@@ -35,180 +35,392 @@ td b{color:#fafaf9}
 .tag{display:inline-block;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#4ade80;padding:.15em .6em;border-radius:99px;font-size:.7em;font-weight:600}
 .tag.t{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);color:#60a5fa}
 .tag.a{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#fbbf24}
+
+/* lang toggle */
+.langtoggle{position:fixed;top:12px;right:14px;z-index:200;display:flex;background:rgba(28,25,23,.9);border-radius:99px;padding:3px;gap:0;box-shadow:0 4px 16px rgba(0,0,0,.5);backdrop-filter:blur(6px)}
+.langtoggle button{border:0;background:transparent;color:rgba(255,255,255,.5);font-family:'Inter';font-size:.7rem;font-weight:600;padding:7px 14px;border-radius:99px;cursor:pointer;transition:.15s}
+.langtoggle button.on{background:#4ade80;color:#0c0a09}
+.langtoggle button:hover:not(.on){color:rgba(255,255,255,.8)}
 </style></head>
 <body>
+<div class="langtoggle" id="langtoggle">
+  <button class="on" data-lang="en">EN</button>
+  <button data-lang="tl">🇵🇭 TL</button>
+</div>
 <div class="deck" id="deck">
 
+<!-- SLIDE 1: TITLE -->
 <section class="slide on">
-  <div class="kicker">Serbizyu · Investor Preview · 2026</div>
-  <h1>The trust infrastructure for the<br><span class="accent">Philippine local service economy.</span></h1>
-  <p style="margin-top:3%;max-width:70%">A two-sided marketplace where buyers post what they need, servicers bid to win the work, and every transaction is protected by structural escrow — not promises. Built for Candon first, designed for every town.</p>
+  <div class="kicker" data-i18n="s1-kicker">Serbizyu · Investor Preview · 2026</div>
+  <h1 data-i18n-html="s1-h1">The trust infrastructure for the<br><span class="accent">Philippine local service economy.</span></h1>
+  <p style="margin-top:3%;max-width:70%" data-i18n="s1-p">A two-sided marketplace where buyers post what they need, servicers bid to win the work, and every transaction is protected by structural escrow — not promises. Built for Candon first, designed for every town.</p>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>1 / 12</span></div>
 </section>
 
+<!-- SLIDE 2: THE PROBLEM -->
 <section class="slide">
-  <div class="kicker">The Problem</div>
-  <h2>Finding a plumber in a Philippine town is still<br>word-of-mouth and crossed fingers.</h2>
+  <div class="kicker" data-i18n="s2-kicker">The Problem</div>
+  <h2 data-i18n="s2-h2">Finding a plumber in a Philippine town is still<br>word-of-mouth and crossed fingers.</h2>
   <div class="grid3" style="margin-top:2%">
-    <div class="card"><b>💸 Payment risk</b><p>Pay ahead and hope? Or pay after and argue? Both sides lose. No escrow culture exists offline.</p></div>
-    <div class="card"><b>🫥 No verifiable trust</b><p>"My cousin knows a guy" is the entire verification system. No proof of work, no accountability.</p></div>
-    <div class="card"><b>📵 Digital exclusion</b><p>Existing platforms demand app installs, cards, and English fluency. The tricycle driver and his customers are locked out.</p></div>
+    <div class="card"><b data-i18n="s2-c1t">💸 Payment risk</b><p data-i18n="s2-c1p">Pay ahead and hope? Or pay after and argue? Both sides lose. No escrow culture exists offline.</p></div>
+    <div class="card"><b data-i18n="s2-c2t">🫥 No verifiable trust</b><p data-i18n="s2-c2p">"My cousin knows a guy" is the entire verification system. No proof of work, no accountability.</p></div>
+    <div class="card"><b data-i18n="s2-c3t">📵 Digital exclusion</b><p data-i18n="s2-c3p">Existing platforms demand app installs, cards, and English fluency. The tricycle driver and his customers are locked out.</p></div>
   </div>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>2 / 12</span></div>
 </section>
 
+<!-- SLIDE 3: THE INSIGHT -->
 <section class="slide">
-  <div class="kicker">The Insight</div>
-  <h2>Trust shouldn't be a promise.<br>It should be <span class="accent">the architecture.</span></h2>
+  <div class="kicker" data-i18n="s3-kicker">The Insight</div>
+  <h2 data-i18n-html="s3-h2">Trust shouldn't be a promise.<br>It should be <span class="accent">the architecture.</span></h2>
   <div class="grid2" style="margin-top:2%">
     <ul>
-      <li><b>Escrow by default</b> — every peso held in an internal ledger, released only on buyer confirmation (Xendit as rail, not source of truth)</li>
-      <li><b>Structured work</b> — every booking follows a visible fulfillment contract with proof steps</li>
-      <li><b>Evidence over testimony</b> — GPS logs, photos, sign-offs make disputes solvable in minutes</li>
+      <li data-i18n="s3-l1"><b>Escrow by default</b> — every peso held in an internal ledger, released only on buyer confirmation (Xendit as rail, not source of truth)</li>
+      <li data-i18n="s3-l2"><b>Structured work</b> — every booking follows a visible fulfillment contract with proof steps</li>
+      <li data-i18n="s3-l3"><b>Evidence over testimony</b> — GPS logs, photos, sign-offs make disputes solvable in minutes</li>
     </ul>
     <ul>
-      <li><b>Meet users where they are</b> — Messenger, SMS, mobile web. No install required to book or earn</li>
-      <li><b>Meet buyers where they scroll</b> — listings travel to Facebook, TikTok, Google. Distribution is a product feature, not a marketing afterthought</li>
+      <li data-i18n="s3-l4"><b>Meet users where they are</b> — Messenger, SMS, mobile web. No install required to book or earn</li>
+      <li data-i18n="s3-l5"><b>Meet buyers where they scroll</b> — listings travel to Facebook, TikTok, Google. Distribution is a product feature, not a marketing afterthought</li>
     </ul>
   </div>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>3 / 12</span></div>
 </section>
 
+<!-- SLIDE 4: ARCHETYPES -->
 <section class="slide">
-  <div class="kicker">The Moat — Fulfillment Archetypes</div>
-  <h2>Every product &amp; service reduces to <span class="accent">10 shapes.</span><br>We built the engine for all of them.</h2>
+  <div class="kicker" data-i18n="s4-kicker">The Moat — Fulfillment Archetypes</div>
+  <h2 data-i18n-html="s4-h2">Every product &amp; service reduces to <span class="accent">10 shapes.</span><br>We built the engine for all of them.</h2>
   <table style="margin-top:1%">
-    <tr><th>Archetype</th><th>Examples</th><th>Status</th></tr>
-    <tr><td><b>A1 Linear Project</b></td><td>Carpentry, events, design</td><td><span class="tag">launch preset</span></td></tr>
-    <tr><td><b>A2 Instant Dispatch</b></td><td>Tricycle, delivery, towing</td><td><span class="tag t">flagship config</span></td></tr>
-    <tr><td><b>A3 Appointment</b></td><td>Tutor, salon, dental</td><td><span class="tag">launch preset</span></td></tr>
-    <tr><td><b>A4 Handoff</b></td><td>Food, meat vendor, crafts</td><td><span class="tag">launch preset</span></td></tr>
-    <tr><td><b>A5–A10</b> Rental · Recurring · Quoted · Emergency · Digital · Retainer</td><td>Sound systems, cleaning, caregiving…</td><td><span class="tag a">config, not code</span></td></tr>
+    <tr><th data-i18n="s4-t1">Archetype</th><th data-i18n="s4-t2">Examples</th><th data-i18n="s4-t3">Status</th></tr>
+    <tr><td><b>A1 Linear Project</b></td><td data-i18n="s4-r1e">Carpentry, events, design</td><td><span class="tag" data-i18n="s4-r1s">launch preset</span></td></tr>
+    <tr><td><b>A2 Instant Dispatch</b></td><td data-i18n="s4-r2e">Tricycle, delivery, towing</td><td><span class="tag t" data-i18n="s4-r2s">flagship config</span></td></tr>
+    <tr><td><b>A3 Appointment</b></td><td data-i18n="s4-r3e">Tutor, salon, dental</td><td><span class="tag" data-i18n="s4-r3s">launch preset</span></td></tr>
+    <tr><td><b>A4 Handoff</b></td><td data-i18n="s4-r4e">Food, meat vendor, crafts</td><td><span class="tag" data-i18n="s4-r4s">launch preset</span></td></tr>
+    <tr><td><b>A5–A10</b> Rental · Recurring · Quoted · Emergency · Digital · Retainer</td><td data-i18n="s4-r5e">Sound systems, cleaning, caregiving…</td><td><span class="tag a" data-i18n="s4-r5s">config, not code</span></td></tr>
   </table>
-  <p style="margin-top:2.5%">One fixed status contract; infinite internal variety. Payments, notifications, and trust never care what shape the work is. <b>Competitors bolt categories on; we generalize the shape of work itself.</b></p>
+  <p style="margin-top:2.5%" data-i18n-html="s4-p">One fixed status contract; infinite internal variety. Payments, notifications, and trust never care what shape the work is. <b>Competitors bolt categories on; we generalize the shape of work itself.</b></p>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>4 / 12</span></div>
 </section>
 
+<!-- SLIDE 5: THE PRODUCT -->
 <section class="slide">
-  <div class="kicker">The Product</div>
-  <h2>See it work — two directions, one platform.</h2>
+  <div class="kicker" data-i18n="s5-kicker">The Product</div>
+  <h2 data-i18n="s5-h2">See it work — two directions, one platform.</h2>
   <div class="grid3" style="margin-top:2%">
-    <div class="card"><b>🛍 Buyer</b><p>Search → book → GCash → watch the tricycle approach live on the map → confirm → escrow releases. <br><br><b>Or:</b> Post what you need → compare bids → pick the winner → escrow protects every peso. <br><br><span class="accent">Screens 01–07 + 18, 21.</span></p></div>
-    <div class="card"><b>🛠 Servicer</b><p>SMS signup → free branded calling card → honest profile score → drag-drop workflow → one inbox for SMS + Messenger + app. <br><br><b>Or:</b> Browse open requests → submit detailed bids → win the job → do the work → get paid. <br><br><span class="accent">Screens 08–13 + 19–20.</span></p></div>
-    <div class="card"><b>📊 Ops</b><p>Curator approves LLM-drafted posts, disputes resolve on GPS + photo evidence, channel ROI feeds tomorrow's rotation. <br><br><span class="accent">Screens 14–17.</span></p></div>
+    <div class="card"><b data-i18n="s5-c1t">🛍 Buyer</b><p data-i18n-html="s5-c1p">Search → book → GCash → watch the tricycle approach live on the map → confirm → escrow releases. <br><br><b>Or:</b> Post what you need → compare bids → pick the winner → escrow protects every peso. <br><br><span class="accent">Screens 01–07 + 18, 21.</span></p></div>
+    <div class="card"><b data-i18n="s5-c2t">🛠 Servicer</b><p data-i18n-html="s5-c2p">SMS signup → free branded calling card → honest profile score → drag-drop workflow → one inbox for SMS + Messenger + app. <br><br><b>Or:</b> Browse open requests → submit detailed bids → win the job → do the work → get paid. <br><br><span class="accent">Screens 08–13 + 19–20.</span></p></div>
+    <div class="card"><b data-i18n="s5-c3t">📊 Ops</b><p data-i18n="s5-c3p">Curator approves LLM-drafted posts, disputes resolve on GPS + photo evidence, channel ROI feeds tomorrow's rotation. <br><br><span class="accent">Screens 14–17.</span></p></div>
   </div>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>5 / 12</span></div>
 </section>
 
+<!-- SLIDE 6: DISTRIBUTION -->
 <section class="slide">
-  <div class="kicker">Distribution — The Unfair Advantage</div>
-  <h2>Listings that <span class="blue">travel to the buyer,</span><br>not buyers we beg to come to us.</h2>
+  <div class="kicker" data-i18n="s6-kicker">Distribution — The Unfair Advantage</div>
+  <h2 data-i18n-html="s6-h2">Listings that <span class="blue">travel to the buyer,</span><br>not buyers we beg to come to us.</h2>
   <div class="grid2" style="margin-top:2%">
     <ul>
-      <li><b>SSR public pages</b> — every offer readable by Google, Facebook previews, and AI agents</li>
-      <li><b>One adapter per channel</b> — the same integration that posts a listing also answers its replies (Facebook, Messenger, SMS, TikTok-ready)</li>
-      <li><b>Reciprocity engine</b> — servicers share their free branded card; every share is a UTM-tagged acquisition channel</li>
+      <li data-i18n="s6-l1"><b>SSR public pages</b> — every offer readable by Google, Facebook previews, and AI agents</li>
+      <li data-i18n="s6-l2"><b>One adapter per channel</b> — the same integration that posts a listing also answers its replies (Facebook, Messenger, SMS, TikTok-ready)</li>
+      <li data-i18n="s6-l3"><b>Reciprocity engine</b> — servicers share their free branded card; every share is a UTM-tagged acquisition channel</li>
     </ul>
     <ul>
-      <li><b>Human-approved automation</b> — LLM drafts, curator publishes. ToS-safe by design</li>
-      <li><b>Channel ROI loop</b> — attributed bookings feed the orchestrator's rotation weights</li>
-      <li><b>Target: 30%+ of bookings channel-attributed</b> by Phase 3 — compounding reach competitors can't copy with ad spend</li>
+      <li data-i18n="s6-l4"><b>Human-approved automation</b> — LLM drafts, curator publishes. ToS-safe by design</li>
+      <li data-i18n="s6-l5"><b>Channel ROI loop</b> — attributed bookings feed the orchestrator's rotation weights</li>
+      <li data-i18n="s6-l6"><b>Target: 30%+ of bookings channel-attributed</b> by Phase 3 — compounding reach competitors can't copy with ad spend</li>
     </ul>
   </div>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>6 / 12</span></div>
 </section>
 
+<!-- SLIDE 7: TRACTION PLAN -->
 <section class="slide">
-  <div class="kicker">Traction Plan — Proof Before Scale</div>
-  <h2>One town. Twenty servicers. Fifty bookings.<br><span class="accent">Then we automate.</span></h2>
+  <div class="kicker" data-i18n="s7-kicker">Traction Plan — Proof Before Scale</div>
+  <h2 data-i18n-html="s7-h2">One town. Twenty servicers. Fifty bookings.<br><span class="accent">Then we automate.</span></h2>
   <table style="margin-top:1%">
-    <tr><th>Phase</th><th>Focus</th><th>Gate to proceed</th></tr>
-    <tr><td><b>1 — Validation</b> (10 sprints)</td><td>Core loop only: offers, orders, escrow, in-app chat. Staff post to FB by hand.</td><td>≥2 bookings/servicer/wk · ≥90% trust density</td></tr>
-    <tr><td><b>2 — Platform</b></td><td>Messenger/SMS channels, Facebook adapter, asset generator, WorkflowBuilder, tricycle pilot.</td><td>≥10% channel-attributed bookings</td></tr>
-    <tr><td><b>3 — Expansion</b></td><td>Product offers, AI template builder, referrals, multi-town via feature flags.</td><td>Candon metrics stable 8+ weeks</td></tr>
+    <tr><th data-i18n="s7-t1">Phase</th><th data-i18n="s7-t2">Focus</th><th data-i18n="s7-t3">Gate to proceed</th></tr>
+    <tr><td data-i18n="s7-r1h"><b>1 — Validation</b> (10 sprints)</td><td data-i18n="s7-r1f">Core loop only: offers, orders, escrow, in-app chat. Staff post to FB by hand.</td><td data-i18n="s7-r1g">≥2 bookings/servicer/wk · ≥90% trust density</td></tr>
+    <tr><td data-i18n="s7-r2h"><b>2 — Platform</b></td><td data-i18n="s7-r2f">Messenger/SMS channels, Facebook adapter, asset generator, WorkflowBuilder, tricycle pilot.</td><td data-i18n="s7-r2g">≥10% channel-attributed bookings</td></tr>
+    <tr><td data-i18n="s7-r3h"><b>3 — Expansion</b></td><td data-i18n="s7-r3f">Product offers, AI template builder, referrals, multi-town via feature flags.</td><td data-i18n="s7-r3g">Candon metrics stable 8+ weeks</td></tr>
   </table>
-  <p style="margin-top:2.5%">The sequencing is the discipline: <b>we don't build the distribution machine before the core loop is proven.</b> Every generalization is possible early but built late — on purpose.</p>
+  <p style="margin-top:2.5%" data-i18n-html="s7-p">The sequencing is the discipline: <b>we don't build the distribution machine before the core loop is proven.</b> Every generalization is possible early but built late — on purpose.</p>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>7 / 12</span></div>
 </section>
 
+<!-- SLIDE 8: MARKET -->
 <section class="slide">
-  <div class="kicker">Market</div>
-  <h2>Start hyper-local. The model replicates<br>to <span class="accent">every municipality in the country.</span></h2>
+  <div class="kicker" data-i18n="s8-kicker">Market</div>
+  <h2 data-i18n-html="s8-h2">Start hyper-local. The model replicates<br>to <span class="accent">every municipality in the country.</span></h2>
   <div class="grid3" style="margin-top:2%">
-    <div class="stat"><b>1,493</b><span>municipalities in the Philippines — each one a self-contained liquidity zone</span></div>
-    <div class="stat"><b>96%</b><span>of Filipinos on Facebook — our primary distribution channel is where the market already is</span></div>
-    <div class="stat"><b>₱0</b><span>spent on app-install ads in our plan — distribution rides channels users already trust</span></div>
+    <div class="stat"><b>1,493</b><span data-i18n="s8-s1">municipalities in the Philippines — each one a self-contained liquidity zone</span></div>
+    <div class="stat"><b>96%</b><span data-i18n="s8-s2">of Filipinos on Facebook — our primary distribution channel is where the market already is</span></div>
+    <div class="stat"><b>₱0</b><span data-i18n="s8-s3">spent on app-install ads in our plan — distribution rides channels users already trust</span></div>
   </div>
-  <p style="margin-top:3%">Competitive frame: Grab owns cities and ride-hailing. Facebook groups own unstructured local commerce with zero trust. <b>The structural-trust layer for town-level services is unclaimed.</b></p>
+  <p style="margin-top:3%" data-i18n-html="s8-p">Competitive frame: Grab owns cities and ride-hailing. Facebook groups own unstructured local commerce with zero trust. <b>The structural-trust layer for town-level services is unclaimed.</b></p>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>8 / 12</span></div>
 </section>
 
+<!-- SLIDE 9: BUSINESS MODEL -->
 <section class="slide">
-  <div class="kicker">Business Model</div>
-  <h2>We earn when trust converts.</h2>
+  <div class="kicker" data-i18n="s9-kicker">Business Model</div>
+  <h2 data-i18n="s9-h2">We earn when trust converts.</h2>
   <div class="grid2" style="margin-top:2%">
     <ul>
-      <li><b>Transaction fee</b> — percentage per completed, escrow-released order (aligned with successful fulfillment, not listings)</li>
-      <li><b>Featured slots</b> — performance-earned, visibility-priced rotation per town-category</li>
+      <li data-i18n="s9-l1"><b>Transaction fee</b> — percentage per completed, escrow-released order (aligned with successful fulfillment, not listings)</li>
+      <li data-i18n="s9-l2"><b>Featured slots</b> — performance-earned, visibility-priced rotation per town-category</li>
     </ul>
     <ul>
-      <li><b>Value-added services</b> — disbursement convenience, asset generation boosts, coop dashboards (Phase 3)</li>
-      <li><b>Disciplined exclusions</b> — no e-wallet, no Grab-clone, no licensed-profession liability. Focus is a feature.</li>
+      <li data-i18n="s9-l3"><b>Value-added services</b> — disbursement convenience, asset generation boosts, coop dashboards (Phase 3)</li>
+      <li data-i18n="s9-l4"><b>Disciplined exclusions</b> — no e-wallet, no Grab-clone, no licensed-profession liability. Focus is a feature.</li>
     </ul>
   </div>
-  <div class="card" style="margin-top:3%"><b>Unit economics honesty:</b><p>Phase 1 exists to measure real take-rate tolerance in one town before we model national scale. We'd rather show you Candon's real numbers than a fictional TAM slide.</p></div>
+  <div class="card" style="margin-top:3%"><b data-i18n="s9-card-t">Unit economics honesty:</b><p data-i18n="s9-card-p">Phase 1 exists to measure real take-rate tolerance in one town before we model national scale. We'd rather show you Candon's real numbers than a fictional TAM slide.</p></div>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>9 / 12</span></div>
 </section>
 
+<!-- SLIDE 10: TWO DIRECTIONS -->
 <section class="slide">
-  <div class="kicker">The Marketplace — Two Directions</div>
-  <h2>Not just a catalog.<br><span class="accent">A true two-sided marketplace.</span></h2>
+  <div class="kicker" data-i18n="s10-kicker">The Marketplace — Two Directions</div>
+  <h2 data-i18n-html="s10-h2">Not just a catalog.<br><span class="accent">A true two-sided marketplace.</span></h2>
   <div class="grid2" style="margin-top:2%">
-    <div class="card"><b>🛍 Buyer → Search & Book</b><p>Browse verified servicers, book directly, pay into escrow. The tricycle driver, the tutor, the plumber — all discoverable, all protected.<br><br><span class="accent">Screens 01–07</span></p></div>
-    <div class="card"><b>📣 Buyer → Post & Receive Bids</b><p>Can't find what you need? Post your request. Servicers bid with price, timeline, and work plans. You compare and pick the winner. Escrow protects every peso.<br><br><span class="accent">Screens 18, 21</span></p></div>
-    <div class="card"><b>🛠 Servicer → List & Get Booked</b><p>Create offers, set prices, get discovered. The platform brings buyers to you. Free branded calling card at onboarding — reciprocity before any ask.<br><br><span class="accent">Screens 08–13</span></p></div>
-    <div class="card"><b>💵 Servicer → Browse & Bid</b><p>See open requests in your area. Submit detailed bids with work breakdowns and past photos. Detailed proposals are 2× more likely to win. Win the bid, it becomes a regular escrow-protected order.<br><br><span class="accent">Screens 19–20</span></p></div>
+    <div class="card"><b data-i18n="s10-c1t">🛍 Buyer → Search & Book</b><p data-i18n-html="s10-c1p">Browse verified servicers, book directly, pay into escrow. The tricycle driver, the tutor, the plumber — all discoverable, all protected.<br><br><span class="accent">Screens 01–07</span></p></div>
+    <div class="card"><b data-i18n="s10-c2t">📣 Buyer → Post & Receive Bids</b><p data-i18n-html="s10-c2p">Can't find what you need? Post your request. Servicers bid with price, timeline, and work plans. You compare and pick the winner. Escrow protects every peso.<br><br><span class="accent">Screens 18, 21</span></p></div>
+    <div class="card"><b data-i18n="s10-c3t">🛠 Servicer → List & Get Booked</b><p data-i18n-html="s10-c3p">Create offers, set prices, get discovered. The platform brings buyers to you. Free branded calling card at onboarding — reciprocity before any ask.<br><br><span class="accent">Screens 08–13</span></p></div>
+    <div class="card"><b data-i18n="s10-c4t">💵 Servicer → Browse & Bid</b><p data-i18n-html="s10-c4p">See open requests in your area. Submit detailed bids with work breakdowns and past photos. Detailed proposals are 2× more likely to win. Win the bid, it becomes a regular escrow-protected order.<br><br><span class="accent">Screens 19–20</span></p></div>
   </div>
-  <p style="margin-top:2.5%">Most marketplaces pick one direction. <b>We built both.</b> The same Archetype engine, the same escrow ledger, the same trust system — regardless of who started the conversation.</p>
+  <p style="margin-top:2.5%" data-i18n-html="s10-p">Most marketplaces pick one direction. <b>We built both.</b> The same Archetype engine, the same escrow ledger, the same trust system — regardless of who started the conversation.</p>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>10 / 12</span></div>
 </section>
 
+<!-- SLIDE 11: FULL VISION -->
 <section class="slide">
-  <div class="kicker">The Full Vision</div>
-  <h2>Not a catalog. <span class="accent">A town's economic operating system.</span></h2>
+  <div class="kicker" data-i18n="s11-kicker">The Full Vision</div>
+  <h2 data-i18n-html="s11-h2">Not a catalog. <span class="accent">A town's economic operating system.</span></h2>
   <div class="grid2" style="margin-top:2%">
     <div>
-      <div class="stat" style="margin-bottom:3%"><b>Two-sided</b><span>Buyers post requests, servicers bid. Or servicers list offers, buyers book. Both directions, same trust engine.</span></div>
-      <div class="stat"><b>Whole-industry</b><span>10 fulfillment archetypes cover every trade — from tricycle rides to house construction. One engine, infinite shapes.</span></div>
+      <div class="stat" style="margin-bottom:3%"><b data-i18n="s11-s1t">Two-sided</b><span data-i18n="s11-s1s">Buyers post requests, servicers bid. Or servicers list offers, buyers book. Both directions, same trust engine.</span></div>
+      <div class="stat"><b data-i18n="s11-s2t">Whole-industry</b><span data-i18n="s11-s2s">10 fulfillment archetypes cover every trade — from tricycle rides to house construction. One engine, infinite shapes.</span></div>
     </div>
     <div>
-      <div class="stat" style="margin-bottom:3%"><b>Multi-channel</b><span>Bookings arrive via app, Messenger, SMS, or Facebook — one unified inbox, one escrow ledger, one source of truth.</span></div>
-      <div class="stat"><b>Self-replicating</b><span>Prove the model in Candon. Flip a feature flag for Vigan, Narvacan, Tagudin. The architecture is the playbook.</span></div>
+      <div class="stat" style="margin-bottom:3%"><b data-i18n="s11-s3t">Multi-channel</b><span data-i18n="s11-s3s">Bookings arrive via app, Messenger, SMS, or Facebook — one unified inbox, one escrow ledger, one source of truth.</span></div>
+      <div class="stat"><b data-i18n="s11-s4t">Self-replicating</b><span data-i18n="s11-s4s">Prove the model in Candon. Flip a feature flag for Vigan, Narvacan, Tagudin. The architecture is the playbook.</span></div>
     </div>
   </div>
-  <p style="margin-top:2.5%">The mission isn't to build a better classifieds app. It's to be <b>the trust layer every local transaction passes through</b> — where the carpenter who bid ₱9,500 and the family who accepted it both walk away protected by the same immutable contract.</p>
+  <p style="margin-top:2.5%" data-i18n-html="s11-p">The mission isn't to build a better classifieds app. It's to be <b>the trust layer every local transaction passes through</b> — where the carpenter who bid ₱9,500 and the family who accepted it both walk away protected by the same immutable contract.</p>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>11 / 12</span></div>
 </section>
 
+<!-- SLIDE 12: THE ASK -->
 <section class="slide">
-  <div class="kicker">The Ask</div>
-  <h1>Fund the town.<br><span class="accent">The towns fund themselves.</span></h1>
-  <p style="margin-top:2%;max-width:75%">Runway for the 10-sprint Phase 1 build and the Candon pilot: engineering, Xendit/Meta/Semaphore integrations, and the human ops layer (curator, trust reviewer, onboarding coach) that makes the automation trustworthy.</p>
-  <p style="margin-top:2%"><b>What you get:</b> the structural-trust playbook for local commerce — validated, archetype-driven, and ready to replicate town by town.</p>
-  <div style="margin-top:3%"><span class="tag" style="font-size:.9em;padding:.5em 1.2em">Open the interactive mockup → 21 linked screens</span></div>
+  <div class="kicker" data-i18n="s12-kicker">The Ask</div>
+  <h1 data-i18n-html="s12-h1">Fund the town.<br><span class="accent">The towns fund themselves.</span></h1>
+  <p style="margin-top:2%;max-width:75%" data-i18n="s12-p1">Runway for the 10-sprint Phase 1 build and the Candon pilot: engineering, Xendit/Meta/Semaphore integrations, and the human ops layer (curator, trust reviewer, onboarding coach) that makes the automation trustworthy.</p>
+  <p style="margin-top:2%" data-i18n-html="s12-p2"><b>What you get:</b> the structural-trust playbook for local commerce — validated, archetype-driven, and ready to replicate town by town.</p>
+  <div style="margin-top:3%"><span class="tag" style="font-size:.9em;padding:.5em 1.2em" data-i18n="s12-tag">Open the interactive mockup → 21 linked screens</span></div>
   <div class="foot"><span class="logo">◆ SERBIZYU</span><span>12 / 12</span></div>
 </section>
 
 </div>
 <div class="hint">← → navigate · F fullscreen</div>
 <script>
-const slides=[...document.querySelectorAll('.slide')];let i=0;
+var slides=[...document.querySelectorAll('.slide')];var i=0;
 function show(n){slides[i].classList.remove('on');i=(n+slides.length)%slides.length;slides[i].classList.add('on');}
-document.addEventListener('keydown',e=>{
+document.addEventListener('keydown',function(e){
   if(e.key==='ArrowRight'||e.key===' ')show(i+1);
   if(e.key==='ArrowLeft')show(i-1);
   if(e.key==='f'||e.key==='F')document.documentElement.requestFullscreen?.();
 });
-document.addEventListener('click',()=>show(i+1));
+document.addEventListener('click',function(e){if(!e.target.closest('.langtoggle'))show(i+1)});
+
+// ──── I18N ────
+window.I18N={en:{},tl:{}};
+var E=window.I18N.en,T=window.I18N.tl;
+E["s1-kicker"]="Serbizyu · Investor Preview · 2026";
+E["s1-h1"]='The trust infrastructure for the<br><span class="accent">Philippine local service economy.</span>';
+E["s1-p"]="A two-sided marketplace where buyers post what they need, servicers bid to win the work, and every transaction is protected by structural escrow — not promises. Built for Candon first, designed for every town.";
+E["s2-kicker"]="The Problem";
+E["s2-h2"]="Finding a plumber in a Philippine town is still<br>word-of-mouth and crossed fingers.";
+E["s2-c1t"]="💸 Payment risk";E["s2-c1p"]="Pay ahead and hope? Or pay after and argue? Both sides lose. No escrow culture exists offline.";
+E["s2-c2t"]="🫥 No verifiable trust";E["s2-c2p"]="\"My cousin knows a guy\" is the entire verification system. No proof of work, no accountability.";
+E["s2-c3t"]="📵 Digital exclusion";E["s2-c3p"]="Existing platforms demand app installs, cards, and English fluency. The tricycle driver and his customers are locked out.";
+E["s3-kicker"]="The Insight";
+E["s3-h2"]='Trust shouldn\'t be a promise.<br>It should be <span class="accent">the architecture.</span>';
+E["s3-l1"]="<b>Escrow by default</b> — every peso held in an internal ledger, released only on buyer confirmation (Xendit as rail, not source of truth)";
+E["s3-l2"]="<b>Structured work</b> — every booking follows a visible fulfillment contract with proof steps";
+E["s3-l3"]="<b>Evidence over testimony</b> — GPS logs, photos, sign-offs make disputes solvable in minutes";
+E["s3-l4"]="<b>Meet users where they are</b> — Messenger, SMS, mobile web. No install required to book or earn";
+E["s3-l5"]="<b>Meet buyers where they scroll</b> — listings travel to Facebook, TikTok, Google. Distribution is a product feature, not a marketing afterthought";
+E["s4-kicker"]="The Moat — Fulfillment Archetypes";
+E["s4-h2"]='Every product &amp; service reduces to <span class="accent">10 shapes.</span><br>We built the engine for all of them.';
+E["s4-t1"]="Archetype";E["s4-t2"]="Examples";E["s4-t3"]="Status";
+E["s4-r1e"]="Carpentry, events, design";E["s4-r1s"]="launch preset";
+E["s4-r2e"]="Tricycle, delivery, towing";E["s4-r2s"]="flagship config";
+E["s4-r3e"]="Tutor, salon, dental";E["s4-r3s"]="launch preset";
+E["s4-r4e"]="Food, meat vendor, crafts";E["s4-r4s"]="launch preset";
+E["s4-r5e"]="Sound systems, cleaning, caregiving…";E["s4-r5s"]="config, not code";
+E["s4-p"]='One fixed status contract; infinite internal variety. Payments, notifications, and trust never care what shape the work is. <b>Competitors bolt categories on; we generalize the shape of work itself.</b>';
+E["s5-kicker"]="The Product";
+E["s5-h2"]="See it work — two directions, one platform.";
+E["s5-c1t"]="🛍 Buyer";
+E["s5-c1p"]='Search → book → GCash → watch the tricycle approach live on the map → confirm → escrow releases. <br><br><b>Or:</b> Post what you need → compare bids → pick the winner → escrow protects every peso. <br><br><span class="accent">Screens 01–07 + 18, 21.</span>';
+E["s5-c2t"]="🛠 Servicer";
+E["s5-c2p"]='SMS signup → free branded calling card → honest profile score → drag-drop workflow → one inbox for SMS + Messenger + app. <br><br><b>Or:</b> Browse open requests → submit detailed bids → win the job → do the work → get paid. <br><br><span class="accent">Screens 08–13 + 19–20.</span>';
+E["s5-c3t"]="📊 Ops";E["s5-c3p"]='Curator approves LLM-drafted posts, disputes resolve on GPS + photo evidence, channel ROI feeds tomorrow\'s rotation. <br><br><span class="accent">Screens 14–17.</span>';
+E["s6-kicker"]="Distribution — The Unfair Advantage";
+E["s6-h2"]='Listings that <span class="blue">travel to the buyer,</span><br>not buyers we beg to come to us.';
+E["s6-l1"]="<b>SSR public pages</b> — every offer readable by Google, Facebook previews, and AI agents";
+E["s6-l2"]="<b>One adapter per channel</b> — the same integration that posts a listing also answers its replies (Facebook, Messenger, SMS, TikTok-ready)";
+E["s6-l3"]="<b>Reciprocity engine</b> — servicers share their free branded card; every share is a UTM-tagged acquisition channel";
+E["s6-l4"]="<b>Human-approved automation</b> — LLM drafts, curator publishes. ToS-safe by design";
+E["s6-l5"]="<b>Channel ROI loop</b> — attributed bookings feed the orchestrator's rotation weights";
+E["s6-l6"]="<b>Target: 30%+ of bookings channel-attributed</b> by Phase 3 — compounding reach competitors can't copy with ad spend";
+E["s7-kicker"]="Traction Plan — Proof Before Scale";
+E["s7-h2"]='One town. Twenty servicers. Fifty bookings.<br><span class="accent">Then we automate.</span>';
+E["s7-t1"]="Phase";E["s7-t2"]="Focus";E["s7-t3"]="Gate to proceed";
+E["s7-r1h"]="<b>1 — Validation</b> (10 sprints)";E["s7-r1f"]="Core loop only: offers, orders, escrow, in-app chat. Staff post to FB by hand.";E["s7-r1g"]="≥2 bookings/servicer/wk · ≥90% trust density";
+E["s7-r2h"]="<b>2 — Platform</b>";E["s7-r2f"]="Messenger/SMS channels, Facebook adapter, asset generator, WorkflowBuilder, tricycle pilot.";E["s7-r2g"]="≥10% channel-attributed bookings";
+E["s7-r3h"]="<b>3 — Expansion</b>";E["s7-r3f"]="Product offers, AI template builder, referrals, multi-town via feature flags.";E["s7-r3g"]="Candon metrics stable 8+ weeks";
+E["s7-p"]='The sequencing is the discipline: <b>we don\'t build the distribution machine before the core loop is proven.</b> Every generalization is possible early but built late — on purpose.';
+E["s8-kicker"]="Market";
+E["s8-h2"]='Start hyper-local. The model replicates<br>to <span class="accent">every municipality in the country.</span>';
+E["s8-s1"]="municipalities in the Philippines — each one a self-contained liquidity zone";
+E["s8-s2"]="of Filipinos on Facebook — our primary distribution channel is where the market already is";
+E["s8-s3"]="spent on app-install ads in our plan — distribution rides channels users already trust";
+E["s8-p"]='Competitive frame: Grab owns cities and ride-hailing. Facebook groups own unstructured local commerce with zero trust. <b>The structural-trust layer for town-level services is unclaimed.</b>';
+E["s9-kicker"]="Business Model";E["s9-h2"]="We earn when trust converts.";
+E["s9-l1"]="<b>Transaction fee</b> — percentage per completed, escrow-released order (aligned with successful fulfillment, not listings)";
+E["s9-l2"]="<b>Featured slots</b> — performance-earned, visibility-priced rotation per town-category";
+E["s9-l3"]="<b>Value-added services</b> — disbursement convenience, asset generation boosts, coop dashboards (Phase 3)";
+E["s9-l4"]="<b>Disciplined exclusions</b> — no e-wallet, no Grab-clone, no licensed-profession liability. Focus is a feature.";
+E["s9-card-t"]="Unit economics honesty:";E["s9-card-p"]="Phase 1 exists to measure real take-rate tolerance in one town before we model national scale. We'd rather show you Candon's real numbers than a fictional TAM slide.";
+E["s10-kicker"]="The Marketplace — Two Directions";
+E["s10-h2"]='Not just a catalog.<br><span class="accent">A true two-sided marketplace.</span>';
+E["s10-c1t"]="🛍 Buyer → Search & Book";E["s10-c1p"]='Browse verified servicers, book directly, pay into escrow. The tricycle driver, the tutor, the plumber — all discoverable, all protected.<br><br><span class="accent">Screens 01–07</span>';
+E["s10-c2t"]="📣 Buyer → Post & Receive Bids";E["s10-c2p"]='Can\'t find what you need? Post your request. Servicers bid with price, timeline, and work plans. You compare and pick the winner. Escrow protects every peso.<br><br><span class="accent">Screens 18, 21</span>';
+E["s10-c3t"]="🛠 Servicer → List & Get Booked";E["s10-c3p"]='Create offers, set prices, get discovered. The platform brings buyers to you. Free branded calling card at onboarding — reciprocity before any ask.<br><br><span class="accent">Screens 08–13</span>';
+E["s10-c4t"]="💵 Servicer → Browse & Bid";E["s10-c4p"]='See open requests in your area. Submit detailed bids with work breakdowns and past photos. Detailed proposals are 2× more likely to win. Win the bid, it becomes a regular escrow-protected order.<br><br><span class="accent">Screens 19–20</span>';
+E["s10-p"]='Most marketplaces pick one direction. <b>We built both.</b> The same Archetype engine, the same escrow ledger, the same trust system — regardless of who started the conversation.';
+E["s11-kicker"]="The Full Vision";
+E["s11-h2"]='Not a catalog. <span class="accent">A town\'s economic operating system.</span>';
+E["s11-s1t"]="Two-sided";E["s11-s1s"]="Buyers post requests, servicers bid. Or servicers list offers, buyers book. Both directions, same trust engine.";
+E["s11-s2t"]="Whole-industry";E["s11-s2s"]="10 fulfillment archetypes cover every trade — from tricycle rides to house construction. One engine, infinite shapes.";
+E["s11-s3t"]="Multi-channel";E["s11-s3s"]="Bookings arrive via app, Messenger, SMS, or Facebook — one unified inbox, one escrow ledger, one source of truth.";
+E["s11-s4t"]="Self-replicating";E["s11-s4s"]="Prove the model in Candon. Flip a feature flag for Vigan, Narvacan, Tagudin. The architecture is the playbook.";
+E["s11-p"]='The mission isn\'t to build a better classifieds app. It\'s to be <b>the trust layer every local transaction passes through</b> — where the carpenter who bid ₱9,500 and the family who accepted it both walk away protected by the same immutable contract.';
+E["s12-kicker"]="The Ask";
+E["s12-h1"]='Fund the town.<br><span class="accent">The towns fund themselves.</span>';
+E["s12-p1"]="Runway for the 10-sprint Phase 1 build and the Candon pilot: engineering, Xendit/Meta/Semaphore integrations, and the human ops layer (curator, trust reviewer, onboarding coach) that makes the automation trustworthy.";
+E["s12-p2"]='<b>What you get:</b> the structural-trust playbook for local commerce — validated, archetype-driven, and ready to replicate town by town.';
+E["s12-tag"]="Open the interactive mockup → 21 linked screens";
+
+// ── TAGLISH ──
+T["s1-kicker"]="Serbizyu · Investor Preview · 2026";
+T["s1-h1"]='Ang <span class="accent">trust infrastructure</span> ng<br>Philippine local service economy.';
+T["s1-p"]="Isang two-sided marketplace kung saan pwedeng mag-post si buyer ng kailangan, magbi-bid ang servicer para makuha ang trabaho, at bawat transaction protektado ng structural escrow — hindi lang pangako. Binuo muna sa Candon, dinisenyo para sa bawat bayan.";
+T["s2-kicker"]="Ang Problema";
+T["s2-h2"]="Ang paghahanap ng tubero sa isang bayan sa Pilipinas ay<br>word-of-mouth pa rin at dasal-dasal lang.";
+T["s2-c1t"]="💸 Risk sa bayaran";T["s2-c1p"]="Magbayad nang maaga at umasa? O magbayad pagkatapos at mag-away? Parehong talo. Walang escrow culture sa offline.";
+T["s2-c2t"]="🫥 Walang verifiable na tiwala";T["s2-c2p"]="\"May kilala yung pinsan ko\" — yan na ang buong verification system. Walang proof ng trabaho, walang accountability.";
+T["s2-c3t"]="📵 Digital exclusion";T["s2-c3p"]="Ang existing platforms kailangan ng app install, credit card, at English fluency. Ang tricycle driver at ang mga customer niya, locked out.";
+T["s3-kicker"]="Ang Solusyon";
+T["s3-h2"]='Ang tiwala hindi dapat pangako.<br>Dapat <span class="accent">nasa architecture mismo.</span>';
+T["s3-l1"]="<b>Escrow by default</b> — bawat piso naka-hold sa internal ledger, nire-release lang kapag nag-confirm si buyer (Xendit ang daan, hindi ang source of truth)";
+T["s3-l2"]="<b>Structured na trabaho</b> — bawat booking sumusunod sa visible fulfillment contract na may proof steps";
+T["s3-l3"]="<b>Ebidensya, hindi testimonya</b> — GPS logs, photos, sign-offs — ang disputes naso-solve in minutes";
+T["s3-l4"]="<b>Hinaharap ang user kung nasaan sila</b> — Messenger, SMS, mobile web. Walang install na kailangan para mag-book o kumita";
+T["s3-l5"]="<b>Hinaharap ang buyer kung saan sila nag-i-scroll</b> — ang listings pumupunta sa Facebook, TikTok, Google. Ang distribution ay product feature, hindi marketing afterthought";
+T["s4-kicker"]="Ang Moat — Fulfillment Archetypes";
+T["s4-h2"]='Lahat ng produkto at serbisyo nauuwi sa <span class="accent">10 hugis.</span><br>Binuo na namin ang makina para sa lahat.';
+T["s4-t1"]="Archetype";T["s4-t2"]="Halimbawa";T["s4-t3"]="Status";
+T["s4-r1e"]="Karpintero, events, design";T["s4-r1s"]="launch preset";
+T["s4-r2e"]="Tricycle, delivery, towing";T["s4-r2s"]="flagship config";
+T["s4-r3e"]="Tutor, salon, dental";T["s4-r3s"]="launch preset";
+T["s4-r4e"]="Pagkain, meat vendor, crafts";T["s4-r4s"]="launch preset";
+T["s4-r5e"]="Sound system, cleaning, caregiving…";T["s4-r5s"]="config, hindi code";
+T["s4-p"]='Isang fixed status contract; infinite na internal variety. Ang payments, notifications, at tiwala — hindi nila kailangan malaman kung anong hugis ng trabaho. <b>Ang competitors nagbo-bolt on ng categories; kami, ginawa naming general ang hugis ng trabaho mismo.</b>';
+T["s5-kicker"]="Ang Produkto";
+T["s5-h2"]="Panoorin mong gumana — dalawang direksyon, iisang platform.";
+T["s5-c1t"]="🛍 Buyer";
+T["s5-c1p"]='Search → book → GCash → panoorin ang tricycle papalapit live sa mapa → confirm → nag-release ang escrow. <br><br><b>O kaya:</b> Mag-post ng kailangan → compare bids → piliin ang winner → protektado ng escrow ang bawat piso. <br><br><span class="accent">Screens 01–07 + 18, 21.</span>';
+T["s5-c2t"]="🛠 Servicer";
+T["s5-c2p"]='SMS signup → libreng branded calling card → honest profile score → drag-drop workflow → iisang inbox para sa SMS + Messenger + app. <br><br><b>O kaya:</b> Browse open requests → submit detailed bids → makuha ang trabaho → gawin ang trabaho → bayad na. <br><br><span class="accent">Screens 08–13 + 19–20.</span>';
+T["s5-c3t"]="📊 Ops";T["s5-c3p"]='Ina-approve ng curator ang LLM-drafted posts, ang disputes naso-solve gamit GPS + photo evidence, ang channel ROI ang nagfe-feed sa rotation bukas. <br><br><span class="accent">Screens 14–17.</span>';
+T["s6-kicker"]="Distribution — Ang Unfair Advantage";
+T["s6-h2"]='Mga listing na <span class="blue">pumupunta sa buyer,</span><br>hindi buyer na pinipilit naming pumunta sa amin.';
+T["s6-l1"]="<b>SSR public pages</b> — bawat offer nababasa ng Google, Facebook previews, at AI agents";
+T["s6-l2"]="<b>Isang adapter bawat channel</b> — ang integration na nagpo-post ng listing, siya rin ang sumasagot sa replies (Facebook, Messenger, SMS, TikTok-ready)";
+T["s6-l3"]="<b>Reciprocity engine</b> — shineshare ng servicer ang libreng branded card nila; bawat share ay UTM-tagged acquisition channel";
+T["s6-l4"]="<b>Human-approved automation</b> — LLM drafts, curator ang nagpa-publish. ToS-safe by design";
+T["s6-l5"]="<b>Channel ROI loop</b> — attributed bookings ang nagfe-feed sa orchestrator's rotation weights";
+T["s6-l6"]="<b>Target: 30%+ ng bookings channel-attributed</b> by Phase 3 — compounding reach na hindi kayang kopyahin ng competitors gamit ang ad spend";
+T["s7-kicker"]="Traction Plan — Patunay Bago Scale";
+T["s7-h2"]='Isang bayan. Dalawampung servicer. Limampung booking.<br><span class="accent">Tapos i-a-automate na natin.</span>';
+T["s7-t1"]="Phase";T["s7-t2"]="Focus";T["s7-t3"]="Gate para mag-proceed";
+T["s7-r1h"]="<b>1 — Validation</b> (10 sprints)";T["s7-r1f"]="Core loop lang: offers, orders, escrow, in-app chat. Manual na nagpo-post ang staff sa FB.";T["s7-r1g"]="≥2 bookings/servicer/wk · ≥90% trust density";
+T["s7-r2h"]="<b>2 — Platform</b>";T["s7-r2f"]="Messenger/SMS channels, Facebook adapter, asset generator, WorkflowBuilder, tricycle pilot.";T["s7-r2g"]="≥10% channel-attributed bookings";
+T["s7-r3h"]="<b>3 — Expansion</b>";T["s7-r3f"]="Product offers, AI template builder, referrals, multi-town via feature flags.";T["s7-r3g"]="Candon metrics stable ng 8+ weeks";
+T["s7-p"]='Ang sequencing ang disiplina: <b>hindi namin binuo ang distribution machine bago napatunayan ang core loop.</b> Lahat ng generalization pwedeng gawin nang maaga pero binuo nang huli — sinadya yan.';
+T["s8-kicker"]="Market";
+T["s8-h2"]='Magsimula sa hyper-local. Ang modelo nagre-replicate<br>sa <span class="accent">bawat munisipalidad sa bansa.</span>';
+T["s8-s1"]="munisipalidad sa Pilipinas — bawat isa ay self-contained liquidity zone";
+T["s8-s2"]="ng Pilipino nasa Facebook — ang primary distribution channel natin ay kung nasaan na ang market";
+T["s8-s3"]="ginastos sa app-install ads sa plano natin — ang distribution sumasakay sa channels na tiwala na ng users";
+T["s8-p"]='Competitive frame: Ang Grab ang may-ari ng cities at ride-hailing. Ang Facebook groups ang may-ari ng unstructured local commerce na walang tiwala. <b>Ang structural-trust layer para sa town-level services — wala pang nagke-claim.</b>';
+T["s9-kicker"]="Business Model";
+T["s9-h2"]="Kumikita kami kapag nagko-convert ang tiwala.";
+T["s9-l1"]="<b>Transaction fee</b> — percentage bawat completed, escrow-released order (nakakunekta sa successful fulfillment, hindi sa listings)";
+T["s9-l2"]="<b>Featured slots</b> — performance-earned, visibility-priced rotation bawat town-category";
+T["s9-l3"]="<b>Value-added services</b> — disbursement convenience, asset generation boosts, coop dashboards (Phase 3)";
+T["s9-l4"]="<b>Disiplinadong exclusions</b> — walang e-wallet, walang Grab-clone, walang licensed-profession liability. Ang focus ay feature.";
+T["s9-card-t"]="Unit economics, totoo lang:";
+T["s9-card-p"]="Ang Phase 1 ay para sukatin ang totoong take-rate tolerance sa isang bayan bago tayo mag-model ng national scale. Mas gugustuhin naming ipakita ang totoong numero ng Candon kaysa sa fictional TAM slide.";
+T["s10-kicker"]="Ang Marketplace — Dalawang Direksyon";
+T["s10-h2"]='Hindi lang catalog.<br><span class="accent">Isang tunay na two-sided marketplace.</span>';
+T["s10-c1t"]="🛍 Buyer → Search & Book";T["s10-c1p"]='Mag-browse ng verified servicer, diretso mag-book, bayad sa escrow. Ang tricycle driver, ang tutor, ang tubero — lahat discoverable, lahat protektado.<br><br><span class="accent">Screens 01–07</span>';
+T["s10-c2t"]="📣 Buyer → Post & Receive Bids";T["s10-c2p"]='Walang mahanap? Mag-post ng request. Nagbi-bid ang servicer ng presyo, timeline, at work plan. Ikukumpara mo at pipiliin ang winner. Protektado ng escrow ang bawat piso.<br><br><span class="accent">Screens 18, 21</span>';
+T["s10-c3t"]="🛠 Servicer → List & Get Booked";T["s10-c3p"]='Gumawa ng offers, mag-set ng presyo, ma-discover. Dinadala ng platform ang buyers sa iyo. Libreng branded calling card sa onboarding — reciprocity bago ang kahit anong hiling.<br><br><span class="accent">Screens 08–13</span>';
+T["s10-c4t"]="💵 Servicer → Browse & Bid";T["s10-c4p"]='Makita ang open requests sa area mo. Mag-submit ng detailed bids na may work breakdowns at past photos. Ang detailed proposals 2× mas malamang manalo. Kapag nanalo ang bid, nagiging regular escrow-protected order ito.<br><br><span class="accent">Screens 19–20</span>';
+T["s10-p"]='Karamihan ng marketplace pumipili ng isang direksyon. <b>Pareho naming binuo.</b> Parehong Archetype engine, parehong escrow ledger, parehong trust system — kahit sino pa ang nagsimula ng usapan.';
+T["s11-kicker"]="Ang Buong Vision";
+T["s11-h2"]='Hindi catalog. <span class="accent">Economic operating system ng isang bayan.</span>';
+T["s11-s1t"]="Two-sided";T["s11-s1s"]="Ang buyer nagpo-post ng request, ang servicer nagbi-bid. O ang servicer nagli-list ng offers, ang buyer nagbu-book. Parehong direksyon, parehong trust engine.";
+T["s11-s2t"]="Whole-industry";T["s11-s2s"]="10 fulfillment archetypes sumasaklaw sa bawat trade — mula tricycle hanggang house construction. Isang makina, infinite na hugis.";
+T["s11-s3t"]="Multi-channel";T["s11-s3s"]="Dumarating ang booking via app, Messenger, SMS, o Facebook — iisang unified inbox, iisang escrow ledger, iisang source of truth.";
+T["s11-s4t"]="Self-replicating";T["s11-s4s"]="Patunayan ang modelo sa Candon. I-flip ang feature flag para sa Vigan, Narvacan, Tagudin. Ang architecture ang playbook.";
+T["s11-p"]='Ang misyon ay hindi gumawa ng mas magandang classifieds app. Ito ay ang maging <b>trust layer na dinadaanan ng bawat local transaction</b> — kung saan ang karpintero na nag-bid ng ₱9,500 at ang pamilyang tumanggap nito, parehong lumalakad palayo na protektado ng parehong immutable na kontrata.';
+T["s12-kicker"]="Ang Hinihingi";
+T["s12-h1"]='Pondohan ang bayan.<br><span class="accent">Ang mga bayan ang magpo-pondo sa sarili nila.</span>';
+T["s12-p1"]="Runway para sa 10-sprint Phase 1 build at Candon pilot: engineering, Xendit/Meta/Semaphore integrations, at ang human ops layer (curator, trust reviewer, onboarding coach) na nagpapa-trustworthy ng automation.";
+T["s12-p2"]='<b>Ang makukuha mo:</b> ang structural-trust playbook para sa local commerce — validated, archetype-driven, at handa nang i-replicate bawat bayan.';
+T["s12-tag"]="Buksan ang interactive mockup → 21 linked screens";
+
+// ── TOGGLE ──
+(function(){
+  var lang = localStorage.getItem('serbizyu-deck-lang') || 'en';
+  function setLang(l){
+    lang = l;
+    localStorage.setItem('serbizyu-deck-lang', l);
+    var map = window.I18N[l];
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key = el.getAttribute('data-i18n');
+      if(map[key]) el.textContent = map[key];
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el){
+      var key = el.getAttribute('data-i18n-html');
+      if(map[key]) el.innerHTML = map[key];
+    });
+    document.querySelectorAll('.langtoggle button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-lang') === l);
+    });
+  }
+  document.querySelectorAll('.langtoggle button').forEach(function(b){
+    b.addEventListener('click', function(e){
+      e.stopPropagation();
+      setLang(this.getAttribute('data-lang'));
+    });
+  });
+  setLang(lang);
+})();
 </script>
 </body></html>

@@ -10,7 +10,6 @@ h1,h2,h3{font-family:'Plus Jakarta Sans','Inter',sans-serif}
 a{text-decoration:none;color:inherit}
 .wrap{max-width:1060px;margin:0 auto;padding:36px 22px 60px}
 
-/* hero */
 .hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
 .mark{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#22c55e,var(--g700));display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.5rem}
 .hero h1{font-size:1.9rem}
@@ -21,11 +20,15 @@ a{text-decoration:none;color:inherit}
 .deckbtn{display:inline-block;background:var(--g600);color:#fff;padding:12px 22px;border-radius:12px;font-weight:600;font-size:.9rem}
 .deckbtn:hover{background:var(--g700)}
 
-/* pitch strip */
+/* lang toggle */
+.langtoggle{position:fixed;top:12px;right:14px;z-index:200;display:flex;background:rgba(28,25,23,.9);border-radius:99px;padding:3px;gap:0;box-shadow:0 4px 16px rgba(0,0,0,.3);backdrop-filter:blur(6px)}
+.langtoggle button{border:0;background:transparent;color:rgba(255,255,255,.55);font-family:'Inter';font-size:.7rem;font-weight:600;padding:7px 14px;border-radius:99px;cursor:pointer;transition:.15s}
+.langtoggle button.on{background:var(--g600);color:#fff}
+.langtoggle button:hover:not(.on){color:rgba(255,255,255,.8)}
+
 .pitch{background:#fff;border:1px solid var(--w200);border-left:4px solid var(--g600);border-radius:14px;padding:16px 18px;margin-bottom:26px;font-size:.92rem}
 .pitch b{color:var(--g700)}
 
-/* how it works: the two loops */
 .howworks{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:30px}
 .loop{background:#fff;border:1px solid var(--w200);border-radius:16px;padding:18px}
 .loop .lh{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -42,7 +45,6 @@ a{text-decoration:none;color:inherit}
 .loop .go.alt{background:var(--t600)}
 .loop .go.alt:hover{background:var(--t700)}
 
-/* guided tour */
 .tour{background:linear-gradient(135deg,var(--g900),#166534);color:#fff;border-radius:16px;padding:20px 22px;margin-bottom:30px}
 .tour h2{font-size:1.15rem;margin-bottom:4px}
 .tour p{font-size:.82rem;opacity:.85;margin-bottom:14px}
@@ -55,7 +57,6 @@ a{text-decoration:none;color:inherit}
 .tour .start{display:inline-block;background:#fff;color:var(--g900);padding:11px 22px;border-radius:12px;font-weight:700;font-size:.88rem;margin-bottom:14px}
 .tour .start:hover{background:var(--g100)}
 
-/* journey sections */
 .flow{margin-bottom:28px}
 .flow h2{font-size:1.05rem;margin-bottom:3px}
 .flow .sub{color:var(--w500);font-size:.8rem;margin-bottom:12px}
@@ -71,7 +72,6 @@ a{text-decoration:none;color:inherit}
 
 .footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--w200);color:var(--w500);font-size:.75rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 
-/* external page nav — same bar as every phone screen */
 .pagenav{position:fixed;left:0;right:0;bottom:0;z-index:100;display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 14px;background:rgba(28,25,23,.94);backdrop-filter:blur(10px);box-shadow:0 -6px 24px rgba(0,0,0,.25)}
 .pagenav a{color:#fff;font-size:.78rem;font-weight:600;padding:9px 18px;border-radius:11px;border:1px solid rgba(255,255,255,.2);transition:.15s}
 .pagenav a:hover{background:rgba(255,255,255,.12)}
@@ -81,107 +81,247 @@ a{text-decoration:none;color:inherit}
 @media(max-width:520px){.pagenav .pn-mid{display:none}}
 </style></head>
 <body>
+<div class="langtoggle" id="langtoggle">
+  <button class="on" data-lang="en">EN</button>
+  <button data-lang="tl">🇵🇭 TL</button>
+</div>
 <div class="wrap">
   <div class="hero">
     <div class="mark">S</div>
     <div>
-      <h1>Serbizyu — Interactive Mockup</h1>
-      <p>Hyper-local service marketplace · trust by structure · distribution by design</p>
+      <h1 data-i18n="hub-title">Serbizyu — Interactive Mockup</h1>
+      <p data-i18n="hub-sub">Hyper-local service marketplace · trust by structure · distribution by design</p>
     </div>
-    <div style="margin-left:auto"><a class="deckbtn" href="mockup/deck/pitch.html">▶ Investor deck (12 slides)</a></div>
+    <div style="margin-left:auto"><a class="deckbtn" href="mockup/deck/pitch.html" data-i18n="deck-btn">▶ Investor deck (12 slides)</a></div>
   </div>
   <div class="badges">
     <span class="badge hot">Laravel + Inertia + React</span><span class="badge">Escrow via Xendit</span><span class="badge">10 fulfillment archetypes</span><span class="badge">Unified inbox: app · Messenger · SMS</span><span class="badge">Channel-native distribution</span><span class="badge">Two-sided: listings + open offers</span>
   </div>
 
-  <div class="pitch">
-    <b>The one-paragraph pitch:</b> Serbizyu is the trust infrastructure for the Philippine local service economy. Buyers book verified neighbors — or post what they need and let servicers bid. Every peso sits in escrow until the work is confirmed. Every job follows a visible step-by-step contract. Every screen below is clickable — open one and keep tapping.
-  </div>
+  <div class="pitch" data-i18n-html="pitch"><b>The one-paragraph pitch:</b> Serbizyu is the trust infrastructure for the Philippine local service economy. Buyers book verified neighbors — or post what they need and let servicers bid. Every peso sits in escrow until the work is confirmed. Every job follows a visible step-by-step contract. Every screen below is clickable — open one and keep tapping.</div>
 
-  <h2 style="font-size:1.15rem;margin-bottom:4px">🧭 How the system works — two loops, one engine</h2>
-  <p style="color:var(--w500);font-size:.8rem;margin-bottom:14px">Every transaction, whichever direction it starts, ends up in the same escrow + tracking + review pipeline.</p>
+  <h2 style="font-size:1.15rem;margin-bottom:4px" data-i18n="how-title">🧭 How the system works — two loops, one engine</h2>
+  <p style="color:var(--w500);font-size:.8rem;margin-bottom:14px" data-i18n="how-sub">Every transaction, whichever direction it starts, ends up in the same escrow + tracking + review pipeline.</p>
   <div class="howworks">
     <div class="loop">
-      <div class="lh"><div class="lic" style="background:var(--g50)">🛍</div><div><div class="lt">Book a listing</div><div class="ls">servicer lists an offer → buyer books it directly</div></div></div>
-      <div class="chain"><span class="node">Home / Search</span><span class="arr">→</span><span class="node">Offer page</span><span class="arr">→</span><span class="node">Pay into escrow</span><span class="arr">→</span><span class="node">Live tracking</span><span class="arr">→</span><span class="node">Confirm & release</span><span class="arr">→</span><span class="node">Review & rebook</span></div>
-      <p>The catalog path: tricycle rides, tutors, plumbers — fixed prices, bookable now. This is what the Home feed leads with.</p>
-      <a class="go" href="mockup/screens/01-home.html">▶ Start buyer tour (7 screens)</a>
+      <div class="lh"><div class="lic" style="background:var(--g50)">🛍</div><div><div class="lt" data-i18n="loop1-title">Book a listing</div><div class="ls" data-i18n="loop1-sub">servicer lists an offer → buyer books it directly</div></div></div>
+      <div class="chain"><span class="node" data-i18n="loop1-n1">Home / Search</span><span class="arr">→</span><span class="node" data-i18n="loop1-n2">Offer page</span><span class="arr">→</span><span class="node" data-i18n="loop1-n3">Pay into escrow</span><span class="arr">→</span><span class="node" data-i18n="loop1-n4">Live tracking</span><span class="arr">→</span><span class="node" data-i18n="loop1-n5">Confirm & release</span><span class="arr">→</span><span class="node" data-i18n="loop1-n6">Review & rebook</span></div>
+      <p data-i18n="loop1-desc">The catalog path: tricycle rides, tutors, plumbers — fixed prices, bookable now. This is what the Home feed leads with.</p>
+      <a class="go" href="mockup/screens/01-home.html" data-i18n="loop1-cta">▶ Start buyer tour (7 screens)</a>
     </div>
     <div class="loop">
-      <div class="lh"><div class="lic" style="background:var(--t50)">📣</div><div><div class="lt">Post an open offer</div><div class="ls">buyer describes the job → servicers bid → buyer picks the winner</div></div></div>
-      <div class="chain"><span class="node b">Post request (free)</span><span class="arr">→</span><span class="node b">Servicers see it & bid</span><span class="arr">→</span><span class="node b">Compare side by side</span><span class="arr">→</span><span class="node">Accept → escrow order</span><span class="arr">→</span><span class="node">same tracking & release</span></div>
-      <p>The marketplace path: custom cabinets, catering, repairs — anything without a fixed listing. Open offers appear right on Home and Search so both loops stay connected.</p>
-      <a class="go alt" href="mockup/screens/18-post-request.html">▶ Start request tour (4 screens)</a>
+      <div class="lh"><div class="lic" style="background:var(--t50)">📣</div><div><div class="lt" data-i18n="loop2-title">Post an open offer</div><div class="ls" data-i18n="loop2-sub">buyer describes the job → servicers bid → buyer picks the winner</div></div></div>
+      <div class="chain"><span class="node b" data-i18n="loop2-n1">Post request (free)</span><span class="arr">→</span><span class="node b" data-i18n="loop2-n2">Servicers see it & bid</span><span class="arr">→</span><span class="node b" data-i18n="loop2-n3">Compare side by side</span><span class="arr">→</span><span class="node" data-i18n="loop2-n4">Accept → escrow order</span><span class="arr">→</span><span class="node" data-i18n="loop2-n5">same tracking & release</span></div>
+      <p data-i18n="loop2-desc">The marketplace path: custom cabinets, catering, repairs — anything without a fixed listing. Open offers appear right on Home and Search so both loops stay connected.</p>
+      <a class="go alt" href="mockup/screens/18-post-request.html" data-i18n="loop2-cta">▶ Start request tour (4 screens)</a>
     </div>
   </div>
 
   <div class="tour">
-    <h2>🎬 The guided tour — 10 screens, one story</h2>
-    <p>Follow a cabinet job and a tricycle ride end-to-end. Best path for showing teammates or pitching in 5 minutes.</p>
-    <a class="start" href="mockup/screens/01-home.html">▶ Begin the tour at Home</a>
+    <h2 data-i18n="tour-title">🎬 The guided tour — 10 screens, one story</h2>
+    <p data-i18n="tour-sub">Follow a cabinet job and a tricycle ride end-to-end. Best path for showing teammates or pitching in 5 minutes.</p>
+    <a class="start" href="mockup/screens/01-home.html" data-i18n="tour-start">▶ Begin the tour at Home</a>
     <div class="stops">
-      <a class="stop" href="mockup/screens/01-home.html"><div class="n">STOP 01</div><b>Home</b><span>listings + open offers, one feed</span></a>
-      <a class="stop" href="mockup/screens/03-offer.html"><div class="n">STOP 02</div><b>Offer page</b><span>work promise, escrow explainer</span></a>
-      <a class="stop" href="mockup/screens/04-book.html"><div class="n">STOP 03</div><b>Book & pay</b><span>GCash → escrow hold</span></a>
-      <a class="stop" href="mockup/screens/05-track.html"><div class="n">STOP 04</div><b>Live tracking</b><span>GPS auto-advance steps</span></a>
-      <a class="stop" href="mockup/screens/06-release.html"><div class="n">STOP 05</div><b>Release</b><span>confirm → escrow pays out</span></a>
-      <a class="stop" href="mockup/screens/18-post-request.html"><div class="n">STOP 06</div><b>Post a request</b><span>the second loop begins</span></a>
-      <a class="stop" href="mockup/screens/19-browse-requests.html"><div class="n">STOP 07</div><b>Browse requests</b><span>servicer's job board</span></a>
-      <a class="stop" href="mockup/screens/20-submit-bid.html"><div class="n">STOP 08</div><b>Submit a bid</b><span>price + timeline + plan</span></a>
-      <a class="stop" href="mockup/screens/21-compare-bids.html"><div class="n">STOP 09</div><b>Compare bids</b><span>accept → becomes escrow order</span></a>
-      <a class="stop" href="mockup/screens/17-trust.html"><div class="n">STOP 10</div><b>Trust & safety</b><span>evidence, disputes, audit trail</span></a>
+      <a class="stop" href="mockup/screens/01-home.html"><div class="n">STOP 01</div><b data-i18n="stop1-t">Home</b><span data-i18n="stop1-s">listings + open offers, one feed</span></a>
+      <a class="stop" href="mockup/screens/03-offer.html"><div class="n">STOP 02</div><b data-i18n="stop2-t">Offer page</b><span data-i18n="stop2-s">work promise, escrow explainer</span></a>
+      <a class="stop" href="mockup/screens/04-book.html"><div class="n">STOP 03</div><b data-i18n="stop3-t">Book & pay</b><span data-i18n="stop3-s">GCash → escrow hold</span></a>
+      <a class="stop" href="mockup/screens/05-track.html"><div class="n">STOP 04</div><b data-i18n="stop4-t">Live tracking</b><span data-i18n="stop4-s">GPS auto-advance steps</span></a>
+      <a class="stop" href="mockup/screens/06-release.html"><div class="n">STOP 05</div><b data-i18n="stop5-t">Release</b><span data-i18n="stop5-s">confirm → escrow pays out</span></a>
+      <a class="stop" href="mockup/screens/18-post-request.html"><div class="n">STOP 06</div><b data-i18n="stop6-t">Post a request</b><span data-i18n="stop6-s">the second loop begins</span></a>
+      <a class="stop" href="mockup/screens/19-browse-requests.html"><div class="n">STOP 07</div><b data-i18n="stop7-t">Browse requests</b><span data-i18n="stop7-s">servicer's job board</span></a>
+      <a class="stop" href="mockup/screens/20-submit-bid.html"><div class="n">STOP 08</div><b data-i18n="stop8-t">Submit a bid</b><span data-i18n="stop8-s">price + timeline + plan</span></a>
+      <a class="stop" href="mockup/screens/21-compare-bids.html"><div class="n">STOP 09</div><b data-i18n="stop9-t">Compare bids</b><span data-i18n="stop9-s">accept → becomes escrow order</span></a>
+      <a class="stop" href="mockup/screens/17-trust.html"><div class="n">STOP 10</div><b data-i18n="stop10-t">Trust & safety</b><span data-i18n="stop10-s">evidence, disputes, audit trail</span></a>
     </div>
   </div>
 
   <div class="flow">
-    <h2>🛍 Buyer Journey — book a listing</h2><div class="sub">Discover → book → escrow → live tracking → release → review. Seven screens, fully linked.</div>
+    <h2 data-i18n="buyer-title">🛍 Buyer Journey — book a listing</h2><div class="sub" data-i18n="buyer-sub">Discover → book → escrow → live tracking → release → review. Seven screens, fully linked.</div>
     <div class="grid">
-      <a class="tile" href="mockup/screens/01-home.html"><div class="num">01</div><div class="ic">🏠</div><b>Home &amp; Discovery</b><span>Geofenced feed — listings AND open offers</span></a>
-      <a class="tile" href="mockup/screens/02-search.html"><div class="num">02</div><div class="ic">🔍</div><b>Search &amp; Filters</b><span>Trust-score ranking + matching requests</span></a>
-      <a class="tile" href="mockup/screens/03-offer.html"><div class="num">03</div><div class="ic">📄</div><b>Offer Page (SSR)</b><span>Server-rendered for SEO/OG, work promise, escrow explainer</span></a>
-      <a class="tile" href="mockup/screens/04-book.html"><div class="num">04</div><div class="ic">💳</div><b>Book &amp; Escrow</b><span>Xendit payment, internal ledger hold, idempotent webhook</span></a>
-      <a class="tile" href="mockup/screens/05-track.html"><div class="num">05</div><div class="ic">🗺</div><b>Live Work Tracking</b><span>A2 dispatch archetype — GPS auto-advance, simulated live</span></a>
-      <a class="tile" href="mockup/screens/06-release.html"><div class="num">06</div><div class="ic">🛡</div><b>Confirm &amp; Release</b><span>OrderFulfilled event chain across four domains</span></a>
-      <a class="tile" href="mockup/screens/07-review.html"><div class="num">07</div><div class="ic">⭐</div><b>Review &amp; Repeat</b><span>Peak-end ritual: review, referral, one-tap rebook</span></a>
+      <a class="tile" href="mockup/screens/01-home.html"><div class="num">01</div><div class="ic">🏠</div><b data-i18n="b1-t">Home & Discovery</b><span data-i18n="b1-s">Geofenced feed — listings AND open offers</span></a>
+      <a class="tile" href="mockup/screens/02-search.html"><div class="num">02</div><div class="ic">🔍</div><b data-i18n="b2-t">Search & Filters</b><span data-i18n="b2-s">Trust-score ranking + matching requests</span></a>
+      <a class="tile" href="mockup/screens/03-offer.html"><div class="num">03</div><div class="ic">📄</div><b data-i18n="b3-t">Offer Page (SSR)</b><span data-i18n="b3-s">Server-rendered for SEO/OG, work promise, escrow explainer</span></a>
+      <a class="tile" href="mockup/screens/04-book.html"><div class="num">04</div><div class="ic">💳</div><b data-i18n="b4-t">Book & Escrow</b><span data-i18n="b4-s">Xendit payment, internal ledger hold, idempotent webhook</span></a>
+      <a class="tile" href="mockup/screens/05-track.html"><div class="num">05</div><div class="ic">🗺</div><b data-i18n="b5-t">Live Work Tracking</b><span data-i18n="b5-s">A2 dispatch archetype — GPS auto-advance, simulated live</span></a>
+      <a class="tile" href="mockup/screens/06-release.html"><div class="num">06</div><div class="ic">🛡</div><b data-i18n="b6-t">Confirm & Release</b><span data-i18n="b6-s">OrderFulfilled event chain across four domains</span></a>
+      <a class="tile" href="mockup/screens/07-review.html"><div class="num">07</div><div class="ic">⭐</div><b data-i18n="b7-t">Review & Repeat</b><span data-i18n="b7-s">Peak-end ritual: review, referral, one-tap rebook</span></a>
     </div>
   </div>
 
   <div class="flow">
-    <h2>📣 Request &amp; Bid Flow — post an open offer</h2><div class="sub">Buyer posts what they need → servicers bid → buyer compares and picks the winner. The full marketplace, not just a catalog. These screens are woven into Home and Search too.</div>
+    <h2 data-i18n="req-title">📣 Request & Bid Flow — post an open offer</h2><div class="sub" data-i18n="req-sub">Buyer posts what they need → servicers bid → buyer compares and picks the winner. The full marketplace, not just a catalog. These screens are woven into Home and Search too.</div>
     <div class="grid">
-      <a class="tile new" href="mockup/screens/18-post-request.html"><span class="pill">NEW</span><div class="num">18</div><div class="ic">📝</div><b>Post a Request</b><span>Buyer describes needs, sets budget, uploads photos — free to post</span></a>
-      <a class="tile new" href="mockup/screens/19-browse-requests.html"><span class="pill">NEW</span><div class="num">19</div><div class="ic">🔔</div><b>Browse Requests</b><span>Servicer sees open jobs in their area, filtered by category</span></a>
-      <a class="tile new" href="mockup/screens/20-submit-bid.html"><span class="pill">NEW</span><div class="num">20</div><div class="ic">💵</div><b>Submit a Bid</b><span>Price, timeline, work breakdown, past photos — detailed proposals win</span></a>
-      <a class="tile new" href="mockup/screens/21-compare-bids.html"><span class="pill">NEW</span><div class="num">21</div><div class="ic">⚖</div><b>Compare &amp; Accept</b><span>Buyer reviews all bids side by side, chats, picks the winner — escrow kicks in</span></a>
+      <a class="tile new" href="mockup/screens/18-post-request.html"><span class="pill">NEW</span><div class="num">18</div><div class="ic">📝</div><b data-i18n="r1-t">Post a Request</b><span data-i18n="r1-s">Buyer describes needs, sets budget, uploads photos — free to post</span></a>
+      <a class="tile new" href="mockup/screens/19-browse-requests.html"><span class="pill">NEW</span><div class="num">19</div><div class="ic">🔔</div><b data-i18n="r2-t">Browse Requests</b><span data-i18n="r2-s">Servicer sees open jobs in their area, filtered by category</span></a>
+      <a class="tile new" href="mockup/screens/20-submit-bid.html"><span class="pill">NEW</span><div class="num">20</div><div class="ic">💵</div><b data-i18n="r3-t">Submit a Bid</b><span data-i18n="r3-s">Price, timeline, work breakdown, past photos — detailed proposals win</span></a>
+      <a class="tile new" href="mockup/screens/21-compare-bids.html"><span class="pill">NEW</span><div class="num">21</div><div class="ic">⚖</div><b data-i18n="r4-t">Compare & Accept</b><span data-i18n="r4-s">Buyer reviews all bids side by side, chats, picks the winner — escrow kicks in</span></a>
     </div>
   </div>
 
   <div class="flow">
-    <h2>🛠 Servicer Journey</h2><div class="sub">Onboard → reciprocity gift → profile score → workflow builder → unified inbox → payout.</div>
+    <h2 data-i18n="serv-title">🛠 Servicer Journey</h2><div class="sub" data-i18n="serv-sub">Onboard → reciprocity gift → profile score → workflow builder → unified inbox → payout.</div>
     <div class="grid">
-      <a class="tile" href="mockup/screens/08-servicer-signup.html"><div class="num">08</div><div class="ic">👋</div><b>Phone-First Signup</b><span>OTP quick capture, Messenger path, no app install</span></a>
-      <a class="tile" href="mockup/screens/09-reciprocity.html"><div class="num">09</div><div class="ic">🎁</div><b>Reciprocity Gift</b><span>Branded marketing asset before any ask</span></a>
-      <a class="tile" href="mockup/screens/10-profile-completion.html"><div class="num">10</div><div class="ic">📈</div><b>Profile Completion</b><span>Endowed progress — honest 35% weighted checklist</span></a>
-      <a class="tile" href="mockup/screens/11-workflow-builder.html"><div class="num">11</div><div class="ic">🧩</div><b>WorkflowBuilder</b><span>Tier-2 template editing, tool palette, contract checker</span></a>
-      <a class="tile" href="mockup/screens/12-inbox.html"><div class="num">12</div><div class="ic">💬</div><b>Unified Inbox</b><span>App + Messenger + SMS, one thread, token-bound</span></a>
-      <a class="tile" href="mockup/screens/13-servicer-order.html"><div class="num">13</div><div class="ic">✅</div><b>Job Execution</b><span>GPS checklist, proof steps, payout visibility</span></a>
+      <a class="tile" href="mockup/screens/08-servicer-signup.html"><div class="num">08</div><div class="ic">👋</div><b data-i18n="s1-t">Phone-First Signup</b><span data-i18n="s1-s">OTP quick capture, Messenger path, no app install</span></a>
+      <a class="tile" href="mockup/screens/09-reciprocity.html"><div class="num">09</div><div class="ic">🎁</div><b data-i18n="s2-t">Reciprocity Gift</b><span data-i18n="s2-s">Branded marketing asset before any ask</span></a>
+      <a class="tile" href="mockup/screens/10-profile-completion.html"><div class="num">10</div><div class="ic">📈</div><b data-i18n="s3-t">Profile Completion</b><span data-i18n="s3-s">Endowed progress — honest 35% weighted checklist</span></a>
+      <a class="tile" href="mockup/screens/11-workflow-builder.html"><div class="num">11</div><div class="ic">🧩</div><b data-i18n="s4-t">WorkflowBuilder</b><span data-i18n="s4-s">Tier-2 template editing, tool palette, contract checker</span></a>
+      <a class="tile" href="mockup/screens/12-inbox.html"><div class="num">12</div><div class="ic">💬</div><b data-i18n="s5-t">Unified Inbox</b><span data-i18n="s5-s">App + Messenger + SMS, one thread, token-bound</span></a>
+      <a class="tile" href="mockup/screens/13-servicer-order.html"><div class="num">13</div><div class="ic">✅</div><b data-i18n="s6-t">Job Execution</b><span data-i18n="s6-s">GPS checklist, proof steps, payout visibility</span></a>
     </div>
   </div>
 
   <div class="flow">
-    <h2>📊 Ops &amp; Growth</h2><div class="sub">The human-in-the-loop layer most marketplaces under-build.</div>
+    <h2 data-i18n="ops-title">📊 Ops & Growth</h2><div class="sub" data-i18n="ops-sub">The human-in-the-loop layer most marketplaces under-build.</div>
     <div class="grid">
-      <a class="tile" href="mockup/screens/14-curator.html"><div class="num">14</div><div class="ic">📣</div><b>Curator Dashboard</b><span>Distribution queue, LLM caption drafts, human approval</span></a>
-      <a class="tile" href="mockup/screens/15-analytics.html"><div class="num">15</div><div class="ic">📊</div><b>Analytics</b><span>Funnel, channel attribution, north-star metrics</span></a>
-      <a class="tile" href="mockup/screens/16-growth.html"><div class="num">16</div><div class="ic">🚀</div><b>Growth Mechanics</b><span>Featured slots, referrals, loyalty, TODA partnership</span></a>
-      <a class="tile" href="mockup/screens/17-trust.html"><div class="num">17</div><div class="ic">🛡</div><b>Trust &amp; Safety</b><span>Verification queue, dispute evidence, audit trail</span></a>
+      <a class="tile" href="mockup/screens/14-curator.html"><div class="num">14</div><div class="ic">📣</div><b data-i18n="o1-t">Curator Dashboard</b><span data-i18n="o1-s">Distribution queue, LLM caption drafts, human approval</span></a>
+      <a class="tile" href="mockup/screens/15-analytics.html"><div class="num">15</div><div class="ic">📊</div><b data-i18n="o2-t">Analytics</b><span data-i18n="o2-s">Funnel, channel attribution, north-star metrics</span></a>
+      <a class="tile" href="mockup/screens/16-growth.html"><div class="num">16</div><div class="ic">🚀</div><b data-i18n="o3-t">Growth Mechanics</b><span data-i18n="o3-s">Featured slots, referrals, loyalty, TODA partnership</span></a>
+      <a class="tile" href="mockup/screens/17-trust.html"><div class="num">17</div><div class="ic">🛡</div><b data-i18n="o4-t">Trust & Safety</b><span data-i18n="o4-s">Verification queue, dispute evidence, audit trail</span></a>
     </div>
   </div>
 
   <div class="footer">
-    <span>Spec: <b>Serbizyu-2.0</b> repo · 21 linked screens · pure HTML/CSS/JS, zero build step</span>
-    <span>Demo tip: every screen has the same bar at the bottom — <b>⊞ Mockup Hub</b> brings you back here, <b>▶ Investor Deck</b> jumps to the pitch.</span>
+    <span data-i18n="footer-l">Spec: <b>Serbizyu-2.0</b> repo · 21 linked screens · pure HTML/CSS/JS, zero build step</span>
+    <span data-i18n="footer-r">Demo tip: every screen has the same bar at the bottom — <b>⊞ Mockup Hub</b> brings you back here, <b>▶ Investor Deck</b> jumps to the pitch.</span>
   </div>
 </div>
-<div class="pagenav"><a href="mockup/screens/01-home.html">▶ Start Tour</a><span class="pn-mid">Mockup Hub — 21 screens · 2 loops · 1 engine</span><a class="deck" href="mockup/deck/pitch.html">▶ Investor Deck</a></div>
+<div class="pagenav"><a href="mockup/screens/01-home.html" data-i18n="nav-l">▶ Start Tour</a><span class="pn-mid" data-i18n="nav-mid">Mockup Hub — 21 screens · 2 loops · 1 engine</span><a class="deck" href="mockup/deck/pitch.html" data-i18n="nav-r">▶ Investor Deck</a></div>
+<script>
+window.I18N = {
+  en:{
+    "hub-title":"Serbizyu — Interactive Mockup",
+    "hub-sub":"Hyper-local service marketplace · trust by structure · distribution by design",
+    "deck-btn":"▶ Investor deck (12 slides)",
+    "pitch":"<b>The one-paragraph pitch:</b> Serbizyu is the trust infrastructure for the Philippine local service economy. Buyers book verified neighbors — or post what they need and let servicers bid. Every peso sits in escrow until the work is confirmed. Every job follows a visible step-by-step contract. Every screen below is clickable — open one and keep tapping.",
+    "how-title":"🧭 How the system works — two loops, one engine",
+    "how-sub":"Every transaction, whichever direction it starts, ends up in the same escrow + tracking + review pipeline.",
+    "loop1-title":"Book a listing",
+    "loop1-sub":"servicer lists an offer → buyer books it directly",
+    "loop1-n1":"Home / Search","loop1-n2":"Offer page","loop1-n3":"Pay into escrow","loop1-n4":"Live tracking","loop1-n5":"Confirm & release","loop1-n6":"Review & rebook",
+    "loop1-desc":"The catalog path: tricycle rides, tutors, plumbers — fixed prices, bookable now. This is what the Home feed leads with.",
+    "loop1-cta":"▶ Start buyer tour (7 screens)",
+    "loop2-title":"Post an open offer",
+    "loop2-sub":"buyer describes the job → servicers bid → buyer picks the winner",
+    "loop2-n1":"Post request (free)","loop2-n2":"Servicers see it & bid","loop2-n3":"Compare side by side","loop2-n4":"Accept → escrow order","loop2-n5":"same tracking & release",
+    "loop2-desc":"The marketplace path: custom cabinets, catering, repairs — anything without a fixed listing. Open offers appear right on Home and Search so both loops stay connected.",
+    "loop2-cta":"▶ Start request tour (4 screens)",
+    "tour-title":"🎬 The guided tour — 10 screens, one story",
+    "tour-sub":"Follow a cabinet job and a tricycle ride end-to-end. Best path for showing teammates or pitching in 5 minutes.",
+    "tour-start":"▶ Begin the tour at Home",
+    "stop1-s":"listings + open offers, one feed","stop2-s":"work promise, escrow explainer","stop3-s":"GCash → escrow hold","stop4-s":"GPS auto-advance steps","stop5-s":"confirm → escrow pays out","stop6-s":"the second loop begins","stop7-s":"servicer's job board","stop8-s":"price + timeline + plan","stop9-s":"accept → becomes escrow order","stop10-s":"evidence, disputes, audit trail",
+    "buyer-title":"🛍 Buyer Journey — book a listing",
+    "buyer-sub":"Discover → book → escrow → live tracking → release → review. Seven screens, fully linked.",
+    "b1-t":"Home & Discovery","b1-s":"Geofenced feed — listings AND open offers",
+    "b2-t":"Search & Filters","b2-s":"Trust-score ranking + matching requests",
+    "b3-t":"Offer Page (SSR)","b3-s":"Server-rendered for SEO/OG, work promise, escrow explainer",
+    "b4-t":"Book & Escrow","b4-s":"Xendit payment, internal ledger hold, idempotent webhook",
+    "b5-t":"Live Work Tracking","b5-s":"A2 dispatch archetype — GPS auto-advance, simulated live",
+    "b6-t":"Confirm & Release","b6-s":"OrderFulfilled event chain across four domains",
+    "b7-t":"Review & Repeat","b7-s":"Peak-end ritual: review, referral, one-tap rebook",
+    "req-title":"📣 Request & Bid Flow — post an open offer",
+    "req-sub":"Buyer posts what they need → servicers bid → buyer compares and picks the winner. The full marketplace, not just a catalog. These screens are woven into Home and Search too.",
+    "r1-t":"Post a Request","r1-s":"Buyer describes needs, sets budget, uploads photos — free to post",
+    "r2-t":"Browse Requests","r2-s":"Servicer sees open jobs in their area, filtered by category",
+    "r3-t":"Submit a Bid","r3-s":"Price, timeline, work breakdown, past photos — detailed proposals win",
+    "r4-t":"Compare & Accept","r4-s":"Buyer reviews all bids side by side, chats, picks the winner — escrow kicks in",
+    "serv-title":"🛠 Servicer Journey",
+    "serv-sub":"Onboard → reciprocity gift → profile score → workflow builder → unified inbox → payout.",
+    "s1-t":"Phone-First Signup","s1-s":"OTP quick capture, Messenger path, no app install",
+    "s2-t":"Reciprocity Gift","s2-s":"Branded marketing asset before any ask",
+    "s3-t":"Profile Completion","s3-s":"Endowed progress — honest 35% weighted checklist",
+    "s4-t":"WorkflowBuilder","s4-s":"Tier-2 template editing, tool palette, contract checker",
+    "s5-t":"Unified Inbox","s5-s":"App + Messenger + SMS, one thread, token-bound",
+    "s6-t":"Job Execution","s6-s":"GPS checklist, proof steps, payout visibility",
+    "ops-title":"📊 Ops & Growth",
+    "ops-sub":"The human-in-the-loop layer most marketplaces under-build.",
+    "o1-t":"Curator Dashboard","o1-s":"Distribution queue, LLM caption drafts, human approval",
+    "o2-t":"Analytics","o2-s":"Funnel, channel attribution, north-star metrics",
+    "o3-t":"Growth Mechanics","o3-s":"Featured slots, referrals, loyalty, TODA partnership",
+    "o4-t":"Trust & Safety","o4-s":"Verification queue, dispute evidence, audit trail",
+    "footer-l":"Spec: <b>Serbizyu-2.0</b> repo · 21 linked screens · pure HTML/CSS/JS, zero build step",
+    "footer-r":"Demo tip: every screen has the same bar at the bottom — <b>⊞ Mockup Hub</b> brings you back here, <b>▶ Investor Deck</b> jumps to the pitch.",
+    "nav-l":"▶ Start Tour","nav-mid":"Mockup Hub — 21 screens · 2 loops · 1 engine","nav-r":"▶ Investor Deck"
+  },
+  tl:{
+    "hub-title":"Serbizyu — Interactive Mockup",
+    "hub-sub":"Hyper-local service marketplace — tiwala sa sistema, hindi sa pangako · distribution by design",
+    "deck-btn":"▶ Investor deck (12 slides)",
+    "pitch":"<b>Ang one-paragraph pitch:</b> Serbizyu ang trust infrastructure ng Philippine local service economy. Pwedeng mag-book ng verified na kapitbahay — o mag-post ng kailangan at hayaan ang mga servicer na mag-bid. Bawat piso naka-hold sa escrow hangga't confirmed na tapos ang trabaho. Bawat trabaho sumusunod sa visible step-by-step na kontrata. Lahat ng screen sa baba clickable — buksan mo isa at i-tap lang.",
+    "how-title":"🧭 Paano gumagana ang sistema — dalawang loop, iisang makina",
+    "how-sub":"Lahat ng transaction, kahit saang direksyon magsimula, nauuwi sa parehong escrow + tracking + review pipeline.",
+    "loop1-title":"Mag-book ng listing",
+    "loop1-sub":"nag-list si servicer ng offer → diretso nag-book si buyer",
+    "loop1-n1":"Home / Search","loop1-n2":"Offer page","loop1-n3":"Bayad sa escrow","loop1-n4":"Live tracking","loop1-n5":"Kumpirma at release","loop1-n6":"Review at rebook",
+    "loop1-desc":"Ang catalog path: tricycle, tutor, tubero — fixed prices, pwedeng i-book agad. Ito ang unang makikita sa Home feed.",
+    "loop1-cta":"▶ Simulan ang buyer tour (7 screens)",
+    "loop2-title":"Mag-post ng open offer",
+    "loop2-sub":"dinescribe ni buyer ang trabaho → nag-bid ang mga servicer → pinili ni buyer ang panalo",
+    "loop2-n1":"Post request (libre)","loop2-n2":"Nakikita ng servicer at nag-bid","loop2-n3":"I-compare side by side","loop2-n4":"Accept → escrow order","loop2-n5":"same tracking & release",
+    "loop2-desc":"Ang marketplace path: custom cabinet, catering, repair — kahit anong walang fixed listing. Lumalabas ang open offers sa Home at Search para connected ang dalawang loop.",
+    "loop2-cta":"▶ Simulan ang request tour (4 screens)",
+    "tour-title":"🎬 Ang guided tour — 10 screens, isang kwento",
+    "tour-sub":"Sundan ang cabinet job at tricycle ride mula simula hanggang dulo. Best path para ipakita sa teammates o i-pitch in 5 minutes.",
+    "tour-start":"▶ Simulan ang tour sa Home",
+    "stop1-s":"listings + open offers, iisang feed","stop2-s":"work promise, paliwanag ng escrow","stop3-s":"GCash → hold sa escrow","stop4-s":"GPS auto-advance steps","stop5-s":"confirm → payout na ang escrow","stop6-s":"simula ng pangalawang loop","stop7-s":"job board ng servicer","stop8-s":"presyo + timeline + plano","stop9-s":"accept → nagiging escrow order","stop10-s":"ebidensya, disputes, audit trail",
+    "buyer-title":"🛍 Buyer Journey — mag-book ng listing",
+    "buyer-sub":"Discover → book → escrow → live tracking → release → review. Pitong screen, fully linked.",
+    "b1-t":"Home & Discovery","b1-s":"Geofenced feed — may listings AT open offers",
+    "b2-t":"Search & Filters","b2-s":"Trust-score ranking + matching requests",
+    "b3-t":"Offer Page (SSR)","b3-s":"Server-rendered para sa SEO/OG, work promise, paliwanag ng escrow",
+    "b4-t":"Book & Escrow","b4-s":"Xendit payment, internal ledger hold, idempotent webhook",
+    "b5-t":"Live Work Tracking","b5-s":"A2 dispatch archetype — GPS auto-advance, simulated live",
+    "b6-t":"Confirm & Release","b6-s":"OrderFulfilled event chain sa apat na domains",
+    "b7-t":"Review & Repeat","b7-s":"Peak-end ritual: review, referral, one-tap rebook",
+    "req-title":"📣 Request & Bid Flow — mag-post ng open offer",
+    "req-sub":"Nag-po-post si buyer ng kailangan → nagbi-bid ang servicer → kinukumpara ni buyer at pinipili ang panalo. Ang full marketplace, hindi lang catalog. Naka-integrate ang screens na ito sa Home at Search.",
+    "r1-t":"Post a Request","r1-s":"Dinescribe ni buyer ang kailangan, sets budget, uploads photos — libre mag-post",
+    "r2-t":"Browse Requests","r2-s":"Nakikita ni servicer ang open jobs sa area, filtered by category",
+    "r3-t":"Submit a Bid","r3-s":"Presyo, timeline, work breakdown, past photos — detailed proposals ang panalo",
+    "r4-t":"Compare & Accept","r4-s":"Ni-review ni buyer lahat ng bids side by side, nag-chat, pinipili ang winner — papasok na ang escrow",
+    "serv-title":"🛠 Servicer Journey",
+    "serv-sub":"Onboard → reciprocity gift → profile score → workflow builder → unified inbox → payout.",
+    "s1-t":"Phone-First Signup","s1-s":"OTP quick capture, Messenger path, walang app install",
+    "s2-t":"Reciprocity Gift","s2-s":"Branded marketing asset bago ang kahit anong hiling",
+    "s3-t":"Profile Completion","s3-s":"Endowed progress — honest 35% weighted checklist",
+    "s4-t":"WorkflowBuilder","s4-s":"Tier-2 template editing, tool palette, contract checker",
+    "s5-t":"Unified Inbox","s5-s":"App + Messenger + SMS, iisang thread, token-bound",
+    "s6-t":"Job Execution","s6-s":"GPS checklist, proof steps, kita ang payout",
+    "ops-title":"📊 Ops & Growth",
+    "ops-sub":"Ang human-in-the-loop layer na madalas under-built ng karamihan ng marketplace.",
+    "o1-t":"Curator Dashboard","o1-s":"Distribution queue, LLM caption drafts, human approval",
+    "o2-t":"Analytics","o2-s":"Funnel, channel attribution, north-star metrics",
+    "o3-t":"Growth Mechanics","o3-s":"Featured slots, referrals, loyalty, TODA partnership",
+    "o4-t":"Trust & Safety","o4-s":"Verification queue, dispute evidence, audit trail",
+    "footer-l":"Spec: <b>Serbizyu-2.0</b> repo · 21 linked screens · purong HTML/CSS/JS, zero build step",
+    "footer-r":"Demo tip: bawat screen may parehong bar sa baba — <b>⊞ Mockup Hub</b> nagbabalik dito, <b>▶ Investor Deck</b> dumidiretso sa pitch.",
+    "nav-l":"▶ Start Tour","nav-mid":"Mockup Hub — 21 screens · 2 loops · 1 engine","nav-r":"▶ Investor Deck"
+  }
+};
+(function(){
+  var lang = localStorage.getItem('serbizyu-lang') || 'en';
+  function setLang(l){
+    lang = l;
+    localStorage.setItem('serbizyu-lang', l);
+    var map = window.I18N[l];
+    // data-i18n = textContent swap
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key = el.getAttribute('data-i18n');
+      if(map[key]) el.textContent = map[key];
+    });
+    // data-i18n-html = innerHTML swap
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el){
+      var key = el.getAttribute('data-i18n-html');
+      if(map[key]) el.innerHTML = map[key];
+    });
+    // toggle buttons
+    document.querySelectorAll('.langtoggle button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-lang') === l);
+    });
+  }
+  document.querySelectorAll('.langtoggle button').forEach(function(b){
+    b.addEventListener('click', function(){ setLang(this.getAttribute('data-lang')); });
+  });
+  setLang(lang);
+})();
+</script>
 </body></html>
