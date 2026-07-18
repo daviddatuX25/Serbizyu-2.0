@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Servicer Signup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+<div class="stage-label"><b>Servicer 1/6 — Phone-First Signup</b><span><a href="07-review.html">← Buyer flow</a> · <a href="09-reciprocity.html">Next →</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><div class="ttl">Create your account</div></div>
+  <div class="pad">
+    <div style="text-align:center;padding:8px 0 4px"><div style="font-size:2.3rem">👋</div><h3>Kitaaan ta'ka ditoy Serbizyu!</h3><div class="mut">Earn from your skills. We handle trust &amp; payments.</div></div>
+    <div class="lbl">Full name</div><div class="inp">Jun P. Bataller</div>
+    <div class="lbl">Mobile number</div><div class="inp">+63 917 555 0142</div>
+    <div class="lbl">What do you do?</div>
+    <div class="row" style="flex-wrap:wrap;gap:6px"><div class="chip on">🛺 Tricycle</div><div class="chip">🚿 Plumbing</div><div class="chip">🔌 Electrical</div><div class="chip">📚 Tutoring</div><div class="chip">🍲 Food</div><div class="chip">💈 Barber</div></div>
+    <div class="lbl">Service area</div><div class="inp">Candon — Poblacion, Darapidap, Calaoaan</div>
+    <button class="btn btn-p" id="otpbtn" style="margin-top:15px">Send OTP via SMS</button>
+    <div class="row" style="justify-content:center;gap:12px;margin-top:12px"><span class="chip" style="border-style:dashed">or continue with Messenger</span><span class="chip" style="border-style:dashed">Facebook</span></div>
+    <div class="tiny" style="margin-top:12px;text-align:center">Phone verification = Tier 1 trust. ID and address tiers unlock more visibility.</div>
+    <div class="card" style="background:var(--w50);margin-top:12px"><b style="font-size:.78rem">Low-friction by design</b><div class="tiny" style="margin-top:4px">No app install required — PWA. SMS/Messenger signup paths serve users who avoid heavy apps. Quick capture seeds the profile score with real data.</div></div>
+  </div>
+</div></div>
+<div class="filenames"><span>screens/08-servicer-signup.html</span><span>OTP · quick capture · PWA</span></div>
+<script src="../shared/mock.js"></script>
+<script>
+document.getElementById('otpbtn').onclick=function(){
+  this.textContent='Sending…';this.disabled=true;
+  setTimeout(()=>{toast('OTP sent · +63 ••• ••• 0142');setTimeout(()=>location.href='09-reciprocity.html',900);},800);
+};
+</script>
+</body></html>

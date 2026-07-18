@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Review &amp; Repeat</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+<div class="stage-label"><b>Buyer 7/7 — Review &amp; Repeat</b><span><a href="06-release.html">← Prev</a> · <a href="08-servicer-signup.html">Servicer flow →</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><a class="back" href="06-release.html">←</a><div class="ttl">Transaction Complete</div></div>
+  <div class="pad">
+    <div class="card" style="text-align:center;background:linear-gradient(150deg,var(--g50),#fff)">
+      <div style="font-size:2.5rem">✅</div>
+      <b>₱45 released to Kuya Jun</b>
+      <div class="tiny mono" style="margin-top:4px">TXN SBZ-4821 · settled via Xendit</div>
+    </div>
+    <div class="lbl">How was your ride?</div>
+    <div style="font-size:1.9rem;text-align:center;letter-spacing:6px;cursor:pointer" id="stars">☆☆☆☆☆</div>
+    <textarea class="inp" rows="3" placeholder="On time, courteous, safe driving…" style="margin-top:10px"></textarea>
+    <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:6px"><div class="chip">On time</div><div class="chip">Safe driver</div><div class="chip">Clean ride</div><div class="chip">Fair price</div><div class="chip">Friendly</div></div>
+    <button class="btn btn-p" data-toast="Review submitted · trust signal updated" style="margin-top:13px">Submit review</button>
+    <div class="hr"></div>
+    <div class="card row"><div class="ava" style="background:var(--a600)">🎁</div><div class="grow"><b style="font-size:.83rem">Refer a friend, both get ₱50</b><div class="tiny">Code <span class="mono">MARIA-7KX2</span> · Phase 3 mechanic</div></div><button class="btn btn-s" style="width:auto;padding:8px 13px" data-toast="Referral link copied">Share</button></div>
+    <button class="btn btn-s" data-toast="Rebooked! Same driver, one tap." style="margin-top:8px">🔁 Book Kuya Jun again</button>
+    <div class="card" style="background:var(--w50);margin-top:12px"><b style="font-size:.78rem">Peak-end rule</b><div class="tiny" style="margin-top:4px">The completion ritual is designed, not a log entry: release → review → referral → rebook. This is where repeat-booking rate is won.</div></div>
+  </div>
+  <div class="tabbar"><a class="tb" href="01-home.html"><span class="ic">🏠</span>Home</a><a class="tb" href="02-search.html"><span class="ic">🔍</span>Search</a><div class="tb on"><span class="ic">📦</span>Orders</div><div class="tb"><span class="ic">💬</span>Inbox</div><a class="tb" href="../../mockup.html"><span class="ic">👤</span>Hub</a></div>
+</div></div>
+<div class="filenames"><span>screens/07-review.html</span><span>Review gating · referral · rebook</span></div>
+<script src="../shared/mock.js"></script>
+<script>
+const st=document.getElementById('stars');
+st.onclick=()=>{st.textContent='★★★★★';st.style.color='var(--a500)';};
+</script>
+</body></html>

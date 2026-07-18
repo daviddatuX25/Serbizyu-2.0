@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Mockup Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--g600:#16a34a;--g700:#15803d;--g900:#14532d;--g50:#f0fdf4;--t600:#2563eb;--a500:#f59e0b;--w50:#fafaf9;--w100:#f5f5f4;--w200:#e7e5e4;--w300:#d6d3d1;--w500:#78716c;--w700:#44403c;--w900:#1c1917}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--w100);color:var(--w900);line-height:1.5}
+h1,h2,h3{font-family:'Plus Jakarta Sans','Inter',sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:36px 22px 60px}
+.hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.mark{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#22c55e,var(--g700));display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.5rem}
+.hero h1{font-size:1.9rem}
+.hero p{color:var(--w500);font-size:.9rem}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 26px}
+.badge{padding:4px 11px;border-radius:999px;font-size:.7rem;font-weight:600;background:#fff;border:1px solid var(--w300);color:var(--w700)}
+.badge.hot{background:var(--g50);border-color:#bbf7d0;color:var(--g700)}
+.flow{margin-bottom:26px}
+.flow h2{font-size:1.05rem;margin-bottom:3px}
+.flow .sub{color:var(--w500);font-size:.8rem;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.tile{background:#fff;border:1px solid var(--w200);border-radius:14px;padding:15px;display:block;transition:.15s;color:inherit}
+.tile:hover{box-shadow:0 10px 26px -12px rgba(0,0,0,.18);border-color:#bbf7d0;transform:translateY(-2px)}
+.tile .ic{font-size:1.5rem}
+.tile b{display:block;font-size:.9rem;margin:8px 0 2px}
+.tile span{font-size:.75rem;color:var(--w500)}
+.tile .num{font-size:.65rem;font-weight:700;color:var(--g700);letter-spacing:.06em}
+a{text-decoration:none}
+.footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--w200);color:var(--w500);font-size:.75rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.deckbtn{display:inline-block;background:var(--g600);color:#fff;padding:12px 22px;border-radius:12px;font-weight:600;font-size:.9rem;margin-top:4px}
+.deckbtn:hover{background:var(--g700)}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="mark">S</div>
+    <div>
+      <h1>Serbizyu — Interactive Mockup</h1>
+      <p>Hyper-local service marketplace · trust by structure · distribution by design</p>
+    </div>
+    <div style="margin-left:auto"><a class="deckbtn" href="mockup/deck/pitch.html">▶ Investor deck</a></div>
+  </div>
+  <div class="badges">
+    <span class="badge hot">Laravel + Inertia + React</span><span class="badge">Escrow via Xendit</span><span class="badge">10 fulfillment archetypes</span><span class="badge">Unified inbox: app · Messenger · SMS</span><span class="badge">Channel-native distribution</span><span class="badge">shadcn/ui brand system</span>
+  </div>
+
+  <div class="flow">
+    <h2>🛍 Buyer Journey</h2><div class="sub">Discover → book → escrow → live tracking → release → review. Seven screens, fully linked.</div>
+    <div class="grid">
+      <a class="tile" href="mockup/screens/01-home.html"><div class="num">01</div><div class="ic">🏠</div><b>Home &amp; Discovery</b><span>Geofenced town feed, featured slots, live trust signals</span></a>
+      <a class="tile" href="mockup/screens/02-search.html"><div class="num">02</div><div class="ic">🔍</div><b>Search &amp; Filters</b><span>Meilisearch, trust-score ranking, category chips</span></a>
+      <a class="tile" href="mockup/screens/03-offer.html"><div class="num">03</div><div class="ic">📄</div><b>Offer Page (SSR)</b><span>Server-rendered for SEO/OG, work promise, escrow explainer</span></a>
+      <a class="tile" href="mockup/screens/04-book.html"><div class="num">04</div><div class="ic">💳</div><b>Book &amp; Escrow</b><span>Xendit payment, internal ledger hold, idempotent webhook</span></a>
+      <a class="tile" href="mockup/screens/05-track.html"><div class="num">05</div><div class="ic">🗺</div><b>Live Work Tracking</b><span>A2 dispatch archetype — GPS auto-advance, simulated live</span></a>
+      <a class="tile" href="mockup/screens/06-release.html"><div class="num">06</div><div class="ic">🛡</div><b>Confirm &amp; Release</b><span>OrderFulfilled event chain across four domains</span></a>
+      <a class="tile" href="mockup/screens/07-review.html"><div class="num">07</div><div class="ic">⭐</div><b>Review &amp; Repeat</b><span>Peak-end ritual: review, referral, one-tap rebook</span></a>
+    </div>
+  </div>
+
+  <div class="flow">
+    <h2>🛠 Servicer Journey</h2><div class="sub">Onboard → reciprocity gift → profile score → workflow builder → unified inbox → payout.</div>
+    <div class="grid">
+      <a class="tile" href="mockup/screens/08-servicer-signup.html"><div class="num">08</div><div class="ic">👋</div><b>Phone-First Signup</b><span>OTP quick capture, Messenger path, no app install</span></a>
+      <a class="tile" href="mockup/screens/09-reciprocity.html"><div class="num">09</div><div class="ic">🎁</div><b>Reciprocity Gift</b><span>Branded marketing asset before any ask</span></a>
+      <a class="tile" href="mockup/screens/10-profile-completion.html"><div class="num">10</div><div class="ic">📈</div><b>Profile Completion</b><span>Endowed progress — honest 35% weighted checklist</span></a>
+      <a class="tile" href="mockup/screens/11-workflow-builder.html"><div class="num">11</div><div class="ic">🧩</div><b>WorkflowBuilder</b><span>Tier-2 template editing, tool palette, contract checker</span></a>
+      <a class="tile" href="mockup/screens/12-inbox.html"><div class="num">12</div><div class="ic">💬</div><b>Unified Inbox</b><span>App + Messenger + SMS, one thread, token-bound</span></a>
+      <a class="tile" href="mockup/screens/13-servicer-order.html"><div class="num">13</div><div class="ic">✅</div><b>Job Execution</b><span>GPS checklist, proof steps, payout visibility</span></a>
+    </div>
+  </div>
+
+  <div class="flow">
+    <h2>📊 Ops &amp; Growth</h2><div class="sub">The human-in-the-loop layer most marketplaces under-build.</div>
+    <div class="grid">
+      <a class="tile" href="mockup/screens/14-curator.html"><div class="num">14</div><div class="ic">📣</div><b>Curator Dashboard</b><span>Distribution queue, LLM caption drafts, human approval</span></a>
+      <a class="tile" href="mockup/screens/15-analytics.html"><div class="num">15</div><div class="ic">📊</div><b>Analytics</b><span>Funnel, channel attribution, north-star metrics</span></a>
+      <a class="tile" href="mockup/screens/16-growth.html"><div class="num">16</div><div class="ic">🚀</div><b>Growth Mechanics</b><span>Featured slots, referrals, loyalty, TODA partnership</span></a>
+      <a class="tile" href="mockup/screens/17-trust.html"><div class="num">17</div><div class="ic">🛡</div><b>Trust &amp; Safety</b><span>Verification queue, dispute evidence, audit trail</span></a>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Spec: <b>Serbizyu-2.0</b> repo · 17 linked screens · pure HTML/CSS/JS, zero build step</span>
+    <span>Demo tip: open screen 01 and just keep clicking — every screen links forward.</span>
+  </div>
+</div>
+</body></html>
