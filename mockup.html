@@ -1,34 +1,84 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Serbizyu — Mockup Hub</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<title>Serbizyu — Interactive Mockup & Guided Tour</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--g600:#16a34a;--g700:#15803d;--g900:#14532d;--g50:#f0fdf4;--t600:#2563eb;--a500:#f59e0b;--w50:#fafaf9;--w100:#f5f5f4;--w200:#e7e5e4;--w300:#d6d3d1;--w500:#78716c;--w700:#44403c;--w900:#1c1917}
+:root{--g600:#16a34a;--g700:#15803d;--g900:#14532d;--g50:#f0fdf4;--g100:#dcfce7;--g200:#bbf7d0;--t50:#eff6ff;--t600:#2563eb;--t700:#1d4ed8;--a500:#f59e0b;--a600:#d97706;--w50:#fafaf9;--w100:#f5f5f4;--w200:#e7e5e4;--w300:#d6d3d1;--w400:#a8a29e;--w500:#78716c;--w700:#44403c;--w900:#1c1917}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--w100);color:var(--w900);line-height:1.5}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--w100);color:var(--w900);line-height:1.5;padding-bottom:82px}
 h1,h2,h3{font-family:'Plus Jakarta Sans','Inter',sans-serif}
+a{text-decoration:none;color:inherit}
 .wrap{max-width:1060px;margin:0 auto;padding:36px 22px 60px}
+
+/* hero */
 .hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
 .mark{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#22c55e,var(--g700));display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.5rem}
 .hero h1{font-size:1.9rem}
 .hero p{color:var(--w500);font-size:.9rem}
-.badges{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 26px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 22px}
 .badge{padding:4px 11px;border-radius:999px;font-size:.7rem;font-weight:600;background:#fff;border:1px solid var(--w300);color:var(--w700)}
-.badge.hot{background:var(--g50);border-color:#bbf7d0;color:var(--g700)}
-.flow{margin-bottom:26px}
+.badge.hot{background:var(--g50);border-color:var(--g200);color:var(--g700)}
+.deckbtn{display:inline-block;background:var(--g600);color:#fff;padding:12px 22px;border-radius:12px;font-weight:600;font-size:.9rem}
+.deckbtn:hover{background:var(--g700)}
+
+/* pitch strip */
+.pitch{background:#fff;border:1px solid var(--w200);border-left:4px solid var(--g600);border-radius:14px;padding:16px 18px;margin-bottom:26px;font-size:.92rem}
+.pitch b{color:var(--g700)}
+
+/* how it works: the two loops */
+.howworks{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:30px}
+.loop{background:#fff;border:1px solid var(--w200);border-radius:16px;padding:18px}
+.loop .lh{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.loop .lic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:1.15rem;flex-shrink:0}
+.loop .lt{font-weight:700;font-size:1rem}
+.loop .ls{font-size:.72rem;color:var(--w500)}
+.loop .chain{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:10px 0}
+.loop .node{background:var(--g50);border:1px solid var(--g200);color:var(--g700);padding:4px 10px;border-radius:99px;font-size:.72rem;font-weight:600}
+.loop .node.b{background:var(--t50);border-color:#bfdbfe;color:var(--t700)}
+.loop .arr{color:var(--w400);font-size:.7rem}
+.loop p{font-size:.8rem;color:var(--w700)}
+.loop .go{display:inline-block;margin-top:10px;background:var(--g600);color:#fff;padding:9px 18px;border-radius:11px;font-weight:600;font-size:.82rem}
+.loop .go:hover{background:var(--g700)}
+.loop .go.alt{background:var(--t600)}
+.loop .go.alt:hover{background:var(--t700)}
+
+/* guided tour */
+.tour{background:linear-gradient(135deg,var(--g900),#166534);color:#fff;border-radius:16px;padding:20px 22px;margin-bottom:30px}
+.tour h2{font-size:1.15rem;margin-bottom:4px}
+.tour p{font-size:.82rem;opacity:.85;margin-bottom:14px}
+.tour .stops{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+.tour .stop{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:11px 13px;display:block;transition:.15s}
+.tour .stop:hover{background:rgba(255,255,255,.2)}
+.tour .stop .n{font-size:.62rem;font-weight:700;letter-spacing:.08em;opacity:.7}
+.tour .stop b{display:block;font-size:.8rem;margin:3px 0 1px}
+.tour .stop span{font-size:.68rem;opacity:.75}
+.tour .start{display:inline-block;background:#fff;color:var(--g900);padding:11px 22px;border-radius:12px;font-weight:700;font-size:.88rem;margin-bottom:14px}
+.tour .start:hover{background:var(--g100)}
+
+/* journey sections */
+.flow{margin-bottom:28px}
 .flow h2{font-size:1.05rem;margin-bottom:3px}
 .flow .sub{color:var(--w500);font-size:.8rem;margin-bottom:12px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
-.tile{background:#fff;border:1px solid var(--w200);border-radius:14px;padding:15px;display:block;transition:.15s;color:inherit}
-.tile:hover{box-shadow:0 10px 26px -12px rgba(0,0,0,.18);border-color:#bbf7d0;transform:translateY(-2px)}
+.tile{background:#fff;border:1px solid var(--w200);border-radius:14px;padding:15px;display:block;transition:.15s}
+.tile:hover{box-shadow:0 10px 26px -12px rgba(0,0,0,.18);border-color:var(--g200);transform:translateY(-2px)}
 .tile .ic{font-size:1.5rem}
 .tile b{display:block;font-size:.9rem;margin:8px 0 2px}
 .tile span{font-size:.75rem;color:var(--w500)}
 .tile .num{font-size:.65rem;font-weight:700;color:var(--g700);letter-spacing:.06em}
-a{text-decoration:none}
+.tile.new{border-color:var(--t600);border-width:1.5px}
+.tile .pill{float:right;font-size:.6rem;font-weight:700;background:var(--t50);color:var(--t700);padding:2px 8px;border-radius:99px}
+
 .footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--w200);color:var(--w500);font-size:.75rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.deckbtn{display:inline-block;background:var(--g600);color:#fff;padding:12px 22px;border-radius:12px;font-weight:600;font-size:.9rem;margin-top:4px}
-.deckbtn:hover{background:var(--g700)}
+
+/* external page nav — same bar as every phone screen */
+.pagenav{position:fixed;left:0;right:0;bottom:0;z-index:100;display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 14px;background:rgba(28,25,23,.94);backdrop-filter:blur(10px);box-shadow:0 -6px 24px rgba(0,0,0,.25)}
+.pagenav a{color:#fff;font-size:.78rem;font-weight:600;padding:9px 18px;border-radius:11px;border:1px solid rgba(255,255,255,.2);transition:.15s}
+.pagenav a:hover{background:rgba(255,255,255,.12)}
+.pagenav a.deck{background:var(--g600);border-color:var(--g600)}
+.pagenav a.deck:hover{background:var(--g700)}
+.pagenav .pn-mid{color:rgba(255,255,255,.45);font-size:.68rem}
+@media(max-width:520px){.pagenav .pn-mid{display:none}}
 </style></head>
 <body>
 <div class="wrap">
@@ -38,17 +88,56 @@ a{text-decoration:none}
       <h1>Serbizyu — Interactive Mockup</h1>
       <p>Hyper-local service marketplace · trust by structure · distribution by design</p>
     </div>
-    <div style="margin-left:auto"><a class="deckbtn" href="mockup/deck/pitch.html">▶ Investor deck</a></div>
+    <div style="margin-left:auto"><a class="deckbtn" href="mockup/deck/pitch.html">▶ Investor deck (12 slides)</a></div>
   </div>
   <div class="badges">
-    <span class="badge hot">Laravel + Inertia + React</span><span class="badge">Escrow via Xendit</span><span class="badge">10 fulfillment archetypes</span><span class="badge">Unified inbox: app · Messenger · SMS</span><span class="badge">Channel-native distribution</span><span class="badge">shadcn/ui brand system</span>
+    <span class="badge hot">Laravel + Inertia + React</span><span class="badge">Escrow via Xendit</span><span class="badge">10 fulfillment archetypes</span><span class="badge">Unified inbox: app · Messenger · SMS</span><span class="badge">Channel-native distribution</span><span class="badge">Two-sided: listings + open offers</span>
+  </div>
+
+  <div class="pitch">
+    <b>The one-paragraph pitch:</b> Serbizyu is the trust infrastructure for the Philippine local service economy. Buyers book verified neighbors — or post what they need and let servicers bid. Every peso sits in escrow until the work is confirmed. Every job follows a visible step-by-step contract. Every screen below is clickable — open one and keep tapping.
+  </div>
+
+  <h2 style="font-size:1.15rem;margin-bottom:4px">🧭 How the system works — two loops, one engine</h2>
+  <p style="color:var(--w500);font-size:.8rem;margin-bottom:14px">Every transaction, whichever direction it starts, ends up in the same escrow + tracking + review pipeline.</p>
+  <div class="howworks">
+    <div class="loop">
+      <div class="lh"><div class="lic" style="background:var(--g50)">🛍</div><div><div class="lt">Book a listing</div><div class="ls">servicer lists an offer → buyer books it directly</div></div></div>
+      <div class="chain"><span class="node">Home / Search</span><span class="arr">→</span><span class="node">Offer page</span><span class="arr">→</span><span class="node">Pay into escrow</span><span class="arr">→</span><span class="node">Live tracking</span><span class="arr">→</span><span class="node">Confirm & release</span><span class="arr">→</span><span class="node">Review & rebook</span></div>
+      <p>The catalog path: tricycle rides, tutors, plumbers — fixed prices, bookable now. This is what the Home feed leads with.</p>
+      <a class="go" href="mockup/screens/01-home.html">▶ Start buyer tour (7 screens)</a>
+    </div>
+    <div class="loop">
+      <div class="lh"><div class="lic" style="background:var(--t50)">📣</div><div><div class="lt">Post an open offer</div><div class="ls">buyer describes the job → servicers bid → buyer picks the winner</div></div></div>
+      <div class="chain"><span class="node b">Post request (free)</span><span class="arr">→</span><span class="node b">Servicers see it & bid</span><span class="arr">→</span><span class="node b">Compare side by side</span><span class="arr">→</span><span class="node">Accept → escrow order</span><span class="arr">→</span><span class="node">same tracking & release</span></div>
+      <p>The marketplace path: custom cabinets, catering, repairs — anything without a fixed listing. Open offers appear right on Home and Search so both loops stay connected.</p>
+      <a class="go alt" href="mockup/screens/18-post-request.html">▶ Start request tour (4 screens)</a>
+    </div>
+  </div>
+
+  <div class="tour">
+    <h2>🎬 The guided tour — 10 screens, one story</h2>
+    <p>Follow a cabinet job and a tricycle ride end-to-end. Best path for showing teammates or pitching in 5 minutes.</p>
+    <a class="start" href="mockup/screens/01-home.html">▶ Begin the tour at Home</a>
+    <div class="stops">
+      <a class="stop" href="mockup/screens/01-home.html"><div class="n">STOP 01</div><b>Home</b><span>listings + open offers, one feed</span></a>
+      <a class="stop" href="mockup/screens/03-offer.html"><div class="n">STOP 02</div><b>Offer page</b><span>work promise, escrow explainer</span></a>
+      <a class="stop" href="mockup/screens/04-book.html"><div class="n">STOP 03</div><b>Book & pay</b><span>GCash → escrow hold</span></a>
+      <a class="stop" href="mockup/screens/05-track.html"><div class="n">STOP 04</div><b>Live tracking</b><span>GPS auto-advance steps</span></a>
+      <a class="stop" href="mockup/screens/06-release.html"><div class="n">STOP 05</div><b>Release</b><span>confirm → escrow pays out</span></a>
+      <a class="stop" href="mockup/screens/18-post-request.html"><div class="n">STOP 06</div><b>Post a request</b><span>the second loop begins</span></a>
+      <a class="stop" href="mockup/screens/19-browse-requests.html"><div class="n">STOP 07</div><b>Browse requests</b><span>servicer's job board</span></a>
+      <a class="stop" href="mockup/screens/20-submit-bid.html"><div class="n">STOP 08</div><b>Submit a bid</b><span>price + timeline + plan</span></a>
+      <a class="stop" href="mockup/screens/21-compare-bids.html"><div class="n">STOP 09</div><b>Compare bids</b><span>accept → becomes escrow order</span></a>
+      <a class="stop" href="mockup/screens/17-trust.html"><div class="n">STOP 10</div><b>Trust & safety</b><span>evidence, disputes, audit trail</span></a>
+    </div>
   </div>
 
   <div class="flow">
-    <h2>🛍 Buyer Journey</h2><div class="sub">Discover → book → escrow → live tracking → release → review. Seven screens, fully linked.</div>
+    <h2>🛍 Buyer Journey — book a listing</h2><div class="sub">Discover → book → escrow → live tracking → release → review. Seven screens, fully linked.</div>
     <div class="grid">
-      <a class="tile" href="mockup/screens/01-home.html"><div class="num">01</div><div class="ic">🏠</div><b>Home &amp; Discovery</b><span>Geofenced town feed, featured slots, live trust signals</span></a>
-      <a class="tile" href="mockup/screens/02-search.html"><div class="num">02</div><div class="ic">🔍</div><b>Search &amp; Filters</b><span>Meilisearch, trust-score ranking, category chips</span></a>
+      <a class="tile" href="mockup/screens/01-home.html"><div class="num">01</div><div class="ic">🏠</div><b>Home &amp; Discovery</b><span>Geofenced feed — listings AND open offers</span></a>
+      <a class="tile" href="mockup/screens/02-search.html"><div class="num">02</div><div class="ic">🔍</div><b>Search &amp; Filters</b><span>Trust-score ranking + matching requests</span></a>
       <a class="tile" href="mockup/screens/03-offer.html"><div class="num">03</div><div class="ic">📄</div><b>Offer Page (SSR)</b><span>Server-rendered for SEO/OG, work promise, escrow explainer</span></a>
       <a class="tile" href="mockup/screens/04-book.html"><div class="num">04</div><div class="ic">💳</div><b>Book &amp; Escrow</b><span>Xendit payment, internal ledger hold, idempotent webhook</span></a>
       <a class="tile" href="mockup/screens/05-track.html"><div class="num">05</div><div class="ic">🗺</div><b>Live Work Tracking</b><span>A2 dispatch archetype — GPS auto-advance, simulated live</span></a>
@@ -58,12 +147,12 @@ a{text-decoration:none}
   </div>
 
   <div class="flow">
-    <h2>📣 Request &amp; Bid Flow</h2><div class="sub">Buyer posts what they need → servicers bid → buyer compares and picks the winner. The full marketplace, not just a catalog.</div>
+    <h2>📣 Request &amp; Bid Flow — post an open offer</h2><div class="sub">Buyer posts what they need → servicers bid → buyer compares and picks the winner. The full marketplace, not just a catalog. These screens are woven into Home and Search too.</div>
     <div class="grid">
-      <a class="tile" href="mockup/screens/18-post-request.html"><div class="num">18</div><div class="ic">📝</div><b>Post a Request</b><span>Buyer describes needs, sets budget, uploads photos — free to post</span></a>
-      <a class="tile" href="mockup/screens/19-browse-requests.html"><div class="num">19</div><div class="ic">🔔</div><b>Browse Requests</b><span>Servicer sees open jobs in their area, filtered by category</span></a>
-      <a class="tile" href="mockup/screens/20-submit-bid.html"><div class="num">20</div><div class="ic">💵</div><b>Submit a Bid</b><span>Price, timeline, work breakdown, past photos — detailed proposals win</span></a>
-      <a class="tile" href="mockup/screens/21-compare-bids.html"><div class="num">21</div><div class="ic">⚖</div><b>Compare &amp; Accept</b><span>Buyer reviews all bids side by side, chats, picks the winner — escrow kicks in</span></a>
+      <a class="tile new" href="mockup/screens/18-post-request.html"><span class="pill">NEW</span><div class="num">18</div><div class="ic">📝</div><b>Post a Request</b><span>Buyer describes needs, sets budget, uploads photos — free to post</span></a>
+      <a class="tile new" href="mockup/screens/19-browse-requests.html"><span class="pill">NEW</span><div class="num">19</div><div class="ic">🔔</div><b>Browse Requests</b><span>Servicer sees open jobs in their area, filtered by category</span></a>
+      <a class="tile new" href="mockup/screens/20-submit-bid.html"><span class="pill">NEW</span><div class="num">20</div><div class="ic">💵</div><b>Submit a Bid</b><span>Price, timeline, work breakdown, past photos — detailed proposals win</span></a>
+      <a class="tile new" href="mockup/screens/21-compare-bids.html"><span class="pill">NEW</span><div class="num">21</div><div class="ic">⚖</div><b>Compare &amp; Accept</b><span>Buyer reviews all bids side by side, chats, picks the winner — escrow kicks in</span></a>
     </div>
   </div>
 
@@ -91,7 +180,8 @@ a{text-decoration:none}
 
   <div class="footer">
     <span>Spec: <b>Serbizyu-2.0</b> repo · 21 linked screens · pure HTML/CSS/JS, zero build step</span>
-    <span>Demo tip: open screen 01 and just keep clicking — every screen links forward.</span>
+    <span>Demo tip: every screen has the same bar at the bottom — <b>⊞ Mockup Hub</b> brings you back here, <b>▶ Investor Deck</b> jumps to the pitch.</span>
   </div>
 </div>
+<div class="pagenav"><a href="mockup/screens/01-home.html">▶ Start Tour</a><span class="pn-mid">Mockup Hub — 21 screens · 2 loops · 1 engine</span><a class="deck" href="mockup/deck/pitch.html">▶ Investor Deck</a></div>
 </body></html>

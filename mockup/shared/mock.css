@@ -82,3 +82,22 @@ a{color:inherit;text-decoration:none}
 .tgl::after{content:'';position:absolute;top:3px;left:3px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .tgl.on{background:var(--g500)}.tgl.on::after{left:22px}
 .filenames{max-width:375px;width:100%;margin-top:10px;font-size:.68rem;color:var(--w400);display:flex;justify-content:space-between}
+
+/* === cohesion rebuild: external page nav + request integration === */
+body{padding-bottom:82px}
+.pagenav{position:fixed;left:0;right:0;bottom:0;z-index:100;display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 14px;background:rgba(28,25,23,.94);backdrop-filter:blur(10px);box-shadow:0 -6px 24px rgba(0,0,0,.25)}
+.pagenav a{color:#fff;font-size:.78rem;font-weight:600;padding:9px 18px;border-radius:11px;border:1px solid rgba(255,255,255,.2);transition:.15s}
+.pagenav a:hover{background:rgba(255,255,255,.12)}
+.pagenav a.deck{background:var(--g600);border-color:var(--g600)}
+.pagenav a.deck:hover{background:var(--g700)}
+.pagenav .pn-mid{color:rgba(255,255,255,.45);font-size:.68rem;letter-spacing:.02em}
+@media(max-width:520px){.pagenav .pn-mid{display:none}}
+
+/* open-request cards (used on home/search to weave the bid flow into the app) */
+.reqcard{background:#fff;border:1px solid var(--w200);border-left:4px solid var(--a500);border-radius:var(--r);padding:12px 13px;margin-bottom:11px;display:block;transition:.15s}
+.reqcard:hover{box-shadow:0 8px 24px -10px rgba(0,0,0,.18)}
+.reqcard .budget{font-weight:700;color:var(--g700);font-size:.95rem}
+.postcta{display:block;border:1.5px dashed var(--t600);border-radius:var(--r);padding:13px;text-align:center;color:var(--t700);font-weight:600;font-size:.85rem;background:var(--t50);margin-bottom:12px;transition:.15s}
+.postcta:hover{background:#dbeafe}
+.flowhint{display:flex;gap:8px;align-items:center;background:var(--w100);border-radius:99px;padding:6px 13px;font-size:.68rem;color:var(--w600);margin:4px 0 12px;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+.flowhint b{color:var(--g700)}
