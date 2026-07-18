@@ -41,12 +41,16 @@ td b{color:#fafaf9}
 .langtoggle button{border:0;background:transparent;color:rgba(255,255,255,.5);font-family:'Inter';font-size:.7rem;font-weight:600;padding:7px 14px;border-radius:99px;cursor:pointer;transition:.15s}
 .langtoggle button.on{background:#4ade80;color:#0c0a09}
 .langtoggle button:hover:not(.on){color:rgba(255,255,255,.8)}
+/* exit button — top-left, back to hub */
+.exitbtn{position:fixed;top:12px;left:14px;z-index:200;display:flex;align-items:center;gap:5px;background:rgba(28,25,23,.88);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:7px 13px;color:rgba(255,255,255,.7);font-family:'Inter';font-size:.71rem;font-weight:600;cursor:pointer;transition:.15s;backdrop-filter:blur(6px);text-decoration:none}
+.exitbtn:hover{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4);color:#fca5a5}
 </style></head>
 <body>
 <div class="langtoggle" id="langtoggle">
   <button class="on" data-lang="en">EN</button>
   <button data-lang="tl">🇵🇭 TL</button>
 </div>
+<a class="exitbtn" href="../../mockup.html" data-i18n-html="exit-label">✕ Exit to Hub</a>
 <div class="deck" id="deck">
 
 <!-- SLIDE 1: TITLE -->
@@ -222,16 +226,17 @@ td b{color:#fafaf9}
 </section>
 
 </div>
-<div class="hint">← → navigate · F fullscreen</div>
+<div class="hint">← → navigate · F fullscreen · Esc exit</div>
 <script>
 var slides=[...document.querySelectorAll('.slide')];var i=0;
 function show(n){slides[i].classList.remove('on');i=(n+slides.length)%slides.length;slides[i].classList.add('on');}
 document.addEventListener('keydown',function(e){
   if(e.key==='ArrowRight'||e.key===' ')show(i+1);
   if(e.key==='ArrowLeft')show(i-1);
+  if(e.key==='Escape')location.href='../../mockup.html';
   if(e.key==='f'||e.key==='F')document.documentElement.requestFullscreen?.();
 });
-document.addEventListener('click',function(e){if(!e.target.closest('.langtoggle'))show(i+1)});
+document.addEventListener('click',function(e){if(!e.target.closest('.langtoggle')&&!e.target.closest('.exitbtn'))show(i+1)});
 
 // ──── I18N ────
 window.I18N={en:{},tl:{}};
@@ -313,6 +318,7 @@ E["s12-h1"]='Fund the town.<br><span class="accent">The towns fund themselves.</
 E["s12-p1"]="Runway for the 10-sprint Phase 1 build and the Candon pilot: engineering, Xendit/Meta/Semaphore integrations, and the human ops layer (curator, trust reviewer, onboarding coach) that makes the automation trustworthy.";
 E["s12-p2"]='<b>What you get:</b> the structural-trust playbook for local commerce — validated, archetype-driven, and ready to replicate town by town.';
 E["s12-tag"]="Open the interactive mockup → 21 linked screens";
+E["exit-label"]="✕ Exit to Hub";
 
 // ── TAGLISH ──
 T["s1-kicker"]="Serbizyu · Investor Preview · 2026";
@@ -394,6 +400,7 @@ T["s12-h1"]='Pondohan ang bayan.<br><span class="accent">Ang mga bayan ang magpo
 T["s12-p1"]="Runway para sa 10-sprint Phase 1 build at Candon pilot: engineering, Xendit/Meta/Semaphore integrations, at ang human ops layer (curator, trust reviewer, onboarding coach) na nagpapa-trustworthy ng automation.";
 T["s12-p2"]='<b>Ang makukuha mo:</b> ang structural-trust playbook para sa local commerce — validated, archetype-driven, at handa nang i-replicate bawat bayan.';
 T["s12-tag"]="Buksan ang interactive mockup → 21 linked screens";
+T["exit-label"]="✕ Bumalik sa Hub";
 
 // ── TOGGLE ──
 (function(){
