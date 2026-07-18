@@ -404,7 +404,7 @@ T["s12-tag"]="Buksan ang interactive mockup → 21 linked screens";
     var map = window.I18N[l];
     document.querySelectorAll('[data-i18n]').forEach(function(el){
       var key = el.getAttribute('data-i18n');
-      if(map[key]) el.textContent = map[key];
+      if(map[key]) el.innerHTML = map[key];
     });
     document.querySelectorAll('[data-i18n-html]').forEach(function(el){
       var key = el.getAttribute('data-i18n-html');
