@@ -9,13 +9,14 @@ The hardened, buildable specification for the Serbizyu platform. Start here.
 3. **[brand/serbizyu-brand-system.md](brand/serbizyu-brand-system.md)** — color tokens, typography, shadcn/ui config, voice and tone. Implementation-ready.
 4. **[architecture/fulfillment-archetypes.md](architecture/fulfillment-archetypes.md)** — the 10 shapes (A1–A10) that cover all products and services. The answer to "can the system support the whole industry."
 5. **[architecture/connector-architecture.md](architecture/connector-architecture.md)** — one adapter per channel serving both Distribution (outbound) and Messaging (inbound). Facebook, Messenger, SMS, TikTok, and how to add #8.
-6. **[architecture/work-connector-ecosystem.md](architecture/work-connector-ecosystem.md)** — pluggable tools (Mapbox, Calendar, Route Planner, Documents) that Work Templates reference. This is what makes Serbizyu a platform, not just a marketplace.
-7. **[architecture/workflow-builder-spec.md](architecture/workflow-builder-spec.md)** — how Work is built (servicer canvas, contract checker, AI drafting) and shown (three buyer render modes).
-8. **[strategies/industry-coverage-matrix.md](strategies/industry-coverage-matrix.md)** — every industry mapped to an archetype, with readiness verdicts, marketing angles, and explicit exclusions.
-9. **[strategies/strategy-matrix.md](strategies/strategy-matrix.md)** — UX psychology, market reach per segment, growth loops, affiliate models, trust density.
-10. **[case-studies/tricycle-fulfillment.md](case-studies/tricycle-fulfillment.md)** — the A2 dispatch archetype end to end. The proof that a non-project service works without a dedicated domain.
-11. **[roadmap/phased-build-plan.md](roadmap/phased-build-plan.md)** — Phase 0 checklist, 10 sprints to launch gate, Phase 2/3 epics, schema checklist per phase, risk register, definition of ready/done.
-12. **[architecture/channels/](architecture/channels/)** — per-channel implementation specs: facebook.md, messenger.md, sms.md, tiktok.md. Credentials, API flows, rate limits, ToS risks, fallbacks, tests.
+6. **[architecture/unified-inbox.md](architecture/unified-inbox.md)** — the conversation model, token binding, shared vs. per-user channels, in-app messaging (Phase 1), channel messaging (Phase 2), and inbox UI behavior across roles.
+7. **[architecture/work-connector-ecosystem.md](architecture/work-connector-ecosystem.md)** — pluggable tools (Mapbox, Calendar, Route Planner, Documents) that Work Templates reference. This is what makes Serbizyu a platform, not just a marketplace.
+8. **[architecture/workflow-builder-spec.md](architecture/workflow-builder-spec.md)** — how Work is built (servicer canvas, contract checker, AI drafting) and shown (three buyer render modes).
+9. **[strategies/industry-coverage-matrix.md](strategies/industry-coverage-matrix.md)** — every industry mapped to an archetype, with readiness verdicts, marketing angles, and explicit exclusions.
+10. **[strategies/strategy-matrix.md](strategies/strategy-matrix.md)** — UX psychology, market reach per segment, growth loops, affiliate models, trust density.
+11. **[case-studies/tricycle-fulfillment.md](case-studies/tricycle-fulfillment.md)** — the A2 dispatch archetype end to end. The proof that a non-project service works without a dedicated domain.
+12. **[roadmap/phased-build-plan.md](roadmap/phased-build-plan.md)** — Phase 0 checklist, 10 sprints to launch gate, Phase 2/3 epics, schema checklist per phase, risk register, definition of ready/done.
+13. **[architecture/channels/](architecture/channels/)** — per-channel implementation specs: facebook.md, messenger.md, sms.md, tiktok.md. Credentials, API flows, rate limits, ToS risks, fallbacks, tests.
 
 ## The One-Paragraph Thesis
 
@@ -30,6 +31,7 @@ The platform supports the whole industry not by building infinite features but b
 | Brand system | Complete, implementation-ready |
 | Archetype library | Complete, 10 archetypes |
 | Connector architecture | Complete |
+| Unified inbox | Complete |
 | Tool ecosystem | Complete |
 | WorkflowBuilder spec | Complete |
 | Industry coverage | Complete, 9 sectors + exclusions |
