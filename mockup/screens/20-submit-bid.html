@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Submit Bid</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+<div class="stage-label"><b>Request Flow 3/4 — Submit Bid (Servicer)</b><span><a href="19-browse-requests.html">← Prev</a> · <a href="21-compare-bids.html">Next →</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><a class="back" href="19-browse-requests.html">←</a><div class="ttl">Submit a Bid</div></div>
+  <div class="pad">
+    <!-- Request Summary -->
+    <div class="card" style="background:#fff;border-color:var(--a500)">
+      <div class="row" style="margin-bottom:4px"><span class="badge b-a">Request</span><span class="grow"></span><span class="tiny">3 hrs ago</span></div>
+      <b style="font-size:.92rem">Custom kitchen cabinet — 6×4 ft</b>
+      <div class="row" style="margin-top:6px">
+        <span class="badge b-w">🪚 Carpentry</span>
+        <span style="font-size:.76rem;color:var(--w500)">Poblacion, Candon</span>
+      </div>
+      <p class="mut" style="margin-top:6px">"I need a carpenter to build a custom 6×4 ft storage cabinet in my kitchen. Prefer narra or mahogany wood. Budget is around ₱8,000–12,000."</p>
+      <div class="row" style="margin-top:10px">
+        <span style="font-weight:700;color:var(--g700)">Budget: ₱8,000–12,000</span>
+        <span class="grow"></span>
+        <span style="font-size:.73rem;color:var(--w500)">Within 2 weeks</span>
+      </div>
+    </div>
+
+    <!-- Your Bid -->
+    <div class="lbl">Your bid amount</div>
+    <input class="inp" value="₱9,500" style="font-size:1.2rem;font-weight:700;text-align:center;color:var(--g700)">
+
+    <div class="lbl">Timeline</div>
+    <div class="row" style="overflow-x:auto;scrollbar-width:none">
+      <div class="chip on">5–7 days</div><div class="chip">1–2 weeks</div><div class="chip">2–3 weeks</div>
+    </div>
+
+    <div class="lbl">Work breakdown (optional but recommended)</div>
+    <div class="card" style="background:var(--w50)">
+      <div class="steps">
+        <div class="stp done"><div class="dot">1</div><div class="sl">Material sourcing &amp; measurement<span class="ss">Day 1 — visit site, finalize dimensions</span></div></div>
+        <div class="stp cur"><div class="dot">2</div><div class="sl">Cabinet frame construction<span class="ss">Days 2–4 — cut, assemble, sand</span></div></div>
+        <div class="stp"><div class="dot">3</div><div class="sl">Finishing &amp; installation<span class="ss">Days 5–6 — stain, mount, hardware</span></div></div>
+        <div class="stp"><div class="dot">4</div><div class="sl">Buyer inspection &amp; sign-off<span class="ss">Day 7 — you inspect, escrow releases</span></div></div>
+      </div>
+      <div class="tiny" style="margin-top:6px">Work steps help buyers understand your process. Bids with breakdowns are 2× more likely to be accepted.</div>
+    </div>
+
+    <div class="lbl">Message to the buyer</div>
+    <textarea class="inp" style="height:80px;resize:none;font-family:'Inter'" placeholder="Introduce yourself. Mention experience, materials included, or any questions.">Hi! I'm Mang Domeng — 12 years carpentry in Candon. I've built 50+ cabinets including 3 in Poblacion this year. I'll use kiln-dried mahogany (included in ₱9,500). You can see my past work on my profile. Happy to visit tomorrow for exact measurements.</textarea>
+
+    <div class="lbl">Include photos of past work</div>
+    <div class="row" style="gap:6px">
+      <div style="width:72px;height:72px;border-radius:12px;background:var(--g100);display:grid;place-items:center;font-size:1.2rem">🪵</div>
+      <div style="width:72px;height:72px;border-radius:12px;background:var(--w200);display:grid;place-items:center;font-size:.65rem;color:var(--w500)">+ Add</div>
+      <div style="width:72px;height:72px;border-radius:12px;background:var(--w200);display:grid;place-items:center;font-size:.65rem;color:var(--w500)">+ Add</div>
+    </div>
+
+    <a class="btn btn-p" style="margin-top:16px;display:block;text-align:center" href="21-compare-bids.html" data-toast="Bid submitted! Buyer will review it alongside other bids.">📨 Submit Bid</a>
+
+    <div class="card" style="background:var(--w50);margin-top:14px">
+      <b style="font-size:.78rem">📌 How bidding works</b>
+      <div class="tiny" style="margin-top:4px">• Your bid is visible to the buyer alongside others<br>• The buyer picks the winner — no automatic selection<br>• If you win, it becomes a regular order with escrow protection<br>• You can edit your bid until the buyer makes a decision</div>
+    </div>
+  </div>
+  <div class="tabbar"><a class="tb" href="../../mockup.html"><span class="ic">🏠</span>Home</a><a class="tb" href="19-browse-requests.html"><span class="ic">📋</span>Requests</a><div class="tb on"><span class="ic">💵</span>Bid</div><a class="tb" href="12-inbox.html"><span class="ic">💬</span>Inbox</a><a class="tb" href="../../mockup.html"><span class="ic">👤</span>Hub</a></div>
+</div></div>
+<div class="filenames"><span>screens/20-submit-bid.html</span><span>Servicer submits bid with breakdown</span></div>
+<script src="../shared/mock.js"></script>
+</body></html>
