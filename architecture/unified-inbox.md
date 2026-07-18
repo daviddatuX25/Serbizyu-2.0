@@ -173,13 +173,7 @@ Both buyer and servicer use the same inbox screen (12-inbox.html). The conversat
 
 ### Tabbar Behavior (Mockup Reference)
 
-| Screen Group | Inbox Tab | Rationale |
-|---|---|---|
-| 01–04 (browse/search/offer/book) | `<div>` unclickable | Casual browsing — no active conversation yet |
-| 05–07 (track/release/review) | `<div>` unclickable | Inline order chat serves the same purpose; unified inbox is for multi-conversation management |
-| 18, 21 (post request, compare bids) | `<a>` → inbox | Active poster managing bids and conversations |
-| 08–13 (servicer flow) | `<a>` → inbox | Servicer always manages multiple conversations |
-| 19–20 (browse requests, submit bid) | `<a>` → inbox | Servicer in active bidding |
+All screens with the inbox tab use `<a href="12-inbox.html">` — the inbox is shared infrastructure accessible from any screen. The inbox tabbar item is always clickable, regardless of role. A buyer browsing without active conversations will see an empty inbox; a servicer with active jobs sees their threads. Same screen, same data model, different content.
 
 ### "One Thread, Any Channel" Card
 
