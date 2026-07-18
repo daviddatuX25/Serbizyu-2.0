@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Investor Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--g600:#16a34a;--g700:#15803d;--g900:#14532d;--g50:#f0fdf4;--t600:#2563eb;--a500:#f59e0b;--w100:#f5f5f4;--w300:#d6d3d1;--w500:#78716c;--w900:#1c1917}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0c0a09;color:#fafaf9;overflow:hidden}
+.deck{width:100vw;height:100vh;display:grid;place-items:center}
+.slide{width:min(94vw,150vh);aspect-ratio:16/9;background:linear-gradient(160deg,#1c1917,#0c0a09);border:1px solid #292524;border-radius:20px;padding:5.5% 6.5%;display:none;flex-direction:column;justify-content:center;position:relative}
+.slide.on{display:flex;animation:in .3s ease}
+@keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1}}
+h1,h2{font-family:'Plus Jakarta Sans',sans-serif}
+h1{font-size:clamp(1.9rem,4.4vw,3.6rem);line-height:1.1}
+h2{font-size:clamp(1.4rem,3vw,2.4rem);line-height:1.15;margin-bottom:3.5%}
+p,li{font-size:clamp(.85rem,1.5vw,1.2rem);color:#d6d3d1;line-height:1.55}
+.accent{color:#4ade80}.blue{color:#60a5fa}.amber{color:#fbbf24}
+.kicker{color:#4ade80;font-weight:700;letter-spacing:.14em;font-size:clamp(.6rem,1vw,.8rem);text-transform:uppercase;margin-bottom:2%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:4%;align-items:start}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:3%}
+.stat{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:14px;padding:5% 6%}
+.stat b{display:block;font-size:clamp(1.5rem,3.4vw,2.8rem);color:#4ade80;font-family:'Plus Jakarta Sans'}
+.stat span{font-size:clamp(.65rem,1.1vw,.85rem);color:#a8a29e}
+.card{background:rgba(255,255,255,.04);border:1px solid #292524;border-radius:14px;padding:4.5% 5%}
+.card b{color:#fafaf9}
+.card p{font-size:clamp(.7rem,1.2vw,.95rem);margin-top:4px}
+ul{padding-left:1.2em}li{margin-bottom:.5em}
+.foot{position:absolute;bottom:4%;left:6.5%;right:6.5%;display:flex;justify-content:space-between;font-size:.7rem;color:#57534e}
+.logo{color:#4ade80;font-weight:800}
+.hint{position:fixed;bottom:14px;right:18px;color:#57534e;font-size:.72rem}
+table{width:100%;border-collapse:collapse;font-size:clamp(.65rem,1.15vw,.95rem)}
+th{color:#4ade80;text-align:left;padding:.5em .4em;border-bottom:1px solid #292524;font-size:.85em;letter-spacing:.06em;text-transform:uppercase}
+td{padding:.55em .4em;border-bottom:1px solid #1c1917;color:#d6d3d1}
+td b{color:#fafaf9}
+.tag{display:inline-block;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#4ade80;padding:.15em .6em;border-radius:99px;font-size:.7em;font-weight:600}
+.tag.t{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);color:#60a5fa}
+.tag.a{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#fbbf24}
+</style></head>
+<body>
+<div class="deck" id="deck">
+
+<section class="slide on">
+  <div class="kicker">Serbizyu · Investor Preview · 2026</div>
+  <h1>The trust infrastructure for the<br><span class="accent">Philippine local service economy.</span></h1>
+  <p style="margin-top:3%;max-width:70%">A hyper-local marketplace where trust is structural — escrow, milestones, evidence — not promised. Built for Candon first, designed for every town.</p>
+  <div class="foot"><span class="logo">◆ SERBIZYU</span><span>1 / 10</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The Problem</div>
+  <h2>Finding a plumber in a Philippine town is still<br>word-of-mouth and crossed fingers.</h2>
+  <div class="grid3" style="margin-top:2%">
+    <div class="card"><b>💸 Payment risk</b><p>Pay ahead and hope? Or pay after and argue? Both sides lose. No escrow culture exists offline.</p></div>
+    <div class="card"><b>🫥 No verifiable trust</b><p>"My cousin knows a guy" is the entire verification system. No proof of work, no accountability.</p></div>
+    <div class="card"><b>📵 Digital exclusion</b><p>Existing platforms demand app installs, cards, and English fluency. The tricycle driver and his customers are locked out.</p></div>
+  </div>
+  <div class="foot"><span class="logo">◆ SERBIZYU</span><span>2 / 10</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The Insight</div>
+  <h2>Trust shouldn't be a promise.<br>It should be <span class="accent">the architecture.</span></h2>
+  <div class="grid2" style="margin-top:2%">
+    <ul>
+      <li><b>Escrow by default</b> — every peso held in an internal ledger, released only on buyer confirmation (Xendit as rail, not source of truth)</li>
+      <li><b>Structured work</b> — every booking follows a visible fulfillment contract with proof steps</li>
+      <li><b>Evidence over testimony</b> — GPS logs, photos, sign-offs make disputes solvable in minutes</li>
+    </ul>
+    <ul>
+      <li><b>Meet users where they are</b> — Messenger, SMS, mobile web. No install required to book or earn</li>
+      <li><b>Meet buyers where they scroll</b> — listings travel to Facebook, TikTok, Google. Distribution is a product feature, not a marketing afterthought</li>
+    </ul>
+  </div>
+  <div class="foot"><span class="logo">◆ SERBIZYU</span><span>3 / 10</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The Moat — Fulfillment Archetypes</div>
+  <h2>Every product &amp; service reduces to <span class="accent">10 shapes.</span><br>We built the engine for all of them.</h2>
+  <table style="margin-top:1%">
+    <tr><th>Archetype</th><th>Examples</th><th>Status</th></tr>
+    <tr><td><b>A1 Linear Project</b></td><td>Carpentry, events, design</td><td><span class="tag">launch preset</span></td></tr>
+    <tr><td><b>A2 Instant Dispatch</b></td><td>Tricycle, delivery, towing</td><td><span class="tag t">flagship config</span></td></tr>
+    <tr><td><b>A3 Appointment</b></td><td>Tutor, salon, dental</td><td><span class="tag">launch preset</span></td></tr>
+    <tr><td><b>A4 Handoff</b></td><td>Food, meat vendor, crafts</td><td><span class="tag">launch preset</span></td></tr>
+    <tr><td><b>A5–A10</b> Rental · Recurring · Quoted · Emergency · Digital · Retainer</td><td>Sound systems, cleaning, caregiving…</td><td><span class="tag a">config, not code</span></td></tr>
+  </table>
+  <p style="margin-top:2.5%">One fixed status contract; infinite internal variety. Payments, notifications, and trust never care what shape the work is. <b>Competitors bolt categories on; we generalize the shape of work itself.</b></p>
+  <div class="foot"><span class="logo">◆ SERBIZYU</span><span>4 / 10</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The Product</div>
+  <h2>See it work.</h2>
+  <div class="grid3" style="margin-top:2%">
+    <div class="card"><b>🛍 Buyer</b><p>Search → book → GCash → watch the tricycle approach live on the map → confirm → escrow releases. <br><br><span class="accent">Screens 01–07 in the interactive mockup.</span></p></div>
+    <div class="card"><b>🛠 Servicer</b><p>SMS signup → free branded calling card → honest profile score → drag-drop workflow → one inbox for SMS + Messenger + app. <br><br><span class="accent">Screens 08–13.</span></p></div>
+    <div class="card"><b>📊 Ops</b><p>Curator approves LLM-drafted posts, disputes resolve on GPS + photo evidence, channel ROI feeds tomorrow's rotation. <br><br><span class="accent">Screens 14–17.</span></p></div>
+  </div>
+  <div class="foot"><span class="logo">◆ SERBIZYU</span><span>5 / 10</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Distribution — The Unfair Advantage</div>
+  <h2>Listings that <span class="blue">travel to the buyer,</span><br>not buyers we beg to come to us.</h2>
+  <div class="grid2" style="margin-top:2%">
+    <ul>
+      <li><b>SSR public pages</b> — every offer readable by Google, Facebook previews, and AI agents</li>
+      <li><b>One adapter per channel</b> — the same integration that posts a listing also answers its replies (Facebook, Messenger, SMS, TikTok-ready)</li>
+      <li><b>Reciprocity engine</b> — servicers share their free branded card; every share is a UTM-tagged acquisition channel</li>
+    </ul>
+    <ul>
+      <li><b>Human-approved automation</b> — LLM drafts, curator publishes. ToS-safe by design</li>
+      <li><b>Channel ROI loop</b> — attributed bookings feed the orchestrator's rotation weights</li>
+      <li><b>Target: 30%+ of bookings channel-attributed</b> by Phase 3 — compounding reach competitors can't copy with ad spend</li>
+    </ul>
+  </div>
+  <div class="foot"><span class="logo">◆ SERBIZYU</span><span>6 / 10</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Traction Plan — Proof Before Scale</div>
+  <h2>One town. Twenty servicers. Fifty bookings.<br><span class="accent">Then we automate.</span></h2>
+  <table style="margin-top:1%">
+    <tr><th>Phase</th><th>Focus</th><th>Gate to proceed</th></tr>
+    <tr><td><b>1 — Validation</b> (10 sprints)</td><td>Core loop only: offers, orders, escrow, in-app chat. Staff post to FB by hand.</td><td>≥2 bookings/servicer/wk · ≥90% trust density</td></tr>
+    <tr><td><b>2 — Platform</b></td><td>Messenger/SMS channels, Facebook adapter, asset generator, WorkflowBuilder, tricycle pilot.</td><td>≥10% channel-attributed bookings</td></tr>
+    <tr><td><b>3 — Expansion</b></td><td>Product offers, AI template builder, referrals, multi-town via feature flags.</td><td>Candon metrics stable 8+ weeks</td></tr>
+  </table>
+  <p style="margin-top:2.5%">The sequencing is the discipline: <b>we don't build the distribution machine before the core loop is proven.</b> Every generalization is possible early but built late — on purpose.</p>
+  <div class="foot"><span class="logo">◆ SERBIZYU</span><span>7 / 10</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Market</div>
+  <h2>Start hyper-local. The model replicates<br>to <span class="accent">every municipality in the country.</span></h2>
+  <div class="grid3" style="margin-top:2%">
+    <div class="stat"><b>1,493</b><span>municipalities in the Philippines — each one a self-contained liquidity zone</span></div>
+    <div class="stat"><b>96%</b><span>of Filipinos on Facebook — our primary distribution channel is where the market already is</span></div>
+    <div class="stat"><b>₱0</b><span>spent on app-install ads in our plan — distribution rides channels users already trust</span></div>
+  </div>
+  <p style="margin-top:3%">Competitive frame: Grab owns cities and ride-hailing. Facebook groups own unstructured local commerce with zero trust. <b>The structural-trust layer for town-level services is unclaimed.</b></p>
+  <div class="foot"><span class="logo">◆ SERBIZYU</span><span>8 / 10</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Business Model</div>
+  <h2>We earn when trust converts.</h2>
+  <div class="grid2" style="margin-top:2%">
+    <ul>
+      <li><b>Transaction fee</b> — percentage per completed, escrow-released order (aligned with successful fulfillment, not listings)</li>
+      <li><b>Featured slots</b> — performance-earned, visibility-priced rotation per town-category</li>
+    </ul>
+    <ul>
+      <li><b>Value-added services</b> — disbursement convenience, asset generation boosts, coop dashboards (Phase 3)</li>
+      <li><b>Disciplined exclusions</b> — no e-wallet, no Grab-clone, no licensed-profession liability. Focus is a feature.</li>
+    </ul>
+  </div>
+  <div class="card" style="margin-top:3%"><b>Unit economics honesty:</b><p>Phase 1 exists to measure real take-rate tolerance in one town before we model national scale. We'd rather show you Candon's real numbers than a fictional TAM slide.</p></div>
+  <div class="foot"><span class="logo">◆ SERBIZYU</span><span>9 / 10</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The Ask</div>
+  <h1>Fund the town.<br><span class="accent">The towns fund themselves.</span></h1>
+  <p style="margin-top:2%;max-width:75%">Runway for the 10-sprint Phase 1 build and the Candon pilot: engineering, Xendit/Meta/Semaphore integrations, and the human ops layer (curator, trust reviewer, onboarding coach) that makes the automation trustworthy.</p>
+  <p style="margin-top:2%"><b>What you get:</b> the structural-trust playbook for local commerce — validated, archetype-driven, and ready to replicate town by town.</p>
+  <div style="margin-top:3%"><span class="tag" style="font-size:.9em;padding:.5em 1.2em">Open the interactive mockup → 17 linked screens</span></div>
+  <div class="foot"><span class="logo">◆ SERBIZYU</span><span>10 / 10</span></div>
+</section>
+
+</div>
+<div class="hint">← → navigate · F fullscreen</div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];let i=0;
+function show(n){slides[i].classList.remove('on');i=(n+slides.length)%slides.length;slides[i].classList.add('on');}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')show(i+1);
+  if(e.key==='ArrowLeft')show(i-1);
+  if(e.key==='f'||e.key==='F')document.documentElement.requestFullscreen?.();
+});
+document.addEventListener('click',()=>show(i+1));
+</script>
+</body></html>
