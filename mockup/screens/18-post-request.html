@@ -15,6 +15,19 @@
       <div class="tiny" style="margin-top:4px">Describe what you need. Servicers in your area will bid. You choose the best offer — no commitment until you accept.</div>
     </div>
 
+    <div class="lbl">How do you want to receive offers?</div>
+    <div class="row" style="gap:6px;margin-bottom:10px">
+      <div class="card" style="flex:1;text-align:center;padding:10px;cursor:pointer;border:2px solid var(--g500);background:var(--g50)" onclick="this.style.borderColor='var(--g500)';this.style.background='var(--g50)';this.nextElementSibling.style.borderColor='var(--w200)';this.nextElementSibling.style.background='#fff'">
+        <div style="font-size:1.3rem">⚡</div>
+        <b style="font-size:.75rem">First Available</b>
+        <div class="tiny" style="margin-top:2px">Auto-assign first qualified servicer. For urgent needs — tricycle, emergency plumber.</div>
+      </div>
+      <div class="card" style="flex:1;text-align:center;padding:10px;cursor:pointer" onclick="this.style.borderColor='var(--t500)';this.style.background='var(--t50)';this.previousElementSibling.style.borderColor='var(--w200)';this.previousElementSibling.style.background='#fff'">
+        <div style="font-size:1.3rem">📊</div>
+        <b style="font-size:.75rem">Let Me Compare</b>
+        <div class="tiny" style="margin-top:2px">Collect bids for 24h. Compare price, timeline, profile. For price-sensitive work.</div>
+      </div>
+    </div>
     <div class="lbl">What do you need?</div>
     <select class="inp" style="appearance:auto;padding:12px 14px">
       <option>🏠 Home Repair &amp; Construction</option>
