@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Admin Verify Queue</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+<div class="stage-label"><b>Admin 4/4 — Verify</b><span><a href="38-admin-revenue.html">← Prev</a> · <a href="../../mockup.html">⊞ Hub</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><a class="back" href="38-admin-revenue.html">←</a><div class="ttl">Verification Queue</div></div>
+  <div class="pad">
+
+    <div class="row" style="gap:4px;margin-bottom:8px">
+      <span class="chip on">Pending (3)</span><span class="chip">Approved</span><span class="chip">Rejected</span>
+    </div>
+
+    <!-- Item 1: Face match fail -->
+    <div class="card" style="border-color:var(--a500)">
+      <div class="row" style="margin-bottom:4px">
+        <span class="badge b-a" style="background:#fef3c7;color:var(--a600)">Face Match</span>
+        <span class="tiny" style="margin-left:auto">1h ago</span>
+      </div>
+      <div class="row" style="align-items:flex-start">
+        <div class="ava" style="background:var(--t500);width:36px;height:36px;border-radius:10px;font-size:.75rem">KB</div>
+        <div class="grow">
+          <b style="font-size:.78rem">Kuya Bert — Face Match Failed</b>
+          <div class="tiny">AI confidence 62% (threshold: 85%) · Manual review needed</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <div style="width:50px;height:50px;background:var(--w200);border-radius:8px;display:grid;place-items:center;font-size:.55rem;color:var(--w500)">Selfie</div>
+        <div style="width:50px;height:50px;background:var(--w200);border-radius:8px;display:grid;place-items:center;font-size:.55rem;color:var(--w500)">Gov ID</div>
+        <div style="flex:1;font-size:.6rem;color:var(--w500);padding:4px">
+          <span>Glasses + different lighting</span>
+          <div>Submitted: PhilHealth ID + selfie</div>
+        </div>
+      </div>
+      <div class="row" style="gap:4px;margin-top:6px">
+        <button class="btn btn-p" style="flex:1;padding:6px;font-size:.65rem">✓ Approve</button>
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.65rem;color:var(--err)">✗ Reject</button>
+      </div>
+    </div>
+
+    <!-- Item 2: Tier 4 skills -->
+    <div class="card" style="border-color:var(--t500)">
+      <div class="row" style="margin-bottom:4px">
+        <span class="badge b-t">Tier 4</span>
+        <span class="tiny" style="margin-left:auto">3h ago</span>
+      </div>
+      <b style="font-size:.78rem">Nanding's Lechonan — Skills Cert</b>
+      <div class="tiny" style="margin:4px 0">Uploaded: TESDA Food Handling Cert · Expires Dec 2026</div>
+      <div style="font-size:.62rem;color:var(--w500)">
+        <span>🍖 Food & Catering</span> · <span>⭐ 4.6 · 124 events</span> · <span>Tier 2 active</span>
+      </div>
+      <div class="row" style="gap:4px;margin-top:6px">
+        <button class="btn btn-p" style="flex:1;padding:6px;font-size:.65rem">✓ Certify Tier 4</button>
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.65rem">Request More</button>
+      </div>
+    </div>
+
+    <!-- Item 3: Barangay clearance -->
+    <div class="card">
+      <div class="row" style="margin-bottom:4px">
+        <span class="badge b-g">Tier 3</span>
+        <span class="tiny" style="margin-left:auto">1d ago</span>
+      </div>
+      <b style="font-size:.78rem">Rey's Sound Rentals — Barangay Clearance</b>
+      <div class="tiny" style="margin:4px 0">Capt. Reyes confirmed · Brgy. Darapidap · Doc #BRG-2026-0147</div>
+      <div class="row" style="gap:4px;margin-top:6px">
+        <button class="btn btn-p" style="flex:1;padding:6px;font-size:.65rem">✓ Approve</button>
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.65rem">Verify Capt.</button>
+      </div>
+    </div>
+
+    <div class="lbl">Queue stats</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div class="card" style="text-align:center;padding:10px"><div class="mono" style="font-size:1rem;font-weight:700">3</div><div class="tiny">Pending</div></div>
+      <div class="card" style="text-align:center;padding:10px"><div class="mono" style="font-size:1rem;font-weight:700">12m</div><div class="tiny">Avg response</div></div>
+      <div class="card" style="text-align:center;padding:10px"><div class="mono" style="font-size:1rem;font-weight:700">127</div><div class="tiny">This month</div></div>
+      <div class="card" style="text-align:center;padding:10px"><div class="mono" style="font-size:1rem;font-weight:700">94%</div><div class="tiny">Approval rate</div></div>
+    </div>
+
+  </div>
+  <div class="tabbar"><a class="tb"><span class="ic">⚖</span>Disputes</a><a class="tb"><span class="ic">💰</span>Fees</a><a class="tb"><span class="ic">📊</span>Revenue</a><a class="tb on"><span class="ic">👤</span>Verify</a><a class="tb" href="../../mockup.html"><span class="ic">⊞</span>Hub</a></div>
+</div></div>
+<div class="filenames"><span>screens/39-admin-verify-queue.html</span></div>
+<script src="../shared/mock.js"></script>
+<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Admin 4/4 · Verify</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
+</body></html>

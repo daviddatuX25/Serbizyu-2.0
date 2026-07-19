@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Admin Fee Config</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+<div class="stage-label"><b>Admin 2/4 — Fee Config</b><span><a href="36-dispute-console.html">← Prev</a> · <a href="38-admin-revenue.html">Next →</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><a class="back" href="36-dispute-console.html">←</a><div class="ttl">Fee Configuration</div></div>
+  <div class="pad">
+
+    <div class="card" style="background:var(--g50);border-color:var(--g200)">
+      <div class="row"><b style="font-size:.8rem">Global rate — Digital</b><b style="font-family:'JetBrains Mono',monospace;color:var(--g700);margin-left:auto">8%</b></div>
+      <div class="tiny" style="margin-top:2px">Applies to all GCash/card transactions through Xendit</div>
+    </div>
+    <div class="card" style="background:#fef3c7;border-color:var(--a500)">
+      <div class="row"><b style="font-size:.8rem">Global rate — Cash</b><b style="font-family:'JetBrains Mono',monospace;color:var(--a600);margin-left:auto">12%</b></div>
+      <div class="tiny">External payments · servicer-compensated · due in 7 days</div>
+    </div>
+
+    <div class="lbl">Per-category overrides</div>
+    <div class="card">
+      <div class="row" style="margin-bottom:6px"><span>🚖 Transport</span><span class="chip">Digital 8%</span><span class="chip" style="background:#fef3c7;border-color:var(--a500);color:var(--a600)">Cash 12%</span></div>
+      <div class="row"><div class="tiny">Flat rate for tricycles, deliveries</div><span style="font-size:.62rem;color:var(--w500)">default</span></div>
+    </div>
+    <div class="card" style="border-color:var(--t500)">
+      <div class="row" style="margin-bottom:6px"><span>🔧 Home Repair</span><span class="chip on">Digital 6%</span><span class="chip" style="background:#fef3c7;border-color:var(--a500);color:var(--a600)">Cash 12%</span></div>
+      <div class="row"><div class="tiny">Subsidized to attract skilled trades</div><span class="badge b-t">Subsidy active</span></div>
+      <div class="tiny" style="margin-top:2px;color:var(--a600)">Expires: Aug 31, 2026 · ₱5,000 subsidy cap remaining</div>
+    </div>
+    <div class="card">
+      <div class="row" style="margin-bottom:6px"><span>🍖 Food & Catering</span><span class="chip on">Digital 6%</span><span class="chip" style="background:#fef3c7;border-color:var(--a500);color:var(--a600)">Cash 12%</span></div>
+      <div class="row"><div class="tiny">Subsidized — high volume, low margin</div><span class="badge b-t">Subsidy active</span></div>
+    </div>
+    <div class="card">
+      <div class="row" style="margin-bottom:6px"><span>🎵 Entertainment</span><span class="chip">Digital 10%</span><span class="chip" style="background:#fef3c7;border-color:var(--a500);color:var(--a600)">Cash 15%</span></div>
+      <div class="row"><div class="tiny">Higher rate — premium service category</div><span style="font-size:.62rem;color:var(--w500)">no subsidy</span></div>
+    </div>
+
+    <div class="lbl">Cash high-value surcharge</div>
+    <div class="card" style="background:var(--w50)">
+      <div class="row"><span class="tiny">Cash deals > ₱5,000</span><b style="font-family:'JetBrains Mono',monospace;color:var(--err);margin-left:auto">15%</b></div>
+      <div class="tiny">Applies per slot in deal-chains. Requires barangay witness.</div>
+    </div>
+
+    <button class="btn btn-s" style="margin-top:10px">➕ Add Category Override</button>
+    <button class="btn btn-p" style="margin-top:6px">💾 Save Configuration</button>
+  </div>
+  <div class="tabbar"><a class="tb"><span class="ic">⚖</span>Disputes</a><a class="tb on"><span class="ic">💰</span>Fees</a><a class="tb"><span class="ic">📊</span>Revenue</a><a class="tb"><span class="ic">👤</span>Verify</a><a class="tb" href="../../mockup.html"><span class="ic">⊞</span>Hub</a></div>
+</div></div>
+<div class="filenames"><span>screens/37-admin-fees.html</span></div>
+<script src="../shared/mock.js"></script>
+<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Admin 2/4 · Fees</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
+</body></html>

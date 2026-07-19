@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Revenue Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+<div class="stage-label"><b>Admin 3/4 — Revenue</b><span><a href="37-admin-fees.html">← Prev</a> · <a href="39-admin-verify-queue.html">Next →</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><a class="back" href="37-admin-fees.html">←</a><div class="ttl">Revenue Dashboard</div></div>
+  <div class="pad">
+
+    <!-- KPI cards -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div class="card" style="text-align:center;padding:12px"><div class="tiny">Gross Revenue (Jul)</div><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.2rem;color:var(--g700)">₱19.4K</div><div class="tiny" style="color:var(--g700)">↑ Target: ₱19.2K</div></div>
+      <div class="card" style="text-align:center;padding:12px"><div class="tiny">Platform Net</div><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.2rem;color:var(--t700)">₱2,910</div><div class="tiny">15% effective</div></div>
+      <div class="card" style="text-align:center;padding:12px"><div class="tiny">Transactions</div><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem">487</div><div class="tiny">Avg ₱39.80/tx</div></div>
+      <div class="card" style="text-align:center;padding:12px"><div class="tiny">Subsidy Spent</div><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem;color:var(--a600)">₱320</div><div class="tiny" style="color:var(--a600)">₱4,680 remaining</div></div>
+    </div>
+
+    <!-- Revenue breakdown -->
+    <div class="lbl">Revenue by source</div>
+    <div class="card">
+      <div class="row" style="padding:4px 0"><span class="tiny">Digital fees (8%)</span><b class="mono" style="margin-left:auto">₱1,840</b><span class="tiny">63%</span></div>
+      <div class="row" style="padding:4px 0"><span class="tiny">Cash fees (12%)</span><b class="mono" style="margin-left:auto">₱860</b><span class="tiny">30%</span></div>
+      <div class="row" style="padding:4px 0"><span class="tiny">Cash surcharge (>₱5K, 15%)</span><b class="mono" style="margin-left:auto">₱210</b><span class="tiny">7%</span></div>
+      <div class="hr"></div>
+      <div class="row"><b>Total</b><b class="mono" style="color:var(--g700);margin-left:auto">₱2,910</b></div>
+    </div>
+
+    <!-- Subsidy impact -->
+    <div class="lbl">Subsidy impact</div>
+    <div class="card" style="background:var(--t50);border-color:#bfdbfe">
+      <div class="row"><span class="tiny">Home Repair (6% vs 8%)</span><span class="mono" style="margin-left:auto">₱180 forgone</span></div>
+      <div class="row"><span class="tiny">Food & Catering (6% vs 8%)</span><span class="mono" style="margin-left:auto">₱140 forgone</span></div>
+      <div class="tiny" style="color:var(--t600);margin-top:4px">85 transactions benefited from subsidies. Estimated 40% would have left platform at full rate.</div>
+    </div>
+
+    <!-- Recent ledger -->
+    <div class="lbl">Transaction ledger</div>
+    <div class="card" style="padding:6px;font-size:.62rem">
+      <div class="row" style="padding:3px 0"><span class="mono">#QD-0049</span><span>Catering ₱1,800</span><span class="mono" style="color:var(--g700);margin-left:auto">+₱108</span><span>6%</span></div>
+      <div class="row" style="padding:3px 0"><span class="mono">#QD-0048</span><span>Plumbing ₱350</span><span class="mono" style="color:var(--g700);margin-left:auto">+₱21</span><span>6%</span></div>
+      <div class="row" style="padding:3px 0"><span class="mono">#QD-0047</span><span>Trip ₱50</span><span class="mono" style="color:var(--a600);margin-left:auto">+₱6</span><span>12% cash</span></div>
+      <div class="row" style="padding:3px 0"><span class="mono">#QD-0046</span><span>Trip ₱40</span><span class="mono" style="color:var(--g700);margin-left:auto">+₱3.20</span><span>8%</span></div>
+    </div>
+
+    <button class="btn btn-s" style="margin-top:8px">📥 Export CSV</button>
+
+  </div>
+  <div class="tabbar"><a class="tb"><span class="ic">⚖</span>Disputes</a><a class="tb"><span class="ic">💰</span>Fees</a><a class="tb on"><span class="ic">📊</span>Revenue</a><a class="tb"><span class="ic">👤</span>Verify</a><a class="tb" href="../../mockup.html"><span class="ic">⊞</span>Hub</a></div>
+</div></div>
+<div class="filenames"><span>screens/38-admin-revenue.html</span></div>
+<script src="../shared/mock.js"></script>
+<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Admin 3/4 · Revenue</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
+</body></html>

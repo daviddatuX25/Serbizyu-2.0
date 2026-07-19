@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Admin Dispute Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+<div class="stage-label"><b>Admin 1/4 — Disputes</b><span><a href="../../mockup.html">⊞ Hub</a> · <a href="37-admin-fees.html">Next →</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><a class="back" href="../../mockup.html">←</a><div class="ttl">Dispute Console</div></div>
+  <div class="pad">
+
+    <div class="row" style="margin-bottom:8px;gap:4px">
+      <span class="chip on">Pending (2)</span><span class="chip">Resolved (14)</span><span class="chip">Appealed (1)</span>
+    </div>
+
+    <!-- Dispute 1 -->
+    <div class="card" style="border-color:var(--err)">
+      <div class="row" style="margin-bottom:4px">
+        <span class="badge b-r">⚠ Priority</span>
+        <span style="margin-left:auto;font-size:.62rem;color:var(--w500)">Filed 2h ago</span>
+      </div>
+      <b style="font-size:.78rem">DSP-0047: Buyer didn't pay</b>
+      <div class="tiny" style="margin:4px 0">Servicer: Mang Jose vs Buyer: Juan D. · Order #QD-0047 · Trip ₱50 · Cash deal</div>
+      <div class="row" style="gap:4px;font-size:.65rem;color:var(--w500)">
+        <span>Evidence: Medium (60%)</span><span>·</span><span>2 photos · GPS · SMS confirm</span>
+      </div>
+      <div style="margin-top:6px;font-size:.68rem;background:var(--w100);border-radius:6px;padding:6px">
+        "Buyer Juan refused to pay ₱50. Only gave ₱30. No witness." — Mang Jose
+      </div>
+      <div class="row" style="gap:4px;margin-top:6px">
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.65rem">Full Release ₱50</button>
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.65rem">Partial ₱20 refund</button>
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.65rem">Re-service</button>
+      </div>
+      <textarea class="inp" rows="1" style="font-size:.65rem;margin-top:4px" placeholder="Admin notes..."></textarea>
+    </div>
+
+    <!-- Dispute 2 -->
+    <div class="card">
+      <div class="row" style="margin-bottom:4px">
+        <span class="badge b-t">Standard</span>
+        <span style="margin-left:auto;font-size:.62rem;color:var(--w500)">Filed 6h ago</span>
+      </div>
+      <b style="font-size:.78rem">DSP-0045: Service not as described</b>
+      <div class="tiny" style="margin:4px 0">Buyer: Maria S. vs Servicer: Kuya Bert · Plumbing ₱350 · Digital</div>
+      <div class="row" style="gap:4px;font-size:.65rem;color:var(--w500)">
+        <span>Evidence: High (85%)</span><span>·</span><span>3 photos · before/after · chat log</span>
+      </div>
+      <div style="margin-top:6px;font-size:.68rem;background:var(--w100);border-radius:6px;padding:6px">
+        "Kuya Bert fixed the leak but pipe burst again next day. He says not his fault." — Maria
+      </div>
+      <div class="row" style="gap:4px;margin-top:6px">
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.65rem">Full Refund ₱350</button>
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.65rem">Partial ₱175</button>
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.65rem">Release</button>
+      </div>
+    </div>
+
+    <div class="lbl">Recent Resolutions</div>
+    <div class="card" style="padding:8px;font-size:.65rem">
+      <div class="row" style="padding:4px 0"><span>DSP-0042 — Full release</span><span class="mono">₱200</span><span class="tiny" style="margin-left:auto">Jul 18</span></div>
+      <div class="row" style="padding:4px 0"><span>DSP-0039 — Partial refund</span><span class="mono">₱150</span><span class="tiny" style="margin-left:auto">Jul 17</span></div>
+    </div>
+
+  </div>
+  <div class="tabbar"><a class="tb on"><span class="ic">⚖</span>Disputes</a><a class="tb"><span class="ic">💰</span>Fees</a><a class="tb"><span class="ic">📊</span>Revenue</a><a class="tb"><span class="ic">👤</span>Verify</a><a class="tb" href="../../mockup.html"><span class="ic">⊞</span>Hub</a></div>
+</div></div>
+<div class="filenames"><span>screens/36-dispute-console.html</span></div>
+<script src="../shared/mock.js"></script>
+<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Admin 1/4 · Disputes</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
+</body></html>
