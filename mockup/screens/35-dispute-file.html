@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — File Dispute</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+<div class="stage-label"><b>Servicer 3/3 — Dispute</b><span><a href="34-verification-center.html">← Prev</a> · <a href="../../mockup.html">⊞ Hub</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><a class="back" href="34-verification-center.html">←</a><div class="ttl">File a Dispute</div></div>
+  <div class="pad">
+
+    <div class="card" style="background:var(--w50)">
+      <div class="lbl" style="margin-top:0">Select order</div>
+      <select class="inp"><option selected>Order #QD-0047 — Juan D. — Trip ₱50 — Jul 19</option><option>Order #QD-0045 — Maria S. — Trip ₱80 — Jul 18</option></select>
+    </div>
+
+    <div class="lbl">What happened?</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+      <span class="chip on">Buyer didn't pay</span><span class="chip">Service not as described</span><span class="chip">Buyer no-show</span><span class="chip">Wrong price charged</span><span class="chip">Other</span>
+    </div>
+
+    <div class="lbl">Describe the issue</div>
+    <textarea class="inp" rows="3" style="resize:none;font-size:.8rem">Buyer Juan refused to pay the agreed ₱50 after the ride. He said "short lang naman" and only gave ₱30. No witness present.</textarea>
+
+    <div class="lbl">Upload evidence</div>
+    <div class="card" style="text-align:center;border-style:dashed;border-color:var(--w300);padding:14px">
+      <div style="font-size:1.5rem">📎</div>
+      <div style="font-size:.7rem;color:var(--w500)">Photos, screenshots, or receipt</div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center">
+        <span class="chip" style="background:var(--g50);border-color:var(--g200)">📸 chat-ss-1.jpg ✓</span>
+        <span class="chip" style="background:var(--g50);border-color:var(--g200)">📸 ride-photo.jpg ✓</span>
+        <span class="chip">+ Add more</span>
+      </div>
+    </div>
+
+    <!-- Evidence tier preview -->
+    <div class="card" style="background:var(--t50);border-color:#bfdbfe;margin-top:8px">
+      <div class="row"><span style="font-size:1rem">📊</span><div class="grow"><b style="font-size:.75rem;color:var(--t700)">Evidence Score</b><div class="tiny" style="color:var(--t600)">Based on: 2 photos · GPS · timestamps · SMS confirm</div></div><span class="badge b-t" style="font-size:.7rem">Medium</span></div>
+      <div class="pbar" style="margin-top:6px"><i style="width:60%;background:var(--t500)"></i></div>
+      <div class="tiny" style="text-align:right;margin-top:2px">60% — Medium tier</div>
+    </div>
+
+    <!-- Resolution preview -->
+    <div class="lbl">What to expect</div>
+    <div class="card" style="background:var(--w50)">
+      <div class="row"><span class="tiny">Your tier</span><span>Medium evidence</span></div>
+      <div class="row"><span class="tiny">Dispute type</span><span>Buyer didn't pay (cash deal)</span></div>
+      <div class="row"><span class="tiny">SLA</span><span>&lt;12h response (non-business hrs)</span></div>
+      <div class="row"><span class="tiny">Possible outcomes</span><span>Full release · Partial refund · Re-service</span></div>
+      <div class="row"><span class="tiny">Appeal window</span><span>48h after resolution</span></div>
+    </div>
+
+    <button class="btn btn-p" id="submitBtn" style="margin-top:10px">Submit Dispute</button>
+
+  </div>
+  <div class="tabbar"><a class="tb" href="01-home.html"><span class="ic">🏠</span>Home</a><a class="tb" href="05-track.html"><span class="ic">📦</span>Orders</a><a class="tb on"><span class="ic">⚖</span>Disputes</a><a class="tb" href="12-inbox.html"><span class="ic">💬</span>Inbox</a><a class="tb" href="../../mockup.html"><span class="ic">👤</span>Hub</a></div>
+</div></div>
+<div class="filenames"><span>screens/35-dispute-file.html</span></div>
+<script src="../shared/mock.js"></script>
+<script>
+document.getElementById('submitBtn').onclick=function(){this.textContent='Submitted!';this.disabled=true;this.style.background='var(--g700)';setTimeout(function(){toast('Dispute #DSP-0047 filed. SLA: <12h response.');},400);};
+</script>
+<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Servicer 3/3 · Dispute</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
+</body></html>
