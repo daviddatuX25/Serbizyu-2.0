@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Kiosk Deal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g50:#f0fdf4;--g100:#dcfce7;--g200:#bbf7d0;--g500:#22c55e;--g600:#16a34a;--g700:#15803d;--g900:#14532d;
+  --t50:#eff6ff;--t500:#3b82f6;--t600:#2563eb;--t700:#1d4ed8;
+  --a500:#f59e0b;--a600:#d97706;--a700:#b45309;
+  --w50:#fafaf9;--w100:#f5f5f4;--w200:#e7e5e4;--w300:#d6d3d1;--w400:#a8a29e;--w500:#78716c;--w600:#57534e;--w700:#44403c;--w800:#292524;--w900:#1c1917;
+  --err:#ef4444;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--w200);color:var(--w900);line-height:1.5;display:flex;flex-direction:column;align-items:center;padding:30px 16px;min-height:100vh}
+h1,h2,h3{font-family:'Plus Jakarta Sans','Inter',sans-serif}
+a{color:inherit;text-decoration:none}
+.mono{font-family:'JetBrains Mono',monospace}
+
+.stage-label{max-width:900px;width:100%;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;font-size:.72rem;color:var(--w500)}
+.stage-label b{color:var(--w700)}
+.stage-label a{color:var(--g700);font-weight:600}
+
+.tablet{width:900px;min-height:600px;background:#fff;border-radius:24px;border:8px solid var(--w900);box-shadow:0 24px 60px -20px rgba(28,25,23,.5);overflow:hidden;position:relative}
+.tablet-top{background:var(--w900);padding:8px 16px;display:flex;align-items:center;gap:8px;color:#fff;font-size:.7rem}
+.tablet-top .cam{width:8px;height:8px;border-radius:50%;background:#333;border:1px solid #555}
+.tablet-top .brand{font-weight:700;letter-spacing:.04em;margin-left:auto}
+.tablet-screen{display:flex;min-height:540px;background:var(--w50)}
+
+.main{flex:1;padding:24px 28px;overflow-y:auto;display:flex;gap:20px}
+
+.col{flex:1}
+.col h3{font-size:.85rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.col h3 .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.col h3 .dot.buyer{background:var(--t500)}
+.col h3 .dot.servicer{background:var(--g500)}
+
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:.7rem;font-weight:600;color:var(--w600);margin-bottom:4px}
+.form-group input,.form-group select{width:100%;padding:10px 12px;border:1.5px solid var(--w300);border-radius:10px;font-family:'Inter';font-size:.82rem;outline:none;background:#fff;transition:.15s}
+.form-group input:focus,.form-group select:focus{border-color:var(--g500)}
+
+/* Separator */
+.sep{width:1px;background:var(--w200);flex-shrink:0}
+
+/* Receipt column */
+.col.receipt{flex:.7;border-left:1px solid var(--w200);padding-left:20px}
+
+.receipt-paper{background:var(--w50);border:1px dashed var(--w300);border-radius:12px;padding:18px;font-size:.73rem}
+.receipt-paper .r-title{font-weight:800;font-size:.85rem;text-align:center;margin-bottom:4px;font-family:'JetBrains Mono',monospace}
+.receipt-paper .r-divider{border-top:1px solid var(--w300);margin:8px 0;text-align:center;font-size:.6rem;color:var(--w400)}
+.receipt-paper .r-row{display:flex;justify-content:space-between;padding:2px 0}
+.receipt-paper .r-qr{width:80px;height:80px;background:var(--w200);margin:8px auto;display:grid;place-items:center;border-radius:8px;font-size:3rem}
+
+/* Token box */
+.token-box{background:var(--w900);color:var(--g500);padding:10px 14px;border-radius:10px;text-align:center;margin-top:10px}
+.token-box .tok{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;letter-spacing:.1em}
+.token-box .tok-sub{font-size:.63rem;color:var(--w400);margin-top:2px}
+
+/* Action bar */
+.actions{display:flex;gap:10px;margin-top:16px}
+.btn{flex:1;padding:12px;border-radius:12px;border:0;font-family:'Inter';font-weight:600;font-size:.85rem;cursor:pointer;text-align:center;transition:.15s}
+.btn-p{background:var(--g600);color:#fff}.btn-p:hover{background:var(--g700)}
+.btn-s{background:var(--w100);color:var(--w800);border:1px solid var(--w300)}
+.btn-a{background:var(--a500);color:#fff}
+
+/* Layer badge */
+.layer-badge{padding:5px 12px;border-radius:99px;font-size:.65rem;font-weight:700;letter-spacing:.04em;display:inline-flex;align-items:center;gap:4px}
+.layer-badge.l2{background:#fef3c7;color:var(--a700)}
+
+/* SMS visual */
+.sms-box{background:var(--w100);border-left:3px solid var(--t500);padding:10px 14px;border-radius:0 10px 10px 0;margin-top:8px;font-size:.72rem}
+.sms-box .sms-from{font-size:.65rem;color:var(--w500)}
+
+.filenames{max-width:900px;width:100%;margin-top:8px;display:flex;justify-content:space-between;font-size:.62rem;color:var(--w400)}
+.pagenav{position:fixed;left:0;right:0;bottom:0;z-index:100;display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 14px;background:rgba(28,25,23,.94);backdrop-filter:blur(10px);box-shadow:0 -6px 24px rgba(0,0,0,.25)}
+.pagenav a{color:#fff;font-size:.78rem;font-weight:600;padding:9px 18px;border-radius:11px;border:1px solid rgba(255,255,255,.2);transition:.15s}
+.pagenav a:hover{background:rgba(255,255,255,.12)}
+.pagenav a.deck{background:var(--g600);border-color:var(--g600)}
+.pagenav .pn-mid{color:rgba(255,255,255,.45);font-size:.68rem}
+
+@media(max-width:960px){.tablet{width:100%;border-radius:0;border:none}.main{flex-direction:column;gap:16px}.sep{display:none}}
+</style></head>
+<body>
+
+<div class="stage-label"><b>Kiosk 2/2 — Both-Present Deal</b><span><a href="28-kiosk-home.html">← Prev</a> · <a href="../../mockup.html">⊞ Hub</a></span></div>
+
+<div class="tablet">
+  <div class="tablet-top">
+    <div class="cam"></div>
+    <span>SERBIZYU KIOSK · Brgy. Darapidap</span>
+    <span class="brand">🛡 Serbizyu</span>
+  </div>
+  <div class="tablet-screen">
+    <div class="main">
+
+      <!-- Buyer column -->
+      <div class="col">
+        <h3><span class="dot buyer"></span> Buyer</h3>
+        <div class="form-group">
+          <label>Name / Palayaw</label>
+          <input value="Juan dela Cruz" placeholder="Full name or nickname">
+        </div>
+        <div class="form-group">
+          <label>Phone number</label>
+          <input value="0917-555-1234" placeholder="Even if feature phone">
+        </div>
+        <div class="form-group">
+          <label>Service needed</label>
+          <select>
+            <option>Tricycle Ride</option>
+            <option>Plumbing</option>
+            <option>Carpentry</option>
+            <option>Delivery / Cargo</option>
+            <option>Other...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>From → To</label>
+          <input value="Public Market → Brgy. San Juan" placeholder="Pickup → Destination">
+        </div>
+
+        <!-- SMS token for servicer (if feature phone) -->
+        <div class="sms-box">
+          <div class="sms-from">📩 IF SERVICER HAS FEATURE PHONE — SMS token:</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-weight:700;margin-top:4px">SERBIZYU: Juan offers ₱40 for ride to Brgy San Juan. Reply: ACCEPT <span style="color:var(--g700)">A7K3</span></div>
+          <div style="font-size:.65rem;color:var(--w400);margin-top:2px">Token expires in 30 min · Servicer replies from registered number</div>
+        </div>
+      </div>
+
+      <!-- Separator -->
+      <div class="sep"></div>
+
+      <!-- Servicer column -->
+      <div class="col">
+        <h3><span class="dot servicer"></span> Servicer</h3>
+        <div class="form-group">
+          <label>Name</label>
+          <input value="Mang Jose" placeholder="Servicer name or palayaw">
+        </div>
+        <div class="form-group">
+          <label>Phone number</label>
+          <input value="0920-888-5678" placeholder="For SMS confirmation">
+        </div>
+        <div class="form-group">
+          <label>Service type</label>
+          <select>
+            <option selected>Tricycle — Standard Trip</option>
+            <option>Tricycle — Special Trip</option>
+            <option>Delivery</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Agreed price</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input value="40" style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem;flex:1;text-align:center" id="priceInput">
+            <span style="font-size:.7rem;color:var(--w500);white-space:nowrap">PHP cash</span>
+          </div>
+        </div>
+
+        <!-- Kiosk dual-confirm -->
+        <div style="background:var(--g50);border:1.5px solid var(--g200);border-radius:10px;padding:14px;margin-top:12px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+            <span style="font-size:1.1rem">🤝</span>
+            <div style="font-size:.75rem;font-weight:600">Both parties present — confirm on kiosk</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-p" style="flex:1;padding:10px;font-size:.75rem" id="buyerConfirm">✓ Juan Confirms</button>
+            <button class="btn btn-s" style="flex:1;padding:10px;font-size:.75rem" id="servicerConfirm">✓ Mang Jose Confirms</button>
+          </div>
+          <div style="font-size:.65rem;color:var(--w400);text-align:center;margin-top:6px" id="confirmStatus">Waiting for both confirmations...</div>
+        </div>
+
+        <!-- Layer indicator -->
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <span class="layer-badge l2">L2 Kiosk-Mediated</span>
+          <span style="font-size:.65rem;color:var(--w500)">Escrow: ✅ (kiosk proxy)</span>
+        </div>
+      </div>
+
+      <!-- Receipt column -->
+      <div class="col receipt">
+        <h3 style="font-size:.85rem;margin-bottom:12px">🧾 Receipt Preview</h3>
+
+        <div class="receipt-paper">
+          <div class="r-title">═══ SERBIZYU ═══</div>
+          <div style="text-align:center;font-size:.65rem;color:var(--w500)">Quick Deal Receipt</div>
+          <div class="r-divider">─────────────────</div>
+          <div class="r-row"><span>Deal #</span><span class="mono">QD-A7K3F9</span></div>
+          <div class="r-row"><span>Date</span><span>Jul 19, 2026 10:30 AM</span></div>
+          <div class="r-divider">─────────────────</div>
+          <div class="r-row"><span>Service</span><span>Tricycle Ride</span></div>
+          <div class="r-row"><span>From</span><span>Public Market</span></div>
+          <div class="r-row"><span>To</span><span>Brgy. San Juan</span></div>
+          <div class="r-divider">─────────────────</div>
+          <div class="r-row"><span>Servicer</span><span>Mang Jose</span></div>
+          <div class="r-row"><span>Buyer</span><span>Juan dela Cruz</span></div>
+          <div class="r-divider">─────────────────</div>
+          <div class="r-row"><span><b>Price</b></span><span class="mono"><b>₱40.00</b></span></div>
+          <div class="r-row" style="font-size:.65rem;color:var(--w500)"><span>Payment</span><span>Cash</span></div>
+          <div class="r-row" style="font-size:.65rem;color:var(--w500)"><span>Platform Fee</span><span>₱4.80 (12%)</span></div>
+          <div class="r-divider">─────────────────</div>
+          <div style="text-align:center;font-size:.65rem;color:var(--w500);margin:4px 0">Token: <span class="mono" style="font-weight:700;color:var(--w800)">A7K3F9</span></div>
+          <div class="r-qr">📱</div>
+          <div style="text-align:center;font-size:.6rem;color:var(--w400)">Scan QR to verify</div>
+          <div class="r-divider">─────────────────</div>
+          <div style="display:flex;gap:8px;font-size:.62rem;color:var(--w400)">
+            <span style="flex:1">Buyer sign: ___________</span>
+            <span style="flex:1">Servicer sign: ___________</span>
+          </div>
+          <div class="r-divider">─────────────────</div>
+          <div style="text-align:center;font-size:.6rem;color:var(--w400)">Kiosk: Brgy. Darapidap · Operator: Aling Nena</div>
+          <div style="text-align:center;font-size:.6rem;color:var(--w400)">L2 Kiosk · synced when online · token valid 30 min</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-p" id="printBtn">🖨 Print Receipt</button>
+          <button class="btn btn-s" id="syncBtn">📡 Sync Now</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="filenames"><span>screens/29-kiosk-deal.html</span><span>Kiosk-mediated deal · both parties · receipt · SMS token · L2</span></div>
+
+<script>
+var buyerConfirmed = false, servicerConfirmed = false;
+function updateConfirm(){
+  document.getElementById('confirmStatus').textContent = 
+    buyerConfirmed && servicerConfirmed ? '✅ Both confirmed! Deal recorded. Receipt ready.' :
+    buyerConfirmed ? 'Juan confirmed — waiting for Mang Jose...' :
+    servicerConfirmed ? 'Mang Jose confirmed — waiting for Juan...' :
+    'Waiting for both confirmations...';
+}
+document.getElementById('buyerConfirm').onclick=function(){
+  buyerConfirmed=!buyerConfirmed;
+  this.style.background=buyerConfirmed?'var(--g700)':'var(--g600)';
+  this.textContent=buyerConfirmed?'✓ Juan Confirmed':'✓ Juan Confirms';
+  updateConfirm();
+};
+document.getElementById('servicerConfirm').onclick=function(){
+  servicerConfirmed=!servicerConfirmed;
+  this.style.background=servicerConfirmed?'var(--g700)':'';
+  this.style.color=servicerConfirmed?'#fff':'';
+  this.textContent=servicerConfirmed?'✓ Mang Jose Confirmed':'✓ Mang Jose Confirms';
+  updateConfirm();
+};
+document.getElementById('printBtn').onclick=function(){
+  if(!buyerConfirmed||!servicerConfirmed){alert('Both parties must confirm first.');return;}
+  this.textContent='Printing...';this.disabled=true;
+  setTimeout(function(){alert('Receipt sent to kiosk printer.');},500);
+};
+document.getElementById('syncBtn').onclick=function(){
+  this.textContent='Syncing...';this.disabled=true;
+  setTimeout(function(){alert('Deal synced to server. Order #QD-A7K3F9 created.');},700);
+};
+</script>
+
+<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Kiosk 2/2 · Both-Present Deal</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
+</body></html>
