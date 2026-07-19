@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Agent Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+
+<div class="stage-label"><b>Agent 1/3 — Dashboard</b><span><a href="../../mockup.html">⊞ Hub</a> · <a href="31-owner-sms.html">Next →</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><a class="back" href="../../mockup.html">←</a><div class="ttl">Agent Dashboard</div></div>
+  <div class="pad">
+
+    <!-- Agent profile header -->
+    <div class="card" style="background:linear-gradient(135deg,var(--g900),#166534);color:#fff;padding:16px">
+      <div class="row" style="margin-bottom:8px">
+        <div class="ava" style="background:var(--g500);width:44px;height:44px;border-radius:14px;font-size:1rem">AN</div>
+        <div class="grow">
+          <b style="font-size:.9rem">Ana Navarro</b>
+          <div style="font-size:.65rem;opacity:.8">Agent since Mar 2026 · Candon, Ilocos Sur</div>
+        </div>
+        <span style="background:rgba(255,255,255,.15);padding:4px 10px;border-radius:99px;font-size:.65rem;font-weight:700">🥈 Silver</span>
+      </div>
+      <div class="row" style="gap:12px">
+        <div style="text-align:center"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem">₱3,240</div><div style="font-size:.6rem;opacity:.7">This month</div></div>
+        <div style="text-align:center"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem">4</div><div style="font-size:.6rem;opacity:.7">Owners</div></div>
+        <div style="text-align:center"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem">⭐4.6</div><div style="font-size:.6rem;opacity:.7">Agent rating</div></div>
+        <div style="text-align:center"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem">87</div><div style="font-size:.6rem;opacity:.7">Deals this mo</div></div>
+      </div>
+      <!-- Progress to Gold -->
+      <div style="margin-top:8px;background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px">
+        <div class="row" style="font-size:.62rem">
+          <span>Next tier: 🥇 Gold (200 deals)</span>
+          <span style="font-family:'JetBrains Mono',monospace">87/200</span>
+        </div>
+        <div class="pbar" style="margin-top:4px;background:rgba(255,255,255,.2)"><i style="width:43%;background:var(--g500)"></i></div>
+      </div>
+    </div>
+
+    <!-- Managed businesses -->
+    <div class="lbl" style="margin-top:4px">Managed Businesses</div>
+
+    <!-- Owner 1: Mang Jose — active, good earnings -->
+    <div class="card">
+      <div class="row" style="margin-bottom:4px">
+        <div class="ava" style="background:linear-gradient(135deg,var(--g500),var(--g700));width:34px;height:34px;border-radius:10px;font-size:.7rem">MJ</div>
+        <div class="grow">
+          <b style="font-size:.8rem">Mang Jose's Tricycle</b>
+          <div class="tiny">Owner: Mang Jose · 0917-xxx · Active</div>
+        </div>
+        <span class="badge b-g">Active</span>
+      </div>
+      <div class="row" style="font-size:.7rem;gap:12px;margin-top:6px">
+        <span>🚖 1 listing</span>
+        <span>📦 23 deals/mo</span>
+        <span style="font-family:'JetBrains Mono',monospace;color:var(--g700)">₱920/mo</span>
+        <span style="margin-left:auto;font-size:.62rem;color:var(--w500)">Your cut: 10%</span>
+      </div>
+      <div class="row" style="gap:4px;margin-top:6px">
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.68rem">View Listings</button>
+        <button class="btn btn-s" style="flex:1;padding:6px;font-size:.68rem">Earnings</button>
+      </div>
+    </div>
+
+    <!-- Owner 2: Aling Maria's Sari-Sari — graduation in progress -->
+    <div class="card" style="border-color:var(--a500)">
+      <div class="row" style="margin-bottom:4px">
+        <div class="ava" style="background:linear-gradient(135deg,var(--a500),var(--a600));width:34px;height:34px;border-radius:10px;font-size:.7rem">AM</div>
+        <div class="grow">
+          <b style="font-size:.8rem">Aling Maria's Sari-Sari Store</b>
+          <div class="tiny">Owner: Aling Maria · 0920-xxx · Graduating</div>
+        </div>
+        <span class="badge b-a" style="background:#fef3c7;color:var(--a600)">🎓 Graduating</span>
+      </div>
+      <div style="background:#fef3c7;border-radius:6px;padding:6px 8px;margin-top:4px;font-size:.65rem">
+        <div class="row">
+          <span>📱 Aling Maria got a smartphone — co-management started</span>
+        </div>
+        <div class="pbar" style="margin-top:4px"><i style="width:70%;background:var(--a500)"></i></div>
+        <div class="tiny" style="text-align:right;margin-top:2px">2.1 months into 3-month co-management</div>
+      </div>
+      <div style="font-size:.62rem;color:var(--g700);margin-top:4px;text-align:center">🎁 Graduation bonus: ₱2,760 (3× monthly avg) when complete</div>
+    </div>
+
+    <!-- Owner 3: Kuya Bert — new, low volume -->
+    <div class="card">
+      <div class="row" style="margin-bottom:4px">
+        <div class="ava" style="background:linear-gradient(135deg,var(--t500),var(--t700));width:34px;height:34px;border-radius:10px;font-size:.7rem">KB</div>
+        <div class="grow">
+          <b style="font-size:.8rem">Kuya Bert's Plumbing</b>
+          <div class="tiny">Owner: Kuya Bert · 0935-xxx · Active</div>
+        </div>
+        <span class="badge b-t" style="background:var(--t50);color:var(--t700)">New</span>
+      </div>
+      <div class="row" style="font-size:.7rem;gap:12px;margin-top:4px">
+        <span>🔧 2 listings</span>
+        <span>📦 5 deals/mo</span>
+        <span style="font-family:'JetBrains Mono',monospace;color:var(--t700)">₱175/mo</span>
+      </div>
+    </div>
+
+    <!-- Owner 4: Nanding's Lechonan -->
+    <div class="card">
+      <div class="row" style="margin-bottom:4px">
+        <div class="ava" style="background:linear-gradient(135deg,var(--a500),var(--a600));width:34px;height:34px;border-radius:10px;font-size:.7rem">NL</div>
+        <div class="grow">
+          <b style="font-size:.8rem">Nanding's Lechonan</b>
+          <div class="tiny">Owner: Nanding · 0918-xxx · Active</div>
+        </div>
+        <span class="badge b-g">Active</span>
+      </div>
+      <div class="row" style="font-size:.7rem;gap:12px;margin-top:4px">
+        <span>🍖 3 listings</span>
+        <span>📦 28 deals/mo</span>
+        <span style="font-family:'JetBrains Mono',monospace;color:var(--g700)">₱1,400/mo</span>
+      </div>
+    </div>
+
+    <button class="btn btn-p" style="margin-top:10px">➕ Register New Owner</button>
+
+    <div style="text-align:center;margin-top:10px;font-size:.65rem;color:var(--w500)">
+      <span>Suggested agent commission: <b>10–15%</b></span> · 
+      <span>75/10/15 default</span> ·
+      <span>Negotiable</span>
+    </div>
+
+  </div>
+  <div class="tabbar"><a class="tb" href="01-home.html"><span class="ic">🏠</span>Home</a><a class="tb on"><span class="ic">👥</span>Owners</a><a class="tb"><span class="ic">💰</span>Earnings</a><a class="tb" href="12-inbox.html"><span class="ic">💬</span>Inbox</a><a class="tb" href="../../mockup.html"><span class="ic">👤</span>Hub</a></div>
+</div></div>
+<div class="filenames"><span>screens/30-agent-dashboard.html</span><span>Agent dashboard · multi-business · tier progress · graduation</span></div>
+
+<script src="../shared/mock.js"></script>
+<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Agent 1/3 · Dashboard</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
+</body></html>
