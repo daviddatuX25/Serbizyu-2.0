@@ -68,6 +68,15 @@ This plan converts the grilling-session output into an ordered, dependency-aware
 
 **WS-00c — A2 GPS auto-advance spike.** Stress-test GPS accuracy and battery behavior on a cheap Android in provincial signal conditions. Deliverable: accuracy report; confirm "manual confirm always available, GPS only assists" guardrail holds. Source: D22-era risk register.
 
+
+### Spike Decisions (Grilled 2026-07-19)
+
+| Spike | Decision | Summary |
+|---|---|---|
+| WS-00a Xendit | ✅ GO | Path A (Protected, escrow) primary. Path B (Direct, ₱15-25 flat fee) credit-gated — servicer Tier 3+, 50+ Path A tx, pre-topup = listing boost. Xendit-only rail at launch. Negotiate rates post-traction. |
+| WS-00b Semaphore | ✅ GO | SMS-only at launch via Semaphore OTP endpoint. philsms as backup provider. No voice OTP, no WhatsApp, no international. 3-attempt retry policy. Account application in Phase 0. |
+| WS-00c GPS | ✅ GO | 800m auto-advance threshold, 3-sample debounce, buyer tap-confirm required. App works screen-off (heat protection). Manual confirmation always available as primary fallback. Quick Deal: GPS auto-advance. Near-offline: seller QR + facial. Full offline: kiosk. |
+
 ### P1 — Mockups for New Primitives (specs already exist; screens feed the pitch deck)
 
 **WS-01 — Quick Deal screens.** Source: deal-system §2, §11. Screens 22–24: QR landing chooser (Book / Quick Deal / Reviews / Message), price negotiation, dual confirmation + receipt. DoD: linked in mockup hub, EN/Taglish toggle, brand tokens.
