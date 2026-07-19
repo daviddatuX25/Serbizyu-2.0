@@ -6,111 +6,100 @@
 :root{
   --g50:#f0fdf4;--g100:#dcfce7;--g200:#bbf7d0;--g500:#22c55e;--g600:#16a34a;--g700:#15803d;--g900:#14532d;
   --t50:#eff6ff;--t500:#3b82f6;--t600:#2563eb;--t700:#1d4ed8;
-  --a500:#f59e0b;--a600:#d97706;--a700:#b45309;
+  --a500:#f59e0b;--a600:#d97706;
   --w50:#fafaf9;--w100:#f5f5f4;--w200:#e7e5e4;--w300:#d6d3d1;--w400:#a8a29e;--w500:#78716c;--w600:#57534e;--w700:#44403c;--w800:#292524;--w900:#1c1917;
-  --err:#ef4444;--r:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--w200);color:var(--w900);line-height:1.5;display:flex;flex-direction:column;align-items:center;padding:30px 16px;min-height:100vh}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--w200);color:var(--w900);line-height:1.4;display:flex;flex-direction:column;align-items:center;padding:24px 12px;min-height:100vh}
 h1,h2,h3{font-family:'Plus Jakarta Sans','Inter',sans-serif}
 a{color:inherit;text-decoration:none}
 .mono{font-family:'JetBrains Mono',monospace}
 
-/* Tablet Chrome */
-.stage-label{max-width:900px;width:100%;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;font-size:.72rem;color:var(--w500)}
+.stage-label{max-width:960px;width:100%;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;font-size:.68rem;color:var(--w500)}
 .stage-label b{color:var(--w700)}
 .stage-label a{color:var(--g700);font-weight:600}
 
-.tablet{width:900px;min-height:600px;background:#fff;border-radius:24px;border:8px solid var(--w900);box-shadow:0 24px 60px -20px rgba(28,25,23,.5);overflow:hidden;position:relative}
-.tablet-top{background:var(--w900);padding:8px 16px;display:flex;align-items:center;gap:8px;color:#fff;font-size:.7rem}
-.tablet-top .cam{width:8px;height:8px;border-radius:50%;background:#333;border:1px solid #555}
-.tablet-top .brand{font-weight:700;letter-spacing:.04em;margin-left:auto}
-.tablet-screen{display:flex;min-height:540px;background:var(--w50)}
+.kiosk{width:960px;height:540px;background:#fff;border-radius:20px;border:6px solid var(--w900);box-shadow:0 20px 50px -16px rgba(28,25,23,.5);overflow:hidden;position:relative}
+.kiosk-top{background:var(--w900);padding:6px 14px;display:flex;align-items:center;gap:8px;color:#fff;font-size:.65rem;flex-shrink:0}
+.kiosk-top .cam{width:7px;height:7px;border-radius:50%;background:#333;border:1px solid #444}
+.kiosk-top .brand{font-weight:700;letter-spacing:.04em;margin-left:auto}
+.kiosk-body{display:flex;height:504px}
 
-/* Sidebar */
-.sidebar{width:220px;background:var(--w900);color:#fff;padding:16px 0;display:flex;flex-direction:column}
-.sidebar .loc{display:flex;align-items:center;gap:8px;padding:8px 16px;margin-bottom:8px;font-size:.75rem;font-weight:600;background:rgba(255,255,255,.08);border-left:3px solid var(--g500)}
-.sidebar .nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:.78rem;color:rgba(255,255,255,.6);cursor:pointer;transition:.15s;border-left:3px solid transparent}
+.sidebar{width:180px;background:var(--w900);color:#fff;padding:10px 0;display:flex;flex-direction:column;flex-shrink:0}
+.sidebar .loc{padding:6px 12px;font-size:.65rem;font-weight:600;background:rgba(255,255,255,.08);border-left:3px solid var(--g500);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.sidebar .nav-item{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:.68rem;color:rgba(255,255,255,.55);cursor:pointer;transition:.1s;border-left:3px solid transparent}
 .sidebar .nav-item:hover,.sidebar .nav-item.on{color:#fff;background:rgba(255,255,255,.06);border-left-color:var(--g500)}
-.sidebar .nav-item .ic{font-size:1.1rem;width:24px;text-align:center}
+.sidebar .nav-item .ic{font-size:.95rem;width:20px;text-align:center}
 .sidebar .spacer{flex:1}
-.sidebar .status{font-size:.68rem;padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);color:var(--w400)}
+.sidebar .status{padding:8px 12px;font-size:.58rem;border-top:1px solid rgba(255,255,255,.08);color:var(--w400)}
 
-/* Main area */
-.main{flex:1;padding:20px 24px;overflow-y:auto}
+.main{flex:1;padding:16px 18px;overflow-y:auto}
 
-/* Header row */
-.header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.header-row h2{font-size:1.2rem}
-.layer-badge{padding:5px 12px;border-radius:99px;font-size:.68rem;font-weight:700;letter-spacing:.04em}
-.layer-badge.l0{background:var(--g100);color:var(--g700)}
-.layer-badge.l1{background:var(--t50);color:var(--t700)}
-.layer-badge.l2{background:#fef3c7;color:var(--a700)}
-.layer-badge.l3{background:#fee2e2;color:#b91c1c}
-.layer-badge.l4{background:var(--w100);color:var(--w600)}
+.header-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.header-row h2{font-size:1.05rem}
+.l2-badge{padding:4px 10px;border-radius:99px;font-size:.6rem;font-weight:700;background:#fef3c7;color:var(--a600);display:inline-flex;align-items:center;gap:4px}
 
-/* Mode cards */
-.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
-.mode-card{background:#fff;border:2px solid var(--w200);border-radius:16px;padding:20px;cursor:pointer;transition:.2s}
-.mode-card:hover{border-color:var(--g500);box-shadow:0 8px 24px -10px rgba(0,0,0,.12)}
-.mode-card.on{border-color:var(--g500);background:var(--g50)}
-.mode-card .mc-icon{font-size:2rem;margin-bottom:8px}
-.mode-card .mc-title{font-weight:700;font-size:.95rem;margin-bottom:4px}
-.mode-card .mc-sub{font-size:.73rem;color:var(--w500);line-height:1.4}
-.mode-card.wide{grid-column:span 2;text-align:center}
-.mode-card.wide .mc-icon{font-size:2.2rem}
+/* Layer indicator */
+.layer-bar{display:flex;gap:4px;align-items:center;margin-bottom:12px}
+.layer-dot{display:inline-flex;align-items:center;gap:2px;padding:3px 8px;border-radius:99px;font-size:.58rem;font-weight:600}
+.layer-dot.l0{background:var(--g100);color:var(--g700)}
+.layer-dot.l1{background:var(--t50);color:var(--t700)}
+.layer-dot.l2{background:#fef3c7;color:var(--a600);box-shadow:0 0 0 2px rgba(245,158,11,.2)}
+.layer-dot.l3{background:#fee2e2;color:#b91c1c}
+.layer-dot.l4{background:var(--w100);color:var(--w500)}
+.layer-arr{color:var(--w300);font-size:.55rem}
 
-/* Quick stats */
-.quick-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
-.stat-card{background:#fff;border:1px solid var(--w200);border-radius:12px;padding:14px;text-align:center}
-.stat-card .val{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--g700)}
-.stat-card .lbl{font-size:.68rem;color:var(--w500);margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:#fff;border:1px solid var(--w200);border-radius:10px;padding:10px 12px;text-align:center}
+.stat .val{font-family:'JetBrains Mono',monospace;font-size:1.15rem;font-weight:700;color:var(--g700)}
+.stat .lbl{font-size:.6rem;color:var(--w500);margin-top:1px}
 
-/* Recent deals table */
-.deal-table{width:100%;border-collapse:collapse;font-size:.78rem}
-.deal-table th{text-align:left;font-size:.68rem;color:var(--w500);font-weight:600;padding:8px 10px;border-bottom:2px solid var(--w200)}
-.deal-table td{padding:10px;border-bottom:1px solid var(--w100)}
+.mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.mcard{background:#fff;border:1.5px solid var(--w200);border-radius:10px;padding:12px;cursor:pointer;transition:.15s}
+.mcard:hover,.mcard.on{border-color:var(--g500);background:var(--g50)}
+.mcard .ic{font-size:1.4rem;margin-bottom:4px}
+.mcard .t{font-weight:700;font-size:.75rem}
+.mcard .s{font-size:.62rem;color:var(--w500);margin-top:2px;line-height:1.35}
+
+.deal-table{width:100%;border-collapse:collapse;font-size:.65rem}
+.deal-table th{text-align:left;font-size:.6rem;color:var(--w500);font-weight:600;padding:6px 8px;border-bottom:2px solid var(--w200)}
+.deal-table td{padding:7px 8px;border-bottom:1px solid var(--w100)}
 .deal-table tr{cursor:pointer;transition:.1s}
 .deal-table tr:hover{background:var(--g50)}
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:.66rem;font-weight:600}
+
+.badge{display:inline-flex;align-items:center;gap:2px;padding:2px 6px;border-radius:99px;font-size:.58rem;font-weight:600}
 .b-g{background:var(--g100);color:var(--g700)}
 .b-t{background:var(--t50);color:var(--t700)}
-.b-a{background:#fef3c7;color:var(--a600)}
 
-/* Footer */
-.pagenav{position:fixed;left:0;right:0;bottom:0;z-index:100;display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 14px;background:rgba(28,25,23,.94);backdrop-filter:blur(10px);box-shadow:0 -6px 24px rgba(0,0,0,.25)}
-.pagenav a{color:#fff;font-size:.78rem;font-weight:600;padding:9px 18px;border-radius:11px;border:1px solid rgba(255,255,255,.2);transition:.15s}
+.pagenav{position:fixed;left:0;right:0;bottom:0;z-index:100;display:flex;justify-content:center;align-items:center;gap:12px;padding:8px 14px;background:rgba(28,25,23,.94);backdrop-filter:blur(10px);box-shadow:0 -4px 20px rgba(0,0,0,.25)}
+.pagenav a{color:#fff;font-size:.72rem;font-weight:600;padding:8px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.2)}
 .pagenav a:hover{background:rgba(255,255,255,.12)}
 .pagenav a.deck{background:var(--g600);border-color:var(--g600)}
-.pagenav a.deck:hover{background:var(--g700)}
-.pagenav .pn-mid{color:rgba(255,255,255,.45);font-size:.68rem}
-
-@media(max-width:960px){.tablet{width:100%;border-radius:0;border:none}.sidebar{display:none}}
+.pagenav .pn-mid{color:rgba(255,255,255,.4);font-size:.62rem}
 </style></head>
 <body>
 
 <div class="stage-label"><b>Kiosk 1/2 — Barangay Hall Hub</b><span><a href="../../mockup.html">⊞ Hub</a> · <a href="29-kiosk-deal.html">Next →</a></span></div>
 
-<div class="tablet">
-  <div class="tablet-top">
+<div class="kiosk">
+  <div class="kiosk-top">
     <div class="cam"></div>
     <span>SERBIZYU KIOSK · Barangay Hall Terminal</span>
     <span class="brand">🛡 Serbizyu</span>
   </div>
-  <div class="tablet-screen">
+  <div class="kiosk-body">
 
     <!-- Sidebar -->
     <div class="sidebar">
       <div class="loc">📍 Brgy. Darapidap, Candon</div>
-      <div class="nav-item on"><span class="ic">🏠</span> Kiosk Home</div>
-      <div class="nav-item"><span class="ic">🤝</span> New Deal</div>
-      <div class="nav-item"><span class="ic">📋</span> Today's Deals</div>
-      <div class="nav-item"><span class="ic">👤</span> Operator: Aling Nena</div>
+      <div class="nav-item on"><span class="ic">🏠</span>Kiosk Home</div>
+      <div class="nav-item"><span class="ic">🤝</span>New Deal</div>
+      <div class="nav-item"><span class="ic">📋</span>Today's Deals</div>
+      <div class="nav-item"><span class="ic">👤</span>Operator: Aling Nena</div>
       <div class="spacer"></div>
       <div class="status">
-        <div style="color:var(--g500)">● Online — L2 Kiosk</div>
-        <div style="margin-top:2px;color:var(--w400)">Last sync: 2 min ago</div>
-        <div style="margin-top:2px;color:var(--w400)">4 pending sync</div>
+        <span style="color:var(--g500)">● Online — L2 Kiosk</span><br>
+        Last sync 2m ago · 4 pending
       </div>
     </div>
 
@@ -119,76 +108,70 @@ a{color:inherit;text-decoration:none}
       <div class="header-row">
         <div>
           <h2>Barangay Kiosk Hub</h2>
-          <div style="font-size:.73rem;color:var(--w500)">Shared terminal — sari-sari store & barangay hall</div>
+          <div style="font-size:.65rem;color:var(--w500)">Shared terminal — sari-sari store & barangay hall</div>
         </div>
-        <span class="layer-badge l2">L2 · KIOSK</span>
+        <span class="l2-badge">L2 · KIOSK</span>
       </div>
 
-      <!-- Degradation layer explainer -->
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
-        <span style="font-size:.65rem;font-weight:600;color:var(--w500);margin-right:6px">LAYER:</span>
-        <span class="layer-badge l0">L0 Full Online</span>
-        <span style="color:var(--w300);font-size:.7rem">→</span>
-        <span class="layer-badge l1">L1 SMS-Aided</span>
-        <span style="color:var(--w300);font-size:.7rem">→</span>
-        <span class="layer-badge l2">L2 Kiosk</span>
-        <span style="color:var(--w300);font-size:.7rem">→</span>
-        <span class="layer-badge l3">L3 Local-First</span>
-        <span style="color:var(--w300);font-size:.7rem">→</span>
-        <span class="layer-badge l4">L4 Paper Trail</span>
-        <span style="font-size:.65rem;color:var(--g700);font-weight:600;margin-left:8px">◀ ACTIVE</span>
+      <!-- Degradation layer -->
+      <div class="layer-bar">
+        <span class="layer-dot l0">L0 Full</span><span class="layer-arr">→</span>
+        <span class="layer-dot l1">L1 SMS</span><span class="layer-arr">→</span>
+        <span class="layer-dot l2">L2 KIOSK ◀</span><span class="layer-arr">→</span>
+        <span class="layer-dot l3">L3 Local</span><span class="layer-arr">→</span>
+        <span class="layer-dot l4">L4 Paper</span>
+        <span style="font-size:.58rem;color:var(--a600);font-weight:600;margin-left:8px">ACTIVE</span>
       </div>
 
-      <!-- Quick stats -->
-      <div class="quick-stats">
-        <div class="stat-card"><div class="val">8</div><div class="lbl">Today's deals</div></div>
-        <div class="stat-card"><div class="val">₱1,240</div><div class="lbl">Total volume</div></div>
-        <div class="stat-card"><div class="val">12%</div><div class="lbl">Kiosk cash rate</div></div>
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat"><div class="val">8</div><div class="lbl">Today's deals</div></div>
+        <div class="stat"><div class="val">₱1,240</div><div class="lbl">Total volume</div></div>
+        <div class="stat"><div class="val">12%</div><div class="lbl">Kiosk cash rate</div></div>
       </div>
 
       <!-- Mode selector -->
-      <h3 style="font-size:.9rem;margin-bottom:10px">What brings you to the kiosk?</h3>
-      <div class="mode-grid">
-        <div class="mode-card" onclick="this.classList.toggle('on')">
-          <div class="mc-icon">👤🔍</div>
-          <div class="mc-title">I need a service</div>
-          <div class="mc-sub">Buyer has no smartphone. Operator searches servicers, creates deal, sends SMS to servicer.</div>
+      <h3 style="font-size:.75rem;margin-bottom:8px">What brings you to the kiosk?</h3>
+      <div class="mode-cards">
+        <div class="mcard">
+          <div class="ic">👤🔍</div>
+          <div class="t">I need a service</div>
+          <div class="s">Buyer has no device. Operator searches & sends SMS invite to servicer.</div>
         </div>
-        <div class="mode-card" onclick="this.classList.toggle('on')">
-          <div class="mc-icon">🛠📱</div>
-          <div class="mc-title">I offer a service</div>
-          <div class="mc-sub">Servicer has no device. Manage availability, wait for buyers, create deal when found.</div>
+        <div class="mcard">
+          <div class="ic">🛠📱</div>
+          <div class="t">I offer a service</div>
+          <div class="s">Servicer manages availability, waits for buyers, gets notified.</div>
         </div>
-        <div class="mode-card wide on" onclick="location.href='29-kiosk-deal.html'" style="border-color:var(--g500);background:var(--g50)">
-          <div class="mc-icon">🤝</div>
-          <div class="mc-title">We're both here — start a deal now</div>
-          <div class="mc-sub">Most common. Both parties present at kiosk. Quick Deal or Deal-Chain. Receipt printed.</div>
-        </div>
+      </div>
+      <div class="mcard on" style="grid-column:span 2;text-align:center;border-color:var(--g500);background:var(--g50);margin-bottom:14px" onclick="location.href='29-kiosk-deal.html'">
+        <div class="ic">🤝</div>
+        <div class="t">We're both here — start deal now</div>
+        <div class="s">Face scan or QR tag. Quick Deal. Receipt printed.</div>
       </div>
 
       <!-- Recent deals -->
-      <h3 style="font-size:.9rem;margin-bottom:8px">Recent Kiosk Deals</h3>
+      <h3 style="font-size:.75rem;margin-bottom:6px">Recent Kiosk Deals</h3>
       <table class="deal-table">
-        <tr><th>Time</th><th>Deal</th><th>Buyer</th><th>Servicer</th><th>Price</th><th>Status</th></tr>
+        <tr><th>Time</th><th>Deal</th><th>From</th><th>To</th><th>Price</th><th>Status</th></tr>
         <tr onclick="location.href='29-kiosk-deal.html'">
-          <td>10:15 AM</td><td>Tricycle to Market</td><td>Juan D.</td><td>Mang Jose</td><td class="mono">₱40</td><td><span class="badge b-g">Done</span></td>
+          <td>10:15 AM</td><td>Tricycle</td><td>Juan D.</td><td>Mang Jose</td><td class="mono">₱40</td><td><span class="badge b-g">Done</span></td>
         </tr>
         <tr>
-          <td>9:42 AM</td><td>Plumbing repair</td><td>Aling Maria</td><td>Kuya Bert</td><td class="mono">₱350</td><td><span class="badge b-t">Active</span></td>
+          <td>9:42 AM</td><td>Plumbing</td><td>Aling Maria</td><td>Kuya Bert</td><td class="mono">₱350</td><td><span class="badge b-t">Active</span></td>
         </tr>
         <tr>
-          <td>8:30 AM</td><td>Cargo to Vigan</td><td>Mang Pedro</td><td>Rey's Truck</td><td class="mono">₱500</td><td><span class="badge b-t">Active</span></td>
+          <td>8:30 AM</td><td>Cargo</td><td>Mang Pedro</td><td>Rey's Truck</td><td class="mono">₱500</td><td><span class="badge b-t">Active</span></td>
         </tr>
         <tr>
-          <td>7:05 AM</td><td>Lechon delivery</td><td>Fiesta Com.</td><td>Nanding's</td><td class="mono">₱2,500</td><td><span class="badge b-g">Done</span></td>
+          <td>7:05 AM</td><td>Lechon</td><td>Fiesta Com.</td><td>Nanding's</td><td class="mono">₱2,500</td><td><span class="badge b-g">Done</span></td>
         </tr>
       </table>
     </div>
-
   </div>
 </div>
 
-<div class="filenames"><span>screens/28-kiosk-home.html</span><span>Kiosk PWA · barangay hall · L2 degradation · tablet form</span></div>
+<div class="filenames"><span>screens/28-kiosk-home.html</span><span>Kiosk PWA · barangay · L2 degradation · landscape-locked</span></div>
 
-<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Kiosk 1/2 · Barangay Hall Hub</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
+<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Kiosk 1/2 · Landscape Hub</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
 </body></html>
