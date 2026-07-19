@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Slot Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+
+<div class="langtoggle" style="position:fixed;top:12px;right:14px;z-index:200;display:flex;background:rgba(28,25,23,.9);border-radius:99px;padding:3px;box-shadow:0 4px 16px rgba(0,0,0,.3);backdrop-filter:blur(6px)">
+  <button class="on" data-lang="en">EN</button>
+  <button data-lang="tl">🇵🇭 TL</button>
+</div>
+
+<div class="stage-label"><b>Deal-Chaining 2/3</b><span><a href="25-deal-create.html">← Prev</a> · <a href="27-deal-track.html">Next →</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><a class="back" href="25-deal-create.html">←</a><div class="ttl" data-i18n="title">Slot Manager</div></div>
+  <div class="pad">
+
+    <!-- Deal header -->
+    <div class="card" style="background:linear-gradient(135deg,var(--g50),#dcfce7);border-color:var(--g200)">
+      <div class="row" style="margin-bottom:4px">
+        <div class="grow"><b style="font-size:.9rem" data-i18n="deal-name">🎉 Fiesta Preparation</b></div>
+        <span class="badge b-a" data-i18n="deal-status">pending_slots</span>
+      </div>
+      <div class="row">
+        <span class="tiny" data-i18n="slots-count">3 slots · 1 filled</span>
+        <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--g700)">₱6,700</span>
+      </div>
+      <div class="pbar" style="margin-top:6px"><i style="width:33%"></i></div>
+      <div class="tiny" style="margin-top:3px;text-align:right" data-i18n="progress">1 of 3 slots filled</div>
+    </div>
+
+    <!-- Slot 1: invitation_sent -->
+    <div class="lbl" data-i18n="slot1-label">Slot 1 — Lechon (₱2,500)</div>
+    <div class="card" style="border-color:#bfdbfe">
+      <div class="row" style="margin-bottom:6px">
+        <span class="badge b-t" data-i18n="s1-status">📨 Invitation Sent</span>
+        <span class="tiny" style="margin-left:auto" data-i18n="s1-expiry">Expires in 41h</span>
+      </div>
+      <div class="row" style="align-items:flex-start">
+        <div class="ava" style="background:linear-gradient(135deg,var(--a500),var(--a600))">NR</div>
+        <div class="grow">
+          <b style="font-size:.82rem">Nanding's Lechonan</b>
+          <div class="tiny">⭐ 4.6 · 124 events · Candon</div>
+        </div>
+        <span class="badge b-g">Top Pick</span>
+      </div>
+      <div class="row" style="margin-top:8px;gap:6px">
+        <button class="btn btn-s" style="flex:1;font-size:.73rem;padding:8px" data-i18n="s1-cancel">Cancel Invite</button>
+        <button class="btn btn-s" style="flex:1;font-size:.73rem;padding:8px" data-i18n="s1-replace">Replace</button>
+      </div>
+      <div class="tiny" style="text-align:center;margin-top:6px" data-i18n="s1-waiting">Waiting for response · no payment yet</div>
+    </div>
+
+    <!-- Slot 2: filled -->
+    <div class="lbl" data-i18n="slot2-label">Slot 2 — Sound System (₱2,200)</div>
+    <div class="card" style="border-color:var(--g200)">
+      <div class="row" style="margin-bottom:6px">
+        <span class="badge b-g" data-i18n="s2-status">✅ Filled</span>
+        <span class="tiny" style="margin-left:auto;color:var(--g700)" data-i18n="s2-agreed">Agreed ₱2,000</span>
+      </div>
+      <div class="row" style="align-items:flex-start">
+        <div class="ava" style="background:linear-gradient(135deg,var(--g500),var(--g700))">RS</div>
+        <div class="grow">
+          <b style="font-size:.82rem">Rey's Sound Rentals</b>
+          <div class="tiny">⭐ 4.9 · 312 events · Candon</div>
+        </div>
+      </div>
+      <div style="margin-top:6px;font-size:.72rem;color:var(--w500)">
+        <span data-i18n="s2-negotiated">Negotiated from ₱2,200</span> ·
+        <span>partial release: <b>No</b> (waits for all)</span>
+      </div>
+    </div>
+
+    <!-- Slot 3: pending -->
+    <div class="lbl" data-i18n="slot3-label">Slot 3 — Catering (₱2,000)</div>
+    <div class="card" style="border-style:dashed;border-color:var(--w300)">
+      <div class="row" style="margin-bottom:6px">
+        <span class="badge b-w" data-i18n="s3-status">⏳ Pending</span>
+        <span class="tiny" style="margin-left:auto">🍖 Food & Catering</span>
+      </div>
+      <div class="tiny" style="text-align:center;padding:8px 0" data-i18n="s3-empty">No servicer invited yet</div>
+      <div class="row" style="gap:6px">
+        <input class="inp" placeholder="Search caterers in Candon..." style="flex:1;font-size:.8rem;padding:10px">
+        <button class="btn btn-p" style="padding:10px 14px;font-size:.75rem;white-space:nowrap" data-i18n="s3-search">Find</button>
+      </div>
+      <div class="tiny" style="margin-top:6px;text-align:center" data-i18n="s3-hint">Search by category, rating, or name</div>
+    </div>
+
+    <!-- Escrow info -->
+    <div class="card" style="background:var(--w50);margin-top:8px">
+      <div class="row">
+        <span style="font-size:1.1rem">🛡</span>
+        <div class="grow">
+          <b style="font-size:.75rem" data-i18n="escrow-title">How escrow works here</b>
+          <div class="tiny" data-i18n="escrow-body">You pay once (₱6,700 total) when all slots are filled. Each slot's portion is held in escrow. All escrows release when every slot completes — or servicers can opt for partial release.</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-p" id="payBtn" style="margin-top:8px" disabled data-i18n="pay-btn">Fill All Slots to Pay</button>
+
+  </div>
+  <div class="tabbar"><a class="tb" href="01-home.html"><span class="ic">🏠</span>Home</a><a class="tb" href="02-search.html"><span class="ic">🔍</span>Search</a><a class="tb on" href="05-track.html"><span class="ic">📦</span>Orders</a><a class="tb" href="12-inbox.html"><span class="ic">💬</span>Inbox</a><a class="tb" href="../../mockup.html"><span class="ic">👤</span>Hub</a></div>
+</div></div>
+<div class="filenames"><span>screens/26-deal-slots.html</span><span>Slot manager · invitations · servicer search</span></div>
+
+<script src="../shared/mock.js"></script>
+<script>
+document.getElementById('payBtn').onclick=function(){
+  if(this.disabled) return;
+  this.textContent='Processing...';this.disabled=true;
+  setTimeout(function(){location.href='27-deal-track.html';},600);
+};
+// Sim: clicking Find for Slot 3 fills it after delay
+var findBtn = document.querySelector('#slot3 .btn-p');
+if(findBtn){
+  findBtn.onclick=function(){
+    this.textContent='Found!';this.disabled=true;
+    // Update slot 3 to filled
+    setTimeout(function(){
+      var s3card = document.getElementById('slot3').closest('.card') || document.querySelectorAll('.card')[4];
+      // Simple: update the UI
+      toast('Caterer invited: Aling Tessie\'s Catering');
+      // Navigate to tracker
+      setTimeout(function(){location.href='27-deal-track.html';},800);
+    },400);
+  };
+}
+</script>
+
+<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Deal-Chaining 2/3 · Slot Manager</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
+
+<script>
+window.I18N_SCREEN = {
+  en:{
+    title:"Slot Manager",
+    "deal-name":"🎉 Fiesta Preparation",
+    "deal-status":"pending_slots",
+    "slots-count":"3 slots · 1 filled",
+    "progress":"1 of 3 slots filled",
+    "slot1-label":"Slot 1 — Lechon (₱2,500)",
+    "s1-status":"📨 Invitation Sent",
+    "s1-expiry":"Expires in 41h",
+    "s1-cancel":"Cancel Invite",
+    "s1-replace":"Replace",
+    "s1-waiting":"Waiting for response · no payment yet",
+    "slot2-label":"Slot 2 — Sound System (₱2,200)",
+    "s2-status":"✅ Filled",
+    "s2-agreed":"Agreed ₱2,000",
+    "s2-negotiated":"Negotiated from ₱2,200",
+    "slot3-label":"Slot 3 — Catering (₱2,000)",
+    "s3-status":"⏳ Pending",
+    "s3-empty":"No servicer invited yet",
+    "s3-search":"Find",
+    "s3-hint":"Search by category, rating, or name",
+    "escrow-title":"How escrow works here",
+    "escrow-body":"You pay once (₱6,700 total) when all slots are filled. Each slot's portion is held in escrow. All escrows release when every slot completes — or servicers can opt for partial release.",
+    "pay-btn":"Fill All Slots to Pay"
+  },
+  tl:{
+    title:"Slot Manager",
+    "deal-name":"🎉 Paghahanda sa Fiesta",
+    "deal-status":"pending_slots",
+    "slots-count":"3 slot · 1 ang puno",
+    "progress":"1 sa 3 slot ang puno",
+    "slot1-label":"Slot 1 — Lechon (₱2,500)",
+    "s1-status":"📨 Naipadala ang Imbitasyon",
+    "s1-expiry":"Mawawalan ng bisa sa 41 oras",
+    "s1-cancel":"Kanselahin ang Imbitasyon",
+    "s1-replace":"Palitan",
+    "s1-waiting":"Naghihintay ng sagot · wala pang bayad",
+    "slot2-label":"Slot 2 — Sound System (₱2,200)",
+    "s2-status":"✅ Puno",
+    "s2-agreed":"Napagkasunduan ₱2,000",
+    "s2-negotiated":"Nakipag-usap mula sa ₱2,200",
+    "slot3-label":"Slot 3 — Catering (₱2,000)",
+    "s3-status":"⏳ Nakabinbin",
+    "s3-empty":"Wala pang inimbitahang servicer",
+    "s3-search":"Hanapin",
+    "s3-hint":"Maghanap ayon sa kategorya, rating, o pangalan",
+    "escrow-title":"Paano gumagana ang escrow dito",
+    "escrow-body":"Isang beses ka lang magbabayad (₱6,700 kabuuan) kapag puno na ang lahat ng slot. Ang bahagi ng bawat slot ay naka-hold sa escrow. Ilalabas ang lahat ng escrow kapag tapos na ang bawat slot — o pwedeng mag-opt ang servicer para sa partial release.",
+    "pay-btn":"Punuin ang Lahat ng Slot Bago Magbayad"
+  }
+};
+(function(){
+  var lang = localStorage.getItem('serbizyu-lang') || 'en';
+  function setLang(l){
+    lang = l; localStorage.setItem('serbizyu-lang', l);
+    var map = window.I18N_SCREEN[l];
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key = el.getAttribute('data-i18n');
+      if(map[key]) el.textContent = map[key];
+    });
+    document.querySelectorAll('.langtoggle button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-lang') === l);
+    });
+  }
+  document.querySelectorAll('.langtoggle button').forEach(function(b){
+    b.addEventListener('click', function(){ setLang(this.getAttribute('data-lang')); });
+  });
+  setLang(lang);
+})();
+</script>
+</body></html>

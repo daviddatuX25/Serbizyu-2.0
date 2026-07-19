@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Create Deal-Chain</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/mock.css"></head>
+<body>
+
+<div class="langtoggle" style="position:fixed;top:12px;right:14px;z-index:200;display:flex;background:rgba(28,25,23,.9);border-radius:99px;padding:3px;box-shadow:0 4px 16px rgba(0,0,0,.3);backdrop-filter:blur(6px)">
+  <button class="on" data-lang="en">EN</button>
+  <button data-lang="tl">🇵🇭 TL</button>
+</div>
+
+<div class="stage-label"><b>Deal-Chaining 1/3</b><span><a href="../../mockup.html">⊞ Hub</a> · <a href="26-deal-slots.html">Next →</a></span></div>
+<div class="phone"><div class="notch"></div>
+<div class="screen">
+  <div class="phead"><a class="back" href="../../mockup.html">←</a><div class="ttl" data-i18n="title">Create Deal-Chain</div></div>
+  <div class="pad">
+
+    <!-- Deal name -->
+    <div class="lbl" data-i18n="name-label">Deal name</div>
+    <input class="inp" id="dealName" placeholder="e.g. Fiesta Preparation, House Renovation" style="font-weight:600">
+
+    <!-- Budget (optional) -->
+    <div class="lbl" data-i18n="budget-label">Total budget (optional)</div>
+    <div class="row" style="gap:8px">
+      <input class="inp" id="dealBudget" placeholder="₱6,700" style="font-family:'JetBrains Mono',monospace;flex:1">
+      <span class="tiny" style="white-space:nowrap" data-i18n="budget-hint">or let servicers propose</span>
+    </div>
+
+    <!-- Slots section -->
+    <div class="lbl" data-i18n="slots-label">Slots (services needed)</div>
+    <div class="card" style="background:var(--t50);border-color:#bfdbfe;margin-bottom:8px">
+      <div class="tiny" style="color:var(--t600)" data-i18n="slots-hint">Each slot becomes an independent order with its own servicer, escrow, and tracking. Buyer pays once — system splits per slot.</div>
+    </div>
+
+    <!-- Slot 1 -->
+    <div class="card" id="slot1">
+      <div class="row" style="margin-bottom:8px">
+        <span class="badge b-t">Slot 1</span>
+        <span class="tiny" style="margin-left:auto" data-i18n="slot-status">pending</span>
+      </div>
+      <div class="lbl" style="margin-top:0" data-i18n="slot-desc-label">What's needed?</div>
+      <input class="inp" value="Lechon (roasted pig)" style="font-size:.85rem">
+      <div class="lbl" style="margin-top:8px" data-i18n="slot-cat-label">Category</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">
+        <span class="chip on">🍖 Food & Catering</span><span class="chip">🏠 Home Services</span><span class="chip">🚚 Transport</span>
+      </div>
+      <div class="lbl" style="margin-top:8px" data-i18n="slot-price-label">Budget for this slot</div>
+      <input class="inp" value="₱2,500" style="font-family:'JetBrains Mono',monospace;font-size:.85rem">
+      <button class="btn btn-s" style="margin-top:8px;font-size:.78rem" disabled data-i18n="invite-btn">➕ Invite Servicer</button>
+    </div>
+
+    <!-- Slot 2 -->
+    <div class="card" id="slot2">
+      <div class="row" style="margin-bottom:8px">
+        <span class="badge b-t">Slot 2</span>
+        <span class="tiny" style="margin-left:auto" data-i18n="slot-status">pending</span>
+      </div>
+      <input class="inp" value="Sound System" style="font-size:.85rem">
+      <div class="lbl" style="margin-top:8px" data-i18n="slot-cat-label">Category</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">
+        <span class="chip">🎵 Sound & Events</span><span class="chip on">🎤 Entertainment</span><span class="chip">🔧 Equipment Rental</span>
+      </div>
+      <input class="inp" value="₱2,200" style="font-family:'JetBrains Mono',monospace;font-size:.85rem;margin-top:8px">
+      <button class="btn btn-s" style="margin-top:8px;font-size:.78rem" disabled data-i18n="invite-btn">➕ Invite Servicer</button>
+    </div>
+
+    <!-- Slot 3 -->
+    <div class="card" id="slot3">
+      <div class="row" style="margin-bottom:8px">
+        <span class="badge b-t">Slot 3</span>
+        <span class="tiny" style="margin-left:auto" data-i18n="slot-status">pending</span>
+      </div>
+      <input class="inp" value="Catering (lunch buffet)" style="font-size:.85rem">
+      <div class="lbl" style="margin-top:8px" data-i18n="slot-cat-label">Category</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">
+        <span class="chip on">🍖 Food & Catering</span><span class="chip">🍽 Events</span>
+      </div>
+      <input class="inp" value="₱2,000" style="font-family:'JetBrains Mono',monospace;font-size:.85rem;margin-top:8px">
+      <button class="btn btn-s" style="margin-top:8px;font-size:.78rem" disabled data-i18n="invite-btn">➕ Invite Servicer</button>
+    </div>
+
+    <!-- Add slot -->
+    <button class="btn btn-s" style="margin-top:4px;border-style:dashed;color:var(--w500)" data-i18n="add-slot">➕ Add another slot</button>
+
+    <!-- Summary -->
+    <div class="card" style="background:var(--g50);border-color:var(--g200);margin-top:10px">
+      <div class="row">
+        <div class="grow">
+          <b style="font-size:.78rem;color:var(--g700)" data-i18n="summary-slots">3 slots defined</b>
+        </div>
+        <b style="font-size:1rem;color:var(--g700);font-family:'JetBrains Mono',monospace">₱6,700</b>
+      </div>
+      <div class="tiny" style="margin-top:2px" data-i18n="summary-note">Buyer pays once · escrow per-slot · all released when complete</div>
+    </div>
+
+    <button class="btn btn-p" id="createBtn" style="margin-top:10px" data-i18n="create-btn">Create Deal</button>
+    <div class="tiny" style="text-align:center;margin-top:8px" data-i18n="create-note">Slots remain editable after creation. No payment until all slots filled and buyer approves.</div>
+
+  </div>
+  <div class="tabbar"><a class="tb" href="01-home.html"><span class="ic">🏠</span>Home</a><a class="tb" href="02-search.html"><span class="ic">🔍</span>Search</a><a class="tb" href="05-track.html"><span class="ic">📦</span>Orders</a><a class="tb" href="12-inbox.html"><span class="ic">💬</span>Inbox</a><a class="tb" href="../../mockup.html"><span class="ic">👤</span>Hub</a></div>
+</div></div>
+<div class="filenames"><span>screens/25-deal-create.html</span><span>Deal-Chain creation · slot definition · budget</span></div>
+
+<script src="../shared/mock.js"></script>
+<script>
+document.getElementById('createBtn').onclick=function(){
+  this.textContent='Creating Deal...';this.disabled=true;
+  setTimeout(function(){location.href='26-deal-slots.html';},600);
+};
+</script>
+
+<div class="pagenav"><a href="../../mockup.html">⊞ Mockup Hub</a><span class="pn-mid">Deal-Chaining 1/3 · Create</span><a class="deck" href="../deck/pitch.html">▶ Investor Deck</a></div>
+
+<script>
+window.I18N_SCREEN = {
+  en:{
+    title:"Create Deal-Chain",
+    "name-label":"Deal name",
+    "budget-label":"Total budget (optional)",
+    "budget-hint":"or let servicers propose",
+    "slots-label":"Slots (services needed)",
+    "slots-hint":"Each slot becomes an independent order with its own servicer, escrow, and tracking. Buyer pays once — system splits per slot.",
+    "slot-status":"pending",
+    "slot-desc-label":"What's needed?",
+    "slot-cat-label":"Category",
+    "slot-price-label":"Budget for this slot",
+    "invite-btn":"➕ Invite Servicer",
+    "add-slot":"➕ Add another slot",
+    "summary-slots":"3 slots defined",
+    "summary-note":"Buyer pays once · escrow per-slot · all released when complete",
+    "create-btn":"Create Deal",
+    "create-note":"Slots remain editable after creation. No payment until all slots filled and buyer approves."
+  },
+  tl:{
+    title:"Gumawa ng Deal-Chain",
+    "name-label":"Pangalan ng deal",
+    "budget-label":"Kabuuang budget (pwedeng wala)",
+    "budget-hint":"o hayaang mag-propose ang servicer",
+    "slots-label":"Mga slot (serbisyong kailangan)",
+    "slots-hint":"Bawat slot ay nagiging hiwalay na order na may sariling servicer, escrow, at tracking. Isang beses lang magbabayad si buyer — hahatiin ng sistema kada slot.",
+    "slot-status":"nakabinbin",
+    "slot-desc-label":"Anong kailangan?",
+    "slot-cat-label":"Kategorya",
+    "slot-price-label":"Budget para sa slot na ito",
+    "invite-btn":"➕ Mag-imbita ng Servicer",
+    "add-slot":"➕ Magdagdag ng slot",
+    "summary-slots":"3 slot ang ginawa",
+    "summary-note":"Isang bayad lang si buyer · escrow kada slot · ilalabas lahat kapag tapos na",
+    "create-btn":"Gawin ang Deal",
+    "create-note":"Pwedeng i-edit ang slots pagkatapos gawin. Walang bayad hangga't hindi puno ang lahat ng slot at naaprubahan ni buyer."
+  }
+};
+(function(){
+  var lang = localStorage.getItem('serbizyu-lang') || 'en';
+  function setLang(l){
+    lang = l; localStorage.setItem('serbizyu-lang', l);
+    var map = window.I18N_SCREEN[l];
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key = el.getAttribute('data-i18n');
+      if(map[key]) el.textContent = map[key];
+    });
+    document.querySelectorAll('.langtoggle button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-lang') === l);
+    });
+  }
+  document.querySelectorAll('.langtoggle button').forEach(function(b){
+    b.addEventListener('click', function(){ setLang(this.getAttribute('data-lang')); });
+  });
+  setLang(lang);
+})();
+</script>
+</body></html>
