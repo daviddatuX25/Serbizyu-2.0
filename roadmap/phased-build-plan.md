@@ -1,15 +1,17 @@
-# Serbizyu — Phased Build Plan
-*From zero to launched platform. Sprint-level for Phase 1 (you can start tomorrow), epic-level for Phases 2 and 3 (refine when you get there). Every phase has exit criteria tied to the GTM metrics, not to feature count.*
+# Serbizyu — Build Plan (Consolidated)
+
+*Single continuous build for pitch-ready full system. All Phase 1–3 features ship together. The metrics gate (liquidity, trust density) still applies before multi-town scaling.*
 
 ---
 
 ## 0. Working Assumptions
 
-- Team: 1 to 3 developers. David leads. Adjust sprint lengths linearly if the team grows.
-- Sprint length: 1 week. Phase 1 target: 10 to 12 weeks.
-- All decisions in `decisions/decision-matrix.md` are locked. If one gets overturned, update this plan in the same commit.
+- Team: 1 to 3 developers. David leads.
+- **Cadence:** Single continuous build (all phases collapsed). Target: 12–16 weeks to pitch-ready.
+- All decisions in `decisions/decision-matrix.md` (D1–D23) are locked. If one gets overturned, update this plan in the same commit.
 - No code leaves a sprint without tests on the money path.
-- Pennant flags gate everything user-facing from Sprint 1 onward. Geofence config starts as a single town (Candon).
+- Pennant flags gate everything user-facing. Geofence config starts as a single town (Candon).
+- **Pitch posture:** Full features ship, real-world validation happens before multi-town scaling. Metrics gate (liquidity ≥2, trust density ≥90%) still applies as launch gate.
 
 ---
 
@@ -117,53 +119,101 @@ Goal per the GTM plan: one town, about 20 servicers, 50 completed bookings. Core
 - Backup drill: restore staging DB from backup, verify ledger integrity
 - **Exit: PHASE 1 LAUNCH GATE.** All money-path tests green, 20 servicers onboarded in Candon, first real booking completed end to end
 
-### Phase 1 Metrics Gate (before building Phase 2)
+### Sprint 11: Request/Bid Flow
+- Hybrid request model: buyer selects "First Available" or "Let Me Compare" when posting
+- Request CRUD: `service_request` offer type, category, description, budget range, urgency flag
+- Servicer request browser: filtered by category + location, "Accept" (first-come mode) or "Submit Bid" (comparison mode)
+- Bid comparison UI for buyer: servicer name, price, ETA, rating, message — side by side
+- Award → convert to Order: same Order state machine as direct booking
+- **Exit:** buyer posts request, 3 servicers bid, buyer picks one, order created
+
+### Sprint 12: Admin & Ops Interfaces
+- RBAC with town scoping: 8 personas (Superadmin, Town Ops, Trust & Safety, Content Moderator, Finance, Support, Developer, Viewer)
+- Revenue domain: category × town commission table, promo overrides, effective rate display, full audit trail
+- Verification queue: Barangay Clearance → NBI → Business Permit tier progression
+- Content moderation: listing review queue, automated flagging rules, bulk approve/reject
+- Dispute resolution panel: booking info + chat transcript + servicer/customer history + one-click resolution (target <5 min)
+- Developer tools: API key management, webhook config + delivery logs, sandbox toggle, rate limit dashboard
+- Analytics: daily ops dashboard (GMV, bookings, disputes), weekly management dashboard, BIR-ready transaction exports
+- **Exit:** ops staff can run the town from dashboards without DB access
+
+### Sprint 13: Channel Adapters & Distribution
+- `MessengerAdapter` + `SmsAdapter`: outbound notifications, inbound webhook resolution, full booking flow inside Messenger
+- `FacebookAdapter`: normalize, publish (draft-first, curator approves), metrics readback
+- Marketing Asset Generator: queued job producing branded graphics from profile data
+- Notification expansion: per-user channel preference, outbound dispatch through adapters
+- Credential vault: encrypted storage, auto-refresh, expiry monitoring
+- **Exit:** Messenger booking flow works end-to-end; Facebook post published, metrics returned
+
+### Sprint 14: Human Agent System
+- Agent registration + verification (phone-based, minimal docs)
+- Business owner OTP/SMS consent flow (no app required for owner)
+- Agent-managed listing creation with owner verification before go-live
+- Commission auto-split: 75% owner / 10% agent / 15% platform
+- SMS-first owner experience: weekly earnings summary via text
+- Immutable audit trail: every agent action logged with cryptographic hash chain
+- Agent dashboard: earnings, listings, ratings
+- **Exit:** agent creates listing for SMS-verified owner, transaction completes, payout splits correctly
+
+### Sprint 15: Workflow Builder & Tools
+- Tier-2 builder canvas (dnd-kit): edit labels, proof types, amounts, timeouts on presets
+- Contract checker: validates template against Work contract before publish
+- Buyer presentation modes 1–3 (Milestone Stepper, Live Tracker, Simple Status Card)
+- Mapbox Map tool + Calendar tool connectors
+- A2 Dispatch archetype configured for tricycle pilot (GPS auto-advance, manual fallback)
+- **Exit:** servicer customizes a preset template, publishes, buyer sees it rendered correctly
+
+### Sprint 16: Advanced Features
+- Tier-3 AI template drafting: "Describe how you work" → LLM drafts structure → servicer edits and publishes
+- Template cloning (servicer in Candon publishes, servicer in Vigan clones)
+- Multi-town rollout: Pennant region flags, per-town category availability, SEO landing pages per town-category
+- Growth domain: basic referral tracking, featured listing slots (performance-based, not paid)
+- Calendar slot booking: availability management, reminders, Google Calendar sync (read-only Phase 1)
+- **Exit:** AI drafts a workflow, servicer edits and publishes; second town appears behind Pennant flag
+
+### Sprint 17: Hardening and Pitch Readiness
+- Playwright money-path suite green: register, list, search, book, pay, work, sign off, disburse, review
+- Request/bid path tested end-to-end
+- Agent-managed transaction path tested end-to-end
+- Messenger booking flow tested
+- Load test: 50 concurrent bookings on staging, p95 page load under 2.5s
+- Security pass: rate limits, webhook signatures, OWASP spot check
+- Data Privacy: consent records audit, retention policy, privacy page
+- Backup drill: restore staging DB, verify ledger integrity
+- Pitch deck alignment: every feature demonstrated with real (seeded) data
+- **Exit: PITCH READY.** All paths green, demo data compelling, legal ToS drafted.
+
+### Metrics Gate (before multi-town scaling)
 From the strategy matrix: liquidity at or above 2 bookings per active servicer per week trending up, trust density at or above 90%, dispute rate understood. If these are not moving, fix the town, not the codebase.
 
 ---
 
-## 3. Phase 2: Platform Launch (Epics, roughly 8 to 12 weeks)
+## 3. Extended Features (Post-Pitch, by demand)
 
-Build only after the Phase 1 metrics gate passes.
-
-| Epic | Scope | Depends on |
-|---|---|---|
-| E1 Messenger + SMS channels | `MessengerAdapter`, `SmsAdapter`: outbound notifications, inbound webhook resolution with conversation tokens. Full booking flow inside Messenger. | Connector architecture doc, Phase 1 Conversation model |
-| E2 Facebook distribution | `FacebookAdapter`: normalize, publish (draft-first, curator approves), metrics readback. Content queue + rotation logic v1. | E1 (shared Meta credentials), ops curator dashboard |
-| E3 Marketing Asset Generator | Queued job producing 1200x630 branded graphics from profile data. Serves reciprocity gift at onboarding and Facebook content. | Brand system, queue infra |
-| E4 Tier-2 WorkflowBuilder | Builder canvas (dnd-kit): edit labels, proof types, amounts, timeouts on presets. Contract checker as validation service. Buyer presentation modes 1 to 3. | Phase 1 Work engine, archetype presets |
-| E5 A2 Dispatch pilot (tricycle) | A2 archetype config, Mapbox Map tool, GPS auto-advance, TODA partnership onboarding. | E4, Mapbox account |
-| E6 Calendar tool + A3 upgrade | Slot booking UI, availability management, reminders. Unlocks tutoring/salon properly. | E4 |
-| E7 Notifications expansion | Per-user channel preference, outbound dispatch through channel adapters, delivery tracking. | E1 |
-| E8 SEO program | Sitemaps, per-town category landing pages, Search Console, llms.txt. | Sprint 6 snapshot SSR |
-
-**Phase 2 exit:** distribution leverage measurable (channel-attributed bookings above 10%), Messenger/SMS registration live, tricycle pilot metrics from the case study doc hit (pickup under 10 min, confirmation rate above 90%).
-
----
-
-## 4. Phase 3: Community Expansion (Epics, timing by demand)
-
-| Epic | Trigger to start |
+| Feature | Trigger to build |
 |---|---|
-| Product Offer types + A4 product polish | A real vendor with catalog and commitment (per decision D7) |
-| Tier-3 AI template builder | 10+ active categories straining presets |
-| Template marketplace | 20+ quality tier-2 templates exist to seed it |
 | TikTok adapter | Facebook ROI proven, content capacity for video |
-| Remaining archetypes (A5 rental, A6 recurring polish, A8 emergency, A10 retainer) | Sector demand from the industry matrix (events, caregiving, farm work) |
-| Growth domain: gamification, referrals, loyalty | Liquidity proven, K-factor worth optimizing |
-| Multi-town rollout | Candon metrics stable for 8+ weeks; Pennant region flags, no code branches |
-| Shopee/Lazada connectors | Product vendors active and requesting it |
-| PH fintech counsel review | GMV approaching ₱500k/month (per decision D8) |
+| AI-designed mini-shops (per-servicer subdomain) | 20+ active servicers request customization |
+| Template marketplace | 20+ quality tier-2 templates exist to seed it |
+| Owner graduation flow (agent → independent) | First 5 owners request independence |
+| Agent tiers & gamification (Bronze→Platinum) | 50+ active agents |
+| Inventory Check connector (seller external stock API) | Product vendors active and requesting |
+| Route Planner, Document Generator, Weather, IoT connectors | Real category demand (>5 active servicers) |
+| Payment Split connector (multi-vendor orders) | Multi-vendor use case emerges |
+| Affiliate/referral system (K-factor tracking) | Liquidity proven, K-factor worth optimizing |
+| PH fintech counsel review | GMV approaching ₱500k/month |
 
 ---
 
-## 5. Database Schema Checklist by Phase
+## 5. Database Schema Checklist
 
-**Phase 1:** users, profiles, verification_tiers, categories, category_attribute_schemas, offers, media, orders, work_instances, wallets, ledger_transactions, xendit_webhooks, conversations, messages, notifications, reviews, disputes, flags, activity_log, regions, servicer_channel_consents, analytics_events
+**Phase 1 (Sprints 1–10, core):** users, profiles, verification_tiers, categories, category_attribute_schemas, offers, media, orders, work_instances, wallets, ledger_transactions, xendit_webhooks, conversations, messages, notifications, reviews, disputes, flags, activity_log, regions, servicer_channel_consents, analytics_events
 
-**Phase 2 adds:** channel_credentials, content_queue, publish_results, channel_metrics, work_templates (user-owned clones of presets), tool_configs, generated_assets, calendar_slots
+**Sprints 11–14 (added domains):** service_requests, bids, admin_roles, admin_permissions, revenue_configs, commission_overrides, promo_overrides, audit_log, channel_credentials, content_queue, publish_results, channel_metrics, agents, agent_managed_businesses, business_owners, owner_consents, agent_commissions, payout_splits
 
-**Phase 3 adds:** loyalty_ledger, referrals, template_marketplace entries, product fulfillment extensions (inventory fields on offers)
+**Sprints 15–16 (builder & tools):** work_templates (user-owned clones), tool_configs, generated_assets, calendar_slots, pennant_flags
+
+**Extended (post-pitch):** loyalty_ledger, referrals, template_marketplace entries, inventory_sources, external_api_configs, product fulfillment extensions
 
 Rule: every table ships with its migration, model, policy, and factory in the same PR.
 

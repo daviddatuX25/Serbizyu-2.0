@@ -196,4 +196,115 @@
 
 ---
 
+## D17. Pricing Model: Sliding Scale + Flat Micro Fees (resolved)
+
+**Decision:** Three-tier commission structure with category-level subsidy overrides.
+
+| Tier | Range | Rate | Cap |
+|---|---|---|---|
+| Micro | ₱50–300 | Flat ₱10 | N/A |
+| Standard | ₱300–2,000 | 8% | ₱150 |
+| Premium | ₱2,000–15,000+ | 6% | ₱500 |
+
+**Subsidy overrides:** Configurable per category in `config/serbizyu.php` + admin panel. Tricycle/transport at 0–3%, farm labor at 0–3%, emergencies at 0%. Time-bounded promos supported.
+
+**Rationale:** Flat fee on micro-transactions avoids GCash/PayMongo fees eating the entire margin. Percentage at higher tiers captures value proportionally. Caps prevent sticker shock. No PH platform has income-tiered pricing — Serbizyu can pioneer.
+
+**Non-transaction revenue:** AI template drafting at near-cost (₱20/gen), marketing assets free first 3 then ₱10/asset. Verification is FREE (no PH platform charges for it — charging would be a competitive disadvantage).
+
+**Revenue estimate at launch:** 20 servicers × 10 bookings/week × ~₱24 avg fee = ~₱19,200/month.
+
+**Review trigger:** If average transaction value shifts significantly outside modeled ranges, recalibrate tiers. If a competitor enters with aggressive pricing, review subsidy strategy.
+
+---
+
+## D18. BIR / Tax Posture: Platform Does Not Withhold (resolved)
+
+**Decision:** Serbizyu is a technology platform connecting independent contractors with buyers. Tax compliance is the servicer's responsibility. The platform does NOT withhold or remit taxes on behalf of servicers.
+
+**Rationale:** Under TRAIN Law, servicers earning <₱250,000/year owe ₱0 in income tax. BIR RR 8-2024 mandates 1% withholding but enforcement on service marketplaces is untested. Requiring TIN before payout would exclude 90% of provincial servicers. Graduated compliance tiers (TIN optional at Basic level, required at Growth level) balance inclusion with eventual formalization.
+
+**Platform provides:** Downloadable transaction summaries for servicers who choose to file. TIN facilitation via ORUS integration (optional during onboarding). Partnership with DTI Negosyo Center for BMBE registration.
+
+**Legal caveat:** Formal tax counsel opinion recommended before processing real money. The posture is defensible (matching Grab/Angkas pre-regulation approach) but not tested in court.
+
+**Review trigger:** If BIR issues a specific ruling targeting service marketplaces, or if Serbizyu GMV crosses ₱50M/year.
+
+---
+
+## D19. Human Agent Model: Intermediaries for Offline Businesses (resolved)
+
+**Decision:** Tech-savvy "agents" can create and manage listings on behalf of non-tech-savvy business owners (elderly sari-sari store owners, offline repair shops). Platform facilitates the relationship with verification, commission splitting, and a graduation path.
+
+**Commission split:** 75% owner / 10% agent / 15% platform.
+
+**Verification:** OTP/SMS consent from owner to agent (no app required for owner). Canonical business ID persists across agent-managed → owner-graduated transitions.
+
+**Owner experience:** SMS-first. Weekly earnings summaries via text. Owner never needs to log in.
+
+**Graduation bonus:** Agent earns 3× monthly commission when owner goes independent — incentivizes agents to train owners toward self-management.
+
+**Anti-fraud:** Owner must verify via OTP before listing goes live. Audit trail with cryptographic hash chain. Agent and owner both notified on disputes.
+
+**Rationale:** Modeled after Facebook Page Access roles + Meesho's social commerce reseller model (130M+ resellers in India). No existing PH platform does this — blue ocean. Targets the "70-year-old tindera with 30 years of trust but no smartphone" demographic.
+
+**Review trigger:** If agent-facilitated dispute rate exceeds direct-servicer rate by >5%.
+
+---
+
+## D20. Request/Bid Flow: Hybrid (resolved)
+
+**Decision:** Option C — buyer chooses mode when posting a request.
+
+- **"First Available"** → auto-assigns to first qualified servicer who accepts. For urgent needs (tricycle, emergency plumber).
+- **"Let Me Compare"** → collects bids for 24 hours (price, ETA, message). Buyer reviews and picks. For price-sensitive work (construction, tutoring).
+
+Both modes feed into the same Order state machine. One extra dropdown at request creation.
+
+**Rationale:** Request/bid is the *more natural* flow for provincial services ("I need a plumber" vs "let me browse plumbers"). The hybrid covers both use cases without duplicating the order pipeline.
+
+**Review trigger:** If >30% of "Let Me Compare" requests expire without a buyer pick, add auto-close + notification.
+
+---
+
+## D21. Escrow Timing: Shopee-Style 3-Day Guarantee (resolved)
+
+**Decision:** 
+- Escrow created on payment confirmation (buyer pays → funds held)
+- Servicer marks work complete → 3-day buyer review window begins
+- If no dispute within 3 days → escrow auto-releases
+- If dispute filed → escrow frozen → admin resolves
+- Cancellation before work starts → full refund minus ₱50 cancellation fee to servicer
+- Cash transactions: buyer confirms "paid in cash" → servicer confirms receipt → platform tracks for trust/review but no escrow hold
+
+**Rationale:** Mimics Shopee's proven model. The 3-day window balances buyer protection with servicer cash flow. Cash support is essential for provincial PH where GCash fees would destroy micro-transaction margins.
+
+**Review trigger:** If dispute rate exceeds 5% or auto-release complaints exceed 2%.
+
+---
+
+## D22. Build Cadence: Single Continuous Build (resolved)
+
+**Decision:** All three phases collapsed into one continuous build. The platform is being developed as a pitch-ready full system, not an iterative MVP.
+
+**Database schema:** Phase 2 tables are included in migrations from day one. Channel adapters, WorkflowBuilder, and multi-town UI are built alongside Phase 1 features rather than deferred.
+
+**Risk mitigation:** Schema-readiness for Phase 2 features (channels, tools, agents) is worth the upfront cost. The Phase 1 metrics gate (liquidity ≥2 bookings/servicer/week, trust density ≥90%) is still the launch gate — all features ship, but real-world validation happens before scaling to additional towns.
+
+**Rationale:** Pitch-ready product requires demo of the full vision. Less context-switching than phased delivery. Previous rationale (earn each layer of generality with real usage) is superseded by the pitch requirement.
+
+**Review trigger:** If build timeline exceeds 16 weeks, descope Phase 3 features (template marketplace, TikTok adapter, IoT tools) to post-pitch.
+
+---
+
+## D23. Servicer Onboarding: Curated First Batch (resolved)
+
+**Decision:** First 10–15 servicers are personally recruited in Candon. Additional 5–10 via barangay captain referrals. Zero platform commission for first 30 days. Focus metric: retention and liquidity per active servicer, not signup volume.
+
+**Rationale:** The pitch isn't about growth numbers — it's about proving the model works. A curated batch with known trust relationships reduces early dispute risk and generates authentic testimonials. 0% commission removes adoption friction during the proof period.
+
+**Review trigger:** After 30 days, if <50% of first batch are still active, investigate churn causes before opening signups.
+
+---
+
 *End of Decision Matrix. All resolved decisions have a named owner and a review trigger. Open decisions have an action item and a deadline.*

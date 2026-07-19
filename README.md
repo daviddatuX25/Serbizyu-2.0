@@ -27,7 +27,7 @@ The platform supports the whole industry not by building infinite features but b
 | Document | State |
 |---|---|
 | Full spec (source) | Stable foundation |
-| Decision matrix | Complete, 16 decisions |
+| Decision matrix | Complete, 23 decisions (D1–D23) |
 | Brand system | Complete, implementation-ready |
 | Archetype library | Complete, 10 archetypes |
 | Connector architecture | Complete |
@@ -37,7 +37,13 @@ The platform supports the whole industry not by building infinite features but b
 | Industry coverage | Complete, 9 sectors + exclusions |
 | Strategy matrix | Complete |
 | Tricycle case study | Complete |
-| Build plan (roadmap) | Complete, sprint-ready |
+| Build plan | Updated — consolidated 17-sprint build for pitch |
 | Channel specs (4) | Complete: FB, Messenger, SMS, TikTok |
 
-*Last updated: 2026-07-18*
+**Research reports (supplementary):**
+- `~/serbizyu-pricing-research-report.md` — PH marketplace commission benchmarks, economic context
+- `~/serbizyu-admin-research.md` — Admin interface patterns, RBAC, BIR compliance
+- `~/serbizyu-ph-legal-blueprint.md` — Labor law, TRAIN Law, BMBE Act, graduated compliance tiers
+- `~/serbizyu-agent-models-research.md` — Delegated seller models, Meesho, affiliate patterns
+
+*Last updated: 2026-07-19*
