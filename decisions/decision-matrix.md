@@ -307,4 +307,134 @@ Both modes feed into the same Order state machine. One extra dropdown at request
 
 ---
 
+## D24. Dispute Resolution: Evidence-Tiered + Three Outcomes (resolved)
+
+**Decision:** Dispute resolution uses an evidence-tier model where the default judgment depends on how much platform tooling the servicer adopted.
+
+| Evidence Tier | Examples | Resolution | Default Judgment |
+|---|---|---|---|
+| High | GPS log, photo proof, buyer confirmations, step timestamps | Near-automatic; admin confirms in <5 min | Split by actual evidence |
+| Medium | Calendar confirmations, chat logs, manual photo uploads | Admin reviews available evidence | 50/50 if inconclusive |
+| Low | Cash handshake, no tools used, "I said / they said" | Admin decides on balance of probability | Burden falls on servicer |
+
+**Resolution outcomes:** Full refund, partial refund (admin sets %), full release, re-service (24hr to complete, escrow held).
+
+**Appeal:** Single-level to superadmin, 48-hour window. Final.
+
+**SLA:** <4 hours during business hours, <12 hours otherwise.
+
+**Rationale:** Evidence asymmetry incentivizes servicers to adopt platform tools. Servicers who use tracking get near-automatic protection.
+
+**Review trigger:** If >10% of Low-tier disputes escalate to appeal, add mandatory tool adoption for high-dispute categories.
+
+---
+
+## D25. Notification Strategy: Event-Driven, Channel-Aware (resolved)
+
+**Decision:** Event-driven notification matrix with role-specific channel preferences.
+
+| Event | Buyer | Servicer | Agent | Owner (SMS-only) |
+|---|---|---|---|---|
+| Booking confirmed | In-app | In-app + SMS | — | — |
+| Work started | In-app | In-app | — | — |
+| Work step completed | In-app | In-app | — | — |
+| Work completed / review window | In-app + SMS | In-app + SMS | — | — |
+| Escrow released | In-app | In-app + SMS | In-app | SMS (amount only) |
+| Dispute opened | In-app + SMS | In-app + SMS | In-app + SMS | SMS (alert only) |
+| New request posted | — | In-app (category+area match) | — | — |
+| Bid placed on your request | In-app + SMS | — | — | — |
+| Bid accepted (you won) | — | In-app + SMS | — | — |
+| Request awarded to another | — | In-app (courtesy) | — | — |
+| Payment received (revenue) | — | — | — | SMS (weekly digest) |
+| Commission earned | — | — | In-app | — |
+| Low rating received | — | In-app (private) | In-app (private) | — |
+
+**Key principles:** SMS is for time-sensitive actions only. Agent handles all platform actions — owner gets informational SMS only. Losing bidders get courtesy notification.
+
+**Review trigger:** If SMS cost per active user exceeds ₱20/month, add in-app-only option.
+
+---
+
+## D26. Verification Tiers: Progressive Trust Levels (resolved)
+
+**Decision:** Five-tier verification model where each tier unlocks more platform privileges.
+
+| Tier | Requirement | Method | Time | Unlocks |
+|---|---|---|---|---|
+| **Phone Verified** | OTP on signup | Automated | Instant | Basic account, browse only |
+| **Identity Verified** | Selfie + valid ID. AI face match, admin spot-check. | AI + admin queue | <1 hour | Create listings, accept bookings |
+| **Barangay Verified** | Barangay Clearance upload | Admin review | <24 hours | Visibility boost, featured slot eligibility |
+| **Professional Verified** | NBI Clearance + trade cert/license | Admin review | <3 days | Lower dispute hold %, higher search ranking |
+| **Business Verified** | DTI/SEC + BIR 2303 | Admin review | <1 week | No transaction caps, priority support, "Business Verified" badge |
+
+**For agent-managed accounts:** Agent must be at least Identity Verified. Owner must reach Barangay Verified before listings go live.
+
+**Verification is FREE** — no PH platform charges for it.
+
+**Review trigger:** If >30% of servicers stall at Identity Verified for >30 days, add automated reminders.
+
+---
+
+## D27. Cash Handling: Tiered Trust Architecture (resolved)
+
+**Decision:** Cash is a first-class payment method. Platform creates trustworthy records around cash.
+
+**Commission structure (updates D17):**
+
+| Payment Method | Platform Rate | Why |
+|---|---|---|
+| Digital (GCash, bank) | 8% | Lowest risk, no handling cost |
+| Cash — dual confirmed | 12% | Medium risk, covers dispute budget |
+| Cash — high value (>₱5K) | 15% | Barangay witness required, higher risk |
+
+**Cash dispute protection — tiered, not flat surcharge:**
+
+| Tier | Cost | What Happens |
+|---|---|---|
+| **Free** | ₱0 | Platform generates downloadable Barangay Mediation Form with transaction details |
+| **Protected** | +₱10–15/transaction | Platform mediates: evidence review, admin resolution, superadmin appeal |
+
+**Cash handling mechanics (from Grab/Gojek model):** Servicer collects cash directly. Dual confirmation required. Commission tracked as receivable in servicer's wallet. Transaction limits escalate with servicer history.
+
+**Review trigger:** If cash dispute rate exceeds 2× digital dispute rate, mandate GPS confirmation for cash.
+
+---
+
+## D28. Deal System: Quick Deal + Deal-Chaining (resolved)
+
+**Decision:** Two new transaction primitives between listing browsing and order creation.
+
+**Quick Deal:** Single QR code per servicer. Scanner gets interface to choose: Book, Quick Deal, Reviews, Message. Impromptu face-to-face transaction with negotiable price. Converts to Order on dual confirmation.
+
+**Deal-Chaining:** Multi-slot deal where different servicers fill each slot. Either party can invite to fill slots. 2+ servicers per deal. Payout split per slot, released when all slots complete.
+
+**Single QR per servicer:** One QR → one landing page. User chooses action.
+
+**Launch:** Quick Deal standalone. Deal-Chaining as project-tagged linked orders. Full multi-slot post-pitch.
+
+**Review trigger:** If >20% of Quick Deals modify price by >30%, add price-change justification requirement.
+
+---
+
+## D29. Category Structure: 28 Provincial Categories (resolved)
+
+**Decision:** Launch with 28 categories across 8 tiers, tailored for Candon's agricultural + service economy.
+
+| Tier | Categories |
+|---|---|
+| **Home Services** | Carpenter, Plumber, Electrician, Painter, Mason, Aircon Service, House Cleaning |
+| **Beauty & Personal** | Barber (men only), Salon (women), Manicure/Pedicure, Hilot (traditional), Massage |
+| **Automotive** | Mechanic, Vulcanizing (standalone), Body Repair, Tricycle |
+| **Food & Events** | Lutong Bahay, Catering, Dressmaker, Tailor |
+| **Education** | Tutor |
+| **Agriculture** | Farm Labor, Rice Milling, Chainsaw/Lumber |
+| **Delivery** | Porter, Utilities Delivery (water/ice/LPG) |
+| **Other** | Welding, Digital Services, Shoe Repair |
+
+**Key rules:** Occupation labels in Tagalog + Ilocano + English. "Labor lang" vs "Kasama materyales" mandatory filter for trades. Service area by barangay. Gender preference attribute where relevant. Admin-defined only at launch.
+
+**Review trigger:** If category has <3 active servicers after 60 days, merge or deprecate.
+
+---
+
 *End of Decision Matrix. All resolved decisions have a named owner and a review trigger. Open decisions have an action item and a deadline.*
