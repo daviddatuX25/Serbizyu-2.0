@@ -1,49 +1,59 @@
-# Serbizyu — Spec Workspace
+# Serbizyu 2.0 — BMAD Workspace
 
-The hardened, buildable specification for the Serbizyu platform. Start here.
+> **Build More, Architect Dreams.**  
+> AI-driven agile development with specialized agents and guided workflows.
 
-## Reading Order
+---
 
-1. **Foundation** — the original full spec (serbizyu-full-spec.md in the project root / chat attachment). Domains, data architecture, build sequencing.
-2. **[decisions/decision-matrix.md](decisions/decision-matrix.md)** — every open question from §14, resolved with rationale and review triggers. Postgres, Forge+hybrid SSR, shadcn/ui, Mapbox, OpenRouter, and more.
-3. **[brand/serbizyu-brand-system.md](brand/serbizyu-brand-system.md)** — color tokens, typography, shadcn/ui config, voice and tone. Implementation-ready.
-4. **[architecture/fulfillment-archetypes.md](architecture/fulfillment-archetypes.md)** — the 10 shapes (A1–A10) that cover all products and services. The answer to "can the system support the whole industry."
-5. **[architecture/connector-architecture.md](architecture/connector-architecture.md)** — one adapter per channel serving both Distribution (outbound) and Messaging (inbound). Facebook, Messenger, SMS, TikTok, and how to add #8.
-6. **[architecture/unified-inbox.md](architecture/unified-inbox.md)** — the conversation model, token binding, shared vs. per-user channels, in-app messaging (Phase 1), channel messaging (Phase 2), and inbox UI behavior across roles.
-7. **[architecture/work-connector-ecosystem.md](architecture/work-connector-ecosystem.md)** — pluggable tools (Mapbox, Calendar, Route Planner, Documents) that Work Templates reference. This is what makes Serbizyu a platform, not just a marketplace.
-8. **[architecture/workflow-builder-spec.md](architecture/workflow-builder-spec.md)** — how Work is built (servicer canvas, contract checker, AI drafting) and shown (three buyer render modes).
-9. **[strategies/industry-coverage-matrix.md](strategies/industry-coverage-matrix.md)** — every industry mapped to an archetype, with readiness verdicts, marketing angles, and explicit exclusions.
-10. **[strategies/strategy-matrix.md](strategies/strategy-matrix.md)** — UX psychology, market reach per segment, growth loops, affiliate models, trust density.
-11. **[case-studies/tricycle-fulfillment.md](case-studies/tricycle-fulfillment.md)** — the A2 dispatch archetype end to end. The proof that a non-project service works without a dedicated domain.
-12. **[roadmap/phased-build-plan.md](roadmap/phased-build-plan.md)** — Phase 0 checklist, 10 sprints to launch gate, Phase 2/3 epics, schema checklist per phase, risk register, definition of ready/done.
-13. **[architecture/channels/](architecture/channels/)** — per-channel implementation specs: facebook.md, messenger.md, sms.md, tiktok.md. Credentials, API flows, rate limits, ToS risks, fallbacks, tests.
+## Directory Structure
 
-## The One-Paragraph Thesis
+```
+_bmad/                     # BMAD Method framework — agents, config, scripts
+_bmad-output/              # BMAD-generated artifacts
+  ├── planning-artifacts/  # PRD, PRFAQ, architecture docs (active)
+  └── implementation-artifacts/  # Sprint plans, stories (when building)
+old-docs/                  # Pre-BMAD specification workspace (archived)
+  ├── architecture/        # Connector, deal system, archetypes, inbox, etc.
+  ├── brand/               # Brand system (colors, typography, voice)
+  ├── case-studies/        # Tricycle fulfillment case study
+  ├── decisions/           # Decision matrix (D1–D29, resolved & rationale)
+  ├── mockup/              # 21+ screens, deck builder
+  ├── roadmap/             # Build plan, spec expansion plan
+  ├── spikes/              # Technical validation spikes (Xendit, GPS, SMS)
+  └── strategies/          # Industry coverage, strategy matrix
+research/                  # Research reports
+  └── serbizyu-ph-regulatory-report.md  # PH legal/regulatory landscape
+```
 
-The platform supports the whole industry not by building infinite features but by recognizing that every product and service reduces to one of ten fulfillment archetypes. Four presets (project, appointment, handoff, digital) plus one configured dispatch template cover ~80% of a provincial economy at launch. The Work engine's JSONB structure absorbs variation; the fixed status contract keeps Payments, Notifications, and Trust unaware of category shape. Channels are one adapter each, serving both marketing distribution and buyer messaging. Tools (maps, calendar, documents) plug into templates without touching the engine. Build order: prove liquidity in one town with four presets, then earn each layer of generality with real usage.
+---
 
-## Status
+## BMAD Method Track
 
-| Document | State |
-|---|---|
-| Full spec (source) | Stable foundation |
-| Decision matrix | Complete, 23 decisions (D1–D23) |
-| Brand system | Complete, implementation-ready |
-| Archetype library | Complete, 10 archetypes |
-| Connector architecture | Complete |
-| Unified inbox | Complete |
-| Tool ecosystem | Complete |
-| WorkflowBuilder spec | Complete |
-| Industry coverage | Complete, 9 sectors + exclusions |
-| Strategy matrix | Complete |
-| Tricycle case study | Complete |
-| Build plan | Updated — consolidated 17-sprint build for pitch |
-| Channel specs (4) | Complete: FB, Messenger, SMS, TikTok |
+Using the **BMad Method** planning track (full PRD + Architecture + Epics).
 
-**Research reports (supplementary):**
-- `~/serbizyu-pricing-research-report.md` — PH marketplace commission benchmarks, economic context
-- `~/serbizyu-admin-research.md` — Admin interface patterns, RBAC, BIR compliance
-- `~/serbizyu-ph-legal-blueprint.md` — Labor law, TRAIN Law, BMBE Act, graduated compliance tiers
-- `~/serbizyu-agent-models-research.md` — Delegated seller models, Meesho, affiliate patterns
+| Phase | Status | Description |
+|---|---|---|
+| **1. Analysis** | ✅ Complete | Brainstorming, PRFAQ, market/legal research, architecture deep-dive |
+| **2. Planning** | 🔲 Next | PRD, UX |
+| **3. Solutioning** | 🔲 Pending | Architecture spine, ADRs, Epics & Stories |
+| **4. Implementation** | 🔲 Pending | Sprint planning, story cycle |
 
-*Last updated: 2026-07-19*
+---
+
+## Key Documents
+
+| Document | Location | Status |
+|---|---|---|
+| Press Release (PRFAQ) | `_bmad-output/planning-artifacts/prfaq-press-release.md` | Drafted |
+| PH Regulatory Report | `research/serbizyu-ph-regulatory-report.md` | Complete |
+| Decision Matrix (D1–D29) | `old-docs/decisions/decision-matrix.md` | Complete |
+| Fulfillment Archetypes (A1–A10) | `old-docs/architecture/fulfillment-archetypes.md` | Stable |
+| Deal System Spec (Quick Deal + Deal-Chaining) | `old-docs/architecture/deal-system-spec.md` | Complete |
+| Offline/Hybrid Deal Architecture | `old-docs/architecture/offline-deal-spec.md` | Complete |
+| Build Plan (17 sprints) | `old-docs/roadmap/phased-build-plan.md` | Sprint-ready |
+
+---
+
+## Tech Stack (Resolved per D1–D16)
+
+Laravel 12 / PHP 8.3 / Inertia + React + TypeScript / shadcn/ui (New York) / PostgreSQL 16 / Redis / Meilisearch / Laravel Reverb / Mapbox / Xendit / OpenRouter / Pest + Vitest + Playwright
