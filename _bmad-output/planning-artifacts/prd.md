@@ -1,7 +1,7 @@
 # Serbizyu 2.0 — Product Requirements Document (PRD)
 
 > **BMAD Method Phase 2 Artifact: Planning & Scoping**  
-> *Document Version:* 2.2.0 (Full-Breadth Product Requirements)  
+> *Document Version:* 2.3.0 (Master Comprehensive Edition)  
 > *Date:* July 25, 2026  
 > *Authors:* David Datu N. Sarmiento, Christine M. Lopez, Jaypee G. Pagaduan, Prince John Vidaña (BSIT 4B, CCSIT 215)  
 > *Project Scope:* Tagudin & Candon City, Ilocos Sur, Philippines  
@@ -37,7 +37,7 @@
 
 ### 3.1 Catalog & Classification Scope
 * **REQ-CAT-01 (28 Categories):** System shall support 28 service and product categories across 8 primary domains (Home Repairs, Beauty & Wellness, Local Transport, Agricultural Labor, Education & Tutoring, Events & Catering, Digital Services, Local Goods).
-* **REQ-CAT-02 (Professional Verification Flags):** Categories requiring legal licenses (e.g., Electrician, Engineer) shall enforce a verified license check badge before listing publication.
+* **REQ-CAT-02 (Professional Verification Flags):** Categories requiring legal licenses (e.g., Electrician/PRC, Engineer/PRC, Transport/LTO-TODA, Massage/DOH) shall enforce a verified license check badge before listing publication.
 * **REQ-CAT-03 (10 Fulfillment Archetypes):** System shall support 10 operational fulfillment modes: Single Visit, Multi-Slot Event, Recurring Retainer, On-Demand Dispatch, Delivery & Pickup, Digital Deliverable, Kiosk Pickup, Field Agritech Labor, Emergency Assist, and Face-to-Face Quick Deal.
 
 ### 3.2 Commerce Primitives (Functional Scope)
@@ -45,6 +45,7 @@
 #### Primitive 1: Direct Offer & Booking Engine
 * **REQ-DIR-01:** Providers/Agents shall create fixed or tiered service listings specifying service radius, pricing tiers, and calendar availability.
 * **REQ-DIR-02:** Buyers shall browse listings, select options, and initiate direct bookings protected by escrow.
+* **REQ-DIR-03 (Atomic Cart Reservation):** System shall lock a selected booking slot for 15 minutes during checkout to prevent double-booking contention.
 
 #### Primitive 2: Reverse Bidding Engine (Post & Bid)
 * **REQ-BID-01:** Buyers shall post custom job or product requests specifying budget, target date, location, and description/photo requirements.
@@ -115,16 +116,22 @@ To comply with BIR Revenue Regulations No. 16-2023 and the BMBE Act without disc
 
 ---
 
-## 6. Financial Integrity, Escrow & Risk Guardrails
+## 6. Financial Integrity, Governance & Risk Guardrails
 
-### 6.1 Cloud Truth Boundary
+### 6.1 Cloud Truth Boundary & Regulatory Insulation
 * **REQ-TRU-01:** Real money digital balances, escrow holds, and split disbursements shall be governed **exclusively by the cloud backend infrastructure and payment gateway (Xendit)**. Client-side caches or local mobile databases shall have zero authority to disburse or move digital funds.
+* **REQ-FIN-01 (BSP Operator Insulation):** Fund custody and settlement shall be handled by Xendit's BSP-licensed marketplace architecture, insulating Serbizyu from Money Service Business (MSB) capital requirements.
 * **REQ-TRU-02 (Air-Gapped Offline Rule):** Any transaction executed while offline (`navigator.onLine === false`) **MUST default strictly to Physical External Cash settlement**. Digital escrow cannot be validated or disbursed offline.
 
-### 6.2 Double-Entry Escrow Ledger & Protection Rules
+### 6.2 Double-Entry Escrow Ledger & Risk Rules
 * **REQ-ESC-01:** All financial transactions (digital and cash) shall be recorded in an immutable double-entry ledger maintaining **0% balance drift** across pending, escrow-held, disbursed, and disputed states.
 * **REQ-ESC-02 (Shopee-Style Guarantee):** Escrow funds shall be held until buyer job sign-off, with a **3-day auto-release buffer** if no dispute is opened.
 * **REQ-ESC-03 (Fulfiller Personal Liability Shield):** In Deal-Chaining, if a lead contractor creates sub-deals exceeding the authorized budget pool while offline, the excess amount **CANNOT be charged to the Primary Buyer**. Upon cloud sync, the excess shall convert into a direct personal debt against the lead contractor.
+
+### 6.3 Governance, Privacy & Barangay Alignment
+* **REQ-DPA-01 (Data Privacy Compliance):** Biometric selfie verification, government IDs, and barangay clearances shall be collected with explicit consent under RA 10173 (Data Privacy Act of 2012) with defined retention and deletion policies.
+* **REQ-GOV-01 (Barangay Alignment):** Platform operations shall maintain formal administrative communication templates (endorsement requests and informational notices to local barangay captains) for community trust alignment.
+* **REQ-DSP-01 (4-Hour Dispute Resolution SLA):** Admin dashboard shall triage disputes using photo, GPS location, and chat/SMS evidence logs, resolving >90% of claims within a 4-hour SLA window.
 
 ---
 
@@ -168,7 +175,7 @@ To comply with BIR Revenue Regulations No. 16-2023 and the BMBE Act without disc
 |---|---|---|
 | **Obj 1: Market Liquidity** | 50+ active providers, ≥40% agent-onboarded, Liquidity Ratio ≥2.0 | REQ-CAT-01, REQ-BID-03, REQ-REV-01, REQ-AGT-01, REQ-DIS-02 |
 | **Obj 2: Operational Velocity** | Quick Deal <2 min, Server Latency <50ms | REQ-QDL-01, REQ-QDL-02, REQ-QDL-03, NFR-01, NFR-02 |
-| **Obj 3: Financial & Dispute Safety** | 0% ledger drift, >90% disputes resolved in <4 hrs | REQ-TRU-01, REQ-ESC-01, REQ-ESC-02, NFR-03, NFR-06 |
+| **Obj 3: Financial & Dispute Safety** | 0% ledger drift, >90% disputes resolved in <4 hrs | REQ-TRU-01, REQ-ESC-01, REQ-ESC-02, REQ-DSP-01, NFR-03, NFR-06 |
 | **Obj 4: Frictionless Formalization** | 100% providers classified in 3-Lane Ladder | Section 5 (3-Lane Ladder), REQ-AGT-02 (Graduation) |
 
 ---
