@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Serbizyu 2.0 — Interactive High-Fidelity Throwaway Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #0D9488;
+      --primary-dark: #0F766E;
+      --primary-light: #CCFBF1;
+      --amber: #F59E0B;
+      --amber-light: #FEF3C7;
+      --emerald: #10B981;
+      --emerald-light: #D1FAE5;
+      --slate-dark: #0F172A;
+      --slate-card: #1E293B;
+      --slate-muted: #64748B;
+      --bg-warm: #FDFBF7;
+      --card-bg: #FFFFFF;
+      --border-color: #E2E8F0;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-warm);
+      color: var(--slate-dark);
+      padding-bottom: 60px;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Top Bar Header */
+    header {
+      background: var(--slate-dark);
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--emerald));
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-location {
+      background: rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-pill {
+      background: var(--emerald-light);
+      color: #065F46;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Main Layout */
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    /* Gamified 3-Lane Banner */
+    .banner-ladder {
+      background: linear-gradient(135deg, #0F766E, #0D9488);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 25px rgba(13, 148, 136, 0.25);
+    }
+
+    .banner-text h2 {
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    .banner-text p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .btn-action {
+      background: var(--amber);
+      color: var(--slate-dark);
+      border: none;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      background: none;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--slate-muted);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    /* Section Cards Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* Quick Deal Split Screen Simulator */
+    .quick-deal-simulator {
+      background: var(--slate-dark);
+      color: white;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .viewfinder {
+      height: 140px;
+      background: #1E293B;
+      border: 2px dashed var(--primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .qr-canvas {
+      height: 120px;
+      background: white;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: black;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .stepper-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn-step {
+      flex: 1;
+      padding: 8px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* Agent Workspace List */
+    .owner-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-bottom: 8px;
+    }
+
+    .owner-info h4 {
+      font-size: 15px;
+    }
+
+    .owner-info p {
+      font-size: 12px;
+      color: var(--slate-muted);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #E2E8F0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--emerald);
+      width: 75%;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--slate-dark);
+      color: white;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      border-left: 4px solid var(--emerald);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">S</div>
+      <div class="brand-title">Serbizyu 2.0</div>
+    </div>
+    <div class="header-actions">
+      <div class="badge-location">📍 Tagudin, Ilocos Sur</div>
+      <div class="status-pill">L0 Online / L1 SMS Active</div>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Gamified 3-Lane Regulatory Banner -->
+    <div class="banner-ladder">
+      <div class="banner-text">
+        <h2>Keep 100% of Your Earnings!</h2>
+        <p>File a 2-minute digital Sworn Declaration under BIR RR 16-2023 to unlock full payouts with zero tax deductions.</p>
+      </div>
+      <button class="btn-action" onclick="showToast('Opening 2-Minute Sworn Declaration Modal...')">Unlock Level 2 Now</button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('marketplace')">Marketplace & Bidding</button>
+      <button class="tab-btn" onclick="switchTab('quickdeal')">Quick Deal QR Simulator</button>
+      <button class="tab-btn" onclick="switchTab('dealchain')">Deal-Chaining (DAG)</button>
+      <button class="tab-btn" onclick="switchTab('agent')">Agent Workspace</button>
+    </div>
+
+    <!-- Tab 1: Marketplace Feed -->
+    <div id="tab-marketplace" class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Direct Services Catalog</h3>
+          <span style="font-size:12px; color:var(--slate-muted);">28 Categories</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="owner-item">
+            <div>
+              <h4 style="color:var(--primary); font-weight:700;">AC Deep Cleaning & Repair</h4>
+              <p style="font-size:12px; color:var(--slate-muted);">Ate Grace Tech • 📍 0.5 km away (Barangay Bio)</p>
+              <span style="background:var(--emerald-light); color:#065F46; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:600;">Verified 2303 Tier</span>
+            </div>
+            <div>
+              <div style="font-size:16px; font-weight:700; color:var(--slate-dark);">₱500</div>
+              <button class="btn-action" style="padding:6px 12px; font-size:12px;" onclick="showToast('Booking slot locked for 15 minutes! Proceeding to Xendit Escrow.')">Book Escrow</button>
+            </div>
+          </div>
+          <div class="owner-item">
+            <div>
+              <h4 style="color:var(--primary); font-weight:700;">Plumbing & Pipe Repair</h4>
+              <p style="font-size:12px; color:var(--slate-muted);">Tatay Ben (Agent Kevin) • 📍 1.2 km away</p>
+              <span style="background:var(--amber-light); color:#92400E; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:600;">Sworn Declaration Tier</span>
+            </div>
+            <div>
+              <div style="font-size:16px; font-weight:700; color:var(--slate-dark);">₱350</div>
+              <button class="btn-action" style="padding:6px 12px; font-size:12px;" onclick="showToast('Booking request sent! SMS OTP dispatched to Tatay Ben.')">Book Escrow</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Reverse Bidding Feed (Post & Bid)</h3>
+          <span style="font-size:12px; color:var(--primary); font-weight:700;">Liquidity Ratio: 2.5 Bids/Req</span>
+        </div>
+        <div class="owner-item">
+          <div>
+            <h4>Custom Event Catering (50 pax)</h4>
+            <p style="font-size:12px; color:var(--slate-muted);">Posted by Maria • Budget: ₱12,000</p>
+            <p style="font-size:12px; color:var(--emerald); font-weight:600; margin-top:4px;">3 Providers Submitted Proposals</p>
+          </div>
+          <button class="btn-action" style="padding:6px 12px; font-size:12px;" onclick="showToast('Viewing proposals from Aling Nena, Ilocos Bakes, and Tagudin Chef...')">View Bids</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Quick Deal Simulator -->
+    <div id="tab-quickdeal" class="card" style="display:none;">
+      <h3 class="card-title">Face-to-Face Quick Deal Optical QR Simulator</h3>
+      <p style="font-size:13px; color:var(--slate-muted); margin-bottom:16px;">Simulates air-gapped zero-navigation optical QR code negotiation between Buyer and Seller.</p>
+      
+      <div class="grid-2">
+        <div class="quick-deal-simulator">
+          <h4 style="margin-bottom:8px; color:var(--amber);">1. Top Camera Viewfinder (Scanning)</h4>
+          <div class="viewfinder">
+            <span style="font-size:24px;">📷</span>
+            <span style="font-size:12px; color:#94A3B8;">Scanning incoming RaptorQ Fountain QR stream...</span>
+          </div>
+
+          <h4 style="margin-bottom:8px; color:var(--primary);">2. Bottom Dynamic QR Canvas (Rendering)</h4>
+          <div class="qr-canvas">
+            <div>
+              <div style="font-size:14px;">[ANIMATED QR STREAM 3-5 FPS]</div>
+              <div style="font-size:11px; color:#64748B;" id="qr-status">Payload: 600B (Gzip) • Symbol 2/4</div>
+            </div>
+          </div>
+
+          <div class="stepper-row">
+            <button class="btn-step" onclick="adjustAmount(-50)">- ₱50</button>
+            <button class="btn-step" onclick="adjustAmount(50)">+ ₱50</button>
+            <button class="btn-step" style="background:var(--emerald); color:black;" onclick="acceptDeal()">Accept ₱<span id="deal-price">450</span></button>
+          </div>
+          <div style="font-size:12px; text-align:center; color:#94A3B8;">Circuit Breaker: Round <span id="round-count">2</span> of 3</div>
+        </div>
+
+        <div>
+          <h4>Quick Deal State Inspection</h4>
+          <div style="background:#F1F5F9; padding:16px; border-radius:var(--radius-md); font-family:monospace; font-size:12px; line-height:1.6; margin-top:12px;">
+            <div><strong>Status:</strong> COUNTER_OFFER_ACTIVE</div>
+            <div><strong>Buyer ECDSA Sig:</strong> MEQCID3k9L8...==</div>
+            <div><strong>Settlement Mode:</strong> EXTERNAL_CASH</div>
+            <div><strong>Outbox Sync:</strong> PENDING_SYNC (Flushes on 4G)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Deal Chaining Simulator -->
+    <div id="tab-dealchain" class="card" style="display:none;">
+      <h3 class="card-title">Multi-Slot Deal Chaining Container (DAG)</h3>
+      <p style="font-size:13px; color:var(--slate-muted); margin-bottom:16px;">Bundles multiple independent product/service slots under a single parent budget container.</p>
+
+      <div style="background:#F8FAFC; padding:16px; border-radius:var(--radius-md); border:1px solid #E2E8F0; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between;">
+          <h4 style="font-size:16px; color:var(--slate-dark);">Fiesta Wedding Event Package (Parent Container)</h4>
+          <span style="font-size:16px; font-weight:700; color:var(--primary);">Authorized Pool: ₱25,000</span>
+        </div>
+        <p style="font-size:12px; color:var(--slate-muted);">Root Buyer: Maria • Lead Contractor: Kevin</p>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="owner-item">
+          <div>
+            <h4>Slot 1: Food & Catering (50 Pax)</h4>
+            <p style="font-size:12px; color:var(--slate-muted);">Provider: Aling Nena • ₱12,000</p>
+          </div>
+          <span style="background:var(--emerald-light); color:#065F46; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Fulfillment Complete • Escrow Released</span>
+        </div>
+
+        <div class="owner-item">
+          <div>
+            <h4>Slot 2: Mobile Sound System Rental</h4>
+            <p style="font-size:12px; color:var(--slate-muted);">Provider: Tagudin Audio • ₱8,000</p>
+          </div>
+          <button class="btn-action" style="padding:6px 12px; font-size:12px;" onclick="showToast('Slot 2 Completed! Released ₱8,000 to Tagudin Audio wallet.')">Release Escrow</button>
+        </div>
+
+        <div class="owner-item" style="border-left:4px solid var(--amber);">
+          <div>
+            <h4>Fulfiller Liability Shield Status</h4>
+            <p style="font-size:12px; color:var(--slate-muted);">Draw Total: ₱20,000 / ₱25,000 (No Overage Debt)</p>
+          </div>
+          <span style="font-size:12px; font-weight:700; color:var(--emerald);">0% Buyer Risk</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Agent Workspace -->
+    <div id="tab-agent" class="card" style="display:none;">
+      <h3 class="card-title">Human Agent Delegated Workspace</h3>
+      <p style="font-size:13px; color:var(--slate-muted); margin-bottom:16px;">Agent Kevin managing offline feature-phone business owners via SMS OTP authorization.</p>
+
+      <div class="grid-2">
+        <div>
+          <h4>Managed Servicer Profiles</h4>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px;">
+            <div class="owner-item">
+              <div class="owner-info">
+                <h4>Tatay Ben (Plumbing)</h4>
+                <p>Feature Phone (Nokia 105) • 12 Orders this month</p>
+                <div class="progress-bar"><div class="progress-fill"></div></div>
+                <span style="font-size:10px; color:var(--slate-muted);">Smartphone Graduation: 75% Complete</span>
+              </div>
+              <button class="btn-action" style="padding:6px 10px; font-size:11px;" onclick="showToast('OTP code APPROVE 8492 sent to Tatay Ben SMS.')">Trigger SMS OTP</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4>Agent Incentive Summary</h4>
+          <div style="background:#F1F5F9; padding:16px; border-radius:var(--radius-md); font-size:13px; line-height:1.8;">
+            <div><strong>Agent Tier:</strong> Gold Agent (14% Commission Rate)</div>
+            <div><strong>Active Managed Owners:</strong> 14 Merchants</div>
+            <div><strong>Graduation Bonus Pending:</strong> 3× Monthly Commission (₱4,500)</div>
+            <div style="color:var(--emerald); font-weight:700; margin-top:8px;">✅ DOLE Contractor Safety: 100% Outcome-Based</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Element -->
+  <div id="toast" class="toast" style="display:none;">
+    <span>⚡</span>
+    <span id="toast-message">Notification message here...</span>
+  </div>
+
+  <script>
+    let currentDealPrice = 450;
+    let roundCount = 2;
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      document.getElementById('tab-marketplace').style.display = tabId === 'marketplace' ? 'grid' : 'none';
+      document.getElementById('tab-quickdeal').style.display = tabId === 'quickdeal' ? 'block' : 'none';
+      document.getElementById('tab-dealchain').style.display = tabId === 'dealchain' ? 'block' : 'none';
+      document.getElementById('tab-agent').style.display = tabId === 'agent' ? 'block' : 'none';
+    }
+
+    function adjustAmount(delta) {
+      if (roundCount >= 3) {
+        showToast("Circuit Breaker Reached! 3 Rounds Max.");
+        return;
+      }
+      currentDealPrice += delta;
+      roundCount++;
+      document.getElementById('deal-price').innerText = currentDealPrice;
+      document.getElementById('round-count').innerText = roundCount;
+      document.getElementById('qr-status').innerText = `Payload: 600B • Counter: ₱${currentDealPrice} • Round ${roundCount}`;
+      showToast(`Counter offer updated to ₱${currentDealPrice}`);
+    }
+
+    function acceptDeal() {
+      showToast(`Quick Deal Sealed at ₱${currentDealPrice}! Envelope written to Dexie.js.`);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').innerText = msg;
+      toast.style.display = 'flex';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3500);
+    }
+  </script>
+</body>
+</html>

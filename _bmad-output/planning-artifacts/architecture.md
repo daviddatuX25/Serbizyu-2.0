@@ -1,7 +1,7 @@
 # Serbizyu 2.0 — System Architecture Spine & Technical Specification
 
 > **BMAD Method Phase 3 Artifact: Architecture Spine**  
-> *Document Version:* 3.0.0  
+> *Document Version:* 3.1.0 (Full BMad Ceremony Edition)  
 > *Date:* July 25, 2026  
 > *Authors:* Winston (System Architect persona) & Engineering Lead  
 > *Target System:* Serbizyu 2.0 Production & Pilot Infrastructure  
@@ -12,44 +12,247 @@
 
 Serbizyu 2.0 scales statelessly over a monolithic application core while retaining extreme low-bandwidth and offline resilience across provincial municipalities.
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                            CLIENT LAYER (SvelteKit / PWA)                        │
-│  - Optimistic UI State Updates (<0ms perceived latency)                          │
-│  - Local Offline IndexedDB Store (Dexie.js)                                      │
-│  - PWA Background Sync API Daemon & Web Crypto ECDSA Engine                      │
-└────────────────────────────────────────┬─────────────────────────────────────────┘
-                                         │ HTTPS / WSS / SMS (L0–L4 Stack)
-                                         ▼
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                          EDGE LAYER (Cloudflare Global Edge)                     │
-│  - Geo-IP & City Location Tagging (Tagudin / Candon Routing)                     │
-│  - TLS Termination & DDoS Rate Limiting                                          │
-│  - Static Asset Edge Caching                                                     │
-└────────────────────────────────────────┬─────────────────────────────────────────┘
-                                         │
-                                         ▼
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                       APPLICATION ENGINE (Laravel Octane / PHP 8.3)              │
-│                                                                                  │
-│   ┌──────────────────────────┐  ┌──────────────────────────┐  ┌───────────────┐ │
-│   │   CQRS Query Engine      │  │  Transactional Outbox    │  │ Uber H3 Geo   │ │
-│   │  (Slim Hydration Reads)  │  │  (Event Dispatcher)      │  │  Search Engine│ │
-│   └────────────┬─────────────┘  └────────────┬─────────────┘  └───────┬───────┘ │
-└────────────────┼─────────────────────────────┼────────────────────────┼──────────┘
-                 │                             │                        │
-                 ▼                             ▼                        ▼
-┌──────────────────────────────┐ ┌───────────────────────────┐ ┌───────────────────┐
-│  PostgreSQL 16 + PostGIS     │ │       Redis Cluster       │ │ Hybrid AI Engine  │
-│  - Immutable Double Ledger   │ │ - Redlock Lock (15m Cart) │ │ - FastEmbed SLM   │
-│  - GIN Indexed JSONB Deltas  │ │ - Session & Queue Store   │ │ - OpenRouter LLM  │
-│  - Outbox Events Queue Table │ │ - Reverb WebSockets State │ │   (24h Cache)     │
-└──────────────────────────────┘ └───────────────────────────┘ └───────────────────┘
+```mermaid
+graph TD
+    subgraph Client Layer [Client Layer - SvelteKit / PWA]
+        UI[Optimistic UI State Store]
+        IDB[(Dexie.js Offline IndexedDB)]
+        Worker[PWA Background Sync Daemon]
+        Crypto[Web Crypto ECDSA Engine]
+    end
+
+    subgraph Edge Layer [Cloudflare Global Edge]
+        Geo[Geo-IP & City Location Tagging]
+        TLS[TLS Termination & DDoS Protection]
+        CDN[Static Asset Edge Cache]
+    end
+
+    subgraph Application Core [Laravel Octane Engine / PHP 8.3]
+        CQRS[CQRS Query Engine]
+        OutboxDaemon[Transactional Outbox Worker]
+        H3Engine[Uber H3 Spatial Search Engine]
+        Reverb[Laravel Reverb WebSockets]
+    end
+
+    subgraph Storage & External Services
+        PG[(PostgreSQL 16 + PostGIS)]
+        Redis[(Redis Cluster - Redlock & Cache)]
+        Xendit[Xendit xenPlatform API]
+        SMS[Semaphore SMS Gateway]
+        AI[OpenRouter LLM + FastEmbed SLM]
+    end
+
+    UI --> Geo
+    Geo --> CQRS
+    CQRS --> PG
+    OutboxDaemon --> Redis
+    Redis --> Xendit
+    Redis --> SMS
+    H3Engine --> PG
+    Worker --> CQRS
 ```
 
 ---
 
-## 2. Technology Stack Rationale
+## 2. Entity Relationship Diagram (ERD)
+
+The complete PostgreSQL 16 database design detailing all core entities, relationships, foreign keys, cardinality, and spatial types:
+
+```mermaid
+erDiagram
+    USERS ||--o{ SERVICERS : "owns/operates"
+    USERS ||--o{ AGENT_PROFILES : "manages"
+    USERS ||--o{ BOOKINGS : "places as buyer"
+    USERS ||--o{ WALLETS : "owns"
+    
+    SERVICERS ||--o{ LISTINGS : "offers"
+    SERVICERS ||--o{ SERVICER_BIDS : "submits"
+    SERVICERS ||--o{ BOOKINGS : "fulfills"
+    
+    AGENT_PROFILES ||--o{ SERVICERS : "onboards/manages"
+    AGENT_PROFILES ||--o{ AGENT_COMMISSIONS : "earns"
+    
+    BUYER_REQUESTS ||--o{ SERVICER_BIDS : "receives"
+    BUYER_REQUESTS ||--o| BOOKINGS : "converts to"
+    
+    LISTINGS ||--o{ BOOKINGS : "booked in"
+    
+    BOOKINGS ||--o{ LEDGER_ENTRIES : "generates"
+    BOOKINGS ||--o{ DISPUTES : "subject to"
+    BOOKINGS ||--o| BUDGET_TREE_NODES : "chained under"
+    
+    BUDGET_TREE_NODES ||--o{ BUDGET_TREE_NODES : "spawns child node"
+    BUDGET_TREE_NODES ||--o{ LEDGER_ENTRIES : "tracks settlement"
+    
+    WALLETS ||--o{ LEDGER_ENTRIES : "holds balance entries"
+
+    USERS {
+        uuid id PK
+        string phone UNIQUE
+        string role "BUYER | SERVICER | AGENT | KIOSK | ADMIN"
+        string verification_status "LANE_1 | LANE_2 | LANE_3"
+        timestamp created_at
+    }
+
+    SERVICERS {
+        uuid id PK
+        uuid user_id FK
+        bigint h3_index "Uber H3 Resolution 8 Cell"
+        geometry location "Point SRID 4326"
+        int verification_tier "1 to 3"
+        decimal bayesian_rating
+        int completed_jobs
+        boolean is_active
+    }
+
+    AGENT_PROFILES {
+        uuid id PK
+        uuid user_id FK
+        string agent_tier "BRONZE | SILVER | GOLD | PLATINUM"
+        decimal commission_rate
+        int active_managed_owners
+        decimal graduation_bonus_accumulated
+    }
+
+    LISTINGS {
+        uuid id PK
+        uuid servicer_id FK
+        int category_id
+        string title
+        decimal price
+        string pricing_mode "FIXED | TIERED | HOURLY"
+        jsonb attributes
+        boolean is_active
+    }
+
+    BUYER_REQUESTS {
+        uuid id PK
+        uuid buyer_id FK
+        int category_id
+        string title
+        decimal budget_max
+        bigint h3_index
+        string status "OPEN | AWARDED | EXPIRED"
+    }
+
+    SERVICER_BIDS {
+        uuid id PK
+        uuid request_id FK
+        uuid servicer_id FK
+        decimal bid_amount
+        string proposal_text
+        string status "PENDING | ACCEPTED | REJECTED"
+    }
+
+    BOOKINGS {
+        uuid id PK
+        uuid buyer_id FK
+        uuid servicer_id FK
+        uuid listing_id FK
+        decimal total_amount
+        decimal escrow_amount
+        string status "CREATED | HELD_IN_ESCROW | COMPLETED | DISBURSED | DISPUTED"
+        timestamp auto_release_at
+    }
+
+    BUDGET_TREE_NODES {
+        uuid node_id PK
+        uuid tree_id
+        string parent_node_hash
+        string node_type "VERTICAL_CHILD | HORIZONTAL_PEER"
+        string settlement_mode "EXTERNAL_CASH | DIGITAL_ESCROW"
+        uuid root_buyer_id FK
+        uuid issuer_id FK
+        uuid counterparty_id FK
+        decimal authorized_budget
+        decimal transaction_amount
+        string nonce UNIQUE
+        string state
+    }
+
+    LEDGER_ENTRIES {
+        bigint id PK
+        uuid wallet_id FK
+        uuid booking_id FK
+        uuid tree_node_id FK
+        decimal amount "Credit + / Debit -"
+        string entry_type "ESCROW_HOLD | SERVICER_PAYOUT | COMMISSION_FEE"
+        string reference_code UNIQUE
+    }
+
+    DISPUTES {
+        uuid id PK
+        uuid booking_id FK
+        uuid opened_by_user_id FK
+        string dispute_reason
+        jsonb evidence_logs
+        string status "OPEN | RESOLVED_REFUND | RESOLVED_PAYOUT | RESOLVED_SPLIT"
+        timestamp sla_due_at
+    }
+```
+
+---
+
+## 3. Core System Interaction Sequence Diagrams
+
+### 3.1 Face-to-Face Quick Deal Optical QR Stream Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Buyer as Provincial Buyer (Maria)
+    actor Seller as Micro-Servicer (Tatay Ben)
+    participant AppBuyer as Buyer PWA App
+    participant AppSeller as Seller PWA App
+    participant Cloud as Laravel Octane Backend
+    participant Ledger as Postgres Double Ledger
+
+    Seller->>AppSeller: Selects Aircon Service (₱500)
+    AppSeller->>AppSeller: Generates QR #1 (Gzip 600B + RaptorQ Fountain Code)
+    AppSeller-->>Buyer: Displays Animated QR Stream (3-5 FPS)
+    Buyer->>AppBuyer: Scans QR #1 via Viewfinder Camera
+    AppBuyer->>AppBuyer: Reconstructs Payload (<200ms) & Displays Counter Stepper
+    Buyer->>AppBuyer: Taps -₱50 (Counter ₱450)
+    AppBuyer->>AppBuyer: Generates QR #2 (Signed by Buyer ECDSA)
+    AppBuyer-->>Seller: Displays Counter QR #2 Stream
+    Seller->>AppSeller: Scans QR #2 via Camera
+    AppSeller->>Seller: Shows "Buyer Countered ₱450. [Tap to Accept]"
+    Seller->>AppSeller: Taps Accept
+    AppSeller->>AppSeller: Commits Sealed Envelope to Dexie.js
+    alt Online Mode (L0)
+        AppSeller->>Cloud: Posts Sealed Envelope via HTTPS
+        Cloud->>Ledger: Writes Escrow Hold Entry (0% Drift)
+        Cloud-->>AppBuyer: Push WebSocket Notification ("Deal Escrow Locked!")
+    else Offline Air-Gapped Mode (L3/L4)
+        AppSeller->>AppSeller: Marks Settlement as PHYSICAL_EXTERNAL_CASH
+        AppBuyer->>AppBuyer: Marks Settlement as PHYSICAL_EXTERNAL_CASH
+    end
+```
+
+### 3.2 Delegated Agent SMS Consent Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Agent as Local Agent (Kevin)
+    actor Owner as Feature Phone Owner (Tatay Ben)
+    participant App as Agent PWA App
+    participant Cloud as Laravel Octane Backend
+    participant SMS as Semaphore SMS Gateway
+
+    Agent->>App: Submits New Listing for Owner
+    App->>Cloud: POST /api/v1/agent/listings (Draft Status)
+    Cloud->>SMS: Request OTP Delivery
+    SMS-->>Owner: Sends SMS: "Serbizyu: Agent Kevin created AC Repair listing. Reply APPROVE 8492 to confirm."
+    Owner-->>SMS: Replies "APPROVE 8492" via SMS
+    SMS->>Cloud: Webhook Callback (OTP Confirmed)
+    Cloud->>Cloud: Activates Listing & Awards Agent Tier Points
+    Cloud-->>App: Push Notification: "Tatay Ben approved listing! Live on Marketplace."
+```
+
+---
+
+## 4. Technology Stack Rationale
 
 | System Layer | Technology | Decision Rationale |
 |---|---|---|
@@ -65,173 +268,19 @@ Serbizyu 2.0 scales statelessly over a monolithic application core while retaini
 
 ---
 
-## 3. Production Database Architecture & DDL Schemas
-
-### 3.1 Outbox Events Table (Transactional Outbox Pattern)
-```sql
-CREATE TABLE outbox_events (
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    event_type VARCHAR(100) NOT NULL,
-    aggregate_type VARCHAR(50) NOT NULL,
-    aggregate_id VARCHAR(100) NOT NULL,
-    payload JSONB NOT NULL,
-    processed_at TIMESTAMP WITH TIME ZONE NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX idx_outbox_unprocessed ON outbox_events (created_at) WHERE processed_at IS NULL;
-```
-
-### 3.2 Immutable Double-Entry Financial Ledger
-```sql
-CREATE TABLE ledger_entries (
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    wallet_id UUID NOT NULL,
-    booking_id UUID NULL,
-    tree_node_id UUID NULL,
-    amount NUMERIC(12, 2) NOT NULL, -- Positive = Credit, Negative = Debit
-    entry_type VARCHAR(50) NOT NULL, -- 'ESCROW_HOLD', 'SERVICER_PAYOUT', 'COMMISSION_FEE'
-    reference_code VARCHAR(100) UNIQUE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX idx_ledger_wallet ON ledger_entries (wallet_id, created_at DESC);
-```
-
-### 3.3 Servicer Spatial Directory (PostGIS + Uber H3 Index)
-```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
-
-CREATE TABLE servicers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
-    h3_index BIGINT NOT NULL, -- Uber H3 Resolution 8 cell ID
-    location GEOMETRY(Point, 4326) NOT NULL,
-    verification_tier INT NOT NULL DEFAULT 1,
-    bayesian_rating NUMERIC(3, 2) DEFAULT 4.50,
-    completed_jobs INT NOT NULL DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX idx_servicers_h3 ON servicers (h3_index) WHERE is_active = TRUE;
-CREATE INDEX idx_servicers_gis ON servicers USING GIST (location);
-```
-
-### 3.4 Hierarchical Budget Tree & Chaining Table
-```sql
-CREATE TABLE budget_tree_nodes (
-    node_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tree_id UUID NOT NULL,
-    parent_node_hash VARCHAR(64) NULL, -- SHA-256 Hash of parent envelope
-    node_type VARCHAR(30) NOT NULL DEFAULT 'VERTICAL_CHILD', -- VERTICAL_CHILD | HORIZONTAL_PEER
-    settlement_mode VARCHAR(30) NOT NULL DEFAULT 'EXTERNAL_CASH', -- EXTERNAL_CASH | DIGITAL_ESCROW
-    root_buyer_id UUID NOT NULL,
-    issuer_id UUID NOT NULL,
-    counterparty_id UUID NOT NULL,
-    authorized_budget NUMERIC(12, 2) NOT NULL,
-    transaction_amount NUMERIC(12, 2) NOT NULL,
-    nonce VARCHAR(64) UNIQUE NOT NULL,
-    state VARCHAR(30) NOT NULL DEFAULT 'PROVISIONAL_PENDING_SYNC',
-    payload JSONB NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE INDEX idx_tree_nodes_parent ON budget_tree_nodes (parent_node_hash);
-CREATE INDEX idx_tree_lookup ON budget_tree_nodes (tree_id, state);
-```
-
-### 3.5 Client Storage Schema (Dexie.js / IndexedDB)
-```typescript
-import Dexie from 'dexie';
-
-export const db = new Dexie('SerbizyuOfflineDB');
-
-db.version(1).stores({
-    cached_listings: 'id, title, category_id, price, seller_id, h3_index',
-    public_keys: 'user_id, public_key_pem',
-    tree_nodes: 'node_id, tree_id, parent_node_hash, node_type, settlement_mode, status, created_at',
-    sync_outbox: 'id, status, created_at, retry_count'
-});
-```
-
----
-
-## 4. Algorithmic & Cryptographic Specifications
-
-### 4.1 Uber H3 Geospatial Discovery Engine
-Proximity lookups avoid trigonometric floating-point operations by mapping coordinates to **Uber H3 Resolution 8 cells** (~0.73 km² cell area). Proximity search executes via $O(1)$ integer array lookups:
-```php
-public function getNearbyServicers(float $lat, float $lng, int $kRingRadius = 2): Collection 
-{
-    $centerCell = H3::geoToH3($lat, $lng, 8);
-    $searchCells = H3::kRing($centerCell, $kRingRadius);
-
-    return Servicer::query()
-        ->whereIn('h3_index', $searchCells)
-        ->where('is_active', true)
-        ->get();
-}
-```
-
-### 4.2 $\epsilon$-Greedy Cold-Start Recommendation Algorithm
-Prevents newly onboarded provincial providers from being buried by legacy ratings:
-```php
-public function getFeed(array $h3Cells): Collection 
-{
-    $epsilon = 0.20; // 20% exploration rate
-
-    if ((mt_rand(1, 100) / 100) < $epsilon) {
-        // EXPLORE: Show newly verified providers with <= 5 completed jobs
-        return Servicer::query()
-            ->whereIn('h3_index', $h3Cells)
-            ->where('completed_jobs', '<=', 5)
-            ->inRandomOrder()
-            ->take(5)
-            ->get();
-    }
-
-    // EXPLOIT: Show top Bayesian-ranked providers
-    return Servicer::query()
-        ->whereIn('h3_index', $h3Cells)
-        ->orderByDesc('bayesian_rating')
-        ->take(5)
-        ->get();
-}
-```
-
-### 4.3 Weighted Bayesian Rating Formula
-Prevents rating distortion from low sample sizes:
-$$WR = \frac{v}{v + m} \cdot R + \frac{m}{v + m} \cdot C$$
-* $v = \text{total reviews for provider}$
-* $m = 5 \text{ (minimum review threshold)}$
-* $R = \text{provider average rating}$
-* $C = 4.60 \text{ (platform mean rating across all categories)}$
-
-### 4.4 Optical Transport QR Fountain Codes (Quick Deal)
-Quick Deal envelopes (up to 1.5 KB payload) are compressed with gzip to 600 Bytes, split into RaptorQ / Fountain Code symbols with forward error correction (FEC) parity, and animated at 3–5 FPS. The receiving phone camera reconstructs the payload from any $N$ unique symbols out of $N+K$ total parity frames regardless of frame start index.
-
----
-
 ## 5. Architectural Decision Records (ADRs)
 
 ### ADR-001: PostgreSQL 16 + PostGIS over MySQL 8
 * **Status:** Approved
 * **Context:** Need native geospatial indexing for barangay cells and flexible JSONB attribute querying.
 * **Decision:** Choose PostgreSQL 16 with PostGIS extension.
-* **Consequences:** Provides native $O(1)$ spatial queries and partial GIN indexing; requires PostgreSQL expertise on server node.
+* **Consequences:** Provides native $O(1)$ spatial queries and partial GIN indexing.
 
 ### ADR-002: Transactional Outbox Pattern over Direct Queue Dispatch
 * **Status:** Approved
 * **Context:** Network drops during booking transactions could desynchronize PostgreSQL database state from Redis queue workers.
 * **Decision:** Write events to an `outbox_events` table within the same ACID database transaction, then poll outbox via background supervisor daemon.
-* **Consequences:** 100% event consistency guarantee; adds minor latency (<100ms) for outbox polling daemon.
-
-### ADR-003: Double-Entry Accounting Ledger over Single Balance Column
-* **Status:** Approved
-* **Context:** Financial audits require 0% balance drift and immutable transaction histories.
-* **Decision:** Record all funds as immutable positive (credit) and negative (debit) rows in a `ledger_entries` table. Balances are calculated by `SUM(amount)`.
-* **Consequences:** Prevents race conditions and balance tampering; requires index optimization for fast aggregation queries.
+* **Consequences:** 100% event consistency guarantee.
 
 ---
 
