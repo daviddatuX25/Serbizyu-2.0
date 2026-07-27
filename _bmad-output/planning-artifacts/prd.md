@@ -87,8 +87,10 @@ All platform users are called **Ka-Serbizyu** — members of the Serbizyu commun
 
 **Digital is NOT a separate listing type.** A digital product is a Product Listing fulfilled via A9 (Digital Deliverable). A digital service is a Service Listing fulfilled via A9.
 
-**REQ-LST-01:** Every listing has: title, description, category, price/pricing mode (fixed, tiered, hourly, negotiable, per-unit), service radius or pickup area, photos (min 1, max 8), availability calendar or stock count, fulfillment archetype, agent-managed flag, license verification badge.  
+**REQ-LST-01:** Every listing has: title, description, category, price/pricing mode (fixed, tiered, hourly, negotiable, per-unit) and price_visibility (public/starting_from/hidden), service radius or pickup area, photos (min 1, max 8), availability calendar or stock count, fulfillment archetype, agent-managed flag, license verification badge.  
 **REQ-LST-02:** Pricing supports all modes: fixed, tiered, hourly, per-kilo, per-unit, negotiable.
+
+**REQ-LST-03 (Hidden Price / Quote Request):** Providers may optionally hide prices on Service Listings and custom Product Listings (price_visibility: 'hidden' or 'starting_from'). Hidden-price listings cannot use Direct Booking — the listing instead shows a "Request a Quote" (Magtanong ng Presyo) button that triggers a 1:1 quote flow. Standard commodity products (groceries, mass-market goods, fixed-price items) require public pricing. Quote Requests reuse the existing bidding infrastructure (see §3.3) with `bid_type: 'quote'` — single-provider, non-competitive. After the buyer accepts a quote, the order flows through the standard Order state machine (see §3.3 REQ-TXN-01). Trust safeguards: providers must respond within 24 hours (SLA-tracked), quotes are valid for 48 hours, and the listing always shows the anonymized category-average price range (e.g., "Typical cost in Tagudin: ₱300–₱800"). A "Talagang Presyo" (Transparent Pricing) badge is available for providers who choose to publish fixed prices.
 
 ### 3.3 The Five Transaction Mechanisms
 
@@ -105,6 +107,8 @@ All platform users are called **Ka-Serbizyu** — members of the Serbizyu commun
 **REQ-TXN-03:** Listing types and transaction mechanisms are independent dimensions. Any listing type can be transacted through any compatible mechanism.  
 **REQ-TXN-04:** Quick Deal / Deal-Chaining compatibility is a provider/agent decision, not a hard archetype restriction. Providers toggle whether they accept Quick Deals for their listings.
 
+**REQ-TXN-05 (Quote Request — Quote Request is a 1:1 variant of Reverse Bidding):** When a buyer clicks "Request a Quote" on a hidden-price or starting-from listing, the existing bid infrastructure handles the request → quote → accept flow. Unlike Reverse Bidding (which is competitive — multiple providers bidding on one request), Quote Requests are non-competitive: only the listing owner can respond. The underlying tables and notification pipeline are shared; the distinction is `bid_type: 'quote'` vs `bid_type: 'bid'` and `source_listing_id` (for quotes) vs `source_request_id` (for bids).
+
 **Quick Deal Offline Behavior:**
 
 | Scenario | How It Works | Connectivity Required |
@@ -115,8 +119,8 @@ All platform users are called **Ka-Serbizyu** — members of the Serbizyu commun
 | Both fully offline (no data, no SMS) | Cannot transact | — |
 
 **Agent-Mediated SMS Consent:**  
-**REQ-TXN-05:** Critical actions requiring owner SMS OTP: listing creation/activation, payout withdrawal, agent assignment change.  
-**REQ-TXN-06:** Non-critical actions handled by agent without SMS: regular booking confirmation, message replies, calendar updates.
+**REQ-TXN-06:** Critical actions requiring owner SMS OTP: listing creation/activation, payout withdrawal, agent assignment change.  
+**REQ-TXN-07:** Non-critical actions handled by agent without SMS: regular booking confirmation, message replies, calendar updates.
 
 ### 3.4 The 10 Fulfillment Archetypes
 
@@ -275,13 +279,15 @@ The agent system bridges the digital divide for feature-phone users. Agents are 
 
 ### 3.11 Dispute Resolution
 
-*[In progress — to be facilitated]*
+> *See §6.4 for full dispute resolution phases, cash dispute rules, and trust-score impact. Dispute resolution is governed under Financial Integrity (§6).*
 
 ### 3.12 Search & Discovery
 
 **REQ-SRC-01 (H3 Geospatial Indexing):** Every Provider mapped to Uber H3 Resolution 8 cell by barangay coordinates. Search results filtered by proximity via k-ring neighbor lookup. Distance displayed as "0.5 km away — Barangay Bio." O(1) spatial queries via PostGIS + H3 index.
 
 **REQ-SRC-02 (Category Browsing & Filtering):** 28 categories in 8 tier groups with SVG icon carousel. Filters: category, price range, barangay, availability, rating, verification tier. Dual-tab feed: Direct Offers vs Buyer Requests. Sort by distance, rating, price, newest.
+
+**REQ-SRC-02a (Price Visibility Filter):** Price filter toggle: "Fixed Price / Negotiable." Hidden-price and starting-from listings appear under Negotiable. Hidden-price listings display a "Request a Quote" badge and the anonymized category-average price range instead of a numeric price.
 
 **REQ-SRC-03 (Text Search):** Full-text search via Meilisearch. Typo-tolerant. Language-aware (Tagalog, Ilocano, English). Voice-first mic button (Web Speech API).
 
@@ -357,38 +363,396 @@ The agent system bridges the digital divide for feature-phone users. Agents are 
 
 ## 4. Business Rules, Revenue Model & Agent Incentives
 
-*[In progress — to be facilitated]*
+> **Facilitated:** July 27, 2026 — Section locked. Revenue splits adjusted per founder direction (lower platform defaults). All rates remain admin-configurable.
+
+### 4.1 Revenue Model — Default Splits
+
+All rates are **admin-configurable** per category, tier, and province. Defaults are intentionally low to maximize adoption intake.
+
+| Scenario | Split | Note |
+|---|---|---|
+| **Direct** (Provider sells directly) | 90% Provider / 10% Platform | No agent involved |
+| **Agent-Managed** (Owner/Agent/Platform) | 80% Owner / 10% Agent / 10% Platform | Agent tier influences agent share |
+| **Cash Transactions** | 8% Platform rate | Covers dispute risk buffer; no escrow hold |
+| **Category Subsidies** | 0–3% Platform | Tricycle/transport, farm labor, emergencies |
+| **Boost/Advertising** | Per-listing paid feature | Phase 2+; pricing admin-configurable |
+| **Time-Bounded Promos** | 0% Platform, first 30 days | Tagudin pilot launch incentive |
+
+**Payout Schedule:** Weekly batched disbursements via Xendit. Minimum withdrawal and schedule are admin-configurable.
+
+**Philosophy:** Rates start low to prioritize user intake during adoption phase. As the platform gains popularity, the model can be adjusted upward. Sensitivity to provincial price points is paramount — fees must not penalize participation.
+
+### 4.2 Business Rules — Operational Constants
+
+Platform-wide rules that apply across all categories. All values admin-configurable.
+
+| Rule | Default Value | Rationale |
+|---|---|---|
+| Minimum listing price | ₱5 | Prevents troll/spam ₱1 listings |
+| Default escrow auto-release window | 3 days | Shopee-style buyer protection |
+| Maximum Quick Deal counter-offer rounds | 3 | Prevents endless negotiation |
+| High-value cash transaction threshold | ₱5,000 | Triggers additional confirmation above this amount |
+| Minimum reviews before star rating displays | 3 | Prevents single-review distortion |
+| Featured slots per category per town | 3 | Rotated weekly based on performance |
+| ε-Greedy cold-start ratio | 80/20 | Veterans / newcomers search impression split |
+| Agent-owner relationship limit | Admin-configurable per tier | Prevents agent account farming |
+| Dispute expiration window | Admin-configurable | Receipt-as-liability model (see Phase 1 FAQ #1) |
+| ID verification requirement for listings | Identity Verified tier minimum | Government ID + selfie face match |
+| Agent-managed owner verification | Barangay Verified minimum before listings go live | Extra scrutiny for offline owners |
+
+### 4.3 Agent Incentive Model
+
+Reinforcing Section 3.8 (Human Agent Network):
+
+| Incentive | Mechanism |
+|---|---|
+| **Commission Ladder** | Bronze (10%) → Silver (11–12%) → Gold (13–15%) → Platinum (max) |
+| **Graduation Bonus** | 3× owner's average monthly commission when owner transitions to independent smartphone use |
+| **Featured Badge** | Silver tier and above, displayed on managed listings |
+| **Priority Expansion** | Gold tier gets first access to new barangay territories |
+| **Mentorship Bonus** | Platinum tier earns on agents they train (Phase 3+) |
+| **SMS Safety Keywords** | Every notification includes STOP (suspend agent) and REVOKE (permanent removal) — irrefutable consent record |
+
+### 4.4 DOLE Classification
+
+Agents are classified as **independent contractors**, not employees:
+- No prescribed working hours or methods
+- Commission-based compensation (not salary/wage)
+- Owner controls agent relationship; platform facilitates
+- Agent provides own tools (smartphone, internet)
+- Revenue split terms disclosed upfront at onboarding
 
 ---
 
 ## 5. Regulatory & Compliance (3-Lane Formalization Ladder)
 
-*[In progress — to be facilitated]*
+> **Facilitated:** July 27, 2026 — Section locked. Ladder designed as earnings progression, not tax burden.
+
+The 3-Lane Ladder frames regulatory compliance as "Unlock more earnings" — not "File your taxes." Servicers climb at their own pace. No lane is forced; each lane unlocks higher earnings and trust signals.
+
+### Lane 1 — Informal (Entry)
+
+| Attribute | Detail |
+|---|---|
+| **Requirement** | Phone verified + Government ID or Barangay Clearance |
+| **Unlocks** | Create listings, accept bookings, browse platform |
+| **Payout Cap** | ₱50,000/month (admin-configurable) |
+| **Tax Status** | No BIR filing required at this tier |
+| **Badge** | None |
+
+### Lane 2 — Sworn Declaration (Growth)
+
+| Attribute | Detail |
+|---|---|
+| **Requirement** | Lane 1 + digital Sworn Declaration under BIR RR 16-2023 |
+| **Process** | 2-minute guided form in-app → auto-generates PDF for provider submission |
+| **Unlocks** | Full tax-free payouts up to ₱250,000/year (BMBE threshold), "Tax-Compliant" badge |
+| **Tax Rate** | 1% withholding (BIR RR 16-2023) or BMBE-exempt if registered |
+| **Badge** | "Tax-Compliant" |
+
+### Lane 3 — Registered Business (Max)
+
+| Attribute | Detail |
+|---|---|
+| **Requirement** | Lane 2 + BIR Form 2303 + BMBE Certificate (or DTI/SEC) |
+| **Unlocks** | Uncapped earnings, "Business Verified" badge, priority search placement, eligible for Boost/Advertising |
+| **Badge** | "Business Verified" |
+
+### Regulatory Cross-Cutting Concerns
+
+| Area | Requirement | Status |
+|---|---|---|
+| **BSP (Bangko Sentral)** | Xendit xenPlatform handles payment custody. Platform classified as OPS (Operator of Payment System) partner, not MSB (Money Service Business). | Legal opinion pending |
+| **DPA (Data Privacy Act, RA 10173)** | NPC registration for personal data processing. Consent language for government ID and selfie collection. Data retention and deletion policy. | Required before launch |
+| **DOLE (Labor Code)** | Agent classification as independent contractor (see §4.4). No employer-employee relationship; commission-based; no prescribed hours. | Model designed for compliance |
+| **LGU Permit** | Mayor's Permit for Tagudin operations. Business registration with Municipal Hall. | Research pending (walk-in) |
+| **DTI Consumer Act (RA 7394)** | Quote-based pricing: quotes are estimates, not binding offers (disclaimer). Price transparency: category-average ranges displayed even for hidden-price listings. | Mitigated by platform design |
+| **Professional Regulation** | PRC / TESDA / DOH / LTO-TODA license badges are informational at launch — not blockers to listing creation. | Phase 2+ enforcement |
+| **Insurance** | Not required for pilot launch. Deferred to Phase 3. | P3 |
+| **BMBE (RA 9178)** | Barangay Micro Business Enterprise registration at Lane 3. Income tax exemption up to ₱250,000/year. LGU-filed, not BIR. | Key servicer incentive |
 
 ---
 
 ## 6. Financial Integrity, Governance & Risk Guardrails
 
-*[In progress — to be facilitated]*
+> **Facilitated:** July 27, 2026 — Section locked. Consolidates financial integrity (§3.10), dispute resolution (§3.11), and governance layer.
+
+### 6.1 Financial Integrity (Consolidated from §3.10)
+
+| Item | Source | Key Rule |
+|---|---|---|
+| Double-entry escrow ledger | REQ-PAY-03 | Paired debit/credit entries, 0% drift, immutable — corrections are offsetting entries, not updates |
+| Xendit xenPlatform | REQ-PAY-02 | Handles KYC, fund custody, settlement, disbursement. Platform owns internal ledger as source of truth. |
+| Cloud Truth Boundary | REQ-PAY-09 | Real money governed exclusively by cloud backend and payment gateway. Client-side storage has zero disbursement authority. Offline transactions default strictly to external cash settlement. |
+| 3-day escrow auto-release | REQ-PAY-04 | Shopee-style buyer protection window; admin-configurable |
+| Cash dual-confirmation | REQ-PAY-05 | Both parties confirm payment/receipt; no escrow hold; amounts above ₱5,000 trigger additional confirmation |
+| Weekly batched payouts | REQ-PAY-07 | Via Xendit — lower per-transaction cost than on-demand disbursement |
+| Automated daily reconciliation | REQ-PAY-10 | Drift detection with alerting; exportable for external audit |
+
+### 6.2 Governance — Audit Trail & Admin Oversight
+
+**REQ-GOV-01 (Audit Trail):** Every financial event (escrow hold, release, refund, commission split, payout) is logged with: actor ID, timestamp, amount, order reference, ledger entry ID, event type. Logs are immutable — corrections are offsetting entries, never modifications or deletions.
+
+**REQ-GOV-02 (Admin Oversight Dashboard):**
+- Real-time escrow summary: total held, pending release, frozen/disputed
+- Transaction volume and commission revenue by category and period
+- Provider liquidity per category per barangay (see REQ-SRC-05)
+- Agent commission payouts and tier distribution
+- Automated fraud flags: velocity checks, anomalous commission patterns, quote-to-booking ratio outliers
+- Dispute queue with aging and resolution metrics
+
+### 6.3 Risk Guardrails
+
+| Guardrail | Rule | Rationale |
+|---|---|---|
+| Provider payout hold | New providers: first 3 completed transactions held for additional 2 days beyond standard auto-release before disbursement | Anti-fly-by-night fraud; admin-configurable count and duration |
+| High-value escrow threshold | Transactions above ₱10,000 require admin review before escrow release | Extra scrutiny on large amounts; threshold admin-configurable |
+| Agent concurrent owner limit | Admin-configurable max owners per agent per tier (e.g., Bronze: 20, Silver: 50, Gold: 100, Platinum: unlimited) | Prevents account farming and quality dilution |
+| Dispute rate suspension | Providers exceeding 5% dispute rate (rolling 90-day window) automatically paused; admin reviews for reactivation | Quality gate; threshold admin-configurable |
+| Cash advisory threshold | Cash transactions above ₱15,000 trigger an in-app recommendation to use digital escrow for security. Transaction is NOT blocked — platform cannot control external cash. Receipt-based trust model (Phase 1 FAQ #1) handles disputes regardless of amount. | Advises safety without restricting user choice; threshold admin-configurable |
+| Quote response SLA enforcement | Providers with >48h average response time on quote requests receive "Slow Response" warning; >72h triggers listing visibility downgrade | Protects buyer experience for hidden-price listings |
+
+### 6.4 Dispute Resolution
+
+> *Consolidates and locks §3.11. Platform/admin carries the resolution burden — buyer and seller do not need to be online simultaneously.*
+
+| Phase | Action | Timeline |
+|---|---|---|
+| **1. Open** | Either party files dispute with reason category + evidence upload (photos, messages, receipts) | Any time before escrow auto-release or within configurable window after completion |
+| **2. Evidence Collection** | Admin independently gathers receipts, conversation logs, photos, kiosk footage (if available) from both parties. Admin drives the process — buyer and seller respond asynchronously. | Target: 48 hours from filing |
+| **3. Resolution** | Admin rules based on evidence + platform policy. Solid/deterministic cases (clear receipt, clear fault): immediate resolution. Complex cases (conflicting evidence, ambiguous fault): admin issues preliminary finding with documented reason; may extend for final evidence. | **Target: 48h from filing** for deterministic cases. Complex: up to 5 days with documented extension reason. |
+| **4. Final** | Binding ruling issued. Rationale recorded. Logged to immutable audit trail. Both parties notified. | Binding upon issuance |
+| **Cash Disputes** | Receipt is the primary trust anchor (Phase 1 FAQ #1). No receipt = burden of proof falls on claiming party. Dispute expiration window is admin-configurable — if neither party raises within the window, transaction stands. | Configurable expiration |
+
+**REQ-DSP-01:** Dispute history affects provider trust score and tier eligibility. Resolved disputes count less than unresolved.  
+**REQ-DSP-02:** Customers can view a provider's dispute rate and resolution rate on the provider profile.  
+**REQ-DSP-03:** Repeat disputers (either role) flagged for admin review. Pattern of frivolous disputes may result in platform restriction.
+
+### 6.5 External Escalation & Legal Handoff
+
+When internal dispute resolution (§6.4) fails — either party rejects the admin ruling, or the case involves external factors (cash dispute with no receipt, fraud outside platform jurisdiction) — a formal handoff path exists.
+
+**Three-Tier External Escalation:**
+
+| Tier | Channel | When Used | Platform Role |
+|---|---|---|---|
+| **1. Platform Final Ruling** | Admin issues binding decision with full evidence package | After §6.4 phases exhausted | Platform is arbiter |
+| **2. Formal Handoff Letter** | Platform generates a structured "Notice of Unresolved Dispute" document. Contains: transaction summary, evidence log, admin findings, both party statements. Digitally signed by platform. Delivered to both parties. | Either party rejects the platform ruling and wants external recourse | Platform provides the case file; does not represent either party |
+| **3. External Legal Pathway** | Parties take the handoff letter to: **Barangay Lupon** (Katarungang Pambarangay — mandatory first legal step in PH for disputes between residents of the same municipality under RA 7160), **DTI Consumer Mediation** (for consumer complaints under RA 7394), or **Small Claims Court** (for monetary claims under ₱400,000, no lawyer required under AM No. 08-8-7-SC) | Handoff letter serves as the complete case file | Platform is no longer involved; case file is the platform's final contribution |
+
+**REQ-GOV-03 (External Handoff Letter):** Platform generates a formal Notarized-Ready handoff document on request. Contains: transaction ID, timeline of events, evidence index with hashes, admin findings and ruling, both party statements. Platform does not provide legal representation. The handoff letter is the platform's final action on the dispute.  
+**REQ-GOV-04 (Future Legal Housing):** Phase 3+ — platform may retain in-house or partnered legal counsel for dispute arbitration and mediation. Out of scope for academic pilot.
 
 ---
 
 ## 7. Discovery, Recommendation & Accessibility
 
-*[In progress — to be facilitated]*
+> **Facilitated:** July 27, 2026 — Section locked. Covers multi-channel access tiers, offline-first patterns, recommendation schema, and accessibility standards.
+
+### 7.1 Multi-Channel Access Tiers (L0–L4)
+
+Serbizyu serves users across the full digital divide spectrum. Five access tiers ensure no user is locked out by their device or connectivity.
+
+| Tier | User | Device | Connectivity | Interface | Discovery Method |
+|---|---|---|---|---|---|
+| **L0** | Non-digital service owner | Feature phone (no data) | SMS only | SMS notifications + keyword replies (APPROVE, STOP, REVOKE) | Agent brings them work; they confirm via SMS |
+| **L1** | Kiosk user | Shared tablet at sari-sari store / barangay hall | WiFi/4G (kiosk-owned) | Kiosk app — browse-only or operator-assisted | Browse by category; kiosk operator assists |
+| **L2** | Smartphone — offline / low-data | Android/iOS, intermittent connectivity | Intermittent | PWA with IndexedDB cache for catalog | Browse cached catalog; search when online; requests queued offline |
+| **L3** | Smartphone — online | Android/iOS, 4G/5G/WiFi | Always-on | Full PWA — all features | Full search, browse, Quick Deal QR, notifications, quotes |
+| **L4** | Power user / admin | Desktop/laptop + smartphone | WiFi/ethernet | Full web app + admin dashboard | Admin tools, analytics, bulk operations, governance |
+
+**REQ-ACC-01:** Feature degradation is tier-aware. L2 users never see features requiring real-time connectivity. L0 users never see visual UI elements.  
+**REQ-ACC-02:** All tiers produce the same Order — the backend is tier-agnostic. Tier determines presentation, not transaction capability.
+
+### 7.2 Offline-First Patterns
+
+| Pattern | Mechanism | Tier |
+|---|---|---|
+| Catalog caching | Top/popular listings cached in IndexedDB on PWA; refreshed on connectivity | L2, L3 |
+| Queued requests | Buyer Requests and Quote Requests composed offline; synced when online | L2 |
+| Offline Quick Deal | QR scan + counter-offer stepper works fully air-gapped (see §3.3); deal data syncs when either device reconnects | L2, L3 |
+| Conflict resolution | Last-write-wins with server timestamp authority. Cloud Truth Boundary (§3.10 REQ-PAY-09) governs all money — client has zero disbursement authority | All |
+
+### 7.3 Recommendation Engine Schema
+
+Recommendation logic is Phase 2+ but the data model is prepared. Not in pilot scope.
+
+| Signal | Weight | Description |
+|---|---|---|
+| Category affinity | High | User's past bookings by category → boost similar categories |
+| Barangay proximity | High | H3 k-ring lookup — closer providers ranked higher |
+| Provider trust score | Medium | Composite: verification tier + completion rate + rating + dispute rate |
+| Recency | Low | Recently active providers get slight freshness boost |
+| ε-Greedy cold-start | 20% | New providers (≤5 completed jobs) guaranteed 20% of search impressions |
+
+### 7.4 Accessibility Standards
+
+**REQ-ACC-03:** PWA meets WCAG 2.1 Level AA minimum: keyboard-navigable, screen reader compatible (ARIA labels), sufficient color contrast (4.5:1 minimum), scalable text without layout breakage.  
+**REQ-ACC-04:** Multi-language UI: Tagalog, Ilocano, English — user-selectable in settings, not geo-guessed. Language preference persists across sessions.  
+**REQ-ACC-05:** SMS notifications use plain language — no URLs, no markdown, no special characters. Critical action keywords in ALL CAPS (APPROVE, STOP, REVOKE) for feature phone readability. Maximum 160 characters per SMS to avoid segmentation on 2G networks.  
+**REQ-ACC-06:** Kiosk interface uses large touch targets (minimum 48×48dp), high-contrast mode default, and step-by-step guided flows for first-time users.
 
 ---
 
 ## 8. Non-Functional Requirements (NFRs) & Quality SLAs
 
-*[In progress — to be facilitated]*
+> **Facilitated:** July 27, 2026 — Section locked.
+
+### 8.1 Performance & Latency
+
+| Metric | Target | Measurement |
+|---|---|---|
+| Page load (PWA, 4G) | < 3 seconds to interactive | Lighthouse / Web Vitals |
+| Page load (PWA, 3G/2G) | < 8 seconds to first paint | PWA with lazy loading + code splitting |
+| SMS OTP delivery | < 10 seconds | Semaphore gateway SLA |
+| Search response (Meilisearch) | < 200ms for text search | Server-side timing |
+| API response (typical) | < 300ms p95 | Laravel Telescope / monitoring |
+| Escrow webhook processing | < 2 seconds (idempotent) | Xendit webhook → ledger update |
+| Image optimization | Auto-resize + WebP conversion on upload | Intervention/image + queue job |
+
+### 8.2 Reliability & Availability
+
+| Metric | Target |
+|---|---|
+| Platform uptime | 99% (academic timeline; single VPS) |
+| Escrow ledger availability | 99.9% (financial data — highest priority) |
+| Scheduled maintenance window | Sundays 2:00–4:00 AM, with in-app notice 48h prior |
+| Backup frequency | Daily database + file backups; retained 30 days |
+| Disaster recovery | Restore from backup within 4 hours |
+
+### 8.3 Security
+
+| Requirement | Implementation |
+|---|---|
+| Authentication | Laravel Sanctum SPA auth; session-based for web, token-based for PWA |
+| Authorization | Policy-based gates per role (Customer, Provider, Agent, Admin) |
+| Data in transit | TLS 1.3 minimum; Cloudflare edge |
+| Data at rest | PostgreSQL encryption-at-rest; sensitive fields (government IDs, selfies) encrypted at application layer |
+| API rate limiting | Per-user, per-endpoint; admin-configurable thresholds |
+| OWASP Top 10 | CSRF protection, XSS filtering, SQL injection prevention (Eloquent ORM), secure headers (CSP, HSTS) |
+| Dependency scanning | Composer audit + npm audit on CI pipeline |
+| PII handling | Government IDs, selfies, phone numbers — encrypted at rest, access-logged, purgeable on account deletion per DPA (RA 10173) |
+
+### 8.4 Scalability (Academic Ceiling)
+
+| Constraint | Target | Notes |
+|---|---|---|
+| Concurrent users | 50 (Tagudin pilot) | Single VPS: 2 vCPU, 4GB RAM handles this comfortably |
+| Daily transactions | 100 (pilot phase) | Database + Redis on same host adequate |
+| Storage | 20GB SSD (pilot) | Images on local filesystem; Cloudflare R2 for Phase 2+ |
+| SMS volume | 500/month (Semaphore starter tier) | Agent-managed owners + transactional notifications |
+| Design ceiling | Schema and architecture designed for 10,000+ users; infrastructure upgraded when needed | No premature optimization; no microservices for pilot |
+
+### 8.5 Data Retention & Privacy
+
+| Policy | Rule |
+|---|---|
+| Transaction records | Retained indefinitely (financial audit trail) |
+| Government ID images | Retained while account active + 1 year after deletion per DPA; then purged from storage |
+| Chat/message history | Retained 2 years; user-requestable deletion |
+| Dispute evidence | Retained 5 years (statute of limitations reference) |
+| Analytics data | Anonymized after 12 months |
+| Account deletion | User-requestable; triggers PII purge within 30 days |
 
 ---
 
 ## 9. Academic Scope Boundaries & Traceability Matrix
 
-*[In progress — to be facilitated]*
+> **Facilitated:** July 27, 2026 — Section locked. Phase 2 PRD complete.
+
+### 9.1 Zero-Cost Constraint
+
+All infrastructure during academic development must use free tiers, self-hosted alternatives, or one-time hardware costs. No recurring SaaS subscriptions.
+
+| Service (Near-Pilot Paid Option) | Academic Alternative | One-Time Cost |
+|---|---|---|
+| Semaphore SMS gateway | Self-hosted ModemManager + USB GSM dongle + Gammu SMS daemon | ₱300 hardware |
+| Cloudflare R2 (object storage) | Local filesystem on VPS (already provisioned) | ₱0 |
+| Meilisearch Cloud | Self-hosted Meilisearch on same VPS | ₱0 |
+| Mapbox (maps) | Free tier (50K monthly loads); OpenStreetMap + Leaflet fallback | ₱0 |
+| Xendit xenPlatform | Xendit sandbox for dev — live requires BSP-registered business (accepted: this is the one paid dependency at go-live) | ₱0 for dev |
+| Deployment | **Self-hosted Dokploy on Proxmox VPS** with domain (dxtechph.online available) | ₱0 (existing infra) |
+
+**REQ-SC-01:** Zero recurring infrastructure cost during academic timeline. SMS hardware is a one-time ₱300 purchase. Xendit live keys are the sole paid dependency at pilot launch. Dokploy handles all deployment, SSL, and container orchestration.
+
+### 9.2 Capacity Gates (Build If Capable)
+
+Phase labels are priority hints, not hard gates. If a feature's schema and requirements are documented in the PRD, and the team has capacity, build it.
+
+| Feature | Priority | Rule |
+|---|---|---|
+| Boost/Advertising (§3.15) | Phase 2 | Simple toggle + featured slot logic is lightweight — build if time permits |
+| Hidden Price / Quote (§3.2, §3.3) | Phase 2 | Schema and requirements documented; implementation deferred unless capacity allows |
+| Kiosk (§3.17) | Phase 2 | Build if Android tablet available + kiosk-mode PWA is straightforward |
+| Recommendation engine (§7.3) | Phase 3 | Schema prepared; defer unless substantial extra time |
+| Points/Affiliate (§3.16) | Phase 3 | Defer — needs active user liquidity before it makes sense |
+| User-connected channels (§3.5 Form B) | Phase 3 | Defer — platform-owned channels (Form A) sufficient for pilot |
+| Virtual World (§3.7 REQ-MSP-07) | Out of scope | Definite out-of-scope |
+| Geographic expansion | Out of scope | Tagudin only — no Candon, no province-wide |
+
+### 9.3 Scope Fence — What's IN
+
+| Scope Area | Included |
+|---|---|
+| **Geography** | Tagudin, Ilocos Sur ONLY |
+| **Launch fulfillment presets** | A1 (Linear Project), A3 (Appointment), A4 (Handoff), A9 (Digital Deliverable) |
+| **Payment** | Xendit sandbox (dev) / Xendit live (pilot) + external cash |
+| **Serbi AI** | Cloud-only via Laravel AI SDK |
+| **Infrastructure** | Single Proxmox VPS, Dokploy-managed containers, domain dxtechph.online |
+| **Channels** | Platform-owned: FB Page, FB Groups, Messenger Bot, SMS, SEO |
+| **Agent network** | In-house trained agents in Tagudin; Bronze–Platinum tier ladder |
+| **Verification** | 5-tier progressive identity (Phone → Identity → Barangay → Professional → Business) |
+| **Deployment** | Dokploy CI/CD from GitHub; Cloudflare DNS/TLS |
+
+### 9.4 Explicitly OUT of Scope
+
+| Item | Reason |
+|---|---|
+| Geographic expansion beyond Tagudin | Academic timeline; requires real capital + operational presence |
+| Real capital / paid marketing | Bootstrap phase; student budget |
+| Legal representation for disputes | Phase 3+; handoff letter (§6.5) is max commitment |
+| Professional license enforcement | Badges are informational at launch |
+| In-house payment custody (MSB license) | Xendit handles all custody; platform is OPS partner |
+| Virtual World / AR/VR spatial discovery | Indefinite out-of-scope |
+| Dedicated mobile apps (iOS/Android native) | PWA is the delivery mechanism |
+
+### 9.5 Traceability — Phase 1 → PRD
+
+| PRD Section | Source Phase 1 Artifact | Old-Docs / Research Source |
+|---|---|---|
+| §1 Product Purpose | PRFAQ Press Release | — |
+| §2 Personas | FAQ Challenge #4 (Adoption) | — |
+| §3.1 Catalog | PRFAQ (28 categories) | `old-docs/strategies/industry-coverage-matrix.md` |
+| §3.2 Listing Types | Listing Model Taxonomy §1–3 | `old-docs/architecture/deal-system-spec.md` |
+| §3.3 Transactions | Listing Model Taxonomy §3 | `old-docs/architecture/deal-system-spec.md`, `offline-deal-spec.md` |
+| §3.4 Archetypes | Listing Model Taxonomy §4 (A1–A10) | `old-docs/architecture/fulfillment-archetypes.md` |
+| §3.5 Channels | PRFAQ supporting infra | `old-docs/architecture/connector-architecture.md` |
+| §3.6 Serbi AI | PRFAQ supporting infra | `docs/.../04-engineering-architecture-master-reference.md` |
+| §3.7 My Space | PRFAQ supporting infra | `old-docs/architecture/connector-architecture.md` |
+| §3.8 Agent Network | FAQ #3 (Fraud) + #4 (Adoption) | `old-docs/decisions/decision-matrix.md` (D18–D19) |
+| §3.9 3-Lane Ladder | PRFAQ supporting infra | `docs/.../02-onboarding-formalization-agent-strategy.md` |
+| §3.10 Payment | FAQ #1 (Trust) + #2 (Economics) | `old-docs/decisions/decision-matrix.md` (D17, D24, D27) |
+| §3.12 Search | FAQ #4 (Adoption) | `old-docs/decisions/decision-matrix.md` (D9–D11) |
+| §3.13 Verification | FAQ #1 + #3 | `old-docs/decisions/decision-matrix.md` (D4, D6) |
+| §4 Revenue & Rules | FAQ #2 (Unit Economics) | `old-docs/decisions/decision-matrix.md` (D17, D27) |
+| §5 Regulatory | Research Agenda P0–P3 | `research/serbizyu-ph-regulatory-report.md` |
+| §6 Financial Integrity | FAQ #1 (Trust) + #5 (Risk) | `old-docs/architecture/deal-system-spec.md` |
+| §7 Discovery & Access | FAQ #4 (Adoption) | `old-docs/architecture/connector-architecture.md` |
+| §8 NFRs | FAQ #5 (Execution Risk) | `docs/.../03-tech-architecture-cost.md` |
+| §9 Scope Boundaries | FAQ #5 + founder direction | `docs/.../04-engineering-architecture-master-reference.md` |
+
+### 9.6 Dokploy Deployment Architecture
+
+| Component | Detail |
+|---|---|
+| **Orchestrator** | Dokploy on Proxmox VM |
+| **Domain** | dxtechph.online |
+| **SSL** | Auto-provisioned via Dokploy + Let's Encrypt |
+| **Containers** | Laravel app (PHP-FPM + Nginx), PostgreSQL 16, Redis, Meilisearch, Reverb (WebSocket) |
+| **CI/CD** | GitHub → Dokploy webhook trigger → rebuild → deploy |
+| **SMS daemon** | Gammu + USB GSM dongle (separate container or bare-metal service) |
+| **Backup** | Dokploy native volume backups → local retention + optional Cloudflare R2 sync |
 
 ---
 
-*Document under active facilitation. Version 3.0.0 captures Sections 1–3.7 as locked. Remaining sections to be facilitated per BMAD Phase 2 ceremony.*
+*Document under active facilitation. Version 3.0.1 — Sections 1–9 locked. Phase 2 PRD complete. Hidden-price/Quote feature integrated into §3.2, §3.3, §3.12. External escalation handoff added to §6.5. Zero-cost academic constraint + capacity gates applied to §9. Dokploy deployment architecture documented.*
