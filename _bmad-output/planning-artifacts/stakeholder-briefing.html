@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serbizyu 2.0 — Stakeholder Briefing</title>
+<style>
+/* === RESET & BASE === */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  background:#0f1923;color:#f0f4f8;overflow:hidden;width:100vw;height:100vh;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale
+}
+/* === SLIDE CONTAINER === */
+.slide-container{position:relative;width:100vw;height:100vh;overflow:hidden}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;padding:clamp(2rem,5vw,5rem);
+  opacity:0;visibility:hidden;transition:opacity .6s ease,visibility .6s ease;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch
+}
+.slide.active{opacity:1;visibility:visible;z-index:2}
+.slide.exit{opacity:0;visibility:hidden;z-index:1}
+/* === SLIDE INNER === */
+.slide-inner{
+  width:100%;max-width:1100px;margin:auto;
+  padding:clamp(0.5rem,1.5vh,2rem) 0
+}
+/* === TYPOGRAPHY === */
+h1{font-size:clamp(1.8rem,4vw,3.5rem);font-weight:800;line-height:1.15;letter-spacing:-.02em;margin-bottom:.25em}
+h1 .accent{color:#f5a623}
+h1 .green{color:#1a5632}
+h2{font-size:clamp(1.3rem,2.8vw,2.4rem);font-weight:700;line-height:1.2;margin-bottom:.6em;color:#f5a623}
+h2 .green{color:#1a5632}
+h3{font-size:clamp(1rem,1.8vw,1.5rem);font-weight:600;margin-bottom:.4em;color:#e0e8f0}
+h4{font-size:clamp(0.85rem,1.3vw,1.1rem);font-weight:600;color:#b0c0d0;margin-bottom:.3em}
+p{font-size:clamp(0.9rem,1.4vw,1.15rem);line-height:1.55;color:#c8d4e0;margin-bottom:.6em}
+p.lead{font-size:clamp(1rem,1.6vw,1.3rem);color:#dce6f0;font-weight:400}
+.tagline{font-size:clamp(0.95rem,1.4vw,1.2rem);color:#f5a623;font-weight:500;margin-bottom:.5em}
+.subtitle{font-size:clamp(0.85rem,1.1vw,1rem);color:#8899aa;letter-spacing:.04em;text-transform:uppercase}
+.big-number{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;color:#1a5632;line-height:1}
+.big-number .gold{color:#f5a623}
+/* === CARDS === */
+.card-grid{display:grid;gap:clamp(0.6rem,1vw,1rem);margin:1rem 0}
+.card-grid-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card-grid-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.card-grid-4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card-grid-5{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.card{
+  background:#1a2a3a;border-radius:12px;padding:clamp(0.7rem,1.2vw,1.2rem);
+  border:1px solid rgba(255,255,255,.06);transition:border-color .3s,transform .2s;
+  text-align:left
+}
+.card:hover{border-color:rgba(26,86,50,.5);transform:translateY(-2px)}
+.card-title{font-size:clamp(0.8rem,1.1vw,1rem);font-weight:700;color:#f0f4f8;margin-bottom:.25em}
+.card-body{font-size:clamp(0.75rem,1vw,0.9rem);color:#a0b0c0;line-height:1.5}
+.card-badge{
+  display:inline-block;padding:.15em .6em;border-radius:4px;
+  font-size:clamp(.65rem,.85vw,.75rem);font-weight:600;margin-right:.3em;margin-bottom:.3em
+}
+.badge-green{background:rgba(26,86,50,.3);color:#4ad66d}
+.badge-gold{background:rgba(245,166,35,.2);color:#f5a623}
+.badge-blue{background:rgba(59,130,246,.2);color:#7bb7ff}
+.badge-red{background:rgba(239,68,68,.2);color:#f87171}
+.badge-white{background:rgba(255,255,255,.1);color:#d0d8e0}
+/* === TABLES === */
+.table-wrap{overflow-x:auto;margin:.75rem 0;border-radius:10px;border:1px solid rgba(255,255,255,.06)}
+table{width:100%;border-collapse:collapse;font-size:clamp(.7rem,.95vw,.85rem)}
+thead{background:#1a5632;border-bottom:2px solid #2a6a42}
+th{text-align:left;padding:.55rem .7rem;font-weight:700;color:#fff;white-space:nowrap}
+td{padding:.45rem .7rem;border-bottom:1px solid rgba(255,255,255,.04);color:#c0ccd8}
+tr:last-child td{border-bottom:none}
+tbody tr{background:#1a2a3a;transition:background .2s}
+tbody tr:nth-child(even){background:#1e2e3e}
+tbody tr:hover{background:#233545}
+td:first-child{font-weight:600;color:#e0e8f0}
+/* === LISTS === */
+.ulist{padding-left:1.2em;margin:.3em 0}
+.ulist li{font-size:clamp(0.8rem,1.1vw,0.95rem);color:#b8c8d8;line-height:1.6;margin-bottom:.15em}
+.ulist li strong{color:#e0e8f0}
+/* === STAT ROW === */
+.stat-row{display:flex;flex-wrap:wrap;gap:clamp(0.8rem,2vw,2rem);justify-content:center;margin:1rem 0}
+.stat{text-align:center;min-width:100px}
+.stat-value{font-size:clamp(1.5rem,3vw,2.5rem);font-weight:800;color:#f5a623}
+.stat-label{font-size:clamp(0.7rem,.9vw,.8rem);color:#8899aa;text-transform:uppercase;letter-spacing:.05em}
+/* === NAVIGATION === */
+.nav-bar{
+  position:fixed;bottom:clamp(.5rem,2vh,1.5rem);left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:.4rem;z-index:100;
+  background:rgba(15,25,35,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  padding:.4rem .8rem;border-radius:40px;border:1px solid rgba(255,255,255,.08)
+}
+.nav-dot{
+  width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;
+  transition:all .3s;border:none;padding:0;flex-shrink:0
+}
+.nav-dot.active{background:#f5a623;width:24px;border-radius:4px}
+.nav-dot:hover{background:rgba(255,255,255,.4)}
+.nav-counter{font-size:.7rem;color:rgba(255,255,255,.5);margin-left:.2rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* === KEYBOARD === */
+.kbd{
+  display:inline-block;padding:.1em .5em;border-radius:4px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+  font-size:.8em;font-family:inherit;color:#b0c0d0
+}
+/* === RESPONSIVE TWEAKS === */
+@media(max-width:640px){
+  .slide{padding:1rem}
+  .card-grid-2,.card-grid-3,.card-grid-4,.card-grid-5{grid-template-columns:1fr}
+  .nav-bar{gap:.25rem;padding:.35rem .6rem}
+  .nav-dot{width:6px;height:6px}
+}
+/* === ACCENT BAR === */
+.accent-bar{width:60px;height:3px;background:#f5a623;border-radius:2px;margin:.5rem 0 1rem}
+.accent-bar.green{background:#1a5632;width:100%}
+/* === HIGHLIGHT === */
+.highlight-box{
+  background:rgba(26,86,50,.15);border-left:3px solid #1a5632;
+  padding:.75rem 1rem;border-radius:0 8px 8px 0;margin:.6rem 0
+}
+.highlight-box.gold{border-left-color:#f5a623;background:rgba(245,166,35,.08)}
+/* === FLEX ROW === */
+.flex-row{display:flex;flex-wrap:wrap;gap:1rem;align-items:center}
+.flex-row>*{flex:1;min-width:200px}
+/* === COLUMNS === */
+.cols-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:700px){.cols-2{grid-template-columns:1fr}}
+/* === BADGE ROW === */
+.badge-row{display:flex;flex-wrap:wrap;gap:.4rem;margin:.4rem 0}
+/* === TAG === */
+.tag{display:inline-block;font-size:.7rem;font-weight:600;padding:.15em .5em;border-radius:4px;background:rgba(255,255,255,.08);color:#8899aa;margin-right:.3em}
+.tag-success{background:rgba(26,86,50,.3);color:#4ad66d}
+.tag-warning{background:rgba(245,166,35,.2);color:#f5a623}
+.tag-danger{background:rgba(239,68,68,.2);color:#f87171}
+.tag-info{background:rgba(59,130,246,.2);color:#7bb7ff}
+/* === CENTERED TEXT === */
+.text-center{text-align:center}
+.text-gold{color:#f5a623}
+.text-green{color:#4ad66d}
+.text-muted{color:#8899aa}
+.text-sm{font-size:clamp(.65rem,.85vw,.75rem)}
+.mb-0{margin-bottom:0}
+.mb-1{margin-bottom:.5rem}
+.mt-1{margin-top:.5rem}
+.mt-2{margin-top:1rem}
+</style>
+</head>
+<body>
+
+<div class="slide-container" id="deck">
+
+<!-- ═══ SLIDE 1: TITLE ═══ -->
+<div class="slide active" data-index="0">
+  <div class="slide-inner text-center">
+    <div style="margin-bottom:1.5rem">
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style="display:inline-block">
+        <rect width="72" height="72" rx="16" fill="#1a5632"/>
+        <text x="36" y="46" text-anchor="middle" fill="#fff" font-size="28" font-weight="800" font-family="system-ui">S</text>
+      </svg>
+    </div>
+    <h1 style="margin-bottom:.2rem">Serbizyu <span class="accent">2.0</span></h1>
+    <p class="text-gold" style="font-size:clamp(1rem,1.8vw,1.5rem);font-weight:500;margin-bottom:.75rem">Stakeholder Briefing</p>
+    <div class="accent-bar" style="margin:.5rem auto"></div>
+    <p class="lead" style="max-width:720px;margin:0 auto .5rem">A Full-Spectrum Services Commerce Platform for the Provincial Economy</p>
+    <p style="font-size:clamp(.75rem,1vw,.9rem);color:#8899aa;margin-top:.75rem">
+      BMAD Phase 1 (Analysis) + Phase 2 (Planning &amp; Scoping) — Complete
+    </p>
+    <p style="font-size:clamp(.7rem,.9vw,.8rem);color:#667788;margin-top:.25rem">July 27, 2026 · Tagudin, Ilocos Sur, Philippines</p>
+    <div style="margin-top:2rem;display:flex;flex-wrap:wrap;gap:1.5rem;justify-content:center;font-size:.8rem;color:#8899aa">
+      <span>▲ Press <kbd class="kbd">→</kbd> or <kbd class="kbd">↓</kbd> to advance</span>
+      <span>● Click navigation dots below</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 2: THE PROBLEM ═══ -->
+<div class="slide" data-index="1">
+  <div class="slide-inner">
+    <div class="text-center mb-1" style="margin-bottom:.5rem">
+      <span class="tag tag-warning">The Problem</span>
+    </div>
+    <h2 class="text-center">The Structural Unfairness of the Digital Economy</h2>
+    <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="stat-value">70%</div><div class="stat-label">Provincial micro-entrepreneurs<br>invisible online</div></div>
+      <div class="stat"><div class="stat-value">Feature Phone</div><div class="stat-label">Primary device for<br>trade workers</div></div>
+      <div class="stat"><div class="stat-value">Cash Only</div><div class="stat-label">Dominant transaction<br>method</div></div>
+    </div>
+
+    <div class="cols-2" style="margin-top:.5rem">
+      <div>
+        <p><strong>This is not a skills gap — it's an access gap.</strong> Businesses with the means, knowledge, and confidence to digitize capture an outsized share of economic opportunity. The vast majority of skilled, hardworking provincial micro-entrepreneurs remain invisible — locked out by the tools and infrastructure required to participate.</p>
+        <p style="font-size:clamp(.75rem,1vw,.85rem);color:#8899aa;font-style:italic;border-left:2px solid #f5a623;padding-left:.75rem;margin-top:.5rem">
+          "The carpenter in Tagudin, the seamstress in Barangay Bio, the tricycle driver who knows every street — they have no equivalent. Fiverr only serves the international market and only digital goods."<br>
+          <span style="color:#f5a623">— David Datu N. Sarmiento, Founder</span>
+        </p>
+      </div>
+      <div class="card" style="background:#1e2e3e">
+        <h4 style="color:#f5a623;margin-bottom:.5rem">The Bayanihan Street Thesis</h4>
+        <p style="font-size:clamp(.72rem,.9vw,.82rem)">Serbizyu is built on the vision of <strong>Bayanihan Street</strong> — a place where anyone could join, claim their digital presence, and get work. Like how Fiverr works, but designed for the local, real-world service economy. The platform closes the digital divide by meeting people where they are, with the tools they already have — SMS for feature phones, agents for non-digital-literate owners, cash for the unbanked.</p>
+        <p style="font-size:clamp(.72rem,.9vw,.82rem);margin-top:.5rem">Metropolitan platforms (Shopee, Grab, Fiverr) are optimized for smartphone-native, credit-card-carrying users. Serbizyu serves everyone else.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 3: SOLUTION OVERVIEW ═══ -->
+<div class="slide" data-index="2">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-success">The Solution</span>
+    </div>
+    <h2 class="text-center">Serbizyu Bridges the Divide</h2>
+    <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="stat-value">28</div><div class="stat-label">Categories across<br>8 tiers</div></div>
+      <div class="stat"><div class="stat-value">4</div><div class="stat-label">Listing types</div></div>
+      <div class="stat"><div class="stat-value">5</div><div class="stat-label">Transaction<br>mechanisms</div></div>
+      <div class="stat"><div class="stat-value">10</div><div class="stat-label">Fulfillment<br>archetypes</div></div>
+      <div class="stat"><div class="stat-value">5</div><div class="stat-label">Access tiers<br>(L0–L4)</div></div>
+    </div>
+
+    <p class="text-center" style="max-width:700px;margin:0 auto .5rem">Tagudin, Ilocos Sur pilot — a full-spectrum commerce platform purpose-built for the provincial economy, from a ₱50 tricycle ride to a multi-month construction project.</p>
+
+    <div class="card-grid card-grid-4" style="margin-top:.5rem">
+      <div class="card">
+        <div class="card-title"><span class="badge badge-green">●</span> Inclusive Access</div>
+        <div class="card-body">Non-digital-literate trade workers participate through a Human Agent Network. No smartphone required. SMS consent keeps the owner in control.</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="badge badge-gold">●</span> Invisible Formalization</div>
+        <div class="card-body">Tax compliance is gamified as earnings progression. Servicers unlock higher payouts by climbing the 3-Lane Ladder at their own pace.</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="badge badge-blue">●</span> Financial Safety</div>
+        <div class="card-body">Double-entry escrow with Shopee-style 3-day guarantee protects both buyer and servicer. Cash transactions with dual-confirmation receipts.</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="badge badge-red">●</span> Full-Spectrum Commerce</div>
+        <div class="card-body">Four listing types, five transaction mechanisms, ten fulfillment archetypes covering the complete provincial economy.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 4: COMMERCE PRIMITIVES ═══ -->
+<div class="slide" data-index="3">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-success">Commerce Primitives</span>
+    </div>
+    <h2 class="text-center">The 4 Listing Types &amp; 5 Transaction Mechanisms</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+    <div class="card-grid card-grid-4" style="margin-bottom:.5rem">
+      <div class="card" style="border-top:3px solid #1a5632">
+        <div class="card-badge badge-green">LST-1</div>
+        <div class="card-title">Service Listing</div>
+        <div class="card-body">Provider offers a service — "Aircon cleaning, ₱500, available Tues/Thurs"</div>
+      </div>
+      <div class="card" style="border-top:3px solid #f5a623">
+        <div class="card-badge badge-gold">LST-2</div>
+        <div class="card-title">Product Listing</div>
+        <div class="card-body">Seller lists a product — "Lutong bahay adobo, ₱80/serving"</div>
+      </div>
+      <div class="card" style="border-top:3px solid #3b82f6">
+        <div class="card-badge badge-blue">LST-3</div>
+        <div class="card-title">Service Request</div>
+        <div class="card-body">Customer posts a need — "Need plumber for leaking sink, ₱300 budget"</div>
+      </div>
+      <div class="card" style="border-top:3px solid #ef4444">
+        <div class="card-badge badge-red">LST-4</div>
+        <div class="card-title">Product Request</div>
+        <div class="card-body">Buyer seeks goods — "Looking for 2 sacks of rice, delivered"</div>
+      </div>
+    </div>
+
+    <p class="text-center text-gold" style="font-size:clamp(.75rem,.9vw,.85rem);margin:.25rem 0"><strong>Any listing type × any compatible mechanism — independently composable</strong></p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Mechanism</th><th>Initiated By</th><th>Flow</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><strong>Direct Booking</strong></td><td>Customer/Buyer browses listing</td><td>Browse → Select → Pay into escrow → Order created</td></tr>
+          <tr><td>2</td><td><strong>Reverse Bidding</strong></td><td>Customer posts a Request</td><td>Post Request → Providers bid → Customer picks winner → Order</td></tr>
+          <tr><td>3</td><td><strong>Quick Deal</strong></td><td>Either party, face-to-face</td><td>Scan QR → Counter-offer (≤3 rounds) → Dual confirm → Order</td></tr>
+          <tr><td>4</td><td><strong>Deal-Chaining</strong></td><td>Either party, multi-party</td><td>Create container → Invite providers → All filled → Multiple Orders</td></tr>
+          <tr><td>5</td><td><strong>Agent-Mediated</strong></td><td>Agent on behalf of offline Owner</td><td>Agent creates listing → SMS OTP approval → Revenue split 80/10/10</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 5: FULFILLMENT ARCHETYPES ═══ -->
+<div class="slide" data-index="4">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-success">Fulfillment</span>
+    </div>
+    <h2 class="text-center">The 10 Fulfillment Archetypes</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+    <p class="text-center text-sm" style="margin-bottom:.25rem">Every transaction maps to one of ten standardized fulfillment shapes — archetype determines execution logic, category determines search/discovery.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Archetype</th><th>Duration</th><th>Custody</th><th>Example</th><th>Launch?</th></tr></thead>
+        <tbody>
+          <tr style="background:rgba(26,86,50,.25)!important"><td class="text-green">A1</td><td><strong>Linear Project</strong></td><td>days–weeks</td><td>0–1</td><td>House construction, web design, event planning</td><td><span class="tag tag-success">✅ PRESET</span></td></tr>
+          <tr><td>A2</td><td>Instant Dispatch</td><td>minutes–hours</td><td>1</td><td>Tricycle ride, same-day delivery, towing</td><td>—</td></tr>
+          <tr style="background:rgba(26,86,50,.25)!important"><td class="text-green">A3</td><td><strong>Appointment</strong></td><td>hours</td><td>0</td><td>Tutoring, salon, massage, consulting</td><td><span class="tag tag-success">✅ PRESET</span></td></tr>
+          <tr style="background:rgba(26,86,50,.25)!important"><td class="text-green">A4</td><td><strong>Handoff</strong></td><td>hours–days</td><td>1</td><td>Baked goods, crafts, produce, ukay-ukay</td><td><span class="tag tag-success">✅ PRESET</span></td></tr>
+          <tr><td>A5</td><td>Rental / Asset Return</td><td>hours–days</td><td>2</td><td>Sound system, karaoke, gowns, tables &amp; chairs</td><td>—</td></tr>
+          <tr><td>A6</td><td>Recurring / Subscription</td><td>weeks–months</td><td>per cycle</td><td>Weekly house cleaning, bookkeeping retainer</td><td>—</td></tr>
+          <tr><td>A7</td><td>Quoted / Negotiated</td><td>varies</td><td>varies</td><td>House construction (bid), catering for 200 pax</td><td>—</td></tr>
+          <tr><td>A8</td><td>Emergency / On-Demand</td><td>minutes–hours</td><td>0–1</td><td>Plumbing emergency, locksmith, electrical fault</td><td>—</td></tr>
+          <tr style="background:rgba(26,86,50,.25)!important"><td class="text-green">A9</td><td><strong>Digital Deliverable</strong></td><td>days</td><td>0</td><td>Graphic design, video edit, resume writing</td><td><span class="tag tag-success">✅ PRESET</span></td></tr>
+          <tr><td>A10</td><td>Long-Running / Retainer</td><td>indefinite</td><td>0</td><td>Virtual assistant, ongoing caregiving, farm caretaking</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-center text-sm text-muted" style="margin-top:.3rem"><strong>4 Launch Presets</strong> (A1, A3, A4, A9) cover the majority of a provincial service economy. Remaining 6 are tier-2 configs or Phase 3 builds.</p>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 6: HUMAN AGENT NETWORK ═══ -->
+<div class="slide" data-index="5">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-warning">Human Agent Network</span>
+    </div>
+    <h2 class="text-center">Bridging the Digital Divide —<br>The Agent Model</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+    <div class="cols-2">
+      <div>
+        <p>Tech-savvy Ka-Serbizyu (<strong>Agents</strong>) onboard and manage offline Service Providers and Sellers. The model is <strong>oversight, not gating</strong> — the agent does the work, the owner stays informed, and only account-structure changes require SMS approval.</p>
+        <div class="highlight-box" style="margin-top:.5rem">
+          <strong>Revenue Split:</strong> 80% Owner / 10% Agent / 10% Platform  <span style="color:#8899aa;font-size:.8rem">(admin-configurable)</span>
+        </div>
+        <div class="highlight-box gold" style="margin-top:.3rem">
+          <strong>Graduation Bonus:</strong> 3× owner's average monthly commission when owner transitions to independent smartphone use — incentivizes agents to train toward independence.
+        </div>
+        <p class="text-sm" style="margin-top:.4rem"><strong>SMS Safety Keywords:</strong> Every notification includes "Reply STOP to suspend agent. Reply REVOKE to permanently remove agent." Irrefutable consent record.</p>
+      </div>
+      <div>
+        <h4 style="color:#f5a623">Agent Tier Ladder</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tier</th><th>Requirements</th><th>Commission</th><th>Benefits</th></tr></thead>
+            <tbody>
+              <tr><td>🥉 Bronze</td><td>Baseline entry</td><td>10%</td><td>Standard share</td></tr>
+              <tr><td>🥈 Silver</td><td>10+ active owners, 3-month retention</td><td>11–12%</td><td>Featured Badge</td></tr>
+              <tr><td>🥇 Gold</td><td>50+ active owners, &lt;2% dispute rate</td><td>13–15%</td><td>Priority expansion</td></tr>
+              <tr><td>💎 Platinum</td><td>Top volume percentile</td><td>Max</td><td>Mentorship bonus</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-sm text-muted" style="margin-top:.3rem">DOLE-compliant independent contractor model — no prescribed hours, commission-based, owner controls relationship.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 7: TRUST & FINANCIAL INFRASTRUCTURE ═══ -->
+<div class="slide" data-index="6">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-info">Trust &amp; Finance</span>
+    </div>
+    <h2 class="text-center">Financial Integrity &amp; Trust Infrastructure</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+    <div class="card-grid card-grid-3" style="margin-bottom:.5rem">
+      <div class="card" style="border-top:3px solid #1a5632">
+        <div class="card-title">Double-Entry Escrow Ledger</div>
+        <div class="card-body">Every transaction writes paired debit/credit entries. 0% balance drift — automated reconciliation on every transaction. Ledger is immutable — corrections are offsetting entries, not updates or deletes.</div>
+      </div>
+      <div class="card" style="border-top:3px solid #f5a623">
+        <div class="card-title">3-Day Auto-Release</div>
+        <div class="card-body">Shopee-style buyer protection window. Provider marks work complete → 3-day buyer review window → auto-release if no dispute → freeze if disputed. Admin-configurable duration.</div>
+      </div>
+      <div class="card" style="border-top:3px solid #3b82f6">
+        <div class="card-title">Xendit Integration</div>
+        <div class="card-body">xenPlatform API handles KYC, fund custody, settlement, and disbursement. Platform owns internal ledger as source of truth. Webhook handlers idempotent.</div>
+      </div>
+      <div class="card" style="border-top:3px solid #ef4444">
+        <div class="card-title">Cash Dual-Confirmation</div>
+        <div class="card-body">Both parties confirm payment/receipt. No escrow hold for cash. Platform tracks for trust score and review eligibility. High-value (&gt;₱5,000) triggers additional confirmation.</div>
+      </div>
+      <div class="card" style="border-top:3px solid #888">
+        <div class="card-title">Cloud Truth Boundary</div>
+        <div class="card-body">Real money governed exclusively by cloud backend and payment gateway. Client-side storage has zero disbursement authority. Offline transactions default to external cash settlement.</div>
+      </div>
+      <div class="card" style="border-top:3px solid #1a5632">
+        <div class="card-title">Weekly Batched Payouts</div>
+        <div class="card-body">Via Xendit — lower per-transaction cost than on-demand disbursement. Provider sees wallet balance in My Space. GCash or bank account withdrawal.</div>
+      </div>
+    </div>
+
+    <p class="text-center text-sm mt-1">
+      <span class="badge badge-green">●</span> Daily auto-reconciliation with drift detection
+      <span class="badge badge-gold" style="margin-left:.5rem">●</span> Immutable audit trail for all financial events
+      <span class="badge badge-blue" style="margin-left:.5rem">●</span> Administrative oversight dashboard
+    </p>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 8: 3-LANE REGULATORY LADDER ═══ -->
+<div class="slide" data-index="7">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-warning">Formalization</span>
+    </div>
+    <h2 class="text-center">The 3-Lane Regulatory Ladder</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+    <p class="text-center text-sm" style="margin-bottom:.5rem">Framed as <strong>"Unlock more earnings"</strong> — not "File your taxes." Servicers climb at their own pace. No lane is forced.</p>
+
+    <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+      <div class="card" style="border-left:4px solid #8899aa">
+        <div class="card-title"><span style="color:#8899aa">Lane 1 — Informal</span> <span class="tag tag-white">Entry</span></div>
+        <div class="card-body">
+          <p><strong>Requirement:</strong> Phone verified + Government ID or Barangay Clearance</p>
+          <p><strong>Unlocks:</strong> Create listings, accept bookings, browse platform</p>
+          <p><strong>Payout Cap:</strong> ₱50,000/month</p>
+          <p><strong>Tax Status:</strong> No BIR filing required</p>
+        </div>
+      </div>
+      <div class="card" style="border-left:4px solid #f5a623">
+        <div class="card-title"><span style="color:#f5a623">Lane 2 — Sworn Declaration</span> <span class="tag tag-warning">Growth</span></div>
+        <div class="card-body">
+          <p><strong>Requirement:</strong> Lane 1 + digital Sworn Declaration under BIR RR 16-2023</p>
+          <p><strong>Process:</strong> 2-minute guided form in-app → auto-generates PDF</p>
+          <p><strong>Unlocks:</strong> Full tax-free payouts up to ₱250,000/year (BMBE threshold)</p>
+          <p><strong>Badge:</strong> "Tax-Compliant"</p>
+        </div>
+      </div>
+      <div class="card" style="border-left:4px solid #1a5632">
+        <div class="card-title"><span style="color:#4ad66d">Lane 3 — Registered Business</span> <span class="tag tag-success">Max</span></div>
+        <div class="card-body">
+          <p><strong>Requirement:</strong> Lane 2 + BIR Form 2303 + BMBE Certificate (or DTI/SEC)</p>
+          <p><strong>Unlocks:</strong> Uncapped earnings, "Business Verified" badge, priority search placement, eligible for Boost/Advertising</p>
+          <p><strong>Badge:</strong> "Business Verified"</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center" style="margin-top:.5rem">
+      <span class="tag tag-info">LGU Permit</span>
+      <span class="tag tag-info">DPA (RA 10173)</span>
+      <span class="tag tag-info">BSP — OPS Partner</span>
+      <span class="tag tag-info">DTI Consumer Act</span>
+      <span class="tag tag-info">DOLE Independent Contractor</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 9: 5 PERSONAS ═══ -->
+<div class="slide" data-index="8">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-success">User Research</span>
+    </div>
+    <h2 class="text-center">The 5 Ka-Serbizyu Personas</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+    <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr))">
+      <div class="card" style="border-top:3px solid #3b82f6">
+        <div class="card-title">Maria <span class="text-muted text-sm">— Customer/Buyer</span></div>
+        <div class="card-badge badge-blue">PER-01</div>
+        <div class="card-body" style="margin-top:.25rem">
+          Provincial resident or event organizer with a smartphone. Needs trusted local providers with transparent pricing and escrow safety.
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid #8899aa">
+        <div class="card-title">Tatay Ben <span class="text-muted text-sm">— Provider (Offline)</span></div>
+        <div class="card-badge badge-white">PER-02</div>
+        <div class="card-body" style="margin-top:.25rem">
+          Skilled trade worker using a feature phone. Decades of experience, zero digital presence. Agent-managed. Wants more customers without buying a smartphone.
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid #f5a623">
+        <div class="card-title">Ate Grace <span class="text-muted text-sm">— Provider (Tech-Savvy)</span></div>
+        <div class="card-badge badge-gold">PER-03</div>
+        <div class="card-body" style="margin-top:.25rem">
+          Aircon technician, tutor, or designer with a smartphone. Wants booking calendar, bidding tools, verified reviews, and Facebook reach.
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid #1a5632">
+        <div class="card-title">Kevin <span class="text-muted text-sm">— Agent</span></div>
+        <div class="card-badge badge-green">PER-04</div>
+        <div class="card-body" style="margin-top:.25rem">
+          Tech-savvy community youth who knows everyone in the barangay. Wants flexible local gig income through commissions and graduation bonuses.
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid #ef4444">
+        <div class="card-title">Project Team <span class="text-muted text-sm">— Admin</span></div>
+        <div class="card-badge badge-red">PER-05</div>
+        <div class="card-body" style="margin-top:.25rem">
+          David + Christine + Jaypee + Prince John. Platform operations: evidence logs, automated ledger audits, admin dashboard for resolution.
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-sm text-muted mt-1">All platform users are <strong>Ka-Serbizyu</strong> — members of the Serbizyu community. Every persona has a distinct Job-to-be-Done driving their platform interaction.</p>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 10: HIDDEN PRICE & QUOTE ═══ -->
+<div class="slide" data-index="9">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-warning">Feature Spotlight</span>
+    </div>
+    <h2 class="text-center">Hidden Price &amp; Quote Request</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+    <div class="cols-2">
+      <div>
+        <p><strong>Research-backed feature</strong> — providers with variable-scope services (construction, events, custom work) cannot publish fixed prices. Competitors should not see their pricing.</p>
+        <div class="highlight-box">
+          <strong>Thumbtack-style "Request a Quote":</strong> Hidden-price listings display a <strong>"Magtanong ng Presyo"</strong> button instead of a price. Clicking triggers a 1:1 quote flow — single-provider, non-competitive, reusing the existing bidding infrastructure.
+        </div>
+        <div class="card" style="margin-top:.5rem">
+          <div class="card-title">Trust Safeguards</div>
+          <div class="card-body">
+            <ul class="ulist" style="margin:0">
+              <li>Providers must respond within <strong>24 hours</strong> (SLA-tracked)</li>
+              <li>Quotes valid for <strong>48 hours</strong></li>
+              <li>Anonymized category-average price range displayed <span style="color:#8899aa">(e.g., "Typical cost in Tagudin: ₱300–₱800")</span></li>
+              <li><strong>"Talagang Presyo"</strong> badge for providers who choose transparent pricing</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="background:#1e2e3e">
+          <h4 style="color:#f5a623">How It Works</h4>
+          <div style="position:relative;display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem">
+            <div style="display:flex;gap:.5rem;align-items:flex-start">
+              <span style="background:#1a5632;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">1</span>
+              <div><strong>Price Visibility</strong><br><span style="font-size:.8rem;color:#8899aa">Provider sets price_visibility: 'hidden' or 'starting_from' on their listing</span></div>
+            </div>
+            <div style="display:flex;gap:.5rem;align-items:flex-start">
+              <span style="background:#1a5632;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">2</span>
+              <div><strong>Quote Request</strong><br><span style="font-size:.8rem;color:#8899aa">Buyer clicks "Magtanong ng Presyo" → bid_type: 'quote' request created</span></div>
+            </div>
+            <div style="display:flex;gap:.5rem;align-items:flex-start">
+              <span style="background:#1a5632;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">3</span>
+              <div><strong>Provider Responds</strong><br><span style="font-size:.8rem;color:#8899aa">Listing owner sends quote → buyer accepts → flows into standard Order state machine</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="text-sm text-muted mt-1"><span class="tag tag-info">REQ-LST-03</span> Standard commodity products (groceries, mass-market goods) require public pricing. Hidden-price listings cannot use Direct Booking.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 11: DISCOVERY & ACCESS ═══ -->
+<div class="slide" data-index="10">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-info">Accessibility</span>
+    </div>
+    <h2 class="text-center">Discovery &amp; Multi-Layer Access (L0–L4)</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+    <p class="text-center text-sm" style="margin-bottom:.5rem">Five access tiers ensure no user is locked out by their device or connectivity. Every tier produces the same Order — tier determines presentation, not transaction capability.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tier</th><th>User</th><th>Device</th><th>Interface</th><th>Discovery</th></tr></thead>
+        <tbody>
+          <tr><td><strong>L0</strong></td><td>Non-digital owner</td><td>Feature phone (SMS only)</td><td>SMS notifications + keyword replies</td><td>Agent brings work; owner confirms via SMS</td></tr>
+          <tr><td><strong>L1</strong></td><td>Kiosk user</td><td>Shared tablet at sari-sari store</td><td>Kiosk app — browse or operator-assisted</td><td>Browse by category; operator assists</td></tr>
+          <tr><td><strong>L2</strong></td><td>Smartphone — offline/low-data</td><td>Android/iOS, intermittent</td><td>PWA + IndexedDB cache</td><td>Browse cached catalog; requests queued offline</td></tr>
+          <tr><td><strong>L3</strong></td><td>Smartphone — online</td><td>4G/5G/WiFi</td><td>Full PWA — all features</td><td>Full search, Quick Deal QR, quotes, notifications</td></tr>
+          <tr><td><strong>L4</strong></td><td>Power user / admin</td><td>Desktop + smartphone</td><td>Full web app + admin dashboard</td><td>Admin tools, analytics, bulk ops, governance</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-grid card-grid-3 mt-1">
+      <div class="card">
+        <div class="card-title">Multi-Language</div>
+        <div class="card-body">Tagalog, Ilocano, and English — user-selectable in settings. Persists across sessions. SMS in plain language (≤160 chars) for feature phone readability.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Offline-First Patterns</div>
+        <div class="card-body">Catalog caching via IndexedDB. Queued requests sync when online. Quick Deal works fully air-gapped. Conflict resolution via last-write-wins + server timestamp.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Accessibility</div>
+        <div class="card-body">WCAG 2.1 Level AA: keyboard-navigable, screen reader compatible (ARIA labels), 4.5:1 color contrast, scalable text. Kiosk: 48×48dp touch targets, high-contrast mode.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 12: REVENUE MODEL ═══ -->
+<div class="slide" data-index="11">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-gold">Revenue</span>
+    </div>
+    <h2 class="text-center">Revenue Model &amp; Incentive Structure</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+    <p class="text-center text-sm" style="margin-bottom:.5rem">All rates are <strong>admin-configurable</strong> per category, tier, and province. Defaults deliberately low to maximize adoption.</p>
+
+    <div class="cols-2">
+      <div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Scenario</th><th>Split</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Direct</strong></td><td>90/10 Provider/Platform</td><td>No agent involved</td></tr>
+              <tr><td><strong>Agent-Managed</strong></td><td>80/10/10 Owner/Agent/Platform</td><td>Agent tier influences share</td></tr>
+              <tr><td><strong>Cash Transactions</strong></td><td>8% Platform</td><td>Dispute risk buffer; no escrow hold</td></tr>
+              <tr><td><strong>Category Subsidies</strong></td><td>0–3% Platform</td><td>Tricycle, farm labor, emergencies</td></tr>
+              <tr><td><strong>Boost/Advertising</strong></td><td>Per-listing paid feature</td><td>Phase 2+; pricing configurable</td></tr>
+              <tr><td><strong>Launch Promo</strong></td><td>0% Platform, first 30 days</td><td>Tagudin pilot launch incentive</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="background:#1e2e3e;height:100%">
+          <h4 style="color:#f5a623">Key Business Rules</h4>
+          <ul class="ulist">
+            <li><strong>Min listing price:</strong> ₱5 (prevents spam)</li>
+            <li><strong>Escrow auto-release:</strong> 3 days (admin-configurable)</li>
+            <li><strong>Max Quick Deal rounds:</strong> 3</li>
+            <li><strong>High-value cash threshold:</strong> &gt;₱5,000 (extra confirmation)</li>
+            <li><strong>Min reviews before star rating:</strong> 3</li>
+            <li><strong>Featured slots:</strong> 3 per category per town</li>
+            <li><strong>ε-Greedy cold-start:</strong> 80/20 veterans/newcomers</li>
+            <li><strong>Cash advisory:</strong> &gt;₱15,000 triggers digital escrow recommendation</li>
+            <li><strong>New provider hold:</strong> First 3 transactions +2 days</li>
+          </ul>
+          <p class="text-sm text-muted mt-1">Payout schedule: <strong>Weekly batched disbursements</strong> via Xendit. Minimum withdrawal admin-configurable.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 13: DEPLOYMENT ARCHITECTURE ═══ -->
+<div class="slide" data-index="12">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-info">Infrastructure</span>
+    </div>
+    <h2 class="text-center">Deployment Architecture</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+    <p class="text-center text-sm" style="margin-bottom:.5rem">Zero-cost academic constraint — all infrastructure self-hosted or free-tier. One-time ₱300 SMS hardware. Single paid dependency: Xendit at go-live.</p>
+
+    <div class="cols-2">
+      <div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Component</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Orchestrator</strong></td><td>Dokploy on Proxmox VM</td></tr>
+              <tr><td><strong>Domain</strong></td><td>dxtechph.online</td></tr>
+              <tr><td><strong>SSL</strong></td><td>Auto-provisioned via Dokploy + Let's Encrypt</td></tr>
+              <tr><td><strong>Containers</strong></td><td>Laravel (PHP-FPM + Nginx), PostgreSQL 16, Redis, Meilisearch, Reverb (WebSocket)</td></tr>
+              <tr><td><strong>CI/CD</strong></td><td>GitHub → Dokploy webhook → rebuild → deploy</td></tr>
+              <tr><td><strong>SMS</strong></td><td>Gammu + USB GSM dongle (₱300 one-time)</td></tr>
+              <tr><td><strong>Backup</strong></td><td>Dokploy native volume backups → local + optional R2 sync</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="background:#1e2e3e;height:100%">
+          <h4 style="color:#f5a623">Zero-Cost Infrastructure</h4>
+          <ul class="ulist">
+            <li><span class="tag tag-success">₱0</span> <strong>VPS:</strong> Self-hosted on existing Proxmox infrastructure</li>
+            <li><span class="tag tag-success">₱0</span> <strong>SMS:</strong> Self-hosted ModemManager + Gammu (hardware: ₱300)</li>
+            <li><span class="tag tag-success">₱0</span> <strong>Search:</strong> Self-hosted Meilisearch on same VPS</li>
+            <li><span class="tag tag-success">₱0</span> <strong>Maps:</strong> Free tier (50K loads) + OpenStreetMap fallback</li>
+            <li><span class="tag tag-success">₱0</span> <strong>CDN/TLS:</strong> Cloudflare free tier</li>
+            <li><span class="tag tag-success">₱0</span> <strong>Storage:</strong> Local filesystem on VPS</li>
+          </ul>
+          <div class="highlight-box gold mt-1">
+            <strong>One paid dependency:</strong> Xendit xenPlatform at go-live (sandbox free for dev). All other infra at ₱0 recurring cost.
+          </div>
+          <p class="text-sm text-muted mt-1">Designed for 50 concurrent users / 100 daily transactions (Tagudin pilot). Schema scales to 10,000+ users — no premature microservices.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 14: DISPUTE RESOLUTION ═══ -->
+<div class="slide" data-index="13">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-danger">Governance</span>
+    </div>
+    <h2 class="text-center">Dispute Resolution &amp; Governance</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+    <div class="cols-2">
+      <div>
+        <h4>Internal Resolution Process</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Phase</th><th>Action</th><th>Target</th></tr></thead>
+            <tbody>
+              <tr><td><strong>1. Open</strong></td><td>Party files dispute with reason + evidence upload</td><td>Any time before auto-release</td></tr>
+              <tr><td><strong>2. Evidence</strong></td><td>Admin gathers receipts, logs, photos from both parties</td><td>48h target</td></tr>
+              <tr><td><strong>3. Resolution</strong></td><td>Admin rules on evidence + platform policy</td><td><strong>48h target from filing</strong></td></tr>
+              <tr><td><strong>4. Final</strong></td><td>Binding ruling. Immutable audit trail. Both parties notified.</td><td>Binding upon issuance</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="highlight-box gold" style="margin-top:.3rem">
+          <strong>Cash Disputes:</strong> Receipt is primary trust anchor. No receipt = burden of proof on claiming party.
+        </div>
+      </div>
+      <div>
+        <h4>External Escalation (3-Tier)</h4>
+        <div style="display:flex;flex-direction:column;gap:.4rem">
+          <div class="card" style="padding:.6rem .8rem">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <strong>Tier 1 — Platform Final Ruling</strong>
+              <span class="tag tag-success">Internal</span>
+            </div>
+            <div class="card-body">Admin issues binding decision with full evidence package</div>
+          </div>
+          <div class="card" style="padding:.6rem .8rem">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <strong>Tier 2 — Formal Handoff Letter</strong>
+              <span class="tag tag-warning">External</span>
+            </div>
+            <div class="card-body">Platform generates "Notice of Unresolved Dispute" — transaction summary, evidence log, digitally signed. Delivered to both parties.</div>
+          </div>
+          <div class="card" style="padding:.6rem .8rem">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <strong>Tier 3 — External Legal Pathway</strong>
+              <span class="tag tag-danger">Legal</span>
+            </div>
+            <div class="card-body">
+              Barangay Lupon (RA 7160) · DTI Consumer Mediation (RA 7394) · Small Claims Court (₱400K, no lawyer)
+            </div>
+          </div>
+        </div>
+        <p class="text-sm text-muted mt-1">Dispute history affects provider trust score. Repeat disputers flagged for admin review. Pattern of frivolous disputes may result in platform restriction.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 15: PHASE 2→3 HANDOFF ═══ -->
+<div class="slide" data-index="14">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="tag tag-info">Roadmap</span>
+    </div>
+    <h2 class="text-center">Phase 2 → Phase 3 Handoff</h2>
+    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+    <div class="cols-2" style="margin-bottom:.5rem">
+      <div>
+        <div class="card" style="border:2px solid #1a5632">
+          <h4 style="color:#4ad66d;display:flex;align-items:center;gap:.4rem">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ad66d"></span>
+            Phase 1+2 — COMPLETE
+          </h4>
+          <ul class="ulist">
+            <li><strong>PRFAQ</strong> — Press Release &amp; FAQ (Working Backwards Ceremony)</li>
+            <li><strong>Listing Taxonomy</strong> — 4 listing types, 10 archetypes, naming conventions</li>
+            <li><strong>PRD</strong> — 9 sections locked. Full requirements: 28 categories, 5 transaction mechanisms, agent network, escrow, discovery, accessibility, NFRs, scope boundaries</li>
+            <li><strong>7 Facilitated Ceremonies</strong> — Trust, Economics, Fraud, Adoption, Risk, Formalization, Finance &amp; Governance</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="border:2px solid #f5a623">
+          <h4 style="color:#f5a623;display:flex;align-items:center;gap:.4rem">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f5a623"></span>
+            Phase 3 — NEXT
+          </h4>
+          <ul class="ulist">
+            <li><strong>Architecture (ADRs)</strong> — System design decisions, module boundaries, data flow</li>
+            <li><strong>Epics &amp; Stories</strong> — User stories mapped to PRD requirements with acceptance criteria</li>
+            <li><strong>Implementation Readiness Check</strong> — Technical feasibility, dependency audit, sprint planning</li>
+          </ul>
+          <div class="highlight-box gold mt-1" style="padding:.5rem">
+            <strong>Academic Timeline:</strong> 12 weeks to go-live. Tagudin, Ilocos Sur only. No expansion until proven.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid card-grid-3">
+      <div class="card text-center" style="padding:.5rem">
+        <div class="stat-value" style="font-size:1.8rem">9</div>
+        <div class="stat-label">PRD Sections Locked</div>
+      </div>
+      <div class="card text-center" style="padding:.5rem">
+        <div class="stat-value" style="font-size:1.8rem">7</div>
+        <div class="stat-label">Facilitated Ceremonies</div>
+      </div>
+      <div class="card text-center" style="padding:.5rem">
+        <div class="stat-value" style="font-size:1.8rem">12</div>
+        <div class="stat-label">Weeks to Go-Live</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 16: THANK YOU / Q&A ═══ -->
+<div class="slide" data-index="15">
+  <div class="slide-inner text-center">
+    <div style="margin-bottom:1.5rem">
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style="display:inline-block">
+        <rect width="72" height="72" rx="16" fill="#1a5632"/>
+        <text x="36" y="46" text-anchor="middle" fill="#fff" font-size="28" font-weight="800" font-family="system-ui">S</text>
+      </svg>
+    </div>
+    <h1 style="margin-bottom:.2rem">Salamat, <span class="accent">Ka-Serbizyu</span>!</h1>
+    <div class="accent-bar" style="margin:.5rem auto"></div>
+    <p class="lead" style="max-width:600px;margin:0 auto .75rem">Questions &amp; Discussion</p>
+    <div class="accent-bar green" style="margin:.25rem auto .75rem;width:120px"></div>
+
+    <div class="card" style="max-width:500px;margin:0 auto;background:#1e2e3e">
+      <h4 style="color:#f5a623;margin-bottom:.6rem">The Team</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;text-align:left;font-size:.85rem">
+        <div><strong>David Datu N. Sarmiento</strong><br><span class="text-muted text-sm">Founder</span></div>
+        <div><strong>Christine M. Lopez</strong><br><span class="text-muted text-sm">Team Member</span></div>
+        <div><strong>Jaypee G. Pagaduan</strong><br><span class="text-muted text-sm">Team Member</span></div>
+        <div><strong>Prince John</strong><br><span class="text-muted text-sm">Team Member</span></div>
+        <div style="grid-column:1 / -1;text-align:center;padding-top:.3rem;border-top:1px solid rgba(255,255,255,.06)">
+          <strong>Advisor:</strong> Sir Zeus
+        </div>
+      </div>
+    </div>
+
+    <p class="text-sm text-muted mt-2">
+      <span>GitHub: <strong>daviddatuX25/Serbizyu-2.0</strong></span>
+      <span style="margin:0 .5rem">·</span>
+      <span>Domain: <strong>dxtechph.online</strong></span>
+      <span style="margin:0 .5rem">·</span>
+      <span>Pilot: <strong>Tagudin, Ilocos Sur</strong></span>
+    </p>
+    <p class="text-sm text-muted" style="margin-top:.25rem">
+      BMAD Phase 1 (Analysis) + Phase 2 (Planning &amp; Scoping) · July 27, 2026
+    </p>
+  </div>
+</div>
+
+</div>
+
+<!-- ═══ NAVIGATION BAR ═══ -->
+<nav class="nav-bar" id="navBar" aria-label="Slide navigation">
+  <button class="nav-dot active" data-slide="0" aria-label="Go to slide 1"></button>
+  <button class="nav-dot" data-slide="1" aria-label="Go to slide 2"></button>
+  <button class="nav-dot" data-slide="2" aria-label="Go to slide 3"></button>
+  <button class="nav-dot" data-slide="3" aria-label="Go to slide 4"></button>
+  <button class="nav-dot" data-slide="4" aria-label="Go to slide 5"></button>
+  <button class="nav-dot" data-slide="5" aria-label="Go to slide 6"></button>
+  <button class="nav-dot" data-slide="6" aria-label="Go to slide 7"></button>
+  <button class="nav-dot" data-slide="7" aria-label="Go to slide 8"></button>
+  <button class="nav-dot" data-slide="8" aria-label="Go to slide 9"></button>
+  <button class="nav-dot" data-slide="9" aria-label="Go to slide 10"></button>
+  <button class="nav-dot" data-slide="10" aria-label="Go to slide 11"></button>
+  <button class="nav-dot" data-slide="11" aria-label="Go to slide 12"></button>
+  <button class="nav-dot" data-slide="12" aria-label="Go to slide 13"></button>
+  <button class="nav-dot" data-slide="13" aria-label="Go to slide 14"></button>
+  <button class="nav-dot" data-slide="14" aria-label="Go to slide 15"></button>
+  <button class="nav-dot" data-slide="15" aria-label="Go to slide 16"></button>
+  <span class="nav-counter" id="slideCounter">1 / 16</span>
+</nav>
+
+<script>
+(function(){
+  'use strict';
+
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.nav-dot');
+  const counter = document.getElementById('slideCounter');
+  const total = slides.length;
+  let current = 0;
+  let busy = false;
+
+  function goTo(index){
+    if(busy) return;
+    if(index < 0 || index >= total) return;
+    if(index === current) return;
+    busy = true;
+
+    const prev = current;
+    const next = index;
+
+    slides[prev].classList.remove('active');
+    slides[prev].classList.add('exit');
+
+    slides[next].classList.remove('exit');
+    slides[next].classList.add('active');
+
+    dots.forEach(d => d.classList.remove('active'));
+    dots[next].classList.add('active');
+    counter.textContent = (next + 1) + ' / ' + total;
+
+    current = next;
+
+    setTimeout(function(){ busy = false; }, 600);
+  }
+
+  // Click navigation dots
+  dots.forEach(function(dot){
+    dot.addEventListener('click', function(){
+      goTo(parseInt(this.getAttribute('data-slide')));
+    });
+  });
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' '){
+      e.preventDefault();
+      goTo(current + 1);
+    } else if(e.key === 'ArrowLeft' || e.key === 'ArrowUp'){
+      e.preventDefault();
+      goTo(current - 1);
+    }
+  });
+
+  // Touch swipe support
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  document.addEventListener('touchstart', function(e){
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, {passive: true});
+
+  document.addEventListener('touchend', function(e){
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    const dy = e.changedTouches[0].screenY - touchStartY;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    // Only count as swipe if horizontal movement is significant and > vertical
+    if(absDx > 40 && absDx > absDy * 1.5){
+      if(dx > 0) goTo(current - 1);
+      else goTo(current + 1);
+    }
+  }, {passive: true});
+
+  // Mouse wheel navigation (debounced)
+  let wheelTimeout = false;
+  document.addEventListener('wheel', function(e){
+    if(wheelTimeout) return;
+    wheelTimeout = true;
+    if(e.deltaY > 30){
+      goTo(current + 1);
+    } else if(e.deltaY < -30){
+      goTo(current - 1);
+    }
+    setTimeout(function(){ wheelTimeout = false; }, 700);
+  }, {passive: true});
+
+  // Expose goTo for debugging
+  window.goToSlide = goTo;
+
+})();
+</script>
+</body>
+</html>
