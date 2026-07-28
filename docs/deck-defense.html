@@ -89,10 +89,10 @@ td b{color:#fafaf9}
 <section class="slide on">
   <div class="kicker">Serbizyu · Pilot: Tagudin, Ilocos Sur</div>
   <div class="big-num">Serbizyu</div>
-  <h1>Marketplace &amp; trust infrastructure for<br><span class="accent">Philippine provincial economies.</span></h1>
+  <h1>Marketplace &amp; trust infrastructure for<br><span class="accent">local economies — starting in the province, built for anywhere.</span></h1>
   <ul class="bullets" style="margin-top:3%">
     <li><em>Two-sided marketplace</em> connecting informal workers, micro-entrepreneurs, and local buyers — where every transaction is escrow-protected, not promised.</li>
-    <li>Built for the <em>70% of provincial micro-entrepreneurs</em> who operate outside formal digital commerce — no smartphone, no bank account, no BIR registration required.</li>
+    <li>Built for the <em>70% of micro-entrepreneurs</em> who operate outside formal digital commerce. Geo-first design boosts local industries — but the model is place-agnostic.</li>
     <li>28 categories across 8 domains: home services, transport, beauty, agri-labor, events, education, digital, local goods.</li>
   </ul>
   <div style="margin-top:3%;color:var(--w500);font-size:clamp(.7rem,1.1vw,.85rem)">
@@ -140,23 +140,37 @@ td b{color:#fafaf9}
   <div class="snum">3 / 7</div>
 </section>
 
-<!-- SLIDE 4: SOLUTION & CORE PRIMITIVES -->
+<!-- SLIDE 4: USE CASES -->
 <section class="slide">
-  <div class="kicker">Solution &amp; Core Primitives</div>
-  <h2>Four transaction modes. <span class="accent">One trust engine.</span></h2>
-  <ul class="bullets">
-    <li><em>Direct Offers</em> — Providers post fixed-price or tiered listings. Buyers browse 28 categories, book instantly, pay into escrow. Hidden-price "Request a Quote" mode protects pricing-sensitive services.</li>
-    <li><em>Buyer Requests &amp; Competitive Bidding</em> — Buyers post what they need. Local providers submit competitive bids with price, timeline, and work samples. System tracks provider liquidity to guarantee responses.</li>
-    <li><em>Face-to-Face Quick Deal + Deal-Chaining</em> — QR scan initiates in-person deal with 3-round capped negotiation and dual confirmation. Multi-party projects (weddings, construction) bundled under single escrow container with per-slot release.</li>
-  </ul>
-  <div style="margin-top:3%;display:flex;gap:3%;align-items:stretch">
-    <div style="flex:1;background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);border-radius:10px;padding:2.5% 3%">
-      <span class="tag">Escrow</span><span class="tag b">Bidding</span><span class="tag a">Agent</span><span class="tag">QR Deal</span>
-      <p style="font-size:clamp(.65rem,1vw,.8rem);color:var(--w300);margin-top:6px">Every transaction path leads to the same Order state machine — double-entry ledger, 0% drift, immutable audit trail.</p>
+  <div class="kicker">How It Works — Use Cases</div>
+  <h2>Concrete stories. <span class="accent">One platform.</span></h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:3%;margin-top:2%">
+    <!-- Use Case 1 -->
+    <div style="background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:4% 5%">
+      <div style="font-size:clamp(.55rem,.85vw,.7rem);color:var(--a400);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px">Case 1 — Agent + SMS</div>
+      <p style="font-size:clamp(.65rem,1.1vw,.85rem);color:var(--w300);line-height:1.45"><b style="color:#fafaf9">Tatay Ben</b>, carpenter with a Nokia. Agent Kevin creates his listing → Ben approves via SMS → customer books → Ben gets SMS confirmation → work done, both confirm → <b style="color:var(--g400)">80% to Ben, 10% to Kevin</b>.</p>
     </div>
+    <!-- Use Case 2 -->
+    <div style="background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:4% 5%">
+      <div style="font-size:clamp(.55rem,.85vw,.7rem);color:var(--b400);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px">Case 2 — Direct Offer + Escrow</div>
+      <p style="font-size:clamp(.65rem,1.1vw,.85rem);color:var(--w300);line-height:1.45"><b style="color:#fafaf9">Ate Grace</b>, baker. Posts lutong bahay with photos → buyer browses, books, pays into escrow → Grace delivers → buyer confirms → <b style="color:var(--g400)">escrow releases. No deposit lost.</b></p>
+    </div>
+    <!-- Use Case 3 -->
+    <div style="background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:4% 5%">
+      <div style="font-size:clamp(.55rem,.85vw,.7rem);color:var(--g400);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px">Case 3 — Deal-Chaining</div>
+      <p style="font-size:clamp(.65rem,1.1vw,.85rem);color:var(--w300);line-height:1.45"><b style="color:#fafaf9">Barangay Fiesta</b>. Organizer creates Deal → adds caterer, photographer, sound system as slots → single payment → <b style="color:var(--g400)">each provider paid independently</b> as their work completes.</p>
+    </div>
+    <!-- Use Case 4 -->
+    <div style="background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:4% 5%">
+      <div style="font-size:clamp(.55rem,.85vw,.7rem);color:var(--a400);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px">Case 4 — Quick Deal (QR)</div>
+      <p style="font-size:clamp(.65rem,1.1vw,.85rem);color:var(--w300);line-height:1.45"><b style="color:#fafaf9">Palengke transaction</b>. Buyer scans seller's QR → counter-offers up to 3 rounds → both confirm (app tap or SMS) → <b style="color:var(--g400)">deal locked. No internet needed.</b></p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:3%;margin-top:2.5%">
+    <p style="font-size:clamp(.6rem,.95vw,.78rem);color:var(--w500);flex:1">Every story above — agent-mediated, direct booking, multi-party event, face-to-face — runs on the <b style="color:var(--g400)">same escrow engine</b> with 0% ledger drift.</p>
     <div class="qr" style="position:static;flex-shrink:0">
       <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/old-docs/mockup.html&size=200&margin=2" alt="Interactive Mockup">
-      <span>Scan for<br>interactive demo</span>
+      <span>Scan to explore<br>all 39 screens</span>
     </div>
   </div>
   <div class="snum">4 / 7</div>
@@ -177,9 +191,9 @@ td b{color:#fafaf9}
           <td>SMS consent = irrefutable audit record</td>
         </tr>
         <tr>
-          <td><b>L1 — Kiosk</b> <span class="tag a">Shared tablet</span></td>
-          <td>Sari-sari store customer, no phone</td>
-          <td>Public Android tablet at barangay hall. Browse catalog, print receipts, deposit cash, scan QR for Quick Deal.</td>
+          <td><b>L1 — Community Kiosk</b> <span class="tag a">Shared access</span></td>
+          <td>Walk-in user, no device</td>
+          <td>Public tablet at strategic community locations. Browse catalog, deposit cash, print receipts, initiate Quick Deal via QR.</td>
           <td>Kiosk operator + printed receipt</td>
         </tr>
         <tr>
