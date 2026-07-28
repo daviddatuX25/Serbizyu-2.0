@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Serbizyu — Business Pitch Deck</title>
+<title>Serbizyu — Defense Deck</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--g400:#4ade80;--g600:#16a34a;--g900:#14532d;--b400:#60a5fa;--a400:#fbbf24;--r400:#f87171;--w100:#f5f5f4;--w300:#d6d3d1;--w500:#78716c;--w900:#1c1917}
+:root{--g400:#4ade80;--g600:#16a34a;--b400:#60a5fa;--a400:#fbbf24;--r400:#f87171;--p400:#c084fc;--w100:#f5f5f4;--w300:#d6d3d1;--w500:#78716c;--w900:#1c1917}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',system-ui,sans-serif;background:#0c0a09;color:#fafaf9;overflow:hidden;user-select:none}
 .deck{width:100vw;height:100vh;display:grid;place-items:center}
@@ -15,17 +15,22 @@ body{font-family:'Inter',system-ui,sans-serif;background:#0c0a09;color:#fafaf9;o
 @keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1}}
 h1,h2{font-family:'Plus Jakarta Sans',sans-serif}
 h1{font-size:clamp(2rem,4.6vw,3.8rem);line-height:1.08}
-h2{font-size:clamp(1.5rem,3.2vw,2.6rem);line-height:1.12;margin-bottom:3%}
-.accent{color:var(--g400)}.blue{color:var(--b400)}.amber{color:var(--a400)}.red{color:var(--r400)}
+h2{font-size:clamp(1.5rem,3.2vw,2.6rem);line-height:1.12;margin-bottom:2.5%}
+.accent{color:var(--g400)}.blue{color:var(--b400)}.amber{color:var(--a400)}.red{color:var(--r400)}.purple{color:var(--p400)}
 .kicker{color:var(--g400);font-weight:700;letter-spacing:.15em;font-size:clamp(.6rem,1vw,.8rem);text-transform:uppercase;margin-bottom:2%}
 .bullets{list-style:none;padding:0;margin-top:2%}
 .bullets li{font-size:clamp(.9rem,1.55vw,1.25rem);color:var(--w300);line-height:1.5;margin-bottom:2.5%;padding-left:1.8em;position:relative;max-width:85%}
 .bullets li::before{content:'▸';position:absolute;left:0;color:var(--g400);font-weight:700}
 .bullets li em{font-style:normal;color:var(--g400);font-weight:600}
 .big-num{font-size:clamp(3rem,7vw,5.5rem);font-family:'Plus Jakarta Sans';color:var(--g400);line-height:1;margin-bottom:1%}
-.foot{position:absolute;bottom:3.5%;left:6%;right:6%;display:flex;justify-content:space-between;font-size:.68rem;color:#57534e}
 .hint{position:fixed;bottom:14px;right:18px;color:#57534e;font-size:.72rem;z-index:100}
 .snum{position:absolute;top:4%;right:6%;font-size:.7rem;color:#3d3a36;font-weight:600}
+
+/* Stat row */
+.stat-row{display:flex;gap:3%;margin-top:3.5%}
+.stat{flex:1;background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:3% 4%;text-align:center}
+.stat b{display:block;font-size:clamp(1.5rem,3.4vw,2.8rem);color:var(--g400);font-family:'Plus Jakarta Sans'}
+.stat span{font-size:clamp(.6rem,1vw,.78rem);color:var(--w500);margin-top:4px;line-height:1.3}
 
 /* Table */
 .tbl-wrap{width:100%;margin-top:2%}
@@ -38,23 +43,30 @@ td b{color:#fafaf9}
 .tag.a{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:var(--a400)}
 .tag.r{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.25);color:var(--r400)}
 
-/* Stat row */
-.stat-row{display:flex;gap:3%;margin-top:4%}
-.stat{flex:1;background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:3% 4%;text-align:center}
-.stat b{display:block;font-size:clamp(1.5rem,3.4vw,2.8rem);color:var(--g400);font-family:'Plus Jakarta Sans'}
-.stat span{font-size:clamp(.6rem,1vw,.78rem);color:var(--w500);margin-top:4px;line-height:1.3}
+/* Flow diagrams */
+.flow-h{display:flex;align-items:center;justify-content:center;gap:clamp(2px,0.6vw,6px);margin-top:3%;flex-wrap:wrap}
+.flow-h .fc{background:rgba(255,255,255,.04);border:1px solid #292524;border-radius:10px;padding:2% 2.5%;text-align:center;min-width:clamp(80px,13%,150px)}
+.flow-h .fc .step{font-size:clamp(.48rem,.72vw,.62rem);color:var(--g400);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.flow-h .fc .desc{font-size:clamp(.58rem,.9vw,.75rem);color:var(--w300);line-height:1.25}
+.flow-h .fc .actor{font-size:clamp(.5rem,.75vw,.65rem);color:#fafaf9;font-weight:600;margin-bottom:2px}
+.flow-h .fa{color:var(--g400);font-size:clamp(.8rem,1.4vw,1.2rem);flex-shrink:0;margin:0 1px}
+.flow-h .fa.dim{color:#3d3a36}
 
-/* Flow */
-.flow{display:flex;align-items:center;gap:0;margin-top:3.5%;flex-wrap:wrap;justify-content:center}
-.flow .node{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:2.5% 3.5%;text-align:center;min-width:clamp(110px,17%,170px)}
-.flow .node .phase{font-size:clamp(.55rem,.85vw,.7rem);color:var(--g400);font-weight:700;letter-spacing:.1em;text-transform:uppercase}
-.flow .node .label{font-size:clamp(.7rem,1.15vw,.9rem);color:var(--w300);margin-top:3px;line-height:1.3}
-.flow .arrow{color:var(--g400);font-size:clamp(1rem,2vw,1.6rem);margin:0 2px;flex-shrink:0}
+/* UC color themes */
+.uc-amber .fc{border-color:rgba(245,158,11,.25)}.uc-amber .step{color:var(--a400)}.uc-amber .fa{color:var(--a400)}
+.uc-blue .fc{border-color:rgba(59,130,246,.25)}.uc-blue .step{color:var(--b400)}.uc-blue .fa{color:var(--b400)}
+.uc-green .fc{border-color:rgba(34,197,94,.3)}.uc-green .step{color:var(--g400)}.uc-green .fa{color:var(--g400)}
+.uc-red .fc{border-color:rgba(248,113,113,.25)}.uc-red .step{color:var(--r400)}.uc-red .fa{color:var(--r400)}
 
-/* QR codes */
+/* QR */
 .qr{position:absolute;bottom:3.5%;right:5.5%;display:flex;flex-direction:column;align-items:center;gap:4px}
 .qr img{width:clamp(80px,9vw,130px);height:auto;border-radius:10px;border:2px solid rgba(255,255,255,.1);background:#fff;padding:6px}
 .qr span{font-size:clamp(.45rem,.7vw,.58rem);color:#57534e;text-align:center;max-width:130px;line-height:1.2}
+
+/* UC slide QR - bottom left */
+.qr-uc{position:absolute;bottom:3.5%;left:5.5%;display:flex;align-items:center;gap:8px}
+.qr-uc img{width:clamp(60px,6.5vw,100px);height:auto;border-radius:8px;border:2px solid rgba(255,255,255,.1);background:#fff;padding:4px}
+.qr-uc span{font-size:clamp(.42rem,.65vw,.55rem);color:#57534e;line-height:1.2}
 
 /* Mobile */
 @media(max-width:768px),(max-aspect-ratio:9/16){
@@ -67,9 +79,6 @@ td b{color:#fafaf9}
   h2{font-size:clamp(1.2rem,5.5vw,2rem)}
   .big-num{font-size:clamp(2.2rem,10vw,4.5rem)}
   .kicker{font-size:clamp(.55rem,2.5vw,.75rem)}
-  .flow{flex-direction:column;gap:8px}
-  .flow .arrow{transform:rotate(90deg);font-size:1.2rem}
-  .flow .node{min-width:80%;padding:5% 6%}
   .stat-row{flex-wrap:wrap;gap:8px}
   .stat{flex:1 1 45%;min-width:140px}
   .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -78,6 +87,10 @@ td b{color:#fafaf9}
   .hint{bottom:8px;right:10px;font-size:.62rem}
   .qr{position:static;margin-top:16px;align-self:center}
   .qr img{width:100px}
+  .qr-uc{position:static;margin-top:16px;justify-content:center}
+  .flow-h{flex-direction:column;gap:6px}
+  .flow-h .fa{transform:rotate(90deg)}
+  .flow-h .fc{min-width:70%}
 }
 </style>
 </head>
@@ -85,98 +98,164 @@ td b{color:#fafaf9}
 
 <div class="deck">
 
-<!-- SLIDE 1: CORE IDENTITY -->
+<!-- ═══════════ SLIDE 1: CORE IDENTITY ═══════════ -->
 <section class="slide on">
   <div class="kicker">Serbizyu · Pilot: Tagudin, Ilocos Sur</div>
   <div class="big-num">Serbizyu</div>
   <h1>Marketplace &amp; trust infrastructure for<br><span class="accent">local economies — starting in the province, built for anywhere.</span></h1>
   <ul class="bullets" style="margin-top:3%">
-    <li><em>Two-sided marketplace</em> connecting informal workers, micro-entrepreneurs, and local buyers — where every transaction is escrow-protected, not promised.</li>
-    <li>Built for the <em>70% of micro-entrepreneurs</em> who operate outside formal digital commerce. Geo-first design boosts local industries — but the model is place-agnostic.</li>
-    <li>28 categories across 8 domains: home services, transport, beauty, agri-labor, events, education, digital, local goods.</li>
+    <li><em>Two-sided marketplace</em> connecting informal workers, micro-entrepreneurs, and local buyers — every transaction escrow-protected.</li>
+    <li>Built for the <em>70% of micro-entrepreneurs</em> outside formal digital commerce. Geo-first design boosts local industries — model is place-agnostic.</li>
   </ul>
   <div style="margin-top:3%;color:var(--w500);font-size:clamp(.7rem,1.1vw,.85rem)">
     Sarmiento, David Datu N. &nbsp;·&nbsp; Lopez, Christine M. &nbsp;·&nbsp; Pagaduan, Jaypee G. &nbsp;·&nbsp; Vidaña, Prince John<br>
-    BSIT 4B · CCSIT 215 Project Management · A.Y. 2026–2027
+    BSIT 4B · CCSIT 215 Project Management
   </div>
-  <div class="snum">1 / 7</div>
+  <div class="snum">1 / 10</div>
   <div class="qr">
     <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/docs/deck-defense.html&size=200&margin=2" alt="Scan for presentation">
     <span>Scan to follow<br>on your phone</span>
   </div>
 </section>
 
-<!-- SLIDE 2: TARGET MARKET -->
+<!-- ═══════════ SLIDE 2: TARGET MARKET ═══════════ -->
 <section class="slide">
   <div class="kicker">Target Market</div>
   <h2>Informal workers. Micro-entrepreneurs. <span class="accent">Local buyers.</span></h2>
   <ul class="bullets">
-    <li><em>Service providers &amp; trade workers</em> — carpenters, mechanics, tricycle drivers, beauticians, farm laborers. Skilled, experienced, zero digital presence. Earning under ₱250K/year. No smartphone needed — they operate via SMS + Human Agent.</li>
-    <li><em>Local product sellers</em> — lutong bahay vendors, hardware suppliers, handmade crafts, agricultural goods. Currently selling through unindexed Facebook posts. Need booking calendars, inventory tracking, verified reviews.</li>
-    <li><em>Provincial buyers &amp; event organizers</em> — residents and barangay-level customers who need trusted providers with transparent pricing and payment protection. Currently stuck with cash handshakes and Facebook Messenger threads.</li>
+    <li><em>Service providers &amp; trade workers</em> — carpenters, mechanics, tricycle drivers, beauticians, farm laborers. Skilled, zero digital presence. Earning under ₱250K/year.</li>
+    <li><em>Local product sellers</em> — lutong bahay vendors, hardware suppliers, handmade crafts. Currently stuck on unindexed Facebook posts with no booking tools.</li>
+    <li><em>Provincial buyers &amp; event organizers</em> — residents needing trusted providers with transparent pricing and payment protection. Currently cash handshakes only.</li>
   </ul>
   <div class="stat-row">
     <div class="stat"><b>~70%</b><span>of provincial micro-entrepreneurs operate informally (PSA 2023)</span></div>
     <div class="stat"><b>Zero</b><span>escrow-protected service marketplaces exist outside Metro Manila</span></div>
     <div class="stat"><b>40%+</b><span>of target sellers lack smartphones or data load (DICT 2023)</span></div>
   </div>
-  <div class="snum">2 / 7</div>
+  <div class="snum">2 / 10</div>
 </section>
 
-<!-- SLIDE 3: CORE PROBLEM -->
+<!-- ═══════════ SLIDE 3: CORE PROBLEM ═══════════ -->
 <section class="slide">
   <div class="kicker">Core Problem</div>
   <h2>Provincial trade runs on <span class="amber">cash handshakes</span> and <span class="red">unindexed chats.</span></h2>
   <ul class="bullets">
-    <li><em>No escrow, no recourse.</em> Buyers lose deposits to non-performance. Workers complete labor and never get paid. Zero rating history. Zero dispute mechanism. Every transaction is a gamble on trust.</li>
-    <li><em>Facebook bans service listings.</em> Policy-gated from Marketplace. Deals scatter across Messenger threads — no pricing transparency, no booking calendar, no identity verification. Complete loss of transactional visibility.</li>
-    <li><em>Connectivity costs block adoption.</em> Daily prepaid data load is a bigger barrier than network dead spots. App-only platforms exclude 40%+ of micro-servicers. BIR registration fear blocks the rest.</li>
+    <li><em>No escrow, no recourse.</em> Buyers lose deposits to non-performance. Workers unpaid after labor. Zero rating history. Every transaction is a gamble.</li>
+    <li><em>Facebook bans service listings.</em> Policy-gated from Marketplace. Deals scatter across Messenger — no pricing, no calendar, no identity verification.</li>
+    <li><em>Connectivity costs + tax fear block adoption.</em> Daily data load is a bigger barrier than network dead spots. BIR registration fear blocks 90%+ of informal providers.</li>
   </ul>
   <div class="stat-row">
     <div class="stat"><b>0%</b><span>escrow coverage in provincial service trade</span></div>
-    <div class="stat"><b>Banned</b><span>service listings on Facebook Marketplace (Meta 2024)</span></div>
+    <div class="stat"><b>Banned</b><span>service listings on FB Marketplace (Meta 2024)</span></div>
     <div class="stat"><b>90%+</b><span>informal providers fear tax registration (BIR 2023)</span></div>
   </div>
-  <div class="snum">3 / 7</div>
+  <div class="snum">3 / 10</div>
 </section>
 
-<!-- SLIDE 4: USE CASES -->
-<section class="slide">
-  <div class="kicker">How It Works — Use Cases</div>
-  <h2>Concrete stories. <span class="accent">One platform.</span></h2>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:3%;margin-top:2%">
-    <!-- Use Case 1 -->
-    <div style="background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:4% 5%">
-      <div style="font-size:clamp(.55rem,.85vw,.7rem);color:var(--a400);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px">Case 1 — Agent + SMS</div>
-      <p style="font-size:clamp(.65rem,1.1vw,.85rem);color:var(--w300);line-height:1.45"><b style="color:#fafaf9">Tatay Ben</b>, carpenter with a Nokia. Agent Kevin creates his listing → Ben approves via SMS → customer books → Ben gets SMS confirmation → work done, both confirm → <b style="color:var(--g400)">80% to Ben, 10% to Kevin</b>.</p>
-    </div>
-    <!-- Use Case 2 -->
-    <div style="background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:4% 5%">
-      <div style="font-size:clamp(.55rem,.85vw,.7rem);color:var(--b400);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px">Case 2 — Direct Offer + Escrow</div>
-      <p style="font-size:clamp(.65rem,1.1vw,.85rem);color:var(--w300);line-height:1.45"><b style="color:#fafaf9">Ate Grace</b>, baker. Posts lutong bahay with photos → buyer browses, books, pays into escrow → Grace delivers → buyer confirms → <b style="color:var(--g400)">escrow releases. No deposit lost.</b></p>
-    </div>
-    <!-- Use Case 3 -->
-    <div style="background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:4% 5%">
-      <div style="font-size:clamp(.55rem,.85vw,.7rem);color:var(--g400);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px">Case 3 — Deal-Chaining</div>
-      <p style="font-size:clamp(.65rem,1.1vw,.85rem);color:var(--w300);line-height:1.45"><b style="color:#fafaf9">Barangay Fiesta</b>. Organizer creates Deal → adds caterer, photographer, sound system as slots → single payment → <b style="color:var(--g400)">each provider paid independently</b> as their work completes.</p>
-    </div>
-    <!-- Use Case 4 -->
-    <div style="background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:4% 5%">
-      <div style="font-size:clamp(.55rem,.85vw,.7rem);color:var(--a400);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px">Case 4 — Quick Deal (QR)</div>
-      <p style="font-size:clamp(.65rem,1.1vw,.85rem);color:var(--w300);line-height:1.45"><b style="color:#fafaf9">Palengke transaction</b>. Buyer scans seller's QR → counter-offers up to 3 rounds → both confirm (app tap or SMS) → <b style="color:var(--g400)">deal locked. No internet needed.</b></p>
+<!-- ═══════════ SLIDE 4: USE CASE 1 — Agent + SMS ═══════════ -->
+<section class="slide uc-amber">
+  <div class="kicker" style="color:var(--a400)">Use Case 1 — Agent + SMS</div>
+  <h2><span class="amber">Tatay Ben</span> · Carpenter · Nokia 3310</h2>
+  <div class="flow-h">
+    <div class="fc"><div class="actor">Agent Kevin</div><div class="step">Creates Listing</div><div class="desc">Profile, trade,<br>barangay, rates</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Tatay Ben</div><div class="step">SMS Approval</div><div class="desc">Reply APPROVE<br>to confirm</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Customer</div><div class="step">Books Service</div><div class="desc">Browse → Select<br>→ Pay escrow</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Tatay Ben</div><div class="step">SMS Confirm</div><div class="desc">Job schedule<br>+ location</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Both</div><div class="step">Work Done</div><div class="desc">Dual confirm<br>→ escrow release</div></div>
+  </div>
+  <div style="display:flex;gap:3%;margin-top:4%;align-items:center">
+    <div style="flex:1;font-size:clamp(.65rem,1vw,.82rem);color:var(--w300)">
+      <span class="tag a">80% Owner</span><span class="tag a">10% Agent</span><span class="tag a">10% Platform</span>
+      <span style="margin-left:8px">Agent handles all platform actions. Owner only replies to SMS. Safety keywords: STOP / REVOKE.</span>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:3%;margin-top:2.5%">
-    <p style="font-size:clamp(.6rem,.95vw,.78rem);color:var(--w500);flex:1">Every story above — agent-mediated, direct booking, multi-party event, face-to-face — runs on the <b style="color:var(--g400)">same escrow engine</b> with 0% ledger drift.</p>
-    <div class="qr" style="position:static;flex-shrink:0">
-      <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/old-docs/mockup.html&size=200&margin=2" alt="Interactive Mockup">
-      <span>Scan to explore<br>all 39 screens</span>
-    </div>
+  <div class="qr-uc">
+    <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/old-docs/mockup/screens/30-agent-dashboard.html&size=200&margin=2" alt="Agent Dashboard">
+    <span>Scan: Agent<br>Dashboard →</span>
   </div>
-  <div class="snum">4 / 7</div>
+  <div class="snum">4 / 10</div>
 </section>
 
-<!-- SLIDE 5: HYBRID / TECH ARCHITECTURE (as business accessibility layers) -->
+<!-- ═══════════ SLIDE 5: USE CASE 2 — Direct Offer + Escrow ═══════════ -->
+<section class="slide uc-blue">
+  <div class="kicker" style="color:var(--b400)">Use Case 2 — Direct Offer + Escrow</div>
+  <h2><span class="blue">Ate Grace</span> · Baker · Smartphone</h2>
+  <div class="flow-h">
+    <div class="fc"><div class="actor">Ate Grace</div><div class="step">Posts Listing</div><div class="desc">Photos, price,<br>pickup location</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Buyer</div><div class="step">Browse &amp; Book</div><div class="desc">28 categories<br>→ instant checkout</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Platform</div><div class="step">Funds in Escrow</div><div class="desc">3-day auto-release<br>buyer protection</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Ate Grace</div><div class="step">Fulfills Order</div><div class="desc">Handoff / delivery<br>→ marks complete</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Both</div><div class="step">Escrow Releases</div><div class="desc">Buyer confirms<br>→ Grace gets paid</div></div>
+  </div>
+  <div style="margin-top:4%;font-size:clamp(.65rem,1vw,.82rem);color:var(--w300)">
+    <span class="tag b">Fixed Price</span><span class="tag b">Hidden Quote</span> Pricing modes for all seller types. Category-average price shown even on hidden-price listings.
+  </div>
+  <div class="qr-uc">
+    <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/old-docs/mockup/screens/03-offer.html&size=200&margin=2" alt="Offer Screen">
+    <span>Scan: Product<br>Listing →</span>
+  </div>
+  <div class="snum">5 / 10</div>
+</section>
+
+<!-- ═══════════ SLIDE 6: USE CASE 3 — Deal-Chaining ═══════════ -->
+<section class="slide uc-green">
+  <div class="kicker" style="color:var(--g400)">Use Case 3 — Deal-Chaining</div>
+  <h2><span class="accent">Barangay Fiesta</span> · Multi-Party Event</h2>
+  <div class="flow-h">
+    <div class="fc"><div class="actor">Organizer</div><div class="step">Creates Deal</div><div class="desc">Names event,<br>sets total budget</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Organizer</div><div class="step">Adds Slots</div><div class="desc">Caterer · Photog<br>· Sound System</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Providers</div><div class="step">Accept Slots</div><div class="desc">Each confirms<br>their scope &amp; rate</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Buyer</div><div class="step">Single Payment</div><div class="desc">One checkout<br>→ split to slots</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Per-Slot</div><div class="step">Independent Release</div><div class="desc">Each provider paid<br>when their work done</div></div>
+  </div>
+  <div style="margin-top:4%;font-size:clamp(.65rem,1vw,.82rem);color:var(--w300)">
+    <span class="tag">Multi-Slot Container</span> One buyer payment. Per-slot escrow. No cross-dependency — caterer gets paid even if photographer is late.
+  </div>
+  <div class="qr-uc">
+    <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/old-docs/mockup/screens/25-deal-create.html&size=200&margin=2" alt="Deal Create">
+    <span>Scan: Deal<br>Creation →</span>
+  </div>
+  <div class="snum">6 / 10</div>
+</section>
+
+<!-- ═══════════ SLIDE 7: USE CASE 4 — Quick Deal ═══════════ -->
+<section class="slide uc-red">
+  <div class="kicker" style="color:var(--r400)">Use Case 4 — Quick Deal (QR)</div>
+  <h2><span class="red">Palengke</span> · Face-to-Face · No Internet Needed</h2>
+  <div class="flow-h">
+    <div class="fc"><div class="actor">Seller</div><div class="step">Shows QR</div><div class="desc">Animated QR on<br>phone or kiosk</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Buyer</div><div class="step">Scans QR</div><div class="desc">Opens deal screen<br>on their phone</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Both</div><div class="step">Negotiate</div><div class="desc">Up to 3 counter-<br>offer rounds</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Both</div><div class="step">Dual Confirm</div><div class="desc">App tap or<br>SMS reply</div></div>
+    <div class="fa">→</div>
+    <div class="fc"><div class="actor">Platform</div><div class="step">Deal Locked</div><div class="desc">Syncs when<br>reconnected</div></div>
+  </div>
+  <div style="margin-top:4%;font-size:clamp(.65rem,1vw,.82rem);color:var(--w300)">
+    <span class="tag r">Air-Gapped</span> Works with zero connectivity at transaction moment. Settlement: cash (offline) or escrow (online). Cloud Truth Boundary governs all money.
+  </div>
+  <div class="qr-uc">
+    <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/old-docs/mockup/screens/22-quickdeal-landing.html&size=200&margin=2" alt="Quick Deal">
+    <span>Scan: Quick<br>Deal Flow →</span>
+  </div>
+  <div class="snum">7 / 10</div>
+</section>
+
+<!-- ═══════════ SLIDE 8: ACCESS ARCHITECTURE ═══════════ -->
 <section class="slide">
   <div class="kicker">Access Architecture</div>
   <h2>Five access tiers. <span class="accent">No user left behind.</span></h2>
@@ -186,25 +265,25 @@ td b{color:#fafaf9}
       <tbody>
         <tr>
           <td><b>L0 — SMS</b> <span class="tag r">Feature phone</span></td>
-          <td>Tatay Ben: carpenter, Nokia 3310</td>
-          <td>Agent manages profile. Owner confirms bookings via SMS OTP. Safety keywords: STOP / REVOKE.</td>
+          <td>Tatay Ben: carpenter, Nokia</td>
+          <td>Agent manages profile. Owner confirms via SMS OTP. Safety keywords: STOP / REVOKE.</td>
           <td>SMS consent = irrefutable audit record</td>
         </tr>
         <tr>
           <td><b>L1 — Community Kiosk</b> <span class="tag a">Shared access</span></td>
           <td>Walk-in user, no device</td>
-          <td>Public tablet at strategic community locations. Browse catalog, deposit cash, print receipts, initiate Quick Deal via QR.</td>
+          <td>Public tablet at strategic community locations. Browse catalog, deposit cash, print receipts, initiate Quick Deal.</td>
           <td>Kiosk operator + printed receipt</td>
         </tr>
         <tr>
           <td><b>L2 — PWA Offline</b> <span class="tag b">Intermittent data</span></td>
           <td>Ate Grace: smartphone, load-conscious</td>
-          <td>Progressive Web App. Catalog cached locally. Search when online. Quick Deal works air-gapped — no internet needed.</td>
+          <td>Progressive Web App. Catalog cached locally. Quick Deal works air-gapped — no internet needed on the spot.</td>
           <td>Syncs when reconnected; server is authority</td>
         </tr>
         <tr>
           <td><b>L3 — PWA Online</b></td>
-          <td>Kevin: tech-savvy agent, smartphone</td>
+          <td>Kevin: tech-savvy agent</td>
           <td>Full PWA: listings, bidding, inbox, analytics. Agent dashboard: manage multiple offline owners.</td>
           <td>Real-time escrow, verified reviews</td>
         </tr>
@@ -218,68 +297,56 @@ td b{color:#fafaf9}
     </table>
   </div>
   <div style="margin-top:2%;font-size:clamp(.6rem,.9vw,.7rem);color:var(--w500)">
-    <span class="tag" style="font-size:.85em">Cloud Truth Boundary</span> Real money governed exclusively by backend. Client devices have zero disbursement authority. One Order state machine across all tiers.
+    <span class="tag" style="font-size:.85em">Cloud Truth Boundary</span> Real money governed exclusively by backend. Client devices have zero disbursement authority.
   </div>
-  <div class="snum">5 / 7</div>
+  <div class="snum">8 / 10</div>
 </section>
 
-<!-- SLIDE 6: ONBOARDING & BUSINESS MODEL -->
+<!-- ═══════════ SLIDE 9: ONBOARDING & BUSINESS MODEL ═══════════ -->
 <section class="slide">
   <div class="kicker">Onboarding &amp; Business Model</div>
   <h2>No BIR Form 2303. <span class="accent">No upfront cost. No smartphone required.</span></h2>
   <ul class="bullets">
-    <li><em>3-Lane Progressive Formalization</em> — Lane 1: Phone + ID verified, capped payouts. Lane 2: 2-min Sworn Declaration, tax-free up to ₱250K/yr. Lane 3: BMBE registered, "Business Verified" badge, uncapped earnings. Framed as <em>"Unlock more earnings"</em> — never "File your taxes."</li>
-    <li><em>Human Agent Network</em> — Tech-savvy local youth (Kevin) manage profiles for offline owners (Tatay Ben). Revenue auto-split: <em>80% Owner / 10% Agent / 10% Platform.</em> Graduation Bonus: 3× monthly commission when owner transitions to smartphone independence.</li>
-    <li><em>Revenue Model</em> — 10% platform commission on digital escrow transactions. 12% on cash (covers dispute risk buffer). Category subsidies at 0–3% for transport and agri-labor. Zero listing fees. Scales with transaction volume, not seller count.</li>
+    <li><em>3-Lane Progressive Formalization</em> — Lane 1: Phone + ID, capped payouts. Lane 2: 2-min Sworn Declaration, tax-free up to ₱250K/yr. Lane 3: BMBE registered, "Business Verified" badge, uncapped. Framed as <em>"Unlock more earnings."</em></li>
+    <li><em>Human Agent Network</em> — Tech-savvy youth manage profiles for offline owners. Revenue auto-split: <em>80% Owner / 10% Agent / 10% Platform.</em> Graduation Bonus: 3× monthly commission when owner goes independent.</li>
+    <li><em>Revenue Model</em> — 10% platform commission on digital escrow. 12% on cash. Category subsidies at 0–3% for transport and agri-labor. ₱0 listing fees. Scales with volume, not seller count.</li>
   </ul>
-  <div class="stat-row" style="margin-top:3%">
+  <div class="stat-row">
     <div class="stat"><b>80/10/10</b><span>Owner / Agent / Platform split</span></div>
     <div class="stat"><b>₱0</b><span>Listing fees. Zero upfront cost.</span></div>
     <div class="stat"><b>3×</b><span>Agent Graduation Bonus</span></div>
   </div>
-  <div class="snum">6 / 7</div>
+  <div class="snum">9 / 10</div>
 </section>
 
-<!-- SLIDE 7: ROADMAP & METRICS -->
+<!-- ═══════════ SLIDE 10: ROADMAP & METRICS ═══════════ -->
 <section class="slide">
   <div class="kicker">Roadmap &amp; Metrics</div>
   <h2>12 weeks. 4 phases. <span class="accent">One pilot launch.</span></h2>
 
-  <div class="flow">
-    <div class="node">
-      <div class="phase">Phase 1</div>
-      <div class="label">Foundations<br>&amp; Architecture</div>
-    </div>
-    <div class="arrow">→</div>
-    <div class="node">
-      <div class="phase">Phase 2</div>
-      <div class="label">Marketplace<br>&amp; Escrow Ledger</div>
-    </div>
-    <div class="arrow">→</div>
-    <div class="node">
-      <div class="phase">Phase 3</div>
-      <div class="label">Quick Deal<br>&amp; Agent Network</div>
-    </div>
-    <div class="arrow">→</div>
-    <div class="node">
-      <div class="phase">Phase 4</div>
-      <div class="label">Deal-Chaining<br>&amp; Pilot Launch</div>
-    </div>
+  <div class="flow-h" style="margin-top:3%;gap:clamp(2px,0.6vw,6px)">
+    <div class="fc" style="min-width:clamp(100px,16%,170px)"><div class="step">Phase 1</div><div class="desc">Foundations &amp;<br>Architecture</div><div style="font-size:clamp(.45rem,.65vw,.55rem);color:#57534e;margin-top:2px">Weeks 1–3</div></div>
+    <div class="fa">→</div>
+    <div class="fc" style="min-width:clamp(100px,16%,170px)"><div class="step">Phase 2</div><div class="desc">Marketplace &amp;<br>Escrow Ledger</div><div style="font-size:clamp(.45rem,.65vw,.55rem);color:#57534e;margin-top:2px">Weeks 4–6</div></div>
+    <div class="fa">→</div>
+    <div class="fc" style="min-width:clamp(100px,16%,170px)"><div class="step">Phase 3</div><div class="desc">Quick Deal &amp;<br>Agent Network</div><div style="font-size:clamp(.45rem,.65vw,.55rem);color:#57534e;margin-top:2px">Weeks 7–9</div></div>
+    <div class="fa">→</div>
+    <div class="fc" style="min-width:clamp(100px,16%,170px)"><div class="step">Phase 4</div><div class="desc">Deal-Chaining &amp;<br>Pilot Launch</div><div style="font-size:clamp(.45rem,.65vw,.55rem);color:#57534e;margin-top:2px">Weeks 10–12</div></div>
   </div>
-  <div style="display:flex;justify-content:space-between;margin-top:1.5%;padding:0 2%;font-size:clamp(.55rem,.8vw,.65rem);color:#57534e">
-    <span>Weeks 1–3</span><span>Weeks 4–6</span><span>Weeks 7–9</span><span>Weeks 10–12</span>
+  <div style="display:flex;justify-content:space-between;margin-top:1.5%;padding:0 2%;font-size:clamp(.5rem,.7vw,.6rem);color:#57534e">
+    <span>G1: DB + SMS OTP</span><span>G2: 0% ledger drift</span><span>G3: 80/10/10 verified</span><span>G4: 50+ listings launch</span>
   </div>
 
   <div class="stat-row">
-    <div class="stat"><b>≥ 2.0</b><span>Provider Liquidity Ratio<br>(bids per open buyer request)</span></div>
-    <div class="stat"><b>50+</b><span>Onboarded Providers<br>(40% via Human Agent Network)</span></div>
-    <div class="stat"><b>0%</b><span>Escrow Ledger Drift<br>(double-entry verified daily)</span></div>
-    <div class="stat"><b>&lt; 48h</b><span>Dispute Resolution Time<br>(platform-driven evidence collection)</span></div>
+    <div class="stat"><b>≥ 2.0</b><span>Provider Liquidity<br>(bids per open request)</span></div>
+    <div class="stat"><b>50+</b><span>Onboarded Providers<br>(40% via Human Agents)</span></div>
+    <div class="stat"><b>0%</b><span>Escrow Ledger Drift<br>(double-entry verified)</span></div>
+    <div class="stat"><b>&lt; 48h</b><span>Dispute Resolution<br>(platform-driven evidence)</span></div>
   </div>
-  <div style="margin-top:2.5%;font-size:clamp(.65rem,1vw,.82rem);color:var(--w500);text-align:center">
-    <span class="tag" style="font-size:.85em">Tagudin</span> Pilot scope. Expansion roadmap defined for post-academic phase.
+  <div style="margin-top:2.5%;font-size:clamp(.6rem,.85vw,.75rem);color:var(--w500);text-align:center">
+    <span class="tag" style="font-size:.85em">Tagudin</span> Pilot. Expansion roadmap ready for post-academic phase.
   </div>
-  <div class="snum">7 / 7</div>
+  <div class="snum">10 / 10</div>
 </section>
 
 </div>
