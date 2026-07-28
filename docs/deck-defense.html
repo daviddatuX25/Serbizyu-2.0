@@ -4,355 +4,999 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Serbizyu — Defense Deck</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--g400:#4ade80;--g600:#16a34a;--b400:#60a5fa;--a400:#fbbf24;--r400:#f87171;--p400:#c084fc;--w100:#f5f5f4;--w300:#d6d3d1;--w500:#78716c;--w900:#1c1917}
+:root{
+  --sand:#FAF6EE;
+  --sand-dim:#F1EADA;
+  --paper:#FFFDF8;
+  --ink:#1B2A28;
+  --ink-soft:#4A5B58;
+  --teal:#0D7A6E;
+  --teal-deep:#095A52;
+  --teal-tint:#E3F1EE;
+  --marigold:#D97A1F;
+  --marigold-tint:#FCECD8;
+  --terracotta:#B4432E;
+  --terracotta-tint:#F7E4DE;
+  --line:#DDD3BC;
+  --line-soft:#EAE2CE;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:#0c0a09;color:#fafaf9;overflow:hidden;user-select:none}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:#0F1512;
+  color:var(--ink);
+  overflow:hidden;
+}
 .deck{width:100vw;height:100vh;display:grid;place-items:center}
-.slide{width:min(96vw,177.8vh);aspect-ratio:16/9;background:linear-gradient(160deg,#1c1917,#0c0a09);border:1px solid #292524;border-radius:20px;padding:4.5% 5.5%;display:none;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
-.slide.on{display:flex;animation:in .35s ease}
-@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1}}
-h1,h2{font-family:'Plus Jakarta Sans',sans-serif}
-h1{font-size:clamp(2rem,4.6vw,3.8rem);line-height:1.08}
-h2{font-size:clamp(1.5rem,3.2vw,2.6rem);line-height:1.12;margin-bottom:2.5%}
-.accent{color:var(--g400)}.blue{color:var(--b400)}.amber{color:var(--a400)}.red{color:var(--r400)}.purple{color:var(--p400)}
-.kicker{color:var(--g400);font-weight:700;letter-spacing:.15em;font-size:clamp(.6rem,1vw,.8rem);text-transform:uppercase;margin-bottom:2%}
-.bullets{list-style:none;padding:0;margin-top:2%}
-.bullets li{font-size:clamp(.9rem,1.55vw,1.25rem);color:var(--w300);line-height:1.5;margin-bottom:2.5%;padding-left:1.8em;position:relative;max-width:85%}
-.bullets li::before{content:'▸';position:absolute;left:0;color:var(--g400);font-weight:700}
-.bullets li em{font-style:normal;color:var(--g400);font-weight:600}
-.big-num{font-size:clamp(3rem,7vw,5.5rem);font-family:'Plus Jakarta Sans';color:var(--g400);line-height:1;margin-bottom:1%}
-.hint{position:fixed;bottom:14px;right:18px;color:#57534e;font-size:.72rem;z-index:100}
-.snum{position:absolute;top:4%;right:6%;font-size:.7rem;color:#3d3a36;font-weight:600}
+.slide{
+  width:min(96vw,177.8vh);
+  aspect-ratio:16/9;
+  background:var(--sand);
+  border-radius:6px;
+  padding:5.2% 6.4%;
+  display:none;
+  flex-direction:column;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 40px 100px -20px rgba(0,0,0,.5);
+}
+.slide.on{display:flex;animation:in .35s cubic-bezier(.2,.7,.3,1)}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-/* Stat row */
-.stat-row{display:flex;gap:3%;margin-top:3.5%}
-.stat{flex:1;background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:3% 4%;text-align:center}
-.stat b{display:block;font-size:clamp(1.5rem,3.4vw,2.8rem);color:var(--g400);font-family:'Plus Jakarta Sans'}
-.stat span{font-size:clamp(.6rem,1vw,.78rem);color:var(--w500);margin-top:4px;line-height:1.3}
+/* texture */
+.slide::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;
+  background-image:radial-gradient(circle at 1px 1px, rgba(27,42,40,.06) 1px, transparent 0);
+  background-size:22px 22px;
+}
 
-/* Table */
-.tbl-wrap{width:100%;margin-top:2%}
-table{width:100%;border-collapse:collapse;font-size:clamp(.68rem,1.2vw,.95rem)}
-th{color:var(--g400);text-align:left;padding:.6em .5em;border-bottom:1px solid #292524;font-size:.8em;letter-spacing:.06em;text-transform:uppercase}
-td{padding:.6em .5em;border-bottom:1px solid #1c1917;color:var(--w300);vertical-align:top}
-td b{color:#fafaf9}
-.tag{display:inline-block;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:var(--g400);padding:.15em .6em;border-radius:99px;font-size:.7em;font-weight:600;margin-right:4px}
-.tag.b{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:var(--b400)}
-.tag.a{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:var(--a400)}
-.tag.r{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.25);color:var(--r400)}
+/* eyebrow / header bar */
+.eyebrow{
+  display:flex;align-items:baseline;justify-content:space-between;
+  border-bottom:1.5px solid var(--line);
+  padding-bottom:1.6%;margin-bottom:2.6%;
+  position:relative;z-index:1;
+}
+.eyebrow-left{display:flex;align-items:baseline;gap:.9em}
+.slide-tag{
+  font-family:'JetBrains Mono',monospace;font-weight:600;
+  font-size:clamp(.62rem,1vw,.82rem);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--teal);background:var(--teal-tint);
+  padding:.28em .7em;border-radius:3px;
+}
+.eyebrow h1{
+  font-family:'Fraunces',serif;font-weight:600;font-optical-sizing:auto;
+  font-size:clamp(1.5rem,3vw,2.5rem);color:var(--ink);letter-spacing:-.01em;
+}
+.brand{
+  font-family:'JetBrains Mono',monospace;font-size:clamp(.6rem,.95vw,.78rem);
+  color:var(--ink-soft);letter-spacing:.06em;
+}
 
-/* Flow diagrams */
-.flow-h{display:flex;align-items:center;justify-content:center;gap:clamp(2px,0.6vw,6px);margin-top:3%;flex-wrap:wrap}
-.flow-h .fc{background:rgba(255,255,255,.04);border:1px solid #292524;border-radius:10px;padding:2% 2.5%;text-align:center;min-width:clamp(80px,13%,150px)}
-.flow-h .fc .step{font-size:clamp(.48rem,.72vw,.62rem);color:var(--g400);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
-.flow-h .fc .desc{font-size:clamp(.58rem,.9vw,.75rem);color:var(--w300);line-height:1.25}
-.flow-h .fc .actor{font-size:clamp(.5rem,.75vw,.65rem);color:#fafaf9;font-weight:600;margin-bottom:2px}
-.flow-h .fa{color:var(--g400);font-size:clamp(.8rem,1.4vw,1.2rem);flex-shrink:0;margin:0 1px}
-.flow-h .fa.dim{color:#3d3a36}
+.body{flex:1;display:flex;position:relative;z-index:1;min-height:0}
 
-/* UC color themes */
-.uc-amber .fc{border-color:rgba(245,158,11,.25)}.uc-amber .step{color:var(--a400)}.uc-amber .fa{color:var(--a400)}
-.uc-blue .fc{border-color:rgba(59,130,246,.25)}.uc-blue .step{color:var(--b400)}.uc-blue .fa{color:var(--b400)}
-.uc-green .fc{border-color:rgba(34,197,94,.3)}.uc-green .step{color:var(--g400)}.uc-green .fa{color:var(--g400)}
-.uc-red .fc{border-color:rgba(248,113,113,.25)}.uc-red .step{color:var(--r400)}.uc-red .fa{color:var(--r400)}
+/* footer */
+.foot{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-top:1.4%;margin-top:1.4%;border-top:1px dashed var(--line);
+  font-family:'JetBrains Mono',monospace;font-size:clamp(.58rem,.85vw,.72rem);
+  color:#8C8266;position:relative;z-index:1;
+}
+.foot .page{font-weight:600;color:var(--ink-soft)}
 
-/* QR */
-.qr{position:absolute;bottom:3.5%;right:5.5%;display:flex;flex-direction:column;align-items:center;gap:4px}
-.qr img{width:clamp(80px,9vw,130px);height:auto;border-radius:10px;border:2px solid rgba(255,255,255,.1);background:#fff;padding:6px}
-.qr span{font-size:clamp(.45rem,.7vw,.58rem);color:#57534e;text-align:center;max-width:130px;line-height:1.2}
+/* nav hint */
+.hint{position:fixed;bottom:14px;right:18px;color:#5c6663;font-size:.72rem;z-index:100;font-family:'JetBrains Mono',monospace}
+.progress{position:fixed;bottom:0;left:0;height:3px;background:var(--marigold);z-index:100;transition:width .35s ease}
 
-/* UC slide QR - bottom left */
-.qr-uc{position:absolute;bottom:3.5%;left:5.5%;display:flex;align-items:center;gap:8px}
-.qr-uc img{width:clamp(60px,6.5vw,100px);height:auto;border-radius:8px;border:2px solid rgba(255,255,255,.1);background:#fff;padding:4px}
-.qr-uc span{font-size:clamp(.42rem,.65vw,.55rem);color:#57534e;line-height:1.2}
+/* type helpers */
+.serif{font-family:'Fraunces',serif}
+.mono{font-family:'JetBrains Mono',monospace}
+.lede{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(1.1rem,1.9vw,1.55rem);line-height:1.4;color:var(--ink);}
+.lede b{font-weight:700;color:var(--teal-deep)}
+.small{font-size:clamp(.78rem,1.15vw,.98rem);color:var(--ink-soft);line-height:1.55}
 
-/* Mobile */
-@media(max-width:768px),(max-aspect-ratio:9/16){
-  body{overflow-y:auto;overflow-x:hidden}
-  .deck{display:block;width:100%;height:auto;min-height:100vh}
-  .slide{width:100vw;min-height:100vh;aspect-ratio:auto;border-radius:0;border-left:0;border-right:0;padding:12% 6% 20% 6%;justify-content:flex-start;overflow-y:auto;overflow-x:hidden}
+/* receipt signature motif */
+.receipt{
+  background:var(--paper);
+  border:1px solid var(--line);
+  position:relative;
+  box-shadow:0 8px 24px -12px rgba(27,42,40,.25);
+}
+.receipt::before,.receipt::after{
+  content:"";position:absolute;left:0;right:0;height:10px;
+  background-image:radial-gradient(circle 5px, var(--sand) 5px, transparent 5px);
+  background-size:16px 10px;background-repeat:repeat-x;
+}
+.receipt::before{top:-5px;background-position:0 -5px}
+.receipt::after{bottom:-5px;background-position:0 5px}
+
+/* QR chip — cover slide */
+.qr-follow{
+  position:absolute;top:5.2%;right:6.4%;z-index:2;
+  display:flex;align-items:center;gap:.7em;
+  background:var(--paper);border:1px solid var(--line);border-radius:8px;
+  padding:.55em .8em .55em .55em;box-shadow:0 10px 30px -14px rgba(27,42,40,.3);
+  max-width:min(320px,40%);
+}
+.qr-follow .qr-ph{width:clamp(52px,5.2vw,72px);height:clamp(52px,5.2vw,72px);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--line-soft);overflow:hidden}
+.qr-follow .qr-ph svg{width:100%;height:100%;display:block}
+.qr-follow .qrt{font-family:'JetBrains Mono',monospace;font-size:clamp(.56rem,.8vw,.66rem);color:var(--ink-soft);line-height:1.4;min-width:0}
+.qr-follow .qrt b{display:block;color:var(--teal-deep);font-size:1.05em;margin-bottom:.15em}
+
+/* use-case QR footer chip */
+.qr-uc{display:flex;align-items:center;gap:.7em;flex-shrink:0}
+.qr-uc .qr-ph{width:clamp(46px,4.6vw,60px);height:clamp(46px,4.6vw,60px);border-radius:4px;border:1.5px dashed var(--line);background:#fff;padding:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.qr-uc .qr-ph svg{width:100%;height:100%;display:block}
+.qr-uc span{font-family:'JetBrains Mono',monospace;font-size:clamp(.52rem,.72vw,.62rem);color:var(--ink-soft);line-height:1.3}
+
+/* flow steps (use-case journeys) */
+.flow{display:flex;align-items:stretch;gap:0;flex:1;min-height:0}
+.flow-step{
+  flex:1;background:var(--paper);border:1px solid var(--line);border-radius:8px;
+  padding:5.2% 4.2%;display:flex;flex-direction:column;gap:.5em;position:relative;min-width:0;
+  overflow:hidden;justify-content:flex-start;
+}
+.flow-step .fs-actor{font-family:'JetBrains Mono',monospace;font-size:clamp(.54rem,.72vw,.64rem);letter-spacing:.06em;text-transform:uppercase;color:var(--teal);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flow-step .fs-title{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(.84rem,1.1vw,1rem);color:var(--ink);line-height:1.22}
+.flow-step .fs-desc{
+  font-size:clamp(.62rem,.82vw,.74rem);color:var(--ink-soft);line-height:1.42;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;
+}
+.flow-arrow{flex:0 0 auto;width:clamp(18px,2.4vw,32px);display:flex;align-items:center;justify-content:center;position:relative;top:0}
+.flow-arrow svg{width:100%;height:18px}
+
+/* comparison table */
+.ctable{width:100%;border-collapse:collapse;font-size:clamp(.64rem,.88vw,.8rem);table-layout:fixed}
+.ctable th,.ctable td{padding:.55em .7em;text-align:left;border-bottom:1px solid var(--line-soft);overflow-wrap:break-word}
+.ctable thead th{font-family:'JetBrains Mono',monospace;font-size:.76em;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);border-bottom:1.5px solid var(--ink);font-weight:600}
+.ctable td.row-label{font-family:'Fraunces',serif;font-weight:700;color:var(--ink)}
+.ctable td.yes{color:var(--teal-deep);font-weight:700}
+.ctable td.no{color:#9a9082}
+.ctable tbody tr:last-child td{border-bottom:none}
+.ctable td.hero{background:var(--teal-tint)}
+
+/* risk cards */
+.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.2%;flex:1;min-height:0}
+.risk-card{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--marigold);border-radius:6px;padding:4.4% 4.8%;display:flex;flex-direction:column;gap:.4em;overflow:hidden;min-width:0}
+.risk-card .rc-q{font-family:'JetBrains Mono',monospace;font-size:clamp(.52rem,.68vw,.6rem);color:var(--terracotta);letter-spacing:.04em;text-transform:uppercase;font-weight:700}
+.risk-card .rc-a{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(.76rem,1vw,.88rem);color:var(--ink);line-height:1.3}
+.risk-card .rc-d{
+  font-size:clamp(.6rem,.78vw,.7rem);color:var(--ink-soft);line-height:1.42;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden;
+}
+
+/* tech badges */
+.badges{display:flex;flex-wrap:wrap;gap:.5em}
+.badge-chip{
+  font-family:'JetBrains Mono',monospace;font-size:clamp(.6rem,.8vw,.72rem);font-weight:600;
+  background:var(--teal-tint);color:var(--teal-deep);border:1px solid rgba(13,122,110,.25);
+  padding:.4em .8em;border-radius:20px;white-space:nowrap;
+}
+
+/* phase timeline */
+.phase-rail{display:flex;gap:1.4%;flex:1;min-height:0}
+.phase{flex:1;display:flex;flex-direction:column;gap:.5em;min-width:0;overflow:hidden}
+.phase-bar{height:8px;border-radius:4px;background:var(--line-soft);flex-shrink:0}
+.phase-bar i{display:block;height:100%;border-radius:4px}
+.phase .ph-no{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--ink-soft);font-weight:700}
+.phase .ph-title{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(.8rem,1.05vw,.94rem);color:var(--ink);line-height:1.25}
+.phase .ph-desc{
+  font-size:clamp(.62rem,.8vw,.72rem);color:var(--ink-soft);line-height:1.42;flex:1;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden;
+}
+
+/* stat pill row */
+.stat-row{display:flex;gap:2.4%}
+.stat-pill{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4.2% 4.6%;text-align:center;min-width:0;overflow:hidden}
+.stat-pill .sp-n{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(1.3rem,2.2vw,1.9rem);color:var(--teal-deep)}
+.stat-pill .sp-l{font-size:clamp(.6rem,.8vw,.72rem);color:var(--ink-soft);margin-top:.3em;line-height:1.32}
+
+@media(max-width:768px){
+  body{overflow-y:auto}
+  .deck{display:block}
+  .slide{width:100vw;min-height:100vh;aspect-ratio:auto;border-radius:0;padding:8% 6% 10%;overflow-y:auto}
   .slide.on{display:flex}
-  .bullets li{max-width:100%;font-size:clamp(.85rem,3.8vw,1.1rem)}
-  h1{font-size:clamp(1.5rem,7vw,2.8rem)}
-  h2{font-size:clamp(1.2rem,5.5vw,2rem)}
-  .big-num{font-size:clamp(2.2rem,10vw,4.5rem)}
-  .kicker{font-size:clamp(.55rem,2.5vw,.75rem)}
-  .stat-row{flex-wrap:wrap;gap:8px}
-  .stat{flex:1 1 45%;min-width:140px}
-  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table{font-size:clamp(.6rem,2.8vw,.85rem)}
-  .snum{top:3%;right:5%}
-  .hint{bottom:8px;right:10px;font-size:.62rem}
-  .qr{position:static;margin-top:16px;align-self:center}
-  .qr img{width:100px}
-  .qr-uc{position:static;margin-top:16px;justify-content:center}
-  .flow-h{flex-direction:column;gap:6px}
-  .flow-h .fa{transform:rotate(90deg)}
-  .flow-h .fc{min-width:70%}
+  .hint{display:none}
+  .risk-grid{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .flow-arrow svg{transform:rotate(90deg);height:26px;width:26px;margin:0 auto}
+  .phase-rail{flex-direction:column}
+  .qr-follow{position:static;margin-bottom:14px}
 }
 </style>
 </head>
 <body>
-
 <div class="deck">
 
-<!-- ═══════════ SLIDE 1: CORE IDENTITY ═══════════ -->
-<section class="slide on">
-  <div class="kicker">Serbizyu · Pilot: Tagudin, Ilocos Sur</div>
-  <div class="big-num">Serbizyu</div>
-  <h1>Marketplace &amp; trust infrastructure for<br><span class="accent">local economies — starting in the province, built for anywhere.</span></h1>
-  <ul class="bullets" style="margin-top:3%">
-    <li><em>Two-sided marketplace</em> connecting informal workers, micro-entrepreneurs, and local buyers — every transaction escrow-protected.</li>
-    <li>Built for the <em>70% of micro-entrepreneurs</em> outside formal digital commerce. Geo-first design boosts local industries — model is place-agnostic.</li>
-  </ul>
-  <div style="margin-top:3%;color:var(--w500);font-size:clamp(.7rem,1.1vw,.85rem)">
-    Sarmiento, David Datu N. &nbsp;·&nbsp; Lopez, Christine M. &nbsp;·&nbsp; Pagaduan, Jaypee G. &nbsp;·&nbsp; Vidaña, Prince John<br>
-    BSIT 4B · CCSIT 215 Project Management
-  </div>
-  <div class="snum">1 / 10</div>
-  <div class="qr">
-    <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/docs/deck-defense.html&size=200&margin=2" alt="Scan for presentation">
-    <span>Scan to follow<br>on your phone</span>
-  </div>
-</section>
-
-<!-- ═══════════ SLIDE 2: TARGET MARKET ═══════════ -->
-<section class="slide">
-  <div class="kicker">Target Market</div>
-  <h2>Informal workers. Micro-entrepreneurs. <span class="accent">Local buyers.</span></h2>
-  <ul class="bullets">
-    <li><em>Service providers &amp; trade workers</em> — carpenters, mechanics, tricycle drivers, beauticians, farm laborers. Skilled, zero digital presence. Earning under ₱250K/year.</li>
-    <li><em>Local product sellers</em> — lutong bahay vendors, hardware suppliers, handmade crafts. Currently stuck on unindexed Facebook posts with no booking tools.</li>
-    <li><em>Provincial buyers &amp; event organizers</em> — residents needing trusted providers with transparent pricing and payment protection. Currently cash handshakes only.</li>
-  </ul>
-  <div class="stat-row">
-    <div class="stat"><b>~70%</b><span>of provincial micro-entrepreneurs operate informally (PSA 2023)</span></div>
-    <div class="stat"><b>Zero</b><span>escrow-protected service marketplaces exist outside Metro Manila</span></div>
-    <div class="stat"><b>40%+</b><span>of target sellers lack smartphones or data load (DICT 2023)</span></div>
-  </div>
-  <div class="snum">2 / 10</div>
-</section>
-
-<!-- ═══════════ SLIDE 3: CORE PROBLEM ═══════════ -->
-<section class="slide">
-  <div class="kicker">Core Problem</div>
-  <h2>Provincial trade runs on <span class="amber">cash handshakes</span> and <span class="red">unindexed chats.</span></h2>
-  <ul class="bullets">
-    <li><em>No escrow, no recourse.</em> Buyers lose deposits to non-performance. Workers unpaid after labor. Zero rating history. Every transaction is a gamble.</li>
-    <li><em>Facebook bans service listings.</em> Policy-gated from Marketplace. Deals scatter across Messenger — no pricing, no calendar, no identity verification.</li>
-    <li><em>Connectivity costs + tax fear block adoption.</em> Daily data load is a bigger barrier than network dead spots. BIR registration fear blocks 90%+ of informal providers.</li>
-  </ul>
-  <div class="stat-row">
-    <div class="stat"><b>0%</b><span>escrow coverage in provincial service trade</span></div>
-    <div class="stat"><b>Banned</b><span>service listings on FB Marketplace (Meta 2024)</span></div>
-    <div class="stat"><b>90%+</b><span>informal providers fear tax registration (BIR 2023)</span></div>
-  </div>
-  <div class="snum">3 / 10</div>
-</section>
-
-<!-- ═══════════ SLIDE 4: USE CASE 1 — Agent + SMS ═══════════ -->
-<section class="slide uc-amber">
-  <div class="kicker" style="color:var(--a400)">Use Case 1 — Agent + SMS</div>
-  <h2><span class="amber">Tatay Ben</span> · Carpenter · Nokia 3310</h2>
-  <div class="flow-h">
-    <div class="fc"><div class="actor">Agent Kevin</div><div class="step">Creates Listing</div><div class="desc">Profile, trade,<br>barangay, rates</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Tatay Ben</div><div class="step">SMS Approval</div><div class="desc">Reply APPROVE<br>to confirm</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Customer</div><div class="step">Books Service</div><div class="desc">Browse → Select<br>→ Pay escrow</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Tatay Ben</div><div class="step">SMS Confirm</div><div class="desc">Job schedule<br>+ location</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Both</div><div class="step">Work Done</div><div class="desc">Dual confirm<br>→ escrow release</div></div>
-  </div>
-  <div style="display:flex;gap:3%;margin-top:4%;align-items:center">
-    <div style="flex:1;font-size:clamp(.65rem,1vw,.82rem);color:var(--w300)">
-      <span class="tag a">80% Owner</span><span class="tag a">10% Agent</span><span class="tag a">10% Platform</span>
-      <span style="margin-left:8px">Agent handles all platform actions. Owner only replies to SMS. Safety keywords: STOP / REVOKE.</span>
+<!-- ============ SLIDE 1 — COVER / CORE IDENTITY ============ -->
+<section class="slide on" id="s1">
+  <div class="eyebrow">
+    <div class="eyebrow-left">
+      <span class="slide-tag">01 · Identity</span>
     </div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
   </div>
-  <div class="qr-uc">
-    <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/old-docs/mockup/screens/30-agent-dashboard.html&size=200&margin=2" alt="Agent Dashboard">
-    <span>Scan: Agent<br>Dashboard →</span>
+  <div class="qr-follow">
+    <span class="qr-ph"><img src="https://quickchart.io/qr?text=https%3A%2F%2Fdaviddatux25.github.io%2FSerbizyu-2.0%2Fdocs%2Fdeck-defense.html&size=200&margin=2" alt="QR" style="width:100%;height:100%;border-radius:3px"></span>
+    <div class="qrt"><b>Follow along</b>Scan &amp; present<br>on your phone</div>
   </div>
-  <div class="snum">4 / 10</div>
-</section>
-
-<!-- ═══════════ SLIDE 5: USE CASE 2 — Direct Offer + Escrow ═══════════ -->
-<section class="slide uc-blue">
-  <div class="kicker" style="color:var(--b400)">Use Case 2 — Direct Offer + Escrow</div>
-  <h2><span class="blue">Ate Grace</span> · Baker · Smartphone</h2>
-  <div class="flow-h">
-    <div class="fc"><div class="actor">Ate Grace</div><div class="step">Posts Listing</div><div class="desc">Photos, price,<br>pickup location</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Buyer</div><div class="step">Browse &amp; Book</div><div class="desc">28 categories<br>→ instant checkout</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Platform</div><div class="step">Funds in Escrow</div><div class="desc">3-day auto-release<br>buyer protection</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Ate Grace</div><div class="step">Fulfills Order</div><div class="desc">Handoff / delivery<br>→ marks complete</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Both</div><div class="step">Escrow Releases</div><div class="desc">Buyer confirms<br>→ Grace gets paid</div></div>
-  </div>
-  <div style="margin-top:4%;font-size:clamp(.65rem,1vw,.82rem);color:var(--w300)">
-    <span class="tag b">Fixed Price</span><span class="tag b">Hidden Quote</span> Pricing modes for all seller types. Category-average price shown even on hidden-price listings.
-  </div>
-  <div class="qr-uc">
-    <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/old-docs/mockup/screens/03-offer.html&size=200&margin=2" alt="Offer Screen">
-    <span>Scan: Product<br>Listing →</span>
-  </div>
-  <div class="snum">5 / 10</div>
-</section>
-
-<!-- ═══════════ SLIDE 6: USE CASE 3 — Deal-Chaining ═══════════ -->
-<section class="slide uc-green">
-  <div class="kicker" style="color:var(--g400)">Use Case 3 — Deal-Chaining</div>
-  <h2><span class="accent">Barangay Fiesta</span> · Multi-Party Event</h2>
-  <div class="flow-h">
-    <div class="fc"><div class="actor">Organizer</div><div class="step">Creates Deal</div><div class="desc">Names event,<br>sets total budget</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Organizer</div><div class="step">Adds Slots</div><div class="desc">Caterer · Photog<br>· Sound System</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Providers</div><div class="step">Accept Slots</div><div class="desc">Each confirms<br>their scope &amp; rate</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Buyer</div><div class="step">Single Payment</div><div class="desc">One checkout<br>→ split to slots</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Per-Slot</div><div class="step">Independent Release</div><div class="desc">Each provider paid<br>when their work done</div></div>
-  </div>
-  <div style="margin-top:4%;font-size:clamp(.65rem,1vw,.82rem);color:var(--w300)">
-    <span class="tag">Multi-Slot Container</span> One buyer payment. Per-slot escrow. No cross-dependency — caterer gets paid even if photographer is late.
-  </div>
-  <div class="qr-uc">
-    <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/old-docs/mockup/screens/25-deal-create.html&size=200&margin=2" alt="Deal Create">
-    <span>Scan: Deal<br>Creation →</span>
-  </div>
-  <div class="snum">6 / 10</div>
-</section>
-
-<!-- ═══════════ SLIDE 7: USE CASE 4 — Quick Deal ═══════════ -->
-<section class="slide uc-red">
-  <div class="kicker" style="color:var(--r400)">Use Case 4 — Quick Deal (QR)</div>
-  <h2><span class="red">Palengke</span> · Face-to-Face · No Internet Needed</h2>
-  <div class="flow-h">
-    <div class="fc"><div class="actor">Seller</div><div class="step">Shows QR</div><div class="desc">Animated QR on<br>phone or kiosk</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Buyer</div><div class="step">Scans QR</div><div class="desc">Opens deal screen<br>on their phone</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Both</div><div class="step">Negotiate</div><div class="desc">Up to 3 counter-<br>offer rounds</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Both</div><div class="step">Dual Confirm</div><div class="desc">App tap or<br>SMS reply</div></div>
-    <div class="fa">→</div>
-    <div class="fc"><div class="actor">Platform</div><div class="step">Deal Locked</div><div class="desc">Syncs when<br>reconnected</div></div>
-  </div>
-  <div style="margin-top:4%;font-size:clamp(.65rem,1vw,.82rem);color:var(--w300)">
-    <span class="tag r">Air-Gapped</span> Works with zero connectivity at transaction moment. Settlement: cash (offline) or escrow (online). Cloud Truth Boundary governs all money.
-  </div>
-  <div class="qr-uc">
-    <img src="https://quickchart.io/qr?text=https://daviddatux25.github.io/Serbizyu-2.0/old-docs/mockup/screens/22-quickdeal-landing.html&size=200&margin=2" alt="Quick Deal">
-    <span>Scan: Quick<br>Deal Flow →</span>
-  </div>
-  <div class="snum">7 / 10</div>
-</section>
-
-<!-- ═══════════ SLIDE 8: GROWTH & PROJECTIONS ═══════════ -->
-<section class="slide">
-  <div class="kicker">Growth &amp; Projections</div>
-  <h2>Starting in Tagudin. <span class="accent">Built to scale anywhere.</span></h2>
-  <div style="display:flex;gap:3%;margin-top:2%">
-    <!-- Card 1: Market Expansion -->
-    <div style="flex:1;background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:14px;padding:3.5% 4%">
-      <div style="font-size:clamp(.6rem,.95vw,.78rem);color:var(--g400);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Market Expansion</div>
-      <div style="font-size:clamp(.65rem,1vw,.82rem);color:var(--w300);line-height:1.5">
-        <b style="color:#fafaf9">Pilot</b> — Tagudin, 50+ providers<br>
-        <b style="color:#fafaf9">6 months</b> — 3 neighboring municipalities, 200+ providers<br>
-        <b style="color:#fafaf9">12 months</b> — Full Ilocos Sur, 500+ providers<br>
-        <b style="color:var(--g400)">Beyond</b> — Any province. Any city. Place-agnostic.
+  <div class="body" style="align-items:center;gap:5%">
+    <div style="flex:1.15;display:flex;flex-direction:column;justify-content:center;gap:1.4em">
+      <div class="mono" style="font-size:clamp(.72rem,1.05vw,.9rem);color:var(--marigold);letter-spacing:.14em;text-transform:uppercase;font-weight:700">Bayanihan Street, Realized</div>
+      <h2 class="serif" style="font-size:clamp(2.4rem,5vw,4.6rem);font-weight:700;line-height:1.02;letter-spacing:-.02em;color:var(--ink)">
+        A trust layer for the provincial economy.
+      </h2>
+      <p class="lede" style="max-width:34em">
+        Serbizyu is a marketplace <b>and</b> an escrow system — built so that the carpenter in Tagudin, the seamstress in Barangay Bio, and the tricycle driver who knows every street can earn online exactly like the businesses that already have digital reach.
+      </p>
+      <div style="display:flex;gap:2.2em;margin-top:.6em">
+        <div>
+          <div class="serif" style="font-size:clamp(1.6rem,2.6vw,2.3rem);font-weight:700;color:var(--teal-deep)">70%</div>
+          <div class="small">of micro-entrepreneurs shut out of digital commerce</div>
+        </div>
+        <div>
+          <div class="serif" style="font-size:clamp(1.6rem,2.6vw,2.3rem);font-weight:700;color:var(--teal-deep)">0%</div>
+          <div class="small">ledger drift — every peso accounted for</div>
+        </div>
+        <div>
+          <div class="serif" style="font-size:clamp(1.6rem,2.6vw,2.3rem);font-weight:700;color:var(--teal-deep)">28</div>
+          <div class="small">service &amp; product categories at pilot launch</div>
+        </div>
       </div>
     </div>
-    <!-- Card 2: Network Flywheel -->
-    <div style="flex:1;background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:14px;padding:3.5% 4%">
-      <div style="font-size:clamp(.6rem,.95vw,.78rem);color:var(--b400);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Network Flywheel</div>
-      <div style="font-size:clamp(.65rem,1vw,.82rem);color:var(--w300);line-height:1.5">
-        More <b style="color:#fafaf9">providers</b> → more listings<br>
-        More listings → more <b style="color:#fafaf9">buyers</b> browsing<br>
-        More buyers → more <b style="color:#fafaf9">transactions</b><br>
-        More transactions → more <b style="color:var(--b400)">agents sign up</b> → more providers
-      </div>
+    <div style="flex:.85;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 420 420" width="100%" style="max-width:420px" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="210" cy="210" r="188" fill="none" stroke="var(--line)" stroke-width="1.4" stroke-dasharray="2 8"/>
+        <circle cx="210" cy="210" r="140" fill="var(--teal-tint)" stroke="var(--teal)" stroke-width="1.6"/>
+        <!-- map pin cluster representing Tagudin -->
+        <g transform="translate(210,196)">
+          <path d="M0,-58 C34,-58 58,-32 58,0 C58,34 22,64 0,92 C-22,64 -58,34 -58,0 C-58,-32 -34,-58 0,-58 Z" fill="var(--marigold)" opacity=".14"/>
+          <path d="M0,-42 C24,-42 42,-23 42,0 C42,24 16,46 0,66 C-16,46 -42,24 -42,0 C-42,-23 -24,-42 0,-42 Z" fill="var(--marigold)"/>
+          <circle cx="0" cy="-2" r="15" fill="var(--sand)"/>
+          <circle cx="0" cy="-2" r="6.5" fill="var(--marigold)"/>
+        </g>
+        <text x="210" y="330" text-anchor="middle" class="mono" font-family="JetBrains Mono, monospace" font-size="13" fill="var(--ink-soft)" letter-spacing="1.5">TAGUDIN, ILOCOS SUR</text>
+        <text x="210" y="350" text-anchor="middle" class="mono" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--teal-deep)" letter-spacing="1" font-weight="600">PILOT MARKET — JUL 2026</text>
+      </svg>
     </div>
-    <!-- Card 3: Revenue at Scale -->
-    <div style="flex:1;background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:14px;padding:3.5% 4%">
-      <div style="font-size:clamp(.6rem,.95vw,.78rem);color:var(--a400);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Revenue at Scale</div>
-      <div style="font-size:clamp(.65rem,1vw,.82rem);color:var(--w300);line-height:1.5">
-        <b style="color:#fafaf9">500 providers</b> × ₱5K avg/month<br>
-        = ₱2.5M monthly transaction volume<br>
-        <b style="color:var(--a400)">10% platform</b> = ₱250K/month<br>
-        <b style="color:#fafaf9">1,000 providers</b> = ₱500K/month
+  </div>
+  <div class="foot">
+    <span>Marketplace + Escrow Trust, built for the province.</span>
+    <span class="page">01 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 2 — CORE PROBLEM ============ -->
+<section class="slide" id="s2">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag" style="background:var(--terracotta-tint);color:var(--terracotta)">02 · Problem</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="flex-direction:column;gap:2%">
+    <h2 class="serif" style="font-size:clamp(1.7rem,3.2vw,2.7rem);font-weight:700;letter-spacing:-.01em;max-width:22em">Every provincial transaction today is a trust gamble.</h2>
+    <div style="display:flex;gap:2.4%;flex:1;min-height:0">
+      <div style="flex:1;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 5.5%;display:flex;flex-direction:column;gap:.9em">
+        <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="var(--terracotta-tint)"/><path d="M14 20h12M14 15h8M14 25h8" stroke="var(--terracotta)" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <div class="serif" style="font-weight:700;font-size:clamp(1.05rem,1.5vw,1.3rem)">No escrow, no recourse</div>
+        <p class="small">Buyers lose deposits. Workers finish the job and are never paid. There's no rating history — every deal is a coin flip.</p>
+      </div>
+      <div style="flex:1;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 5.5%;display:flex;flex-direction:column;gap:.9em">
+        <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="var(--marigold-tint)"/><path d="M12 15h16v10a2 2 0 01-2 2H14a2 2 0 01-2-2V15z" stroke="var(--marigold)" stroke-width="2" fill="none"/><path d="M12 15l8 6 8-6" stroke="var(--marigold)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <div class="serif" style="font-weight:700;font-size:clamp(1.05rem,1.5vw,1.3rem)">Pushed into unindexed chats</div>
+        <p class="small">Facebook restricts service listings. Providers scatter into Messenger threads — no pricing, no calendar, no identity check.</p>
+      </div>
+      <div style="flex:1;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 5.5%;display:flex;flex-direction:column;gap:.9em">
+        <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="var(--teal-tint)"/><path d="M20 12v8l6 4" stroke="var(--teal)" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="20" cy="20" r="9" stroke="var(--teal)" stroke-width="2" fill="none"/></svg>
+        <div class="serif" style="font-weight:700;font-size:clamp(1.05rem,1.5vw,1.3rem)">Cost and fear block adoption</div>
+        <p class="small">Data load, not signal, is the real barrier. Over 90% of informal providers fear BIR registration and stay invisible.</p>
       </div>
     </div>
   </div>
-  <div style="margin-top:4%;font-size:clamp(.65rem,1vw,.82rem);color:var(--w300);text-align:center">
-    <span class="tag">Agent Network</span> Each agent manages 5–10 offline owners. 50 agents = 250–500 offline providers onboarded with zero tech adoption cost.
-    <span class="tag b" style="margin-left:8px">Boost &amp; Channels</span> Facebook, Messenger, Google SEO — free organic distribution per listing.
+  <div class="foot">
+    <span>This is not a skills gap. It is an access gap.</span>
+    <span class="page">02 / 16</span>
   </div>
-  <div class="snum">8 / 10</div>
 </section>
 
-<!-- ═══════════ SLIDE 9: ONBOARDING & BUSINESS MODEL ═══════════ -->
-<section class="slide">
-  <div class="kicker">Onboarding &amp; Business Model</div>
-  <h2>No BIR Form 2303. <span class="accent">No upfront cost. No smartphone required.</span></h2>
-  <ul class="bullets">
-    <li><em>3-Lane Progressive Formalization</em> — Lane 1: Phone + ID, capped payouts. Lane 2: 2-min Sworn Declaration, tax-free up to ₱250K/yr. Lane 3: BMBE registered, "Business Verified" badge, uncapped. Framed as <em>"Unlock more earnings."</em></li>
-    <li><em>Human Agent Network</em> — Tech-savvy youth manage profiles for offline owners. Revenue auto-split: <em>80% Owner / 10% Agent / 10% Platform.</em> Graduation Bonus: 3× monthly commission when owner goes independent.</li>
-    <li><em>Revenue Model</em> — 10% platform commission on digital escrow. 12% on cash. Category subsidies at 0–3% for transport and agri-labor. ₱0 listing fees. Scales with volume, not seller count.</li>
-  </ul>
-  <div class="stat-row">
-    <div class="stat"><b>80/10/10</b><span>Owner / Agent / Platform split</span></div>
-    <div class="stat"><b>₱0</b><span>Listing fees. Zero upfront cost.</span></div>
-    <div class="stat"><b>3×</b><span>Agent Graduation Bonus</span></div>
+<!-- ============ SLIDE 3 — TARGET MARKET ============ -->
+<section class="slide" id="s3">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag">03 · Market</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
   </div>
-  <div class="snum">9 / 10</div>
+  <div class="body" style="gap:4%">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.3em">
+      <h2 class="serif" style="font-size:clamp(1.6rem,2.9vw,2.4rem);font-weight:700;letter-spacing:-.01em">Skilled, informal, underserved.</h2>
+      <p class="small" style="font-size:clamp(.85rem,1.25vw,1.05rem);max-width:30em">Three groups, one shared condition: real skill, real demand, no digital trust infrastructure built for them.</p>
+      <div style="display:flex;flex-direction:column;gap:1em;margin-top:.4em">
+        <div style="display:flex;gap:1em;align-items:baseline">
+          <span class="mono serif" style="font-weight:700;color:var(--teal-deep);font-size:1.4rem;width:2.4em">70%</span>
+          <span class="small">of the target base operate fully informally</span>
+        </div>
+        <div style="display:flex;gap:1em;align-items:baseline">
+          <span class="mono serif" style="font-weight:700;color:var(--marigold);font-size:1.4rem;width:2.4em">0</span>
+          <span class="small">escrow-protected marketplaces exist outside Metro Manila</span>
+        </div>
+        <div style="display:flex;gap:1em;align-items:baseline">
+          <span class="mono serif" style="font-weight:700;color:var(--terracotta);font-size:1.4rem;width:2.4em">40%+</span>
+          <span class="small">lack a smartphone or reliable data load</span>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:2.6%;justify-content:center">
+      <div class="receipt" style="border-radius:6px;padding:4.5% 6%;display:flex;gap:1em;align-items:flex-start">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--teal-tint);flex-shrink:0;display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 15V9a2 2 0 012-2h10a2 2 0 012 2v6M6 7V4a2 2 0 012-2h2a2 2 0 012 2v3" stroke="var(--teal-deep)" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></div>
+        <div><div class="serif" style="font-weight:700;font-size:clamp(.95rem,1.3vw,1.12rem)">Service providers &amp; trade workers</div><div class="small">Carpenters, mechanics, tricycle drivers, beauticians — skilled, earning &lt;₱250K/yr, zero digital presence.</div></div>
+      </div>
+      <div class="receipt" style="border-radius:6px;padding:4.5% 6%;display:flex;gap:1em;align-items:flex-start">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--marigold-tint);flex-shrink:0;display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 6l1-3h12l1 3M3 6v8a1 1 0 001 1h10a1 1 0 001-1V6M3 6h12" stroke="var(--marigold)" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></div>
+        <div><div class="serif" style="font-weight:700;font-size:clamp(.95rem,1.3vw,1.12rem)">Local product sellers</div><div class="small">Lutong bahay vendors, hardware shops, crafts makers — stuck on unindexed Facebook posts, no booking tools.</div></div>
+      </div>
+      <div class="receipt" style="border-radius:6px;padding:4.5% 6%;display:flex;gap:1em;align-items:flex-start">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--terracotta-tint);flex-shrink:0;display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="6" r="3" stroke="var(--terracotta)" stroke-width="1.6" fill="none"/><path d="M3 16c0-3 2.5-5 6-5s6 2 6 5" stroke="var(--terracotta)" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></div>
+        <div><div class="serif" style="font-weight:700;font-size:clamp(.95rem,1.3vw,1.12rem)">Provincial buyers &amp; organizers</div><div class="small">Want a trusted provider, fair pricing, and payment protection they don't currently have.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <span>Reached without requiring a smartphone.</span>
+    <span class="page">03 / 16</span>
+  </div>
 </section>
 
-<!-- ═══════════ SLIDE 10: ROADMAP & METRICS ═══════════ -->
-<section class="slide">
-  <div class="kicker">Roadmap &amp; Metrics</div>
-  <h2>12 weeks. 4 phases. <span class="accent">One pilot launch.</span></h2>
+<!-- ============ SLIDE 4 — THREE PILLARS ============ -->
+<section class="slide" id="s4">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag">04 · Concept</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="align-items:center;gap:4%">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.1em">
+      <h2 class="serif" style="font-size:clamp(1.7rem,3vw,2.5rem);font-weight:700;letter-spacing:-.01em">Three pillars. One trust system.</h2>
+      <p class="lede" style="max-width:28em"><b>Marketplace</b> × <b>Escrow</b> × <b>Human Agents</b> — each one solving the part of the problem the others can't.</p>
+      <div style="display:flex;flex-direction:column;gap:.85em;margin-top:.6em">
+        <div style="display:flex;gap:.8em;align-items:flex-start"><span style="width:8px;height:8px;border-radius:50%;background:var(--teal);margin-top:.5em;flex-shrink:0"></span><span class="small"><b style="color:var(--ink)">Local Marketplace</b> — 28 categories, discovered by barangay and town.</span></div>
+        <div style="display:flex;gap:.8em;align-items:flex-start"><span style="width:8px;height:8px;border-radius:50%;background:var(--marigold);margin-top:.5em;flex-shrink:0"></span><span class="small"><b style="color:var(--ink)">Escrow Trust Layer</b> — money released only when both sides confirm. 0% ledger drift, by design.</span></div>
+        <div style="display:flex;gap:.8em;align-items:flex-start"><span style="width:8px;height:8px;border-radius:50%;background:var(--terracotta);margin-top:.5em;flex-shrink:0"></span><span class="small"><b style="color:var(--ink)">Human Agent Bridge</b> — youth agents onboard offline owners via SMS. Reaches feature phones. Splits 75/10/15.</span></div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 440 440" width="100%" style="max-width:440px" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="var(--line)" stroke-width="1.3">
+          <line x1="220" y1="220" x2="220" y2="70"/>
+          <line x1="220" y1="220" x2="365" y2="300"/>
+          <line x1="220" y1="220" x2="75" y2="300"/>
+        </g>
+        <!-- center -->
+        <circle cx="220" cy="220" r="58" fill="var(--sand)" stroke="var(--ink)" stroke-width="1.6"/>
+        <text x="220" y="215" text-anchor="middle" font-family="Fraunces, serif" font-weight="700" font-size="15" fill="var(--ink)">SERBIZYU</text>
+        <text x="220" y="232" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" letter-spacing="1" fill="var(--ink-soft)">TRUST CORE</text>
+        <!-- marketplace node -->
+        <circle cx="220" cy="70" r="46" fill="var(--teal-tint)" stroke="var(--teal)" stroke-width="1.6"/>
+        <path d="M220 55v13l8 5" stroke="var(--teal-deep)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <text x="220" y="98" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11.5" fill="var(--teal-deep)">MARKETPLACE</text>
+        <!-- escrow node -->
+        <circle cx="365" cy="300" r="46" fill="var(--marigold-tint)" stroke="var(--marigold)" stroke-width="1.6"/>
+        <rect x="352" y="288" width="26" height="18" rx="2" fill="none" stroke="#B4640F" stroke-width="2"/>
+        <path d="M357 288v-4a8 8 0 0116 0v4" fill="none" stroke="#B4640F" stroke-width="2"/>
+        <text x="365" y="328" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11.5" fill="#B4640F">ESCROW</text>
+        <!-- agent node -->
+        <circle cx="75" cy="300" r="46" fill="var(--terracotta-tint)" stroke="var(--terracotta)" stroke-width="1.6"/>
+        <circle cx="75" cy="290" r="7" fill="none" stroke="var(--terracotta)" stroke-width="2"/>
+        <path d="M62 312c0-8 6-13 13-13s13 5 13 13" fill="none" stroke="var(--terracotta)" stroke-width="2" stroke-linecap="round"/>
+        <text x="75" y="328" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11.5" fill="var(--terracotta)">AGENTS</text>
+      </svg>
+    </div>
+  </div>
+  <div class="foot">
+    <span>Marketplace × Escrow × Agents = trust for the province.</span>
+    <span class="page">04 / 16</span>
+  </div>
+</section>
 
-  <div class="flow-h" style="margin-top:3%;gap:clamp(2px,0.6vw,6px)">
-    <div class="fc" style="min-width:clamp(100px,16%,170px)"><div class="step">Phase 1</div><div class="desc">Foundations &amp;<br>Architecture</div><div style="font-size:clamp(.45rem,.65vw,.55rem);color:#57534e;margin-top:2px">Weeks 1–3</div></div>
-    <div class="fa">→</div>
-    <div class="fc" style="min-width:clamp(100px,16%,170px)"><div class="step">Phase 2</div><div class="desc">Marketplace &amp;<br>Escrow Ledger</div><div style="font-size:clamp(.45rem,.65vw,.55rem);color:#57534e;margin-top:2px">Weeks 4–6</div></div>
-    <div class="fa">→</div>
-    <div class="fc" style="min-width:clamp(100px,16%,170px)"><div class="step">Phase 3</div><div class="desc">Quick Deal &amp;<br>Agent Network</div><div style="font-size:clamp(.45rem,.65vw,.55rem);color:#57534e;margin-top:2px">Weeks 7–9</div></div>
-    <div class="fa">→</div>
-    <div class="fc" style="min-width:clamp(100px,16%,170px)"><div class="step">Phase 4</div><div class="desc">Deal-Chaining &amp;<br>Pilot Launch</div><div style="font-size:clamp(.45rem,.65vw,.55rem);color:#57534e;margin-top:2px">Weeks 10–12</div></div>
+<!-- ============ SLIDE 5 — HOW IT WORKS ============ -->
+<section class="slide" id="s5">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag">05 · Architecture</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
   </div>
-  <div style="display:flex;justify-content:space-between;margin-top:1.5%;padding:0 2%;font-size:clamp(.5rem,.7vw,.6rem);color:#57534e">
-    <span>G1: DB + SMS OTP</span><span>G2: 0% ledger drift</span><span>G3: 80/10/10 verified</span><span>G4: 50+ listings launch</span>
-  </div>
+  <div class="body" style="gap:4%">
+    <div style="flex:.82;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 380 420" width="100%" style="max-width:380px" xmlns="http://www.w3.org/2000/svg">
+        <!-- four doors row -->
+        <g font-family="Inter" font-size="9.5" font-weight="700">
+          <rect x="0" y="0" width="80" height="46" rx="7" fill="var(--teal-tint)" stroke="var(--teal)" stroke-width="1.4"/>
+          <text x="40" y="21" text-anchor="middle" fill="var(--teal-deep)">MOBILE</text>
+          <text x="40" y="34" text-anchor="middle" fill="var(--teal-deep)">APP</text>
 
-  <div class="stat-row">
-    <div class="stat"><b>≥ 2.0</b><span>Provider Liquidity<br>(bids per open request)</span></div>
-    <div class="stat"><b>50+</b><span>Onboarded Providers<br>(40% via Human Agents)</span></div>
-    <div class="stat"><b>0%</b><span>Escrow Ledger Drift<br>(double-entry verified)</span></div>
-    <div class="stat"><b>&lt; 48h</b><span>Dispute Resolution<br>(platform-driven evidence)</span></div>
+          <rect x="100" y="0" width="80" height="46" rx="7" fill="var(--marigold-tint)" stroke="var(--marigold)" stroke-width="1.4"/>
+          <text x="140" y="21" text-anchor="middle" fill="#B4640F">SMS</text>
+          <text x="140" y="34" text-anchor="middle" fill="#B4640F">FALLBACK</text>
+
+          <rect x="200" y="0" width="80" height="46" rx="7" fill="var(--terracotta-tint)" stroke="var(--terracotta)" stroke-width="1.4"/>
+          <text x="240" y="21" text-anchor="middle" fill="var(--terracotta)">BARANGAY</text>
+          <text x="240" y="34" text-anchor="middle" fill="var(--terracotta)">KIOSK</text>
+
+          <rect x="300" y="0" width="80" height="46" rx="7" fill="var(--teal-tint)" stroke="var(--teal)" stroke-width="1.4"/>
+          <text x="340" y="21" text-anchor="middle" fill="var(--teal-deep)">QUICK DEAL</text>
+          <text x="340" y="34" text-anchor="middle" fill="var(--teal-deep)">QR</text>
+        </g>
+        <!-- converge lines -->
+        <g stroke="var(--line)" stroke-width="1.3" fill="none">
+          <path d="M40,46 L190,92"/>
+          <path d="M140,46 L190,92"/>
+          <path d="M240,46 L190,92"/>
+          <path d="M340,46 L190,92"/>
+        </g>
+        <!-- core -->
+        <rect x="70" y="92" width="240" height="54" rx="8" fill="var(--sand)" stroke="var(--ink)" stroke-width="1.7"/>
+        <text x="190" y="114" text-anchor="middle" font-family="Fraunces, serif" font-weight="700" font-size="14" fill="var(--ink)">SERBIZYU CORE</text>
+        <text x="190" y="131" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="1" fill="var(--ink-soft)">MARKETPLACE · IDENTITY · SEARCH</text>
+        <!-- arrow down -->
+        <path d="M190,146 L190,178" stroke="var(--ink-soft)" stroke-width="1.6" marker-end="url(#ar1)"/>
+        <!-- escrow ledger -->
+        <rect x="55" y="180" width="270" height="60" rx="8" fill="var(--marigold-tint)" stroke="var(--marigold)" stroke-width="1.7"/>
+        <text x="190" y="205" text-anchor="middle" font-family="Fraunces, serif" font-weight="700" font-size="14" fill="#B4640F">ESCROW LEDGER</text>
+        <text x="190" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="1" fill="#8C5A17">DOUBLE-ENTRY · 0% DRIFT</text>
+        <!-- arrow down -->
+        <path d="M190,240 L190,272" stroke="var(--ink-soft)" stroke-width="1.6" marker-end="url(#ar1)"/>
+        <!-- payouts -->
+        <rect x="70" y="274" width="240" height="54" rx="8" fill="var(--teal-tint)" stroke="var(--teal)" stroke-width="1.7"/>
+        <text x="190" y="296" text-anchor="middle" font-family="Fraunces, serif" font-weight="700" font-size="13" fill="var(--teal-deep)">PAYOUTS + AGENTS</text>
+        <text x="190" y="313" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="1" fill="var(--teal-deep)">75 / 10 / 15 AUTO-SPLIT</text>
+        <defs>
+          <marker id="ar1" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--ink-soft)"/></marker>
+        </defs>
+        <!-- lifecycle strip -->
+        <g transform="translate(0,352)" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="600">
+          <rect x="0" y="0" width="80" height="34" rx="6" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="40" y="21" text-anchor="middle" fill="var(--ink)">PAY</text>
+          <path d="M84,17 L96,17" stroke="var(--line)" stroke-width="1.4" marker-end="url(#ar2)"/>
+          <rect x="100" y="0" width="80" height="34" rx="6" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="140" y="21" text-anchor="middle" fill="var(--ink)">HOLD</text>
+          <path d="M184,17 L196,17" stroke="var(--line)" stroke-width="1.4" marker-end="url(#ar2)"/>
+          <rect x="200" y="0" width="90" height="34" rx="6" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="245" y="21" text-anchor="middle" fill="var(--ink)" font-size="8.6">CONFIRM ×2</text>
+          <path d="M294,17 L302,17" stroke="var(--line)" stroke-width="1.4" marker-end="url(#ar2)"/>
+          <rect x="306" y="0" width="74" height="34" rx="6" fill="var(--teal-tint)" stroke="var(--teal)"/>
+          <text x="343" y="21" text-anchor="middle" fill="var(--teal-deep)">RELEASE</text>
+          <defs><marker id="ar2" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="var(--line)"/></marker></defs>
+        </g>
+      </svg>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.2em">
+      <h2 class="serif" style="font-size:clamp(1.6rem,2.9vw,2.4rem);font-weight:700;letter-spacing:-.01em">Four doors in. One escrow core.</h2>
+      <p class="lede" style="max-width:30em">Every entry point — app, SMS, kiosk, or a face-to-face QR scan — feeds the <b>same</b> Serbizyu Core and the <b>same</b> double-entry ledger. No side channel skips the trust layer.</p>
+      <div style="display:flex;flex-direction:column;gap:.7em;margin-top:.3em">
+        <div style="display:flex;gap:.8em;align-items:flex-start"><span class="mono" style="color:var(--teal-deep);font-weight:700;width:1.4em;flex-shrink:0">1</span><span class="small">Buyer pays → funds are <b style="color:var(--ink)">held</b>, never released to the servicer up front.</span></div>
+        <div style="display:flex;gap:.8em;align-items:flex-start"><span class="mono" style="color:var(--teal-deep);font-weight:700;width:1.4em;flex-shrink:0">2</span><span class="small">Both sides confirm completion — dual confirmation, not a single tap.</span></div>
+        <div style="display:flex;gap:.8em;align-items:flex-start"><span class="mono" style="color:var(--teal-deep);font-weight:700;width:1.4em;flex-shrink:0">3</span><span class="small">Escrow releases. Online, Xendit settles digitally. Offline, cash is recorded by the Cloud Truth Boundary the moment signal returns.</span></div>
+      </div>
+    </div>
   </div>
-  <div style="margin-top:2.5%;font-size:clamp(.6rem,.85vw,.75rem);color:var(--w500);text-align:center">
-    <span class="tag" style="font-size:.85em">Tagudin</span> Pilot. Expansion roadmap ready for post-academic phase.
+  <div class="foot">
+    <span>Four doors in, one escrow core that protects every peso.</span>
+    <span class="page">05 / 16</span>
   </div>
-  <div class="snum">10 / 10</div>
+</section>
+
+<!-- ============ SLIDE 6 — USE CASE 1: AGENT + SMS ============ -->
+<section class="slide" id="s6">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag" style="background:var(--marigold-tint);color:#B4640F">06 · Use Case 1</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="flex-direction:column;gap:1.8%">
+    <div>
+      <h2 class="serif" style="font-size:clamp(1.5rem,2.7vw,2.25rem);font-weight:700;letter-spacing:-.01em">Tatay Ben · Carpenter · Nokia 3310</h2>
+      <p class="small" style="font-size:clamp(.78rem,1.05vw,.94rem);max-width:44em;margin-top:.35em">No smartphone, no data — no problem. An agent brings him online, and Ben never touches an app.</p>
+    </div>
+    <div class="flow">
+      <div class="flow-step"><span class="fs-actor">Agent Kevin</span><span class="fs-title">Creates listing</span><span class="fs-desc">Agent drafts Ben's carpentry listing on his behalf, pricing and all.</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 40 20"><path d="M2 10h32M26 3l10 7-10 7" fill="none" stroke="var(--marigold)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow-step"><span class="fs-actor">Ben · SMS</span><span class="fs-title">Replies APPROVE</span><span class="fs-desc">One SMS reply activates the listing. No app install required.</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 40 20"><path d="M2 10h32M26 3l10 7-10 7" fill="none" stroke="var(--marigold)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow-step"><span class="fs-actor">Buyer</span><span class="fs-title">Pays into escrow</span><span class="fs-desc">Customer browses, books, and pays. Funds are held, not released.</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 40 20"><path d="M2 10h32M26 3l10 7-10 7" fill="none" stroke="var(--marigold)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow-step"><span class="fs-actor">Ben · SMS</span><span class="fs-title">Job + schedule</span><span class="fs-desc">Ben gets the job location and time by text — nothing else needed.</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 40 20"><path d="M2 10h32M26 3l10 7-10 7" fill="none" stroke="var(--marigold)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow-step" style="border-color:var(--marigold);background:var(--marigold-tint)"><span class="fs-actor" style="color:#B4640F">Both · SMS</span><span class="fs-title">Confirm → release</span><span class="fs-desc">Dual SMS confirmation releases escrow. Split: <b>75% Ben / 10% agent / 15% platform.</b></span></div>
+    </div>
+    <div class="qr-uc">
+      <span class="qr-ph"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#fff"/><rect x="8" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="17" width="8" height="8" fill="#1B2A28"/><rect x="66" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="75" y="17" width="8" height="8" fill="#1B2A28"/><rect x="8" y="66" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="75" width="8" height="8" fill="#1B2A28"/><g fill="#1B2A28"><rect x="46" y="10" width="6" height="6"/><rect x="58" y="16" width="6" height="6"/><rect x="46" y="28" width="6" height="6"/><rect x="70" y="46" width="6" height="6"/><rect x="82" y="52" width="6" height="6"/><rect x="46" y="46" width="6" height="6"/><rect x="46" y="58" width="6" height="6"/><rect x="58" y="70" width="6" height="6"/><rect x="46" y="82" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="82" y="82" width="6" height="6"/><rect x="58" y="82" width="6" height="6"/></g></svg></span>
+      <span>QR placeholder —<br>link: Agent Dashboard</span>
+    </div>
+  </div>
+  <div class="foot">
+    <span>A feature-phone carpenter is now a verified, paid provider — through SMS alone.</span>
+    <span class="page">06 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 7 — USE CASE 2: DIRECT OFFER + ESCROW ============ -->
+<section class="slide" id="s7">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag">07 · Use Case 2</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="flex-direction:column;gap:1.8%">
+    <div>
+      <h2 class="serif" style="font-size:clamp(1.5rem,2.7vw,2.25rem);font-weight:700;letter-spacing:-.01em">Ate Grace · Baker · Smartphone</h2>
+      <p class="small" style="font-size:clamp(.78rem,1.05vw,.94rem);max-width:44em;margin-top:.35em">The instant-checkout path — for the servicer who already has a phone and wants speed.</p>
+    </div>
+    <div class="flow">
+      <div class="flow-step"><span class="fs-actor">Grace</span><span class="fs-title">Posts listing</span><span class="fs-desc">Photos, fixed price or hidden quote, live in one of 28 categories.</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 40 20"><path d="M2 10h32M26 3l10 7-10 7" fill="none" stroke="var(--teal)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow-step"><span class="fs-actor">Buyer</span><span class="fs-title">Checks out instantly</span><span class="fs-desc">Browses, picks Grace's listing, pays — funds go straight into escrow.</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 40 20"><path d="M2 10h32M26 3l10 7-10 7" fill="none" stroke="var(--teal)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow-step"><span class="fs-actor">Grace</span><span class="fs-title">Fulfills & marks done</span><span class="fs-desc">Bakes the order, marks it complete in-app.</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 40 20"><path d="M2 10h32M26 3l10 7-10 7" fill="none" stroke="var(--teal)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow-step" style="border-color:var(--teal);background:var(--teal-tint)"><span class="fs-actor" style="color:var(--teal-deep)">Buyer confirms</span><span class="fs-title">Escrow releases</span><span class="fs-desc">3-day protection window, then auto-release. Category average keeps hidden-quote pricing fair.</span></div>
+    </div>
+    <div class="qr-uc">
+      <span class="qr-ph"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#fff"/><rect x="8" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="17" width="8" height="8" fill="#1B2A28"/><rect x="66" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="75" y="17" width="8" height="8" fill="#1B2A28"/><rect x="8" y="66" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="75" width="8" height="8" fill="#1B2A28"/><g fill="#1B2A28"><rect x="46" y="10" width="6" height="6"/><rect x="58" y="16" width="6" height="6"/><rect x="46" y="28" width="6" height="6"/><rect x="70" y="46" width="6" height="6"/><rect x="82" y="52" width="6" height="6"/><rect x="46" y="46" width="6" height="6"/><rect x="46" y="58" width="6" height="6"/><rect x="58" y="70" width="6" height="6"/><rect x="46" y="82" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="82" y="82" width="6" height="6"/><rect x="58" y="82" width="6" height="6"/></g></svg></span>
+      <span>QR placeholder —<br>link: Product Listing</span>
+    </div>
+  </div>
+  <div class="foot">
+    <span>Smartphone sellers get instant checkout + escrow protection, with fair pricing.</span>
+    <span class="page">07 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 8 — USE CASE 3: DEAL-CHAINING ============ -->
+<section class="slide" id="s8">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag" style="background:var(--terracotta-tint);color:var(--terracotta)">08 · Use Case 3</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="gap:4%">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.1em">
+      <h2 class="serif" style="font-size:clamp(1.5rem,2.7vw,2.25rem);font-weight:700;letter-spacing:-.01em">Barangay Fiesta · Multi-Party Event</h2>
+      <p class="lede" style="max-width:29em">One organizer, one budget, <b>many</b> independent providers. Caterer, photographer, sound system — each their own escrow slot.</p>
+      <div style="display:flex;flex-direction:column;gap:.7em;margin-top:.3em">
+        <div style="display:flex;gap:.8em;align-items:flex-start"><span style="width:8px;height:8px;border-radius:50%;background:var(--terracotta);margin-top:.5em;flex-shrink:0"></span><span class="small">Organizer creates a deal, sets one parent budget, adds slots.</span></div>
+        <div style="display:flex;gap:.8em;align-items:flex-start"><span style="width:8px;height:8px;border-radius:50%;background:var(--terracotta);margin-top:.5em;flex-shrink:0"></span><span class="small">Each provider accepts their own slot and confirms their own rate.</span></div>
+        <div style="display:flex;gap:.8em;align-items:flex-start"><span style="width:8px;height:8px;border-radius:50%;background:var(--terracotta);margin-top:.5em;flex-shrink:0"></span><span class="small"><b style="color:var(--ink)">One checkout</b> splits across slots — each released <b style="color:var(--ink)">independently</b> when its own work is done.</span></div>
+      </div>
+      <div class="qr-uc" style="margin-top:.4em">
+        <span class="qr-ph"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#fff"/><rect x="8" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="17" width="8" height="8" fill="#1B2A28"/><rect x="66" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="75" y="17" width="8" height="8" fill="#1B2A28"/><rect x="8" y="66" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="75" width="8" height="8" fill="#1B2A28"/><g fill="#1B2A28"><rect x="46" y="10" width="6" height="6"/><rect x="58" y="16" width="6" height="6"/><rect x="46" y="28" width="6" height="6"/><rect x="70" y="46" width="6" height="6"/><rect x="82" y="52" width="6" height="6"/><rect x="46" y="46" width="6" height="6"/><rect x="46" y="58" width="6" height="6"/><rect x="58" y="70" width="6" height="6"/><rect x="46" y="82" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="82" y="82" width="6" height="6"/><rect x="58" y="82" width="6" height="6"/></g></svg></span>
+        <span>QR placeholder —<br>link: Deal Creation</span>
+      </div>
+    </div>
+    <div style="flex:.9;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 340 340" width="100%" style="max-width:340px" xmlns="http://www.w3.org/2000/svg">
+        <rect x="110" y="6" width="120" height="46" rx="8" fill="var(--sand)" stroke="var(--ink)" stroke-width="1.6"/>
+        <text x="170" y="26" text-anchor="middle" font-family="Fraunces, serif" font-weight="700" font-size="12" fill="var(--ink)">ORGANIZER</text>
+        <text x="170" y="41" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8.5" fill="var(--ink-soft)">ONE PAYMENT</text>
+        <path d="M170,52 L170,76" stroke="var(--ink-soft)" stroke-width="1.4"/>
+        <rect x="90" y="78" width="160" height="30" rx="15" fill="var(--terracotta-tint)" stroke="var(--terracotta)" stroke-width="1.4"/>
+        <text x="170" y="98" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="10" fill="var(--terracotta)">PARENT BUDGET NODE</text>
+        <g stroke="var(--line)" stroke-width="1.3" fill="none">
+          <path d="M120,108 L60,160"/>
+          <path d="M170,108 L170,160"/>
+          <path d="M220,108 L280,160"/>
+        </g>
+        <!-- slot 1 -->
+        <rect x="10" y="162" width="100" height="62" rx="8" fill="var(--paper)" stroke="var(--line)" stroke-width="1.4"/>
+        <text x="60" y="184" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11" fill="var(--ink)">Caterer</text>
+        <text x="60" y="199" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="var(--teal-deep)">SLOT ESCROW</text>
+        <circle cx="60" cy="212" r="4" fill="var(--teal)"/>
+        <!-- slot 2 -->
+        <rect x="120" y="162" width="100" height="62" rx="8" fill="var(--paper)" stroke="var(--line)" stroke-width="1.4"/>
+        <text x="170" y="184" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11" fill="var(--ink)">Photographer</text>
+        <text x="170" y="199" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="var(--marigold)">PENDING</text>
+        <circle cx="170" cy="212" r="4" fill="var(--marigold)"/>
+        <!-- slot 3 -->
+        <rect x="230" y="162" width="100" height="62" rx="8" fill="var(--paper)" stroke="var(--line)" stroke-width="1.4"/>
+        <text x="280" y="184" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11" fill="var(--ink)">Sound System</text>
+        <text x="280" y="199" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="var(--teal-deep)">SLOT ESCROW</text>
+        <circle cx="280" cy="212" r="4" fill="var(--teal)"/>
+        <text x="170" y="256" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="var(--ink-soft)" letter-spacing=".5">EACH SLOT RELEASES ON ITS OWN TIMELINE</text>
+      </svg>
+    </div>
+  </div>
+  <div class="foot">
+    <span>One payment, many providers, each paid fairly on their own timeline.</span>
+    <span class="page">08 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 9 — USE CASE 4: QUICK DEAL QR ============ -->
+<section class="slide" id="s9">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag" style="background:var(--terracotta-tint);color:var(--terracotta)">09 · Use Case 4</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="flex-direction:column;gap:1.8%">
+    <div>
+      <h2 class="serif" style="font-size:clamp(1.5rem,2.7vw,2.25rem);font-weight:700;letter-spacing:-.01em">Palengke · Face-to-Face · No Internet Needed</h2>
+      <p class="small" style="font-size:clamp(.78rem,1.05vw,.94rem);max-width:46em;margin-top:.35em">Air-gapped by design — a fair, recorded deal happens even with zero signal at the moment of sale.</p>
+    </div>
+    <div class="flow">
+      <div class="flow-step"><span class="fs-actor">Seller</span><span class="fs-title">Shows QR</span><span class="fs-desc">Animated fountain-code QR, on phone or kiosk screen.</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 40 20"><path d="M2 10h32M26 3l10 7-10 7" fill="none" stroke="var(--terracotta)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow-step"><span class="fs-actor">Buyer</span><span class="fs-title">Scans QR</span><span class="fs-desc">Deal screen opens instantly — no app switch, no typing.</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 40 20"><path d="M2 10h32M26 3l10 7-10 7" fill="none" stroke="var(--terracotta)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow-step"><span class="fs-actor">Both</span><span class="fs-title">Negotiate, ≤3 rounds</span><span class="fs-desc">Counter-offer stepper. Confirm by app tap or SMS reply.</span></div>
+      <div class="flow-arrow"><svg viewBox="0 0 40 20"><path d="M2 10h32M26 3l10 7-10 7" fill="none" stroke="var(--terracotta)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow-step" style="border-color:var(--terracotta);background:var(--terracotta-tint)"><span class="fs-actor" style="color:var(--terracotta)">Deal locks</span><span class="fs-title">Syncs on reconnect</span><span class="fs-desc">Cash offline or escrow online — the Cloud Truth Boundary governs every peso either way.</span></div>
+    </div>
+    <div class="qr-uc">
+      <span class="qr-ph"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#fff"/><rect x="8" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="17" width="8" height="8" fill="#1B2A28"/><rect x="66" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="75" y="17" width="8" height="8" fill="#1B2A28"/><rect x="8" y="66" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="75" width="8" height="8" fill="#1B2A28"/><g fill="#1B2A28"><rect x="46" y="10" width="6" height="6"/><rect x="58" y="16" width="6" height="6"/><rect x="46" y="28" width="6" height="6"/><rect x="70" y="46" width="6" height="6"/><rect x="82" y="52" width="6" height="6"/><rect x="46" y="46" width="6" height="6"/><rect x="46" y="58" width="6" height="6"/><rect x="58" y="70" width="6" height="6"/><rect x="46" y="82" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="82" y="82" width="6" height="6"/><rect x="58" y="82" width="6" height="6"/></g></svg></span>
+      <span>QR placeholder —<br>link: Quick Deal Flow</span>
+    </div>
+  </div>
+  <div class="foot">
+    <span>Even with no internet, a fair, recorded deal happens in seconds.</span>
+    <span class="page">09 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 10 — COMPARISON: WHY SERBIZYU ============ -->
+<section class="slide" id="s10">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag">10 · Comparison</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="flex-direction:column;gap:2%">
+    <h2 class="serif" style="font-size:clamp(1.5rem,2.7vw,2.25rem);font-weight:700;letter-spacing:-.01em">No platform does what Serbizyu does — for the province.</h2>
+    <div style="flex:1;display:flex;gap:2.4%;min-height:0">
+      <table class="ctable">
+        <thead>
+          <tr>
+            <th style="width:22%">Capability</th>
+            <th style="width:19%">FB Marketplace</th>
+            <th style="width:19%">Carousell</th>
+            <th style="width:19%">Grab</th>
+            <th style="width:21%"><b style="color:var(--teal-deep)">Serbizyu</b></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">Escrow protection</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+            <td class="yes">Built-in</td>
+            <td class="yes hero">Dual-confirm</td>
+          </tr>
+          <tr>
+            <td class="row-label">Offline / SMS access</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+            <td class="yes hero">SMS + Kiosk</td>
+          </tr>
+          <tr>
+            <td class="row-label">Human Agent onboarding</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+            <td class="yes hero">80/10/10 split</td>
+          </tr>
+          <tr>
+            <td class="row-label">Multi-party deal-chaining</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+            <td class="yes hero">Parent budget</td>
+          </tr>
+          <tr>
+            <td class="row-label">Provincial geo-focus</td>
+            <td class="no">✗</td>
+            <td class="no">Metro-centric</td>
+            <td class="no">Metro-only</td>
+            <td class="yes hero">Tagudin-first</td>
+          </tr>
+          <tr>
+            <td class="row-label">No BIR up front</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+            <td class="yes hero">3-lane ramp</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:1.2em;margin-top:1%">
+      <span class="badge-chip">No provincial competitor offers all four entry doors</span>
+      <span class="badge-chip">Escrow is the core, not an add-on</span>
+    </div>
+  </div>
+  <div class="foot">
+    <span>Not a better Facebook. A different category entirely.</span>
+    <span class="page">10 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 11 — GROWTH & PROJECTIONS ============ -->
+<section class="slide" id="s11">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag">11 · Growth</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="gap:4%">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.1em">
+      <h2 class="serif" style="font-size:clamp(1.5rem,2.7vw,2.25rem);font-weight:700;letter-spacing:-.01em">Starting in Tagudin. Built to scale anywhere.</h2>
+      <p class="lede" style="max-width:30em">A network flywheel powered by <b>human agents</b> — each one bringing 5–10 offline providers online at near-zero tech cost.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5em;margin-top:.4em">
+        <div style="background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 6%">
+          <div class="mono" style="font-size:clamp(.55rem,.72vw,.64rem);color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5em">Market Expansion</div>
+          <div class="small" style="line-height:1.6">
+            <b style="color:var(--ink)">Pilot</b> — Tagudin, 50+ providers<br>
+            <b style="color:var(--ink)">6 months</b> — 3 towns, 200+ providers<br>
+            <b style="color:var(--ink)">12 months</b> — Ilocos Sur, 500+ providers<br>
+            <b style="color:var(--teal-deep)">Beyond</b> — Any province. Place-agnostic.
+          </div>
+        </div>
+        <div style="background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 6%">
+          <div class="mono" style="font-size:clamp(.55rem,.72vw,.64rem);color:var(--marigold);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5em">Revenue at Scale</div>
+          <div class="small" style="line-height:1.6">
+            <b style="color:var(--ink)">500 providers</b> × ₱5K avg/month<br>
+            = ₱2.5M monthly volume<br>
+            <b style="color:var(--marigold)">10% platform fee</b> = ₱250K/mo<br>
+            <b style="color:var(--ink)">1,000 providers</b> = ₱500K/mo
+          </div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-pill"><div class="sp-n">50</div><div class="sp-l">Agents at pilot launch</div></div>
+        <div class="stat-pill"><div class="sp-n">250–500</div><div class="sp-l">Offline providers via agents</div></div>
+        <div class="stat-pill"><div class="sp-n">₱0</div><div class="sp-l">Listing fees. Zero upfront.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <span>Agents are the growth engine — not paid ads.</span>
+    <span class="page">11 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 12 — ONBOARDING & BUSINESS MODEL ============ -->
+<section class="slide" id="s12">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag" style="background:var(--marigold-tint);color:#B4640F">12 · Model</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="flex-direction:column;gap:2%">
+    <h2 class="serif" style="font-size:clamp(1.5rem,2.7vw,2.25rem);font-weight:700;letter-spacing:-.01em">No BIR form. No upfront cost. No smartphone required.</h2>
+    <div style="display:flex;gap:2.4%;flex:1;min-height:0">
+      <div style="flex:1;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 5.5%;display:flex;flex-direction:column;gap:.7em">
+        <div class="mono" style="font-size:clamp(.55rem,.7vw,.6rem);color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.06em">Lane 1 · Starter</div>
+        <div class="serif" style="font-weight:700;font-size:clamp(.9rem,1.2vw,1.05rem);color:var(--ink)">Phone + ID verified</div>
+        <p class="small">Capped payouts. Instant onboarding. No tax paperwork. Best for low-volume sellers testing the platform.</p>
+      </div>
+      <div style="flex:1;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 5.5%;display:flex;flex-direction:column;gap:.7em">
+        <div class="mono" style="font-size:clamp(.55rem,.7vw,.6rem);color:var(--marigold);font-weight:700;text-transform:uppercase;letter-spacing:.06em">Lane 2 · Rising</div>
+        <div class="serif" style="font-weight:700;font-size:clamp(.9rem,1.2vw,1.05rem);color:var(--ink)">Sworn declaration</div>
+        <p class="small">2-minute form. Tax-free up to ₱250K/yr (BIR threshold). Unlocks higher payout limits. 70% of providers qualify.</p>
+      </div>
+      <div style="flex:1;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 5.5%;display:flex;flex-direction:column;gap:.7em">
+        <div class="mono" style="font-size:clamp(.55rem,.7vw,.6rem);color:var(--teal-deep);font-weight:700;text-transform:uppercase;letter-spacing:.06em">Lane 3 · Pro</div>
+        <div class="serif" style="font-weight:700;font-size:clamp(.9rem,1.2vw,1.05rem);color:var(--ink)">BMBE registered</div>
+        <p class="small">"Business Verified" badge. Uncapped payouts. BIR-registered. Framed as <b>"Unlock more earnings."</b></p>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-pill"><div class="sp-n">10%</div><div class="sp-l">Escrow commission (digital)</div></div>
+      <div class="stat-pill"><div class="sp-n">12%</div><div class="sp-l">Cash commission (offline)</div></div>
+      <div class="stat-pill"><div class="sp-n">0–3%</div><div class="sp-l">Transport / agri subsidy</div></div>
+      <div class="stat-pill"><div class="sp-n">80/10/10</div><div class="sp-l">Owner / Agent / Platform</div></div>
+    </div>
+  </div>
+  <div class="foot">
+    <span>Progressive formalization — not forced compliance.</span>
+    <span class="page">12 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 13 — TECHNOLOGY STACK ============ -->
+<section class="slide" id="s13">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag">13 · Technology</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="flex-direction:column;gap:2%">
+    <h2 class="serif" style="font-size:clamp(1.5rem,2.7vw,2.25rem);font-weight:700;letter-spacing:-.01em">Built for offline-first. Powered by modern web.</h2>
+    <div style="display:flex;gap:2.4%;flex:1;min-height:0">
+      <div style="flex:1;display:flex;flex-direction:column;gap:2%">
+        <div style="background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 6%;flex:1">
+          <div class="mono" style="font-size:clamp(.52rem,.68vw,.6rem);color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5em">Frontend</div>
+          <div class="badges">
+            <span class="badge-chip">Laravel + Inertia</span>
+            <span class="badge-chip">Svelte 5</span>
+            <span class="badge-chip">Tailwind CSS</span>
+            <span class="badge-chip">PWA-ready</span>
+          </div>
+          <div class="small" style="margin-top:.7em">Responsive web app that works on low-end smartphones. Service workers for offline-capable Quick Deal flows.</div>
+        </div>
+        <div style="background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 6%;flex:1">
+          <div class="mono" style="font-size:clamp(.52rem,.68vw,.6rem);color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5em">Escrow Ledger</div>
+          <div class="badges">
+            <span class="badge-chip">MySQL</span>
+            <span class="badge-chip">Double-entry</span>
+            <span class="badge-chip">Xendit API</span>
+          </div>
+          <div class="small" style="margin-top:.7em">Every transaction logged as debit/credit pair. 0% drift by design. Offline cash recorded on reconnect via Cloud Truth Boundary.</div>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2%">
+        <div style="background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 6%;flex:1">
+          <div class="mono" style="font-size:clamp(.52rem,.68vw,.6rem);color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5em">Backend</div>
+          <div class="badges">
+            <span class="badge-chip">PHP 8.x</span>
+            <span class="badge-chip">Laravel</span>
+            <span class="badge-chip">RESTful API</span>
+            <span class="badge-chip">SMS Gateway</span>
+          </div>
+          <div class="small" style="margin-top:.7em">API-first architecture. SMS integration with Semaphore for feature-phone users. Queue workers for async escrow release.</div>
+        </div>
+        <div style="background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5% 6%;flex:1">
+          <div class="mono" style="font-size:clamp(.52rem,.68vw,.6rem);color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5em">Security &amp; AI</div>
+          <div class="badges">
+            <span class="badge-chip">K-Means + BGE</span>
+            <span class="badge-chip">OTP Auth</span>
+            <span class="badge-chip">Rate limiting</span>
+          </div>
+          <div class="small" style="margin-top:.7em">K-Means for provider categorization. BGE embeddings for smart search. OTP ensures every identity is phone-verified.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <span>Tech chosen for reliability, reach, and provincial connectivity.</span>
+    <span class="page">13 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 14 — ROADMAP ============ -->
+<section class="slide" id="s14">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag" style="background:var(--teal-tint);color:var(--teal-deep)">14 · Roadmap</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="flex-direction:column;gap:2%">
+    <h2 class="serif" style="font-size:clamp(1.5rem,2.7vw,2.25rem);font-weight:700;letter-spacing:-.01em">12 weeks. 4 phases. One pilot launch.</h2>
+    <div class="phase-rail">
+      <div class="phase">
+        <div class="phase-bar"><i style="width:100%;background:var(--teal)"></i></div>
+        <div class="ph-no">PHASE 1</div>
+        <div class="ph-title">Foundations &amp; Architecture</div>
+        <div class="ph-desc">Database schema, double-entry ledger, SMS gateway integration, identity OTP, CI/CD pipeline. Core escrow logic verified for 0% drift.</div>
+        <div class="mono" style="font-size:clamp(.5rem,.65vw,.58rem);color:#8C8266">Weeks 1–3</div>
+      </div>
+      <div class="phase">
+        <div class="phase-bar"><i style="width:100%;background:var(--marigold)"></i></div>
+        <div class="ph-no">PHASE 2</div>
+        <div class="ph-title">Marketplace &amp; Escrow Ledger</div>
+        <div class="ph-desc">28 service categories, listing CRUD, search &amp; browse, checkout with escrow hold, dual-confirm release flow. Xendit sandbox.</div>
+        <div class="mono" style="font-size:clamp(.5rem,.65vw,.58rem);color:#8C8266">Weeks 4–6</div>
+      </div>
+      <div class="phase">
+        <div class="phase-bar"><i style="width:100%;background:var(--terracotta)"></i></div>
+        <div class="ph-no">PHASE 3</div>
+        <div class="ph-title">Quick Deal &amp; Agent Network</div>
+        <div class="ph-desc">Fountain-code QR, air-gapped negotiation, agent dashboard, SMS listing approval, 80/10/10 auto-split. Agent referral tracking.</div>
+        <div class="mono" style="font-size:clamp(.5rem,.65vw,.58rem);color:#8C8266">Weeks 7–9</div>
+      </div>
+      <div class="phase">
+        <div class="phase-bar"><i style="width:100%;background:var(--teal-deep)"></i></div>
+        <div class="ph-no">PHASE 4</div>
+        <div class="ph-title">Deal-Chaining &amp; Pilot Launch</div>
+        <div class="ph-desc">Multi-slot parent budget, per-slot independent release, barangay onboarding drive. Live in Tagudin with 50+ providers.</div>
+        <div class="mono" style="font-size:clamp(.5rem,.65vw,.58rem);color:#8C8266">Weeks 10–12</div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-pill"><div class="sp-n">≥ 2.0</div><div class="sp-l">Provider liquidity ratio</div></div>
+      <div class="stat-pill"><div class="sp-n">50+</div><div class="sp-l">Onboarded providers</div></div>
+      <div class="stat-pill"><div class="sp-n">0%</div><div class="sp-l">Ledger drift verified</div></div>
+      <div class="stat-pill"><div class="sp-n">&lt; 48h</div><div class="sp-l">Dispute resolution</div></div>
+    </div>
+  </div>
+  <div class="foot">
+    <span>Tagudin pilot launch is the north star.</span>
+    <span class="page">14 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 15 — TEAM ============ -->
+<section class="slide" id="s15">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag">15 · Team</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="align-items:center;justify-content:center;gap:3%">
+    <div style="flex:1;display:flex;flex-direction:column;gap:1em;justify-content:center">
+      <h2 class="serif" style="font-size:clamp(1.5rem,2.7vw,2.25rem);font-weight:700;letter-spacing:-.01em">The team behind Serbizyu.</h2>
+      <p class="lede" style="max-width:26em">BSIT 4B — CCSIT 215 Project Management. <b>One vision:</b> digital trust infrastructure <b>for every province.</b></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1em;margin-top:.4em">
+        <div class="receipt" style="border-radius:6px;padding:4% 5%;display:flex;gap:.8em;align-items:center">
+          <div style="width:38px;height:38px;border-radius:50%;background:var(--teal-tint);flex-shrink:0;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:700;color:var(--teal-deep);font-size:.9rem">DS</div>
+          <div><div class="serif" style="font-weight:700;font-size:clamp(.7rem,.9vw,.82rem)">David Datu N. Sarmiento</div><div class="small" style="font-size:clamp(.5rem,.65vw,.6rem)">Lead Developer · Architecture</div></div>
+        </div>
+        <div class="receipt" style="border-radius:6px;padding:4% 5%;display:flex;gap:.8em;align-items:center">
+          <div style="width:38px;height:38px;border-radius:50%;background:var(--marigold-tint);flex-shrink:0;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:700;color:var(--marigold);font-size:.9rem">CL</div>
+          <div><div class="serif" style="font-weight:700;font-size:clamp(.7rem,.9vw,.82rem)">Christine M. Lopez</div><div class="small" style="font-size:clamp(.5rem,.65vw,.6rem)">Research · Documentation</div></div>
+        </div>
+        <div class="receipt" style="border-radius:6px;padding:4% 5%;display:flex;gap:.8em;align-items:center">
+          <div style="width:38px;height:38px;border-radius:50%;background:var(--terracotta-tint);flex-shrink:0;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:700;color:var(--terracotta);font-size:.9rem">JP</div>
+          <div><div class="serif" style="font-weight:700;font-size:clamp(.7rem,.9vw,.82rem)">Jaypee G. Pagaduan</div><div class="small" style="font-size:clamp(.5rem,.65vw,.6rem)">UX · Testing · Deployment</div></div>
+        </div>
+        <div class="receipt" style="border-radius:6px;padding:4% 5%;display:flex;gap:.8em;align-items:center">
+          <div style="width:38px;height:38px;border-radius:50%;background:var(--teal-tint);flex-shrink:0;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:700;color:var(--teal-deep);font-size:.9rem">PJ</div>
+          <div><div class="serif" style="font-weight:700;font-size:clamp(.7rem,.9vw,.82rem)">Prince John Vidaña</div><div class="small" style="font-size:clamp(.5rem,.65vw,.6rem)">Marketing · Stakeholder Liaison</div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.8em;align-items:center;margin-top:.4em">
+        <span class="badge-chip">BSIT 4B</span>
+        <span class="badge-chip">ISPSC Tagudin</span>
+        <span class="badge-chip">CCSIT 215</span>
+      </div>
+    </div>
+    <div style="flex:.7;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 340 340" width="100%" style="max-width:340px" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="170" cy="170" r="155" fill="none" stroke="var(--line)" stroke-width="1.2" stroke-dasharray="2 6"/>
+        <circle cx="170" cy="170" r="120" fill="var(--teal-tint)" stroke="var(--teal)" stroke-width="1.4"/>
+        <text x="170" y="140" text-anchor="middle" font-family="Fraunces, serif" font-weight="700" font-size="22" fill="var(--teal-deep)">4</text>
+        <text x="170" y="162" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="600" font-size="12" fill="var(--ink-soft)">TEAM</text>
+        <text x="170" y="182" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="var(--ink-soft)">MEMBERS</text>
+        <text x="170" y="260" text-anchor="middle" font-family="Fraunces, serif" font-weight="600" font-size="15" fill="var(--ink)">ISPSC TAGUDIN</text>
+        <text x="170" y="282" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--teal-deep)" letter-spacing="1" font-weight="600">BSIT 4B · 2026</text>
+      </svg>
+    </div>
+  </div>
+  <div class="foot">
+    <span>BSIT 4B · ISPSC Tagudin · CCSIT 215 Project Management</span>
+    <span class="page">15 / 16</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 16 — CLOSING / THANK YOU ============ -->
+<section class="slide" id="s16">
+  <div class="eyebrow">
+    <div class="eyebrow-left"><span class="slide-tag" style="background:var(--teal-tint);color:var(--teal-deep)">16 · Closing</span></div>
+    <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
+  </div>
+  <div class="body" style="align-items:center;justify-content:center;flex-direction:column;gap:2em;text-align:center">
+    <div class="mono" style="font-size:clamp(.72rem,1.05vw,.9rem);color:var(--marigold);letter-spacing:.14em;text-transform:uppercase;font-weight:700">Bayanihan Street, Realized</div>
+    <div>
+      <h2 class="serif" style="font-size:clamp(2rem,4vw,3.8rem);font-weight:700;letter-spacing:-.02em;line-height:1.08;color:var(--ink)">
+        A trust layer for<br>
+        <span style="color:var(--teal-deep)">the provincial economy.</span>
+      </h2>
+    </div>
+    <p class="lede" style="max-width:30em;text-align:center">
+      Serbizyu is not just a marketplace.<br>
+      It is <b>escrow infrastructure</b> for the millions of Filipinos<br>
+      who have skills, products, and ambition —<br>
+      but no digital trust system built for them.
+    </p>
+    <div style="display:flex;gap:1.5em;margin-top:.6em">
+      <span class="badge-chip" style="font-size:clamp(.6rem,.8vw,.72rem)">Tagudin, Ilocos Sur</span>
+      <span class="badge-chip" style="font-size:clamp(.6rem,.8vw,.72rem)">July 2026</span>
+      <span class="badge-chip" style="font-size:clamp(.6rem,.8vw,.72rem)">Thank you</span>
+    </div>
+    <div style="position:absolute;bottom:12%;left:0;right:0;text-align:center;opacity:.3;pointer-events:none;font-family:'Fraunces',serif;font-size:clamp(4rem,10vw,8rem);font-weight:800;color:var(--teal);line-height:1">SERBIZYU</div>
+  </div>
+  <div class="foot">
+    <span>Questions? — sarmiento.david@ispsc.edu.ph</span>
+    <span class="page">16 / 16</span>
+  </div>
 </section>
 
 </div>
-
-<div class="hint">← → arrow keys &nbsp;|&nbsp; click to advance</div>
-
+<div class="progress" id="progressBar" style="width:8.33%"></div>
+<div class="hint">← → arrow keys · click to advance</div>
 <script>
 (function(){
   const slides=document.querySelectorAll('.slide');let idx=0;
-  function show(i){slides.forEach(s=>s.classList.remove('on'));slides[i].classList.add('on');idx=i}
+  const bar=document.getElementById('progressBar');
+  function show(i){slides.forEach(s=>s.classList.remove('on'));slides[i].classList.add('on');idx=i;bar.style.width=((i+1)/slides.length*100)+'%'}
   document.addEventListener('keydown',e=>{
     if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();show(Math.min(idx+1,slides.length-1))}
     if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();show(Math.max(idx-1,0))}
