@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Speaker Notes / Script (read-through)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--g400:#4ade80;--w300:#d6d3d1;--w500:#78716c}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0c0a09;color:#fafaf9;overflow:hidden}
+.deck{width:100vw;height:100vh;display:grid;place-items:center}
+.slide{width:min(96vw,177.8vh);aspect-ratio:16/9;background:#15130f;border:1px solid #292524;border-radius:20px;padding:4% 6%;display:none;flex-direction:column;position:relative;overflow:hidden}
+.slide.on{display:flex;animation:in .3s ease}
+@keyframes in{from{opacity:0}to{opacity:1}}
+.bar{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #292524;padding-bottom:2%;margin-bottom:3%}
+.no{font-family:'Plus Jakarta Sans';font-size:clamp(1.4rem,3vw,2.4rem);color:var(--g400);font-weight:800}
+.title{font-family:'Plus Jakarta Sans';font-size:clamp(1.3rem,2.6vw,2.1rem);font-weight:700;color:#fafaf9}
+.script{font-size:clamp(.95rem,1.7vw,1.4rem);line-height:1.62;color:var(--w300);overflow-y:auto;padding-right:8px}
+.script p{margin-bottom:1.1em}
+.script b{color:var(--g400);font-weight:700}
+.script .key{display:inline-block;margin-top:.4em;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:var(--g400);padding:.2em .7em;border-radius:8px;font-size:.85em;font-weight:600}
+.tip{position:absolute;bottom:3.5%;left:6%;right:6%;display:flex;gap:10px;align-items:center;color:#a8a29e;font-size:clamp(.6rem,1vw,.78rem);border-top:1px dashed #292524;padding-top:1.6%}
+.tip .badge{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fbbf24;padding:.15em .6em;border-radius:6px;font-weight:600;white-space:nowrap}
+.hint{position:fixed;bottom:14px;right:18px;color:#57534e;font-size:.72rem;z-index:100}
+@media(max-width:768px){
+  body{overflow-y:auto}
+  .deck{display:block}
+  .slide{width:100vw;min-height:100vh;aspect-ratio:auto;border-radius:0;padding:8% 6% 16%;justify-content:flex-start;overflow-y:auto}
+  .slide.on{display:flex}
+  .script{font-size:clamp(.95rem,4vw,1.25rem)}
+  .tip{position:static;margin-top:18px;border-top:1px dashed #292524;padding-top:14px}
+  .hint{display:none}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- 1 -->
+<section class="slide on">
+  <div class="bar"><span class="no">1</span><span class="title">Core Identity</span></div>
+  <div class="script">
+    <p>Good morning. Our project is <b>Serbizyu</b> — a marketplace and trust system for local economies, and we are launching it first in <b>Tagudin, Ilocos Sur</b>.</p>
+    <p>Think of it as a two-sided marketplace. On one side are the carpenters, bakers, and farmers of the province. On the other side are the residents who need their services. Every transaction is protected by escrow, so nobody gets cheated.</p>
+    <p>We built this for the <b>70% of micro-entrepreneurs</b> who are completely outside digital commerce. The design is geo-first — it boosts our local industries — but the model itself can work anywhere.</p>
+    <span class="key">Land this: "Marketplace + escrow trust, built for the province."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> No jargon. Smile, slow down. This is your "hello" slide.</div>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <div class="bar"><span class="no">2</span><span class="title">Concept — Three Pillars</span></div>
+  <div class="script">
+    <p>Serbizyu stands on <b>three pillars</b>, and this picture is the whole idea in one glance.</p>
+    <p>First, the <b>Local Marketplace</b> — where services and goods are discovered across 28 categories, built around your barangay and town.</p>
+    <p>Second, the <b>Escrow Trust Layer</b> — the money is held safely and only released when both sides are happy. Zero percent ledger drift, by design.</p>
+    <p>Third, the <b>Human Agent Bridge</b> — youth agents who onboard offline owners through SMS. This is how we reach people with no smartphone, and it pays 80 / 10 / 10.</p>
+    <span class="key">Land this: "Marketplace × Escrow × Agents = trust for the province."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> Point at the center node, then sweep left-to-right across the three pillars.</div>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <div class="bar"><span class="no">3</span><span class="title">How It Works</span></div>
+  <div class="script">
+    <p>There are <b>four ways</b> to get into Serbizyu: the mobile app, SMS for offline owners, a barangay kiosk, and a face-to-face QR code. But they all feed one trusted core.</p>
+    <p>At the top is the Serbizyu Core — marketplace, identity, search. Below it is the <b>Escrow Ledger</b>, a double-entry system that holds the money with zero drift. At the bottom are payouts and the agent network, which split money 80 / 10 / 10 automatically.</p>
+    <p>Look at the small flow below: money moves <b>Pay → Hold → Dual Confirm → Release</b>. Online it is kept by Xendit; offline, cash is recorded by the Cloud Truth Boundary. Either way, the provider is only paid when the work is confirmed.</p>
+    <span class="key">Land this: "Four doors in, one escrow core that protects every peso."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> Trace the arrow top-to-bottom with your finger. Then tap the lifecycle boxes.</div>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <div class="bar"><span class="no">4</span><span class="title">Target Market</span></div>
+  <div class="script">
+    <p>Who is this for? Three groups.</p>
+    <p>First, <b>service providers and trade workers</b> — carpenters, mechanics, tricycle drivers, beauticians — skilled people with zero digital presence, earning under two hundred fifty thousand a year.</p>
+    <p>Second, <b>local product sellers</b> — lutong bahay vendors, hardware shops, crafts makers — stuck right now on unindexed Facebook posts with no booking tools.</p>
+    <p>Third, <b>provincial buyers and event organizers</b> — people who just want a trusted provider with fair pricing and payment protection.</p>
+    <p>The numbers: about <b>70%</b> operate informally, there is <b>zero</b> escrow marketplace outside Metro Manila, and over <b>40%</b> lack a smartphone or data load.</p>
+    <span class="key">Land this: "Skilled, informal, underserved — and we reach them without requiring a smartphone."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> Numbers are your proof. Read them plainly, don't rush.</div>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <div class="bar"><span class="no">5</span><span class="title">Core Problem</span></div>
+  <div class="script">
+    <p>So what is broken today? Provincial trade runs on two things: <b>cash handshakes</b> and <b>unindexed chats</b>.</p>
+    <p>First, <b>no escrow, no recourse</b>. Buyers lose deposits. Workers finish the job and don't get paid. There is no rating history. Every deal is a gamble.</p>
+    <p>Second, <b>Facebook bans service listings</b>. Providers are pushed off Marketplace into scattered Messenger threads — no pricing, no calendar, no identity check.</p>
+    <p>Third, <b>cost and fear block adoption</b>. Daily data load is a bigger wall than signal. And over 90% of informal providers fear BIR registration.</p>
+    <span class="key">Land this: "Today, every provincial transaction is a trust gamble. Serbizyu ends that."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> This is the "pain" slide. Slow your voice. Let the problem land.</div>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <div class="bar"><span class="no">6</span><span class="title">Use Case 1 — Agent + SMS (Tatay Ben)</span></div>
+  <div class="script">
+    <p>Meet <b>Tatay Ben</b>, a carpenter with a Nokia 3310. He has no smartphone, no data — but he has skills.</p>
+    <p>Our agent, Kevin, creates Tatay Ben's listing on the platform. Ben just replies <b>APPROVE</b> by SMS. A customer browses and pays into escrow. Ben gets an SMS with the job schedule and location. When the work is done, both sides confirm by SMS, and the money is released.</p>
+    <p>Ben never touches an app. The split is <b>80% owner, 10% agent, 10% platform</b>. He can even reply STOP or REVOKE if anything feels wrong.</p>
+    <span class="key">Land this: "A feature-phone carpenter is now a verified, paid provider — through SMS alone."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> Walk the five boxes left to right. This is your most relatable story.</div>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <div class="bar"><span class="no">7</span><span class="title">Use Case 2 — Direct Offer + Escrow (Ate Grace)</span></div>
+  <div class="script">
+    <p>Now <b>Ate Grace</b>, a baker with a smartphone. She posts her listing with photos and price. A buyer browses the 28 categories, picks hers, and checks out instantly — the money goes straight into escrow.</p>
+    <p>Grace fulfills the order, marks it complete, the buyer confirms, and <b>escrow releases</b> her payment after a 3-day protection window.</p>
+    <p>She can use fixed price or hidden quote. Even on hidden-price listings, buyers see the category average, so pricing stays fair and transparent.</p>
+    <span class="key">Land this: "Smartphone sellers get instant checkout + escrow protection, with fair pricing."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> Contrast this with the SMS story — shows the platform serves both ends of the tech spectrum.</div>
+</section>
+
+<!-- 8 -->
+<section class="slide">
+  <div class="bar"><span class="no">8</span><span class="title">Use Case 3 — Deal-Chaining (Barangay Fiesta)</span></div>
+  <div class="script">
+    <p>For bigger events, meet the <b>Barangay Fiesta</b>. One organizer creates a deal and sets the budget. They add slots — caterer, photographer, sound system. Each provider accepts their slot and confirms their own rate.</p>
+    <p>The buyer makes <b>one payment</b>, which the system splits across slots. Each provider is released independently when their part is done — so the caterer gets paid even if the photographer is late.</p>
+    <p>That is deal-chaining: one checkout, many providers, separate escrow per slot, no cross-dependency.</p>
+    <span class="key">Land this: "One payment, many providers, each paid fairly on their own timeline."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> Emphasize "independently released" — it's the clever part.</div>
+</section>
+
+<!-- 9 -->
+<section class="slide">
+  <div class="bar"><span class="no">9</span><span class="title">Use Case 4 — Quick Deal QR (Palengke)</span></div>
+  <div class="script">
+    <p>At the <b>palengke</b>, face-to-face, maybe no signal. The seller shows an animated QR. The buyer scans it and a deal screen opens on their phone.</p>
+    <p>They negotiate — up to three counter-offer rounds. Both confirm, by app tap or SMS reply. The deal locks, and it syncs to the cloud the moment they reconnect.</p>
+    <p>This is <b>air-gapped</b> — it works with zero connectivity at the moment of sale. Settlement is cash offline or escrow online, but the Cloud Truth Boundary still governs every peso.</p>
+    <span class="key">Land this: "Even with no internet, a fair, recorded deal happens in seconds."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> Mention the QR is on phone OR kiosk — ties back to slide 3.</div>
+</section>
+
+<!-- 10 -->
+<section class="slide">
+  <div class="bar"><span class="no">10</span><span class="title">Growth &amp; Projections</span></div>
+  <div class="script">
+    <p>Serbizyu grows like a <b>flywheel</b>. More providers create more listings. More listings bring more buyers. More buyers mean more transactions. More transactions bring more agents — who onboard even more providers. It spins faster on its own.</p>
+    <p>The plan: pilot Tagudin with 50+ providers, expand to three neighboring towns in six months, full Ilocos Sur in a year. The model is place-agnostic — any province after that.</p>
+    <p>At 500 providers doing five thousand pesos a month, that is two and a half million in volume — <b>ten percent platform is two hundred fifty thousand a month</b>. Double that at a thousand providers.</p>
+    <span class="key">Land this: "A self-reinforcing flywheel — and the economics scale with volume."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> Trace the circle clockwise as you name each step.</div>
+</section>
+
+<!-- 11 -->
+<section class="slide">
+  <div class="bar"><span class="no">11</span><span class="title">Onboarding &amp; Business Model</span></div>
+  <div class="script">
+    <p>Onboarding has <b>no BIR Form 2303, no upfront cost, no smartphone required</b>. We use three lanes of progressive formalization.</p>
+    <p>Lane 1: phone plus ID, capped payouts. Lane 2: a two-minute sworn declaration, tax-free up to 250 thousand a year. Lane 3: BMBE-registered with a "Business Verified" badge and uncapped earnings. We frame it as "unlock more earnings."</p>
+    <p>Revenue is a <b>10% platform commission</b> on digital escrow, 12% on cash, with subsidies down to 0–3% for transport and farm labor. Listing is free. The agent split is 80 / 10 / 10, with a 3× graduation bonus when an owner goes independent.</p>
+    <span class="key">Land this: "We meet providers where they are — and earn only when they earn."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> The "no BIR fear" point directly answers the problem on slide 5.</div>
+</section>
+
+<!-- 12 -->
+<section class="slide">
+  <div class="bar"><span class="no">12</span><span class="title">Roadmap &amp; Metrics</span></div>
+  <div class="script">
+    <p>The build is <b>twelve weeks, four phases, one pilot launch</b>.</p>
+    <p>Phase 1: foundations and architecture. Phase 2: marketplace and the escrow ledger. Phase 3: Quick Deal and the agent network. Phase 4: deal-chaining and the pilot launch in Tagudin.</p>
+    <p>Our success metrics: provider liquidity at 2.0 or better, 50+ onboarded providers with 40% through agents, <b>zero percent ledger drift</b>, and dispute resolution under 48 hours.</p>
+    <p>That is Serbizyu. Thank you.</p>
+    <span class="key">Land this: "12 weeks to a live Tagudin pilot — measurable, escrow-safe, agent-powered."</span>
+  </div>
+  <div class="tip"><span class="badge">TALKING</span> End with a calm breath. Invite questions.</div>
+</section>
+
+</div>
+<div class="hint">← → arrow keys &nbsp;|&nbsp; click to advance &nbsp;|&nbsp; SPEAKER NOTES</div>
+<script>
+(function(){
+  const slides=document.querySelectorAll('.slide');let idx=0;
+  function show(i){slides.forEach(s=>s.classList.remove('on'));slides[i].classList.add('on');idx=i}
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();show(Math.min(idx+1,slides.length-1))}
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();show(Math.max(idx-1,0))}
+  });
+  document.addEventListener('click',e=>{if(e.target.closest('a')||e.target.closest('button'))return;show((idx+1)%slides.length)});
+})();
+</script>
+</body>
+</html>
