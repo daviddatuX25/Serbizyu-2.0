@@ -3,15 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Serbizyu — Academic Defense Deck</title>
+<title>Serbizyu — Business Pitch Deck</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--g400:#4ade80;--g600:#16a34a;--g900:#14532d;--b400:#60a5fa;--a400:#fbbf24;--w100:#f5f5f4;--w300:#d6d3d1;--w500:#78716c;--w900:#1c1917}
+:root{--g400:#4ade80;--g600:#16a34a;--g900:#14532d;--b400:#60a5fa;--a400:#fbbf24;--r400:#f87171;--w100:#f5f5f4;--w300:#d6d3d1;--w500:#78716c;--w900:#1c1917}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',system-ui,sans-serif;background:#0c0a09;color:#fafaf9;overflow:hidden;user-select:none}
 .deck{width:100vw;height:100vh;display:grid;place-items:center}
 .slide{width:min(94vw,150vh);aspect-ratio:16/9;background:linear-gradient(160deg,#1c1917,#0c0a09);border:1px solid #292524;border-radius:20px;padding:5% 6%;display:none;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
-/* Mobile: full-width scrollable slides */
+.slide.on{display:flex;animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1}}
+h1,h2{font-family:'Plus Jakarta Sans',sans-serif}
+h1{font-size:clamp(2rem,4.6vw,3.8rem);line-height:1.08}
+h2{font-size:clamp(1.5rem,3.2vw,2.6rem);line-height:1.12;margin-bottom:3%}
+.accent{color:var(--g400)}.blue{color:var(--b400)}.amber{color:var(--a400)}.red{color:var(--r400)}
+.kicker{color:var(--g400);font-weight:700;letter-spacing:.15em;font-size:clamp(.6rem,1vw,.8rem);text-transform:uppercase;margin-bottom:2%}
+.bullets{list-style:none;padding:0;margin-top:2%}
+.bullets li{font-size:clamp(.9rem,1.55vw,1.25rem);color:var(--w300);line-height:1.5;margin-bottom:2.5%;padding-left:1.8em;position:relative;max-width:85%}
+.bullets li::before{content:'▸';position:absolute;left:0;color:var(--g400);font-weight:700}
+.bullets li em{font-style:normal;color:var(--g400);font-weight:600}
+.big-num{font-size:clamp(3rem,7vw,5.5rem);font-family:'Plus Jakarta Sans';color:var(--g400);line-height:1;margin-bottom:1%}
+.foot{position:absolute;bottom:3.5%;left:6%;right:6%;display:flex;justify-content:space-between;font-size:.68rem;color:#57534e}
+.hint{position:fixed;bottom:14px;right:18px;color:#57534e;font-size:.72rem;z-index:100}
+.snum{position:absolute;top:4%;right:6%;font-size:.7rem;color:#3d3a36;font-weight:600}
+
+/* Table */
+.tbl-wrap{width:100%;margin-top:2%}
+table{width:100%;border-collapse:collapse;font-size:clamp(.68rem,1.2vw,.95rem)}
+th{color:var(--g400);text-align:left;padding:.6em .5em;border-bottom:1px solid #292524;font-size:.8em;letter-spacing:.06em;text-transform:uppercase}
+td{padding:.6em .5em;border-bottom:1px solid #1c1917;color:var(--w300);vertical-align:top}
+td b{color:#fafaf9}
+.tag{display:inline-block;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:var(--g400);padding:.15em .6em;border-radius:99px;font-size:.7em;font-weight:600;margin-right:4px}
+.tag.b{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:var(--b400)}
+.tag.a{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:var(--a400)}
+.tag.r{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.25);color:var(--r400)}
+
+/* Stat row */
+.stat-row{display:flex;gap:3%;margin-top:4%}
+.stat{flex:1;background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:3% 4%;text-align:center}
+.stat b{display:block;font-size:clamp(1.5rem,3.4vw,2.8rem);color:var(--g400);font-family:'Plus Jakarta Sans'}
+.stat span{font-size:clamp(.6rem,1vw,.78rem);color:var(--w500);margin-top:4px;line-height:1.3}
+
+/* Flow */
+.flow{display:flex;align-items:center;gap:0;margin-top:3.5%;flex-wrap:wrap;justify-content:center}
+.flow .node{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:2.5% 3.5%;text-align:center;min-width:clamp(110px,17%,170px)}
+.flow .node .phase{font-size:clamp(.55rem,.85vw,.7rem);color:var(--g400);font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.flow .node .label{font-size:clamp(.7rem,1.15vw,.9rem);color:var(--w300);margin-top:3px;line-height:1.3}
+.flow .arrow{color:var(--g400);font-size:clamp(1rem,2vw,1.6rem);margin:0 2px;flex-shrink:0}
+
+/* Mobile */
 @media(max-width:768px),(max-aspect-ratio:9/16){
   body{overflow-y:auto;overflow-x:hidden}
   .deck{display:block;width:100%;height:auto;min-height:100vh}
@@ -25,76 +65,32 @@ body{font-family:'Inter',system-ui,sans-serif;background:#0c0a09;color:#fafaf9;o
   .flow{flex-direction:column;gap:8px}
   .flow .arrow{transform:rotate(90deg);font-size:1.2rem}
   .flow .node{min-width:80%;padding:5% 6%}
-  .kpi-row{flex-wrap:wrap;gap:8px}
-  .kpi{flex:1 1 45%;min-width:140px}
+  .stat-row{flex-wrap:wrap;gap:8px}
+  .stat{flex:1 1 45%;min-width:140px}
   .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
   table{font-size:clamp(.6rem,2.8vw,.85rem)}
   .snum{top:3%;right:5%}
   .hint{bottom:8px;right:10px;font-size:.62rem}
 }
-.slide.on{display:flex;animation:in .35s ease}
-@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1}}
-h1,h2{font-family:'Plus Jakarta Sans',sans-serif}
-h1{font-size:clamp(2rem,4.6vw,3.8rem);line-height:1.08}
-h2{font-size:clamp(1.5rem,3.2vw,2.6rem);line-height:1.12;margin-bottom:3%}
-.accent{color:var(--g400)}.blue{color:var(--b400)}.amber{color:var(--a400)}
-.kicker{color:var(--g400);font-weight:700;letter-spacing:.15em;font-size:clamp(.6rem,1vw,.8rem);text-transform:uppercase;margin-bottom:2%}
-.bullets{list-style:none;padding:0;margin-top:2%}
-.bullets li{font-size:clamp(.9rem,1.55vw,1.25rem);color:var(--w300);line-height:1.5;margin-bottom:2.5%;padding-left:1.8em;position:relative;max-width:85%}
-.bullets li::before{content:'▸';position:absolute;left:0;color:var(--g400);font-weight:700}
-.big-num{font-size:clamp(3rem,7vw,5.5rem);font-family:'Plus Jakarta Sans';color:var(--g400);line-height:1;margin-bottom:1%}
-.foot{position:absolute;bottom:3.5%;left:6%;right:6%;display:flex;justify-content:space-between;font-size:.68rem;color:#57534e}
-.foot .logo{color:var(--g400);font-weight:800}
-.hint{position:fixed;bottom:14px;right:18px;color:#57534e;font-size:.72rem;z-index:100}
-
-/* Table */
-.tbl-wrap{width:100%;margin-top:2%}
-table{width:100%;border-collapse:collapse;font-size:clamp(.68rem,1.2vw,.95rem)}
-th{color:var(--g400);text-align:left;padding:.6em .5em;border-bottom:1px solid #292524;font-size:.8em;letter-spacing:.06em;text-transform:uppercase}
-td{padding:.6em .5em;border-bottom:1px solid #1c1917;color:var(--w300);vertical-align:top}
-td b{color:#fafaf9}
-.tag{display:inline-block;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:var(--g400);padding:.15em .6em;border-radius:99px;font-size:.7em;font-weight:600;margin-right:4px}
-.tag.b{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:var(--b400)}
-.tag.a{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:var(--a400)}
-
-/* Flow diagram */
-.flow{display:flex;align-items:center;gap:0;margin-top:4%;flex-wrap:wrap;justify-content:center}
-.flow .node{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:3% 3.5%;text-align:center;min-width:clamp(120px,18%,180px)}
-.flow .node .phase{font-size:clamp(.55rem,.85vw,.7rem);color:var(--g400);font-weight:700;letter-spacing:.1em;text-transform:uppercase}
-.flow .node .label{font-size:clamp(.7rem,1.15vw,.9rem);color:var(--w300);margin-top:3px;line-height:1.3}
-.flow .node .weeks{font-size:clamp(.55rem,.8vw,.65rem);color:#57534e;margin-top:2px}
-.flow .arrow{color:var(--g400);font-size:clamp(1rem,2vw,1.6rem);margin:0 2px;flex-shrink:0}
-.flow .arrow.dim{color:#3d3a36}
-
-/* KPI row */
-.kpi-row{display:flex;gap:3%;margin-top:4%}
-.kpi{flex:1;background:rgba(255,255,255,.03);border:1px solid #292524;border-radius:12px;padding:3% 4%;text-align:center}
-.kpi .val{font-size:clamp(1.2rem,2.5vw,2rem);font-family:'Plus Jakarta Sans';color:var(--g400);font-weight:700}
-.kpi .lbl{font-size:clamp(.6rem,1vw,.78rem);color:var(--w500);margin-top:4px;line-height:1.3}
-
-/* Slide number */
-.snum{position:absolute;top:4%;right:6%;font-size:.7rem;color:#3d3a36;font-weight:600}
-
-/* Bullet with icon accent */
-.bullets li em{font-style:normal;color:var(--g400);font-weight:600}
 </style>
 </head>
 <body>
 
-<div class="deck" id="deck">
+<div class="deck">
 
-<!-- SLIDE 1: PROJECT NAME -->
+<!-- SLIDE 1: CORE IDENTITY -->
 <section class="slide on">
-  <div class="kicker">CCSIT 215 · Project Management · A.Y. 2026–2027</div>
+  <div class="kicker">Serbizyu · Pilot: Tagudin &amp; Candon, Ilocos Sur</div>
   <div class="big-num">Serbizyu</div>
-  <h1>The trust infrastructure for the<br><span class="accent">Philippine local service economy.</span></h1>
+  <h1>Marketplace &amp; trust infrastructure for<br><span class="accent">Philippine provincial economies.</span></h1>
   <ul class="bullets" style="margin-top:3%">
-    <li>A two-sided marketplace where buyers post needs, servicers bid to win work, and <em>every transaction is escrow-protected</em> — not promises.</li>
-    <li>Built for <em>Tagudin, Ilocos Sur</em> first. Designed for every provincial town.</li>
+    <li><em>Two-sided marketplace</em> connecting informal workers, micro-entrepreneurs, and local buyers — where every transaction is escrow-protected, not promised.</li>
+    <li>Built for the <em>70% of provincial micro-entrepreneurs</em> who operate outside formal digital commerce — no smartphone, no bank account, no BIR registration required.</li>
+    <li>28 categories across 8 domains: home services, transport, beauty, agri-labor, events, education, digital, local goods.</li>
   </ul>
   <div style="margin-top:3%;color:var(--w500);font-size:clamp(.7rem,1.1vw,.85rem)">
     Sarmiento, David Datu N. &nbsp;·&nbsp; Lopez, Christine M. &nbsp;·&nbsp; Pagaduan, Jaypee G. &nbsp;·&nbsp; Vidaña, Prince John<br>
-    BSIT 4B · July 2026
+    BSIT 4B · CCSIT 215 Project Management · A.Y. 2026–2027
   </div>
   <div class="snum">1 / 7</div>
 </section>
@@ -102,159 +98,158 @@ td b{color:#fafaf9}
 <!-- SLIDE 2: TARGET MARKET -->
 <section class="slide">
   <div class="kicker">Target Market</div>
-  <h2>Tagudin, Ilocos Sur — <span class="accent">Philippine Provincial Economies</span></h2>
+  <h2>Informal workers. Micro-entrepreneurs. <span class="accent">Local buyers.</span></h2>
   <ul class="bullets">
-    <li><em>Micro-servicers & local merchants</em>: trade workers, artisans, tricycle drivers, home-service providers — earning under ₱250K/year, no formal business registration.</li>
-    <li><em>Provincial buyers</em>: residents and event organizers seeking verified services with transparent pricing and payment protection they currently can't get on Facebook.</li>
-    <li><em>Feature-phone users (L0–L1)</em>: 40%+ of target sellers lack smartphones or data load — reached exclusively through <em>SMS + Human Agent Network</em>.</li>
+    <li><em>Service providers &amp; trade workers</em> — carpenters, mechanics, tricycle drivers, beauticians, farm laborers. Skilled, experienced, zero digital presence. Earning under ₱250K/year. No smartphone needed — they operate via SMS + Human Agent.</li>
+    <li><em>Local product sellers</em> — lutong bahay vendors, hardware suppliers, handmade crafts, agricultural goods. Currently selling through unindexed Facebook posts. Need booking calendars, inventory tracking, verified reviews.</li>
+    <li><em>Provincial buyers &amp; event organizers</em> — residents and barangay-level customers who need trusted providers with transparent pricing and payment protection. Currently stuck with cash handshakes and Facebook Messenger threads.</li>
   </ul>
+  <div class="stat-row">
+    <div class="stat"><b>~70%</b><span>of provincial micro-entrepreneurs operate informally (PSA 2023)</span></div>
+    <div class="stat"><b>Zero</b><span>escrow-protected service marketplaces exist outside Metro Manila</span></div>
+    <div class="stat"><b>40%+</b><span>of target sellers lack smartphones or data load (DICT 2023)</span></div>
+  </div>
   <div class="snum">2 / 7</div>
 </section>
 
 <!-- SLIDE 3: CORE PROBLEM -->
 <section class="slide">
   <div class="kicker">Core Problem</div>
-  <h2>Provincial trade runs on <span class="amber">cash handshakes and unindexed chats.</span></h2>
+  <h2>Provincial trade runs on <span class="amber">cash handshakes</span> and <span class="red">unindexed chats.</span></h2>
   <ul class="bullets">
-    <li><em>Zero escrow, zero recourse.</em> Buyers lose deposits to non-performance; workers complete labor and never get paid. No rating history, no dispute mechanism.</li>
-    <li><em>Facebook bans service listings.</em> Policy-gated from Marketplace, transactions scatter across Messenger threads — no booking calendars, no verified pricing, no identity checks.</li>
-    <li><em>Data load costs + tech aversion.</em> Daily prepaid load is a bigger barrier than network dead spots. App-only platforms lose 40%+ of micro-servicers at onboarding.</li>
+    <li><em>No escrow, no recourse.</em> Buyers lose deposits to non-performance. Workers complete labor and never get paid. Zero rating history. Zero dispute mechanism. Every transaction is a gamble on trust.</li>
+    <li><em>Facebook bans service listings.</em> Policy-gated from Marketplace. Deals scatter across Messenger threads — no pricing transparency, no booking calendar, no identity verification. Complete loss of transactional visibility.</li>
+    <li><em>Connectivity costs block adoption.</em> Daily prepaid data load is a bigger barrier than network dead spots. App-only platforms exclude 40%+ of micro-servicers. BIR registration fear blocks the rest.</li>
   </ul>
+  <div class="stat-row">
+    <div class="stat"><b>0%</b><span>escrow coverage in provincial service trade</span></div>
+    <div class="stat"><b>Banned</b><span>service listings on Facebook Marketplace (Meta 2024)</span></div>
+    <div class="stat"><b>90%+</b><span>informal providers fear tax registration (BIR 2023)</span></div>
+  </div>
   <div class="snum">3 / 7</div>
 </section>
 
 <!-- SLIDE 4: SOLUTION & CORE PRIMITIVES -->
 <section class="slide">
-  <div class="kicker">Solution & Core Primitives</div>
-  <h2>Four transaction modes. <span class="accent">One escrow engine.</span></h2>
+  <div class="kicker">Solution &amp; Core Primitives</div>
+  <h2>Four transaction modes. <span class="accent">One trust engine.</span></h2>
   <ul class="bullets">
-    <li><em>Direct Offers</em> — Seller posts fixed-price listing; buyer browses, books, pays into escrow.</li>
-    <li><em>Request & Bids</em> — Buyer posts custom job request; servicers submit competitive bids with price, timeline, and work samples.</li>
-    <li><em>Quick Deal (QR) + Deal-Chaining</em> — Face-to-face QR scan with 3-round capped negotiation and dual confirmation; multi-service bundles with per-slot escrow release.</li>
+    <li><em>Direct Offers</em> — Providers post fixed-price or tiered listings. Buyers browse 28 categories, book instantly, pay into escrow. Hidden-price "Request a Quote" mode protects pricing-sensitive services.</li>
+    <li><em>Buyer Requests &amp; Competitive Bidding</em> — Buyers post what they need. Local providers submit competitive bids with price, timeline, and work samples. System tracks provider liquidity to guarantee responses.</li>
+    <li><em>Face-to-Face Quick Deal + Deal-Chaining</em> — QR scan initiates in-person deal with 3-round capped negotiation and dual confirmation. Multi-party projects (weddings, construction) bundled under single escrow container with per-slot release.</li>
   </ul>
   <div style="margin-top:3%;display:flex;gap:3%">
     <div style="flex:1;background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);border-radius:10px;padding:2.5% 3%">
-      <span class="tag">SMS</span><span class="tag b">PWA</span><span class="tag a">Agent</span>
-      <p style="font-size:clamp(.65rem,1vw,.8rem);color:var(--w300);margin-top:6px">Feature-phone to desktop — one order state machine, tier-aware degradation, no user left behind.</p>
+      <span class="tag">Escrow</span><span class="tag b">Bidding</span><span class="tag a">Agent</span><span class="tag">QR Deal</span>
+      <p style="font-size:clamp(.65rem,1vw,.8rem);color:var(--w300);margin-top:6px">Every transaction path leads to the same Order state machine — double-entry ledger, 0% drift, immutable audit trail.</p>
     </div>
   </div>
   <div class="snum">4 / 7</div>
 </section>
 
-<!-- SLIDE 5: HYBRID / TECH ARCHITECTURE (Table) -->
+<!-- SLIDE 5: HYBRID / TECH ARCHITECTURE (as business accessibility layers) -->
 <section class="slide">
-  <div class="kicker">Hybrid Tech Architecture</div>
-  <h2>Channel layers with <span class="accent">offline fallback</span> at every tier.</h2>
+  <div class="kicker">Access Architecture</div>
+  <h2>Five access tiers. <span class="accent">No user left behind.</span></h2>
   <div class="tbl-wrap">
     <table>
-      <thead><tr><th>Channel</th><th>Technology</th><th>Offline / Low-Data Fallback</th></tr></thead>
+      <thead><tr><th>Channel</th><th>Who It Serves</th><th>How It Works</th><th>Trust Layer</th></tr></thead>
       <tbody>
         <tr>
-          <td><b>Web / PWA</b></td>
-          <td>Laravel 12 · Inertia · React · Tailwind · PostgreSQL · Redis · WebSocket</td>
-          <td>Browser local cache; service worker for static assets</td>
+          <td><b>L0 — SMS</b> <span class="tag r">Feature phone</span></td>
+          <td>Tatay Ben: carpenter, Nokia 3310</td>
+          <td>Agent manages profile. Owner confirms bookings via SMS OTP. Safety keywords: STOP / REVOKE.</td>
+          <td>SMS consent = irrefutable audit record</td>
         </tr>
         <tr>
-          <td><b>SMS (L0–L1)</b></td>
-          <td>TextBee Android GSM gateway · Twilio-style API</td>
-          <td>SMS token confirmation (<code>ACCEPT X7K3</code>); zero data required</td>
+          <td><b>L1 — Kiosk</b> <span class="tag a">Shared tablet</span></td>
+          <td>Sari-sari store customer, no phone</td>
+          <td>Public Android tablet at barangay hall. Browse catalog, print receipts, deposit cash, scan QR for Quick Deal.</td>
+          <td>Kiosk operator + printed receipt</td>
         </tr>
         <tr>
-          <td><b>Human Agent (L0 Proxy)</b></td>
-          <td>Delegated dashboard; agent-managed profiles</td>
-          <td>Agent-initiated SMS authorization on owner's behalf</td>
+          <td><b>L2 — PWA Offline</b> <span class="tag b">Intermittent data</span></td>
+          <td>Ate Grace: smartphone, load-conscious</td>
+          <td>Progressive Web App. Catalog cached locally. Search when online. Quick Deal works air-gapped — no internet needed.</td>
+          <td>Syncs when reconnected; server is authority</td>
         </tr>
         <tr>
-          <td><b>Infrastructure</b></td>
-          <td>Dokploy single-VPS · Docker · Cloudflare Tunnel</td>
-          <td>Self-hosted; no recurring SaaS dependency</td>
+          <td><b>L3 — PWA Online</b></td>
+          <td>Kevin: tech-savvy agent, smartphone</td>
+          <td>Full PWA: listings, bidding, inbox, analytics. Agent dashboard: manage multiple offline owners.</td>
+          <td>Real-time escrow, verified reviews</td>
         </tr>
         <tr>
-          <td><b>Payments</b></td>
-          <td>Xendit escrow · GCash · Maya · dual-confirmed cash</td>
-          <td>Offline cash deals logged via agent or SMS token</td>
+          <td><b>L4 — Desktop</b></td>
+          <td>Admin team, power sellers</td>
+          <td>Full web app: governance, disputes, financial audit, bulk operations, channel distribution.</td>
+          <td>Admin oversight + automated drift detection</td>
         </tr>
       </tbody>
     </table>
   </div>
-  <div style="margin-top:2%;font-size:clamp(.6rem,.9vw,.7rem);color:var(--w500);display:flex;gap:12px">
-    <span><span class="tag" style="font-size:.85em">Cloud Truth Boundary</span> Real money governed exclusively by backend — immutable audit trail, platform-driven dispute evidence.</span>
+  <div style="margin-top:2%;font-size:clamp(.6rem,.9vw,.7rem);color:var(--w500)">
+    <span class="tag" style="font-size:.85em">Cloud Truth Boundary</span> Real money governed exclusively by backend. Client devices have zero disbursement authority. One Order state machine across all tiers.
   </div>
   <div class="snum">5 / 7</div>
 </section>
 
 <!-- SLIDE 6: ONBOARDING & BUSINESS MODEL -->
 <section class="slide">
-  <div class="kicker">Onboarding & Business Model</div>
-  <h2>No BIR Form 2303 required. <span class="accent">Invisible formalization ladder.</span></h2>
+  <div class="kicker">Onboarding &amp; Business Model</div>
+  <h2>No BIR Form 2303. <span class="accent">No upfront cost. No smartphone required.</span></h2>
   <ul class="bullets">
-    <li><em>3-Lane Regulatory Ladder</em> — Lane 1: Phone+ID verified (capped). Lane 2: Sworn Declaration (&lt;₱250K/yr, keep 100%). Lane 3: Registered (verified badge, lower fees, priority ranking).</li>
-    <li><em>Human Agent Network</em> — 75% Owner / 10% Agent / 15% Platform split. Agents manage profiles for offline sellers. <em>Graduation Bonus</em>: 3× monthly commission when owner goes independent.</li>
-    <li><em>Monetization</em> — 15% platform commission on escrow transactions. Zero listing fees. Zero upfront cost. Revenue scales with transaction volume, not seller count.</li>
+    <li><em>3-Lane Progressive Formalization</em> — Lane 1: Phone + ID verified, capped payouts. Lane 2: 2-min Sworn Declaration, tax-free up to ₱250K/yr. Lane 3: BMBE registered, "Business Verified" badge, uncapped earnings. Framed as <em>"Unlock more earnings"</em> — never "File your taxes."</li>
+    <li><em>Human Agent Network</em> — Tech-savvy local youth (Kevin) manage profiles for offline owners (Tatay Ben). Revenue auto-split: <em>80% Owner / 10% Agent / 10% Platform.</em> Graduation Bonus: 3× monthly commission when owner transitions to smartphone independence.</li>
+    <li><em>Revenue Model</em> — 10% platform commission on digital escrow transactions. 12% on cash (covers dispute risk buffer). Category subsidies at 0–3% for transport and agri-labor. Zero listing fees. Scales with transaction volume, not seller count.</li>
   </ul>
+  <div class="stat-row" style="margin-top:3%">
+    <div class="stat"><b>80/10/10</b><span>Owner / Agent / Platform split</span></div>
+    <div class="stat"><b>₱0</b><span>Listing fees. Zero upfront cost.</span></div>
+    <div class="stat"><b>3×</b><span>Agent Graduation Bonus</span></div>
+  </div>
   <div class="snum">6 / 7</div>
 </section>
 
-<!-- SLIDE 7: ROADMAP & METRICS (Flow + KPIs) -->
+<!-- SLIDE 7: ROADMAP & METRICS -->
 <section class="slide">
-  <div class="kicker">Roadmap & Metrics</div>
-  <h2>12 weeks. 4 phases. <span class="accent">4 hard gates.</span></h2>
+  <div class="kicker">Roadmap &amp; Metrics</div>
+  <h2>12 weeks. 4 phases. <span class="accent">One pilot launch.</span></h2>
 
-  <!-- Flow diagram -->
   <div class="flow">
     <div class="node">
       <div class="phase">Phase 1</div>
-      <div class="label">Foundations &<br>Architecture</div>
-      <div class="weeks">Weeks 1–3</div>
+      <div class="label">Foundations<br>&amp; Architecture</div>
     </div>
     <div class="arrow">→</div>
     <div class="node">
       <div class="phase">Phase 2</div>
-      <div class="label">Marketplace &<br>Escrow Ledger</div>
-      <div class="weeks">Weeks 4–6</div>
+      <div class="label">Marketplace<br>&amp; Escrow Ledger</div>
     </div>
     <div class="arrow">→</div>
     <div class="node">
       <div class="phase">Phase 3</div>
-      <div class="label">Quick Deal &<br>Agent Network</div>
-      <div class="weeks">Weeks 7–9</div>
+      <div class="label">Quick Deal<br>&amp; Agent Network</div>
     </div>
     <div class="arrow">→</div>
     <div class="node">
       <div class="phase">Phase 4</div>
-      <div class="label">Deal-Chaining &<br>Defense Readiness</div>
-      <div class="weeks">Weeks 10–12</div>
+      <div class="label">Deal-Chaining<br>&amp; Pilot Launch</div>
     </div>
   </div>
-
-  <!-- Gate markers -->
   <div style="display:flex;justify-content:space-between;margin-top:1.5%;padding:0 2%;font-size:clamp(.55rem,.8vw,.65rem);color:#57534e">
-    <span>G1: DB + SMS OTP</span>
-    <span>G2: 0% ledger drift</span>
-    <span>G3: 75/10/15 split verified</span>
-    <span>G4: 50+ listings · Defense</span>
+    <span>Weeks 1–3</span><span>Weeks 4–6</span><span>Weeks 7–9</span><span>Weeks 10–12</span>
   </div>
 
-  <!-- KPIs -->
-  <div class="kpi-row">
-    <div class="kpi">
-      <div class="val">≥ 2.0</div>
-      <div class="lbl">Provider Liquidity Ratio<br>(bids per open request)</div>
-    </div>
-    <div class="kpi">
-      <div class="val">&lt; 2 min</div>
-      <div class="lbl">Quick Deal Creation Time<br>(QR scan to dual confirm)</div>
-    </div>
-    <div class="kpi">
-      <div class="val">0%</div>
-      <div class="lbl">Escrow Ledger Error Drift<br>(double-entry verified)</div>
-    </div>
-    <div class="kpi">
-      <div class="val">50+</div>
-      <div class="lbl">Onboarded Providers<br>(40% via Human Agents)</div>
-    </div>
+  <div class="stat-row">
+    <div class="stat"><b>≥ 2.0</b><span>Provider Liquidity Ratio<br>(bids per open buyer request)</span></div>
+    <div class="stat"><b>50+</b><span>Onboarded Providers<br>(40% via Human Agent Network)</span></div>
+    <div class="stat"><b>0%</b><span>Escrow Ledger Drift<br>(double-entry verified daily)</span></div>
+    <div class="stat"><b>&lt; 48h</b><span>Dispute Resolution Time<br>(platform-driven evidence collection)</span></div>
   </div>
-
+  <div style="margin-top:2.5%;font-size:clamp(.65rem,1vw,.82rem);color:var(--w500);text-align:center">
+    <span class="tag" style="font-size:.85em">Tagudin + Candon</span> Pilot scope. Expansion roadmap defined for post-academic phase.
+  </div>
   <div class="snum">7 / 7</div>
 </section>
 
@@ -264,21 +259,13 @@ td b{color:#fafaf9}
 
 <script>
 (function(){
-  const slides = document.querySelectorAll('.slide');
-  let idx = 0;
-  function show(i){
-    slides.forEach(s=>s.classList.remove('on'));
-    slides[i].classList.add('on');
-    idx = i;
-  }
+  const slides=document.querySelectorAll('.slide');let idx=0;
+  function show(i){slides.forEach(s=>s.classList.remove('on'));slides[i].classList.add('on');idx=i}
   document.addEventListener('keydown',e=>{
     if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();show(Math.min(idx+1,slides.length-1))}
     if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();show(Math.max(idx-1,0))}
   });
-  document.addEventListener('click',e=>{
-    if(e.target.closest('a')||e.target.closest('button')) return;
-    show((idx+1)%slides.length);
-  });
+  document.addEventListener('click',e=>{if(e.target.closest('a')||e.target.closest('button'))return;show((idx+1)%slides.length)});
 })();
 </script>
 </body>
