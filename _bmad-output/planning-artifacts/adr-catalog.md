@@ -223,12 +223,12 @@
 
 ## Domain 3 — Application & Interface
 
-### ADR-014: Frontend — Inertia v2 + React 18 + TypeScript + Tailwind 4 + shadcn/ui
+### ADR-014: Frontend — Inertia v3.6 + React 19.2 + TypeScript + Tailwind 4.3 + shadcn/ui 4.16
 
-* **Status:** Locked (founder directive, July 28, 2026)
+* **Status:** Locked (founder directive, July 28, 2026; versions updated July 29 per stack audit)
 * **Traces to:** §8.1 (PWA < 3s on 4G), REQ-ACC-03 (WCAG 2.1 AA), §9.3
-* **Context:** The platform needs SEO-able public pages and a fast authenticated app, on a team that is deliberately standardizing across projects. Per founder directive: **React, not SvelteKit** — chosen to diversify the team's framework experience and to match the portfolio-wide stack already proven on NEXIAM and NyTprintz (Laravel 12 + Inertia + React + TypeScript). The July 25 architecture.md naming SvelteKit is superseded.
-* **Decision:** Laravel 12 + Inertia v2 + React 18 + TypeScript as one monolith. Tailwind 4 + shadcn/ui for components — style **not** locked to the stock theme; Serbizyu branding (green `#1a5632`, gold `#f5a623`) applied at the token layer. Vite build. Route-level code splitting to hit < 3s interactive on 4G and < 8s first paint on 3G/2G (§8.1). PWA manifest + service worker per ADR-016.
+* **Context:** The platform needs SEO-able public pages and a fast authenticated app, on a team that is deliberately standardizing across projects. Per founder directive: **React, not SvelteKit** — chosen to diversify the team's framework experience and to match the portfolio-wide stack already proven on NEXIAM and NyTprintz (Laravel 12 + Inertia v3 + React + TypeScript). The July 25 architecture.md naming SvelteKit is superseded.
+* **Decision:** Laravel 12 + Inertia v3.6 + React 19.2 + TypeScript as one monolith. Tailwind 4.3 + shadcn/ui 4.16 for components — style **not** locked to the stock theme; Serbizyu branding (green `#1a5632`, gold `#f5a623`) applied at the token layer. Vite build. Route-level code splitting to hit < 3s interactive on 4G and < 8s first paint on 3G/2G (§8.1). PWA manifest + service worker per ADR-016. React 19 migration note: run `npx codemod react-19` for propTypes/defaultProps removal; concurrent mode is default.
 * **Alternatives Considered:**
   * *SvelteKit + Inertia* (July 25 draft) — superseded by directive; smaller bundle but breaks portfolio standardization.
   * *Next.js separate frontend* — rejected: two deployables, loses Inertia's zero-API-glue velocity, adds Node runtime to the VPS.

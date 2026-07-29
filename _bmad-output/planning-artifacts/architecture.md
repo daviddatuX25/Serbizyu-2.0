@@ -32,7 +32,7 @@ graph TD
 
     subgraph Dokploy VPS [Dokploy-Managed VPS — 2 vCPU / 4 GB]
         subgraph Containers
-            App[Laravel 12 Octane — PHP-FPM + Nginx]
+            App[Laravel 12 Octane — PHP 8.4 + Nginx]
             Horizon[Horizon Queue Workers]
             Reverb[Laravel Reverb WebSockets]
             PG[(PostgreSQL 16 + PostGIS)]
@@ -173,17 +173,17 @@ sequenceDiagram
 
 | System Layer | Technology | Decision Rationale | ADR |
 |---|---|---|---|
-| **Backend Core** | Laravel 12 / PHP 8.3 (Octane) | Proven developer velocity, built-in queue system, robust ORM, low RAM footprint on self-hosted VPS. | — |
-| **Frontend Framework** | React 18 + Inertia v2 + TypeScript | Founder directive (Jul 28). Diversifies team experience across projects. NEXIAM patterns transfer directly. | ADR-014 |
-| **UI Components** | Tailwind 4 + shadcn/ui | Serbizyu brand tokens applied at the Tailwind layer. Components owned in-repo (no dep churn). | ADR-014 |
-| **Database** | PostgreSQL 16 + PostGIS | GIST spatial indexing, JSONB GIN for flexible attributes, ltree for categories and H3 coverage, partial indexes for active queues. | ADR-001 |
-| **Search** | Meilisearch (self-hosted) | Typo-tolerant trilingual search. Disposable read model — full reindex from PG is one artisan command. | ADR-019 |
-| **Cache & Queue** | Redis | Session persistence, queue driver, prompt caching for Serbi AI. No Redlock — single-node Redis is sufficient at pilot scale. | — |
-| **Realtime** | Laravel Reverb | Self-hosted WebSockets (Pusher-compatible). Zero per-connection SaaS fee. | — |
+| **Backend Core** | Laravel 12 / PHP 8.4 (Octane) | Proven developer velocity, built-in queue system, robust ORM, low RAM footprint on self-hosted VPS. PHP 8.4: property hooks, ~10% perf gain. | — |
+| **Frontend Framework** | React 19.2 + Inertia v3.6 + TypeScript | Founder directive (Jul 28). Diversifies team experience across projects. NEXIAM patterns transfer directly. React 19: concurrent mode by default, codemod required for propTypes migration. | ADR-014 |
+| **UI Components** | Tailwind 4.3 + shadcn/ui 4.16 | Serbizyu brand tokens applied at Tailwind layer. Components owned in-repo (no dep churn). shadcn@4 supports React 19 + Inertia v3. | ADR-014 |
+| **Database** | PostgreSQL 16 + PostGIS | GIST spatial indexing, JSONB GIN, ltree for categories/H3 coverage. Supported until Nov 2028 — no need to bump. | ADR-001 |
+| **Search** | Meilisearch 1.51 (self-hosted) | Typo-tolerant trilingual search. Disposable read model — full reindex from PG is one artisan command. | ADR-019 |
+| **Cache & Queue** | Redis 7.x | Session persistence, queue driver, prompt caching for Serbi AI. Single-node sufficient at pilot scale. | — |
+| **Realtime** | Laravel Reverb 1.11 | Self-hosted WebSockets (Pusher-compatible). Zero per-connection SaaS fee. | — |
 | **Payments** | Xendit xenPlatform API | Sub-accounts and split rules for marketplace payouts. Platform insulated under BSP-licensed custody. | ADR-004 |
 | **SMS Gateway** | TextBee Android Gateway | Dedicated Android phone + unli-SMS SIM (~₱100/mo). Two-way: outbound OTP/notifications + inbound consent replies. Cold-standby device. | ADR-018 |
 | **AI (Serbi)** | Laravel AI SDK → OpenRouter | Cloud-only, draft-only. 24h Redis prompt caching. Guardrails: never auto-publishes, never touches finances. | ADR-021 |
-| **PWA** | Service Worker + Dexie.js (IndexedDB) | Offline-first for L2 tier. Tier-aware feature gating (L0–L4). Background Sync for queued requests. | ADR-016 |
+| **PWA** | Service Worker + Dexie.js 4.4 (IndexedDB) | Offline-first for L2 tier. Tier-aware feature gating (L0–L4). Background Sync for queued requests. | ADR-016 |
 | **SEO** | Server-rendered snapshots + Cloudflare edge cache | Listing pages rendered to static HTML on update. OG/Twitter meta + schema.org markup. | ADR-015 |
 | **Maps** | Mapbox GL JS (free tier) + OSM/Leaflet fallback | 50K map loads/month free. Fallback ensures zero-cost if free tier exhausts. | — |
 
