@@ -1,7 +1,7 @@
 # Serbizyu 2.0 — Architecture Decision Records (ADR) Catalog
 
 > **BMAD Method Phase 3 Artifact: ADR Catalog**
-> *Document Version:* 4.1.0
+> *Document Version:* 4.2.0
 > *Date:* July 28, 2026
 > *Authors:* Winston (System Architect persona) & Engineering Lead
 > *Baseline:* PRD v3.0.1 (Sections 1–9 locked), Listing Model Taxonomy, Schema Decisions v4 (30 tables / 8 bounded contexts), Founder directives July 28, 2026
@@ -70,8 +70,8 @@
 
 * **Status:** Locked
 * **Traces to:** REQ-PAY-02/03/04/05/09/10, REQ-GOV-01/02, §6.1
-* **Context:** Escrow is the trust foundation of the entire PRD (Shopee-style 3-day guarantee). Financial events must be (a) immutable, (b) auditable, (c) reconcile-able to zero drift, and (d) replayable for dispute evidence. A `payments` table with status flags cannot answer "where is this centavo right now" without archaeology.
-* **Decision:** Every movement of money — hold, release, refund, commission split, payout, cash-receivable accrual — is a `ledger_entries` journal row with ≥2 `ledger_lines` (debit/credit pairs) into `ledger_accounts`. CHECK constraint: exactly one of debit/credit is non-null per line; per-entry trigger asserts Σdebits = Σcredits. Ledger rows are INSERT-only; corrections are offsetting entries, never UPDATE/DELETE (REQ-PAY-03, REQ-GOV-01). Nightly reconciliation job asserts global Σdebits = Σcredits and per-account balances match expectations; any drift pages the admin (REQ-PAY-10).
+* **Context:** Escrow is the trust foundation of the entire PRD. The release window was initially described as a fixed 3-day Shopee-style guarantee (PRD §4.2, §6.1), but in practice different services need different windows — a tricycle driver needs gas money in 1 hour, while a construction project may have a 14-day inspection window. Per the Payment Protection Taxonomy (ADR-026), each listing declares its own `escrow_release_hours` (0 = use platform default of 72h). Buyers see this window before committing. Additionally, listings may opt into `direct` payment mode where no escrow hold occurs at all — the buyer is warned "not protected, not refundable." Financial events must still be (a) immutable, (b) auditable, (c) reconcile-able to zero drift, and (d) replayable for dispute evidence. A `payments` table with status flags cannot answer "where is this centavo right now" without archaeology.
+* **Decision:** Every movement of money — hold, release, refund, commission split, payout, cash-receivable accrual — is a `ledger_entries` journal row with ≥2 `ledger_lines` (debit/credit pairs) into `ledger_accounts`. CHECK constraint: exactly one of debit/credit is non-null per line; per-entry trigger asserts Σdebits = Σcredits. Ledger rows are INSERT-only; corrections are offsetting entries, never UPDATE/DELETE (REQ-PAY-03, REQ-GOV-01). Nightly reconciliation job asserts global Σdebits = Σcredits and per-account balances match expectations; any drift pages the admin (REQ-PAY-10). The escrow release window is per-listing configurable, capped by `platform_configs.max_escrow_release_hours` (default 720h / 30 days). `escrow_release_at` is snapshotted on `orders` at creation — changing the listing later does not affect existing orders.
 * **Alternatives Considered:**
   * *Single-entry payment records* — rejected: cannot prove conservation of money; dispute evidence becomes screenshots, not math.
   * *Event-sourced ledger only (no current-state accounts)* — rejected: overkill for pilot scale; account-address model (`escrow:order:{id}`, `payable:provider:{id}`, `revenue:commission`) gives the same audit power with simpler queries.
@@ -192,7 +192,13 @@
 * **Status:** Locked
 * **Traces to:** REQ-TXN-01..07, Taxonomy §3, §3.3
 * **Context:** Five mechanisms create orders (Direct Booking, Reverse Bidding, Quick Deal, Deal-Chaining, Agent-Mediated) plus a 1:1 quote variant (`bid_type:'quote'`, REQ-TXN-05). If each mechanism had its own order lifecycle, escrow logic, the dispute SLA (48h, §6), and notification matrix would be implemented five times.
-* **Decision:** Every mechanism converges on one `orders` table and one state machine: `pending_payment → held_in_escrow → in_fulfillment → completed` (or `disputed / cancelled / refunded`). Mechanism is metadata (`orders.origin` enum incl. `deal_chain`, `offline_sync`). Deal-Chaining is a container (`deal_chains`) whose slots each spawn an independent Order (Taxonomy §3). Every transition writes `order_status_transitions` with actor + reason (Schema Correction #3) — a flat enum alone cannot answer "who moved this and why" in a dispute. Quick Deal negotiation caps at 3 rounds via DB CHECK (Schema Correction #5).
+* **Decision:** Every mechanism converges on one `orders` table and one state machine with two protection paths:
+
+  **Tiwala Contract path:** `pending_payment → held_in_escrow → in_fulfillment → completed`
+
+  **Direct Payment path:** `pending_payment → in_fulfillment → completed` (skips escrow hold; `escrow_release_at = NULL`)
+
+  Both paths share the same terminal states: `disputed / cancelled / refunded`. Mechanism is metadata (`orders.origin` enum incl. `deal_chain`, `offline_sync`). Deal-Chaining is a container (`deal_chains`) whose slots each spawn an independent Order (Taxonomy §3). Every transition writes `order_status_transitions` with actor + reason (Schema Correction #3) — a flat enum alone cannot answer "who moved this and why" in a dispute. Quick Deal negotiation has no hard cap on counter-offer rounds (founder directive: caps are restrictive to real-world dealing); platform config may add a soft limit later if abuse patterns emerge.
 * **Alternatives Considered:**
   * *Per-mechanism order tables* — rejected: five escrow implementations, five dispute paths.
   * *State machine library with per-mechanism graphs* — rejected: the D6 contract (ADR-006) already guarantees one vocabulary; extra graphs add no value.
@@ -413,6 +419,54 @@
 
 ---
 
+### ADR-026: Payment Protection Taxonomy — Tiwala Contract + Direct Payment
+
+* **Status:** Locked
+* **Traces to:** REQ-PAY-04/09, §6.1, Listing Model Taxonomy, Founder directive Jul 29
+* **Context:** The PRD described escrow as a fixed 3-day Shopee-style guarantee for all transactions. In practice, this is too rigid: a tricycle driver (A2 Instant Dispatch) needs gas money within hours, while a construction contractor (A1 Linear Project) may need a 14-day inspection window. Additionally, some servicers may want to offer direct (no-escrow) payment — the PRD's "cash transactions" handle offline cash but there is no digital equivalent where a buyer pays online without escrow protection. The platform must support both models while informing buyers of the protection level before they commit.
+* **Decision:**
+
+  **Two payment protection modes, declared per listing:**
+
+  | Mode | Column Value | Escrow? | Buyer Warning | Auto-Release |
+  |---|---|---|---|---|
+  | **Tiwala Contract** | `tiwala_contract` | Yes — buyer's money held until release or dispute | No warning (this is the safe default) | `escrow_release_hours` after order creation (0 = platform default of 72h). Capped at `max_escrow_release_hours` (720h / 30d). |
+  | **Direct Payment** | `direct` | No — money goes straight to servicer | ⚠️ "This listing uses Direct Payment. Your payment is NOT protected by Tiwala Contract and is NOT refundable." | N/A — no escrow hold exists |
+
+  **Three new concepts visible to buyers on listing cards and detail pages:**
+
+  1. **"Tiwala Contract · X days"** — badge showing the escrow duration. "Tiwala" = Tagalog for trust/confidence. This is the default and expected mode.
+  2. **"Direct Payment · No Protection"** — warning badge. Listing cards with this mode get a distinct visual treatment (amber/red accent vs green Tiwala badge).
+  3. **"Running Transaction"** — badge appearing when a listing has active un-released escrow (`active_escrow_count > 0`). Does not block new orders but informs buyers that the servicer currently has held funds. Computed from denormalized counter on the `listings` table.
+
+  **Per-listing escrow window:** `listings.escrow_release_hours` (INT, default 0). 0 = use platform default (72h). Validated at application layer against `platform_configs.max_escrow_release_hours`. Displayed prominently on listing detail. Servicers who need fast release (e.g., tricycle, delivery) set short windows; those with inspection-heavy work set longer ones.
+
+  **Snapshot on order creation:** Both `payment_protection` and `escrow_release_at` (the computed wall-clock time) are frozen on the `orders` row at creation. Changing the listing's settings later does NOT affect existing orders — same snapshot principle as commission rates (ADR-011).
+
+  **Archetype-suggested defaults:** Each fulfillment archetype in the taxonomy has a suggested `escrow_release_hours` default that pre-fills when creating a listing: A2 (Instant Dispatch) = 1h, A3 (Appointment) = 24h, A7 (Quoted) = 72h, A1 (Linear Project) = 168h, A10 (Long-Running) = 336h. The servicer can override within the platform max.
+
+* **Alternatives Considered:**
+  * *Fixed 3-day for everyone* (PRD original) — rejected: too rigid; kills adoption for archetypes that need faster liquidity (tricycle, same-day delivery).
+  * *Escrow mandatory on all digital payments* — rejected: some servicers and buyers have established trust; forcing escrow adds friction they don't want. The warning label is sufficient protection.
+  * *Per-category release windows instead of per-listing* — rejected: even within one category, servicers have different cash-flow needs. Configurability at listing level is the simplest model for the pilot.
+  * *No buyer warning for direct payment* — rejected: buyer must know they're opting out of protection. The warning is mandatory and unskippable in the checkout flow.
+
+* **Consequences:**
+  * `listings` gains 3 columns; `orders` gains 2 columns; `platform_configs` gains 1 table (31 total tables).
+  * Order state machine (ADR-012) now has two paths — the direct-payment path skips `held_in_escrow` entirely.
+  * Escrow auto-release logic must handle NULL `escrow_release_at` for direct-payment orders (no release job fires).
+  * `active_escrow_count` on listings must be maintained via trigger or outbox worker on order transitions — a denormalization that avoids per-listing subqueries in listing feeds.
+  * The Tiwala Contract branding is platform-specific terminology. All user-facing copy must use these exact terms for consistency.
+* **Verification:**
+  * Listing with `tiwala_contract` + 1h release: fund → escrow holds → auto-releases at created_at + 1h.
+  * Listing with `direct`: fund → order status goes straight to `in_fulfillment` → no escrow hold → no release job.
+  * Listing with `escrow_release_hours = 0`: uses platform default (72h). Verified by inspection of `escrow_release_at` on the order.
+  * Listing with `escrow_release_hours > max`: rejected at application layer with clear error message.
+  * Existing order is NOT affected when listing's `escrow_release_hours` or `payment_protection` changes post-creation.
+  * "Running Transaction" badge appears/disappears correctly as orders enter/leave `held_in_escrow` and `in_fulfillment`.
+
+---
+
 ## Supersession & Reconciliation Log
 
 | Item | Old Value | New Value | Authority |
@@ -422,7 +476,9 @@
 | Revenue split example | 75/10/15 (PRD §3.10 REQ-PAY-06 print) | **80/10/10 agent-managed, 90/10 direct, 8% cash** (ADR-011) | PRD §4.1, locked Jul 27 |
 | Hosting | Laravel Forge + DigitalOcean $24/mo (architecture.md §6) | **Dokploy on existing Proxmox, ₱0 recurring** (ADR-020) | PRD §9.6, locked Jul 27 |
 | Old ADRs 001/002 (Jul 25) | PG+PostGIS; Redis-desync outbox | Absorbed & generalized into ADR-001, ADR-009 | This catalog |
-| Readiness report (Jul 25) | "APPROVED FOR PHASE 4" on stale schema/stack | **Void** — re-run readiness after Phase 3 artifacts updated | This catalog |
+| Readiness report v3.0.0 (Jul 25) | "APPROVED FOR PHASE 4" on stale schema/stack | **Replaced by v4.0.0** (Jul 29) | This catalog |
+| Fixed 3-day escrow (PRD §4.2) | Platform-wide fixed 72h | **Per-listing configurable** + Direct Payment mode | ADR-004, ADR-012, ADR-026, Founder directive Jul 29 |
+| 3-round negotiation cap | DB CHECK on quick_deals | **Removed** — no hard cap | Founder directive Jul 29 |
 
 ---
 
@@ -437,4 +493,4 @@
 
 ---
 
-*End of ADR Catalog v4.1.0 — 25 load-bearing decisions. Next: Phase 3 readiness re-check.*
+*End of ADR Catalog v4.2.0 — 26 load-bearing decisions. Next: Phase 3 readiness re-check.*

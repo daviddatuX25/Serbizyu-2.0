@@ -236,7 +236,9 @@ The previous architecture.md v3.1.0 cost model (~$70–145/mo for Forge + Semaph
 | AI | FastEmbed SLM + OpenRouter | Cloud-only OpenRouter (FastEmbed deferred) | ADR-021 |
 | Schema | SERVICERS/BOOKINGS/WALLETS/BUDGET_TREE_NODES ERD | 30 tables, 8 bounded contexts | Schema redesign Jul 28 |
 | Revenue split reference | 75/10/15 (§3.10 print) | 80/10/10 agent-managed, 90/10 direct, 8% cash (§4.1 locked) | ADR-011 |
-| Old ADRs | ADR-001 (PG), ADR-002 (Outbox) inline | Absorbed into ADR catalog v4.0.0 | ADR catalog |
+| Old ADRs | ADR-001 (PG), ADR-002 (Outbox) inline | Absorbed into ADR catalog v4.2.0 | ADR catalog |
+| Escrow release | Fixed 3-day platform-wide | Per-listing configurable (Tiwala Contract) + Direct Payment | ADR-004, ADR-012, ADR-026, Founder directive Jul 29 |
+| Negotiation cap | 3-round max on Quick Deal | No hard cap | Founder directive Jul 29 |
 
 ---
 
