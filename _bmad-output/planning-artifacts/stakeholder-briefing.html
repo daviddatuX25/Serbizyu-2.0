@@ -13,22 +13,83 @@ body{
   background:#0f1923;color:#f0f4f8;overflow:hidden;width:100vw;height:100vh;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale
 }
+/* === PHASE BANNER === */
+.phase-banner{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  background:linear-gradient(135deg,#0f1923 0%,#1a2a3a 100%);
+  border-bottom:1px solid rgba(245,166,35,.2);
+  padding:6px 16px;text-align:center;
+  font-size:clamp(.65rem,.85vw,.75rem);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  flex-wrap:wrap
+}
+.phase-banner .phase-icon{font-size:clamp(.8rem,1vw,.9rem)}
+.phase-banner .phase-current{color:#4ad66d;font-weight:600}
+.phase-banner .phase-arrow{color:#f5a623;font-weight:700}
+.phase-banner .phase-next{color:#f5a623;font-weight:600}
+.phase-banner .phase-muted{color:#667788}
+/* === LANGUAGE TOGGLE === */
+.lang-toggle{
+  position:fixed;top:40px;right:16px;z-index:200;
+  display:flex;gap:2px;border-radius:20px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(15,25,35,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)
+}
+.lang-btn{
+  padding:5px 12px;border:none;cursor:pointer;font-size:.75rem;font-weight:600;
+  background:transparent;color:rgba(255,255,255,.4);transition:all .3s;white-space:nowrap
+}
+.lang-btn.active{background:#1a5632;color:#fff}
+.lang-btn:hover:not(.active){color:rgba(255,255,255,.7)}
 /* === SLIDE CONTAINER === */
-.slide-container{position:relative;width:100vw;height:100vh;overflow:hidden}
+.slide-container{position:relative;width:100vw;height:100vh;overflow:hidden;padding-top:32px}
 .slide{
   position:absolute;inset:0;display:flex;flex-direction:column;
   justify-content:center;align-items:center;padding:clamp(2rem,5vw,5rem);
   opacity:0;visibility:hidden;transition:opacity .6s ease,visibility .6s ease;
   overflow-y:auto;overflow-x:hidden;
-  -webkit-overflow-scrolling:touch
+  -webkit-overflow-scrolling:touch;padding-top:52px
 }
 .slide.active{opacity:1;visibility:visible;z-index:2}
 .slide.exit{opacity:0;visibility:hidden;z-index:1}
+/* === LANGUAGE CONTENT WRAPPERS === */
+.lang-en,.lang-tl{width:100%}
+.lang-tl{display:none}
+.lang-active-tl .lang-en{display:none}
+.lang-active-tl .lang-tl{display:block}
 /* === SLIDE INNER === */
 .slide-inner{
   width:100%;max-width:1100px;margin:auto;
   padding:clamp(0.5rem,1.5vh,2rem) 0
 }
+.slide-inner-narrow{max-width:900px}
+/* === SUMMARY SLIDE === */
+.summary-grid{
+  display:grid;gap:clamp(.6rem,1.2vw,1.2rem);
+  margin:.75rem 0
+}
+.summary-grid-2{grid-template-columns:1fr 1fr}
+.summary-grid-3{grid-template-columns:1fr 1fr 1fr}
+.summary-item{
+  background:#1a2a3a;border-radius:12px;padding:clamp(.8rem,1.5vw,1.5rem);
+  border:1px solid rgba(255,255,255,.06);
+  border-left:4px solid #f5a623;text-align:left
+}
+.summary-item.green{border-left-color:#1a5632}
+.summary-item.blue{border-left-color:#3b82f6}
+.summary-item.red{border-left-color:#ef4444}
+.summary-item .s-num{
+  font-size:clamp(.65rem,.8vw,.7rem);color:#f5a623;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3em
+}
+.summary-item .s-title{
+  font-size:clamp(.95rem,1.3vw,1.1rem);font-weight:700;color:#f0f4f8;
+  margin-bottom:.25em
+}
+.summary-item .s-body{
+  font-size:clamp(.8rem,1.1vw,.95rem);color:#b0c0d0;line-height:1.5
+}
+.summary-item .s-body strong{color:#e0e8f0}
 /* === TYPOGRAPHY === */
 h1{font-size:clamp(1.8rem,4vw,3.5rem);font-weight:800;line-height:1.15;letter-spacing:-.02em;margin-bottom:.25em}
 h1 .accent{color:#f5a623}
@@ -109,9 +170,23 @@ td:first-child{font-weight:600;color:#e0e8f0}
 /* === RESPONSIVE TWEAKS === */
 @media(max-width:640px){
   .slide{padding:1rem}
+  .slide-inner{padding:0.25rem 0}
+  .summary-grid-2,.summary-grid-3{grid-template-columns:1fr}
   .card-grid-2,.card-grid-3,.card-grid-4,.card-grid-5{grid-template-columns:1fr}
   .nav-bar{gap:.25rem;padding:.35rem .6rem}
   .nav-dot{width:6px;height:6px}
+  .phase-banner{font-size:.6rem;padding:4px 8px;gap:4px}
+  .lang-toggle{top:34px;right:8px}
+  .lang-btn{padding:4px 8px;font-size:.65rem}
+}
+@media(max-width:480px){
+  .slide{padding-top:60px;padding-left:.75rem;padding-right:.75rem}
+  .slide-inner{padding-top:.25rem}
+  .stat-row{gap:.5rem}
+  .stat{min-width:70px}
+  .stat-value{font-size:1.3rem}
+  .summary-grid{gap:.4rem}
+  .summary-item{padding:.6rem}
 }
 /* === ACCENT BAR === */
 .accent-bar{width:60px;height:3px;background:#f5a623;border-radius:2px;margin:.5rem 0 1rem}
@@ -122,6 +197,7 @@ td:first-child{font-weight:600;color:#e0e8f0}
   padding:.75rem 1rem;border-radius:0 8px 8px 0;margin:.6rem 0
 }
 .highlight-box.gold{border-left-color:#f5a623;background:rgba(245,166,35,.08)}
+.highlight-box.red{border-left-color:#ef4444;background:rgba(239,68,68,.08)}
 /* === FLEX ROW === */
 .flex-row{display:flex;flex-wrap:wrap;gap:1rem;align-items:center}
 .flex-row>*{flex:1;min-width:200px}
@@ -146,15 +222,60 @@ td:first-child{font-weight:600;color:#e0e8f0}
 .mb-1{margin-bottom:.5rem}
 .mt-1{margin-top:.5rem}
 .mt-2{margin-top:1rem}
+/* === SLIDE TYPE BADGE === */
+.slide-type{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:clamp(.6rem,.75vw,.65rem);font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;padding:2px 10px;border-radius:20px;margin-bottom:.35rem
+}
+.slide-type.summary{background:rgba(245,166,35,.15);color:#f5a623;border:1px solid rgba(245,166,35,.3)}
+.slide-type.detail{background:rgba(59,130,246,.15);color:#7bb7ff;border:1px solid rgba(59,130,246,.3)}
+/* === STEP NUMBER === */
+.step-number{
+  background:#1a5632;border-radius:50%;width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;font-weight:700;flex-shrink:0;color:#fff
+}
+/* === PULSE DOT === */
+.pulse-dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:#4ad66d;animation:pulse 2s infinite
+}
+@keyframes pulse{0%{opacity:1;box-shadow:0 0 0 0 rgba(74,214,109,.7)}50%{opacity:.7}70%{box-shadow:0 0 0 6px rgba(74,214,109,0)}100%{opacity:1;box-shadow:0 0 0 0 rgba(74,214,109,0)}}
+/* === QUOTE === */
+.quote-block{
+  border-left:3px solid #f5a623;padding:.5rem .75rem;margin:.5rem 0;
+  font-style:italic;font-size:clamp(.78rem,1.05vw,.9rem);color:#b0c0d0
+}
+.quote-attribution{font-style:normal;font-size:clamp(.65rem,.8vw,.7rem);color:#f5a623;margin-top:.15rem}
 </style>
 </head>
 <body>
 
+<!-- ═══ PHASE BANNER ═══ -->
+<div class="phase-banner" id="phaseBanner">
+  <span class="phase-icon">📍</span>
+  <span class="phase-muted">Current:</span>
+  <span class="phase-current">Phase 2 (PRD)</span>
+  <span class="tag tag-success" style="font-size:.6rem">COMPLETE</span>
+  <span class="phase-arrow">→</span>
+  <span class="phase-muted">Next:</span>
+  <span class="phase-next">Phase 3 (Architecture + Epics &amp; Stories)</span>
+</div>
+
+<!-- ═══ LANGUAGE TOGGLE ═══ -->
+<div class="lang-toggle" id="langToggle">
+  <button class="lang-btn active" data-lang="en" id="langEnBtn">🇬🇧 English</button>
+  <button class="lang-btn" data-lang="tl" id="langTlBtn">🇵🇭 Taglish</button>
+</div>
+
 <div class="slide-container" id="deck">
 
-<!-- ═══ SLIDE 1: TITLE ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 1: TITLE                              -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide active" data-index="0">
-  <div class="slide-inner text-center">
+  <div class="slide-inner text-center slide-inner-narrow">
     <div style="margin-bottom:1.5rem">
       <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style="display:inline-block">
         <rect width="72" height="72" rx="16" fill="#1a5632"/>
@@ -164,699 +285,1965 @@ td:first-child{font-weight:600;color:#e0e8f0}
     <h1 style="margin-bottom:.2rem">Serbizyu <span class="accent">2.0</span></h1>
     <p class="text-gold" style="font-size:clamp(1rem,1.8vw,1.5rem);font-weight:500;margin-bottom:.75rem">Stakeholder Briefing</p>
     <div class="accent-bar" style="margin:.5rem auto"></div>
-    <p class="lead" style="max-width:720px;margin:0 auto .5rem">A Full-Spectrum Services Commerce Platform for the Provincial Economy</p>
-    <p style="font-size:clamp(.75rem,1vw,.9rem);color:#8899aa;margin-top:.75rem">
-      BMAD Phase 1 (Analysis) + Phase 2 (Planning &amp; Scoping) — Complete
-    </p>
-    <p style="font-size:clamp(.7rem,.9vw,.8rem);color:#667788;margin-top:.25rem">July 27, 2026 · Tagudin, Ilocos Sur, Philippines</p>
+
+    <div class="lang-en">
+      <p class="lead" style="max-width:720px;margin:0 auto .5rem">A Full-Spectrum Services Commerce Platform for the Provincial Economy</p>
+      <p style="font-size:clamp(.75rem,1vw,.9rem);color:#8899aa;margin-top:.75rem">BMAD Phase 1 (Analysis) + Phase 2 (Planning &amp; Scoping) — Complete</p>
+      <p style="font-size:clamp(.7rem,.9vw,.8rem);color:#667788;margin-top:.25rem">July 27, 2026 · Tagudin, Ilocos Sur, Philippines</p>
+    </div>
+
+    <div class="lang-tl">
+      <p class="lead" style="max-width:720px;margin:0 auto .5rem">Isang full-spectrum services commerce platform para sa provincial economy</p>
+      <p style="font-size:clamp(.75rem,1vw,.9rem);color:#8899aa;margin-top:.75rem">BMAD Phase 1 (Analysis) + Phase 2 (Planning &amp; Scoping) — Tapos na!</p>
+      <p style="font-size:clamp(.7rem,.9vw,.8rem);color:#667788;margin-top:.25rem">July 27, 2026 · Tagudin, Ilocos Sur, Pilipinas</p>
+    </div>
+
     <div style="margin-top:2rem;display:flex;flex-wrap:wrap;gap:1.5rem;justify-content:center;font-size:.8rem;color:#8899aa">
       <span>▲ Press <kbd class="kbd">→</kbd> or <kbd class="kbd">↓</kbd> to advance</span>
+      <span>🌐 Toggle <kbd class="kbd">T</kbd> for Taglish/English</span>
       <span>● Click navigation dots below</span>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 2: THE PROBLEM ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 2: SUMMARY — ANO ANG PROBLEMA        -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="1">
   <div class="slide-inner">
-    <div class="text-center mb-1" style="margin-bottom:.5rem">
+    <div class="text-center mb-1">
+      <span class="slide-type summary">📋 SUMMARY</span>
       <span class="tag tag-warning">The Problem</span>
     </div>
-    <h2 class="text-center">The Structural Unfairness of the Digital Economy</h2>
-    <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
 
-    <div class="stat-row">
-      <div class="stat"><div class="stat-value">70%</div><div class="stat-label">Provincial micro-entrepreneurs<br>invisible online</div></div>
-      <div class="stat"><div class="stat-value">Feature Phone</div><div class="stat-label">Primary device for<br>trade workers</div></div>
-      <div class="stat"><div class="stat-value">Cash Only</div><div class="stat-label">Dominant transaction<br>method</div></div>
+    <div class="lang-en">
+      <h2 class="text-center">Ang Problema: The Digital Divide</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item red">
+          <div class="s-num">🔴 INVISIBLE</div>
+          <div class="s-title">70% ng provincial entrepreneurs walang online presence</div>
+          <div class="s-body">Hindi ito skills gap — <strong>access gap</strong> ito. Yung mga marunong mag-digital, sila lang yumayaman.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">📱 FEATURE PHONE ECONOMY</div>
+          <div class="s-title">Trade workers naka-feature phone lang</div>
+          <div class="s-body">Walang smartphone, walang data. <strong>Cash lang</strong> ang transaction. Nakadepende sa word-of-mouth.</div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">🏘️ BAYANIHAN STREET</div>
+          <div class="s-title">Parang Fiverr, pero para sa local economy</div>
+          <div class="s-body">Si Ate Grace, Tatay Ben — dapat sila makasali. Kailangan ng platform na <strong>gumagana sa barrio level</strong>, feature phone, at cash.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">🚫 EXCLUDED</div>
+          <div class="s-title">Shopee, Grab, Fiverr — hindi para sa kanila</div>
+          <div class="s-body">Metro platforms need smartphone + credit card + internet. <strong>Serbizyu serves everyone else.</strong></div>
+        </div>
+      </div>
     </div>
 
-    <div class="cols-2" style="margin-top:.5rem">
-      <div>
-        <p><strong>This is not a skills gap — it's an access gap.</strong> Businesses with the means, knowledge, and confidence to digitize capture an outsized share of economic opportunity. The vast majority of skilled, hardworking provincial micro-entrepreneurs remain invisible — locked out by the tools and infrastructure required to participate.</p>
-        <p style="font-size:clamp(.75rem,1vw,.85rem);color:#8899aa;font-style:italic;border-left:2px solid #f5a623;padding-left:.75rem;margin-top:.5rem">
-          "The carpenter in Tagudin, the seamstress in Barangay Bio, the tricycle driver who knows every street — they have no equivalent. Fiverr only serves the international market and only digital goods."<br>
-          <span style="color:#f5a623">— David Datu N. Sarmiento, Founder</span>
-        </p>
-      </div>
-      <div class="card" style="background:#1e2e3e">
-        <h4 style="color:#f5a623;margin-bottom:.5rem">The Bayanihan Street Thesis</h4>
-        <p style="font-size:clamp(.72rem,.9vw,.82rem)">Serbizyu is built on the vision of <strong>Bayanihan Street</strong> — a place where anyone could join, claim their digital presence, and get work. Like how Fiverr works, but designed for the local, real-world service economy. The platform closes the digital divide by meeting people where they are, with the tools they already have — SMS for feature phones, agents for non-digital-literate owners, cash for the unbanked.</p>
-        <p style="font-size:clamp(.72rem,.9vw,.82rem);margin-top:.5rem">Metropolitan platforms (Shopee, Grab, Fiverr) are optimized for smartphone-native, credit-card-carrying users. Serbizyu serves everyone else.</p>
+    <div class="lang-tl">
+      <h2 class="text-center">Ang Problema: Digital Divide</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item red">
+          <div class="s-num">🔴 INVISIBLE</div>
+          <div class="s-title">70% ng provincial entrepreneurs walang online presence</div>
+          <div class="s-body">Hindi ito skills gap — <strong>access gap</strong> ito. Yung mga marunong mag-digital, sila lang yumayaman.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">📱 FEATURE PHONE ECONOMY</div>
+          <div class="s-title">Trade workers naka-feature phone lang</div>
+          <div class="s-body">Walang smartphone, walang data. <strong>Cash lang</strong> ang transaction. Nakadepende sa word-of-mouth.</div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">🏘️ BAYANIHAN STREET</div>
+          <div class="s-title">Parang Fiverr, pero para sa local economy</div>
+          <div class="s-body">Si Ate Grace, Tatay Ben — dapat sila makasali. Kailangan ng platform na <strong>gumagana sa barrio level</strong>, feature phone, at cash.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">🚫 EXCLUDED</div>
+          <div class="s-title">Shopee, Grab, Fiverr — hindi para sa kanila</div>
+          <div class="s-body">Metro platforms need smartphone + credit card + internet. <strong>Serbizyu serves everyone else.</strong></div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 3: SOLUTION OVERVIEW ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 3: DETAIL — DIGITAL DIVIDE DATA      -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="2">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-success">The Solution</span>
-    </div>
-    <h2 class="text-center">Serbizyu Bridges the Divide</h2>
-    <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
-
-    <div class="stat-row">
-      <div class="stat"><div class="stat-value">28</div><div class="stat-label">Categories across<br>8 tiers</div></div>
-      <div class="stat"><div class="stat-value">4</div><div class="stat-label">Listing types</div></div>
-      <div class="stat"><div class="stat-value">5</div><div class="stat-label">Transaction<br>mechanisms</div></div>
-      <div class="stat"><div class="stat-value">10</div><div class="stat-label">Fulfillment<br>archetypes</div></div>
-      <div class="stat"><div class="stat-value">5</div><div class="stat-label">Access tiers<br>(L0–L4)</div></div>
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-warning">The Problem</span>
     </div>
 
-    <p class="text-center" style="max-width:700px;margin:0 auto .5rem">Tagudin, Ilocos Sur pilot — a full-spectrum commerce platform purpose-built for the provincial economy, from a ₱50 tricycle ride to a multi-month construction project.</p>
+    <div class="lang-en">
+      <h2 class="text-center">The Digital Divide — By the Numbers</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
 
-    <div class="card-grid card-grid-4" style="margin-top:.5rem">
-      <div class="card">
-        <div class="card-title"><span class="badge badge-green">●</span> Inclusive Access</div>
-        <div class="card-body">Non-digital-literate trade workers participate through a Human Agent Network. No smartphone required. SMS consent keeps the owner in control.</div>
+      <div class="stat-row">
+        <div class="stat"><div class="stat-value">70%</div><div class="stat-label">Provincial micro-entrepreneurs<br>invisible online</div></div>
+        <div class="stat"><div class="stat-value">Feature Phone</div><div class="stat-label">Primary device for<br>trade workers</div></div>
+        <div class="stat"><div class="stat-value">Cash Only</div><div class="stat-label">Dominant transaction<br>method</div></div>
       </div>
-      <div class="card">
-        <div class="card-title"><span class="badge badge-gold">●</span> Invisible Formalization</div>
-        <div class="card-body">Tax compliance is gamified as earnings progression. Servicers unlock higher payouts by climbing the 3-Lane Ladder at their own pace.</div>
+
+      <div class="cols-2" style="margin-top:.5rem">
+        <div>
+          <p><strong>This is not a skills gap — it's an access gap.</strong> Businesses with the means, knowledge, and confidence to digitize capture an outsized share of economic opportunity. The vast majority of skilled, hardworking provincial micro-entrepreneurs remain invisible — locked out by the tools and infrastructure required to participate.</p>
+          <div class="quote-block">
+            "The carpenter in Tagudin, the seamstress in Barangay Bio, the tricycle driver who knows every street — they have no equivalent. Fiverr only serves the international market and only digital goods."
+            <div class="quote-attribution">— David Datu N. Sarmiento, Founder</div>
+          </div>
+        </div>
+        <div class="card" style="background:#1e2e3e">
+          <h4 style="color:#f5a623;margin-bottom:.5rem">The Bayanihan Street Thesis</h4>
+          <p style="font-size:clamp(.72rem,.9vw,.82rem)">Serbizyu is built on the vision of <strong>Bayanihan Street</strong> — a place where anyone could join, claim their digital presence, and get work. Like how Fiverr works, but designed for the local, real-world service economy. The platform closes the digital divide by meeting people where they are, with the tools they already have — SMS for feature phones, agents for non-digital-literate owners, cash for the unbanked.</p>
+          <p style="font-size:clamp(.72rem,.9vw,.82rem);margin-top:.5rem">Metropolitan platforms (Shopee, Grab, Fiverr) are optimized for smartphone-native, credit-card-carrying users. Serbizyu serves everyone else.</p>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-title"><span class="badge badge-blue">●</span> Financial Safety</div>
-        <div class="card-body">Double-entry escrow with Shopee-style 3-day guarantee protects both buyer and servicer. Cash transactions with dual-confirmation receipts.</div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Ang Digital Divide — Mga Numero</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="stat-row">
+        <div class="stat"><div class="stat-value">70%</div><div class="stat-label">Provincial micro-entrepreneurs<br>invisible online</div></div>
+        <div class="stat"><div class="stat-value">Feature Phone</div><div class="stat-label">Primary device ng<br>trade workers</div></div>
+        <div class="stat"><div class="stat-value">Cash Only</div><div class="stat-label">Dominant transaction<br>method</div></div>
       </div>
-      <div class="card">
-        <div class="card-title"><span class="badge badge-red">●</span> Full-Spectrum Commerce</div>
-        <div class="card-body">Four listing types, five transaction mechanisms, ten fulfillment archetypes covering the complete provincial economy.</div>
+
+      <div class="cols-2" style="margin-top:.5rem">
+        <div>
+          <p><strong>Hindi ito skills gap — access gap 'to.</strong> Yung mga may means at confidence mag-digitize, sila lang nakikinabang sa digital economy. Yung karamihan ng skilled provincial workers, <strong>invisible pa rin</strong> — nasasara ng pinto dahil sa tools at infrastructure na kailangan.</p>
+          <div class="quote-block">
+            "Yung karpintero sa Tagudin, mananahi sa Barangay Bio, tricycle driver na kilala lahat ng kalsada — wala silang online equivalent. Fiverr? Para lang sa international market at digital goods."
+            <div class="quote-attribution">— David Datu N. Sarmiento, Founder</div>
+          </div>
+        </div>
+        <div class="card" style="background:#1e2e3e">
+          <h4 style="color:#f5a623;margin-bottom:.5rem">Ang Bayanihan Street Thesis</h4>
+          <p style="font-size:clamp(.72rem,.9vw,.82rem)">Ang Serbizyu, gawa siya sa vision ng <strong>Bayanihan Street</strong> — isang lugar kung saan kahit sino pwedeng sumali, gumawa ng digital presence, at makakuha ng trabaho. Parang Fiverr, pero designed para sa local, real-world service economy. Sinasara ng platform ang digital divide sa pamamagitan ng pag-meet sa tao kung nasaan sila — SMS para sa feature phone, agents para sa hindi tech-savvy, cash para sa walang bank account.</p>
+          <p style="font-size:clamp(.72rem,.9vw,.82rem);margin-top:.5rem">Yung mga metro platforms (Shopee, Grab, Fiverr), optimized lang para sa smartphone-native, may-credit-card na users. <strong>Serbizyu serves everyone else.</strong></p>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 4: COMMERCE PRIMITIVES ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 4: SUMMARY — ANG SOLUSYON            -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="3">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-success">Commerce Primitives</span>
-    </div>
-    <h2 class="text-center">The 4 Listing Types &amp; 5 Transaction Mechanisms</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
-
-    <div class="card-grid card-grid-4" style="margin-bottom:.5rem">
-      <div class="card" style="border-top:3px solid #1a5632">
-        <div class="card-badge badge-green">LST-1</div>
-        <div class="card-title">Service Listing</div>
-        <div class="card-body">Provider offers a service — "Aircon cleaning, ₱500, available Tues/Thurs"</div>
-      </div>
-      <div class="card" style="border-top:3px solid #f5a623">
-        <div class="card-badge badge-gold">LST-2</div>
-        <div class="card-title">Product Listing</div>
-        <div class="card-body">Seller lists a product — "Lutong bahay adobo, ₱80/serving"</div>
-      </div>
-      <div class="card" style="border-top:3px solid #3b82f6">
-        <div class="card-badge badge-blue">LST-3</div>
-        <div class="card-title">Service Request</div>
-        <div class="card-body">Customer posts a need — "Need plumber for leaking sink, ₱300 budget"</div>
-      </div>
-      <div class="card" style="border-top:3px solid #ef4444">
-        <div class="card-badge badge-red">LST-4</div>
-        <div class="card-title">Product Request</div>
-        <div class="card-body">Buyer seeks goods — "Looking for 2 sacks of rice, delivered"</div>
-      </div>
+      <span class="slide-type summary">📋 SUMMARY</span>
+      <span class="tag tag-success">The Solution</span>
     </div>
 
-    <p class="text-center text-gold" style="font-size:clamp(.75rem,.9vw,.85rem);margin:.25rem 0"><strong>Any listing type × any compatible mechanism — independently composable</strong></p>
+    <div class="lang-en">
+      <h2 class="text-center">Ang Solusyon: Serbizyu Bridges the Divide</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
 
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>#</th><th>Mechanism</th><th>Initiated By</th><th>Flow</th></tr></thead>
-        <tbody>
-          <tr><td>1</td><td><strong>Direct Booking</strong></td><td>Customer/Buyer browses listing</td><td>Browse → Select → Pay into escrow → Order created</td></tr>
-          <tr><td>2</td><td><strong>Reverse Bidding</strong></td><td>Customer posts a Request</td><td>Post Request → Providers bid → Customer picks winner → Order</td></tr>
-          <tr><td>3</td><td><strong>Quick Deal</strong></td><td>Either party, face-to-face</td><td>Scan QR → Counter-offer (≤3 rounds) → Dual confirm → Order</td></tr>
-          <tr><td>4</td><td><strong>Deal-Chaining</strong></td><td>Either party, multi-party</td><td>Create container → Invite providers → All filled → Multiple Orders</td></tr>
-          <tr><td>5</td><td><strong>Agent-Mediated</strong></td><td>Agent on behalf of offline Owner</td><td>Agent creates listing → SMS OTP approval → Revenue split 80/10/10</td></tr>
-        </tbody>
-      </table>
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item green">
+          <div class="s-num">1️⃣ INCLUSIVE ACCESS</div>
+          <div class="s-title">Walang smartphone? No problem.</div>
+          <div class="s-body">Non-digital-literate workers join through a <strong>Human Agent Network</strong>. SMS consent keeps the owner in control. Feature phone lang, okay na.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">2️⃣ INVISIBLE FORMALIZATION</div>
+          <div class="s-title">Tax compliance = earnings progression</div>
+          <div class="s-body">Hindi burden ang BIR — <strong>gamified as unlocking higher payouts</strong> sa 3-Lane Ladder. Sariling pace, walang pilitan.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">3️⃣ FINANCIAL SAFETY</div>
+          <div class="s-title">Escrow na may 3-day guarantee</div>
+          <div class="s-body">Double-entry escrow, Shopee-style protection. Cash transactions may <strong>dual-confirmation receipts</strong>. Hindi ka maloloko.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">4️⃣ FULL-SPECTRUM COMMERCE</div>
+          <div class="s-title">₱50 tricycle ride hanggang construction project</div>
+          <div class="s-body"><strong>4 listing types</strong> × <strong>5 transaction mechanisms</strong> × <strong>10 fulfillment archetypes</strong>. Lahat covered ang provincial economy.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Ang Solusyon: Sinasara ng Serbizyu ang Divide</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item green">
+          <div class="s-num">1️⃣ INCLUSIVE ACCESS</div>
+          <div class="s-title">Walang smartphone? No problem.</div>
+          <div class="s-body">Yung hindi marunong mag-digital, makakasali sa pamamagitan ng <strong>Human Agent Network</strong>. SMS consent — nasa owner ang control. Feature phone lang, okay na.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">2️⃣ INVISIBLE FORMALIZATION</div>
+          <div class="s-title">Tax compliance = mas mataas na kita</div>
+          <div class="s-body">Hindi burden ang BIR — <strong>parang game progression</strong> sa 3-Lane Ladder. Mag-unlock ng mas malaking payout. Sariling pace mo 'yan.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">3️⃣ FINANCIAL SAFETY</div>
+          <div class="s-title">Escrow na may 3-day guarantee</div>
+          <div class="s-body">Double-entry escrow, parang Shopee ang protection. May <strong>dual-confirmation receipts</strong> ang cash transactions. Protektado ang pera mo.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">4️⃣ FULL-SPECTRUM COMMERCE</div>
+          <div class="s-title">₱50 tricycle ride hanggang malaking construction</div>
+          <div class="s-body"><strong>4 listing types</strong> × <strong>5 transaction mechanisms</strong> × <strong>10 fulfillment archetypes</strong>. Lahat ng klase ng economic activity covered.</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 5: FULFILLMENT ARCHETYPES ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 5: DETAIL — COMMERCE PRIMITIVES      -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="4">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-success">Fulfillment</span>
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-success">Commerce Primitives</span>
     </div>
-    <h2 class="text-center">The 10 Fulfillment Archetypes</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
-    <p class="text-center text-sm" style="margin-bottom:.25rem">Every transaction maps to one of ten standardized fulfillment shapes — archetype determines execution logic, category determines search/discovery.</p>
 
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>#</th><th>Archetype</th><th>Duration</th><th>Custody</th><th>Example</th><th>Launch?</th></tr></thead>
-        <tbody>
-          <tr style="background:rgba(26,86,50,.25)!important"><td class="text-green">A1</td><td><strong>Linear Project</strong></td><td>days–weeks</td><td>0–1</td><td>House construction, web design, event planning</td><td><span class="tag tag-success">✅ PRESET</span></td></tr>
-          <tr><td>A2</td><td>Instant Dispatch</td><td>minutes–hours</td><td>1</td><td>Tricycle ride, same-day delivery, towing</td><td>—</td></tr>
-          <tr style="background:rgba(26,86,50,.25)!important"><td class="text-green">A3</td><td><strong>Appointment</strong></td><td>hours</td><td>0</td><td>Tutoring, salon, massage, consulting</td><td><span class="tag tag-success">✅ PRESET</span></td></tr>
-          <tr style="background:rgba(26,86,50,.25)!important"><td class="text-green">A4</td><td><strong>Handoff</strong></td><td>hours–days</td><td>1</td><td>Baked goods, crafts, produce, ukay-ukay</td><td><span class="tag tag-success">✅ PRESET</span></td></tr>
-          <tr><td>A5</td><td>Rental / Asset Return</td><td>hours–days</td><td>2</td><td>Sound system, karaoke, gowns, tables &amp; chairs</td><td>—</td></tr>
-          <tr><td>A6</td><td>Recurring / Subscription</td><td>weeks–months</td><td>per cycle</td><td>Weekly house cleaning, bookkeeping retainer</td><td>—</td></tr>
-          <tr><td>A7</td><td>Quoted / Negotiated</td><td>varies</td><td>varies</td><td>House construction (bid), catering for 200 pax</td><td>—</td></tr>
-          <tr><td>A8</td><td>Emergency / On-Demand</td><td>minutes–hours</td><td>0–1</td><td>Plumbing emergency, locksmith, electrical fault</td><td>—</td></tr>
-          <tr style="background:rgba(26,86,50,.25)!important"><td class="text-green">A9</td><td><strong>Digital Deliverable</strong></td><td>days</td><td>0</td><td>Graphic design, video edit, resume writing</td><td><span class="tag tag-success">✅ PRESET</span></td></tr>
-          <tr><td>A10</td><td>Long-Running / Retainer</td><td>indefinite</td><td>0</td><td>Virtual assistant, ongoing caregiving, farm caretaking</td><td>—</td></tr>
-        </tbody>
-      </table>
+    <div class="lang-en">
+      <h2 class="text-center">4 Listing Types &amp; 5 Transaction Mechanisms</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="card-grid card-grid-4" style="margin-bottom:.5rem">
+        <div class="card" style="border-top:3px solid #1a5632">
+          <div class="card-badge badge-green">LST-1</div>
+          <div class="card-title">Service Listing</div>
+          <div class="card-body">Provider offers a service — "Aircon cleaning, ₱500, available Tues/Thurs"</div>
+        </div>
+        <div class="card" style="border-top:3px solid #f5a623">
+          <div class="card-badge badge-gold">LST-2</div>
+          <div class="card-title">Product Listing</div>
+          <div class="card-body">Seller lists a product — "Lutong bahay adobo, ₱80/serving"</div>
+        </div>
+        <div class="card" style="border-top:3px solid #3b82f6">
+          <div class="card-badge badge-blue">LST-3</div>
+          <div class="card-title">Service Request</div>
+          <div class="card-body">Customer posts a need — "Need plumber for leaking sink, ₱300 budget"</div>
+        </div>
+        <div class="card" style="border-top:3px solid #ef4444">
+          <div class="card-badge badge-red">LST-4</div>
+          <div class="card-title">Product Request</div>
+          <div class="card-body">Buyer seeks goods — "Looking for 2 sacks of rice, delivered"</div>
+        </div>
+      </div>
+
+      <p class="text-center text-gold" style="font-size:clamp(.75rem,.9vw,.85rem);margin:.25rem 0"><strong>Any listing type × any compatible mechanism — independently composable</strong></p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Mechanism</th><th>Initiated By</th><th>Flow</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><strong>Direct Booking</strong></td><td>Customer/Buyer browses listing</td><td>Browse → Select → Pay into escrow → Order created</td></tr>
+            <tr><td>2</td><td><strong>Reverse Bidding</strong></td><td>Customer posts a Request</td><td>Post Request → Providers bid → Customer picks winner → Order</td></tr>
+            <tr><td>3</td><td><strong>Quick Deal</strong></td><td>Either party, face-to-face</td><td>Scan QR → Counter-offer (≤3 rounds) → Dual confirm → Order</td></tr>
+            <tr><td>4</td><td><strong>Deal-Chaining</strong></td><td>Either party, multi-party</td><td>Create container → Invite providers → All filled → Multiple Orders</td></tr>
+            <tr><td>5</td><td><strong>Agent-Mediated</strong></td><td>Agent on behalf of offline Owner</td><td>Agent creates listing → SMS OTP approval → Revenue split 80/10/10</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <p class="text-center text-sm text-muted" style="margin-top:.3rem"><strong>4 Launch Presets</strong> (A1, A3, A4, A9) cover the majority of a provincial service economy. Remaining 6 are tier-2 configs or Phase 3 builds.</p>
+
+    <div class="lang-tl">
+      <h2 class="text-center">4 Listing Types at 5 Transaction Mechanisms</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="card-grid card-grid-4" style="margin-bottom:.5rem">
+        <div class="card" style="border-top:3px solid #1a5632">
+          <div class="card-badge badge-green">LST-1</div>
+          <div class="card-title">Service Listing</div>
+          <div class="card-body">Nag-aalok ang provider ng service — "Aircon cleaning, ₱500, available tuwing Martes/Huwebes"</div>
+        </div>
+        <div class="card" style="border-top:3px solid #f5a623">
+          <div class="card-badge badge-gold">LST-2</div>
+          <div class="card-title">Product Listing</div>
+          <div class="card-body">Nagbebenta ng produkto — "Lutong bahay adobo, ₱80/serving"</div>
+        </div>
+        <div class="card" style="border-top:3px solid #3b82f6">
+          <div class="card-badge badge-blue">LST-3</div>
+          <div class="card-title">Service Request</div>
+          <div class="card-body">Customer nagpo-post ng need — "Need plumber sa leaky sink, ₱300 budget"</div>
+        </div>
+        <div class="card" style="border-top:3px solid #ef4444">
+          <div class="card-badge badge-red">LST-4</div>
+          <div class="card-title">Product Request</div>
+          <div class="card-body">Buyer naghahanap ng goods — "Looking for 2 sacks of rice, delivered"</div>
+        </div>
+      </div>
+
+      <p class="text-center text-gold" style="font-size:clamp(.75rem,.9vw,.85rem);margin:.25rem 0"><strong>Kahit anong listing type × compatible mechanism — independently composable</strong></p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Mechanism</th><th>Sino Nag-Start</th><th>Flow</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><strong>Direct Booking</strong></td><td>Customer nagba-browse ng listing</td><td>Browse → Select → Bayad sa escrow → Order created</td></tr>
+            <tr><td>2</td><td><strong>Reverse Bidding</strong></td><td>Customer nagpo-post ng Request</td><td>Post Request → Providers bid → Customer pumili → Order</td></tr>
+            <tr><td>3</td><td><strong>Quick Deal</strong></td><td>Kahit sino, face-to-face</td><td>Scan QR → Counter-offer (max 3 rounds) → Dual confirm → Order</td></tr>
+            <tr><td>4</td><td><strong>Deal-Chaining</strong></td><td>Kahit sino, multi-party</td><td>Create container → Invite providers → Lahat filled → Multiple Orders</td></tr>
+            <tr><td>5</td><td><strong>Agent-Mediated</strong></td><td>Agent para sa offline Owner</td><td>Agent gawa ng listing → SMS OTP approval → Revenue split 80/10/10</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 6: HUMAN AGENT NETWORK ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 6: SUMMARY — PAANO KUMLITA          -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="5">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-warning">Human Agent Network</span>
+      <span class="slide-type summary">📋 SUMMARY</span>
+      <span class="tag tag-gold">Revenue</span>
     </div>
-    <h2 class="text-center">Bridging the Digital Divide —<br>The Agent Model</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
 
-    <div class="cols-2">
-      <div>
-        <p>Tech-savvy Ka-Serbizyu (<strong>Agents</strong>) onboard and manage offline Service Providers and Sellers. The model is <strong>oversight, not gating</strong> — the agent does the work, the owner stays informed, and only account-structure changes require SMS approval.</p>
-        <div class="highlight-box" style="margin-top:.5rem">
-          <strong>Revenue Split:</strong> 80% Owner / 10% Agent / 10% Platform  <span style="color:#8899aa;font-size:.8rem">(admin-configurable)</span>
+    <div class="lang-en">
+      <h2 class="text-center">Paano Kumita — Revenue Model</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item green">
+          <div class="s-num">💰 DIRECT SELLING</div>
+          <div class="s-title">90% sa Provider, 10% sa Platform</div>
+          <div class="s-body">Kapag direct ang benta ni provider, wala nang agent. <strong>Pinakamataas na kita para sa kanila.</strong></div>
         </div>
-        <div class="highlight-box gold" style="margin-top:.3rem">
-          <strong>Graduation Bonus:</strong> 3× owner's average monthly commission when owner transitions to independent smartphone use — incentivizes agents to train toward independence.
+        <div class="summary-item">
+          <div class="s-num">🤝 AGENT-MANAGED</div>
+          <div class="s-title">80/10/10 — Owner/Agent/Platform</div>
+          <div class="s-body">Kapag may agent, 80% sa owner, 10% sa agent. <strong>Lahat configurable</strong> per category at tier.</div>
         </div>
-        <p class="text-sm" style="margin-top:.4rem"><strong>SMS Safety Keywords:</strong> Every notification includes "Reply STOP to suspend agent. Reply REVOKE to permanently remove agent." Irrefutable consent record.</p>
+        <div class="summary-item blue">
+          <div class="s-num">💵 CASH</div>
+          <div class="s-title">8% Platform Rate</div>
+          <div class="s-body">Cash transactions may 8% rate para sa dispute risk buffer. <strong>Walang escrow hold</strong> sa cash.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">🚜 SUBSIDIES</div>
+          <div class="s-title">0–3% para sa tricycle at farm labor</div>
+          <div class="s-body">May category-level subsidies para sa mga <strong>sensitive sectors</strong> — transport, agriculture, emergencies.</div>
+        </div>
       </div>
-      <div>
-        <h4 style="color:#f5a623">Agent Tier Ladder</h4>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Tier</th><th>Requirements</th><th>Commission</th><th>Benefits</th></tr></thead>
-            <tbody>
-              <tr><td>🥉 Bronze</td><td>Baseline entry</td><td>10%</td><td>Standard share</td></tr>
-              <tr><td>🥈 Silver</td><td>10+ active owners, 3-month retention</td><td>11–12%</td><td>Featured Badge</td></tr>
-              <tr><td>🥇 Gold</td><td>50+ active owners, &lt;2% dispute rate</td><td>13–15%</td><td>Priority expansion</td></tr>
-              <tr><td>💎 Platinum</td><td>Top volume percentile</td><td>Max</td><td>Mentorship bonus</td></tr>
-            </tbody>
-          </table>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Paano Kumita — Revenue Model</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item green">
+          <div class="s-num">💰 DIRECT SELLING</div>
+          <div class="s-title">90% sa Provider, 10% sa Platform</div>
+          <div class="s-body">Kapag direct ang benta ni provider, wala nang agent involved. <strong>Sila ang mas malaki ang kita.</strong></div>
         </div>
-        <p class="text-sm text-muted" style="margin-top:.3rem">DOLE-compliant independent contractor model — no prescribed hours, commission-based, owner controls relationship.</p>
+        <div class="summary-item">
+          <div class="s-num">🤝 AGENT-MANAGED</div>
+          <div class="s-title">80/10/10 — Owner/Agent/Platform</div>
+          <div class="s-body">Kapag may agent, 80% napupunta sa owner, 10% sa agent. <strong>Pwedeng baguhin</strong> per category at tier ng admin.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">💵 CASH</div>
+          <div class="s-title">8% Platform Rate</div>
+          <div class="s-body">Ang cash transactions, 8% ang platform rate para sa dispute risk buffer. <strong>Walang escrow hold</strong> — bayaran lang.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">🚜 SUBSIDIES</div>
+          <div class="s-title">0–3% para sa tricycle at farm labor</div>
+          <div class="s-body">May category-level subsidies — transport 0–3%, farm labor 0–3%, emergencies 0%. <strong>Hindi lahat kailangan magbayad ng malaki.</strong></div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 7: TRUST & FINANCIAL INFRASTRUCTURE ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 7: DETAIL — REVENUE SPLITS           -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="6">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-info">Trust &amp; Finance</span>
-    </div>
-    <h2 class="text-center">Financial Integrity &amp; Trust Infrastructure</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
-
-    <div class="card-grid card-grid-3" style="margin-bottom:.5rem">
-      <div class="card" style="border-top:3px solid #1a5632">
-        <div class="card-title">Double-Entry Escrow Ledger</div>
-        <div class="card-body">Every transaction writes paired debit/credit entries. 0% balance drift — automated reconciliation on every transaction. Ledger is immutable — corrections are offsetting entries, not updates or deletes.</div>
-      </div>
-      <div class="card" style="border-top:3px solid #f5a623">
-        <div class="card-title">3-Day Auto-Release</div>
-        <div class="card-body">Shopee-style buyer protection window. Provider marks work complete → 3-day buyer review window → auto-release if no dispute → freeze if disputed. Admin-configurable duration.</div>
-      </div>
-      <div class="card" style="border-top:3px solid #3b82f6">
-        <div class="card-title">Xendit Integration</div>
-        <div class="card-body">xenPlatform API handles KYC, fund custody, settlement, and disbursement. Platform owns internal ledger as source of truth. Webhook handlers idempotent.</div>
-      </div>
-      <div class="card" style="border-top:3px solid #ef4444">
-        <div class="card-title">Cash Dual-Confirmation</div>
-        <div class="card-body">Both parties confirm payment/receipt. No escrow hold for cash. Platform tracks for trust score and review eligibility. High-value (&gt;₱5,000) triggers additional confirmation.</div>
-      </div>
-      <div class="card" style="border-top:3px solid #888">
-        <div class="card-title">Cloud Truth Boundary</div>
-        <div class="card-body">Real money governed exclusively by cloud backend and payment gateway. Client-side storage has zero disbursement authority. Offline transactions default to external cash settlement.</div>
-      </div>
-      <div class="card" style="border-top:3px solid #1a5632">
-        <div class="card-title">Weekly Batched Payouts</div>
-        <div class="card-body">Via Xendit — lower per-transaction cost than on-demand disbursement. Provider sees wallet balance in My Space. GCash or bank account withdrawal.</div>
-      </div>
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-gold">Revenue</span>
     </div>
 
-    <p class="text-center text-sm mt-1">
-      <span class="badge badge-green">●</span> Daily auto-reconciliation with drift detection
-      <span class="badge badge-gold" style="margin-left:.5rem">●</span> Immutable audit trail for all financial events
-      <span class="badge badge-blue" style="margin-left:.5rem">●</span> Administrative oversight dashboard
-    </p>
+    <div class="lang-en">
+      <h2 class="text-center">Revenue Splits &amp; Business Rules</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+      <p class="text-center text-sm" style="margin-bottom:.5rem">All rates are <strong>admin-configurable</strong> per category, tier, and province. Defaults deliberately low to maximize adoption.</p>
+
+      <div class="cols-2">
+        <div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Scenario</th><th>Split</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Direct</strong></td><td>90% Provider / 10% Platform</td><td>No agent involved</td></tr>
+                <tr><td><strong>Agent-Managed</strong></td><td>80% Owner / 10% Agent / 10% Platform</td><td>Agent tier influences share</td></tr>
+                <tr><td><strong>Cash Transactions</strong></td><td>8% Platform</td><td>Dispute risk buffer; no escrow hold</td></tr>
+                <tr><td><strong>Category Subsidies</strong></td><td>0–3% Platform</td><td>Tricycle, farm labor, emergencies</td></tr>
+                <tr><td><strong>Boost/Advertising</strong></td><td>Per-listing paid feature</td><td>Phase 2+; pricing configurable</td></tr>
+                <tr><td><strong>Launch Promo</strong></td><td>0% Platform, first 30 days</td><td>Tagudin pilot launch incentive</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="background:#1e2e3e;height:100%">
+            <h4 style="color:#f5a623">Key Business Rules</h4>
+            <ul class="ulist">
+              <li><strong>Min listing price:</strong> ₱5 (prevents spam)</li>
+              <li><strong>Escrow auto-release:</strong> 3 days (admin-configurable)</li>
+              <li><strong>Max Quick Deal rounds:</strong> 3</li>
+              <li><strong>High-value cash threshold:</strong> >₱5,000 (extra confirmation)</li>
+              <li><strong>Min reviews before star rating:</strong> 3</li>
+              <li><strong>Featured slots:</strong> 3 per category per town</li>
+              <li><strong>ε-Greedy cold-start:</strong> 80/20 veterans/newcomers</li>
+              <li><strong>Cash advisory:</strong> >₱15,000 triggers digital escrow recommendation</li>
+              <li><strong>New provider hold:</strong> First 3 transactions +2 days</li>
+            </ul>
+            <p class="text-sm text-muted mt-1">Payout schedule: <strong>Weekly batched disbursements</strong> via Xendit. Minimum withdrawal admin-configurable.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Revenue Splits at Business Rules</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+      <p class="text-center text-sm" style="margin-bottom:.5rem">Lahat ng rates, <strong>pwedeng i-configure ng admin</strong> per category, tier, at province. Nilagyan ng mababa para maraming makasali.</p>
+
+      <div class="cols-2">
+        <div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Scenario</th><th>Split</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Direct</strong></td><td>90% Provider / 10% Platform</td><td>Walang agent</td></tr>
+                <tr><td><strong>Agent-Managed</strong></td><td>80% Owner / 10% Agent / 10% Platform</td><td>Depende sa tier ng agent</td></tr>
+                <tr><td><strong>Cash</strong></td><td>8% Platform</td><td>Dispute risk buffer, walang escrow</td></tr>
+                <tr><td><strong>Subsidies</strong></td><td>0–3% Platform</td><td>Tricycle, farm labor, emergencies</td></tr>
+                <tr><td><strong>Boost/Ads</strong></td><td>Per listing paid feature</td><td>Phase 2+, pwedeng i-set ang presyo</td></tr>
+                <tr><td><strong>Launch Promo</strong></td><td>0% Platform, first 30 days</td><td>Para maka-engganyo sa Tagudin pilot</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="background:#1e2e3e;height:100%">
+            <h4 style="color:#f5a623">Business Rules</h4>
+            <ul class="ulist">
+              <li><strong>Minimum listing price:</strong> ₱5</li>
+              <li><strong>Escrow auto-release:</strong> 3 days</li>
+              <li><strong>Max Quick Deal rounds:</strong> 3</li>
+              <li><strong>High-value cash threshold:</strong> >₱5,000</li>
+              <li><strong>Min reviews for star rating:</strong> 3</li>
+              <li><strong>Featured slots:</strong> 3 per category per town</li>
+              <li><strong>ε-Greedy cold-start:</strong> 80/20</li>
+              <li><strong>Cash advisory:</strong> >₱15,000</li>
+              <li><strong>New provider hold:</strong> First 3 txn +2 days</li>
+            </ul>
+            <p class="text-sm text-muted mt-1"><strong>Weekly batched payouts</strong> via Xendit. Minimum withdrawal pwedeng i-set.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 8: 3-LANE REGULATORY LADDER ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 8: SUMMARY — 5 PERSONAS              -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="7">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-warning">Formalization</span>
-    </div>
-    <h2 class="text-center">The 3-Lane Regulatory Ladder</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
-    <p class="text-center text-sm" style="margin-bottom:.5rem">Framed as <strong>"Unlock more earnings"</strong> — not "File your taxes." Servicers climb at their own pace. No lane is forced.</p>
-
-    <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
-      <div class="card" style="border-left:4px solid #8899aa">
-        <div class="card-title"><span style="color:#8899aa">Lane 1 — Informal</span> <span class="tag tag-white">Entry</span></div>
-        <div class="card-body">
-          <p><strong>Requirement:</strong> Phone verified + Government ID or Barangay Clearance</p>
-          <p><strong>Unlocks:</strong> Create listings, accept bookings, browse platform</p>
-          <p><strong>Payout Cap:</strong> ₱50,000/month</p>
-          <p><strong>Tax Status:</strong> No BIR filing required</p>
-        </div>
-      </div>
-      <div class="card" style="border-left:4px solid #f5a623">
-        <div class="card-title"><span style="color:#f5a623">Lane 2 — Sworn Declaration</span> <span class="tag tag-warning">Growth</span></div>
-        <div class="card-body">
-          <p><strong>Requirement:</strong> Lane 1 + digital Sworn Declaration under BIR RR 16-2023</p>
-          <p><strong>Process:</strong> 2-minute guided form in-app → auto-generates PDF</p>
-          <p><strong>Unlocks:</strong> Full tax-free payouts up to ₱250,000/year (BMBE threshold)</p>
-          <p><strong>Badge:</strong> "Tax-Compliant"</p>
-        </div>
-      </div>
-      <div class="card" style="border-left:4px solid #1a5632">
-        <div class="card-title"><span style="color:#4ad66d">Lane 3 — Registered Business</span> <span class="tag tag-success">Max</span></div>
-        <div class="card-body">
-          <p><strong>Requirement:</strong> Lane 2 + BIR Form 2303 + BMBE Certificate (or DTI/SEC)</p>
-          <p><strong>Unlocks:</strong> Uncapped earnings, "Business Verified" badge, priority search placement, eligible for Boost/Advertising</p>
-          <p><strong>Badge:</strong> "Business Verified"</p>
-        </div>
-      </div>
+      <span class="slide-type summary">📋 SUMMARY</span>
+      <span class="tag tag-success">Personas</span>
     </div>
 
-    <div class="text-center" style="margin-top:.5rem">
-      <span class="tag tag-info">LGU Permit</span>
-      <span class="tag tag-info">DPA (RA 10173)</span>
-      <span class="tag tag-info">BSP — OPS Partner</span>
-      <span class="tag tag-info">DTI Consumer Act</span>
-      <span class="tag tag-info">DOLE Independent Contractor</span>
+    <div class="lang-en">
+      <h2 class="text-center">Mga Tao sa Platform — 5 Personas</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2" style="grid-template-columns:1fr 1fr">
+        <div class="summary-item blue">
+          <div class="s-num">PER-01 · MARIA</div>
+          <div class="s-title">Customer/Buyer</div>
+          <div class="s-body">May smartphone. Kailangan ng <strong>mapagkakatiwalaang providers</strong> na may transparent pricing at escrow protection.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">PER-02 · TATAY BEN</div>
+          <div class="s-title">Provider (Offline) — Feature phone</div>
+          <div class="s-body">Dekada na ang experience, zero digital presence. <strong>Agent ang gagawa</strong>, siya mag-a-approve lang via SMS.</div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">PER-03 · ATE GRACE</div>
+          <div class="s-title">Provider (Tech-Savvy)</div>
+          <div class="s-body">May smartphone. Gusto ng <strong>booking calendar, bidding tools, verified reviews</strong> para lumago ang negosyo.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">PER-04 · KEVIN</div>
+          <div class="s-title">Agent</div>
+          <div class="s-body">Tech-savvy youth. Gusto ng <strong>commission-based gig income</strong> + graduation bonus kapag naging independent na ang owner.</div>
+        </div>
+        <div class="summary-item" style="grid-column:1/-1;border-left-color:#f5a623">
+          <div class="s-num">PER-05 · PROJECT TEAM</div>
+          <div class="s-title">Admin — David + Christine + Jaypee + Prince John</div>
+          <div class="s-body">Platform ops. Dispute resolution, <strong>automated ledger audits</strong>, admin dashboard para ma-resolve ang issues.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Mga Tao sa Platform — 5 Personas</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2" style="grid-template-columns:1fr 1fr">
+        <div class="summary-item blue">
+          <div class="s-num">PER-01 · MARIA</div>
+          <div class="s-title">Customer/Buyer</div>
+          <div class="s-body">May smartphone. Kailangan ng <strong>mapagkakatiwalaang providers</strong> na may transparent pricing at escrow protection.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">PER-02 · TATAY BEN</div>
+          <div class="s-title">Provider (Offline) — Feature phone</div>
+          <div class="s-body">Dekada na ang experience, zero digital presence. <strong>Agent ang gagawa</strong>, siya mag-a-approve lang via SMS.</div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">PER-03 · ATE GRACE</div>
+          <div class="s-title">Provider (Tech-Savvy)</div>
+          <div class="s-body">May smartphone. Gusto ng <strong>booking calendar, bidding tools, verified reviews</strong> para lumago ang negosyo.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">PER-04 · KEVIN</div>
+          <div class="s-title">Agent</div>
+          <div class="s-body">Tech-savvy youth. Gusto ng <strong>commission-based gig income</strong> + graduation bonus kapag naging independent na ang owner.</div>
+        </div>
+        <div class="summary-item" style="grid-column:1/-1;border-left-color:#f5a623">
+          <div class="s-num">PER-05 · PROJECT TEAM</div>
+          <div class="s-title">Admin — David + Christine + Jaypee + Prince John</div>
+          <div class="s-body">Platform ops. Dispute resolution, <strong>automated ledger audits</strong>, admin dashboard para ma-resolve ang issues.</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 9: 5 PERSONAS ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 9: DETAIL — PERSONA JTBD CARDS       -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="8">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-success">User Research</span>
-    </div>
-    <h2 class="text-center">The 5 Ka-Serbizyu Personas</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
-
-    <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr))">
-      <div class="card" style="border-top:3px solid #3b82f6">
-        <div class="card-title">Maria <span class="text-muted text-sm">— Customer/Buyer</span></div>
-        <div class="card-badge badge-blue">PER-01</div>
-        <div class="card-body" style="margin-top:.25rem">
-          Provincial resident or event organizer with a smartphone. Needs trusted local providers with transparent pricing and escrow safety.
-        </div>
-      </div>
-      <div class="card" style="border-top:3px solid #8899aa">
-        <div class="card-title">Tatay Ben <span class="text-muted text-sm">— Provider (Offline)</span></div>
-        <div class="card-badge badge-white">PER-02</div>
-        <div class="card-body" style="margin-top:.25rem">
-          Skilled trade worker using a feature phone. Decades of experience, zero digital presence. Agent-managed. Wants more customers without buying a smartphone.
-        </div>
-      </div>
-      <div class="card" style="border-top:3px solid #f5a623">
-        <div class="card-title">Ate Grace <span class="text-muted text-sm">— Provider (Tech-Savvy)</span></div>
-        <div class="card-badge badge-gold">PER-03</div>
-        <div class="card-body" style="margin-top:.25rem">
-          Aircon technician, tutor, or designer with a smartphone. Wants booking calendar, bidding tools, verified reviews, and Facebook reach.
-        </div>
-      </div>
-      <div class="card" style="border-top:3px solid #1a5632">
-        <div class="card-title">Kevin <span class="text-muted text-sm">— Agent</span></div>
-        <div class="card-badge badge-green">PER-04</div>
-        <div class="card-body" style="margin-top:.25rem">
-          Tech-savvy community youth who knows everyone in the barangay. Wants flexible local gig income through commissions and graduation bonuses.
-        </div>
-      </div>
-      <div class="card" style="border-top:3px solid #ef4444">
-        <div class="card-title">Project Team <span class="text-muted text-sm">— Admin</span></div>
-        <div class="card-badge badge-red">PER-05</div>
-        <div class="card-body" style="margin-top:.25rem">
-          David + Christine + Jaypee + Prince John. Platform operations: evidence logs, automated ledger audits, admin dashboard for resolution.
-        </div>
-      </div>
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-success">Personas</span>
     </div>
 
-    <p class="text-center text-sm text-muted mt-1">All platform users are <strong>Ka-Serbizyu</strong> — members of the Serbizyu community. Every persona has a distinct Job-to-be-Done driving their platform interaction.</p>
+    <div class="lang-en">
+      <h2 class="text-center">Persona Cards with Jobs-to-be-Done</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="card-grid card-grid-2">
+        <div class="card" style="border-top:3px solid #3b82f6">
+          <div class="card-title">Maria <span class="text-muted text-sm">— Customer/Buyer</span> <span class="card-badge badge-blue">PER-01</span></div>
+          <div class="card-body">
+            <p><strong>JTBD:</strong> "When I need something done or bought locally, I want to find a trusted provider, see transparent pricing, and pay safely into escrow — so I don't get overcharged, ghosted, or lose my deposit."</p>
+            <p class="mt-1 text-sm">💡 Needs: trusted local service, transparent pricing, escrow safety</p>
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid #8899aa">
+          <div class="card-title">Tatay Ben <span class="text-muted text-sm">— Provider (Offline)</span> <span class="card-badge badge-white">PER-02</span></div>
+          <div class="card-body">
+            <p><strong>JTBD:</strong> "When I need more customers, I want a trusted local agent to manage my online presence while I just approve things by text message — so I can earn more without buying a smartphone."</p>
+            <p class="mt-1 text-sm">💡 Needs: agent-managed, SMS-only, no smartphone needed</p>
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid #f5a623">
+          <div class="card-title">Ate Grace <span class="text-muted text-sm">— Provider (Tech-Savvy)</span> <span class="card-badge badge-gold">PER-03</span></div>
+          <div class="card-body">
+            <p><strong>JTBD:</strong> "When I run my business, I want a professional booking calendar, bidding tools, verified reviews, and the ability to reach customers on Facebook — so I can grow beyond my barangay."</p>
+            <p class="mt-1 text-sm">💡 Needs: booking calendar, bidding, verified reviews, Facebook reach</p>
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid #1a5632">
+          <div class="card-title">Kevin <span class="text-muted text-sm">— Agent</span> <span class="card-badge badge-green">PER-04</span></div>
+          <div class="card-body">
+            <p><strong>JTBD:</strong> "When I help local trade workers get online, I want to earn transparent commissions on every deal and receive a bonus when a worker I trained graduates to smartphone independence."</p>
+            <p class="mt-1 text-sm">💡 Needs: commission income, graduation bonus, flexible gig</p>
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid #ef4444;grid-column:1/-1">
+          <div class="card-title">Project Team <span class="text-muted text-sm">— Admin</span> <span class="card-badge badge-red">PER-05</span></div>
+          <div class="card-body">
+            <p><strong>JTBD:</strong> "When disputes or financial events occur, I want clear evidence logs, automated ledger audits, and an admin dashboard that lets me resolve issues and keep the platform running."</p>
+            <p class="mt-1 text-sm">💡 Needs: evidence logs, ledger audits, admin dashboard</p>
+          </div>
+        </div>
+      </div>
+      <p class="text-center text-sm text-muted mt-1">All platform users are <strong>Ka-Serbizyu</strong> — members of the Serbizyu community. Every persona has a distinct Job-to-be-Done.</p>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Persona Cards with Jobs-to-be-Done</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="card-grid card-grid-2">
+        <div class="card" style="border-top:3px solid #3b82f6">
+          <div class="card-title">Maria <span class="text-muted text-sm">— Customer/Buyer</span> <span class="card-badge badge-blue">PER-01</span></div>
+          <div class="card-body">
+            <p><strong>JTBD:</strong> "Kapag may kailangan ako sa lokal, gusto ko ng mapagkakatiwalaang provider, transparent pricing, at safe na payment sa escrow — para hindi ako maloko, ma-ghost, o mawalan ng pera."</p>
+            <p class="mt-1 text-sm">💡 Kailangan: trusted provider, transparent pricing, escrow safety</p>
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid #8899aa">
+          <div class="card-title">Tatay Ben <span class="text-muted text-sm">— Provider (Offline)</span> <span class="card-badge badge-white">PER-02</span></div>
+          <div class="card-body">
+            <p><strong>JTBD:</strong> "Kapag kailangan ko ng mas maraming customers, gusto ko ng trusted agent na magma-manage ng online presence ko — ako mag-a-approve lang via text. Para kumita ako nang hindi bumibili ng smartphone."</p>
+            <p class="mt-1 text-sm">💡 Kailangan: agent-managed, SMS only, walang smartphone</p>
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid #f5a623">
+          <div class="card-title">Ate Grace <span class="text-muted text-sm">— Provider (Tech-Savvy)</span> <span class="card-badge badge-gold">PER-03</span></div>
+          <div class="card-body">
+            <p><strong>JTBD:</strong> "Kapag nagpapatakbo ako ng negosyo, gusto ko ng professional booking calendar, bidding tools, verified reviews, at maabot ang customers sa Facebook — para lumago ako lampas sa barangay ko."</p>
+            <p class="mt-1 text-sm">💡 Kailangan: booking calendar, bidding, reviews, Facebook</p>
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid #1a5632">
+          <div class="card-title">Kevin <span class="text-muted text-sm">— Agent</span> <span class="card-badge badge-green">PER-04</span></div>
+          <div class="card-body">
+            <p><strong>JTBD:</strong> "Kapag tinutulungan ko ang local workers na magka-online presence, gusto ko ng transparent commissions sa bawat deal at bonus kapag naging independent na ang worker na sinanay ko."</p>
+            <p class="mt-1 text-sm">💡 Kailangan: commission, graduation bonus, flexible gig</p>
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid #ef4444;grid-column:1/-1">
+          <div class="card-title">Project Team <span class="text-muted text-sm">— Admin</span> <span class="card-badge badge-red">PER-05</span></div>
+          <div class="card-body">
+            <p><strong>JTBD:</strong> "Kapag may disputes o financial events, gusto ko ng clear evidence logs, automated ledger audits, at admin dashboard para ma-resolve ang issues at tumakbo ang platform."</p>
+            <p class="mt-1 text-sm">💡 Kailangan: evidence logs, ledger audits, admin dashboard</p>
+          </div>
+        </div>
+      </div>
+      <p class="text-center text-sm text-muted mt-1">Lahat ng user sa platform ay <strong>Ka-Serbizyu</strong> — miyembro ng Serbizyu community.</p>
+    </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 10: HIDDEN PRICE & QUOTE ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 10: SUMMARY — AGENT NETWORK           -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="9">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-warning">Feature Spotlight</span>
+      <span class="slide-type summary">📋 SUMMARY</span>
+      <span class="tag tag-warning">Agent Network</span>
     </div>
-    <h2 class="text-center">Hidden Price &amp; Quote Request</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
 
-    <div class="cols-2">
-      <div>
-        <p><strong>Research-backed feature</strong> — providers with variable-scope services (construction, events, custom work) cannot publish fixed prices. Competitors should not see their pricing.</p>
-        <div class="highlight-box">
-          <strong>Thumbtack-style "Request a Quote":</strong> Hidden-price listings display a <strong>"Magtanong ng Presyo"</strong> button instead of a price. Clicking triggers a 1:1 quote flow — single-provider, non-competitive, reusing the existing bidding infrastructure.
+    <div class="lang-en">
+      <h2 class="text-center">Bridging the Digital Divide — The Agent Model</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item green">
+          <div class="s-num">🤝 OVERSIGHT, NOT GATING</div>
+          <div class="s-title">Agent ang gumagawa, owner ang nag-a-approve</div>
+          <div class="s-body">Tech-savvy Ka-Serbizyu (Agents) nag-o-onboard ng offline owners. <strong>Revenue split:</strong> 80% Owner / 10% Agent / 10% Platform.</div>
         </div>
-        <div class="card" style="margin-top:.5rem">
-          <div class="card-title">Trust Safeguards</div>
-          <div class="card-body">
-            <ul class="ulist" style="margin:0">
-              <li>Providers must respond within <strong>24 hours</strong> (SLA-tracked)</li>
-              <li>Quotes valid for <strong>48 hours</strong></li>
-              <li>Anonymized category-average price range displayed <span style="color:#8899aa">(e.g., "Typical cost in Tagudin: ₱300–₱800")</span></li>
-              <li><strong>"Talagang Presyo"</strong> badge for providers who choose transparent pricing</li>
-            </ul>
-          </div>
+        <div class="summary-item">
+          <div class="s-num">🎓 GRADUATION BONUS</div>
+          <div class="s-title">3× monthly commission pag nag-independe na ang owner</div>
+          <div class="s-body">Ini-incentivize ang agents na <strong>turuan ang owners</strong> hanggang maging independent smartphone users.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">🔒 SMS SAFETY</div>
+          <div class="s-title">"Reply STOP to suspend. Reply REVOKE to remove."</div>
+          <div class="s-body">Bawat SMS may safety keywords. <strong>Irrefutable consent record.</strong> Owner laging may control.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">🏆 AGENT TIER LADDER</div>
+          <div class="s-title">Bronze → Silver → Gold → Platinum</div>
+          <div class="s-body">Mas maraming active owners at mas mataas na retention = <strong>mas malaking commission share</strong> at featured badge.</div>
         </div>
       </div>
-      <div>
-        <div class="card" style="background:#1e2e3e">
-          <h4 style="color:#f5a623">How It Works</h4>
-          <div style="position:relative;display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem">
-            <div style="display:flex;gap:.5rem;align-items:flex-start">
-              <span style="background:#1a5632;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">1</span>
-              <div><strong>Price Visibility</strong><br><span style="font-size:.8rem;color:#8899aa">Provider sets price_visibility: 'hidden' or 'starting_from' on their listing</span></div>
-            </div>
-            <div style="display:flex;gap:.5rem;align-items:flex-start">
-              <span style="background:#1a5632;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">2</span>
-              <div><strong>Quote Request</strong><br><span style="font-size:.8rem;color:#8899aa">Buyer clicks "Magtanong ng Presyo" → bid_type: 'quote' request created</span></div>
-            </div>
-            <div style="display:flex;gap:.5rem;align-items:flex-start">
-              <span style="background:#1a5632;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">3</span>
-              <div><strong>Provider Responds</strong><br><span style="font-size:.8rem;color:#8899aa">Listing owner sends quote → buyer accepts → flows into standard Order state machine</span></div>
-            </div>
-          </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Pagsasara ng Digital Divide — Agent Model</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item green">
+          <div class="s-num">🤝 OVERSIGHT, HINDI GATE</div>
+          <div class="s-title">Agent ang gumagawa, owner ang nag-a-approve</div>
+          <div class="s-body">Tech-savvy Ka-Serbizyu (Agents) nag-o-onboard ng offline owners. <strong>Revenue split:</strong> 80% Owner / 10% Agent / 10% Platform.</div>
         </div>
-        <p class="text-sm text-muted mt-1"><span class="tag tag-info">REQ-LST-03</span> Standard commodity products (groceries, mass-market goods) require public pricing. Hidden-price listings cannot use Direct Booking.</p>
+        <div class="summary-item">
+          <div class="s-num">🎓 GRADUATION BONUS</div>
+          <div class="s-title">3× monthly commission pag naging independent na ang owner</div>
+          <div class="s-body">Ini-incentivize ang agents na <strong>turuan ang owners</strong> hanggang kaya na nila mag-isa.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">🔒 SMS SAFETY</div>
+          <div class="s-title">"Reply STOP to suspend. Reply REVOKE to remove."</div>
+          <div class="s-body">Bawat SMS may safety keywords. <strong>Irrefutable consent record.</strong> Nasa owner ang control parati.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">🏆 AGENT TIER LADDER</div>
+          <div class="s-title">Bronze → Silver → Gold → Platinum</div>
+          <div class="s-body">Mas maraming active owners at magandang retention = <strong>mas mataas na commission share</strong> at featured badge.</div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 11: DISCOVERY & ACCESS ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 11: DETAIL — AGENT TIERS & CONSENT    -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="10">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-info">Accessibility</span>
-    </div>
-    <h2 class="text-center">Discovery &amp; Multi-Layer Access (L0–L4)</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
-    <p class="text-center text-sm" style="margin-bottom:.5rem">Five access tiers ensure no user is locked out by their device or connectivity. Every tier produces the same Order — tier determines presentation, not transaction capability.</p>
-
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Tier</th><th>User</th><th>Device</th><th>Interface</th><th>Discovery</th></tr></thead>
-        <tbody>
-          <tr><td><strong>L0</strong></td><td>Non-digital owner</td><td>Feature phone (SMS only)</td><td>SMS notifications + keyword replies</td><td>Agent brings work; owner confirms via SMS</td></tr>
-          <tr><td><strong>L1</strong></td><td>Kiosk user</td><td>Shared tablet at sari-sari store</td><td>Kiosk app — browse or operator-assisted</td><td>Browse by category; operator assists</td></tr>
-          <tr><td><strong>L2</strong></td><td>Smartphone — offline/low-data</td><td>Android/iOS, intermittent</td><td>PWA + IndexedDB cache</td><td>Browse cached catalog; requests queued offline</td></tr>
-          <tr><td><strong>L3</strong></td><td>Smartphone — online</td><td>4G/5G/WiFi</td><td>Full PWA — all features</td><td>Full search, Quick Deal QR, quotes, notifications</td></tr>
-          <tr><td><strong>L4</strong></td><td>Power user / admin</td><td>Desktop + smartphone</td><td>Full web app + admin dashboard</td><td>Admin tools, analytics, bulk ops, governance</td></tr>
-        </tbody>
-      </table>
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-warning">Agent Network</span>
     </div>
 
-    <div class="card-grid card-grid-3 mt-1">
-      <div class="card">
-        <div class="card-title">Multi-Language</div>
-        <div class="card-body">Tagalog, Ilocano, and English — user-selectable in settings. Persists across sessions. SMS in plain language (≤160 chars) for feature phone readability.</div>
+    <div class="lang-en">
+      <h2 class="text-center">Agent Tiers, SMS Consent &amp; Graduation Bonus</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="cols-2">
+        <div>
+          <h4 style="color:#f5a623">Agent Tier Ladder</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Tier</th><th>Requirements</th><th>Commission</th><th>Benefits</th></tr></thead>
+              <tbody>
+                <tr><td>🥉 Bronze</td><td>Baseline entry</td><td>10%</td><td>Standard share</td></tr>
+                <tr><td>🥈 Silver</td><td>10+ active owners, 3-month retention</td><td>11–12%</td><td>Featured Badge</td></tr>
+                <tr><td>🥇 Gold</td><td>50+ active owners, &lt;2% dispute rate</td><td>13–15%</td><td>Priority expansion</td></tr>
+                <tr><td>💎 Platinum</td><td>Top volume percentile</td><td>Max</td><td>Mentorship bonus</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="highlight-box gold" style="margin-top:.3rem">
+            <strong>Graduation Bonus:</strong> 3× owner's average monthly commission when owner transitions to independent smartphone use — incentivizes agents to train toward independence.
+          </div>
+        </div>
+        <div>
+          <div class="card" style="background:#1e2e3e;height:100%">
+            <h4 style="color:#f5a623">Agent Actions &amp; Owner Control</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Action</th><th>Owner Experience</th></tr></thead>
+                <tbody>
+                  <tr><td>Create/edit listing</td><td><span class="tag tag-info">Notify</span> SMS update</td></tr>
+                  <tr><td>Booking received</td><td><span class="tag tag-info">Notify</span> SMS alert</td></tr>
+                  <tr><td>Bid won</td><td><span class="tag tag-info">Notify</span> SMS alert</td></tr>
+                  <tr><td>Customer messages</td><td><span class="tag tag-success">Collaborate</span> Shared view</td></tr>
+                  <tr><td>Change agent</td><td><span class="tag tag-danger">Gate</span> SMS OTP required</td></tr>
+                  <tr><td>Deactivate listing</td><td><span class="tag tag-danger">Gate</span> SMS OTP required</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="text-sm text-muted mt-1">🔑 <strong>SMS Safety:</strong> Every notification includes "Reply STOP to suspend agent. Reply REVOKE to permanently remove agent."</p>
+            <p class="text-sm text-muted mt-1">📋 DOLE-compliant independent contractor model — no prescribed hours, commission-based, owner controls relationship.</p>
+          </div>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-title">Offline-First Patterns</div>
-        <div class="card-body">Catalog caching via IndexedDB. Queued requests sync when online. Quick Deal works fully air-gapped. Conflict resolution via last-write-wins + server timestamp.</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Accessibility</div>
-        <div class="card-body">WCAG 2.1 Level AA: keyboard-navigable, screen reader compatible (ARIA labels), 4.5:1 color contrast, scalable text. Kiosk: 48×48dp touch targets, high-contrast mode.</div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Agent Tiers, SMS Consent at Graduation Bonus</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="cols-2">
+        <div>
+          <h4 style="color:#f5a623">Agent Tier Ladder</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Tier</th><th>Requirements</th><th>Commission</th><th>Benefits</th></tr></thead>
+              <tbody>
+                <tr><td>🥉 Bronze</td><td>Baseline entry</td><td>10%</td><td>Standard share</td></tr>
+                <tr><td>🥈 Silver</td><td>10+ active owners, 3-month retention</td><td>11–12%</td><td>Featured Badge</td></tr>
+                <tr><td>🥇 Gold</td><td>50+ active owners, &lt;2% dispute</td><td>13–15%</td><td>Priority expansion</td></tr>
+                <tr><td>💎 Platinum</td><td>Top volume</td><td>Max</td><td>Mentorship bonus</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="highlight-box gold" style="margin-top:.3rem">
+            <strong>Graduation Bonus:</strong> 3× ng average monthly commission ng owner pag nag-independent na sila — ini-insentibo ang agents na turuan ang owners.
+          </div>
+        </div>
+        <div>
+          <div class="card" style="background:#1e2e3e;height:100%">
+            <h4 style="color:#f5a623">Agent Actions at Owner Control</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Action</th><th>Owner Experience</th></tr></thead>
+                <tbody>
+                  <tr><td>Gawa/edit ng listing</td><td><span class="tag tag-info">Notify</span> SMS update</td></tr>
+                  <tr><td>May booking</td><td><span class="tag tag-info">Notify</span> SMS alert</td></tr>
+                  <tr><td>Nanalo sa bid</td><td><span class="tag tag-info">Notify</span> SMS alert</td></tr>
+                  <tr><td>Customer messages</td><td><span class="tag tag-success">Collaborate</span> Shared view</td></tr>
+                  <tr><td>Palitan ang agent</td><td><span class="tag tag-danger">Gate</span> SMS OTP required</td></tr>
+                  <tr><td>Deactivate listing</td><td><span class="tag tag-danger">Gate</span> SMS OTP required</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="text-sm text-muted mt-1">🔑 <strong>SMS Safety:</strong> Bawat notification may "Reply STOP to suspend agent. Reply REVOKE to permanently remove agent."</p>
+            <p class="text-sm text-muted mt-1">📋 DOLE-compliant independent contractor — walang required hours, commission-based, owner ang may control.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 12: REVENUE MODEL ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 12: SUMMARY — TIWALA AT PERA          -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="11">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-gold">Revenue</span>
+      <span class="slide-type summary">📋 SUMMARY</span>
+      <span class="tag tag-info">Trust &amp; Finance</span>
     </div>
-    <h2 class="text-center">Revenue Model &amp; Incentive Structure</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
-    <p class="text-center text-sm" style="margin-bottom:.5rem">All rates are <strong>admin-configurable</strong> per category, tier, and province. Defaults deliberately low to maximize adoption.</p>
 
-    <div class="cols-2">
-      <div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Scenario</th><th>Split</th><th>Notes</th></tr></thead>
-            <tbody>
-              <tr><td><strong>Direct</strong></td><td>90/10 Provider/Platform</td><td>No agent involved</td></tr>
-              <tr><td><strong>Agent-Managed</strong></td><td>80/10/10 Owner/Agent/Platform</td><td>Agent tier influences share</td></tr>
-              <tr><td><strong>Cash Transactions</strong></td><td>8% Platform</td><td>Dispute risk buffer; no escrow hold</td></tr>
-              <tr><td><strong>Category Subsidies</strong></td><td>0–3% Platform</td><td>Tricycle, farm labor, emergencies</td></tr>
-              <tr><td><strong>Boost/Advertising</strong></td><td>Per-listing paid feature</td><td>Phase 2+; pricing configurable</td></tr>
-              <tr><td><strong>Launch Promo</strong></td><td>0% Platform, first 30 days</td><td>Tagudin pilot launch incentive</td></tr>
-            </tbody>
-          </table>
+    <div class="lang-en">
+      <h2 class="text-center">Tiwala at Pera — Trust &amp; Escrow</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item green">
+          <div class="s-num">🔐 DOUBLE-ENTRY ESCROW</div>
+          <div class="s-title">Bawat transaksyon may paired debit/credit entries</div>
+          <div class="s-body"><strong>0% balance drift</strong> — automated reconciliation sa bawat transaction. Immutable ledger. Corrections ay offsetting entries, hindi updates.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">⏱️ 3-DAY AUTO-RELEASE</div>
+          <div class="s-title">Shopee-style buyer protection</div>
+          <div class="s-body">Provider marks complete → 3-day review window → auto-release if no dispute. <strong>Admin-configurable duration.</strong></div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">💵 CASH DUAL-CONFIRMATION</div>
+          <div class="s-title">Dalawang confirmation para sa cash</div>
+          <div class="s-body">Customer confirms paid, Provider confirms received. <strong>Walang escrow hold</strong> sa cash. Platform tracks for trust score.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">☁️ CLOUD TRUTH BOUNDARY</div>
+          <div class="s-title">Real money — cloud backend lang</div>
+          <div class="s-body">Client-side storage <strong>zero disbursement authority</strong>. Offline transactions = external cash settlement lang.</div>
         </div>
       </div>
-      <div>
-        <div class="card" style="background:#1e2e3e;height:100%">
-          <h4 style="color:#f5a623">Key Business Rules</h4>
-          <ul class="ulist">
-            <li><strong>Min listing price:</strong> ₱5 (prevents spam)</li>
-            <li><strong>Escrow auto-release:</strong> 3 days (admin-configurable)</li>
-            <li><strong>Max Quick Deal rounds:</strong> 3</li>
-            <li><strong>High-value cash threshold:</strong> &gt;₱5,000 (extra confirmation)</li>
-            <li><strong>Min reviews before star rating:</strong> 3</li>
-            <li><strong>Featured slots:</strong> 3 per category per town</li>
-            <li><strong>ε-Greedy cold-start:</strong> 80/20 veterans/newcomers</li>
-            <li><strong>Cash advisory:</strong> &gt;₱15,000 triggers digital escrow recommendation</li>
-            <li><strong>New provider hold:</strong> First 3 transactions +2 days</li>
-          </ul>
-          <p class="text-sm text-muted mt-1">Payout schedule: <strong>Weekly batched disbursements</strong> via Xendit. Minimum withdrawal admin-configurable.</p>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Tiwala at Pera — Trust &amp; Escrow</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item green">
+          <div class="s-num">🔐 DOUBLE-ENTRY ESCROW</div>
+          <div class="s-title">Bawat transaksyon may paired debit/credit entries</div>
+          <div class="s-body"><strong>0% balance drift</strong> — automated reconciliation sa bawat transaction. Immutable ang ledger. Ang corrections, offsetting entries — hindi updates o deletes.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">⏱️ 3-DAY AUTO-RELEASE</div>
+          <div class="s-title">Parang Shopee ang buyer protection</div>
+          <div class="s-body">Provider marks complete → 3-day review ng buyer → auto-release pag walang dispute. <strong>Pwedeng baguhin ng admin ang duration.</strong></div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">💵 CASH DUAL-CONFIRMATION</div>
+          <div class="s-title">Dalawang confirmation para sa cash</div>
+          <div class="s-body">Customer nag-confirm na nagbayad, Provider nag-confirm na nakatanggap. <strong>Walang escrow hold</strong> sa cash. May record para sa trust score.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">☁️ CLOUD TRUTH BOUNDARY</div>
+          <div class="s-title">Real money — cloud backend lang may authority</div>
+          <div class="s-body">Client-side storage <strong>walang disbursement authority</strong>. Offline transactions = external cash settlement lang ang pwedeng gawin.</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 13: DEPLOYMENT ARCHITECTURE ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 13: DETAIL — FINANCIAL INFRASTRUCTURE  -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="12">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-info">Infrastructure</span>
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-info">Trust &amp; Finance</span>
     </div>
-    <h2 class="text-center">Deployment Architecture</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
-    <p class="text-center text-sm" style="margin-bottom:.5rem">Zero-cost academic constraint — all infrastructure self-hosted or free-tier. One-time ₱300 SMS hardware. Single paid dependency: Xendit at go-live.</p>
 
-    <div class="cols-2">
-      <div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Component</th><th>Detail</th></tr></thead>
-            <tbody>
-              <tr><td><strong>Orchestrator</strong></td><td>Dokploy on Proxmox VM</td></tr>
-              <tr><td><strong>Domain</strong></td><td>dxtechph.online</td></tr>
-              <tr><td><strong>SSL</strong></td><td>Auto-provisioned via Dokploy + Let's Encrypt</td></tr>
-              <tr><td><strong>Containers</strong></td><td>Laravel (PHP-FPM + Nginx), PostgreSQL 16, Redis, Meilisearch, Reverb (WebSocket)</td></tr>
-              <tr><td><strong>CI/CD</strong></td><td>GitHub → Dokploy webhook → rebuild → deploy</td></tr>
-              <tr><td><strong>SMS</strong></td><td>Gammu + USB GSM dongle (₱300 one-time)</td></tr>
-              <tr><td><strong>Backup</strong></td><td>Dokploy native volume backups → local + optional R2 sync</td></tr>
-            </tbody>
-          </table>
+    <div class="lang-en">
+      <h2 class="text-center">Financial Infrastructure &amp; Integrity</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="card-grid card-grid-3" style="margin-bottom:.5rem">
+        <div class="card" style="border-top:3px solid #1a5632">
+          <div class="card-title">Double-Entry Escrow Ledger</div>
+          <div class="card-body">Every transaction writes paired debit/credit entries. 0% balance drift — automated reconciliation on every transaction. Ledger is immutable — corrections are offsetting entries, not updates or deletes.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #f5a623">
+          <div class="card-title">3-Day Auto-Release</div>
+          <div class="card-body">Shopee-style buyer protection window. Provider marks work complete → 3-day buyer review window → auto-release if no dispute → freeze if disputed. Admin-configurable duration.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #3b82f6">
+          <div class="card-title">Xendit Integration</div>
+          <div class="card-body">xenPlatform API handles KYC, fund custody, settlement, and disbursement. Platform owns internal ledger as source of truth. Webhook handlers idempotent.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #ef4444">
+          <div class="card-title">Cash Dual-Confirmation</div>
+          <div class="card-body">Both parties confirm payment/receipt. No escrow hold for cash. Platform tracks for trust score and review eligibility. High-value (>₱5,000) triggers additional confirmation.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #888">
+          <div class="card-title">Cloud Truth Boundary</div>
+          <div class="card-body">Real money governed exclusively by cloud backend and payment gateway. Client-side storage has zero disbursement authority. Offline transactions default to external cash settlement.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #1a5632">
+          <div class="card-title">Weekly Batched Payouts</div>
+          <div class="card-body">Via Xendit — lower per-transaction cost than on-demand disbursement. Provider sees wallet balance in My Space. GCash or bank account withdrawal.</div>
         </div>
       </div>
-      <div>
-        <div class="card" style="background:#1e2e3e;height:100%">
-          <h4 style="color:#f5a623">Zero-Cost Infrastructure</h4>
-          <ul class="ulist">
-            <li><span class="tag tag-success">₱0</span> <strong>VPS:</strong> Self-hosted on existing Proxmox infrastructure</li>
-            <li><span class="tag tag-success">₱0</span> <strong>SMS:</strong> Self-hosted ModemManager + Gammu (hardware: ₱300)</li>
-            <li><span class="tag tag-success">₱0</span> <strong>Search:</strong> Self-hosted Meilisearch on same VPS</li>
-            <li><span class="tag tag-success">₱0</span> <strong>Maps:</strong> Free tier (50K loads) + OpenStreetMap fallback</li>
-            <li><span class="tag tag-success">₱0</span> <strong>CDN/TLS:</strong> Cloudflare free tier</li>
-            <li><span class="tag tag-success">₱0</span> <strong>Storage:</strong> Local filesystem on VPS</li>
-          </ul>
-          <div class="highlight-box gold mt-1">
-            <strong>One paid dependency:</strong> Xendit xenPlatform at go-live (sandbox free for dev). All other infra at ₱0 recurring cost.
-          </div>
-          <p class="text-sm text-muted mt-1">Designed for 50 concurrent users / 100 daily transactions (Tagudin pilot). Schema scales to 10,000+ users — no premature microservices.</p>
+
+      <p class="text-center text-sm mt-1">
+        <span class="badge badge-green">●</span> Daily auto-reconciliation with drift detection
+        <span class="badge badge-gold" style="margin-left:.5rem">●</span> Immutable audit trail for all financial events
+        <span class="badge badge-blue" style="margin-left:.5rem">●</span> Administrative oversight dashboard
+      </p>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Financial Infrastructure at Integrity</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="card-grid card-grid-3" style="margin-bottom:.5rem">
+        <div class="card" style="border-top:3px solid #1a5632">
+          <div class="card-title">Double-Entry Escrow Ledger</div>
+          <div class="card-body">Bawat transaction may paired debit/credit entries. 0% balance drift — auto-reconciliation per transaction. Immutable ang ledger — corrections ay offsetting entries, hindi updates.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #f5a623">
+          <div class="card-title">3-Day Auto-Release</div>
+          <div class="card-body">Parang Shopee ang buyer protection. Provider nag-mark na complete → 3-day review ng buyer → auto-release pag walang dispute. Pwedeng baguhin ng admin ang duration.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #3b82f6">
+          <div class="card-title">Xendit Integration</div>
+          <div class="card-body">xenPlatform API humahawak ng KYC, fund custody, settlement, at disbursement. Platform ang may-ari ng internal ledger — source of truth. Webhook handlers idempotent.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #ef4444">
+          <div class="card-title">Cash Dual-Confirmation</div>
+          <div class="card-body">Both parties nagco-confirm ng payment/receipt. Walang escrow hold ang cash. Naka-track sa platform para sa trust score at review eligibility.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #888">
+          <div class="card-title">Cloud Truth Boundary</div>
+          <div class="card-body">Ang totoong pera, cloud backend at payment gateway lang ang may hawak. Client-side storage — zero disbursement authority. Offline = cash settlement lang.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #1a5632">
+          <div class="card-title">Weekly Batched Payouts</div>
+          <div class="card-body">Via Xendit — mas mababa ang per-transaction cost. Kita ng provider ang wallet balance sa My Space. Pwedeng i-withdraw sa GCash o bank account.</div>
         </div>
       </div>
+
+      <p class="text-center text-sm mt-1">
+        <span class="badge badge-green">●</span> Daily auto-reconciliation na may drift detection
+        <span class="badge badge-gold" style="margin-left:.5rem">●</span> Immutable audit trail para sa lahat ng financial events
+        <span class="badge badge-blue" style="margin-left:.5rem">●</span> Administrative oversight dashboard
+      </p>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 14: DISPUTE RESOLUTION ═══ -->
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 14: SUMMARY — PAGSUNOD SA BATAS       -->
+<!-- ════════════════════════════════════════════ -->
 <div class="slide" data-index="13">
   <div class="slide-inner">
     <div class="text-center mb-1">
-      <span class="tag tag-danger">Governance</span>
+      <span class="slide-type summary">📋 SUMMARY</span>
+      <span class="tag tag-warning">Regulatory</span>
     </div>
-    <h2 class="text-center">Dispute Resolution &amp; Governance</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
 
-    <div class="cols-2">
-      <div>
-        <h4>Internal Resolution Process</h4>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Phase</th><th>Action</th><th>Target</th></tr></thead>
-            <tbody>
-              <tr><td><strong>1. Open</strong></td><td>Party files dispute with reason + evidence upload</td><td>Any time before auto-release</td></tr>
-              <tr><td><strong>2. Evidence</strong></td><td>Admin gathers receipts, logs, photos from both parties</td><td>48h target</td></tr>
-              <tr><td><strong>3. Resolution</strong></td><td>Admin rules on evidence + platform policy</td><td><strong>48h target from filing</strong></td></tr>
-              <tr><td><strong>4. Final</strong></td><td>Binding ruling. Immutable audit trail. Both parties notified.</td><td>Binding upon issuance</td></tr>
-            </tbody>
-          </table>
+    <div class="lang-en">
+      <h2 class="text-center">Pagsunod sa Batas — 3-Lane Regulatory Ladder</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-3">
+        <div class="summary-item" style="border-left-color:#8899aa">
+          <div class="s-num">LANE 1 · INFORMAL</div>
+          <div class="s-title">Phone verified + Government ID</div>
+          <div class="s-body">Create listings, accept bookings. <strong>Payout cap: ₱50,000/month.</strong> Walang BIR filing required. Entry level para sa lahat.</div>
         </div>
-        <div class="highlight-box gold" style="margin-top:.3rem">
-          <strong>Cash Disputes:</strong> Receipt is primary trust anchor. No receipt = burden of proof on claiming party.
+        <div class="summary-item" style="border-left-color:#f5a623">
+          <div class="s-num">LANE 2 · SWORN DECLARATION</div>
+          <div class="s-title">Digital Sworn Declaration (BIR RR 16-2023)</div>
+          <div class="s-body">2-minute guided form → auto-generate PDF. <strong>Tax-free payouts up to ₱250,000/year.</strong> "Tax-Compliant" badge.</div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">LANE 3 · REGISTERED BUSINESS</div>
+          <div class="s-title">BIR Form 2303 + DTI/SEC + BMBE</div>
+          <div class="s-body"><strong>Uncapped earnings.</strong> "Business Verified" badge. Priority search placement. Eligible for Boost/Advertising.</div>
         </div>
       </div>
-      <div>
-        <h4>External Escalation (3-Tier)</h4>
-        <div style="display:flex;flex-direction:column;gap:.4rem">
-          <div class="card" style="padding:.6rem .8rem">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <strong>Tier 1 — Platform Final Ruling</strong>
-              <span class="tag tag-success">Internal</span>
-            </div>
-            <div class="card-body">Admin issues binding decision with full evidence package</div>
-          </div>
-          <div class="card" style="padding:.6rem .8rem">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <strong>Tier 2 — Formal Handoff Letter</strong>
-              <span class="tag tag-warning">External</span>
-            </div>
-            <div class="card-body">Platform generates "Notice of Unresolved Dispute" — transaction summary, evidence log, digitally signed. Delivered to both parties.</div>
-          </div>
-          <div class="card" style="padding:.6rem .8rem">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <strong>Tier 3 — External Legal Pathway</strong>
-              <span class="tag tag-danger">Legal</span>
-            </div>
-            <div class="card-body">
-              Barangay Lupon (RA 7160) · DTI Consumer Mediation (RA 7394) · Small Claims Court (₱400K, no lawyer)
-            </div>
+
+      <p class="text-center text-sm text-muted mt-1">Framed as <strong>"Unlock more earnings"</strong> — not "File your taxes." Servicers climb at their own pace. No lane is forced.</p>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Pagsunod sa Batas — 3-Lane Regulatory Ladder</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-3">
+        <div class="summary-item" style="border-left-color:#8899aa">
+          <div class="s-num">LANE 1 · INFORMAL</div>
+          <div class="s-title">Phone verified + Government ID</div>
+          <div class="s-body">Pwedeng gumawa ng listings, tumanggap ng bookings. <strong>Payout cap: ₱50,000/month.</strong> Walang BIR filing. Entry level yan.</div>
+        </div>
+        <div class="summary-item" style="border-left-color:#f5a623">
+          <div class="s-num">LANE 2 · SWORN DECLARATION</div>
+          <div class="s-title">Digital Sworn Declaration (BIR RR 16-2023)</div>
+          <div class="s-body">2-minute guided form → auto-generate PDF. <strong>Tax-free payouts hanggang ₱250,000/year.</strong> May "Tax-Compliant" badge.</div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">LANE 3 · REGISTERED BUSINESS</div>
+          <div class="s-title">BIR Form 2303 + DTI/SEC + BMBE</div>
+          <div class="s-body"><strong>Walang cap sa earnings.</strong> "Business Verified" badge. Priority search placement. Pwedeng mag-Boost/Advertising.</div>
+        </div>
+      </div>
+
+      <p class="text-center text-sm text-muted mt-1">Naka-frame bilang <strong>"Mag-unlock ng mas malaking kita"</strong> — hindi "Mag-file ng tax." Sariling pace, walang pilitan.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 15: DETAIL — 3-LANE LADDER DETAIL     -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide" data-index="14">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-warning">Regulatory</span>
+    </div>
+
+    <div class="lang-en">
+      <h2 class="text-center">3-Lane Ladder &amp; Compliance Details</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+        <div class="card" style="border-left:4px solid #8899aa">
+          <div class="card-title"><span style="color:#8899aa">Lane 1 — Informal</span> <span class="tag tag-white">Entry</span></div>
+          <div class="card-body">
+            <p><strong>Requirement:</strong> Phone verified + Government ID or Barangay Clearance</p>
+            <p><strong>Unlocks:</strong> Create listings, accept bookings, browse platform</p>
+            <p><strong>Payout Cap:</strong> ₱50,000/month</p>
+            <p><strong>Tax Status:</strong> No BIR filing required</p>
           </div>
         </div>
-        <p class="text-sm text-muted mt-1">Dispute history affects provider trust score. Repeat disputers flagged for admin review. Pattern of frivolous disputes may result in platform restriction.</p>
+        <div class="card" style="border-left:4px solid #f5a623">
+          <div class="card-title"><span style="color:#f5a623">Lane 2 — Sworn Declaration</span> <span class="tag tag-warning">Growth</span></div>
+          <div class="card-body">
+            <p><strong>Requirement:</strong> Lane 1 + digital Sworn Declaration under BIR RR 16-2023</p>
+            <p><strong>Process:</strong> 2-minute guided form in-app → auto-generates PDF</p>
+            <p><strong>Unlocks:</strong> Full tax-free payouts up to ₱250,000/year (BMBE threshold)</p>
+            <p><strong>Badge:</strong> "Tax-Compliant"</p>
+          </div>
+        </div>
+        <div class="card" style="border-left:4px solid #1a5632">
+          <div class="card-title"><span style="color:#4ad66d">Lane 3 — Registered Business</span> <span class="tag tag-success">Max</span></div>
+          <div class="card-body">
+            <p><strong>Requirement:</strong> Lane 2 + BIR Form 2303 + BMBE Certificate (or DTI/SEC)</p>
+            <p><strong>Unlocks:</strong> Uncapped earnings, "Business Verified" badge, priority search placement, eligible for Boost/Advertising</p>
+            <p><strong>Badge:</strong> "Business Verified"</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center" style="margin-top:.5rem">
+        <span class="tag tag-info">LGU Permit</span>
+        <span class="tag tag-info">DPA (RA 10173)</span>
+        <span class="tag tag-info">BSP — OPS Partner</span>
+        <span class="tag tag-info">DTI Consumer Act</span>
+        <span class="tag tag-info">DOLE Independent Contractor</span>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">3-Lane Ladder at Compliance Details</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+        <div class="card" style="border-left:4px solid #8899aa">
+          <div class="card-title"><span style="color:#8899aa">Lane 1 — Informal</span> <span class="tag tag-white">Entry</span></div>
+          <div class="card-body">
+            <p><strong>Kailangan:</strong> Phone verified + Government ID o Barangay Clearance</p>
+            <p><strong>Magagawa:</strong> Gumawa ng listings, tumanggap ng bookings, mag-browse</p>
+            <p><strong>Payout Cap:</strong> ₱50,000/month</p>
+            <p><strong>Tax Status:</strong> Walang BIR filing required</p>
+          </div>
+        </div>
+        <div class="card" style="border-left:4px solid #f5a623">
+          <div class="card-title"><span style="color:#f5a623">Lane 2 — Sworn Declaration</span> <span class="tag tag-warning">Growth</span></div>
+          <div class="card-body">
+            <p><strong>Kailangan:</strong> Lane 1 + digital Sworn Declaration under BIR RR 16-2023</p>
+            <p><strong>Process:</strong> 2-minute guided form in-app → auto-generate PDF</p>
+            <p><strong>Magagawa:</strong> Tax-free payouts hanggang ₱250,000/year (BMBE threshold)</p>
+            <p><strong>Badge:</strong> "Tax-Compliant"</p>
+          </div>
+        </div>
+        <div class="card" style="border-left:4px solid #1a5632">
+          <div class="card-title"><span style="color:#4ad66d">Lane 3 — Registered Business</span> <span class="tag tag-success">Max</span></div>
+          <div class="card-body">
+            <p><strong>Kailangan:</strong> Lane 2 + BIR Form 2303 + BMBE Certificate (o DTI/SEC)</p>
+            <p><strong>Magagawa:</strong> Uncapped earnings, "Business Verified" badge, priority search, pwedeng mag-Boost/Ads</p>
+            <p><strong>Badge:</strong> "Business Verified"</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center" style="margin-top:.5rem">
+        <span class="tag tag-info">LGU Permit</span>
+        <span class="tag tag-info">DPA (RA 10173)</span>
+        <span class="tag tag-info">BSP — OPS Partner</span>
+        <span class="tag tag-info">DTI Consumer Act</span>
+        <span class="tag tag-info">DOLE Independent Contractor</span>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SLIDE 15: PHASE 2→3 HANDOFF ═══ -->
-<div class="slide" data-index="14">
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 16: SUMMARY — HIDDEN PRICE / QUOTE    -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide" data-index="15">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="slide-type summary">📋 SUMMARY</span>
+      <span class="tag tag-warning">Feature</span>
+    </div>
+
+    <div class="lang-en">
+      <h2 class="text-center">Hidden Price &amp; Quote Request</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item">
+          <div class="s-num">🙈 HIDDEN PRICE</div>
+          <div class="s-title">Pwedeng itago ng provider ang presyo</div>
+          <div class="s-body">Para sa variable-scope services (construction, events, custom work). <strong>"Magtanong ng Presyo"</strong> button imbes na price tag.</div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">💬 THUMBTACK-STYLE QUOTE</div>
+          <div class="s-title">1:1 quote flow — non-competitive</div>
+          <div class="s-body">Listing owner lang ang pwedeng mag-quote. Reuses existing bidding infrastructure with <strong>bid_type: 'quote'</strong>.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">⏰ TRUST SAFEGUARDS</div>
+          <div class="s-title">24h response SLA, 48h quote validity</div>
+          <div class="s-body">Anonymized category-average price range displayed. <strong>"Talagang Presyo"</strong> badge for transparent providers.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">🛒 EXCEPTION</div>
+          <div class="s-title">Commodity products = public pricing required</div>
+          <div class="s-body">Standard groceries, mass-market goods — <strong>fixed price required.</strong> Hidden-price listings can't use Direct Booking.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Hidden Price at Quote Request</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item">
+          <div class="s-num">🙈 HIDDEN PRICE</div>
+          <div class="s-title">Pwedeng itago ng provider ang presyo</div>
+          <div class="s-body">Para sa services na nagbabago ang scope (construction, events, custom work). <strong>"Magtanong ng Presyo"</strong> button — hindi presyo ang kita agad.</div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">💬 THUMBTACK-STYLE QUOTE</div>
+          <div class="s-title">1:1 quote flow — walang kompetisyon</div>
+          <div class="s-body">Listing owner lang ang pwedeng sumagot ng quote. Ginagamit ang existing bidding infrastructure na may <strong>bid_type: 'quote'</strong>.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">⏰ TRUST SAFEGUARDS</div>
+          <div class="s-title">24h response SLA, 48h validity ng quote</div>
+          <div class="s-body">May anonymized category-average price range na display. <strong>"Talagang Presyo"</strong> badge para sa transparent na providers.</div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">🛒 EXCEPTION</div>
+          <div class="s-title">Commodity products = public pricing</div>
+          <div class="s-body">Standard groceries, mass-market goods — <strong>required ang fixed price.</strong> Hidden-price listings hindi pwedeng gumamit ng Direct Booking.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 17: DETAIL — HOW QUOTE REQUESTS WORK  -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide" data-index="16">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-warning">Feature</span>
+    </div>
+
+    <div class="lang-en">
+      <h2 class="text-center">How Quote Requests Work</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="cols-2">
+        <div>
+          <p><strong>Research-backed feature</strong> — providers with variable-scope services (construction, events, custom work) cannot publish fixed prices. Competitors should not see their pricing.</p>
+          <div class="highlight-box">
+            <strong>Thumbtack-style "Request a Quote":</strong> Hidden-price listings display a <strong>"Magtanong ng Presyo"</strong> button instead of a price. Clicking triggers a 1:1 quote flow — single-provider, non-competitive, reusing the existing bidding infrastructure.
+          </div>
+          <div class="card" style="margin-top:.5rem">
+            <div class="card-title">Trust Safeguards</div>
+            <div class="card-body">
+              <ul class="ulist" style="margin:0">
+                <li>Providers must respond within <strong>24 hours</strong> (SLA-tracked)</li>
+                <li>Quotes valid for <strong>48 hours</strong></li>
+                <li>Anonymized category-average price range displayed <span style="color:#8899aa">(e.g., "Typical cost in Tagudin: ₱300–₱800")</span></li>
+                <li><strong>"Talagang Presyo"</strong> badge for providers who choose transparent pricing</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="background:#1e2e3e">
+            <h4 style="color:#f5a623">How It Works</h4>
+            <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem">
+              <div style="display:flex;gap:.5rem;align-items:flex-start">
+                <span class="step-number">1</span>
+                <div><strong>Price Visibility</strong><br><span style="font-size:.8rem;color:#8899aa">Provider sets price_visibility: 'hidden' or 'starting_from' on their listing</span></div>
+              </div>
+              <div style="display:flex;gap:.5rem;align-items:flex-start">
+                <span class="step-number">2</span>
+                <div><strong>Quote Request</strong><br><span style="font-size:.8rem;color:#8899aa">Buyer clicks "Magtanong ng Presyo" → bid_type: 'quote' request created</span></div>
+              </div>
+              <div style="display:flex;gap:.5rem;align-items:flex-start">
+                <span class="step-number">3</span>
+                <div><strong>Provider Responds</strong><br><span style="font-size:.8rem;color:#8899aa">Listing owner sends quote → buyer accepts → flows into standard Order state machine</span></div>
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-muted mt-1"><span class="tag tag-info">REQ-LST-03</span> Standard commodity products (groceries, mass-market goods) require public pricing. Hidden-price listings cannot use Direct Booking.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Paano Gumagana ang Quote Requests</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="cols-2">
+        <div>
+          <p><strong>Research-backed feature</strong> — yung providers na may variable-scope services (construction, events, custom work) hindi pwedeng mag-post ng fixed prices. Ayaw nilang makita ng competitors ang presyo nila.</p>
+          <div class="highlight-box">
+            <strong>Thumbtack-style "Request a Quote":</strong> Hidden-price listings may <strong>"Magtanong ng Presyo"</strong> button imbes na presyo. Pag-click, magti-trigger ng 1:1 quote flow — single-provider, non-competitive, gamit ang existing bidding infrastructure.
+          </div>
+          <div class="card" style="margin-top:.5rem">
+            <div class="card-title">Trust Safeguards</div>
+            <div class="card-body">
+              <ul class="ulist" style="margin:0">
+                <li>Dapat sumagot ang provider sa loob ng <strong>24 oras</strong> (SLA-tracked)</li>
+                <li>Valid ang quote nang <strong>48 oras</strong></li>
+                <li>May anonymized category-average price range na display <span style="color:#8899aa">(e.g., "Typical cost sa Tagudin: ₱300–₱800")</span></li>
+                <li><strong>"Talagang Presyo"</strong> badge para sa mga transparent na provider</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="background:#1e2e3e">
+            <h4 style="color:#f5a623">Paano Ito Gumagana</h4>
+            <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem">
+              <div style="display:flex;gap:.5rem;align-items:flex-start">
+                <span class="step-number">1</span>
+                <div><strong>Price Visibility</strong><br><span style="font-size:.8rem;color:#8899aa">Provider nag-set ng price_visibility: 'hidden' o 'starting_from' sa listing nila</span></div>
+              </div>
+              <div style="display:flex;gap:.5rem;align-items:flex-start">
+                <span class="step-number">2</span>
+                <div><strong>Quote Request</strong><br><span style="font-size:.8rem;color:#8899aa">Buyer nag-click ng "Magtanong ng Presyo" → bid_type: 'quote' request na-create</span></div>
+              </div>
+              <div style="display:flex;gap:.5rem;align-items:flex-start">
+                <span class="step-number">3</span>
+                <div><strong>Provider Sumasagot</strong><br><span style="font-size:.8rem;color:#8899aa">Listing owner nagse-send ng quote → buyer nag-a-accept → pasok sa standard Order state machine</span></div>
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-muted mt-1"><span class="tag tag-info">REQ-LST-03</span> Standard commodity products (groceries, mass-market goods) — required ang public pricing. Hidden-price listings hindi pwedeng gumamit ng Direct Booking.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 18: SUMMARY — ACCESS TIERS L0-L4       -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide" data-index="17">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="slide-type summary">📋 SUMMARY</span>
+      <span class="tag tag-info">Accessibility</span>
+    </div>
+
+    <div class="lang-en">
+      <h2 class="text-center">Access Tiers — L0 to L4</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item" style="border-left-color:#667788">
+          <div class="s-num">L0 — FEATURE PHONE</div>
+          <div class="s-title">SMS lang, walang data</div>
+          <div class="s-body">Agent ang nagdadala ng trabaho. Owner nag-co-confirm lang via SMS. <strong>APPROVE, STOP, REVOKE</strong> — yan lang ang kailangan.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">L1 — KIOSK</div>
+          <div class="s-title">Shared tablet sa sari-sari store</div>
+          <div class="s-body">Browse at kiosk, assisted ng operator. Pwedeng mag-deposit ng cash, mag-print ng receipt, mag-avail ng Quick Deal QR.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">L2-L3 — SMARTPHONE</div>
+          <div class="s-title">PWA na may offline support</div>
+          <div class="s-body">Full PWA — catalog caching via IndexedDB. Queued requests pag offline. Quick Deal kahit <strong>walang internet.</strong></div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">L4 — POWER USER</div>
+          <div class="s-title">Desktop + admin dashboard</div>
+          <div class="s-body">Admin tools, analytics, bulk operations, governance. <strong>Same backend</strong> — tier determines presentation, not transaction capability.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Access Tiers — L0 hanggang L4</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item" style="border-left-color:#667788">
+          <div class="s-num">L0 — FEATURE PHONE</div>
+          <div class="s-title">SMS lang, walang data</div>
+          <div class="s-body">Agent ang nagdadala ng trabaho. Owner nag-co-confirm lang via SMS. <strong>APPROVE, STOP, REVOKE</strong> — yan lang ang kelangan niya.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">L1 — KIOSK</div>
+          <div class="s-title">Shared tablet sa sari-sari store</div>
+          <div class="s-body">Pwedeng mag-browse, may operator na tumutulong. Pwedeng mag-deposit ng cash, mag-print ng receipt, gumamit ng Quick Deal QR.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">L2-L3 — SMARTPHONE</div>
+          <div class="s-title">PWA na may offline capability</div>
+          <div class="s-body">Full PWA — catalog naka-cache sa IndexedDB. Queued requests pag offline. Quick Deal kahit <strong>walang signal.</strong></div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">L4 — POWER USER</div>
+          <div class="s-title">Desktop + admin dashboard</div>
+          <div class="s-body">Admin tools, analytics, bulk operations, governance. <strong>Same backend</strong> — iba lang ang presentation, hindi ang transaction capability.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 19: DETAIL — OFFLINE PATTERNS + WCAG  -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide" data-index="18">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-info">Accessibility</span>
+    </div>
+
+    <div class="lang-en">
+      <h2 class="text-center">Discovery, Offline Patterns &amp; WCAG</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+      <p class="text-center text-sm" style="margin-bottom:.5rem">Five access tiers ensure no user is locked out by their device or connectivity.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tier</th><th>User</th><th>Device</th><th>Interface</th><th>Discovery</th></tr></thead>
+          <tbody>
+            <tr><td><strong>L0</strong></td><td>Non-digital owner</td><td>Feature phone (SMS only)</td><td>SMS notifications + keyword replies</td><td>Agent brings work; owner confirms via SMS</td></tr>
+            <tr><td><strong>L1</strong></td><td>Kiosk user</td><td>Shared tablet at sari-sari store</td><td>Kiosk app — browse or operator-assisted</td><td>Browse by category; operator assists</td></tr>
+            <tr><td><strong>L2</strong></td><td>Smartphone — offline/low-data</td><td>Android/iOS, intermittent</td><td>PWA + IndexedDB cache</td><td>Browse cached catalog; requests queued offline</td></tr>
+            <tr><td><strong>L3</strong></td><td>Smartphone — online</td><td>4G/5G/WiFi</td><td>Full PWA — all features</td><td>Full search, Quick Deal QR, quotes, notifications</td></tr>
+            <tr><td><strong>L4</strong></td><td>Power user / admin</td><td>Desktop + smartphone</td><td>Full web app + admin dashboard</td><td>Admin tools, analytics, bulk ops, governance</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-grid card-grid-3 mt-1">
+        <div class="card">
+          <div class="card-title">🌐 Multi-Language</div>
+          <div class="card-body">Tagalog, Ilocano, and English — user-selectable in settings. Persists across sessions. SMS in plain language (≤160 chars) for feature phone readability.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">📡 Offline-First Patterns</div>
+          <div class="card-body">Catalog caching via IndexedDB. Queued requests sync when online. Quick Deal works fully air-gapped. Conflict resolution via last-write-wins + server timestamp.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">♿ Accessibility</div>
+          <div class="card-body">WCAG 2.1 Level AA: keyboard-navigable, screen reader compatible (ARIA labels), 4.5:1 color contrast, scalable text. Kiosk: 48×48dp touch targets, high-contrast mode.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Discovery, Offline Patterns at WCAG</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+      <p class="text-center text-sm" style="margin-bottom:.5rem">Limang access tiers — walang user na maiiwan dahil sa device o connectivity nila.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tier</th><th>User</th><th>Device</th><th>Interface</th><th>Discovery</th></tr></thead>
+          <tbody>
+            <tr><td><strong>L0</strong></td><td>Non-digital owner</td><td>Feature phone (SMS lang)</td><td>SMS notifications + keyword replies</td><td>Agent nagdadala ng trabaho; owner nag-co-confirm via SMS</td></tr>
+            <tr><td><strong>L1</strong></td><td>Kiosk user</td><td>Shared tablet sa sari-sari store</td><td>Kiosk app — browse or operator-assisted</td><td>Browse by category; operator tumutulong</td></tr>
+            <tr><td><strong>L2</strong></td><td>Smartphone — offline/low-data</td><td>Android/iOS, intermittent</td><td>PWA + IndexedDB cache</td><td>Browse cached catalog; queued requests pag offline</td></tr>
+            <tr><td><strong>L3</strong></td><td>Smartphone — online</td><td>4G/5G/WiFi</td><td>Full PWA — lahat ng features</td><td>Full search, Quick Deal QR, quotes, notifications</td></tr>
+            <tr><td><strong>L4</strong></td><td>Power user / admin</td><td>Desktop + smartphone</td><td>Full web app + admin dashboard</td><td>Admin tools, analytics, bulk ops, governance</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-grid card-grid-3 mt-1">
+        <div class="card">
+          <div class="card-title">🌐 Multi-Language</div>
+          <div class="card-body">Tagalog, Ilocano, at English — pwedeng piliin sa settings. Naaalala ang preference sa susunod na session. SMS sa plain language (≤160 chars).</div>
+        </div>
+        <div class="card">
+          <div class="card-title">📡 Offline-First Patterns</div>
+          <div class="card-body">Catalog naka-cache sa IndexedDB. Queued requests nag-si-sync pag online. Quick Deal kahit walang internet. Conflict resolution via last-write-wins.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">♿ Accessibility</div>
+          <div class="card-body">WCAG 2.1 Level AA: keyboard-navigable, screen reader compatible (ARIA labels), 4.5:1 color contrast, scalable text. Kiosk: 48×48dp touch targets.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 20: SUMMARY — DISPUTES AT GOVERNANCE  -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide" data-index="19">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="slide-type summary">📋 SUMMARY</span>
+      <span class="tag tag-danger">Governance</span>
+    </div>
+
+    <div class="lang-en">
+      <h2 class="text-center">Disputes at Governance</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item red">
+          <div class="s-num">⚖️ 4-PHASE RESOLUTION</div>
+          <div class="s-title">Open → Evidence → Resolution → Final</div>
+          <div class="s-body"><strong>48h target</strong> mula filing hanggang resolution. Admin-driven process — buyer at seller hindi kailangan sabay online.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">🧾 CASH DISPUTES</div>
+          <div class="s-title">Receipt = primary trust anchor</div>
+          <div class="s-body">Walang receipt? <strong>Burden of proof nasa nagre-claim.</strong> Dispute expiration window admin-configurable.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">📋 3-TIER EXTERNAL ESCALATION</div>
+          <div class="s-title">Platform Ruling → Handoff Letter → Legal</div>
+          <div class="s-body">Kung hindi satisfied ang party: Barangay Lupon, DTI Mediation, o Small Claims Court (<strong>₱400K, no lawyer</strong>).</div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">🛡️ RISK GUARDRAILS</div>
+          <div class="s-title">Provider hold, dispute rate suspension, cash advisory</div>
+          <div class="s-body">New provider: first 3 transactions hold +2 days. >5% dispute rate = auto-pause. Cash >₱15,000 → recommend escrow.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Disputes at Governance</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item red">
+          <div class="s-num">⚖️ 4-PHASE RESOLUTION</div>
+          <div class="s-title">Open → Evidence → Resolution → Final</div>
+          <div class="s-body"><strong>48h target</strong> mula filing hanggang resolution. Admin ang nagdi-drive — hindi kailangan sabay online ang buyer at seller.</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">🧾 CASH DISPUTES</div>
+          <div class="s-title">Receipt = primary trust anchor</div>
+          <div class="s-body">Walang receipt? <strong>Burden of proof nasa nagre-claim.</strong> Pwedeng i-configure ang dispute expiration window.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">📋 3-TIER EXTERNAL</div>
+          <div class="s-title">Platform Ruling → Handoff Letter → Legal</div>
+          <div class="s-body">Kung hindi satisfied: Barangay Lupon (RA 7160), DTI Mediation (RA 7394), o Small Claims Court (<strong>₱400K, walang lawyer</strong>).</div>
+        </div>
+        <div class="summary-item green">
+          <div class="s-num">🛡️ RISK GUARDRAILS</div>
+          <div class="s-title">Provider hold, dispute suspension, cash advisory</div>
+          <div class="s-body">New provider: first 3 transactions +2 days hold. >5% dispute rate = auto-pause. Cash >₱15,000 → recommend escrow.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 21: DETAIL — RESOLUTION + ESCALATION  -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide" data-index="20">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-danger">Governance</span>
+    </div>
+
+    <div class="lang-en">
+      <h2 class="text-center">Resolution Timeline &amp; External Escalation</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="cols-2">
+        <div>
+          <h4>Internal Resolution Process</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Phase</th><th>Action</th><th>Target</th></tr></thead>
+              <tbody>
+                <tr><td><strong>1. Open</strong></td><td>Party files dispute with reason + evidence upload</td><td>Any time before auto-release</td></tr>
+                <tr><td><strong>2. Evidence</strong></td><td>Admin gathers receipts, logs, photos from both parties</td><td>48h target</td></tr>
+                <tr><td><strong>3. Resolution</strong></td><td>Admin rules on evidence + platform policy</td><td><strong>48h target from filing</strong></td></tr>
+                <tr><td><strong>4. Final</strong></td><td>Binding ruling. Immutable audit trail. Both parties notified.</td><td>Binding upon issuance</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="highlight-box gold" style="margin-top:.3rem">
+            <strong>Cash Disputes:</strong> Receipt is primary trust anchor. No receipt = burden of proof on claiming party.
+          </div>
+        </div>
+        <div>
+          <h4>External Escalation (3-Tier)</h4>
+          <div style="display:flex;flex-direction:column;gap:.4rem">
+            <div class="card" style="padding:.6rem .8rem">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <strong>Tier 1 — Platform Final Ruling</strong>
+                <span class="tag tag-success">Internal</span>
+              </div>
+              <div class="card-body">Admin issues binding decision with full evidence package</div>
+            </div>
+            <div class="card" style="padding:.6rem .8rem">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <strong>Tier 2 — Formal Handoff Letter</strong>
+                <span class="tag tag-warning">External</span>
+              </div>
+              <div class="card-body">Platform generates "Notice of Unresolved Dispute" — transaction summary, evidence log, digitally signed.</div>
+            </div>
+            <div class="card" style="padding:.6rem .8rem">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <strong>Tier 3 — External Legal Pathway</strong>
+                <span class="tag tag-danger">Legal</span>
+              </div>
+              <div class="card-body">
+                Barangay Lupon (RA 7160) · DTI Consumer Mediation (RA 7394) · Small Claims Court (₱400K, no lawyer)
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-muted mt-1">Dispute history affects provider trust score. Repeat disputers flagged for admin review.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Resolution Timeline at External Escalation</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="cols-2">
+        <div>
+          <h4>Internal Resolution Process</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Phase</th><th>Action</th><th>Target</th></tr></thead>
+              <tbody>
+                <tr><td><strong>1. Open</strong></td><td>Party nagfa-file ng dispute na may reason + evidence</td><td>Before auto-release</td></tr>
+                <tr><td><strong>2. Evidence</strong></td><td>Admin kumukuha ng receipts, logs, photos from both parties</td><td>48h target</td></tr>
+                <tr><td><strong>3. Resolution</strong></td><td>Admin nagde-decide based sa evidence + platform policy</td><td><strong>48h target from filing</strong></td></tr>
+                <tr><td><strong>4. Final</strong></td><td>Binding ruling. Immutable audit trail. Na-notify ang both parties.</td><td>Binding upon issuance</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="highlight-box gold" style="margin-top:.3rem">
+            <strong>Cash Disputes:</strong> Receipt ang primary trust anchor. Walang receipt = burden of proof nasa nagre-claim.
+          </div>
+        </div>
+        <div>
+          <h4>External Escalation (3-Tiers)</h4>
+          <div style="display:flex;flex-direction:column;gap:.4rem">
+            <div class="card" style="padding:.6rem .8rem">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <strong>Tier 1 — Platform Final Ruling</strong>
+                <span class="tag tag-success">Internal</span>
+              </div>
+              <div class="card-body">Admin naglalabas ng binding decision na may complete evidence package</div>
+            </div>
+            <div class="card" style="padding:.6rem .8rem">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <strong>Tier 2 — Formal Handoff Letter</strong>
+                <span class="tag tag-warning">External</span>
+              </div>
+              <div class="card-body">Platform gumagawa ng "Notice of Unresolved Dispute" — transaction summary, evidence log, digitally signed.</div>
+            </div>
+            <div class="card" style="padding:.6rem .8rem">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <strong>Tier 3 — External Legal Pathway</strong>
+                <span class="tag tag-danger">Legal</span>
+              </div>
+              <div class="card-body">
+                Barangay Lupon (RA 7160) · DTI Consumer Mediation (RA 7394) · Small Claims Court (₱400K, walang lawyer)
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-muted mt-1">Affect ng dispute history ang provider trust score. Repeat disputers — flagged for admin review.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 22: SUMMARY — DEPLOYMENT              -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide" data-index="21">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="slide-type summary">📋 SUMMARY</span>
+      <span class="tag tag-info">Infrastructure</span>
+    </div>
+
+    <div class="lang-en">
+      <h2 class="text-center">Deployment — Dokploy, Zero-Cost Infrastructure</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item green">
+          <div class="s-num">🚀 ORCHESTRATOR</div>
+          <div class="s-title">Dokploy on Proxmox VM</div>
+          <div class="s-body">GitHub → Dokploy webhook → rebuild → deploy. <strong>SSL auto-provisioned</strong> via Let's Encrypt. Domain: dxtechph.online</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">📦 CONTAINERS</div>
+          <div class="s-title">Laravel + PostgreSQL + Redis + Meilisearch + Reverb</div>
+          <div class="s-body">All on <strong>single VPS</strong> (2 vCPU, 4GB RAM). Sapat para sa 50 concurrent users / 100 daily transactions.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">💰 ₱0 RECURRING COST</div>
+          <div class="s-title">Self-hosted lahat — isang paid dependency lang</div>
+          <div class="s-body">SMS: Gammu + USB dongle (₱300 one-time). Search: self-hosted Meilisearch. Maps: free tier + OSM. <strong>Only paid: Xendit at go-live.</strong></div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">💾 BACKUP</div>
+          <div class="s-title">Dokploy native volume backups</div>
+          <div class="s-body">Daily database + file backups. Retained 30 days. Local retention + optional Cloudflare R2 sync.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Deployment — Dokploy, Zero-Cost Infrastructure</h2>
+      <div class="accent-bar" style="margin:.25rem auto .75rem"></div>
+
+      <div class="summary-grid summary-grid-2">
+        <div class="summary-item green">
+          <div class="s-num">🚀 ORCHESTRATOR</div>
+          <div class="s-title">Dokploy on Proxmox VM</div>
+          <div class="s-body">GitHub → Dokploy webhook → rebuild → deploy. <strong>Auto-provisioned ang SSL</strong> via Let's Encrypt. Domain: dxtechph.online</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-num">📦 CONTAINERS</div>
+          <div class="s-title">Laravel + PostgreSQL + Redis + Meilisearch + Reverb</div>
+          <div class="s-body">Lahat nasa <strong>single VPS</strong> (2 vCPU, 4GB RAM). Sapat para sa 50 concurrent users / 100 daily transactions.</div>
+        </div>
+        <div class="summary-item blue">
+          <div class="s-num">💰 ₱0 RECURRING COST</div>
+          <div class="s-title">Self-hosted lahat — isa lang ang paid dependency</div>
+          <div class="s-body">SMS: Gammu + USB dongle (₱300 one-time). Search: self-hosted Meilisearch. Maps: free tier + OSM. <strong>Xendit lang ang babayaran pag go-live.</strong></div>
+        </div>
+        <div class="summary-item red">
+          <div class="s-num">💾 BACKUP</div>
+          <div class="s-title">Dokploy native volume backups</div>
+          <div class="s-body">Daily database + file backups. Retained 30 days. Local retention + optional Cloudflare R2 sync.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 23: DETAIL — ARCHITECTURE DIAGRAM     -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide" data-index="22">
+  <div class="slide-inner">
+    <div class="text-center mb-1">
+      <span class="slide-type detail">📊 DETAIL</span>
+      <span class="tag tag-info">Infrastructure</span>
+    </div>
+
+    <div class="lang-en">
+      <h2 class="text-center">Architecture &amp; Deployment Diagram</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+      <p class="text-center text-sm" style="margin-bottom:.5rem">Zero-cost academic constraint — all infrastructure self-hosted or free-tier. One-time ₱300 SMS hardware.</p>
+
+      <div class="cols-2">
+        <div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Component</th><th>Detail</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Orchestrator</strong></td><td>Dokploy on Proxmox VM</td></tr>
+                <tr><td><strong>Domain</strong></td><td>dxtechph.online</td></tr>
+                <tr><td><strong>SSL</strong></td><td>Auto-provisioned via Dokploy + Let's Encrypt</td></tr>
+                <tr><td><strong>Containers</strong></td><td>Laravel (PHP-FPM + Nginx), PostgreSQL 16, Redis, Meilisearch, Reverb (WebSocket)</td></tr>
+                <tr><td><strong>CI/CD</strong></td><td>GitHub → Dokploy webhook → rebuild → deploy</td></tr>
+                <tr><td><strong>SMS</strong></td><td>Gammu + USB GSM dongle (₱300 one-time)</td></tr>
+                <tr><td><strong>Backup</strong></td><td>Dokploy native volume backups → local + optional R2 sync</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="background:#1e2e3e;height:100%">
+            <h4 style="color:#f5a623">Zero-Cost Infrastructure</h4>
+            <ul class="ulist">
+              <li><span class="tag tag-success">₱0</span> <strong>VPS:</strong> Self-hosted on existing Proxmox infrastructure</li>
+              <li><span class="tag tag-success">₱0</span> <strong>SMS:</strong> Self-hosted ModemManager + Gammu (hardware: ₱300)</li>
+              <li><span class="tag tag-success">₱0</span> <strong>Search:</strong> Self-hosted Meilisearch on same VPS</li>
+              <li><span class="tag tag-success">₱0</span> <strong>Maps:</strong> Free tier (50K loads) + OpenStreetMap fallback</li>
+              <li><span class="tag tag-success">₱0</span> <strong>CDN/TLS:</strong> Cloudflare free tier</li>
+              <li><span class="tag tag-success">₱0</span> <strong>Storage:</strong> Local filesystem on VPS</li>
+            </ul>
+            <div class="highlight-box gold mt-1">
+              <strong>One paid dependency:</strong> Xendit xenPlatform at go-live (sandbox free for dev). All other infra at ₱0 recurring cost.
+            </div>
+            <p class="text-sm text-muted mt-1">Designed for 50 concurrent users / 100 daily transactions (Tagudin pilot). Schema scales to 10,000+ users — no premature microservices.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lang-tl">
+      <h2 class="text-center">Architecture at Deployment Diagram</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+      <p class="text-center text-sm" style="margin-bottom:.5rem">Zero-cost academic constraint — lahat ng infrastructure self-hosted o free-tier. ₱300 one-time para sa SMS hardware.</p>
+
+      <div class="cols-2">
+        <div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Component</th><th>Detail</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Orchestrator</strong></td><td>Dokploy on Proxmox VM</td></tr>
+                <tr><td><strong>Domain</strong></td><td>dxtechph.online</td></tr>
+                <tr><td><strong>SSL</strong></td><td>Auto-provisioned via Dokploy + Let's Encrypt</td></tr>
+                <tr><td><strong>Containers</strong></td><td>Laravel, PostgreSQL 16, Redis, Meilisearch, Reverb</td></tr>
+                <tr><td><strong>CI/CD</strong></td><td>GitHub → Dokploy webhook → rebuild → deploy</td></tr>
+                <tr><td><strong>SMS</strong></td><td>Gammu + USB GSM dongle (₱300 one-time)</td></tr>
+                <tr><td><strong>Backup</strong></td><td>Dokploy native volume backups → local + optional R2</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="background:#1e2e3e;height:100%">
+            <h4 style="color:#f5a623">Zero-Cost Infrastructure</h4>
+            <ul class="ulist">
+              <li><span class="tag tag-success">₱0</span> <strong>VPS:</strong> Self-hosted sa existing Proxmox</li>
+              <li><span class="tag tag-success">₱0</span> <strong>SMS:</strong> Self-hosted ModemManager + Gammu (₱300 hardware)</li>
+              <li><span class="tag tag-success">₱0</span> <strong>Search:</strong> Self-hosted Meilisearch</li>
+              <li><span class="tag tag-success">₱0</span> <strong>Maps:</strong> Free tier + OpenStreetMap fallback</li>
+              <li><span class="tag tag-success">₱0</span> <strong>CDN/TLS:</strong> Cloudflare free tier</li>
+              <li><span class="tag tag-success">₱0</span> <strong>Storage:</strong> Local filesystem sa VPS</li>
+            </ul>
+            <div class="highlight-box gold mt-1">
+              <strong>Isang paid dependency:</strong> Xendit xenPlatform pag go-live (sandbox free for dev). Lahat ng iba ₱0 recurring cost.
+            </div>
+            <p class="text-sm text-muted mt-1">Designed for 50 concurrent users / 100 daily transactions (Tagudin pilot). Schema scalable sa 10,000+ users — walang premature microservices.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 24: PHASE 2→3 HANDOFF + TEAM          -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide" data-index="23">
   <div class="slide-inner">
     <div class="text-center mb-1">
       <span class="tag tag-info">Roadmap</span>
     </div>
-    <h2 class="text-center">Phase 2 → Phase 3 Handoff</h2>
-    <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
 
-    <div class="cols-2" style="margin-bottom:.5rem">
-      <div>
-        <div class="card" style="border:2px solid #1a5632">
-          <h4 style="color:#4ad66d;display:flex;align-items:center;gap:.4rem">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ad66d"></span>
-            Phase 1+2 — COMPLETE
-          </h4>
-          <ul class="ulist">
-            <li><strong>PRFAQ</strong> — Press Release &amp; FAQ (Working Backwards Ceremony)</li>
-            <li><strong>Listing Taxonomy</strong> — 4 listing types, 10 archetypes, naming conventions</li>
-            <li><strong>PRD</strong> — 9 sections locked. Full requirements: 28 categories, 5 transaction mechanisms, agent network, escrow, discovery, accessibility, NFRs, scope boundaries</li>
-            <li><strong>7 Facilitated Ceremonies</strong> — Trust, Economics, Fraud, Adoption, Risk, Formalization, Finance &amp; Governance</li>
-          </ul>
+    <div class="lang-en">
+      <h2 class="text-center">Phase 2 → Phase 3 Handoff</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
+
+      <div class="cols-2" style="margin-bottom:.5rem">
+        <div>
+          <div class="card" style="border:2px solid #1a5632">
+            <h4 style="color:#4ad66d;display:flex;align-items:center;gap:.4rem">
+              <span class="pulse-dot"></span>
+              Phase 1+2 — COMPLETE
+            </h4>
+            <ul class="ulist">
+              <li><strong>PRFAQ</strong> — Press Release &amp; FAQ (Working Backwards Ceremony)</li>
+              <li><strong>Listing Taxonomy</strong> — 4 listing types, 10 archetypes, naming conventions</li>
+              <li><strong>PRD</strong> — 9 sections locked. 28 categories, 5 transaction mechanisms, agent network, escrow, discovery, accessibility, NFRs, scope boundaries</li>
+              <li><strong>7 Facilitated Ceremonies</strong> — Trust, Economics, Fraud, Adoption, Risk, Formalization, Finance &amp; Governance</li>
+              <li><strong>Stakeholder Briefing</strong> — This deck. Summary-first, Taglish/English, ~24 slides</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="border:2px solid #f5a623">
+            <h4 style="color:#f5a623;display:flex;align-items:center;gap:.4rem">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f5a623"></span>
+              Phase 3 — NEXT
+            </h4>
+            <ul class="ulist">
+              <li><strong>Architecture (ADRs)</strong> — System design decisions, module boundaries, data flow</li>
+              <li><strong>Epics &amp; Stories</strong> — User stories mapped to PRD requirements with acceptance criteria</li>
+              <li><strong>Implementation Readiness Check</strong> — Technical feasibility, dependency audit, sprint planning</li>
+            </ul>
+            <div class="highlight-box gold mt-1" style="padding:.5rem">
+              <strong>Academic Timeline:</strong> 12 weeks to go-live. Tagudin, Ilocos Sur only. No expansion until proven.
+            </div>
+          </div>
         </div>
       </div>
-      <div>
-        <div class="card" style="border:2px solid #f5a623">
-          <h4 style="color:#f5a623;display:flex;align-items:center;gap:.4rem">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f5a623"></span>
-            Phase 3 — NEXT
-          </h4>
-          <ul class="ulist">
-            <li><strong>Architecture (ADRs)</strong> — System design decisions, module boundaries, data flow</li>
-            <li><strong>Epics &amp; Stories</strong> — User stories mapped to PRD requirements with acceptance criteria</li>
-            <li><strong>Implementation Readiness Check</strong> — Technical feasibility, dependency audit, sprint planning</li>
-          </ul>
-          <div class="highlight-box gold mt-1" style="padding:.5rem">
-            <strong>Academic Timeline:</strong> 12 weeks to go-live. Tagudin, Ilocos Sur only. No expansion until proven.
+
+      <div class="card-grid card-grid-3">
+        <div class="card text-center" style="padding:.5rem">
+          <div class="stat-value" style="font-size:1.8rem">9</div>
+          <div class="stat-label">PRD Sections Locked</div>
+        </div>
+        <div class="card text-center" style="padding:.5rem">
+          <div class="stat-value" style="font-size:1.8rem">7</div>
+          <div class="stat-label">Facilitated Ceremonies</div>
+        </div>
+        <div class="card text-center" style="padding:.5rem">
+          <div class="stat-value" style="font-size:1.8rem">12</div>
+          <div class="stat-label">Weeks to Go-Live</div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:500px;margin:.75rem auto 0;background:#1e2e3e">
+        <h4 style="color:#f5a623;margin-bottom:.6rem;text-align:center">The Team</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;text-align:left;font-size:.85rem">
+          <div><strong>David Datu N. Sarmiento</strong><br><span class="text-muted text-sm">Founder</span></div>
+          <div><strong>Christine M. Lopez</strong><br><span class="text-muted text-sm">Team Member</span></div>
+          <div><strong>Jaypee G. Pagaduan</strong><br><span class="text-muted text-sm">Team Member</span></div>
+          <div><strong>Prince John</strong><br><span class="text-muted text-sm">Team Member</span></div>
+          <div style="grid-column:1 / -1;text-align:center;padding-top:.3rem;border-top:1px solid rgba(255,255,255,.06)">
+            <strong>Advisor:</strong> Sir Zeus
           </div>
         </div>
       </div>
     </div>
 
-    <div class="card-grid card-grid-3">
-      <div class="card text-center" style="padding:.5rem">
-        <div class="stat-value" style="font-size:1.8rem">9</div>
-        <div class="stat-label">PRD Sections Locked</div>
-      </div>
-      <div class="card text-center" style="padding:.5rem">
-        <div class="stat-value" style="font-size:1.8rem">7</div>
-        <div class="stat-label">Facilitated Ceremonies</div>
-      </div>
-      <div class="card text-center" style="padding:.5rem">
-        <div class="stat-value" style="font-size:1.8rem">12</div>
-        <div class="stat-label">Weeks to Go-Live</div>
-      </div>
-    </div>
-  </div>
-</div>
+    <div class="lang-tl">
+      <h2 class="text-center">Phase 2 → Phase 3 Handoff</h2>
+      <div class="accent-bar" style="margin:.25rem auto .5rem"></div>
 
-<!-- ═══ SLIDE 16: THANK YOU / Q&A ═══ -->
-<div class="slide" data-index="15">
-  <div class="slide-inner text-center">
-    <div style="margin-bottom:1.5rem">
-      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style="display:inline-block">
-        <rect width="72" height="72" rx="16" fill="#1a5632"/>
-        <text x="36" y="46" text-anchor="middle" fill="#fff" font-size="28" font-weight="800" font-family="system-ui">S</text>
-      </svg>
-    </div>
-    <h1 style="margin-bottom:.2rem">Salamat, <span class="accent">Ka-Serbizyu</span>!</h1>
-    <div class="accent-bar" style="margin:.5rem auto"></div>
-    <p class="lead" style="max-width:600px;margin:0 auto .75rem">Questions &amp; Discussion</p>
-    <div class="accent-bar green" style="margin:.25rem auto .75rem;width:120px"></div>
+      <div class="cols-2" style="margin-bottom:.5rem">
+        <div>
+          <div class="card" style="border:2px solid #1a5632">
+            <h4 style="color:#4ad66d;display:flex;align-items:center;gap:.4rem">
+              <span class="pulse-dot"></span>
+              Phase 1+2 — TAPOS NA!
+            </h4>
+            <ul class="ulist">
+              <li><strong>PRFAQ</strong> — Press Release at FAQ (Working Backwards Ceremony)</li>
+              <li><strong>Listing Taxonomy</strong> — 4 listing types, 10 archetypes, naming conventions</li>
+              <li><strong>PRD</strong> — 9 sections locked. 28 categories, 5 transaction mechanisms, agent network, escrow, discovery, accessibility, NFRs, scope boundaries</li>
+              <li><strong>7 Facilitated Ceremonies</strong> — Trust, Economics, Fraud, Adoption, Risk, Formalization, Finance at Governance</li>
+              <li><strong>Stakeholder Briefing</strong> — Ito na 'to! Summary-first, Taglish/English, ~24 slides</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="border:2px solid #f5a623">
+            <h4 style="color:#f5a623;display:flex;align-items:center;gap:.4rem">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f5a623"></span>
+              Phase 3 — SUNOD
+            </h4>
+            <ul class="ulist">
+              <li><strong>Architecture (ADRs)</strong> — System design decisions, module boundaries, data flow</li>
+              <li><strong>Epics at Stories</strong> — User stories na naka-map sa PRD requirements na may acceptance criteria</li>
+              <li><strong>Implementation Readiness Check</strong> — Technical feasibility, dependency audit, sprint planning</li>
+            </ul>
+            <div class="highlight-box gold mt-1" style="padding:.5rem">
+              <strong>Academic Timeline:</strong> 12 weeks bago mag-go-live. Tagudin, Ilocos Sur lang. Walang expansion hanggang proven na.
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <div class="card" style="max-width:500px;margin:0 auto;background:#1e2e3e">
-      <h4 style="color:#f5a623;margin-bottom:.6rem">The Team</h4>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;text-align:left;font-size:.85rem">
-        <div><strong>David Datu N. Sarmiento</strong><br><span class="text-muted text-sm">Founder</span></div>
-        <div><strong>Christine M. Lopez</strong><br><span class="text-muted text-sm">Team Member</span></div>
-        <div><strong>Jaypee G. Pagaduan</strong><br><span class="text-muted text-sm">Team Member</span></div>
-        <div><strong>Prince John</strong><br><span class="text-muted text-sm">Team Member</span></div>
-        <div style="grid-column:1 / -1;text-align:center;padding-top:.3rem;border-top:1px solid rgba(255,255,255,.06)">
-          <strong>Advisor:</strong> Sir Zeus
+      <div class="card-grid card-grid-3">
+        <div class="card text-center" style="padding:.5rem">
+          <div class="stat-value" style="font-size:1.8rem">9</div>
+          <div class="stat-label">PRD Sections Locked</div>
+        </div>
+        <div class="card text-center" style="padding:.5rem">
+          <div class="stat-value" style="font-size:1.8rem">7</div>
+          <div class="stat-label">Facilitated Ceremonies</div>
+        </div>
+        <div class="card text-center" style="padding:.5rem">
+          <div class="stat-value" style="font-size:1.8rem">12</div>
+          <div class="stat-label">Weeks to Go-Live</div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:500px;margin:.75rem auto 0;background:#1e2e3e">
+        <h4 style="color:#f5a623;margin-bottom:.6rem;text-align:center">Ang Team</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;text-align:left;font-size:.85rem">
+          <div><strong>David Datu N. Sarmiento</strong><br><span class="text-muted text-sm">Founder</span></div>
+          <div><strong>Christine M. Lopez</strong><br><span class="text-muted text-sm">Team Member</span></div>
+          <div><strong>Jaypee G. Pagaduan</strong><br><span class="text-muted text-sm">Team Member</span></div>
+          <div><strong>Prince John</strong><br><span class="text-muted text-sm">Team Member</span></div>
+          <div style="grid-column:1 / -1;text-align:center;padding-top:.3rem;border-top:1px solid rgba(255,255,255,.06)">
+            <strong>Advisor:</strong> Sir Zeus
+          </div>
         </div>
       </div>
     </div>
-
-    <p class="text-sm text-muted mt-2">
-      <span>GitHub: <strong>daviddatuX25/Serbizyu-2.0</strong></span>
-      <span style="margin:0 .5rem">·</span>
-      <span>Domain: <strong>dxtechph.online</strong></span>
-      <span style="margin:0 .5rem">·</span>
-      <span>Pilot: <strong>Tagudin, Ilocos Sur</strong></span>
-    </p>
-    <p class="text-sm text-muted" style="margin-top:.25rem">
-      BMAD Phase 1 (Analysis) + Phase 2 (Planning &amp; Scoping) · July 27, 2026
-    </p>
   </div>
 </div>
 
-</div>
+</div><!-- /slide-container -->
 
 <!-- ═══ NAVIGATION BAR ═══ -->
 <nav class="nav-bar" id="navBar" aria-label="Slide navigation">
@@ -876,13 +2263,22 @@ td:first-child{font-weight:600;color:#e0e8f0}
   <button class="nav-dot" data-slide="13" aria-label="Go to slide 14"></button>
   <button class="nav-dot" data-slide="14" aria-label="Go to slide 15"></button>
   <button class="nav-dot" data-slide="15" aria-label="Go to slide 16"></button>
-  <span class="nav-counter" id="slideCounter">1 / 16</span>
+  <button class="nav-dot" data-slide="16" aria-label="Go to slide 17"></button>
+  <button class="nav-dot" data-slide="17" aria-label="Go to slide 18"></button>
+  <button class="nav-dot" data-slide="18" aria-label="Go to slide 19"></button>
+  <button class="nav-dot" data-slide="19" aria-label="Go to slide 20"></button>
+  <button class="nav-dot" data-slide="20" aria-label="Go to slide 21"></button>
+  <button class="nav-dot" data-slide="21" aria-label="Go to slide 22"></button>
+  <button class="nav-dot" data-slide="22" aria-label="Go to slide 23"></button>
+  <button class="nav-dot" data-slide="23" aria-label="Go to slide 24"></button>
+  <span class="nav-counter" id="slideCounter">1 / 24</span>
 </nav>
 
 <script>
 (function(){
   'use strict';
 
+  // ── Slides ──
   const slides = document.querySelectorAll('.slide');
   const dots = document.querySelectorAll('.nav-dot');
   const counter = document.getElementById('slideCounter');
@@ -935,19 +2331,15 @@ td:first-child{font-weight:600;color:#e0e8f0}
   // Touch swipe support
   let touchStartX = 0;
   let touchStartY = 0;
-
   document.addEventListener('touchstart', function(e){
     touchStartX = e.changedTouches[0].screenX;
     touchStartY = e.changedTouches[0].screenY;
   }, {passive: true});
-
   document.addEventListener('touchend', function(e){
     const dx = e.changedTouches[0].screenX - touchStartX;
     const dy = e.changedTouches[0].screenY - touchStartY;
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
-
-    // Only count as swipe if horizontal movement is significant and > vertical
     if(absDx > 40 && absDx > absDy * 1.5){
       if(dx > 0) goTo(current - 1);
       else goTo(current + 1);
@@ -967,8 +2359,46 @@ td:first-child{font-weight:600;color:#e0e8f0}
     setTimeout(function(){ wheelTimeout = false; }, 700);
   }, {passive: true});
 
-  // Expose goTo for debugging
+  // ── Language Toggle ──
+  const langEnBtn = document.getElementById('langEnBtn');
+  const langTlBtn = document.getElementById('langTlBtn');
+  const container = document.getElementById('deck');
+
+  function setLanguage(lang){
+    if(lang === 'tl'){
+      container.classList.add('lang-active-tl');
+      langTlBtn.classList.add('active');
+      langEnBtn.classList.remove('active');
+      localStorage.setItem('serbizyu-lang', 'tl');
+    } else {
+      container.classList.remove('lang-active-tl');
+      langEnBtn.classList.add('active');
+      langTlBtn.classList.remove('active');
+      localStorage.setItem('serbizyu-lang', 'en');
+    }
+  }
+
+  langEnBtn.addEventListener('click', function(){ setLanguage('en'); });
+  langTlBtn.addEventListener('click', function(){ setLanguage('tl'); });
+
+  // Restore saved language preference
+  const savedLang = localStorage.getItem('serbizyu-lang');
+  if(savedLang === 'tl') setLanguage('tl');
+
+  // Keyboard shortcut: T to toggle language
+  document.addEventListener('keydown', function(e){
+    if(e.key === 't' || e.key === 'T'){
+      if(!e.ctrlKey && !e.metaKey && !e.altKey){
+        e.preventDefault();
+        const currentLang = container.classList.contains('lang-active-tl') ? 'en' : 'tl';
+        setLanguage(currentLang);
+      }
+    }
+  });
+
+  // Expose for debugging
   window.goToSlide = goTo;
+  window.setLanguage = setLanguage;
 
 })();
 </script>

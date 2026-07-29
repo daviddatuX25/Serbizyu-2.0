@@ -1,7 +1,7 @@
 # Serbizyu 2.0 — Architecture Decision Records (ADR) Catalog
 
 > **BMAD Method Phase 3 Artifact: ADR Catalog**
-> *Document Version:* 4.0.0
+> *Document Version:* 4.1.0
 > *Date:* July 28, 2026
 > *Authors:* Winston (System Architect persona) & Engineering Lead
 > *Baseline:* PRD v3.0.1 (Sections 1–9 locked), Listing Model Taxonomy, Schema Decisions v4 (30 tables / 8 bounded contexts), Founder directives July 28, 2026
@@ -337,6 +337,82 @@
 
 ---
 
+## Domain 5 — Quality & Operations
+
+### ADR-022: File & Media Storage — Local Disk (Pilot), Cloudflare R2 (Phase 2+)
+
+* **Status:** Locked
+* **Traces to:** PRD §9.4, REQ-VER-01 (document uploads), DPA compliance
+* **Context:** Listing images, verification documents, and dispute evidence must be stored durably and served to users. At pilot scale (~50 concurrent users, ~100 txns/day), volume is low (estimated < 5 GB in first 3 months). Cloud object storage (S3, R2) adds recurring cost and operational surface. However, storing verification documents (government IDs, permits) requires DPA-compliant retention and purge.
+* **Decision:** Pilot: `laravel-local` disk on the VPS filesystem, backed up with the daily database dump. Phase 2+: Cloudflare R2 (S3-compatible, zero egress fees, ₱0 at pilot volume). Verification documents encrypted at rest (`php encrypt` before write); access logged to `audit_log`. Purge schedule: verification docs deletable on user request per DPA; listing media retained for dispute window (90 days post-order-completion) then soft-deleted.
+* **Alternatives Considered:**
+  * *AWS S3 from day one* — rejected: recurring cost against REQ-SC-01; egress fees at scale.
+  * *Cloudflare R2 from day one* — deferred: adds integration surface before the backup regime is proven. Move to R2 when (a) pilot completes G4 or (b) storage exceeds 5 GB.
+  * *Base64 in database* — rejected: bloats the database, kills backup speed, bypasses CDN caching.
+* **Consequences:** Single-VPS disk is a SPOF for media — accepted at pilot scale (same disk as the DB; daily backups cover it). Phase 2 migration path: artisan command to rsync local media → R2, then swap disk config. Backup job must include the storage directory alongside `pg_dump`.
+* **Verification:** Listing image upload/display works locally; backup archive includes media files; verification document encryption + audit log entry confirmed.
+
+---
+
+### ADR-023: Authorization — Hybrid RBAC + Policy Gates, Tiered by Verification
+
+* **Status:** Locked
+* **Traces to:** REQ-VER-01 (5-tier verification), REQ-AGT-01..05, §3.13
+* **Context:** The platform has six role types (Customer, Service Provider, Seller, Agent, Admin, Kiosk Operator) and five verification tiers (Phone → Identity → Barangay → Professional → Business). Capabilities are gated by BOTH role AND verification tier — e.g., "Agent" is a role, but an Agent at Phone tier cannot manage owner payouts; they must reach Identity tier. Additionally, the Agent oversight model (ADR-010) requires OWNER consent for specific actions. A flat role-based middleware cannot express these compound gates.
+* **Decision:** Hybrid model:
+  1. **Roles** (Customer, Service Provider, Seller, Agent, Admin, Kiosk) — assigned at registration, stored in `users.role`. Broad buckets for routing and UI.
+  2. **Verification tier** — `users.verification_tier` (Phone | Identity | Barangay | Professional | Business), progressively unlocked. Each tier adds capabilities.
+  3. **Laravel Policies** — per-model authorization (`ListingPolicy`, `OrderPolicy`, `PayoutPolicy`, `AgentPolicy`) that check `role AND verification_tier AND ownership/assignment`. Gate names follow `{action}-{resource}` convention (e.g., `manage-payouts`, `approve-listing`).
+  4. **Consent gates** — `agent_consents` table (ADR-010). Actions requiring owner OTP (listing activation, payout withdrawal, agent change) check for a valid, non-expired consent row before proceeding.
+* **Alternatives Considered:**
+  * *Pure RBAC middleware* — rejected: cannot express "Agent at Phone tier CAN browse listings but CANNOT manage payouts."
+  * *ABAC engine (Casbin/Oso)* — rejected: operational complexity unjustified for 6 roles and 5 tiers.
+  * *Permissions table with role→permission mapping* — accepted as a future optimization; for pilot, policies with tier checks are simpler and more auditable.
+* **Consequences:** Every new protected action requires a policy method. Policy test suite must cover the role × tier matrix (~30 combinations) for each gated capability. Middleware only handles authentication; authorization is always policy-based.
+* **Verification:** Policy test suite passes for the full role × tier matrix; Agent at Phone tier cannot access payout endpoints (403); Identity-tier Agent CAN manage listings but still requires OTP for activation.
+
+---
+
+### ADR-024: Backup & Disaster Recovery — Daily Dump + Off-VPS Replication
+
+* **Status:** Locked
+* **Traces to:** REQ-SC-01, §8.2 (99% uptime, 4-hour RTO), DPA (data residency)
+* **Context:** The platform holds financial records (double-entry ledger), personal data (government IDs, phone numbers), and operational state. A single-VPS deployment means disk failure = total data loss without off-machine backups. ADR-004 mandates 0% ledger drift — but a lost ledger is worse than a drifted one. The zero-cost constraint rules out managed backup services.
+* **Decision:**
+  1. **Daily:** `pg_dump` (custom format, compressed) + tarball of storage directory (`/var/www/storage/app/`), written to a local backup directory.
+  2. **Off-VPS replication:** The backup archive is pushed to a secondary location daily via `rclone` — either Google Drive (free 15 GB, already configured on the Proxmox host per existing infra) or a second Proxmox storage volume. The target is `gdrive:serbizyu-backups/` using the existing rclone configuration.
+  3. **Retention:** 30 daily snapshots on the remote target. Local copies retained for 7 days.
+  4. **Restore drill:** Quarterly manual restore to a fresh Dokploy project. Target RTO: < 4 hours per §8.2. RPO: < 24 hours (daily backup — accepted at pilot volume; tighten to hourly post-pilot).
+  5. **Verification:** Backup script exits non-zero on failure → alert to admin. Restore drill documented and timed.
+* **Alternatives Considered:**
+  * *Same-disk backup only* — rejected: disk failure kills backup and primary together.
+  * *BorgBackup / restic to cloud* — deferred: adds operational learning curve. rclone to GDrive is battle-tested in this environment.
+  * *Streaming WAL replication* — deferred: requires a standby PG instance; unjustified at 100 txns/day.
+* **Consequences:** GDrive is a free dependency with no SLA — accepted. Backup job is a cron entry on the VPS (`0 2 * * *`). Restore drill adds ~2 hrs/quarter ops burden. RPO of 24h means a disaster at 23:59 could lose a day's transactions — mitigated by the double-entry ledger: all entries are also recorded in Xendit's system, so financial state is reconstructible from Xendit webhooks if needed.
+* **Verification:** Backup script runs, archive is under 500 MB compressed at seed volume, rclone push succeeds, restore to clean Dokploy project completes in under 4 hours.
+
+---
+
+### ADR-025: Testing Strategy — PEST + Parallel PHPUnit for Legacy, Cypress for E2E
+
+* **Status:** Locked
+* **Traces to:** ADR-004 (financial correctness), ADR-005 (idempotency), §8.1 (performance SLAs)
+* **Context:** The platform handles money in a double-entry ledger. Testing cannot be optional — a sign error in debit/credit logic is a catastrophic bug. The team (4 BSIT students) has varying testing experience. The test suite must be fast enough to run on every push without discouraging the team, yet thorough enough to catch financial bugs before they reach production.
+* **Decision:**
+  1. **Unit/Feature tests:** PHPUnit (Laravel's default) for all critical paths. PEST PHP as the preferred syntax for new tests (cleaner, less boilerplate, better for a student team). Both coexist — existing Laravel-generated `TestCase` classes remain PHPUnit-compatible.
+  2. **Financial tests (mandatory):** Every path through `LedgerService` has a dedicated test asserting Σdebits = Σcredits. Idempotency: Xendit webhook handlers tested with 3× replay, asserting exactly one ledger entry. Commission splits: property-based test for "provider + agent + platform == amount" across random inputs.
+  3. **E2E tests:** Cypress for the 5 transaction mechanisms (Direct Booking → Completed, Quick Deal → Escrow → Release, Reverse Bidding → Award, Agent-Managed → OTP Gate → Order, Deal-Chaining → Multi-Slot). One happy-path test per mechanism. Not exhaustive — Cypress is slow; 5 workflows only.
+  4. **Coverage target:** ≥ 80% line coverage on `app/Services/LedgerService.php` and `app/Services/WorkStatusService.php`. ≥ 60% on all other service classes. No coverage target on controllers (integration-tested via feature tests).
+  5. **CI:** Tests run on every push via GitHub Actions (or Dokploy webhook pre-deploy check). Financial test suite must be green before deploy.
+* **Alternatives Considered:**
+  * *PEST-only* — rejected: team already has PHPUnit familiarity from NEXIAM; dual support eases transition.
+  * *Full E2E suite* — rejected: Cypress tests are slow and flaky at UI layer; reserve for the 5 mechanism happy paths.
+  * *No coverage target* — rejected: without a target, coverage trends to zero. 60%/80% is achievable for a student team within 12 weeks.
+* **Consequences:** Team must learn PEST syntax (low overhead — ~30 min). Cypress adds a Node dependency to CI. 5 E2E tests add ~3–5 minutes to the CI pipeline — acceptable on push.
+* **Verification:** CI pipeline passes on first push after Sprint 0 setup; financial test suite fails if any debit/credit pair is unbalanced; webhook replay test asserts exactly one ledger entry.
+
+---
+
 ## Supersession & Reconciliation Log
 
 | Item | Old Value | New Value | Authority |
@@ -361,4 +437,4 @@
 
 ---
 
-*End of ADR Catalog v4.0.0. Next Phase 3 artifacts: key data flows, security model, updated epics & stories — then a fresh implementation-readiness check.*
+*End of ADR Catalog v4.1.0 — 25 load-bearing decisions. Next: Phase 3 readiness re-check.*
