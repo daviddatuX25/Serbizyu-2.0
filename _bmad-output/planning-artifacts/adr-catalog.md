@@ -50,19 +50,27 @@
 
 ---
 
-### ADR-003: All Money as `bigint` Centavos; Balances Are Derived, Never Stored
+### ADR-003: All Money as `bigint` Centavos; Ledger is Source of Truth, Balance Column as Write-Time Cache
 
-* **Status:** Locked
+* **Status:** Locked (revised July 29 — balance column adopted per financial architecture research)
 * **Traces to:** REQ-PAY-03, REQ-GOV-01
-* **Context:** Floating-point peso columns accumulate rounding error (₱0.01 drift per rounding path) which, across thousands of escrow splits, becomes real missing money. Separately, a stored `wallet_balance` column can disagree with the ledger under any bug, retry, or crash.
-* **Decision:** Every monetary value is `bigint` centavos (₱500.00 = `50000`). No `DECIMAL`, no `FLOAT`. No wallet/balance column exists anywhere in the schema. A balance is a `SUM()` over ledger lines (Domain 5). Display formatting happens at the application edge only.
+* **Context:** Floating-point peso columns accumulate rounding error (₱0.01 drift per rounding path) which, across thousands of escrow splits, becomes real missing money. Separately, computing every balance as `SUM()` over `ledger_lines` on every read is correct but becomes a hot query at scale. Production financial systems (Stripe, Modern Treasury) use a dual approach: the ledger journal is the immutable source of truth, and a stored balance column is updated atomically in the same ACID transaction as the ledger write — it cannot drift because both live or both die together.
+* **Decision:**
+  1. Every monetary value is `bigint` centavos (₱500.00 = `50000`). No `DECIMAL`, no `FLOAT`. Display formatting at the application edge only.
+  2. `ledger_lines` is the **immutable source of truth**. All financial reporting, auditing, and dispute evidence reads from ledger lines.
+  3. `ledger_accounts.balance_centavos` is a **write-time cache** — updated atomically in the same PostgreSQL transaction as the ledger line INSERT. `UPDATE ledger_accounts SET balance_centavos = balance_centavos + :amount WHERE id = :account_id`. Because both the debit/credit INSERT and the balance UPDATE share one ACID boundary, the cache cannot drift from the source of truth by construction.
+  4. Nightly reconciliation job (ADR-004) cross-checks `SUM(ledger_lines) = SUM(balance_centavos)` per account. Any non-zero drift — which should never happen under ACID — pages the admin.
+  5. External read paths (API, dashboard, notifications) read `balance_centavos` for O(1) performance. Audit and dispute paths read `ledger_lines` directly.
 * **Alternatives Considered:**
   * *DECIMAL(12,2)* — rejected: still permits application-side float math before persistence; CHECK constraints cannot catch semantic drift.
-  * *Cached balance column + reconciliation* — deferred, not rejected: acceptable as a read-model cache **after** pilot if SUM queries get hot, but the ledger remains the only truth (see Schema Corrections #6).
+  * *SUM()-only, no stored balance* (original ADR-003) — revised: correct at pilot scale, but at higher tx volume every balance check becomes an aggregate query. The stored column is an ACID-guaranteed optimization, not a second source of truth.
+  * *Redis balance cache* — rejected: Redis adds operational surface and eventual consistency; an ACID-txn column has zero staleness by definition.
+  * *PostgreSQL materialized view* — deferred: CONCURRENT refresh adds complexity; the atomic UPDATE pattern is simpler and carries zero staleness.
 * **Consequences:**
   * Rounding bugs become type errors at review time, not production incidents.
   * All split math (90/10, 80/10/10) must define a rounding owner — platform absorbs the residual centavo (rule: `platform_pct` receives `amount − provider − agent`).
-* **Verification:** Property test: for random amounts and splits, `provider + agent + platform == amount` always; no `.toFixed()` anywhere in the PHP money path.
+  * The `LedgerService` is the single writer — no other code path touches `ledger_lines` or `balance_centavos`. This is the catastrophic-bug-class guardrail.
+* **Verification:** Property test: for random amounts and splits, `provider + agent + platform == amount` always. Nightly reconciliation: `SUM(ledger_lines) vs SUM(balance_centavos)` = 0 for 7 consecutive days.
 
 ---
 
