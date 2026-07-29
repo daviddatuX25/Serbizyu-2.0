@@ -184,7 +184,7 @@ sequenceDiagram
 | **SMS Gateway** | TextBee Android Gateway | Dedicated Android phone + unli-SMS SIM (~₱100/mo). Two-way: outbound OTP/notifications + inbound consent replies. Cold-standby device. | ADR-018 |
 | **AI (Serbi)** | Laravel AI SDK → OpenRouter | Cloud-only, draft-only. 24h Redis prompt caching. Guardrails: never auto-publishes, never touches finances. | ADR-021 |
 | **PWA** | Service Worker + Dexie.js 4.4 (IndexedDB) | Offline-first for L2 tier. Tier-aware feature gating (L0–L4). Background Sync for queued requests. | ADR-016 |
-| **SEO** | Server-rendered snapshots + Cloudflare edge cache | Listing pages rendered to static HTML on update. OG/Twitter meta + schema.org markup. | ADR-015 |
+| **SEO** | Inertia v3 SSR + Cloudflare edge cache | Server-renders same React components as the PWA — zero drift. Edge-cached after first render. schema.org + OG/Twitter meta. | ADR-015 |
 | **Maps** | Mapbox GL JS (free tier) + OSM/Leaflet fallback | 50K map loads/month free. Fallback ensures zero-cost if free tier exhausts. | — |
 
 ---

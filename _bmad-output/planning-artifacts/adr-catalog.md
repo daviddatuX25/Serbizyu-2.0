@@ -74,7 +74,7 @@
 
 ---
 
-### ADR-004: Double-Entry Escrow Ledger as the Only Money Movement Mechanism
+### ADR-004: Double-Entry Ledger as the Single Money Tracking Mechanism (All Payment Modes)
 
 * **Status:** Locked
 * **Traces to:** REQ-PAY-02/03/04/05/09/10, REQ-GOV-01/02, §6.1
@@ -172,7 +172,7 @@
 * **Status:** Locked
 * **Traces to:** §3.8 REQ-AGT-01..05, REQ-TXN-06/07, §4.3, §4.4
 * **Context:** ~70% of provincial service providers (persona "Tatay Ben", PER-02) have feature phones — no data, no smartphone. Without a bridge, the platform excludes exactly the supply side it exists to serve. But agent-managed money movement without owner proof of consent is legal exposure (DOLE §4.4 classification; DPA).
-* **Decision:** Agents (Identity-Verified minimum, REQ-AGT-01) manage owner accounts under an **oversight model**: agents act; owners are notified by SMS; only account-structure changes are gated — listing activation, payout withdrawal, agent assignment change require owner SMS OTP (REQ-TXN-06). Routine work (booking confirmations, message replies, calendar updates) needs no SMS (REQ-TXN-07). Every gate and action writes `agent_consents` (OTP-linked) and every outbound SMS carries the safety footer *"Reply STOP to suspend agent. Reply REVOKE to permanently remove agent."* (REQ-AGT-04). One active agent per owner enforced by partial unique index on `agent_assignments(owner_id) WHERE status='active'`; full history retained. Graduation: when an owner goes independent, the agent earns a 3×-month commission bonus (§4.3) — incentive aligned with owner empowerment, not lock-in.
+* **Decision:** Agents (Identity-Verified minimum, REQ-AGT-01) manage owner accounts under an **oversight model**: agents act; owners are notified by SMS; only account-structure changes are gated — listing activation and agent assignment change require owner SMS OTP (REQ-TXN-06). Payout withdrawal (the agent's own earned commission) is NOT gated — agents withdraw freely; owners are notified after the fact via SMS with STOP/REVOKE as recourse. Routine work (booking confirmations, message replies, calendar updates) needs no SMS (REQ-TXN-07). Every gate and action writes `agent_consents` (OTP-linked) and every outbound SMS carries the safety footer *"Reply STOP to suspend agent. Reply REVOKE to permanently remove agent."* (REQ-AGT-04). One active agent per owner enforced by partial unique index on `agent_assignments(owner_id) WHERE status='active'`; full history retained. Graduation: when an owner goes independent, the agent earns a 3×-month commission bonus (§4.3) — incentive aligned with owner empowerment, not lock-in.
 * **Alternatives Considered:**
   * *Full gating (SMS approval for everything)* — rejected: feature-phone latency (<10s per OTP per §8.1) makes routine bookings unbearable; agents quit.
   * *No consent trail* — rejected: "my agent stole my payout" with no proof chain ends the platform.
@@ -246,18 +246,18 @@
 
 ---
 
-### ADR-015: Public SEO via Server-Rendered Snapshots Cached at the Edge
+### ADR-015: Public SEO via Inertia v3 SSR + Edge Cache
 
-* **Status:** Locked
+* **Status:** Locked (revised July 29 — Blade snapshots replaced with Inertia SSR)
 * **Traces to:** REQ-CH-07, §8.1, §9.3 (channels)
-* **Context:** Public listing pages must rank on Google (a locked channel) and render for L1 kiosk browsers and FB link previews, but the app is client-rendered (ADR-014). Full Node SSR adds a persistent runtime and RAM to a zero-cost VPS.
-* **Decision:** On `ListingUpdated` (via outbox, ADR-009), a `SnapshotService` renders the public listing page server-side to static HTML with schema.org markup (LocalBusiness/Service), stores it, and purges the Cloudflare edge cache for that URL. Nginx serves the snapshot when present; misses fall back to the Inertia route. OG/Twitter meta generated in the same pass.
+* **Context:** Public listing pages must rank on Google (a locked channel) and render for L1 kiosk browsers and FB link previews, but the app is client-rendered React/Inertia (ADR-014). Blade-based snapshots (original ADR-015 draft) create a second rendering path that drifts from the React components over time.
+* **Decision:** Inertia v3 native SSR. A lightweight Node process runs alongside PHP-FPM on the same VPS, rendering React components to full HTML on the server. The rendered output is cached at Cloudflare's edge. On cache miss, the SSR process generates the page server-side — same React components as the interactive app, zero drift. schema.org markup (LocalBusiness/Service) and OG/Twitter meta are rendered in the same SSR pass. sitemap.xml regenerates nightly.
 * **Alternatives Considered:**
-  * *Full Inertia SSR (Node)* — rejected: persistent Node process on a 4GB VPS for a 50-user pilot.
+  * *Blade snapshots* (original ADR-015 draft) — superseded: two rendering paths (Blade + React) inevitably drift. Inertia SSR renders the same React components used by the PWA.
   * *Prerender SaaS* — rejected: recurring cost, external dependency.
   * *Client-render only* — rejected: kills SEO and FB preview cards, both locked channels.
-* **Consequences:** SEO is eventually consistent (seconds to minutes after edit) — accepted risk ~5% stale previews; sitemap.xml regenerates nightly; snapshot renderer shares Blade partials with the React pages' content model to avoid drift.
-* **Verification:** curl a listing URL returns full HTML + schema.org JSON-LD without JS; Lighthouse SEO = 100; FB Sharing Debugger renders the card.
+* **Consequences:** Node SSR process adds ~100–200 MB RAM to the VPS (within the 4 GB budget). Pages render server-side on first request then cached at Cloudflare edge — typical viewer sees cached HTML. Cold SSR renders add ~200–500ms to first request; acceptable per §8.1 targets given edge caching absorbs subsequent hits.
+* **Verification:** `curl` a listing URL returns full HTML + schema.org JSON-LD without JS; Lighthouse SEO = 100; FB Sharing Debugger renders the card.
 
 ---
 
@@ -301,7 +301,7 @@
   * *Gammu + USB GSM dongle* (PRD §9.4 print) — superseded: no team experience; dongle + ModemManager debugging is unbudgeted dev time.
   * *Semaphore/Twilio SaaS* — rejected: recurring cost against REQ-SC-01.
   * *Push-only, drop SMS* — rejected: kills L0 entirely.
-* **Consequences:** Single point of failure by design (accepted, mitigated by standby device + alerting on delivery failures); GSM network latency is outside SLA control (monitor only); SIM load (~₱100/mo unli-SMS) is an operating petty-cash item, not infra SaaS.
+* **Consequences:** Single point of failure by design (accepted, mitigated by standby device + alerting on delivery failures); GSM network latency is outside SLA control (monitor only); SIM load (~₱100/mo unli-SMS) is an operating petty-cash item, not infra SaaS. **Provider abstraction:** SMS dispatch goes through a swappable `SmsDriver` contract (Laravel service container binding) — TextBee is the default implementation at launch, but Semaphore or any future provider can be swapped via config without touching business logic. The outbox (ADR-009) ensures SMS jobs are already decoupled from the request lifecycle. Cold-standby device covers device failure; the driver abstraction covers provider migration.
 * **Verification:** Soak test 500 outbound/100 inbound across 48h with ≤1% failure; failover drill (kill primary, activate standby) < 10 minutes.
 
 ---
@@ -347,6 +347,12 @@
   * *Direct OpenAI/Anthropic keys* — rejected: OpenRouter gives multi-model failover without code change.
   * *Serbi in SMS channel* — rejected for v1: cost per SMS turn and safety-guardrail enforcement are both worse than in-app.
 * **Consequences:** Online-only features degrade gracefully — Serbi affordances simply don't render at L0/L2-offline (ADR-016 tier gating). Prompt templates are versioned in-repo for review.
+
+  **Two interaction modes:**
+  1. **Informational (direct response):** Quick inquiries — "What's the release window?", "How many bookings this week?", "Show me plumbers near Barangay Bio" — Serbi answers directly without navigating screens. Read-only, low latency, no UI manipulation overhead.
+  2. **Transactional (UI navigation):** Action requests — "Book me a tricycle to the market", "Post a listing for aircon repair" — Serbi translates intent into UI actions (fill form fields, trigger search, navigate to screen). Every backend mutation flows through the same validation, authorization policies, and business rules as human-driven actions. A rate-limiting gateway layer prevents prompt-injection abuse and request flooding. Human submit is always the final step.
+
+  **Performance:** Informational mode is lightweight (API call → cached response). Transactional mode adds UI render cycles — browser performance impact must be measured per-device-tier (acceptable at L3/L4; L2 may defer transactional mode). Prompt/response caching in Redis (24h) collapses repeat queries in both modes.
 * **Verification:** Guardrail test suite: adversarial prompts cannot produce auto-published content, financial actions, or dispute advice; AI spend dashboard shows per-day cost < budget ceiling.
 
 ---
