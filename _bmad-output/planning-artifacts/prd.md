@@ -100,7 +100,7 @@ All platform users are called **Ka-Serbizyu** — members of the Serbizyu commun
 | 2 | **Reverse Bidding** | Customer posts a Request | Post Request → Providers submit bids → Customer picks winner → Order created |
 | 3 | **Quick Deal** | Either party, face-to-face | Scan QR → Counter-offer stepper (max 3 rounds) → Dual confirmation → Order created |
 | 4 | **Deal-Chaining** | Either party, multi-party | Create Deal container → Invite providers per slot → All slots filled → Buyer approves → Multiple Orders created |
-| 5 | **Agent-Mediated** | Agent, on behalf of offline Owner | Agent creates listing → Owner approves via SMS OTP → Listing goes live → Customer books → Owner gets SMS confirmation → Revenue split 75/10/15 |
+| 5 | **Agent-Mediated** | Agent, on behalf of offline Owner | Agent creates listing → Owner approves via SMS OTP → Listing goes live → Customer books → Owner gets SMS confirmation → Revenue split 80/10/10 |
 
 **REQ-TXN-01:** Every mechanism produces an Order. The Order state machine is identical regardless of mechanism: `created → held_in_escrow → in_progress → awaiting_signoff → completed` (or `disputed`).  
 **REQ-TXN-02:** Revenue flows through the same commission engine regardless of mechanism. Admin-configurable per category.  
@@ -155,7 +155,7 @@ Distribution operates in two forms:
 | Facebook Page | "Serbizyu Tagudin" | ✅ |
 | Facebook Groups | "Serbizyu Bakes," "Serbizyu Lumber" | ✅ |
 | Messenger Bot | Serbizyu Page Bot | ✅ |
-| SMS | Platform-hosted Semaphore gateway | ✅ |
+| SMS | Platform-hosted TextBee Android Gateway | ✅ |
 | SEO / Google | Automated snapshot pages, schema.org | ✅ |
 | TikTok | "Serbizyu PH" (Platform-Owned) | Phase 3 |
 | YouTube | "Serbizyu Tagudin" (Platform-Owned) | Phase 3 |
@@ -604,7 +604,7 @@ Recommendation logic is Phase 2+ but the data model is prepared. Not in pilot sc
 |---|---|---|
 | Page load (PWA, 4G) | < 3 seconds to interactive | Lighthouse / Web Vitals |
 | Page load (PWA, 3G/2G) | < 8 seconds to first paint | PWA with lazy loading + code splitting |
-| SMS OTP delivery | < 10 seconds | Semaphore gateway SLA |
+| SMS OTP delivery | < 10 seconds | TextBee gateway SLA |
 | Search response (Meilisearch) | < 200ms for text search | Server-side timing |
 | API response (typical) | < 300ms p95 | Laravel Telescope / monitoring |
 | Escrow webhook processing | < 2 seconds (idempotent) | Xendit webhook → ledger update |
@@ -640,7 +640,7 @@ Recommendation logic is Phase 2+ but the data model is prepared. Not in pilot sc
 | Concurrent users | 50 (Tagudin pilot) | Single VPS: 2 vCPU, 4GB RAM handles this comfortably |
 | Daily transactions | 100 (pilot phase) | Database + Redis on same host adequate |
 | Storage | 20GB SSD (pilot) | Images on local filesystem; Cloudflare R2 for Phase 2+ |
-| SMS volume | 500/month (Semaphore starter tier) | Agent-managed owners + transactional notifications |
+| SMS volume | 500/month (TextBee unli-SMS plan) | Agent-managed owners + transactional notifications |
 | Design ceiling | Schema and architecture designed for 10,000+ users; infrastructure upgraded when needed | No premature optimization; no microservices for pilot |
 
 ### 8.5 Data Retention & Privacy
@@ -666,7 +666,7 @@ All infrastructure during academic development must use free tiers, self-hosted 
 
 | Service (Near-Pilot Paid Option) | Academic Alternative | One-Time Cost |
 |---|---|---|
-| Semaphore SMS gateway | Self-hosted ModemManager + USB GSM dongle + Gammu SMS daemon | ₱300 hardware |
+| TextBee Android Gateway | Dedicated Android phone + unli-SMS SIM | ₱100/mo SIM load |
 | Cloudflare R2 (object storage) | Local filesystem on VPS (already provisioned) | ₱0 |
 | Meilisearch Cloud | Self-hosted Meilisearch on same VPS | ₱0 |
 | Mapbox (maps) | Free tier (50K monthly loads); OpenStreetMap + Leaflet fallback | ₱0 |
@@ -750,7 +750,7 @@ Phase labels are priority hints, not hard gates. If a feature's schema and requi
 | **SSL** | Auto-provisioned via Dokploy + Let's Encrypt |
 | **Containers** | Laravel app (PHP-FPM + Nginx), PostgreSQL 16, Redis, Meilisearch, Reverb (WebSocket) |
 | **CI/CD** | GitHub → Dokploy webhook trigger → rebuild → deploy |
-| **SMS daemon** | Gammu + USB GSM dongle (separate container or bare-metal service) |
+| **SMS** | TextBee Android Gateway (dedicated device on local network) |
 | **Backup** | Dokploy native volume backups → local retention + optional Cloudflare R2 sync |
 
 ---

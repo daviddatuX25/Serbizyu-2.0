@@ -77,12 +77,12 @@ Before any Phase 4 code is written, the team agrees on **how** code is written, 
 
 | # | Item | Owner | When |
 |---|---|---|---|
-| 1 | Patch PRD §9.4 — replace "Gammu + USB GSM dongle" with "TextBee" | PM | Next PRD revision |
-| 2 | Patch PRD §3.10 — replace "75/10/15" with "80/10/10" (already locked in §4.1) | PM | Next PRD revision |
+| 1 | ~~PRD §9.4 Gammu→TextBee~~ | ~~PM~~ | ✅ Patched July 29 |
+| 2 | ~~PRD §3.10 75/10/15→80/10/10~~ | ~~PM~~ | ✅ Patched July 29 |
 | 3 | Provision TextBee device (Android phone + unli-SMS SIM) | Team | Sprint 0 |
 | 4 | Set up Dokploy project + CI/CD pipeline on Proxmox | DevOps | Sprint 0 |
 | 5 | Define 28 categories + trilingual labels in seed data | Team | Sprint 1 |
-| 6 | Serbi AI implementation baseline — research complete (`serbi-ai-assistant-research.md`, 47KB). Native OpenRouter driver, double-layer caching, ~3-5 day build, sub-$5/mo spend. ADR-021 updated. | David + Team | ✅ Done — Phase 3+ |
+| 6 | Serbi AI implementation baseline — research complete (`serbi-ai-assistant-research.md`, 47KB) | David + Team | ✅ Done |
 
 ---
 
