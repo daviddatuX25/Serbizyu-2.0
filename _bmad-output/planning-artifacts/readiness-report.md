@@ -82,7 +82,7 @@ Before any Phase 4 code is written, the team agrees on **how** code is written, 
 | 3 | Provision TextBee device (Android phone + unli-SMS SIM) | Team | Sprint 0 |
 | 4 | Set up Dokploy project + CI/CD pipeline on Proxmox | DevOps | Sprint 0 |
 | 5 | Define 28 categories + trilingual labels in seed data | Team | Sprint 1 |
-| 6 | Serbi AI implementation baseline research — proper patterns with Laravel AI SDK, guardrails, dual-mode architecture | David + Team | Phase 3+ |
+| 6 | Serbi AI implementation baseline — research complete (`serbi-ai-assistant-research.md`, 47KB). Native OpenRouter driver, double-layer caching, ~3-5 day build, sub-$5/mo spend. ADR-021 updated. | David + Team | ✅ Done — Phase 3+ |
 
 ---
 

@@ -346,7 +346,18 @@
   * *On-device SLM* — deferred: device classes at L2 can't sustain it; revisit Phase 3+.
   * *Direct OpenAI/Anthropic keys* — rejected: OpenRouter gives multi-model failover without code change.
   * *Serbi in SMS channel* — rejected for v1: cost per SMS turn and safety-guardrail enforcement are both worse than in-app.
-* **Consequences:** Online-only features degrade gracefully — Serbi affordances simply don't render at L0/L2-offline (ADR-016 tier gating). Prompt templates are versioned in-repo for review.
+* **Consequences:**
+
+  **Implementation baseline (researched July 29):** The `laravel/ai` SDK v0.x has native `openrouter` driver support — no custom HTTP client needed. Built-in providers include Text, Embeddings, Image, Audio, Transcription, and WebSearch. Events (`PromptingAgent`, `AgentPrompted`, `AgentFailedOver`, `ProviderFailedOver`) enable audit logging and failover monitoring. Default models: `anthropic/claude-sonnet-4.6` (smart, ~$15/M tokens), `anthropic/claude-haiku-4.5` (cheap, ~$1/M tokens).
+
+  **Cost strategy — double-layer caching:**
+  1. Redis application cache (24h TTL on prompt_hash → response) — identical questions = $0 API cost
+  2. OpenRouter server-side cache — semantically similar prompts hit their cache
+  Estimated API spend at pilot volume: sub-$5/month with aggressive caching.
+
+  **Build estimate:** ~3–5 developer-days for a working dual-mode prototype (informational + transactional). Guardrail tests: adversarial prompts must not produce auto-published content, financial actions, or dispute advice.
+
+  Online-only features degrade gracefully — Serbi affordances simply don't render at L0/L2-offline (ADR-016 tier gating). Prompt templates are versioned in-repo for review.
 
   **Two interaction modes:**
   1. **Informational (direct response):** Quick inquiries — "What's the release window?", "How many bookings this week?", "Show me plumbers near Barangay Bio" — Serbi answers directly without navigating screens. Read-only, low latency, no UI manipulation overhead.
