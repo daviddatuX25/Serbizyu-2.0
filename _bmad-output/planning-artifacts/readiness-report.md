@@ -40,6 +40,25 @@
 | **Access Tier Completeness** | ✅ PASSED | L0→SMS (ADR-018), L1→Kiosk (Phase 2+), L2→PWA offline (S3.6), L3/L4→Full PWA/web (ADR-014). |
 | **Seller Protection** | ✅ PASSED | Configurable escrow windows (A2=1h for tricycle), Direct Payment option, fast release for liquidity-dependent archetypes. |
 | **Buyer Protection** | ✅ PASSED | Tiwala Contract badge shows duration before booking. Direct Payment warning mandatory at checkout. Running Transaction badge on listings. Dispute resolution 48h SLA. |
+| **Development Standards Defined** | ✅ PASSED | Workflow rituals and tooling specified: BMAD for ceremonial planning (phases/refactors), OpenSpec ritual before every code change, Context7 for codebase-aware AI assistance, Laravel Boost for project scaffolding, TDD via PEST (unit/feature) + Playwright (automated E2E verification if needed), Laravel Pint + Git hooks + CI green-before-merge. See Sprint 0 S0.4 for implementation. |
+
+---
+
+## 2.5 Development Standards & Workflow
+
+Before any Phase 4 code is written, the team agrees on **how** code is written, reviewed, and merged. These standards are the development contract — not optional.
+
+| Practice | Tool / Ritual | When | ADR Trace |
+|---|---|---|---|
+| **Ceremonial Planning** | BMAD method | New phases, large refactors, architectural changes | BMAD methodology |
+| **Pre-Code Specification** | OpenSpec ritual | Before every coding change — spec first, then code | — |
+| **Codebase-Aware AI** | Context7 | Coding sessions — AI understands full project context | — |
+| **Project Scaffolding** | Laravel Boost | Sprint 0 — initial Laravel/Inertia/React setup | ADR-014 |
+| **Test-Driven Development** | PEST (unit/feature) + PHPUnit (legacy) | Every story — test first, code second | ADR-025 |
+| **E2E Verification** | Playwright | 5 transaction mechanism happy paths (when needed) | ADR-025 |
+| **Code Formatting** | Laravel Pint (PSR-12) | Pre-commit hook + CI pipeline | ADR-025 |
+| **Merge Gate** | CI green-before-merge | Every PR — financial test suite must pass | ADR-025 |
+| **Version Control** | Git + GitHub flow | Feature branches, PR review, squash merge to main | — |
 
 ---
 
@@ -63,8 +82,7 @@
 | 3 | Provision TextBee device (Android phone + unli-SMS SIM) | Team | Sprint 0 |
 | 4 | Set up Dokploy project + CI/CD pipeline on Proxmox | DevOps | Sprint 0 |
 | 5 | Define 28 categories + trilingual labels in seed data | Team | Sprint 1 |
-| 6 | Research: Serbi AI dual-mode implementation feasibility | David + Team | Phase 3+ |
-| 7 | Research: Inertia v3 SSR RAM impact on 4GB VPS | Team | Pre-production |
+| 6 | Serbi AI implementation baseline research — proper patterns with Laravel AI SDK, guardrails, dual-mode architecture | David + Team | Phase 3+ |
 
 ---
 

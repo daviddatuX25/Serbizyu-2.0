@@ -87,6 +87,22 @@
   * GitHub Actions (or Dokploy pre-deploy check) runs test suite on push.
   * Financial test suite: `vendor/bin/pest --filter=Financial` must be green before deploy.
 
+### S0.4: Development Workflow Setup (Tools & Rituals)
+
+* **As a** development team,
+* **I want** standardized tools and rituals for how we write, review, and merge code,
+* **So that** every team member codes the same way and quality doesn't drift.
+* **Acceptance Criteria:**
+  * **Laravel Boost** installed for project scaffolding — `boost:install` completes with Inertia v3.6 + React 19.2 preset.
+  * **OpenSpec ritual** documented in project README — before every code change: write spec in comment/issue → review with team/AI → implement → verify against spec.
+  * **Context7** configured — codebase indexed for AI-assisted coding sessions.
+  * **BMAD** directory confirmed — `_bmad/` + `_bmad-output/` structure in place for ceremonial planning of future phases/refactors.
+  * **PEST + PHPUnit** dual config: new tests in PEST syntax, legacy PHPUnit tests coexist.
+  * **Playwright** installed and configured — one skeleton E2E test (e.g., login flow) executing in CI.
+  * **Laravel Pint** with project `pint.json` — pre-commit hook via `husky` or `lefthook`.
+  * **GitHub flow** documented: feature branches, PR template, squash merge, CI must pass before merge.
+  * Team onboarding doc in `docs/CONTRIBUTING.md` covering the full workflow.
+
 ---
 
 ## 2. Epic 1: Identity + Catalog (Weeks 2–4)
@@ -157,6 +173,21 @@
   * Archetype-suggested defaults pre-fill the form (A2 = 1h, A7 = 72h, A1 = 168h).
   * Listing types: `service | product | service_request | product_request` per ADR-002.
   * Type-specific fields (`service_radius`, `stock_count`, `request_budget_centavos`) in real columns or `attributes` JSONB.
+
+### S1.6: Inertia v3 SSR — Public Listing Pages + SEO
+
+* **As a** platform,
+* **I want** listing pages to render server-side so Google and Facebook can index them,
+* **So that** providers' listings are discoverable through search and social media.
+* **Acceptance Criteria:**
+  * Inertia v3 SSR Node process runs alongside PHP-FPM on the Dokploy VPS (~150 MB RAM increment, within 4 GB budget).
+  * Public listing pages render to full HTML server-side on first request; cached at Cloudflare edge thereafter.
+  * schema.org JSON-LD (LocalBusiness/Service) rendered in SSR pass.
+  * OG/Twitter meta tags generated from listing data.
+  * `curl` a listing URL returns full HTML without JavaScript; Lighthouse SEO ≥ 95.
+  * FB Sharing Debugger renders preview card correctly.
+  * Cold SSR renders < 500ms. Edge-cached hits < 50ms.
+  * sitemap.xml regenerates nightly covering all active public listings.
 
 ---
 
@@ -330,7 +361,6 @@ These features are documented but NOT committed for the 12-week pilot. They are 
 | **Serbi AI** (ADR-021) | Complex: dual-mode, guardrails, rate limiting, Redis caching. Separate planning needed. | Phase 3+ |
 | **Deal-Chaining** (Multi-Slot DAG) | Needs stable single-order flow first. Schema prepared. | Phase 2+ |
 | **Kiosk Access Points** (ADR-016 L1) | Hardware provisioning + custom tablet UI. | Phase 2+ |
-| **Inertia v3 SSR for SEO** (ADR-015) | Adds Node SSR process to VPS. Lower priority than core transaction flow. | Post-pilot |
 | **3-Lane Compliance Dashboard** | Admin-only, low usage during pilot. | Post-pilot |
 | **Boost/Advertising** (REQ-BST-01) | No liquidity to advertise before pilot proves market fit. | Phase 2+ |
 | **Points/Affiliate** (REQ-PTS-04) | Needs active user base for referral mechanics. | Phase 3+ |
