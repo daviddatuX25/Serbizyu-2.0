@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page {
+    size: A4;
+    margin: 10mm 12mm 10mm 12mm;
+  }
+  body {
+    font-family: 'Inter', 'DejaVu Sans', sans-serif;
+    font-size: 10px;
+    line-height: 1.35;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    font-size: 13px;
+    margin: 0 0 2px 0;
+    padding: 0;
+    color: #0a5c2a;
+  }
+  h2 {
+    font-size: 11px;
+    margin: 6px 0 2px 0;
+    padding: 2px 5px;
+    background: #0a5c2a;
+    color: #fff;
+    border-radius: 3px;
+  }
+  .slide {
+    margin-bottom: 3px;
+    page-break-inside: avoid;
+  }
+  .slide-label {
+    font-weight: 700;
+    font-size: 10px;
+    color: #0a5c2a;
+  }
+  .script {
+    margin: 1px 0 0 8px;
+    font-style: italic;
+    color: #333;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+  .speaker-header {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0a5c2a;
+    border-bottom: 2px solid #0a5c2a;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+  }
+  .subtitle {
+    font-size: 9px;
+    color: #666;
+    margin-top: -2px;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== DAVID ==================== -->
+<div>
+  <div class="speaker-header">DAVID DATU SARMIENTO — Lead Programmer</div>
+  <div class="subtitle">Slides 1, 4, 5, 13, 15, 16</div>
+
+  <div class="slide">
+    <div class="slide-label">🟢 Slide 1 — Introduction & Title</div>
+    <div class="script">"Magandang araw sa inyong lahat! Good day, everyone. Kami po ang Team Serbizyu, and today we're excited to show you a solution we built specifically for towns like Tagudin. Dito sa probinsya natin, we have thousands of talented people — mga karpintero, panadero, mananahi, tricycle drivers — who do great work pero nahihirapan kumita online. Hindi sila makapasok sa digital economy kasi either walang smartphone, walang data, o takot sa complicated na registration. Serbizyu is a local app and SMS system na nagsisilbing safe at patas na middleman, para 'yung mga manggagawa natin sa probinsya — makahanap ng trabaho, mabayaran nang maayos, kahit naka-de-keypad lang ang phone nila."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">💡 Slide 4 — The Core Idea</div>
+    <div class="script">"So paano nga ba inaayos ng Serbizyu ito? Tatlong simpleng idea lang po: Una — Local Marketplace. Isipin niyo, parang digital town square, naka-organize per barangay. Gusto mo ng karpintero sa Barangay Poblacion? Nandito sila, nakalista. Pangalawa — Safe Deposit Box o Escrow. Kapag nag-order ang buyer, ang pera ay naka-hold muna sa gitna — safe, secured. Mababayaran lang ang worker kapag tapos na ang trabaho at parehong masaya ang dalawang panig. At pangatlo — Youth Agents. 'Yung mga tech-savvy na kabataan sa barangay — sila ang magiging tulay. Sila ang tutulong sa mga offline workers na gumawa ng listings, at tumanggap ng job offers — gamit lang ang simpleng text message."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">🏗️ Slide 5 — How the Money & System Works</div>
+    <div class="script">"Isipin niyo ang Serbizyu — parang isang building na may apat na pintuan, pero iisa lang ang vault sa loob. Kahit saang pintuan ka pumasok — mobile app mo man 'yan, simpleng SMS, sa barangay kiosk, o nag-scan ka lang ng QR code sa palengke — lahat ng transaction na 'yan, pumapasok sa iisang secure system. At ito ang pinakamahalagang rule: Ang customer, magbabayad upfront. Pero ang pera, naka-lock. Kapag tapos na ang trabaho, pareho silang mag-ta-tap ng 'Confirm' o magre-reply via text — at awtomatikong ire-release ng system ang bayad. Ibig sabihin — imposibleng mawala ang pera. Walang takbuhan, walang lokohan."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">🛠️ Slide 13 — Simple Tech Breakdown</div>
+    <div class="script">"Sa likod ng Serbizyu — simple lang pero matibay ang teknolohiya. Para sa App — gumamit kami ng Laravel at Svelte. Modern web tools na mabilis mag-load kahit sa mumurahing phone. Para sa Texting — naka-integrate kami sa Semaphore na SMS service. Kaya 'yung mga naka-de-keypad, nakakatanggap ng text messages in real time. At para sa Payments — Xendit ang partner namin para sa online cash-ins, pero may sarili kaming digital bookkeeping ledger. Bawat piso — recorded, tracked, at audited. Walang centavong nawawala. Pinag-isipan namin 'to para gumana sa totoong kondisyon ng probinsya — mahinang signal, lumang phone, at simpleng user."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">👨‍💻 Slide 15 — The Team Behind Serbizyu</div>
+    <div class="script">"Ang proyektong ito ay binuo ng aming BSIT 4B team mula sa ISPSC Tagudin — at proud na proud kami dito. Ako po — David Datu Sarmiento, Lead Programmer at System Builder. Si Christine Lopez — aming Research at System Documentation. Si Jaypee Pagaduan — User Design at System Testing. At si Prince John Vidaña — Marketing at Community Outreach. Apat kaming magkakaiba ng lakas — pero iisa ang goal: gawing accessible ang digital economy para sa probinsya."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">🏁 Slide 16 — Conclusion</div>
+    <div class="script">"So, para tapusin — ano ba talaga ang Serbizyu? Hindi lang po ito isa pang buying and selling app. Hindi kami Shopee, hindi kami Lazada, hindi kami Facebook Marketplace. Ang Serbizyu ay isang safety net at trust bridge — ginawa para sa everyday na masisipag na Pilipino dito sa probinsya. 'Yung may skills, may talent, may sipag — pero kailangan lang ng sistema na gumagana para sa kanila. Hindi sistema na ginawa sa Maynila at pinilit sa probinsya — kundi sistema na dito mismo sa Tagudin hinubog. Maraming salamat po sa pakikinig! We are now open for your questions and feedback."</div>
+  </div>
+</div>
+
+<!-- ==================== CHRISTINE ==================== -->
+<div class="page-break">
+  <div class="speaker-header">CHRISTINE LOPEZ — Research & Documentation</div>
+  <div class="subtitle">Slides 2, 8, 10</div>
+
+  <div class="slide">
+    <div class="slide-label">🔴 Slide 2 — The Problem</div>
+    <div class="script">"Tingnan natin 'yung problema. Right now, buying services or local goods here sa province — it's literally a gamble. Sugal po talaga. Una — walang payment protection. 'Yung buyer, magse-send ng advance payment, tapos magdadasal na sana dumating 'yung worker. 'Yung worker naman, pagkatapos ng trabaho, magdadasal din na sana magbayad 'yung customer. Parehong dehado. Pangalawa — lahat nakatago sa Facebook chats. Walang official price list, walang ratings, walang paraan para malaman kung reliable ba 'yung tao. Basta tiwala lang. At pangatlo — tech and tax fear. Karamihan ng maliliit na manggagawa, walang budget for daily mobile data. At mahigit 90% sa kanila, takot sa BIR, takot sa business registration. So they stay invisible. Hindi sila makita ng customers."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">🎪 Slide 8 — Example 3: Big Events (Barangay Fiesta)</div>
+    <div class="script">"Pero paano naman kung malaking event — halimbawa, Barangay Fiesta? Dati, 'yung organizer — maghahanap ng caterer, photographer, at sound system — tatlong tao, hiwa-hiwalay na usapan. Lahat hihingi ng downpayment. At kung may isang hindi sumipot — problema. Sa Serbizyu, ang organizer — gagawa lang ng isang event budget. Magda-dagdag ng tatlong slot: caterer, photographer, sound system. Ang organizer — isang beses lang magbabayad. Pero ang bawat supplier — individually silang babayaran ng system kapag natapos na ang specific job nila. Kung sino ang tapos, siya ang bayad. Organized, transparent, at walang nalilito."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">📊 Slide 10 — How Are We Different?</div>
+    <div class="script">"Ngayon, natural na tanong — 'Eh 'di ba may Shopee, Lazada, Facebook Marketplace na?' Bakit kailangan pa ng Serbizyu? Tignan natin ang difference: Facebook at Carousell — walang payment protection. Send ka ng pera, dasal ka na lang. At walang option para sa mga naka-de-keypad. Grab — gumagana lang sa malalaking cities, at kailangan ng formal business documents upfront. Ang Serbizyu — kami lang ang nag-o-offer ng buyer-seller payment protection na gumagana via plain text message. Kami lang ang gumagamit ng local youth agents para tulungan ang offline workers. At kami lang ang may offline QR scanning para sa palengke. Hindi kami pang-Maynila — pang-probinsya talaga kami, at proud kami doon."</div>
+  </div>
+</div>
+
+<!-- ==================== PRINCE JOHN ==================== -->
+<div class="page-break">
+  <div class="speaker-header">PRINCE JOHN VIDAÑA — Marketing & Community Outreach</div>
+  <div class="subtitle">Slides 3, 6, 11, 12</div>
+
+  <div class="slide">
+    <div class="slide-label">👥 Slide 3 — Who Is This For?</div>
+    <div class="script">"So, sino ba talaga ang tutulungan ng Serbizyu? Tatlong grupo ng tao dito sa komunidad natin: Una — Skilled Trade Workers. 'Yung mga karpintero, mekaniko, beautician — magagaling sa trabaho pero zero ang online presence. Pangalawa — Home-Based Sellers. 'Yung mga nagbebenta ng homemade food, crafts — marunong mag-post pero hirap mag-manage ng orders at payments. At pangatlo — Local Buyers & Event Organizers. Simpleng tao na gusto lang kumuha ng reliable na manggagawa nang hindi sila mai-scam. Right now, 70% ng mga workers na ito — they operate completely offline. Ginawa namin ang Serbizyu para hindi sila mapag-iwanan."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">📱 Slide 6 — Example 1: Tatay Ben (Feature Phone)</div>
+    <div class="script">"Ganito po siya sa totoong buhay. Halimbawa — si Tatay Ben, karpintero dito sa atin. Ang phone niya? Old Nokia, de-keypad. So, may local youth agent tayo na si Kevin. Pumunta si Kevin kay Tatay Ben, nilagay niya online ang carpentry service. Walang ginawa si Tatay Ben kundi hintayin ang text at mag-reply ng 'APPROVE'. May kliyenteng nag-hire — nakatanggap siya ng text: saan, anong oras, magkano. Ginawa niya ang trabaho. Pagkatapos, nag-text ang kliyente para i-confirm — awtomatikong pumasok ang bayad. Ang hatian: Tatay Ben 75%, Kevin na agent 10%, Serbizyu 15%. Si Tatay Ben, kumita online nang hindi man lang humawak ng smartphone!"</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">📈 Slide 11 — How We Grow & Make Money</div>
+    <div class="script">"So paano kami lalago? Ang growth strategy namin: local youth agents. Bawat agent, magdadala ng 5 hanggang 10 offline workers sa platform. Organic, community-driven — kapitbahay na tumutulong sa kapitbahay. Magsisimula kami dito mismo sa Tagudin — target namin, 50 providers agad. Within one year, plano naming mag-expand sa buong Ilocos Sur — mahigit 500 providers sa platform. Business model: kumukuha kami ng 10% platform fee sa bawat transaction. Sa 500 active providers, ang platform ay puwedeng maka-generate ng humigit-kumulang ₱250,000 kada buwan — habang 'yung mga local workers natin, kumikita ng milyon-milyon. Win-win."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">📜 Slide 12 — Easy Step-by-Step Registration</div>
+    <div class="script">"Alam namin na isa sa pinakamalaking hadlang para sa maliliit na manggagawa — ay 'yung takot sa tax at paperwork. Kaya gumawa kami ng tatlong antas — 3-Step Growth Ladder: Una — Starter Level. Simpleng sign-up lang, ID at phone number, perfect para sa mga nagsisimula pa lang. Pangalawa — Rising Level. Sagutan lang ng 2-minutong form stating na ang kinikita mo ay below ₱250,000/year, tax-exempt under TRAIN Law. I-u-unlock nito ang mas mataas na transaction limits. At pangatlo — Pro Level. Para sa registered businesses na gustong magkaroon ng 'Verified' badge at unlimited sales. Hindi namin pini-pressure ang tao na mag-register as big business sa Day 1. We let them grow into it — at their own pace."</div>
+  </div>
+</div>
+
+<!-- ==================== JAYPEE ==================== -->
+<div class="page-break">
+  <div class="speaker-header">JAYPEE PAGADUAN — User Design & System Testing</div>
+  <div class="subtitle">Slides 7, 9, 14</div>
+
+  <div class="slide">
+    <div class="slide-label">🍰 Slide 7 — Example 2: Ate Grace (Smartphone User)</div>
+    <div class="script">"Ngayon, para naman sa mga may smartphone — katulad ni Ate Grace na nagbe-bake ng cakes. Si Ate Grace, may Android phone siya. Siya mismo ang gumawa ng listing: nag-upload ng picture ng cakes, nilagay ang presyo. Customers can browse, mag-order, at magbayad — lahat sa app. 'Yung bayad ng customer, naka-hold sa escrow habang nagbe-bake si Ate Grace — so everybody protected. Kapag na-deliver na niya 'yung cake at kinumpirma ng customer na masarap at maganda — 'yung pera, diretso na sa balance niya. Walang tawaran sa personal, walang kulang. Simple, mabilis, at secure."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">🤝 Slide 9 — Example 4: Market Buying with No Signal</div>
+    <div class="script">"Ito po ang paborito kong feature — kasi dito sa probinsya, realidad talaga na may mga lugar na zero ang signal. Isipin niyo — nasa public market kayo ng Tagudin. Walang internet, walang data. Pero may bibilhin kayo. Sa Serbizyu, gagana pa rin! Ang seller, ipapakita ang QR code sa screen. Ang buyer, i-scan 'yung QR code — it works off-grid. Mag-a-agree sila sa presyo, at ise-save ng phone ang transaction. Pagbalik niyo sa lugar na may signal — automatic na magsi-sync ang lahat sa system. Hindi kailangan ng internet para magka-deal. Technology that works where we actually live."</div>
+  </div>
+
+  <div class="slide">
+    <div class="slide-label">🗓️ Slide 14 — Project Timeline & Goals</div>
+    <div class="script">"Plano namin ito sa loob ng 12 linggo — tatlong buwan mula simula hanggang launch: Weeks 1-3 — Binubuo namin ang main database at SMS texting features. Weeks 4-6 — Dinagdag ang service catalog at online payment hold — dito na-realize 'yung escrow system, 'yung heart ng Serbizyu. Weeks 7-9 — Ginawa namin ang offline QR scanner at Agent dashboard — 'yung features na talagang nagpapaiba sa amin. Weeks 10-12 — Final testing, bug fixing, at launch dito mismo sa Tagudin! Ang goal namin: mag-launch na may 50+ local workers na naka-rehistro, at mapanatili ang 100% accurate payment record."</div>
+  </div>
+</div>
+
+</body>
+</html>
