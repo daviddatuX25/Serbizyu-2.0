@@ -1,79 +1,93 @@
 # Serbizyu 2.0 — Implementation Readiness Report
 
 > **BMAD Method Phase 3 Artifact: Readiness Gate Check**  
-> *Document Version:* 4.0.0  
+> *Document Version:* 5.0.0  
 > *Date:* July 29, 2026  
 > *Authors:* Quality Lead & System Architect  
-> *Supersedes:* readiness-report.md v3.0.0 (July 25, 2026) — **void**: written against the old stack (SvelteKit, Semaphore, Forge, 75/10/15, stale ERD)
+> *Supersedes:* readiness-report.md v4.0.0 (July 29) — rewritten post ADR review and epics rebuild
 
 ---
 
-## 1. Readiness Audit Summary
+## 1. Artifact Baseline (Current)
 
-This document verifies the alignment, consistency, and completeness of Phase 1 (Analysis), Phase 2 (Scoping/PRD/UX), and Phase 3 (Solutioning/Architecture) before initiating Phase 4 (Sprint Implementation).
+| Artifact | Version | Date | Status |
+|---|---|---|---|
+| PRD | v3.0.1 | July 26 | ✅ Locked — §1–9 approved. Two known stale lines tracked for next revision. |
+| Architecture Spine | v3.2.0 | July 29 | ✅ Reconciled with ADR catalog v4.2.0 |
+| ADR Catalog | v4.2.0 | July 29 | ✅ 26 load-bearing decisions. All reviewed one-by-one by founder. |
+| Schema Decisions | — | July 28/29 | ✅ 31 tables, 8 bounded contexts. Payment Protection Model added. |
+| Epics & Stories | v4.0.0 | July 29 | ✅ 3-epic core + Sprint 0. 11 features explicitly deferred. |
+| Listing Model Taxonomy | Locked | Phase 2 | ✅ 4 listing types, 5 transaction mechanisms, 10 fulfillment archetypes |
+| UX Spec (Mockups) | 39 screens | Phase 2 | ✅ 01–39 screens, phone + kiosk form factors |
+| PRFAQ (Press Release) | v4 | Phase 1 | ✅ Concept validated, terminology locked |
 
-**Current artifact baseline:**
+---
 
-| Artifact | Version | Status |
-|---|---|---|
-| PRD | v3.0.1 (July 26) | ✅ Locked — §1–9 approved. Two known stale sections (see §4 below) |
-| Architecture Spine | v3.2.0 (July 29) | ✅ Reconciled with ADR catalog |
-| ADR Catalog | v4.1.0 (July 29) | ✅ 25 load-bearing decisions across 5 domains |
-| Schema Decisions | July 28 | ✅ 30 tables, 8 bounded contexts, index strategy |
-| Listing Model Taxonomy | Locked | ✅ 4 listing types, 5 transaction mechanisms, 10 fulfillment archetypes |
-| UX Spec | Locked | ✅ 39 mockup screens (01–39), phone + kiosk form factors |
-| Epics & Stories | July 25 | ⚠️ Needs update — references old schema entities (SERVICERS, BOOKINGS) |
-| PRFAQ (Press Release + FAQ) | Locked | ✅ Concept validated, terminology locked |
+## 2. Readiness Audit Summary
 
 | Audit Gate | Status | Finding / Verification |
 |---|---|---|
-| **PRD & UX Alignment** | ✅ PASSED | 100% of functional requirements (28 categories, 4 listing types, 3-Lane ladder, agent tiers) map to 39 mockup screens. |
-| **Architecture Spine Consistency** | ✅ PASSED | Updated stack (React 18 + Inertia v2 + TS, TextBee SMS, Dokploy, ₱0 recurring) is self-consistent across architecture.md and ADR catalog. No stale references remain. |
-| **ADR Coverage** | ✅ PASSED | 25 ADRs covering data/persistence (8), transactions/agents (5), application/UI (4), integration/infra (4), quality/operations (4). Every PRD REQ-* ID is traceable to ≥1 ADR. |
-| **Database Schema Completeness** | ✅ PASSED | 30 tables, 8 bounded contexts, full index strategy, CHECK constraints for business rules. Schema decisions documented with rationale. |
-| **Scope Boundary Integrity** | ✅ PASSED | Academic scope fence (Tagudin ONLY) strictly enforced. Candon ruled out. Phase 2+ items (R2 storage, kiosk hardware, FastEmbed) deferred with clear migration paths. |
-| **SMART Objectives Traceability** | ✅ PASSED | All 4 SMART objectives mapped to verifiable acceptance criteria in Epics 1–4 (epics need entity-name update but objectives intact). |
-| **Zero-Cost Verification** | ✅ PASSED | Recurring cost eliminated: TextBee (₱100/mo SIM), Dokploy on Proxmox (₱0), self-hosted Meilisearch/Reverb (₱0), Cloudflare free tier (₱0). Only Xendit = per-transaction (no fixed fee). Total pilot ~₱400–700/mo. |
-| **Financial Safety** | ✅ PASSED | Double-entry ledger (ADR-004), DB-level idempotency (ADR-005), commission snapshot (ADR-011), backup with off-VPS replication (ADR-024), testing strategy with mandatory financial tests (ADR-025). |
-| **Access Tier Completeness** | ✅ PASSED | L0–L4 tiers covered: SMS for L0 (ADR-018), PWA offline-first for L2 (ADR-016), full web for L3/L4 (ADR-014), kiosk for L1 (deferred Phase 2+). |
+| **PRD & UX Alignment** | ✅ PASSED | 4 listing types, 5 transaction mechanisms, Tiwala Contract, Direct Payment, 28 categories — all map to 39 mockup screens. |
+| **Architecture Spine Consistency** | ✅ PASSED | Stack (PHP 8.4, React 19.2, Inertia v3.6, Tailwind 4.3, PG 16, Meilisearch 1.51, Redis 7) self-consistent across architecture.md and ADR catalog. No stale references remain. |
+| **ADR Coverage** | ✅ PASSED | 26 ADRs across 5 domains. Every PRD REQ-ID traceable to ≥1 ADR. Financial engineering (ADR-003/004/005) reviewed and hardened. |
+| **ADR-PRD Cross-Reference** | ✅ PASSED | ADR-004→PRD §6.1, ADR-010→§3.8/§4.3/§4.4, ADR-011→§4.1, ADR-026→§4.2, ADR-018→§9.4. No orphan requirements. |
+| **Database Schema Completeness** | ✅ PASSED | 31 tables, 8 bounded contexts. Full index strategy. CHECK constraints for business rules. Payment Protection schema detailed. |
+| **Epic-ADR Traceability** | ✅ PASSED | Each story cites relevant ADRs. S2.1→ADR-003/004, S2.3→ADR-004/011, S3.1→ADR-010, S1.5→ADR-026. |
+| **Scope Boundary Integrity** | ✅ PASSED | Academic scope (Tagudin ONLY). Candon ruled out. 11 features deferred to Phase 2+ with clear rationale. |
+| **SMART Objectives Traceability** | ✅ PASSED | All 4 objectives mapped to Epic 1–3 acceptance criteria. |
+| **Zero-Cost Verification** | ✅ PASSED | TextBee ₱100/mo SIM, Dokploy ₱0, Meilisearch/Reverb ₱0, Cloudflare ₱0. Xendit = per-transaction. Total pilot ~₱400–700/mo. |
+| **Financial Safety** | ✅ PASSED | Double-entry ledger + balance cache (ADR-003), DB idempotency (ADR-005), commission snapshot (ADR-011), backup to GDrive (ADR-024), mandatory financial tests (ADR-025). |
+| **Access Tier Completeness** | ✅ PASSED | L0→SMS (ADR-018), L1→Kiosk (Phase 2+), L2→PWA offline (S3.6), L3/L4→Full PWA/web (ADR-014). |
+| **Seller Protection** | ✅ PASSED | Configurable escrow windows (A2=1h for tricycle), Direct Payment option, fast release for liquidity-dependent archetypes. |
+| **Buyer Protection** | ✅ PASSED | Tiwala Contract badge shows duration before booking. Direct Payment warning mandatory at checkout. Running Transaction badge on listings. Dispute resolution 48h SLA. |
 
 ---
 
-## 2. Milestone Review Gates & Verification Protocol
+## 3. Verification Gates (Carried into Phase 4)
 
-| Gate | Week | Proof | Linked ADRs |
+| Gate | Week | Proof | ADR Trace |
 |---|---|---|---|
-| **G1 — Architecture** | 3 | Migrations green; SMS OTP < 10s on Tagudin GSM | ADR-017, ADR-018 |
-| **G2 — Money** | 6 | 0% ledger drift; webhook replay idempotent; recon 7 days clean; backup restore < 4h | ADR-004, ADR-005, ADR-024 |
-| **G3 — Agent & Mobile** | 9 | Consent gates block without OTP; 80/10/10 split posts correctly from snapshot; PWA offline Quick Deal e2e | ADR-010, ADR-011, ADR-013, ADR-016, ADR-023 |
-| **G4 — Pilot** | 12 | 50+ seeded listings live on Dokploy; all four launch archetypes transact end-to-end; CI pipeline green with financial tests | ADR-020, ADR-006, ADR-025 |
+| **G1 — Sprint 0** | 1 | Dokploy project live, 31-table migration green, CI/CD pipeline deploying, TextBee device provisioned, PEST suite running | ADR-020, ADR-018, ADR-025 |
+| **G2 — Identity + Catalog** | 4 | Phone OTP auth working on Tagudin GSM; 28 categories browseable; listing create/read with Tiwala/Direct modes | ADR-017, ADR-008, ADR-026 |
+| **G3 — Transaction Spine** | 8 | Ledger posts with 0% drift; Xendit sandbox webhooks idempotent; Tiwala auto-release fires; Direct Payment skips escrow; search < 200ms | ADR-003/004/005/011/019 |
+| **G4 — Agent + Trust** | 12 | SMS consent gates operational; Quick Deal QR e2e; dispute flow complete; admin dashboard live; PWA catalog caches offline | ADR-010/012/013/024 |
 
 ---
 
-## 3. Outstanding Items (Non-Blocking)
-
-These items do NOT block Phase 4 but must be resolved during Sprint 0–1:
+## 4. Outstanding Items (Non-Blocking for Phase 4)
 
 | # | Item | Owner | When |
 |---|---|---|---|
-| 1 | **Update `epics-and-stories.md`** to new entity names (SERVICERS→service providers, BOOKINGS→orders, WALLETS→ledger) | Architect | Sprint 0 |
-| 2 | **Patch PRD §9.4** — replace "Gammu + USB GSM dongle" with "TextBee Android Gateway" (ADR-018) | PM | Next PRD revision |
-| 3 | **Patch PRD §3.10 REQ-PAY-06** — replace "75/10/15" example with "80/10/10 agent-managed, 90/10 direct" (§4.1 locked authority) | PM | Next PRD revision |
-| 4 | **Verify PRD §9.4 zero-cost table** — ensure all entries reflect TextBee (₱100/mo), Dokploy (₱0), no Semaphore | PM | Next PRD revision |
-| 5 | **Define 28 categories + trilingual labels** in seed data | Team | Sprint 1 |
-| 6 | **Set up Dokploy project + CI/CD pipeline** on Proxmox VPS | DevOps | Sprint 0 |
-| 7 | **Provision TextBee device** — Android phone + unli-SMS SIM, test OTP round-trip on Tagudin GSM | Team | Sprint 0 |
+| 1 | Patch PRD §9.4 — replace "Gammu + USB GSM dongle" with "TextBee" | PM | Next PRD revision |
+| 2 | Patch PRD §3.10 — replace "75/10/15" with "80/10/10" (already locked in §4.1) | PM | Next PRD revision |
+| 3 | Provision TextBee device (Android phone + unli-SMS SIM) | Team | Sprint 0 |
+| 4 | Set up Dokploy project + CI/CD pipeline on Proxmox | DevOps | Sprint 0 |
+| 5 | Define 28 categories + trilingual labels in seed data | Team | Sprint 1 |
+| 6 | Research: Serbi AI dual-mode implementation feasibility | David + Team | Phase 3+ |
+| 7 | Research: Inertia v3 SSR RAM impact on 4GB VPS | Team | Pre-production |
 
 ---
 
-## 4. Decision Gate & Phase 4 Clearance
+## 5. Decision Gate — Phase 3 → Phase 4 Clearance
 
-> **VERDICT: APPROVED FOR PHASE 4 IMPLEMENTATION**  
-> 
-> All planning, scoping, architecture, schema, ADR, and epic artifacts are aligned with the reconciled stack. The 25 load-bearing ADRs span the full system. The three stale references (PRD Gammu line, PRD 75/10/15 print, epics entity names) are cosmetic patches that do not affect architectural integrity and are tracked as Sprint 0 housekeeping.
+| Criterion | Status |
+|---|---|
+| PRD locked and stable | ✅ |
+| Architecture self-consistent | ✅ |
+| 26 ADRs reviewed and held | ✅ |
+| Schema complete (31 tables) | ✅ |
+| Epics realistic and scoped | ✅ |
+| Stack version audited | ✅ |
+| Deferred features documented | ✅ |
+| Financial engineering sound | ✅ |
+| Verification gates defined | ✅ |
+
+> **VERDICT: APPROVED FOR PHASE 4 — SPRINT 0 INFRASTRUCTURE SETUP**
 >
-> **Phase 3 is complete.** Proceed to Sprint 0: infrastructure setup, Dokploy project creation, CI/CD pipeline, TextBee provisioning, and schema migration scaffolding.
+> Phase 3 (Solutioning) is complete. All artifacts are aligned to the current stack. The 26 ADRs have been reviewed step-by-step. The 3-epic core plan is realistic for a 12-week student-team timeline with 11 features deferred to post-pilot phases.
+>
+> **Next step:** Sprint 0 (Week 1) — Dokploy project creation, schema migration scaffold, CI/CD pipeline, TextBee provisioning, PEST suite initialization, and brand token implementation.
 
 ---
 
-*End of Implementation Readiness Report v4.0.0.*
+*End of Implementation Readiness Report v5.0.0. Phase 3 closed.*
