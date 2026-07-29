@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serbizyu — Mockup Screens</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--sand:#FAF6EE;--paper:#FFFDF8;--ink:#1B2A28;--ink-soft:#4A5B58;--teal:#0D7A6E;--teal-deep:#095A52;--teal-tint:#E3F1EE;--marigold:#D97A1F;--marigold-tint:#FCECD8;--terracotta:#B4432E;--terracotta-tint:#F7E4DE;--line:#DDD3BC;--line-soft:#EAE2CE}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--sand);color:var(--ink);padding:2rem 1.5rem;max-width:1100px;margin:0 auto}
+h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(1.6rem,3vw,2.2rem);margin-bottom:.4rem}
+.sub{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--ink-soft);margin-bottom:2rem}
+.deck-link{display:inline-block;background:var(--teal);color:#fff;padding:.5em 1em;border-radius:6px;text-decoration:none;font-size:.85rem;font-weight:600;margin-bottom:2rem}
+.group{margin-bottom:1.8rem}
+.group-title{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal-deep);border-bottom:1.5px solid var(--line);padding-bottom:.4rem;margin-bottom:.8rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.7rem}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:.9rem 1rem;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:.2rem;transition:box-shadow .15s,transform .15s}
+.card:hover{box-shadow:0 6px 20px -8px rgba(27,42,40,.3);transform:translateY(-2px)}
+.card .num{font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:600;color:var(--marigold);letter-spacing:.06em}
+.card .name{font-weight:600;font-size:.88rem}
+.card .desc{font-size:.72rem;color:var(--ink-soft);line-height:1.35}
+.cat-agent{border-left:3px solid var(--marigold)}
+.cat-deal{border-left:3px solid var(--terracotta)}
+.cat-core{border-left:3px solid var(--teal)}
+.cat-admin{border-left:3px solid #6B7280}
+@media(max-width:640px){.grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<h1>Serbizyu — Mockup Screens</h1>
+<div class="sub">39 interactive screens · user / agent / kiosk / admin journeys</div>
+<a class="deck-link" href="../docs/deck-defense.html">← Back to Defense Deck</a>
+
+<div class="group">
+  <div class="group-title">Core Buyer Journey</div>
+  <div class="grid">
+    <a class="card cat-core" href="screens/01-home.html"><span class="num">01</span><span class="name">Home</span><span class="desc">Landing page — browse categories, featured providers</span></a>
+    <a class="card cat-core" href="screens/02-search.html"><span class="num">02</span><span class="name">Search</span><span class="desc">Category + location search with filters</span></a>
+    <a class="card cat-core" href="screens/03-offer.html"><span class="num">03</span><span class="name">Offer / Listing</span><span class="desc">Provider listing detail — photos, pricing, reviews</span></a>
+    <a class="card cat-core" href="screens/04-book.html"><span class="num">04</span><span class="name">Book</span><span class="desc">Booking form — date, time, address</span></a>
+    <a class="card cat-core" href="screens/05-track.html"><span class="num">05</span><span class="name">Track</span><span class="desc">Order tracking — status, chat, timeline</span></a>
+    <a class="card cat-core" href="screens/06-release.html"><span class="num">06</span><span class="name">Escrow Release</span><span class="desc">Dual confirmation — release funds</span></a>
+    <a class="card cat-core" href="screens/07-review.html"><span class="num">07</span><span class="name">Review</span><span class="desc">Rate and review the provider</span></a>
+    <a class="card cat-core" href="screens/08-servicer-signup.html"><span class="num">08</span><span class="name">Servicer Signup</span><span class="desc">Provider onboarding flow</span></a>
+    <a class="card cat-core" href="screens/09-reciprocity.html"><span class="num">09</span><span class="name">Reciprocity</span><span class="desc">Community give-back and mutual aid</span></a>
+    <a class="card cat-core" href="screens/10-profile-completion.html"><span class="num">10</span><span class="name">Profile Completion</span><span class="desc">Step-by-step profile setup wizard</span></a>
+    <a class="card cat-core" href="screens/11-workflow-builder.html"><span class="num">11</span><span class="name">Workflow Builder</span><span class="desc">Custom service workflow editor</span></a>
+    <a class="card cat-core" href="screens/12-inbox.html"><span class="num">12</span><span class="name">Inbox</span><span class="desc">Messages and notifications</span></a>
+    <a class="card cat-core" href="screens/13-servicer-order.html"><span class="num">13</span><span class="name">Servicer Order</span><span class="desc">Provider-side order management</span></a>
+    <a class="card cat-core" href="screens/14-curator.html"><span class="num">14</span><span class="name">Curator</span><span class="desc">Content curation and moderation</span></a>
+    <a class="card cat-core" href="screens/15-analytics.html"><span class="num">15</span><span class="name">Analytics</span><span class="desc">Provider performance dashboard</span></a>
+    <a class="card cat-core" href="screens/16-growth.html"><span class="num">16</span><span class="name">Growth</span><span class="desc">Growth tools and referral tracking</span></a>
+    <a class="card cat-core" href="screens/17-trust.html"><span class="num">17</span><span class="name">Trust</span><span class="desc">Trust badges and verification tiers</span></a>
+    <a class="card cat-core" href="screens/18-post-request.html"><span class="num">18</span><span class="name">Post Request</span><span class="desc">Buyer posts a service request</span></a>
+    <a class="card cat-core" href="screens/19-browse-requests.html"><span class="num">19</span><span class="name">Browse Requests</span><span class="desc">Provider browses open requests</span></a>
+    <a class="card cat-core" href="screens/20-submit-bid.html"><span class="num">20</span><span class="name">Submit Bid</span><span class="desc">Provider submits a bid on a request</span></a>
+    <a class="card cat-core" href="screens/21-compare-bids.html"><span class="num">21</span><span class="name">Compare Bids</span><span class="desc">Buyer compares multiple bids</span></a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="group-title">Quick Deal &amp; Deal-Chaining</div>
+  <div class="grid">
+    <a class="card cat-deal" href="screens/22-quickdeal-landing.html"><span class="num">22</span><span class="name">Quick Deal Landing</span><span class="desc">Air-gapped QR transaction start</span></a>
+    <a class="card cat-deal" href="screens/23-quickdeal-negotiate.html"><span class="num">23</span><span class="name">Quick Deal Negotiate</span><span class="desc">Counter-offer stepper</span></a>
+    <a class="card cat-deal" href="screens/24-quickdeal-confirm.html"><span class="num">24</span><span class="name">Quick Deal Confirm</span><span class="desc">Final confirmation and lock</span></a>
+    <a class="card cat-deal" href="screens/25-deal-create.html"><span class="num">25</span><span class="name">Deal Create</span><span class="desc">Multi-party event deal setup</span></a>
+    <a class="card cat-deal" href="screens/26-deal-slots.html"><span class="num">26</span><span class="name">Deal Slots</span><span class="desc">Assign providers to slots</span></a>
+    <a class="card cat-deal" href="screens/27-deal-track.html"><span class="num">27</span><span class="name">Deal Track</span><span class="desc">Track all slots in one view</span></a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="group-title">Kiosk &amp; Agent</div>
+  <div class="grid">
+    <a class="card cat-agent" href="screens/28-kiosk-home.html"><span class="num">28</span><span class="name">Kiosk Home</span><span class="desc">Barangay kiosk — public access point</span></a>
+    <a class="card cat-agent" href="screens/29-kiosk-deal.html"><span class="num">29</span><span class="name">Kiosk Deal</span><span class="desc">Kiosk-assisted transaction</span></a>
+    <a class="card cat-agent" href="screens/30-agent-dashboard.html"><span class="num">30</span><span class="name">Agent Dashboard</span><span class="desc">Agent manages offline owners</span></a>
+    <a class="card cat-agent" href="screens/31-owner-sms.html"><span class="num">31</span><span class="name">Owner SMS</span><span class="desc">Feature-phone owner via SMS</span></a>
+    <a class="card cat-agent" href="screens/32-agent-onboarding.html"><span class="num">32</span><span class="name">Agent Onboarding</span><span class="desc">Agent signup and training</span></a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="group-title">Wallet, Verification &amp; Admin</div>
+  <div class="grid">
+    <a class="card cat-admin" href="screens/33-wallet.html"><span class="num">33</span><span class="name">Wallet</span><span class="desc">Balance, transactions, payout history</span></a>
+    <a class="card cat-admin" href="screens/34-verification-center.html"><span class="num">34</span><span class="name">Verification Center</span><span class="desc">ID and document verification hub</span></a>
+    <a class="card cat-admin" href="screens/35-dispute-file.html"><span class="num">35</span><span class="name">Dispute File</span><span class="desc">File a dispute with evidence</span></a>
+    <a class="card cat-admin" href="screens/36-dispute-console.html"><span class="num">36</span><span class="name">Dispute Console</span><span class="desc">Admin reviews and resolves disputes</span></a>
+    <a class="card cat-admin" href="screens/37-admin-fees.html"><span class="num">37</span><span class="name">Admin Fees</span><span class="desc">Commission and fee configuration</span></a>
+    <a class="card cat-admin" href="screens/38-admin-revenue.html"><span class="num">38</span><span class="name">Admin Revenue</span><span class="desc">Platform revenue dashboard</span></a>
+    <a class="card cat-admin" href="screens/39-admin-verify-queue.html"><span class="num">39</span><span class="name">Admin Verify Queue</span><span class="desc">Pending verification requests</span></a>
+  </div>
+</div>
+
+</body>
+</html>

@@ -84,12 +84,12 @@ body{
   display:flex;justify-content:space-between;align-items:center;
   padding-top:1.4%;margin-top:1.4%;border-top:1px dashed var(--line);
   font-family:'JetBrains Mono',monospace;font-size:clamp(.58rem,.85vw,.72rem);
-  color:#8C8266;position:relative;z-index:1;
+  color:#8C8266;position:relative;z-index:1;flex-shrink:0;
 }
 .foot .page{font-weight:600;color:var(--ink-soft)}
 
 /* nav hint */
-.hint{position:fixed;bottom:14px;right:18px;color:#5c6663;font-size:.72rem;z-index:100;font-family:'JetBrains Mono',monospace}
+.hint{position:fixed;bottom:6px;right:18px;color:#5c6663;font-size:.62rem;z-index:100;font-family:'JetBrains Mono',monospace;background:rgba(15,21,18,.85);padding:2px 8px;border-radius:4px}
 .progress{position:fixed;bottom:0;left:0;height:3px;background:var(--marigold);z-index:100;transition:width .35s ease}
 
 /* type helpers */
@@ -116,20 +116,25 @@ body{
 
 /* QR chip — cover slide */
 .qr-follow{
-  position:absolute;top:5.2%;right:6.4%;z-index:2;
+  position:absolute;top:2%;right:6.4%;z-index:2;
   display:flex;align-items:center;gap:.7em;
   background:var(--paper);border:1px solid var(--line);border-radius:8px;
   padding:.55em .8em .55em .55em;box-shadow:0 10px 30px -14px rgba(27,42,40,.3);
   max-width:min(320px,40%);
 }
 .qr-follow .qr-ph{width:clamp(52px,5.2vw,72px);height:clamp(52px,5.2vw,72px);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--line-soft);overflow:hidden}
+.qr-follow .qr-ph img{width:100%;height:100%;display:block;border-radius:3px}
 .qr-follow .qr-ph svg{width:100%;height:100%;display:block}
 .qr-follow .qrt{font-family:'JetBrains Mono',monospace;font-size:clamp(.56rem,.8vw,.66rem);color:var(--ink-soft);line-height:1.4;min-width:0}
 .qr-follow .qrt b{display:block;color:var(--teal-deep);font-size:1.05em;margin-bottom:.15em}
 
+/* body — prevent footer overlap */
+.body{flex:1;display:flex;position:relative;z-index:1;min-height:0;overflow:hidden}
+
 /* use-case QR footer chip */
 .qr-uc{display:flex;align-items:center;gap:.7em;flex-shrink:0}
 .qr-uc .qr-ph{width:clamp(46px,4.6vw,60px);height:clamp(46px,4.6vw,60px);border-radius:4px;border:1.5px dashed var(--line);background:#fff;padding:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.qr-uc .qr-ph img{width:100%;height:100%;display:block;border-radius:3px}
 .qr-uc .qr-ph svg{width:100%;height:100%;display:block}
 .qr-uc span{font-family:'JetBrains Mono',monospace;font-size:clamp(.52rem,.72vw,.62rem);color:var(--ink-soft);line-height:1.3}
 
@@ -221,8 +226,8 @@ body{
     <span class="brand">SERBIZYU — CAPSTONE DEFENSE</span>
   </div>
   <div class="qr-follow">
-    <span class="qr-ph"><img src="https://quickchart.io/qr?text=https%3A%2F%2Fdaviddatux25.github.io%2FSerbizyu-2.0%2Fdocs%2Fdeck-defense.html&size=200&margin=2" alt="QR" style="width:100%;height:100%;border-radius:3px"></span>
-    <div class="qrt"><b>Follow along</b>Scan &amp; present<br>on your phone</div>
+    <span class="qr-ph"><img src="https://quickchart.io/qr?text=https%3A%2F%2Fdaviddatux25.github.io%2FSerbizyu-2.0%2Fdocs%2Fdeck-defense.html&size=200&margin=2" alt="QR — follow along"></span>
+    <div class="qrt"><b>Follow along</b>Scan to open this<br>deck on your phone</div>
   </div>
   <div class="body" style="align-items:center;gap:5%">
     <div style="flex:1.15;display:flex;flex-direction:column;justify-content:center;gap:1.4em">
@@ -259,8 +264,10 @@ body{
           <circle cx="0" cy="-2" r="15" fill="var(--sand)"/>
           <circle cx="0" cy="-2" r="6.5" fill="var(--marigold)"/>
         </g>
-        <text x="210" y="330" text-anchor="middle" class="mono" font-family="JetBrains Mono, monospace" font-size="13" fill="var(--ink-soft)" letter-spacing="1.5">TAGUDIN, ILOCOS SUR</text>
-        <text x="210" y="350" text-anchor="middle" class="mono" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--teal-deep)" letter-spacing="1" font-weight="600">PILOT MARKET — JUL 2026</text>
+        <rect x="85" y="318" width="250" height="22" rx="4" fill="var(--sand)" opacity=".92"/>
+        <text x="210" y="334" text-anchor="middle" class="mono" font-family="JetBrains Mono, monospace" font-size="13" fill="var(--ink-soft)" letter-spacing="1.5">TAGUDIN, ILOCOS SUR</text>
+        <rect x="95" y="342" width="230" height="20" rx="4" fill="var(--sand)" opacity=".92"/>
+        <text x="210" y="356" text-anchor="middle" class="mono" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--teal-deep)" letter-spacing="1" font-weight="600">PILOT MARKET — JUL 2026</text>
       </svg>
     </div>
   </div>
@@ -378,17 +385,20 @@ body{
         <!-- marketplace node -->
         <circle cx="220" cy="70" r="46" fill="var(--teal-tint)" stroke="var(--teal)" stroke-width="1.6"/>
         <path d="M220 55v13l8 5" stroke="var(--teal-deep)" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <text x="220" y="98" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11.5" fill="var(--teal-deep)">MARKETPLACE</text>
+        <rect x="170" y="86" width="100" height="18" rx="3" fill="var(--sand)" opacity=".95"/>
+        <text x="220" y="99" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11.5" fill="var(--teal-deep)">MARKETPLACE</text>
         <!-- escrow node -->
         <circle cx="365" cy="300" r="46" fill="var(--marigold-tint)" stroke="var(--marigold)" stroke-width="1.6"/>
         <rect x="352" y="288" width="26" height="18" rx="2" fill="none" stroke="#B4640F" stroke-width="2"/>
         <path d="M357 288v-4a8 8 0 0116 0v4" fill="none" stroke="#B4640F" stroke-width="2"/>
-        <text x="365" y="328" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11.5" fill="#B4640F">ESCROW</text>
+        <rect x="320" y="316" width="90" height="18" rx="3" fill="var(--sand)" opacity=".95"/>
+        <text x="365" y="329" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11.5" fill="#B4640F">ESCROW</text>
         <!-- agent node -->
         <circle cx="75" cy="300" r="46" fill="var(--terracotta-tint)" stroke="var(--terracotta)" stroke-width="1.6"/>
         <circle cx="75" cy="290" r="7" fill="none" stroke="var(--terracotta)" stroke-width="2"/>
         <path d="M62 312c0-8 6-13 13-13s13 5 13 13" fill="none" stroke="var(--terracotta)" stroke-width="2" stroke-linecap="round"/>
-        <text x="75" y="328" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11.5" fill="var(--terracotta)">AGENTS</text>
+        <rect x="30" y="316" width="90" height="18" rx="3" fill="var(--sand)" opacity=".95"/>
+        <text x="75" y="329" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11.5" fill="var(--terracotta)">AGENTS</text>
       </svg>
     </div>
   </div>
@@ -507,8 +517,8 @@ body{
       <div class="flow-step" style="border-color:var(--marigold);background:var(--marigold-tint)"><span class="fs-actor" style="color:#B4640F">Both · SMS</span><span class="fs-title">Confirm → release</span><span class="fs-desc">Dual SMS confirmation releases escrow. Split: <b>75% Ben / 10% agent / 15% platform.</b></span></div>
     </div>
     <div class="qr-uc">
-      <span class="qr-ph"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#fff"/><rect x="8" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="17" width="8" height="8" fill="#1B2A28"/><rect x="66" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="75" y="17" width="8" height="8" fill="#1B2A28"/><rect x="8" y="66" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="75" width="8" height="8" fill="#1B2A28"/><g fill="#1B2A28"><rect x="46" y="10" width="6" height="6"/><rect x="58" y="16" width="6" height="6"/><rect x="46" y="28" width="6" height="6"/><rect x="70" y="46" width="6" height="6"/><rect x="82" y="52" width="6" height="6"/><rect x="46" y="46" width="6" height="6"/><rect x="46" y="58" width="6" height="6"/><rect x="58" y="70" width="6" height="6"/><rect x="46" y="82" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="82" y="82" width="6" height="6"/><rect x="58" y="82" width="6" height="6"/></g></svg></span>
-      <span>QR placeholder —<br>link: Agent Dashboard</span>
+      <span class="qr-ph"><img src="https://quickchart.io/qr?text=https%3A%2F%2Fdaviddatux25.github.io%2FSerbizyu-2.0%2Fold-docs%2Fmockup%2Fscreens%2F30-agent-dashboard.html&size=160&margin=2" alt="QR — Agent Dashboard demo"></span>
+      <span>Scan: Agent<br>Dashboard demo →</span>
     </div>
   </div>
   <div class="foot">
@@ -538,8 +548,8 @@ body{
       <div class="flow-step" style="border-color:var(--teal);background:var(--teal-tint)"><span class="fs-actor" style="color:var(--teal-deep)">Buyer confirms</span><span class="fs-title">Escrow releases</span><span class="fs-desc">3-day protection window, then auto-release. Category average keeps hidden-quote pricing fair.</span></div>
     </div>
     <div class="qr-uc">
-      <span class="qr-ph"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#fff"/><rect x="8" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="17" width="8" height="8" fill="#1B2A28"/><rect x="66" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="75" y="17" width="8" height="8" fill="#1B2A28"/><rect x="8" y="66" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="75" width="8" height="8" fill="#1B2A28"/><g fill="#1B2A28"><rect x="46" y="10" width="6" height="6"/><rect x="58" y="16" width="6" height="6"/><rect x="46" y="28" width="6" height="6"/><rect x="70" y="46" width="6" height="6"/><rect x="82" y="52" width="6" height="6"/><rect x="46" y="46" width="6" height="6"/><rect x="46" y="58" width="6" height="6"/><rect x="58" y="70" width="6" height="6"/><rect x="46" y="82" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="82" y="82" width="6" height="6"/><rect x="58" y="82" width="6" height="6"/></g></svg></span>
-      <span>QR placeholder —<br>link: Product Listing</span>
+      <span class="qr-ph"><img src="https://quickchart.io/qr?text=https%3A%2F%2Fdaviddatux25.github.io%2FSerbizyu-2.0%2Fold-docs%2Fmockup%2Fscreens%2F03-offer.html&size=160&margin=2" alt="QR — Product Listing demo"></span>
+      <span>Scan: Product<br>Listing demo →</span>
     </div>
   </div>
   <div class="foot">
@@ -564,8 +574,8 @@ body{
         <div style="display:flex;gap:.8em;align-items:flex-start"><span style="width:8px;height:8px;border-radius:50%;background:var(--terracotta);margin-top:.5em;flex-shrink:0"></span><span class="small"><b style="color:var(--ink)">One checkout</b> splits across slots — each released <b style="color:var(--ink)">independently</b> when its own work is done.</span></div>
       </div>
       <div class="qr-uc" style="margin-top:.4em">
-        <span class="qr-ph"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#fff"/><rect x="8" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="17" width="8" height="8" fill="#1B2A28"/><rect x="66" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="75" y="17" width="8" height="8" fill="#1B2A28"/><rect x="8" y="66" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="75" width="8" height="8" fill="#1B2A28"/><g fill="#1B2A28"><rect x="46" y="10" width="6" height="6"/><rect x="58" y="16" width="6" height="6"/><rect x="46" y="28" width="6" height="6"/><rect x="70" y="46" width="6" height="6"/><rect x="82" y="52" width="6" height="6"/><rect x="46" y="46" width="6" height="6"/><rect x="46" y="58" width="6" height="6"/><rect x="58" y="70" width="6" height="6"/><rect x="46" y="82" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="82" y="82" width="6" height="6"/><rect x="58" y="82" width="6" height="6"/></g></svg></span>
-        <span>QR placeholder —<br>link: Deal Creation</span>
+        <span class="qr-ph"><img src="https://quickchart.io/qr?text=https%3A%2F%2Fdaviddatux25.github.io%2FSerbizyu-2.0%2Fold-docs%2Fmockup%2Fscreens%2F25-deal-create.html&size=160&margin=2" alt="QR — Deal Creation demo"></span>
+        <span>Scan: Deal<br>Creation demo →</span>
       </div>
     </div>
     <div style="flex:.9;display:flex;align-items:center;justify-content:center">
@@ -627,8 +637,8 @@ body{
       <div class="flow-step" style="border-color:var(--terracotta);background:var(--terracotta-tint)"><span class="fs-actor" style="color:var(--terracotta)">Deal locks</span><span class="fs-title">Syncs on reconnect</span><span class="fs-desc">Cash offline or escrow online — the Cloud Truth Boundary governs every peso either way.</span></div>
     </div>
     <div class="qr-uc">
-      <span class="qr-ph"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#fff"/><rect x="8" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="17" width="8" height="8" fill="#1B2A28"/><rect x="66" y="8" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="75" y="17" width="8" height="8" fill="#1B2A28"/><rect x="8" y="66" width="26" height="26" fill="none" stroke="#1B2A28" stroke-width="7"/><rect x="17" y="75" width="8" height="8" fill="#1B2A28"/><g fill="#1B2A28"><rect x="46" y="10" width="6" height="6"/><rect x="58" y="16" width="6" height="6"/><rect x="46" y="28" width="6" height="6"/><rect x="70" y="46" width="6" height="6"/><rect x="82" y="52" width="6" height="6"/><rect x="46" y="46" width="6" height="6"/><rect x="46" y="58" width="6" height="6"/><rect x="58" y="70" width="6" height="6"/><rect x="46" y="82" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="82" y="82" width="6" height="6"/><rect x="58" y="82" width="6" height="6"/></g></svg></span>
-      <span>QR placeholder —<br>link: Quick Deal Flow</span>
+      <span class="qr-ph"><img src="https://quickchart.io/qr?text=https%3A%2F%2Fdaviddatux25.github.io%2FSerbizyu-2.0%2Fold-docs%2Fmockup%2Fscreens%2F22-quickdeal-landing.html&size=160&margin=2" alt="QR — Quick Deal demo"></span>
+      <span>Scan: Quick<br>Deal demo →</span>
     </div>
   </div>
   <div class="foot">
@@ -945,8 +955,10 @@ body{
         <text x="170" y="140" text-anchor="middle" font-family="Fraunces, serif" font-weight="700" font-size="22" fill="var(--teal-deep)">4</text>
         <text x="170" y="162" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="600" font-size="12" fill="var(--ink-soft)">TEAM</text>
         <text x="170" y="182" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="var(--ink-soft)">MEMBERS</text>
-        <text x="170" y="260" text-anchor="middle" font-family="Fraunces, serif" font-weight="600" font-size="15" fill="var(--ink)">ISPSC TAGUDIN</text>
-        <text x="170" y="282" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--teal-deep)" letter-spacing="1" font-weight="600">BSIT 4B · 2026</text>
+        <rect x="80" y="242" width="180" height="24" rx="5" fill="var(--sand)" opacity=".95"/>
+        <text x="170" y="259" text-anchor="middle" font-family="Fraunces, serif" font-weight="600" font-size="15" fill="var(--ink)">ISPSC TAGUDIN</text>
+        <rect x="90" y="270" width="160" height="20" rx="5" fill="var(--sand)" opacity=".95"/>
+        <text x="170" y="284" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--teal-deep)" letter-spacing="1" font-weight="600">BSIT 4B · 2026</text>
       </svg>
     </div>
   </div>
@@ -981,7 +993,7 @@ body{
       <span class="badge-chip" style="font-size:clamp(.6rem,.8vw,.72rem)">July 2026</span>
       <span class="badge-chip" style="font-size:clamp(.6rem,.8vw,.72rem)">Thank you</span>
     </div>
-    <div style="position:absolute;bottom:12%;left:0;right:0;text-align:center;opacity:.3;pointer-events:none;font-family:'Fraunces',serif;font-size:clamp(4rem,10vw,8rem);font-weight:800;color:var(--teal);line-height:1">SERBIZYU</div>
+    <div style="position:absolute;bottom:8%;left:0;right:0;text-align:center;opacity:.18;pointer-events:none;font-family:'Fraunces',serif;font-size:clamp(3rem,8vw,6rem);font-weight:800;color:var(--teal);line-height:1;z-index:0">SERBIZYU</div>
   </div>
   <div class="foot">
     <span>Questions? — sarmiento.david@ispsc.edu.ph</span>
