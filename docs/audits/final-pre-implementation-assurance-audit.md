@@ -63,7 +63,7 @@ This audit did not trust the existing readiness report by itself. It:
 1. Read the rebuilt UX and epic/story sources.
 2. Recomputed PRD, UX, story, ADR, and schema counts.
 3. Parsed every story block for direct references and acceptance content.
-4. Inspected the archived 39-screen mockup inventory and representative Buyer, Agent, Wallet, dispute, verification, and Admin screens.
+4. Inspected both historical mockup hubs, the archived 39-screen inventory, the historical pitch deck, and representative Buyer, Agent, Wallet, dispute, verification, and Admin screens.
 5. Scanned all archived screens for stale geography, payment, revenue, custody, and deferred-capability language.
 6. Checked whether current BMAD artifacts define development standards and tool contracts.
 7. Checked technical artifacts for unresolved implementation choices.
@@ -132,6 +132,8 @@ Evidence:
 - Product Vision, taxonomy, PRD, UX, domain, schema, ADR, architecture, and stories still state `REBUILT DRAFT — founder review required`.
 - The authority map says historical files become superseded only after approval.
 - Canonical historical filenames still coexist beside rebuilt files.
+- The root `README.md` still claims `26 ADRs · 31 tables · 3 epics`, points readers to the old artifact filenames, and labels the old `readiness-report.md` as “Phase 4 clearance — all gates passed.”
+- The same README calls `docs/mockup.html` the navigable 39-screen hub even though that file redirects immediately to `docs/deck-defense.html`.
 
 Risk:
 
@@ -263,7 +265,9 @@ Create a development standards artifact and an E0/Sprint-0 story requiring:
 Evidence:
 
 - `docs/mockup.html` redirects to the defense deck rather than a current mockup hub.
-- The actual 39-screen prototype is archived in `old-docs/mockup/`.
+- The styled historical guided hub is `old-docs/mockup.html`; it contains 53 links to 39 unique archived screens and its EN/Taglish tour narrates the old product model.
+- A second plain-grid historical hub exists at `old-docs/mockup/index.html` and links to the same 39 screens.
+- The actual screen files are archived in `old-docs/mockup/screens/`.
 - No current OpenSpec workspace exists.
 - The 39 screens have no shared connected domain state.
 - Across the archived screens, there are 63 buttons but no forms and only 25 explicit click handlers.
@@ -329,11 +333,16 @@ The 12-week schedule is correctly described as a candidate. No story estimates o
 
 ### 6.1 Inventory
 
+- Historical guided hub: `old-docs/mockup.html`.
+- Historical plain-grid hub: `old-docs/mockup/index.html`.
 - 39 archived HTML screens.
 - Buyer/Provider core flows: 01–21.
 - Quick Deal/Deal-Chaining: 22–27.
 - Kiosk/Agent: 28–32.
 - Wallet/Verification/Admin: 33–39.
+- Historical pitch: `old-docs/mockup/deck/pitch.html`.
+- The guided hub advertises a 12-slide deck, while the pitch file contains 13 slide sections and stale `/16` footer numbering, including a repeated `12 / 16` final footer.
+- Root README mockup and readiness links/status are stale.
 
 ### 6.2 Stale behavior counts
 
@@ -356,8 +365,12 @@ Across the archived screens:
 Representative examples:
 
 - `04-book.html` presents Candon, direct Xendit/GCash checkout, and “held in escrow” as if launch-ready.
+- `28-kiosk-home.html` uses an inverted `L0 Full → L1 SMS → L2 Kiosk → L3 Local → L4 Paper` ladder instead of the rebuilt L0 feature-phone/L1 assisted kiosk/L2 low-data/L3 online/L4 Admin model.
 - `30-agent-dashboard.html` presents Agent earnings, a 10% cut, and `75/10/15`.
 - `33-wallet.html` presents a 15% platform fee, 12% cash receivable, wallet restrictions, and GCash withdrawal.
+- `34-verification-center.html` and `39-admin-verify-queue.html` present unapproved verification tiers, face matching, clearance/certification requirements, and trust effects as committed behavior.
+- `35-dispute-file.html` and `36-dispute-console.html` invent evidence scores, response SLAs, and appeal windows not approved in the rebuilt contracts.
+- The guided hub and pitch present A2 dispatch, channel automation, escrow-by-default, and Candon-first claims as current product behavior.
 - Quick Deal and Deal-Chaining receive six dedicated screens despite conditional/deferred status.
 - No current screen demonstrates External Digital Proof, A3 Appointment, A4 Product Handoff, A9 Digital Delivery, correct Agent consent/revocation, cohort classification, or the current four-lane distinction end to end.
 
