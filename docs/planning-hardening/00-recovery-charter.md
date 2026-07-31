@@ -49,7 +49,7 @@ Until this recovery closes its P0 gates:
 - Tiwala release or payout code
 - Direct Payment accounting
 - Cash commission receivables
-- Collection of real government IDs or selfies
+- Collection of government IDs is permitted only under the approved marketplace verification flow with consent, least-privilege access, retention/deletion rules, manual-review fallback, and legal/privacy gates; unapproved biometric/selfie collection remains frozen
 - Claims of production, legal, regulatory, or real-money readiness
 
 ## 4. Source-of-Truth Hierarchy
