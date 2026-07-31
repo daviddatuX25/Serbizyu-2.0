@@ -33,7 +33,7 @@ The mockup expansion must use this precedence:
 7. `canonical-schema-rebuilt.md` for entity/relationship names only.
 8. `adr-catalog-rebuilt.md` and `architecture-rebuilt.md` for technical/security boundaries.
 9. This bridge for prototype scope, screens, scenarios, and interaction rules.
-10. `old-docs/mockup/` for visual/layout inspiration only.
+10. `old-docs/mockup.html`, `old-docs/mockup/`, and the historical pitch for visual/layout inspiration only.
 
 If the archived mock conflicts with any upstream source, the archived behavior loses.
 
@@ -41,7 +41,12 @@ If the archived mock conflicts with any upstream source, the archived behavior l
 
 ### Preserve
 
-Keep `old-docs/mockup/` unchanged as historical evidence.
+Keep all of the following unchanged as historical evidence:
+
+- `old-docs/mockup.html` — styled EN/Taglish guided hub.
+- `old-docs/mockup/index.html` — plain-grid hub.
+- `old-docs/mockup/screens/` — 39 historical screens.
+- `old-docs/mockup/deck/pitch.html` — historical pitch.
 
 Reusable visual ideas:
 
@@ -65,6 +70,41 @@ Reusable visual ideas:
 - Payment equals Work completion.
 - Kiosk or Agent cash custody.
 - “Verified” badges unsupported by actual evidence.
+
+### Legacy screen disposition
+
+`regenerate` means the user need remains valid but behavior/copy/state must derive from the rebuilt sources. `retire` means the screen must not appear in the committed mockup; visual fragments may be reused only after removing stale behavior. `replace` means a different canonical screen contract now owns the need.
+
+| Legacy screens | Disposition | New owner/reason |
+|---|---|---|
+| 01 Home | regenerate | DSC-001 plus current Tagudin listings/requests |
+| 02 Search | regenerate | DSC-003/004; remove trust-score and Candon assumptions |
+| 03 Offer | regenerate | DSC-005/006; current mechanism/shape/lane/safety copy |
+| 04 Book | replace | ORD-001 plus PAY-001/002; no live-looking GCash/escrow |
+| 05 Track | replace | ORD-003 and shape-specific Work screens; A2 not pilot |
+| 06 Release | replace | ORD-005 plus PAY-008 sandbox; Work/payment separate |
+| 07 Review | regenerate | shape completion/review without referral assumptions |
+| 08 Signup | regenerate | ACC-001/002/003; Provider/Owner terminology |
+| 09 Reciprocity | retire | growth/reward behavior is not committed pilot scope |
+| 10 Profile Completion | regenerate | ACC-007; evidence-based status only |
+| 11 Workflow Builder | replace | LST-002 through LST-007; approved shapes only |
+| 12 Inbox | regenerate | TRU-001; committed channels/fallback only |
+| 13 Servicer Order | replace | ORD-002/003 plus A1/A3/A4/A9 Work screens |
+| 14 Curator | retire | channel automation remains deferred/foundation |
+| 15 Analytics | replace | OPS-001/008 with genuine cohort classification |
+| 16 Growth | retire | referrals/points/loyalty/channel expansion not pilot |
+| 17 Trust | regenerate | DSC-006, TRU-002/003, OPS-005/006 |
+| 18–21 Request/Bid | regenerate conditional | REQ-001 through REQ-005; quote semantics and status gate |
+| 22–24 Quick Deal | retire current behavior | no committed offline payment product; quote UI fragments may inform REQ screens |
+| 25–27 Deal-Chaining | retire | deferred capability; no pilot screens |
+| 28–29 Kiosk | regenerate conditional | assisted access only; no wallet, deposit, payout, or custody |
+| 30–32 Agent | regenerate | AGT-001 through AGT-004; consent/attribution/no automatic commission |
+| 33 Wallet | retire/replace | PAY-001 obligations summary; no pilot wallet/cash receivable |
+| 34 Verification | regenerate | ACC-004/005/006; gated collection and honest states |
+| 35–36 Dispute | regenerate | TRU-002, OPS-005; no invented score/SLA/appeal rules |
+| 37 Fee Configuration | retire current behavior | unresolved/versioned policy belongs to later Admin policy design |
+| 38 Revenue | replace | OPS-008; no fabricated cash revenue or stale rates |
+| 39 Verification Queue | regenerate | OPS-002; least privilege and current evidence states |
 
 ## 4. Prototype objective
 
@@ -119,6 +159,13 @@ docs/mockup-v2/
 ```
 
 The future OpenSpec may choose one-page rendering or separate HTML files, but every canonical screen ID and transition below must remain traceable.
+
+Promotion rule:
+
+- During development, `docs/mockup-v2/` remains a clearly labeled draft preview.
+- After founder approval, `docs/mockup.html` shall become the current mockup entry (direct page or intentional redirect to `docs/mockup-v2/index.html`).
+- The root README shall be corrected to point to the approved rebuilt artifacts and current mockup, and shall no longer claim that the stale readiness report cleared implementation.
+- Historical hubs and pitch remain under `old-docs/` and must show/receive an explicit historical notice rather than being deleted.
 
 ## 6. Shared prototype state
 
@@ -726,7 +773,7 @@ Each bridge requirement has one minimum observable scenario. Future capability s
 
 | Scenario ID | Requirement | GIVEN | WHEN | THEN |
 |---|---|---|---|---|
-| MXS-001 | MX-001 | Historical and rebuilt mock paths exist | A reviewer opens either hub | Historical pages are labeled historical and the rebuilt hub is the normative prototype entry |
+| MXS-001 | MX-001 | Historical guided/plain hubs and rebuilt mock paths exist | A reviewer opens any hub | Historical pages are labeled historical and `docs/mockup.html` leads to the approved normative prototype entry |
 | MXS-002 | MX-002 | A genuine-pilot fixture is loaded | Any committed screen renders geography | Tagudin is shown and Candon is absent from current pilot state |
 | MXS-003 | MX-003 | Buyer and Provider view the same cash obligation | Buyer declares payment | Provider/Admin views receive the same event while Work state is unchanged |
 | MXS-004 | MX-004 | A scenario has progressed | Reviewer switches role then returns | Shared state is preserved; changing scenario prompts/reset behavior is explicit |
@@ -957,6 +1004,8 @@ The connected mockup is ready for founder UX review when:
 - Accessibility and responsive smoke checks pass.
 - No real secrets/data/integrations are used.
 - The hub identifies the artifact as a prototype.
+- `docs/mockup.html` and the root README point to the approved current mockup only after founder promotion.
+- Historical guided hub, plain hub, screens, and pitch remain preserved and visibly historical.
 - Founder review is recorded before the mockup becomes UX implementation evidence.
 
 ## 15. Relationship to implementation
