@@ -16,7 +16,7 @@ Owner: Lead architect; founder decisions required for rows marked `FOUNDER DECIS
 
 1. The approved recovery charter controls process and the founder directions explicitly captured there.
 2. This register controls conflict disposition until the resulting decision is copied into the approved Tier-1 artifact.
-3. The next product decision artifact is the pilot-scope matrix; the PRD must follow it.
+3. The next Stage A decision artifact is the payment/trust-lane policy; the pilot-scope matrix follows it and must use its lane definitions.
 4. A research or legal gate cannot be converted into a product promise by wording alone.
 5. Historical documents remain available for traceability but do not count as current readiness evidence.
 
@@ -94,14 +94,14 @@ Owner: Lead architect; founder decisions required for rows marked `FOUNDER DECIS
 
 ## Required decisions before PRD editing
 
-The following must be resolved in the next two control artifacts:
+The following must be resolved in the next control artifacts:
 
-1. Pilot matrix: which listing type, transaction mechanism, fulfillment archetype, payment mode, and access tier are actually committed for the capstone and for the cash pilot.
-2. Payment contracts: cash, direct digital, Tiwala protected digital, agent-managed transaction, fee bearer, refunds, payout timing, and microtransaction display.
+1. Approve the payment/trust-lane policy: cash, external digital proof, direct digital, Tiwala, fees, receipts, agent permissions, refunds, and disclaimers.
+2. Pilot matrix: which listing type, transaction mechanism, fulfillment archetype, payment mode, and access tier are actually committed for the capstone and for the cash pilot.
 3. State model: order/work/payment/dispute/payout states and guards.
-4. Category scope: the small number of pilot categories versus the future taxonomy.
+4. Category scope: the broad future taxonomy versus the categories/capabilities operationally enabled in the pilot.
 5. Stack and SMS provider: one current baseline, with adapters where uncertainty remains.
-6. Verification/privacy: manual review default, identity evidence, retention, deletion, and consent.
+6. Verification/privacy: government-ID flow, manual review, retention, deletion, access control, and consent.
 7. Success planes and measures: capstone, live cash pilot, and future regulatory digital-money launch.
 
 ## Mechanical checks to create before downstream edits
