@@ -55,6 +55,8 @@ This replaces the historical epics/stories plan after approval. Stories below ar
 
 Status: C,S
 
+Implementation contract: `docs/planning-hardening/06-implementation-story-contract-and-e0-pack.md#e0-s1--application-skeleton-and-module-boundaries`
+
 Refs: ADR-R-004, ADR-R-005, ADR-R-022; PRD-001, PRD-024
 
 Acceptance:
@@ -68,6 +70,8 @@ Acceptance:
 ### E0-S2 — Canonical schema migration baseline
 
 Status: C,S
+
+Implementation contract: `docs/planning-hardening/06-implementation-story-contract-and-e0-pack.md#e0-s2--canonical-schema-migration-baseline`
 
 Refs: canonical schema, domain contract
 
@@ -83,6 +87,8 @@ Acceptance:
 
 Status: C,S
 
+Implementation contract: `docs/planning-hardening/06-implementation-story-contract-and-e0-pack.md#e0-s3--test-harness-and-contract-fixtures`
+
 Acceptance:
 
 - Unit, domain-transition, integration, browser, and authorization test categories exist.
@@ -93,6 +99,8 @@ Acceptance:
 ### E0-S4 — Secure configuration and secrets boundary
 
 Status: C,S
+
+Implementation contract: `docs/planning-hardening/06-implementation-story-contract-and-e0-pack.md#e0-s4--secure-configuration-and-secrets-boundary`
 
 Acceptance:
 
