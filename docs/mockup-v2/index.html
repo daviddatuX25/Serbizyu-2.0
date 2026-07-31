@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Serbizyu 2.0 — Reference Prototype</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/buyer/home" aria-label="Serbizyu reference prototype home">
+      <span class="brand-mark">S</span>
+      <span><strong>Serbizyu</strong><small>reference prototype</small></span>
+    </a>
+    <div class="prototype-warning"><span class="dot"></span> REFERENCE ONLY · NO BACKEND · SANDBOX COPY</div>
+    <div class="top-actions">
+      <button class="ghost" data-action="reset">Reset demo</button>
+      <a class="avatar" href="#/admin/operations" title="Open operations view">D</a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-heading">Perspectives</div>
+      <nav class="nav-group" aria-label="Prototype perspectives">
+        <a href="#/buyer/home" data-route="buyer"><span class="nav-icon">⌂</span> Buyer / Customer</a>
+        <a href="#/provider/inbox" data-route="provider"><span class="nav-icon">▣</span> Provider / Owner</a>
+        <a href="#/admin/operations" data-route="admin"><span class="nav-icon">◈</span> Operations / Admin</a>
+      </nav>
+      <div class="side-heading">Demo journey</div>
+      <nav class="nav-group compact" aria-label="Demo journey routes">
+        <a href="#/buyer/discover">01 · Discover</a>
+        <a href="#/buyer/request">02 · Request</a>
+        <a href="#/provider/inbox">03 · Provider inbox</a>
+        <a href="#/provider/work">04 · Work status</a>
+        <a href="#/buyer/review">05 · Confirm / review</a>
+        <a href="#/admin/audit">06 · Audit trail</a>
+      </nav>
+      <div class="side-note">
+        <strong>Feedback lens</strong>
+        <p>Look for confusing words, missing actions, unclear responsibility, and places where Payment status accidentally sounds like Work status.</p>
+      </div>
+    </aside>
+
+    <main id="app" class="main" tabindex="-1"></main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js"></script>
+</body>
+</html>
