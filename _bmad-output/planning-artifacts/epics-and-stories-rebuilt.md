@@ -12,6 +12,10 @@ Depends on:
 - `_bmad-output/planning-artifacts/canonical-schema-rebuilt.md`
 - `_bmad-output/planning-artifacts/adr-catalog-rebuilt.md`
 - `_bmad-output/planning-artifacts/architecture-rebuilt.md`
+- `docs/planning-hardening/06-implementation-story-contract-and-e0-pack.md`
+- `docs/planning-hardening/07-schema-implementation-and-erd-contract.md`
+- `docs/planning-hardening/08-runtime-stack-and-environment-contract.md`
+- `docs/planning-hardening/09-development-standards-and-bmad-openspec-contract.md`
 
 This replaces the historical epics/stories plan after approval. Stories below are implementation candidates, not proof that implementation is currently cleared.
 

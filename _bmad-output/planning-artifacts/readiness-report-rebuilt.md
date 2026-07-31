@@ -16,7 +16,7 @@ The major contradictions from the initial audit have been addressed through expl
 
 **CONDITIONAL — not yet cleared to write production code/migrations solely from this report.**
 
-The rebuilt plan is ready to become implementation authority after founder approval, artifact promotion/supersession, and the implementation environment/toolchain gate. No application source, migrations, or tests have been established in this repository yet.
+The rebuilt plan is now canonical planning authority after the promotion record. It is ready to enter E0 implementation preparation through the story, schema, runtime, and development-standard contracts. No application source, migrations, or tests have been established in this repository yet.
 
 ### Genuine Tagudin pilot
 
@@ -46,6 +46,10 @@ Reviewed the rebuilt planning chain:
 - Architecture/operations blueprint
 - Epics/stories delivery plan
 - Artifact authority/supersession map
+- Implementation story contract and E0 story pack
+- Schema implementation and ERD contract
+- Runtime, stack, and environment contract
+- Development standards and BMAD/OpenSpec workflow contract
 
 Historical PRD, UX, taxonomy, architecture, ADR, epics, and readiness files were treated as evidence only.
 
@@ -75,6 +79,12 @@ The following checks passed:
 - Four canonical payment lanes are consistently represented.
 - No unresolved placeholder markers remain in rebuilt artifacts.
 - `git diff --check` passed during artifact verification.
+- Authority map records founder promotion and all historical BMAD files carry visible non-authoritative notices.
+- E0-S1 through E0-S4 have direct story contracts with refs, failure/retry/security behavior, test IDs, owners, estimates, and rollback.
+- Schema implementation contract closes identifier, state, money, ledger posting, FK/deletion, idempotency, JSONB, and migration-order decisions.
+- Canonical ERD renders successfully to `docs/planning-hardening/07-canonical-erd.svg`.
+- Runtime contract defines locked baseline, process topology, environments, adapters, health, promotion, and rollback.
+- Development contract preserves BMAD ceremony authority and defines OpenSpec/Context7/toolchain/CI integration.
 
 ## 3. Initial-audit contradiction disposition
 
@@ -125,10 +135,10 @@ These activities must not silently enable live money, production ID collection, 
 
 ### Before production schema/migrations
 
-- Founder approval of rebuilt schema/domain/ADR chain.
-- Identifier strategy and migration implementation decision.
-- Migration/rollback/restore rehearsal.
+- E0-S2 schema implementation contract and rendered ERD remain synchronized.
+- Disposable PostgreSQL migration/rollback/restore rehearsal.
 - Test fixtures and transition contract tests.
+- Production migration remains a separate implementation-entry decision.
 
 ### Before G3 Tagudin pilot
 
@@ -156,30 +166,17 @@ These activities must not silently enable live money, production ID collection, 
 
 ## 6. Deployment-dream bias audit
 
-The rebuilt plan does not make these product requirements:
+The product contract does not require a hosting vendor. The implementation-preparation runtime baseline now deliberately selects a conservative Compose-compatible shape:
 
-- Dokploy
-- Cloudflare
-- TextBee/SMS provider
-- Meilisearch
-- Reverb
-- Octane versus PHP-FPM
-- Any specific edge/CDN vendor
+- PHP-FPM first; Octane deferred.
+- PostgreSQL authority; Redis only for queue/cache/coordination.
+- Node SSR is explicit and health-checked.
+- PostgreSQL search baseline; Meilisearch optional.
+- Polling/notifications baseline; Reverb optional.
+- Docker Compose local/test; Dokploy later promotion target only.
+- No live provider, edge vendor, SMS vendor, or CDN is a product requirement.
 
-The architecture instead requires processes and guarantees:
-
-- Web/application
-- Database
-- Queue worker
-- Scheduler
-- Private evidence storage
-- Optional SSR
-- Optional search/realtime
-- Observability
-- Backup/restore
-- Promotion/rollback
-
-A vendor may be selected later if it satisfies those contracts. The deployment option cannot expand the pilot scope by itself.
+The runtime baseline may be revised only through an ADR and compatibility/recovery evidence. It cannot expand pilot scope by itself.
 
 ## 7. Capstone/startup alignment
 
@@ -224,15 +221,13 @@ It should not transition directly to production implementation or live launch.
 
 Recommended next gate:
 
-1. Founder approves the rebuilt Product Vision, Taxonomy, Handoff, PRD, UX, Domain, Schema, ADRs, Architecture, Epics, and Authority Map.
-2. Promote rebuilt files to canonical BMAD names or update repository guidance so the rebuilt names are the only normative files.
-3. Preserve old artifacts as historical/superseded.
-4. Establish the actual implementation repository/toolchain.
-5. Implement E0 foundation and test contracts.
-6. Run a technical preflight before creating production migrations.
-7. Re-run readiness after implementation evidence exists.
-8. Run G3 before genuine Tagudin validation.
-9. Run G6 separately before live connected payments.
+1. Establish the actual implementation repository/toolchain using `09-development-standards-and-bmad-openspec-contract.md`.
+2. Generate the first OpenSpec change only from a hardened E0 story.
+3. Implement E0 foundation and test contracts in disposable environments.
+4. Run the schema catalog, health-chain, browser, backup/restore, and quality checks.
+5. Re-run readiness after implementation evidence exists.
+6. Run G3 before genuine Tagudin validation.
+7. Run G6 separately before live connected payments.
 
 ## 9. Bottom line
 
