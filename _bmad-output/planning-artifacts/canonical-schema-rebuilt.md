@@ -4,6 +4,8 @@ Status: CANONICAL SCHEMA/ERD AUTHORITY — founder-approved 2026-07-31; migratio
 BMAD phase: Phase 3 — Data model / schema contract
 Depends on:
 
+- `docs/planning-hardening/07-schema-implementation-and-erd-contract.md`
+- `docs/planning-hardening/07-canonical-erd.svg` (rendered relationship ERD)
 - `_bmad-output/planning-artifacts/product-vision-rebuilt.md`
 - `_bmad-output/planning-artifacts/listing-model-taxonomy-rebuilt.md`
 - `_bmad-output/planning-artifacts/prd-rebuilt.md`
