@@ -1,5 +1,6 @@
 # Serbizyu 2.0 — Architecture Decision Records (ADR) Catalog
 
+> HISTORICAL / NON-AUTHORITATIVE — superseded by `adr-catalog-rebuilt.md`; preserved for traceability only.
 > **BMAD Method Phase 3 Artifact: ADR Catalog**
 > *Document Version:* 4.2.0
 > *Date:* July 28, 2026

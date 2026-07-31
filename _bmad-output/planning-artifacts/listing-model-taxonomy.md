@@ -1,5 +1,6 @@
 # Serbizyu — Listing Model Taxonomy
 
+> HISTORICAL / NON-AUTHORITATIVE — superseded by `listing-model-taxonomy-rebuilt.md`; preserved for traceability only.
 > BMAD Phase 1: Analysis Artifact  
 > Date: July 25, 2026  
 > Purpose: Formalize the data design foundation — terminology, listing primitives, fulfillment archetypes, and naming conventions. LOCK before Phase 2 (PRD) to ensure consistent terminology across all downstream documents.  

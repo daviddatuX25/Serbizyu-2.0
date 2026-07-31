@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Domain and State Contracts
 
-Status: REBUILT DRAFT — founder review required before schema/implementation authority
+Status: CANONICAL DOMAIN/STATE AUTHORITY — founder-approved 2026-07-31; implementation/live-money gates remain separate
 BMAD phase: Phase 3 — Domain/state design
 Depends on:
 

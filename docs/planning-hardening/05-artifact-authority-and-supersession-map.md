@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — BMAD Artifact Authority and Supersession Map
 
-Status: REBUILT DRAFT — founder review required before final authority is declared
+Status: CANONICAL AUTHORITY MAP — founder-approved 2026-07-31
 Purpose: prevent historical BMAD artifacts from competing with the rebuilt planning stack
 
 ## 1. Authority rule
@@ -27,7 +27,7 @@ For the rebuilt planning sequence:
 | `_bmad-output/planning-artifacts/adr-catalog.md` | `adr-catalog-rebuilt.md` | HISTORICAL / SUPERSEDED |
 | `_bmad-output/planning-artifacts/epics-and-stories.md` | `epics-and-stories-rebuilt.md` | HISTORICAL / SUPERSEDED |
 | `_bmad-output/planning-artifacts/readiness-report.md` | fresh Stage E readiness report | HISTORICAL / INVALID AS CURRENT GATE |
-| `docs/mockup.html` and archived screens | `ux-spec-rebuilt.md` plus regenerated prototypes | HISTORICAL UX INPUT |
+| `docs/mockup.html`, `old-docs/mockup.html`, `old-docs/mockup/index.html`, and archived screens | `ux-spec-rebuilt.md` plus `mockup-experience-expansion-bridge.md` and regenerated prototypes | HISTORICAL UX INPUT |
 | `old-docs/spikes/*` | research/ADR/supporting evidence | HISTORICAL RESEARCH INPUT |
 
 No historical file may be used to reintroduce a superseded revenue split, geography, payment promise, state machine, category count, or deployment commitment.
@@ -68,16 +68,19 @@ No historical file may be used to reintroduce a superseded revenue split, geogra
 - Security/privacy/financial/operations evidence
 - Founder readiness decision
 
-## 4. File naming rule
+## 4. Promotion record
 
-Until the founder approves the rebuilt set, `*-rebuilt.md` files remain explicit drafts. After approval, either:
+- Decision: rebuilt BMAD chain is promoted as the canonical planning authority.
+- Approval date: 2026-07-31.
+- Approved scope: product vision, taxonomy, handoff, PRD, UX, domain/state, schema/ERD, ADRs, architecture/operations, epics/stories, and readiness baseline.
+- Exclusions: this promotion does not authorize production migrations, live connected payments, production Tiwala, sensitive government-ID collection, Tagudin market validation, or deployment.
+- Remaining implementation conditions are governed by the P0 closure artifacts: story pack, schema implementation contract, runtime baseline, and development standards.
 
-- Promote them to canonical filenames and archive the old files, or
-- Keep the rebuilt names and update repository guidance so only them are normative.
+## 5. File naming rule
 
-Do not maintain two unmarked PRDs, taxonomies, architectures, or readiness reports.
+The rebuilt names remain canonical in place, and repository guidance identifies them as normative. Historical files remain preserved with visible notices.
 
-## 5. Authority gate
+## 6. Authority gate
 
 The set is ready for implementation-readiness review when:
 

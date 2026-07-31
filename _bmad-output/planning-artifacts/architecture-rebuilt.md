@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Technical Architecture and Operations Blueprint
 
-Status: REBUILT DRAFT — founder review required before implementation/deployment authority
+Status: CANONICAL ARCHITECTURE/OPERATIONS AUTHORITY — founder-approved 2026-07-31; deployment/live-money gates remain separate
 BMAD phase: Phase 3 — Architecture and operations
 Depends on:
 

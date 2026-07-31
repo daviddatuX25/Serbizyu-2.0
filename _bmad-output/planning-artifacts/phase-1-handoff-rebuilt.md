@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Phase 1 Handoff
 
-Status: REBUILT — founder review required before downstream artifacts become authoritative
+Status: CANONICAL PLANNING HANDOFF — founder-approved 2026-07-31; downstream implementation/live-money gates remain separate
 BMAD phase: Phase 1 Analysis → Phase 2 Planning handoff
 
 ## 1. Phase 1 outcome

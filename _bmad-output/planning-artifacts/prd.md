@@ -1,6 +1,7 @@
-# Serbizyu 2.0 — Product Requirements Document (PRD)
+# Serbizyu 2.0 — Product Requirements Document
 
-> **BMAD Method Phase 2 Artifact: Planning & Scoping**  
+> HISTORICAL / NON-AUTHORITATIVE — superseded by `prd-rebuilt.md`; preserved for traceability only.
+
 > *Document Version:* 3.0.0 (Facilitated Ceremony Edition)  
 > *Date:* July 26, 2026  
 > *Facilitator:* PM John (Product Manager persona)  

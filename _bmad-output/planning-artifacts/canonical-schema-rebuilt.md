@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Canonical Schema and ERD Decision Contract
 
-Status: REBUILT DRAFT — founder review required before migrations or models
+Status: CANONICAL SCHEMA/ERD AUTHORITY — founder-approved 2026-07-31; migration execution remains separately gated by P0-03 contract
 BMAD phase: Phase 3 — Data model / schema contract
 Depends on:
 

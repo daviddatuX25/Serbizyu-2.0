@@ -1,5 +1,6 @@
 # Serbizyu 2.0 — Epics & User Stories Breakdown
 
+> HISTORICAL / NON-AUTHORITATIVE — superseded by `epics-and-stories-rebuilt.md`; preserved for traceability only.
 > **BMAD Method Phase 3 Artifact: Solutioning Epics & Stories**  
 > *Document Version:* 4.0.0  
 > *Date:* July 29, 2026  

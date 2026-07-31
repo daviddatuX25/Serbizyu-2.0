@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Epics, Stories, and Delivery Plan
 
-Status: REBUILT DRAFT — founder review required before implementation planning becomes executable
+Status: CANONICAL DELIVERY PLAN — founder-approved 2026-07-31; only individually hardened stories are implementation-ready
 BMAD phase: Phase 3 — Implementation planning
 Depends on:
 

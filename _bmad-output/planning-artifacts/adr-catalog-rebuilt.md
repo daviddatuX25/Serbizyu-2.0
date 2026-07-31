@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Architecture Decision Record Catalog
 
-Status: REBUILT DRAFT — founder review required before implementation decisions become binding
+Status: CANONICAL ADR AUTHORITY — founder-approved 2026-07-31; implementation decisions remain bounded by P0-03/P0-04
 BMAD phase: Phase 3 — Architecture decisions
 Inputs:
 

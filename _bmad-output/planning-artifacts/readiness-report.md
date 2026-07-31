@@ -1,5 +1,6 @@
 # Serbizyu 2.0 — Implementation Readiness Report
 
+> HISTORICAL / NON-AUTHORITATIVE — superseded by `readiness-report-rebuilt.md`; preserved for traceability only. This report must not be used as a Phase 4 clearance.
 > **BMAD Method Phase 3 Artifact: Readiness Gate Check**  
 > *Document Version:* 5.0.0  
 > *Date:* July 29, 2026  

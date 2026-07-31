@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Product Vision and Working-Backwards Brief
 
-Status: REBUILT DRAFT — founder review required before becoming authoritative
+Status: CANONICAL PLANNING AUTHORITY — founder-approved 2026-07-31; implementation/live-money gates remain separate
 BMAD phase: Phase 1 — Analysis / Product Vision
 Supersedes as a normative source: the previous PRFAQ and product-vision claims after founder approval
 Authority inputs:

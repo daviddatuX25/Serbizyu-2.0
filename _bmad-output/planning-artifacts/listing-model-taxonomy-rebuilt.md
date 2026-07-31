@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Listing, Transaction, Fulfillment, and Access Taxonomy
 
-Status: REBUILT DRAFT — founder review required before becoming authoritative
+Status: CANONICAL PLANNING AUTHORITY — founder-approved 2026-07-31; implementation/live-money gates remain separate
 BMAD phase: Phase 1 — Analysis / Product Taxonomy
 Depends on:
 

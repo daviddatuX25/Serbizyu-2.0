@@ -1,5 +1,6 @@
 # Serbizyu — Phase 1→2 Handoff Checklist
 
+> HISTORICAL / NON-AUTHORITATIVE — superseded by `phase-1-handoff-rebuilt.md`; preserved for traceability only.
 > BMAD Phase 1: Analysis → Phase 2: Planning  
 > Date: July 25, 2026  
 > Purpose: Verify all Phase 1 artifacts exist before entering Phase 2 (PRD + UX)

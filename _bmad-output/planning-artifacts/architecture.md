@@ -1,5 +1,6 @@
 # Serbizyu 2.0 — System Architecture Spine & Technical Specification
 
+> HISTORICAL / NON-AUTHORITATIVE — superseded by `architecture-rebuilt.md`; preserved for traceability only.
 > **BMAD Method Phase 3 Artifact: Architecture Spine**  
 > *Document Version:* 3.2.0 (Reconciled with ADR Catalog v4.0.0)  
 > *Date:* July 29, 2026  

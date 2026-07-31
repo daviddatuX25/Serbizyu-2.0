@@ -1,5 +1,6 @@
 # Serbizyu — PRFAQ Press Release (Phase 1, v4 Final)
 
+> HISTORICAL / NON-AUTHORITATIVE — superseded by `product-vision-rebuilt.md`; preserved for traceability only. Its accepted vision is incorporated only where consistent with the rebuilt authority chain.
 > BMAD Phase 1: Analysis — Working Backwards Ceremony  
 > Facilitated: July 25, 2026  
 > Founder: David Datu N. Sarmiento  

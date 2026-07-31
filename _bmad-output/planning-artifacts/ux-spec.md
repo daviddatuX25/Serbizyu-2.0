@@ -1,5 +1,6 @@
 # Serbizyu 2.0 — UX & Interaction Design Specification
 
+> HISTORICAL / NON-AUTHORITATIVE — superseded by `ux-spec-rebuilt.md`; preserved for traceability only.
 > **BMAD Method Phase 2 Artifact: UX Design**  
 > *Document Version:* 2.1.0 (Comprehensive Master Edition)  
 > *Date:* July 25, 2026  
