@@ -11,6 +11,7 @@ Depends on:
 - `_bmad-output/planning-artifacts/domain-state-contracts-rebuilt.md`
 - `_bmad-output/planning-artifacts/canonical-schema-rebuilt.md`
 - `_bmad-output/planning-artifacts/adr-catalog-rebuilt.md`
+- `docs/planning-hardening/08-runtime-stack-and-environment-contract.md`
 
 Purpose: provide a buildable, supportable technical blueprint without allowing future deployment or live-payment ambitions to dictate the initial product boundary.
 
@@ -28,18 +29,17 @@ Purpose: provide a buildable, supportable technical blueprint without allowing f
 
 ### 2.1 Initial system shape
 
-Use a modular monolith as the initial application boundary:
+Use the locked runtime baseline in `docs/planning-hardening/08-runtime-stack-and-environment-contract.md`:
 
-- One Laravel application boundary.
-- Domain modules aligned to bounded contexts.
-- PostgreSQL as transactional authority.
-- Redis only where required for queue/cache/coordination and never as financial authority.
-- Object/file storage for evidence with private access.
-- Queue worker for asynchronous work.
-- Scheduler for expiry/retry/reconciliation/retention tasks.
-- Separate SSR process only if the approved UX/stack requires it; it must be explicitly health-checked and deployed.
-- Search begins with PostgreSQL capabilities where sufficient; external search is an adapter/scale option, not a pilot dependency.
-- Realtime is optional for pilot UX where polling/notifications are adequate; it must not become a hidden reliability dependency.
+- One Laravel 12 modular-monolith application boundary on PHP 8.4/PHP-FPM.
+- PostgreSQL 16/PostGIS as transactional authority.
+- Redis 7 only where required for queue/cache/coordination and never as financial authority.
+- Private evidence storage through an adapter.
+- Queue worker and scheduler with health, retry, and idempotency contracts.
+- Node 22 LTS SSR as a separate health-checked process.
+- PostgreSQL search baseline; Meilisearch is an optional adapter after measured need.
+- Polling/notifications baseline; Reverb is optional and never a correctness dependency.
+- Docker Compose is the reproducible local/test topology; Dokploy is a later promotion target, not a product contract.
 
 ### 2.2 Deployment-neutral boundary
 

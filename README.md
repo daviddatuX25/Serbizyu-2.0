@@ -9,50 +9,53 @@
 ## 📊 Status
 
 ```
-Phase 1 · Analysis    ████████████ ✅ Complete
-Phase 2 · Planning    ████████████ ✅ Complete
-Phase 3 · Solutioning ████████████ ✅ Complete (26 ADRs · 31 tables · 3 epics)
-Phase 4 · Sprint 0    ░░░░░░░░░░░░ 🔜 Next
+Phase 1 · Analysis    ████████████ ✅ Canonical planning authority
+Phase 2 · Planning    ████████████ ✅ Canonical planning authority
+Phase 3 · Solutioning ████████████ ✅ Canonical planning authority
+E0 · Implementation   ░░░░░░░░░░░░ 🔒 Conditional — foundation contracts first
+Tagudin pilot        ░░░░░░░░░░░░ 🔒 Not cleared
+Live connected money ░░░░░░░░░░░░ 🔒 Blocked
 ```
+
+The rebuilt planning chain is founder-approved for planning authority. This does not authorize production migrations, live payments, production Tiwala, sensitive-ID collection, deployment, or genuine Tagudin validation.
 
 ---
 
 ## 🧱 Stack
 
-| Layer | Tech |
+| Layer | Locked baseline |
 |---|---|
-| Backend | PHP 8.4 · Laravel 12 (Octane) |
-| Frontend | React 19.2 · Inertia v3.6 · TypeScript |
-| UI | Tailwind 4.3 · shadcn/ui 4.16 |
-| Database | PostgreSQL 16 + PostGIS |
-| Cache | Redis 7 |
-| Search | Meilisearch 1.51 (self-hosted) |
-| Realtime | Laravel Reverb 1.11 |
-| PWA | Dexie.js 4.4 (IndexedDB) |
-| SMS | TextBee Android Gateway (swappable driver) |
-| Payments | Xendit xenPlatform |
-| AI | Serbi — Laravel AI SDK → OpenRouter |
-| Infra | Dokploy on Proxmox · Cloudflare Edge · GitHub CI/CD |
+| Backend | PHP 8.4 · Laravel 12 · PHP-FPM |
+| Frontend | React 19.2 · Inertia 3.6 · TypeScript 5.9 · Node 22 LTS SSR |
+| UI | Rebuilt UX token/CSS contract; Tailwind/shadcn are not authority |
+| Database | PostgreSQL 16 + PostGIS 3.x |
+| Cache/queue | Redis 7; never financial authority |
+| Search | PostgreSQL baseline; Meilisearch optional adapter |
+| Realtime | Polling/notifications baseline; Reverb optional adapter |
+| Evidence | Private storage adapter; local disposable implementation for tests |
+| Payments | External Cash + External Digital Proof baseline; Direct/Tiwala sandbox-only |
+| Infra | Docker Compose local/test; Dokploy later promotion target only |
 
 ---
 
 ## 📁 Planning Artifacts (Phase 1–3)
 
-| Document | What it is |
+| Canonical document | What it is |
 |---|---|
-| `prfaq-press-release.md` | Product vision & founder origin story |
-| `prfaq-faq-challenges.md` | Trust, economics, competition, risk |
-| `prd.md` | 9 sections — locked & patched |
-| `ux-spec.md` | UX specification |
-| `listing-model-taxonomy.md` | 4 listing types · 5 mechanisms · 10 archetypes |
-| `architecture.md` | Topology, ERD, sequence diagrams, stack |
-| `adr-catalog.md` | **26 Architecture Decision Records** |
-| `epics-and-stories.md` | 3-epic core + Sprint 0 + 10 deferrals |
-| `readiness-report.md` | Phase 4 clearance — all gates passed |
-| `research-agenda.md` | Tracked research questions |
-| `stakeholder-briefing.html` | Project summary deck |
+| `product-vision-rebuilt.md` | Canonical product vision and working-backwards brief |
+| `listing-model-taxonomy-rebuilt.md` | Canonical listing/transaction/fulfillment/access taxonomy |
+| `phase-1-handoff-rebuilt.md` | Canonical Phase 1→2 handoff |
+| `prd-rebuilt.md` | Canonical product requirements — 59 requirements |
+| `ux-spec-rebuilt.md` | Canonical UX and 23-journey traceability contract |
+| `domain-state-contracts-rebuilt.md` | Canonical domain/state machines |
+| `canonical-schema-rebuilt.md` | Canonical 42-table schema authority |
+| `adr-catalog-rebuilt.md` | Canonical 28-ADR catalog |
+| `architecture-rebuilt.md` | Canonical architecture/operations blueprint |
+| `epics-and-stories-rebuilt.md` | Canonical E0–E9 delivery plan; only hardened stories are executable |
+| `readiness-report-rebuilt.md` | Canonical conditional readiness baseline; not pilot/live-money clearance |
+| `prfaq-press-release.md`, `prd.md`, `ux-spec.md`, etc. | Historical/non-authoritative inputs with visible notices |
 
-All under `_bmad-output/planning-artifacts/`.
+All canonical planning artifacts remain under `_bmad-output/planning-artifacts/`. P0 implementation contracts are under `docs/planning-hardening/`.
 
 ---
 
@@ -74,9 +77,14 @@ Under `docs/critical-decision-brainstorming/`.
 
 | File | Purpose |
 |---|---|
-| `docs/mockup.html` | Navigable hub — all 39 screens |
-| `docs/deck-defense.html` | 16-slide defense deck |
-| `presenter-script.html` | Printable speaker notes |
+| `docs/mockup.html` | Current entry placeholder; remains historical redirect until the approved connected mockup is promoted |
+| `old-docs/mockup.html` | Historical EN/Taglish guided hub — visual input only |
+| `old-docs/mockup/index.html` | Historical plain-grid hub — visual input only |
+| `docs/planning-hardening/07-canonical-erd.svg` | Canonical relationship ERD |
+| `docs/deck-defense.html` | Historical defense deck |
+| `presenter-script.html` | Historical printable speaker notes |
+
+The connected mockup will be produced later from `mockup-experience-expansion-bridge.md`; no current mockup is implementation authority.
 
 ---
 
