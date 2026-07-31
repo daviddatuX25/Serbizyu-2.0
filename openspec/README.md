@@ -29,4 +29,8 @@ openspec/
         └── specs/<capability>/spec.md
 ```
 
-No current OpenSpec change is approved or active. The first future change must be created only after the relevant BMAD story is selected and its traceability contract is complete.
+A draft OpenSpec change is now present for the UX/UI reference dossier:
+
+`changes/create-ux-ui-reference-dossier/`
+
+It is not an approved implementation change. Founder/designer review is still required before the dossier is treated as a locked design input.
