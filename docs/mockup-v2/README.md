@@ -1,44 +1,53 @@
-# Serbizyu 2.0 — Reference Prototype v2
+# Serbizyu 2.0 — Connected Mockup (lo-fi, reference only)
 
-This is a disposable visual feedback prototype, not application implementation.
-
-## Scope
-
-- Static HTML/CSS/JS only.
-- No backend, database, authentication, real persistence, live payments, or identity verification.
-- Hash routes provide organized navigation.
-- Small in-memory demo state lets a few buttons show the intended relationship between Buyer, Provider, and Operations views.
-- The old phone wrapper is intentionally removed; screens are presented as a desktop/workspace reference layout.
+Status: SCAFFOLDING IN PROGRESS · REFERENCE ONLY · no backend · fictional fixtures
+Built from: `docs/design-kit/` element suite, guided by `docs/design-kit/SCAFFOLD-GUIDE.md`
 
 ## Open it
 
-Serve the repository with any static server and open:
+```bash
+cd /home/user/Serbizyu-2.0
+python3 -m http.server 4173 --bind 127.0.0.1
+# → http://127.0.0.1:4173/docs/mockup-v2/
+```
+
+## What exists
+
+| Area | Status |
+|---|---|
+| Shell (picker, shared assets, mockup.js) | ✅ |
+| SCN-01 — A1 low-value service · External Cash (17 screens, 3 role views) | ✅ |
+| SCN-02 … SCN-09 | ⏳ in progress |
+
+## How to review SCN-01
+
+1. Open the picker → `SCN-01`.
+2. Walk the route: Discover → Order → Work + Payment → Completion.
+3. Use the role switcher (Buyer / Provider / Admin) — the fixture state is shared; only permissions and next actions change.
+4. Try the recovery branch: on `PAY-003`/`PAY-004` press `Report a mismatch` (or leave the Provider side unreported).
+5. Answer the feedback task: *Did Serbizyu receive or hold the ₱80?* Intended answer: **No** — the Buyer paid the Provider directly; Serbizyu only records declarations.
+
+## Hard rules applied
+
+- One file per canonical screen ID; each carries its ID badge, actor badge, goal, primary action, recovery variant, and prev/next route links.
+- Payment ≠ Work everywhere (separation panel).
+- External Cash is two-sided: `buyer_reported` / `provider_reported` / `mutually_acknowledged`.
+- Sandbox/reference labels are part of every element and never removable.
+- No invented policy: anything undefined uses the policy-TBD pattern or an explicit "support" route.
+- Only fictional fixture data (BUYER-01, PROVIDER-01, ₱80, capstone_demo).
+
+## Files
 
 ```text
-docs/mockup-v2/index.html
+docs/mockup-v2/
+├── index.html          ← scenario picker (SYS-001)
+├── assets/
+│   ├── dk.css          ← copy of docs/design-kit/styles.css (do not edit here)
+│   └── mockup.js       ← role switcher, two-sided cash demo, guard checklist, modal
+├── scn-01/             ← SCN-01 route screens (17 files)
+└── README.md
 ```
 
-Example:
+## Open questions (for David)
 
-```bash
-python3 -m http.server 4173
-```
-
-Then visit `http://127.0.0.1:4173/docs/mockup-v2/index.html`.
-
-## Current routes
-
-- `#/buyer/home`
-- `#/buyer/discover`
-- `#/buyer/request`
-- `#/buyer/review`
-- `#/provider/inbox`
-- `#/provider/work`
-- `#/admin/operations`
-- `#/admin/audit`
-
-## Feedback boundary
-
-Review the copy, hierarchy, action placement, role perspective, payment/work separation, support language, and safety cues. Do not treat the demo state as a backend design or proof that the business behavior is implemented.
-
-Historical screens remain under `old-docs/` and are visual input only. This v2 prototype is the current disposable reference surface for feedback, but it is not yet canonical product behavior.
+- None yet — anything undefined was routed to "support" or the policy-TBD pattern instead of invented.

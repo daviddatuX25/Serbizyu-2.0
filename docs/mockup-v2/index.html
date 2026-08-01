@@ -1,51 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Serbizyu 2.0 — Reference Prototype</title>
-  <link rel="stylesheet" href="./styles.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Serbizyu 2.0 — Connected Mockup (Lo-Fi)</title>
+<link rel="stylesheet" href="assets/dk.css">
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="#/buyer/home" aria-label="Serbizyu reference prototype home">
-      <span class="brand-mark">S</span>
-      <span><strong>Serbizyu</strong><small>reference prototype</small></span>
-    </a>
-    <div class="prototype-warning"><span class="dot"></span> REFERENCE ONLY · NO BACKEND · SANDBOX COPY</div>
-    <div class="top-actions">
-      <button class="ghost" data-action="reset">Reset demo</button>
-      <a class="avatar" href="#/admin/operations" title="Open operations view">D</a>
-    </div>
-  </header>
+<main class="dk-main" style="max-width:860px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  <span class="dk-badge dk-b-neutral">SYS-001 · scenario picker</span>
+  <h1 style="font-size:24px;margin:8px 0 4px">Serbizyu 2.0 — Connected Mockup</h1>
+  <p class="dk-note">Lo-fi disposable mockup assembled from the design kit. Fictional fixtures only — no backend, no real payment, no pilot claim. Every screen carries its canonical ID and a role switcher.</p>
+</header>
 
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="side-heading">Perspectives</div>
-      <nav class="nav-group" aria-label="Prototype perspectives">
-        <a href="#/buyer/home" data-route="buyer"><span class="nav-icon">⌂</span> Buyer / Customer</a>
-        <a href="#/provider/inbox" data-route="provider"><span class="nav-icon">▣</span> Provider / Owner</a>
-        <a href="#/admin/operations" data-route="admin"><span class="nav-icon">◈</span> Operations / Admin</a>
-      </nav>
-      <div class="side-heading">Demo journey</div>
-      <nav class="nav-group compact" aria-label="Demo journey routes">
-        <a href="#/buyer/discover">01 · Discover</a>
-        <a href="#/buyer/request">02 · Request</a>
-        <a href="#/provider/inbox">03 · Provider inbox</a>
-        <a href="#/provider/work">04 · Work status</a>
-        <a href="#/buyer/review">05 · Confirm / review</a>
-        <a href="#/admin/audit">06 · Audit trail</a>
-      </nav>
-      <div class="side-note">
-        <strong>Feedback lens</strong>
-        <p>Look for confusing words, missing actions, unclear responsibility, and places where Payment status accidentally sounds like Work status.</p>
-      </div>
-    </aside>
+<div class="dk-banner dk-bn-ref" style="margin-bottom:16px"><span class="dk-banner-ico">🧩</span>
+  <span><strong>How to review.</strong> Pick a scenario → click through the route → use the role switcher (Buyer / Provider / Admin) on any screen → try the recovery branch (the "Report a mismatch" button) → answer the feedback task at the end of each scenario.</span></div>
 
-    <main id="app" class="main" tabindex="-1"></main>
-  </div>
+<h2 style="font-size:18px">Scenarios</h2>
+<div class="dk-grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px" id="scn-cards"></div>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="./app.js"></script>
+<div id="dk-modal-veil" class="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Choose a scenario, then walk the route. Use the role switcher to see each actor's view. Reset via SYS-004 on the scenario entry.</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script>
+(function(){
+  var scenarios = [
+    {id:'scn-01', name:'SCN-01 · A1 low-value service', lane:'External Cash', desc:'Greeting-card layout, ₱80. Buyer reports cash paid; Provider reports received; Work stays separate. Recovery: missing counterparty report / mismatch.', status:'BUILT', href:'scn-01/sys-001.html'},
+    {id:'scn-02', name:'SCN-02 · A3 appointment', lane:'External Digital Proof', desc:'Tailoring measurement at a public point. Slot, safety, evidence, no-show recovery.', status:'IN PROGRESS', href:''},
+    {id:'scn-03', name:'SCN-03 · A4 product handoff', lane:'External Cash', desc:'Seedling trays, ₱100. Capacity, handoff, receipt, condition mismatch.', status:'IN PROGRESS', href:''},
+    {id:'scn-04', name:'SCN-04 · purchase-on-behalf', lane:'External Cash fixture', desc:'School supplies. Estimate → approval before spend → variance → receipt.', status:'IN PROGRESS', href:''},
+    {id:'scn-05', name:'SCN-05 · A9 digital delivery', lane:'External Digital Proof', desc:'Invitation layout, ₱250. Versioned delivery, revision, acceptance.', status:'IN PROGRESS', href:''},
+    {id:'scn-06', name:'SCN-06 · agent-assisted Owner', lane:'no custody action', desc:'Listing draft via Agent with consent, attribution, revocation.', status:'IN PROGRESS', href:''},
+    {id:'scn-07', name:'SCN-07 · mismatch, dispute, hold', lane:'lane-specific', desc:'Evidence mismatch, dispute intake, hold scope, admin recovery.', status:'IN PROGRESS', href:''},
+    {id:'scn-08', name:'SCN-08 · Direct Digital sandbox', lane:'sandbox', desc:'Simulated provider events, reconciliation, no live money.', status:'IN PROGRESS', href:''},
+    {id:'scn-09', name:'SCN-09 · Tiwala sandbox', lane:'sandbox', desc:'Guard-checked simulated release; idempotent; no legal claim.', status:'IN PROGRESS', href:''}
+  ];
+  var host = document.getElementById('scn-cards');
+  host.innerHTML = scenarios.map(function(s){
+    var statusBadge = s.status==='BUILT' ? '<span class="dk-badge dk-b-ok">✓ BUILT</span>' : '<span class="dk-badge dk-b-warn">⏳ IN PROGRESS</span>';
+    var btn = s.href ? '<a class="dk-btn dk-primary" style="text-decoration:none" href="'+s.href+'">Open scenario</a>' : '<button class="dk-btn" disabled title="Scaffolding in progress">Coming soon</button>';
+    return '<div class="dk-card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>'+s.name+'</strong>'+statusBadge+'</div>'+
+      '<p class="dk-note" style="margin:6px 0">'+s.desc+'</p>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="dk-badge dk-b-info">'+s.lane+'</span>'+btn+'</div></div>';
+  }).join('');
+})();
+</script>
+</main>
 </body>
 </html>
