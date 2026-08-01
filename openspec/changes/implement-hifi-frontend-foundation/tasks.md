@@ -12,5 +12,5 @@
 - [x] Implement Pattern Lab including difficult edge components.
 - [x] Typecheck and production build.
 - [x] Run browser walkthrough, responsive review, and console check.
-- [ ] Publish to `docs/app/`, push, and verify public HTTP 200.
+- [x] Publish to `docs/app/`, push, and verify public HTTP 200.
 - [ ] Founder visual review remains pending after publication.
