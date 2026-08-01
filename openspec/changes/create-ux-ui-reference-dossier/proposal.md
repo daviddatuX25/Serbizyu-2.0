@@ -12,8 +12,11 @@ A future design agent should not have to infer these details from the 74-screen 
 
 ## Scope
 
-Create a comprehensive, design-agent-readable UX/UI reference dossier covering:
+Create a comprehensive, design-agent-readable UX/UI reference workspace covering:
 
+- A main perspective and flow dossier.
+- A 74-screen perspective matrix with one row per canonical screen ID.
+- Nine connected scenario blueprints for `SCN-01` through `SCN-09`.
 - Actor archetypes and access contexts.
 - Information architecture and route organization.
 - Screen anatomy and hierarchy.
@@ -43,9 +46,9 @@ Create a comprehensive, design-agent-readable UX/UI reference dossier covering:
 3. `domain-state-contracts-rebuilt.md`.
 4. `prd-rebuilt.md`.
 5. `mockup-experience-expansion-bridge.md`.
-6. This reference dossier for design perspective, UI detail, review tasks, and handoff.
+6. This UX/UI reference workspace for design perspective, UI detail, review tasks, and handoff.
 7. Historical mockup only for visual inspiration, never behavior or product truth.
 
 ## Approval question
 
-Does the dossier sufficiently describe the user-facing experience for a separate design agent to produce a stronger low-fidelity connected reference mockup without inventing product behavior or asking the founder to restate the flows?
+Does the reference workspace sufficiently describe the user-facing experience for a separate design agent to produce a stronger low-fidelity connected reference mockup without inventing product behavior or asking the founder to restate the flows?

@@ -10,7 +10,10 @@ Status: reference-authoring batch
 - [x] Author cross-role visibility and state-variant matrices.
 - [x] Author low-literacy, low-data, assisted-access, safety, privacy, and support rules.
 - [x] Add PRD/UX/domain/mockup traceability index.
-- [ ] Review the dossier with founder/design agent.
+- [x] Add 74-screen perspective matrix with exact screen-ID coverage.
+- [x] Add nine connected scenario blueprints with exact scenario-ID coverage.
+- [x] Run adversarial UX audit and correct unsupported/ambiguous claims.
+- [ ] Review the reference workspace with founder/design agent.
 - [ ] Record feedback classification: UX-only, domain/state, schema/ADR, or implementation-story impact.
 - [ ] Reopen upstream BMAD artifact first if feedback changes product behavior.
 

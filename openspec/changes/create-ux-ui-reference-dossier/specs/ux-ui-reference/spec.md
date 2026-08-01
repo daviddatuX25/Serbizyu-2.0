@@ -94,3 +94,45 @@ The dossier and later disposable mockups SHALL not imply backend persistence, re
 - WHEN the screen renders
 - THEN it carries a persistent sandbox/demo label and test data context
 - AND it does not present a production transaction or legal escrow promise.
+
+### Requirement: Canonical screen perspective completeness
+
+ID: UXREF-REQ-007
+Status: FOUNDATION
+
+The reference workspace SHALL define the actor goal, visible hierarchy, primary action, and failure/recovery route for every canonical screen ID in the mockup bridge.
+
+#### Scenario: Screen inventory is validated
+
+- GIVEN the bridge defines 74 canonical screen IDs
+- WHEN the reference workspace is mechanically scanned
+- THEN all 74 IDs appear exactly once as primary rows in the screen perspective matrix
+- AND no screen requires the designer to invent its user goal or recovery behavior.
+
+### Requirement: Connected scenario completeness
+
+ID: UXREF-REQ-008
+Status: FOUNDATION
+
+The reference workspace SHALL define a deterministic route, fixture, cross-role consequence, non-happy-path branch, and feedback task for `SCN-01` through `SCN-09`.
+
+#### Scenario: Scenario inventory is validated
+
+- GIVEN the bridge defines nine canonical scenario fixtures
+- WHEN the reference workspace is mechanically scanned
+- THEN all nine scenario IDs have design blueprints
+- AND each blueprint distinguishes Order, Work, Payment, Evidence, Dispute, Consent, and Hold where applicable.
+
+### Requirement: No inferred policy
+
+ID: UXREF-REQ-009
+Status: FOUNDATION
+
+The reference workspace SHALL label unresolved policy rather than inventing a deadline, automatic completion rule, refund promise, trust score, verification claim, or release behavior.
+
+#### Scenario: Designer encounters an unresolved rule
+
+- GIVEN an upstream artifact does not define an exact timeout, appeal window, refund outcome, or verification strength
+- WHEN the designer needs to represent that situation
+- THEN the design uses conditional or support-oriented language
+- AND does not invent a number or automatic outcome.

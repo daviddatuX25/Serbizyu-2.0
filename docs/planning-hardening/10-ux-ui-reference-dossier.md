@@ -22,11 +22,13 @@ It is deliberately written for a designer who may build a static, low-fidelity, 
 Read in this order:
 
 1. This dossier for user perspective, hierarchy, states, and design review.
-2. `_bmad-output/planning-artifacts/ux-spec-rebuilt.md` for the canonical UX journey contract.
-3. `_bmad-output/planning-artifacts/domain-state-contracts-rebuilt.md` for state meanings and transition boundaries.
-4. `_bmad-output/planning-artifacts/prd-rebuilt.md` for product requirements and capability status.
-5. `_bmad-output/planning-artifacts/mockup-experience-expansion-bridge.md` for the complete screen registry and scenario IDs.
-6. `openspec/changes/create-ux-ui-reference-dossier/` for the change boundary and acceptance scenarios.
+2. `docs/planning-hardening/10a-ux-ui-screen-perspective-matrix.md` for all 74 screen-level actor goals, visible hierarchy, primary actions, and recovery.
+3. `docs/planning-hardening/10b-ux-ui-scenario-blueprints.md` for `SCN-01` through `SCN-09`, connected routes, fixtures, cross-role consequences, and failure branches.
+4. `_bmad-output/planning-artifacts/ux-spec-rebuilt.md` for the canonical UX journey contract.
+5. `_bmad-output/planning-artifacts/domain-state-contracts-rebuilt.md` for state meanings and transition boundaries.
+6. `_bmad-output/planning-artifacts/prd-rebuilt.md` for product requirements and capability status.
+7. `_bmad-output/planning-artifacts/mockup-experience-expansion-bridge.md` for the complete screen registry and scenario IDs.
+8. `openspec/changes/create-ux-ui-reference-dossier/` for the change boundary and acceptance scenarios.
 
 If this dossier conflicts with an upstream product, UX, domain, payment, schema, ADR, or legal decision, the upstream authority wins and this dossier must be corrected before design work continues.
 
@@ -286,6 +288,24 @@ A status badge is never sufficient by itself. Pair it with:
 - Next responsible actor.
 - Consequence if no action occurs.
 - Support route when high-impact.
+
+### 8.4 Layout archetypes for the visual designer
+
+These are composition defaults, not final branding:
+
+| Layout archetype | Best for | Desktop/workspace composition | Narrow/mobile behavior |
+|---|---|---|---|
+| Discovery and comparison | Home, browse, search, results, quotes | Search/context header; filter rail; result list; selected-item preview | Filters become drawer/chips; one result per row; sticky task action |
+| Guided form and review | Account, listing, request, consent, evidence submission | Step rail; focused form; persistent plain-language summary; primary action at end/sticky footer | One conceptual question per section; collapsible summary; preserve draft visibly |
+| Shared transaction workspace | Order, Work, Payment, completion | Context header; immediate next-action panel; separate Order/Work/Payment cards; event timeline | Stack cards in responsibility order; next action first; timeline after summaries |
+| Appointment/handoff workspace | A3/A4 physical interaction | Schedule/place/item panel; safety panel before confirmation; participant responsibilities; receipt/attendance action | Time/place/item and safety stay above primary action; no hidden side panel |
+| Digital delivery workspace | A9 | Scope/version header; artifact/evidence area; revision thread; acceptance panel | Version and acceptance state remain visible; files do not replace action labels |
+| Evidence, concern, and support | Payment proof, mismatch, dispute, support | Affected-object summary; evidence list; focused concern/remedy form; case timeline | Show affected object first; progressive evidence input; persistent help/exit |
+| Agent-assisted workspace | Owner consent and Agent tasks | Persistent acting-for banner; permission scope; Owner resource; approval/history rail | Acting-for identity never scrolls away; approval consequence repeated before action |
+| Admin investigation workspace | OPS-001–009 | Triage queue; multi-aggregate inspector; event/evidence timeline; guarded action drawer | Read-only summary first; high-risk actions in separate confirmed step; no tiny dashboard-only controls |
+| Scenario/evaluator shell | SYS-001–004 | Scenario cards; role switcher; journey map; prototype limits; reset | Current scenario/role always visible; reset/help available without losing orientation |
+
+Visual priority inside any archetype should follow: `user goal → immediate truth/risk → next action → supporting detail → history/metadata`. Do not lead with internal IDs, requirement numbers, or a feature explanation.
 
 ## 9. Detailed journey playbooks
 
@@ -715,7 +735,7 @@ Trace: UX-022–023; PRD-052–059; OPS-001–009.
 | Provider adds evidence | Evidence submitted/version | Buyer sees evidence available | Evidence/audit event | Completion, payment |
 | Buyer declares External Cash | Payment declared | Provider sees receipt action | Payment event | Work state |
 | Provider acknowledges cash | Counterparty acknowledged | Buyer sees acknowledgment | Payment event | Work state |
-| Provider proposes completion | Completion proposed | Buyer sees sign-off/concern choice | Work event | Payment unless lane guard says otherwise |
+| Provider proposes completion | Completion proposed; awaiting Buyer review | Buyer sees sign-off/concern choice | Work event and evidence context | Payment Obligation state; protected-release eligibility is not evaluated from proposal alone |
 | Buyer signs off | Work completed | Provider sees completion | Work event and review | External Cash does not become platform-collected |
 | Buyer reports mismatch | Disputed/needs support | Provider sees concern/evidence request | Dispute/hold candidate | Original history |
 | Agent saves Owner draft | Agent attribution and draft | Owner sees notice | Consent/action audit | Ownership |
@@ -850,6 +870,43 @@ Failure to deliver a notification creates a visible pending/retry/support state.
 - Quick Deal, Deal-Chaining, or deferred shapes presented as committed pilot capability.
 - GCash/Xendit as a committed payment rail.
 - Fictional hotline or emergency guarantee.
+
+### 13.1 Unresolved-policy boundary — do not decide in the mockup
+
+The visual designer must use conditional, generic, or support-oriented copy until an upstream decision defines:
+
+- Exact cancellation penalties, automatic-completion timing, review-window duration, or inactivity outcome.
+- Universal dispute SLA, evidence deadline, appeal limit, or number of dispute rounds.
+- Automatic cash refund, replacement, recovery, or compensation outcome.
+- Exact government-ID types, public identity badges, face matching, clearance requirements, or sensitive-data collection readiness.
+- Final category-specific safety rules where the approved capability profile is still conditional.
+- Exact notification channel, guaranteed delivery time, or fictional support/emergency contact.
+- Automatic ranking, trust score, evidence score, or provider-quality claim.
+- Final Agent permission bundle beyond the explicit consent/custody boundaries.
+- Connected-payment provider brand, live fee/rate, production checkout, refund, payout, or reconciliation behavior.
+- Tiwala legal classification, production custody claim, release-window duration, or live-money readiness.
+- Any geographic expansion beyond Tagudin.
+
+When a mockup needs one of these details, label it `Policy to be defined`, `Conditional`, `Sandbox only`, or route to support as appropriate. Do not hide the missing decision behind realistic-looking sample policy.
+
+### 13.2 Microcopy patterns
+
+English is the baseline for individual reference screens. The hub may show an approved English/Taglish mode, but a designer must not create divergent behavior through separate translations. Future Ilocano copy requires its own reviewed content keys.
+
+| Situation | Recommended user-facing pattern | Avoid |
+|---|---|---|
+| External Cash declaration | `You reported paying ₱80 directly to the Provider. The Provider still needs to acknowledge receipt. Serbizyu does not hold this cash.` | `Payment successful` |
+| External evidence submitted | `Evidence submitted. This screenshot supports your report but does not prove the external funds cleared.` | `Payment verified` |
+| Work started | `The Provider started the agreed Work. Payment status did not change.` | `Order successful` |
+| Completion proposal | `The Provider says the agreed Work is ready for review. Check the evidence before confirming.` | `Job completed` before Buyer/sign-off rules pass |
+| Buyer sign-off | `You confirmed the Work as completed. External payment status remains separate.` | `Funds released` unless a sandbox protected-release guard separately passes |
+| Mismatch | `Your report is saved. Tell us what does not match so the other party and support can respond.` | `Refund approved` |
+| Hold | `This action is paused while support reviews the stated concern. Other parts of the Order may remain available.` | `Account frozen` without scope/reason |
+| Agent assistance | `[Agent] is helping [Owner] with this listing. [Owner] remains the Owner.` | `Agent owns this listing` |
+| Offline draft | `You are offline. Your draft is saved on this device and has not been submitted.` | `Saved` without saying whether server confirmation occurred |
+| Retry uncertainty | `We could not confirm whether the action finished. Check the timeline before trying again.` | Blind `Retry` that may duplicate an action |
+| Sandbox payment | `Test only. No real payment, payout, protection, or pilot result occurred.` | A live-looking success receipt |
+| Unresolved rule | `This policy is not yet defined for the reference. Use support/conditional handling.` | Invented countdown, deadline, fee, or guaranteed outcome |
 
 ## 14. Visual designer handoff checklist
 
@@ -992,6 +1049,8 @@ The dossier does not replace the PRD; this matrix proves that every PRD requirem
 
 The next mockup is ready for founder feedback only when:
 
+- All 74 canonical screen IDs are traceable to `10a-ux-ui-screen-perspective-matrix.md` and remain addressable in the prototype.
+- `SCN-01` through `SCN-09` are traceable to `10b-ux-ui-scenario-blueprints.md`; the selected design batch implements one connected scenario plus its recovery branch.
 - The designer can demonstrate the 20 review tasks above.
 - All 23 UX journeys have a visible route or documented non-visual boundary.
 - Buyer, Provider/Owner, Agent, Admin, assisted user, and evaluator perspectives are represented.
@@ -1010,4 +1069,10 @@ The next mockup is ready for founder feedback only when:
 
 ## 17. Handoff note
 
-This dossier is the artifact to give the next design agent. The current `docs/mockup-v2/` prototype should not be used as the design standard. The next agent should first map its proposed screens/routes to this dossier, then create a stronger low-fidelity visual reference for founder feedback. If feedback changes only visual hierarchy or wording, update the design artifact. If feedback changes product behavior, state transitions, payment meaning, permissions, schema, or architecture, stop and update the appropriate upstream BMAD/OpenSpec artifact before changing the mockup.
+This three-file reference workspace is the handoff to give the next design agent:
+
+1. `10-ux-ui-reference-dossier.md` — actors, journeys, interaction rules, and acceptance gate.
+2. `10a-ux-ui-screen-perspective-matrix.md` — every canonical screen’s user job, hierarchy, action, and recovery.
+3. `10b-ux-ui-scenario-blueprints.md` — all nine connected routes, fixtures, cross-role consequences, and failure branches.
+
+The current `docs/mockup-v2/` prototype should not be used as the design standard. The next agent should map its proposed screens/routes to this workspace, then create a stronger low-fidelity visual reference for founder feedback. If feedback changes only visual hierarchy or wording, update the design artifact. If feedback changes product behavior, state transitions, payment meaning, permissions, schema, or architecture, stop and update the appropriate upstream BMAD/OpenSpec artifact before changing the mockup.

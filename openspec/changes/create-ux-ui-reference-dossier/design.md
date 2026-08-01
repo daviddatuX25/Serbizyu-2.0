@@ -2,11 +2,13 @@
 
 ## Decision
 
-Create one canonical reference dossier at:
+Create one canonical UX/UI reference workspace consisting of:
 
-`docs/planning-hardening/10-ux-ui-reference-dossier.md`
+- `docs/planning-hardening/10-ux-ui-reference-dossier.md`
+- `docs/planning-hardening/10a-ux-ui-screen-perspective-matrix.md`
+- `docs/planning-hardening/10b-ux-ui-scenario-blueprints.md`
 
-The dossier is a design input, not an implementation specification. It will be read by any future mockup/design agent before authoring screens. It complements, rather than replaces, the 74-screen bridge.
+The workspace is a design input, not an implementation specification. It will be read by any future mockup/design agent before authoring screens. It complements, rather than replaces, the 74-screen bridge.
 
 ## Why a separate dossier is needed
 
@@ -23,7 +25,13 @@ The bridge answers “which screen/state must exist?” The dossier answers “w
 
 ## Artifact structure
 
-The dossier is organized in this order:
+The reference workspace has three design inputs:
+
+1. `docs/planning-hardening/10-ux-ui-reference-dossier.md` — actors, principles, detailed journey playbooks, cross-role consequences, state variants, and handoff rules.
+2. `docs/planning-hardening/10a-ux-ui-screen-perspective-matrix.md` — all 74 canonical screen IDs with actor goal, visible hierarchy, primary action, and recovery.
+3. `docs/planning-hardening/10b-ux-ui-scenario-blueprints.md` — `SCN-01` through `SCN-09`, including route sequence, deterministic fixture, cross-role consequences, failure branch, and feedback task.
+
+The main dossier is organized in this order:
 
 1. How to use this artifact.
 2. Experience stance and non-negotiable boundaries.
