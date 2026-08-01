@@ -50,6 +50,7 @@ A specialized **element suite**, not a screen batch. Every canonical screen shou
 - `styles.css` — tokens + all element styles (`dk-` prefixed)
 - `kit.js` — deterministic renderers: variants, lanes, evidence, consent, QR feed loop, archetype composer, modal/toast
 - `README.md` — this file
+- `SCAFFOLD-GUIDE.md` — mechanical step-by-step for building the final mockup from this kit (hand this to the scaffold agent first)
 
 ## Relationship to existing artifacts
 
