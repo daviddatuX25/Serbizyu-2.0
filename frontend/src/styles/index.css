@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #14211d;
+  background: #f8f5ed;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --shell-sidebar: 252px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 84% 8%, rgba(167, 223, 206, .22), transparent 28rem),
+    radial-gradient(circle at 12% 78%, rgba(255, 219, 114, .12), transparent 28rem),
+    #f8f5ed;
+  color: #14211d;
+}
+button, input, textarea, select { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+::selection { background: #a7dfce; color: #052420; }
+
+@layer base {
+  h1, h2, h3, h4 { @apply font-display; }
+  input::placeholder, textarea::placeholder { @apply text-ink-400; }
+}
+
+@layer components {
+  .app-canvas { @apply min-h-screen pb-24 lg:pb-0 lg:pl-[252px]; }
+  .page-wrap { @apply mx-auto w-full max-w-[1480px] px-4 pb-10 pt-4 sm:px-6 lg:px-8 lg:pb-14 lg:pt-6; }
+  .surface { @apply rounded-2xl border border-ink-100 bg-white shadow-soft; }
+  .surface-muted { @apply rounded-2xl border border-ink-100 bg-cream-50; }
+  .eyebrow { @apply text-[11px] font-extrabold uppercase tracking-[0.16em] text-forest-600; }
+  .display-title { @apply font-display text-3xl font-extrabold leading-[1.08] tracking-[-0.045em] text-ink-950 sm:text-4xl; }
+  .field-label { @apply mb-1.5 block text-xs font-bold text-ink-800; }
+  .field-input { @apply min-h-12 w-full rounded-xl border border-ink-200 bg-white px-3.5 text-sm text-ink-950 outline-none transition placeholder:text-ink-400 focus:border-forest-400 focus:ring-4 focus:ring-forest-100; }
+  .field-textarea { @apply field-input min-h-28 resize-none py-3; }
+  .nav-item { @apply flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-ink-500 transition hover:bg-white/70 hover:text-ink-950; }
+  .nav-item-active { @apply bg-white text-forest-700 shadow-sm ring-1 ring-inset ring-ink-100; }
+  .role-pill { @apply flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl px-2 text-xs font-bold text-ink-500 transition hover:text-ink-950; }
+  .role-pill-active { @apply bg-ink-950 text-white shadow-sm hover:text-white; }
+  .pattern-grid { background-image: linear-gradient(rgba(13,113,95,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(13,113,95,.06) 1px, transparent 1px); background-size: 22px 22px; }
+  .hero-mesh { background: radial-gradient(circle at 82% 16%, rgba(255,255,255,.26), transparent 18rem), linear-gradient(135deg, #0b5a4d 0%, #0d715f 56%, #17866f 100%); }
+  .metric-card { @apply relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm; }
+  .service-art { @apply relative h-28 overflow-hidden rounded-2xl; }
+  .step-rail { @apply relative flex flex-col gap-0 before:absolute before:bottom-5 before:left-[17px] before:top-5 before:w-px before:bg-ink-200; }
+  .focus-ring { @apply focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-forest-200; }
+}
+
+.soft-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .14;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.15'/%3E%3C/svg%3E");
+}
+
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: #ced9d3 transparent; }
+
+@keyframes float-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-float-in { animation: float-in .42s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
