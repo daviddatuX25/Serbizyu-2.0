@@ -13,4 +13,4 @@
 ## 3. Verification and publication
 - [x] Typecheck and production build.
 - [x] Browser walkthrough: Home, Browse, Quick Deal, Activity, related work, and mobile viewport.
-- [ ] Publish `/docs/app/` and verify the public Pages bundle and runtime.
+- [x] Publish `/docs/app/` and verify the public Pages bundle and runtime.
