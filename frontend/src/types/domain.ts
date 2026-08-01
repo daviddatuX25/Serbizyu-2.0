@@ -1,53 +1,53 @@
-export type Role = "buyer" | "provider" | "admin";
-export type PaymentLane =
-  | "external_cash"
-  | "external_digital_proof"
-  | "direct_digital_sandbox"
-  | "tiwala_sandbox";
-export type WorkStatus =
-  | "not_started"
-  | "in_progress"
-  | "awaiting_buyer_review"
-  | "completed"
-  | "concern_open";
-export type CashReportStatus =
-  | "not_reported"
-  | "buyer_reported"
-  | "provider_reported"
-  | "mutually_acknowledged"
-  | "mismatch";
+export type Capability = "request" | "provide" | "agent";
+export type ParticipantRole = "buyer" | "provider";
+export type PaymentLane = "external_cash" | "external_digital_proof" | "direct_digital_sandbox" | "tiwala_sandbox";
+export type WorkStatus = "not_started" | "in_progress" | "awaiting_buyer_review" | "completed" | "concern_open";
+export type CashReportStatus = "not_reported" | "buyer_reported" | "provider_reported" | "mutually_acknowledged" | "mismatch";
+
+export interface ViewerAccount {
+  id: string;
+  name: string;
+  shortName: string;
+  avatar: string;
+  area: string;
+  capabilities: Capability[];
+  agentFor: string[];
+}
 
 export interface Actor {
   id: string;
   name: string;
   shortName: string;
-  role: Role;
   area: string;
   avatar: string;
+}
+
+export interface ListingMedia {
+  id: string;
+  url: string;
+  alt: string;
+  kind?: "photo" | "preview";
 }
 
 export interface ServiceListing {
   id: string;
   title: string;
   category: string;
-  provider: string;
-  providerInitials: string;
+  provider: Actor;
   area: string;
   price: number;
   priceLabel: string;
-  workShape: "A1" | "A3" | "A4" | "A9";
-  workShapeLabel: string;
-  lane: PaymentLane;
   availability: string;
   description: string;
-  tone: "forest" | "mango" | "coral" | "blue";
+  media: ListingMedia[];
+  quickDealAvailable?: boolean;
   featured?: boolean;
 }
 
 export interface OpenRequest {
   id: string;
   title: string;
-  buyer: string;
+  buyer: Actor;
   area: string;
   budget: number;
   category: string;
@@ -60,7 +60,7 @@ export interface OpenRequest {
 export interface WorkStep {
   id: string;
   title: string;
-  owner: "buyer" | "provider";
+  owner: ParticipantRole;
   state: "done" | "active" | "upcoming" | "needs_attention";
   note: string;
   evidence?: string;
@@ -88,7 +88,7 @@ export interface Order {
   cashStatus: CashReportStatus;
   buyerCashReported: boolean;
   providerCashReported: boolean;
-  nextActor: Role;
+  nextActor: ParticipantRole;
   nextAction: string;
   steps: WorkStep[];
   timeline: TimelineEvent[];
@@ -100,27 +100,54 @@ export interface RequestDraft {
   details: string;
   budget: number;
   area: string;
-  workShape: "A1" | "A3" | "A4" | "A9";
-  lane: PaymentLane;
+}
+
+export interface QuickDealOffer {
+  id: string;
+  listingId: string;
+  listingTitle: string;
+  seller: Actor;
+  buyer: Actor;
+  listedAmount: number;
+  amount: number;
+  status: "ready" | "scanning" | "offer_received" | "counter_streaming" | "awaiting_acceptance" | "dual_confirm" | "sealed" | "waiting_sync" | "synced";
+  round: number;
+  frame: number;
+  receiptId?: string;
+}
+
+export interface PlanItem {
+  id: string;
+  title: string;
+  amount: number;
+  provider?: Actor;
+  state: "needs_provider" | "invited" | "accepted" | "in_progress" | "completed";
+  dependency?: string;
+  paymentNote: string;
+}
+
+export interface WorkPlan {
+  id: string;
+  title: string;
+  area: string;
+  items: PlanItem[];
 }
 
 export const LOCKED_DECISIONS = {
   pilotArea: "Tagudin",
-  externalCashCommissionPercent: 0,
-  externalDigitalProofCommissionPercent: 0,
+  accountModel: "one_account_multiple_capabilities",
+  quickDeal: "connected_mock_with_no_money_authority",
+  offlineQuickDealPayment: "external_cash_only",
+  relatedWork: "frontend_concept_deferred_for_pilot",
+  listingMedia: "photo_led",
   externalCashCustody: "none",
-  externalCashConfirmation: "two_independent_attestations",
   paymentAndWorkAreIndependent: true,
-  directDigitalAvailability: "sandbox_only",
-  tiwalaAvailability: "sandbox_only",
-  evidenceSubmissionIsVerification: false,
   realIdentityEvidenceAllowed: false,
-  fixturesArePilotEvidence: false,
 } as const;
 
 export const laneLabels: Record<PaymentLane, string> = {
-  external_cash: "External Cash",
-  external_digital_proof: "External Digital Proof",
-  direct_digital_sandbox: "Direct Digital",
-  tiwala_sandbox: "Tiwala Protected Digital",
+  external_cash: "Cash",
+  external_digital_proof: "Digital proof",
+  direct_digital_sandbox: "Direct digital",
+  tiwala_sandbox: "Tiwala",
 };

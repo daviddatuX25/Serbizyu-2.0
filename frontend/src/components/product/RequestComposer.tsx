@@ -12,8 +12,6 @@ const initialDraft: RequestDraft = {
   details: "",
   budget: 100,
   area: "Tagudin Centro",
-  workShape: "A1",
-  lane: "external_cash",
 };
 
 const steps = ["What you need", "Details", "Review"];
