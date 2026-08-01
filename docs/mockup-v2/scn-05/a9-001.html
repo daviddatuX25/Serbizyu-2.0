@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A9-001 — Digital scope &amp; version | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">A9-001</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-05)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-05 · PROVIDER-05</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Digital scope &amp; version</h1>
+  <p class="dk-note">Goal: Track digital scope, version, and progress</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Version target</strong> v1 delivered → exact revision request → v2 delivered without overwriting v1. No silent substitution.</span></div>
+
+<dl class="dk-kv">
+  <dt>Deliverable / format</dt><dd>Single-page digital invitation layout · image file fixture</dd>
+  <dt>Accepted scope</dt><dd>Layout + one revision</dd>
+  <dt>Version target</dt><dd>v1 → v2 (after revision)</dd>
+  <dt>Status</dt><dd>Not started</dd>
+  <dt>Privacy / retention</dt><dd>Attributable access; fixture files kept for review — exact retention window policy to be defined</dd>
+  <dt>Evidence expectation</dt><dd>Delivery file per version + outside-payment reference</dd>
+</dl>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Version path</h3>
+<ul class="dk-timeline">
+  <li class="dk-ev-warn"><strong>v1 deliver</strong><div class="dk-ev-meta">PROVIDER-05 · evidence: layout file</div></li>
+  <li><strong>Revision request</strong><div class="dk-ev-meta">BUYER-05 · exact requested changes</div></li>
+  <li><strong>v2 deliver</strong><div class="dk-ev-meta">PROVIDER-05 · v1 kept</div></li>
+  <li><strong>Acceptance</strong><div class="dk-ev-meta">BUYER-05 · decide</div></li>
+</ul>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Scope change creates an explicit request/version — no silent substitution.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='pay-005.html'">Start digital work</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You see the scope, version target, and what evidence to expect at each version.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You track the version target and accepted scope; delivery evidence comes next.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Scope, versions, and evidence stay separate attributable histories.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="ord-002.html">Prev: ORD-002</a> · Next: <a href="pay-005.html">PAY-005</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

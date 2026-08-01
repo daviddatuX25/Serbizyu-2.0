@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRU-002 — Dispute intake | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">TRU-002</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-03)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-03 · OWNER-03</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Dispute intake</h1>
+  <p class="dk-note">Goal: Open a focused dispute with useful evidence</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Smallest useful intake</strong> What happened, what is affected, evidence, safety concern, requested remedy — no invented outcome or window.</span></div>
+
+<dl class="dk-kv">
+  <dt>What happened</dt><dd>1 of 2 seedling trays arrived damaged at handoff.</dd>
+  <dt>Affected</dt><dd>Order snapshot v1 → A4 Handoff · payment obligation (₱100, External Cash)</dd>
+  <dt>Evidence</dt><dd>1 item submitted · <span class="dk-badge dk-b-info">processing</span></dd>
+  <dt>Safety concern</dt><dd>No</dd>
+  <dt>Requested remedy</dt><dd>Clarification with OWNER-03</dd>
+  <dt>State</dt><dd><span class="dk-badge dk-b-warn">evidence_requested</span> → under_review next</dd>
+</dl>
+
+<p class="dk-note">No fixed outcome, no universal time window, no automatic refund promised. Missing evidence can be added later.</p>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Missing evidence can be added later; history and original handoff evidence are preserved.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='ord-003.html'">Submit dispute</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">Your dispute and its evidence are attributed; you can add more later.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see the same dispute scope and can respond; original terms stay visible.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Dispute, hold, and evidence are separate; resolution creates a new event, never a rewrite.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="a4-004.html">Prev: A4-004</a> · Next: <a href="ord-003.html">ORD-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

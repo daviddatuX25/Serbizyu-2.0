@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAY-004 — Cash reports comparison | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">PAY-004</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-07)</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Buyer</button><button class="dk-chip" data-role-btn="provider">Provider</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Cash reports comparison</h1>
+  <p class="dk-note">Goal: Compare both cash reports and resolve match or mismatch</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Mutual acknowledgment</strong> Matching reports become mutually_acknowledged. Mismatch goes to dispute/support — no automatic refund or recovery promise.</span></div>
+
+<div class="dk-sep" style="margin-bottom:12px">
+  <div class="dk-agg"><h5>Order</h5><div class="dk-agg-state">Accepted</div><small>#DEMO-07 · snapshot v1 · ₱90 · A1 Linear Project · External Cash</small></div>
+  <div class="dk-agg"><h5>Work</h5><div class="dk-agg-state">In progress</div><small>Step 2 of 3 · evidence v1 uploaded · completion NOT proposed</small></div>
+  <div class="dk-agg"><h5>Payment obligation</h5><div class="dk-agg-state">⚠ disputed</div><small>₱90 External Cash · both attestations present · evidence mismatch claimed</small></div>
+</div>
+
+<div class="dk-cash2" style="margin-bottom:12px">
+  <div class="dk-side dk-wait" id="cash-buyer"><strong>Buyer</strong><br><span class="dk-badge dk-b-neutral" data-cash-badge>not reported</span><div style="margin-top:8px"><button class="dk-btn" data-cash-report="buyer">Report cash paid ₱90</button></div></div>
+  <div class="dk-join">→</div>
+  <div class="dk-side dk-wait" id="cash-provider"><strong>Provider</strong><br><span class="dk-badge dk-b-warn" data-cash-badge>report missing</span><div style="margin-top:8px"><button class="dk-btn" data-cash-report="provider">Report cash received ₱90</button></div></div>
+</div>
+<p><span class="dk-badge dk-b-neutral" id="cash-status">not_reported — silence is not proof</span></p>
+<p class="dk-note" style="margin-top:8px">Fixture state: both attestations exist (₱90) but the Buyer claims the payment/item evidence does not match the agreed state. Matching reports still do not change Work. 0% initial pilot commission; Serbizyu holds no cash.</p>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Missing side stays pending — silence is not proof. Mismatch opens the dispute route and preserves history. No automatic recovery promise.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="ord-003.html">Report a mismatch →</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You see both attestations and the evidence mismatch. Reporting the mismatch opens the dispute intake (TRU-002) — Work stays unchanged.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see the Buyer's attestation and the mismatch claim. You can respond in the dispute with your fixture note — never auto-confirm.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You see both attestations as separate events, the mismatch claim, and the affected obligation. No custody record, no revenue.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="ord-003.html">ORD-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Buyer (BUYER-07)',provider:'Actor: Provider (PROVIDER-07)',admin:'Actor: Admin (ADMIN-07)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

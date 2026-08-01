@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AGT-004 — Review assistance | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">AGT-004</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Owner (OWNER-06)</span><span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Owner</button><button class="dk-chip" data-role-btn="provider">Agent</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Review assistance</h1>
+  <p class="dk-note">Goal: Review, pause, or revoke assistance</p>
+</header>
+
+<div class="dk-banner dk-bn-agent" style="margin-bottom:12px"><span class="dk-banner-ico">🤝</span><span><strong>Acting for OWNER-06.</strong> AGENT-06 · Scope: listing draft only · Publication requires Owner approval · no cash/goods custody</span></div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Agent action history (attributed)</h3>
+<ul class="dk-timeline">
+  <li><strong>Grant activated</strong><div class="dk-ev-meta">OWNER-06 · AGT-002 approval</div></li>
+  <li><strong>Listing type chosen</strong> — Product Listing<div class="dk-ev-meta">AGENT-06 · draft</div></li>
+  <li><strong>Product draft saved</strong> — notice sent to OWNER-06<div class="dk-ev-meta">AGENT-06 · LST-004</div></li>
+  <li><strong>Mechanism &amp; shape confirmed</strong> — Direct + A4<div class="dk-ev-meta">AGENT-06 · LST-005</div></li>
+  <li><strong>Availability saved</strong> — 1 unit, Tagudin handoff<div class="dk-ev-meta">AGENT-06 · LST-006</div></li>
+  <li class="dk-ev-warn"><strong>Submitted for Owner review</strong><div class="dk-ev-meta">AGENT-06 · publication pending OWNER-06</div></li>
+</ul>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Pending approvals</h3>
+<div class="dk-empty">Listing publication — awaiting your decision. The Agent cannot publish.</div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Grant status &amp; future-action effect</h3>
+<p class="dk-note"><span class="dk-badge dk-b-ok">✓ active</span> Pausing blocks new assisted actions immediately; history is preserved. Revoking is permanent for this grant — a new scoped grant would be required later.</p>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Revocation preserves history. An unresolved sensitive action routes to support/report — it is never silently completed after revocation.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" data-modal-open>Pause or revoke access</button>
+  <a class="dk-btn" style="text-decoration:none" href="ord-003.html">View full timeline</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Owner</h3><p class="dk-note">You review every attributed Agent action, the pending publication approval, and the effect of pausing or revoking before you decide.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Agent</h3><p class="dk-note">You see your own attributed history. If the Owner pauses or revokes, future assisted actions block with a reason and route back to the Owner.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You see the grant, action history, pending approval, and the future-action effect of pause/revoke — all attributable.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="lst-007.html">Prev: LST-007</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="ord-003.html">ORD-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Confirm: pause or revoke access?</h4>
+  <dl class="dk-kv">
+    <dt>Grant</dt><dd>AGENT-06 → OWNER-06 · listing draft scope</dd>
+    <dt>Pause</dt><dd>Blocks new assisted actions; history preserved; reactivation possible.</dd>
+    <dt>Revoke</dt><dd>Permanent for this grant; history preserved; unresolved sensitive action routes to support.</dd>
+  </dl>
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <a class="dk-btn dk-primary" style="text-decoration:none" href="ord-003.html">Confirm — record decision</a>
+    <button class="dk-btn dk-ghost" data-modal-close>Cancel</button>
+  </div>
+</div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Owner (OWNER-06)',provider:'Actor: Agent (AGENT-06)',admin:'Actor: Admin (ADMIN-06)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

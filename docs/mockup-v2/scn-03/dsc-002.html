@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSC-002 — Browse category | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">DSC-002</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-03)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-03 · OWNER-03</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Browse category</h1>
+  <p class="dk-note">Goal: Browse a category and understand its availability/safety boundary</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Category</strong> Seedlings &amp; plants — supported listing type with active supply. Physical handoff requires a safe public place.</span></div>
+
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+  <span class="dk-chip dk-on">Category: Seedlings &amp; plants ✓</span>
+  <span class="dk-chip">Area: Tagudin</span>
+  <span class="dk-chip">Handoff: pickup</span>
+  <span class="dk-chip">Sort: nearest</span>
+</div>
+
+<dl class="dk-kv">
+  <dt>Supported listing types</dt><dd>Product Listing with quantity/capacity</dd>
+  <dt>Active supply</dt><dd>OWNER-03 · 2 seedling trays available</dd>
+  <dt>Safety class</dt><dd>Physical handoff — public meeting point, masked contact until both confirm</dd>
+  <dt>Pilot status</dt><dd><span class="dk-badge dk-b-info">PILOT</span> · External Cash lane</dd>
+</dl>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Unsupported or empty category explains its status — it never implies false supply.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='dsc-004.html'">View matching listings</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You compare truthful results next; capacity is shown up front.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see how your supply and safety boundary are presented.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Category listing is public context only.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="sys-001.html">Prev: SYS-001</a> · Next: <a href="dsc-004.html">DSC-004</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAY-002 — Choose payment lane (sandbox) | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">PAY-002</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-08)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-sandbox">🧪 SANDBOX ONLY</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Choose payment lane (sandbox)</h1>
+<p class="dk-note">Goal: Choose or confirm a lane with truthful custody/protection meaning</p>
+</header>
+<div class="dk-banner dk-bn-sandbox" style="margin-bottom:12px"><span class="dk-banner-ico">🧪</span><span><strong>SANDBOX ONLY — simulated provider event.</strong> No live-money result. No Tiwala protection. No genuine-pilot metric effect.</span></div>
+
+<div class="dk-card dk-card-accent" style="margin-bottom:8px">
+<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><strong>Direct Digital</strong><span class="dk-badge dk-b-sandbox">🧪 SANDBOX ONLY · selected</span></div>
+<p class="dk-note" style="margin:6px 0">Simulated provider events only · no Tiwala protection · no genuine-pilot metric effect.</p>
+</div>
+<div class="dk-card" style="margin-bottom:8px">
+<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><strong>Tiwala Protected Digital</strong><span class="dk-badge dk-b-sandbox">🧪 SANDBOX ONLY</span></div>
+<p class="dk-note" style="margin:6px 0">Simulated protected release (separate sandbox — SCN-09).</p>
+</div>
+<div class="dk-card" style="margin-bottom:8px">
+<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><strong>External Cash</strong><span class="dk-badge dk-b-info">PILOT</span></div>
+<p class="dk-note" style="margin:6px 0">Direct, two-sided reports · not available in this sandbox fixture.</p>
+</div>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant</div>
+<div class="dk-empty">An unavailable lane explains its gate — it never silently substitutes another lane.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<button class="dk-btn dk-primary" onclick="location.href='pay-007.html'">Confirm Direct Digital (sandbox)</button>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note">You confirm the sandbox lane; nothing real is charged.</p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note">You see the lane choice and its simulated-only meaning.</p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">Lane confirmation is a sandbox event.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="pay-001.html">Prev: PAY-001</a> · Next: <a href="pay-007.html">PAY-007</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

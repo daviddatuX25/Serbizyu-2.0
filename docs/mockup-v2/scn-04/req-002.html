@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REQ-002 — Describe the need | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">REQ-002</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-04)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-info">⚑ PILOT-CONDITIONAL</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Describe the need</h1>
+<p class="dk-note">Goal: Describe the need enough for a safe response</p>
+</header>
+<div class="dk-banner dk-bn-cond" style="margin-bottom:12px"><span class="dk-banner-ico">⚑</span><span><strong>PILOT-CONDITIONAL — purchase-on-behalf (cohort capstone_demo).</strong> No fixture spending before Buyer approval. No automatic substitution, payment confirmation, or spending beyond the approved estimate.</span></div>
+
+<div class="dk-field">
+<label for="r2i">Item list (required)</label>
+<textarea id="r2i" class="dk-textarea">School supplies: 2 notebooks · 5 ballpens · 1 folder · 3 pad papers · 1 coloring set</textarea>
+<span class="dk-hint">Fictional school-supply list from the fixture.</span>
+</div>
+<div class="dk-field">
+<label for="r2t">Timing (required)</label>
+<input id="r2t" class="dk-input" value="Before Monday next week">
+<span class="dk-hint">No invented deadline shown to helpers; freshness is re-checked at review.</span>
+</div>
+<div class="dk-field">
+<label for="r2a">Tagudin area (required)</label>
+<input id="r2a" class="dk-input" value="Poblacion">
+</div>
+<div class="dk-field">
+<label for="r2b">Budget / estimate (required)</label>
+<input id="r2b" class="dk-input" value="₱300 maximum">
+<span class="dk-hint">Estimate meaning: approved limit, not a final price. Actual cost variance requires new approval.</span>
+</div>
+<div class="dk-field">
+<label for="r2al">Alternatives (optional)</label>
+<textarea id="r2al" class="dk-textarea">Accept brand substitutes only if I approve first — no automatic substitution.</textarea>
+</div>
+<div class="dk-spec" style="margin-top:12px">
+<div class="dk-spec-label">Who can see this request</div>
+<p class="dk-note" style="margin:4px 0">Eligible helpers (PROVIDER-04) and Admin. Privacy note: contact details stay masked until both confirm.</p>
+</div>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant</div>
+<div class="dk-empty">Field errors keep the draft on this device; corrections are shown next to each field. Nothing is submitted until you press Send.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<button class="dk-btn dk-primary" onclick="location.href='req-003.html'">Send request</button>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note">You set the estimate meaning and the substitution rule before anyone spends.</p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note">You read the item list, timing, area, and alternatives — scope fit decides your response.</p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">Request draft and submission are separate attributable events.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="req-001.html">Prev: REQ-001</a> · Next: <a href="req-003.html">REQ-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

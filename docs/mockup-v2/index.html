@@ -12,7 +12,7 @@
   <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
   <span class="dk-badge dk-b-neutral">SYS-001 · scenario picker</span>
   <h1 style="font-size:24px;margin:8px 0 4px">Serbizyu 2.0 — Connected Mockup</h1>
-  <p class="dk-note">Lo-fi disposable mockup assembled from the design kit. Fictional fixtures only — no backend, no real payment, no pilot claim. Every screen carries its canonical ID and a role switcher.</p>
+  <p class="dk-note">Lo-fi disposable mockup assembled from the design kit. All 9 canonical scenarios are scaffolded (107 route screens). Fictional fixtures only — no backend, no real payment, no pilot claim. Every screen carries its canonical ID and a role switcher.</p>
 </header>
 
 <div class="dk-banner dk-bn-ref" style="margin-bottom:16px"><span class="dk-banner-ico">🧩</span>
@@ -26,14 +26,14 @@
 (function(){
   var scenarios = [
     {id:'scn-01', name:'SCN-01 · A1 low-value service', lane:'External Cash', desc:'Greeting-card layout, ₱80. Buyer reports cash paid; Provider reports received; Work stays separate. Recovery: missing counterparty report / mismatch.', status:'BUILT', href:'scn-01/sys-001.html'},
-    {id:'scn-02', name:'SCN-02 · A3 appointment', lane:'External Digital Proof', desc:'Tailoring measurement at a public point. Slot, safety, evidence, no-show recovery.', status:'IN PROGRESS', href:''},
-    {id:'scn-03', name:'SCN-03 · A4 product handoff', lane:'External Cash', desc:'Seedling trays, ₱100. Capacity, handoff, receipt, condition mismatch.', status:'IN PROGRESS', href:''},
-    {id:'scn-04', name:'SCN-04 · purchase-on-behalf', lane:'External Cash fixture', desc:'School supplies. Estimate → approval before spend → variance → receipt.', status:'IN PROGRESS', href:''},
-    {id:'scn-05', name:'SCN-05 · A9 digital delivery', lane:'External Digital Proof', desc:'Invitation layout, ₱250. Versioned delivery, revision, acceptance.', status:'IN PROGRESS', href:''},
-    {id:'scn-06', name:'SCN-06 · agent-assisted Owner', lane:'no custody action', desc:'Listing draft via Agent with consent, attribution, revocation.', status:'IN PROGRESS', href:''},
-    {id:'scn-07', name:'SCN-07 · mismatch, dispute, hold', lane:'lane-specific', desc:'Evidence mismatch, dispute intake, hold scope, admin recovery.', status:'IN PROGRESS', href:''},
-    {id:'scn-08', name:'SCN-08 · Direct Digital sandbox', lane:'sandbox', desc:'Simulated provider events, reconciliation, no live money.', status:'IN PROGRESS', href:''},
-    {id:'scn-09', name:'SCN-09 · Tiwala sandbox', lane:'sandbox', desc:'Guard-checked simulated release; idempotent; no legal claim.', status:'IN PROGRESS', href:''}
+    {id:'scn-02', name:'SCN-02 · A3 appointment', lane:'External Digital Proof', desc:'Tailoring measurement at a public point. Slot, safety, evidence, no-show recovery.', status:'BUILT', href:'scn-02/sys-001.html'},
+    {id:'scn-03', name:'SCN-03 · A4 product handoff', lane:'External Cash', desc:'Seedling trays, ₱100. Capacity, handoff, receipt, condition mismatch.', status:'BUILT', href:'scn-03/sys-001.html'},
+    {id:'scn-04', name:'SCN-04 · purchase-on-behalf', lane:'External Cash fixture', desc:'School supplies. Estimate → approval before spend → variance → receipt.', status:'BUILT', href:'scn-04/sys-001.html'},
+    {id:'scn-05', name:'SCN-05 · A9 digital delivery', lane:'External Digital Proof', desc:'Invitation layout, ₱250. Versioned delivery, revision, acceptance.', status:'BUILT', href:'scn-05/sys-001.html'},
+    {id:'scn-06', name:'SCN-06 · agent-assisted Owner', lane:'no custody action', desc:'Listing draft via Agent with consent, attribution, revocation.', status:'BUILT', href:'scn-06/sys-001.html'},
+    {id:'scn-07', name:'SCN-07 · mismatch, dispute, hold', lane:'lane-specific', desc:'Evidence mismatch, dispute intake, hold scope, admin recovery.', status:'BUILT', href:'scn-07/sys-001.html'},
+    {id:'scn-08', name:'SCN-08 · Direct Digital sandbox', lane:'sandbox', desc:'Simulated provider events, reconciliation, no live money.', status:'BUILT', href:'scn-08/sys-001.html'},
+    {id:'scn-09', name:'SCN-09 · Tiwala sandbox', lane:'sandbox', desc:'Guard-checked simulated release; idempotent; no legal claim.', status:'BUILT', href:'scn-09/sys-001.html'}
   ];
   var host = document.getElementById('scn-cards');
   host.innerHTML = scenarios.map(function(s){

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LST-004 — Describe product offer | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">LST-004</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Owner (OWNER-06)</span><span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Owner</button><button class="dk-chip" data-role-btn="provider">Agent</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Describe product offer</h1>
+  <p class="dk-note">Goal: Describe a product offer and avoid false stock promises</p>
+</header>
+
+<div class="dk-banner dk-bn-agent" style="margin-bottom:12px"><span class="dk-banner-ico">🤝</span><span><strong>Acting for OWNER-06.</strong> AGENT-06 · Scope: listing draft only · Publication requires Owner approval · no cash/goods custody · <a href="agt-004.html">Revoke</a></span></div>
+
+<div class="dk-field"><label for="item">Item / unit</label><input id="item" class="dk-input" value="Handwoven bamboo basket (fictional fixture)"><span class="dk-hint">One clear item per listing. Fictional fixture item only.</span></div>
+<div class="dk-field"><label for="qty">Quantity / capacity</label><input id="qty" class="dk-input" value="1 unit"><span class="dk-hint">Truthful capacity — no false stock promises. Overselling blocks activation.</span></div>
+<div class="dk-field"><label for="price">Price</label><input id="price" class="dk-input" value=""><span class="dk-hint"><span class="dk-policy-tbd" style="display:inline-block;padding:2px 8px">Policy-TBD — fixture defines no amount. Ask before inventing a price.</span></span></div>
+<div class="dk-field"><label for="pickup">Pickup / handoff</label><input id="pickup" class="dk-input" value="Tagudin public market entrance (fictional)"><span class="dk-hint">Public meeting point by default. No home entry unless explicitly agreed.</span></div>
+<div class="dk-field"><label for="source">Sourcing status</label><input id="source" class="dk-input" value="In OWNER-06 household — ready"><span class="dk-hint">Truthful sourcing. Mismatch evidence stays visible in the timeline.</span></div>
+
+<p style="margin-top:12px"><span class="dk-badge dk-b-neutral">draft</span> <span class="dk-badge dk-b-info">ℹ saved on device, not submitted</span></p>
+<div class="dk-banner dk-bn-ref" style="margin-top:8px"><span class="dk-banner-ico">🔔</span><span><strong>Owner notice after save.</strong> Each saved draft sends OWNER-06 a plain-language notice: what changed and who acted (AGENT-06). A notice is not an approval.</span></div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Oversell / capacity conflict blocks activation and offers correction. The draft is preserved; the Owner can edit or discard it.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="lst-005.html">Save product details →</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Owner</h3><p class="dk-note">You see the draft the Agent wrote for you, with the notice it generated. You can edit any field; publication is still yours to approve.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Agent</h3><p class="dk-note">You fill the draft inside scope. The price field is policy-TBD — no invented amount. Saving notifies the Owner.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You see the draft, its attribution (AGENT-06 for OWNER-06), and the notice event. No activation without Owner approval.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="lst-002.html">Prev: LST-002</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="lst-005.html">LST-005</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — the Owner can pause or revoke at any time (AGT-004).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Owner (OWNER-06)',provider:'Actor: Agent (AGENT-06)',admin:'Actor: Admin (ADMIN-06)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

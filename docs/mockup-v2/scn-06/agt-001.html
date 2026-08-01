@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AGT-001 — Assistance invitation | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">AGT-001</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Owner (OWNER-06)</span><span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Owner</button><button class="dk-chip" data-role-btn="provider">Agent</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Assistance invitation</h1>
+  <p class="dk-note">Goal: Understand who requests assistance and why</p>
+</header>
+
+<div class="dk-card" style="margin-bottom:12px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">consent: proposed</span><span class="dk-badge dk-b-info">invitation</span></div>
+  <dl class="dk-kv" style="margin-top:10px">
+    <dt>Owner</dt><dd>OWNER-06 — fictional low-data user (you)</dd>
+    <dt>Agent</dt><dd>AGENT-06 — fictional approved assistant</dd>
+    <dt>Purpose</dt><dd>Draft one Product Listing and submit it for your review</dd>
+    <dt>Requested scope</dt><dd>Listing draft only (LST-002 → LST-006). Publication stays approval-required.</dd>
+    <dt>Duration</dt><dd><span class="dk-policy-tbd" style="display:inline-block;padding:2px 8px">Policy-TBD — no invented expiry window</span></dd>
+    <dt>Identity</dt><dd>AGENT-06, approved assistant — attribution on every action</dd>
+  </dl>
+  <p class="dk-note" style="margin-top:8px">Declining ends the invitation. Unknown or expired invitations cannot activate.</p>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Expired or unknown invitation: cannot activate. The Owner may report the sender or ask for help — the grant is never self-starting.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="agt-002.html">Review invitation →</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Owner</h3><p class="dk-note">You see who asks, why, which listing, the requested scope, and how to decline. Reviewing leads to the scope confirmation (AGT-002).</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Agent</h3><p class="dk-note">You see the invitation you sent and its status. It cannot activate until the Owner approves the scoped permission.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You see the consent grant record (proposed), the affected Owner, and the requested scope. Nothing activates without attributable Owner approval.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="agt-002.html">AGT-002</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — decline/report stays available at every step.</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Owner (OWNER-06)',provider:'Actor: Agent (AGENT-06)',admin:'Actor: Admin (ADMIN-06)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

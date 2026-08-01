@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LST-006 — Set availability | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">LST-006</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Owner (OWNER-06)</span><span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Owner</button><button class="dk-chip" data-role-btn="provider">Agent</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Set availability</h1>
+  <p class="dk-note">Goal: Set truthful schedule, stock, or capacity</p>
+</header>
+
+<div class="dk-banner dk-bn-agent" style="margin-bottom:12px"><span class="dk-banner-ico">🤝</span><span><strong>Acting for OWNER-06.</strong> AGENT-06 · Scope: listing draft only · Publication requires Owner approval · no cash/goods custody · <a href="agt-004.html">Revoke</a></span></div>
+
+<div class="dk-field"><label for="cap">Quantity / capacity</label><input id="cap" class="dk-input" value="1 unit (fictional fixture)"><span class="dk-hint">Never promise more than OWNER-06 has. A capacity conflict blocks activation.</span></div>
+<div class="dk-field"><label for="area">Service area / handoff</label><input id="area" class="dk-input" value="Tagudin — public market entrance"><span class="dk-hint">Public handoff by default; privacy and safety apply at the point of risk.</span></div>
+<div class="dk-field"><label for="slots">Pickup window</label><input id="slots" class="dk-input" value=""><span class="dk-hint"><span class="dk-policy-tbd" style="display:inline-block;padding:2px 8px">Policy-TBD — no invented window or countdown.</span></span></div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Conflict example (recovery state)</div>
+  <div class="dk-empty">If the Owner already promised the single unit to another buyer, the saved availability shows the conflict and offers an alternative (e.g. mark unavailable) — no silent override of the earlier promise.</div>
+</div>
+
+<p style="margin-top:12px"><span class="dk-badge dk-b-neutral">draft</span> <span class="dk-badge dk-b-info">ℹ saved on device, not submitted</span></p>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="lst-007.html">Save availability →</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Owner</h3><p class="dk-note">You see the capacity and handoff the Agent recorded for you, plus any conflict that needs your decision.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Agent</h3><p class="dk-note">You record truthful capacity. A conflict preserves the earlier input and proposes an alternative — never a silent override.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You see the availability draft and any capacity-conflict event attributed to AGENT-06.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="lst-005.html">Prev: LST-005</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="lst-007.html">LST-007</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — the Owner can pause or revoke at any time (AGT-004).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Owner (OWNER-06)',provider:'Actor: Agent (AGENT-06)',admin:'Actor: Admin (ADMIN-06)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

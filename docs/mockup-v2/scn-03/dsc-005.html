@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSC-005 — Listing detail | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">DSC-005</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-03)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-03 · OWNER-03</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Listing detail</h1>
+  <p class="dk-note">Goal: Decide whether this offer fits the need</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Amount semantics</strong> ₱100 is the exact price for two seedling trays. Pickup instructions and expected condition are stated up front.</span></div>
+
+<dl class="dk-kv">
+  <dt>What is offered</dt><dd>2 × seedling tray (tomato seedlings, fictional) — healthy, ready to transplant</dd>
+  <dt>Not included</dt><dd>Delivery, pots, soil</dd>
+  <dt>Provider / Owner</dt><dd>OWNER-03 · New Provider (evidence-based history: 2 demo jobs)</dd>
+  <dt>Pickup</dt><dd>Tagudin public market entrance (fictional) · bring a bag/container</dd>
+  <dt>Condition to expect</dt><dd>2 trays, seedlings upright and watered</dd>
+  <dt>Work shape</dt><dd>A4 Handoff</dd>
+  <dt>Payment lane</dt><dd>External Cash — direct to Owner, 0% pilot commission, Serbizyu holds nothing</dd>
+  <dt>Evidence expectation</dt><dd>Two-sided cash reports; handoff receipt with optional photo</dd>
+  <dt>Safety</dt><dd>Public handoff; contact masked until both confirm</dd>
+</dl>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Changed capacity or terms? They require refresh and explicit re-review — no oversell is ever displayed as success.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='ord-001.html'">Reserve this product</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You decide based on quantity, condition, pickup, and lane meaning.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see the same listing; you can only promise available quantity.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Listing context only. No payment or identity claim here.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="dsc-004.html">Prev: DSC-004</a> · Next: <a href="ord-001.html">ORD-001</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

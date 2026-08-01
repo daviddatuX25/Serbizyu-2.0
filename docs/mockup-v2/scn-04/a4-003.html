@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A4-003 — Acknowledge receipt | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">A4-003</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-04)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-info">⚑ PILOT-CONDITIONAL</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Acknowledge receipt</h1>
+<p class="dk-note">Goal: Confirm actual receipt and condition</p>
+</header>
+<div class="dk-banner dk-bn-cond" style="margin-bottom:12px"><span class="dk-banner-ico">⚑</span><span><strong>PILOT-CONDITIONAL — purchase-on-behalf (cohort capstone_demo).</strong> No fixture spending before Buyer approval. No automatic substitution, payment confirmation, or spending beyond the approved estimate.</span></div>
+
+<div class="dk-evi" style="margin-bottom:10px">
+<div class="dk-thumb">📦</div>
+<div>
+<strong>Handoff evidence — 1 photo fixture</strong>
+<div class="dk-ev-meta">Uploaded by PROVIDER-04 · receipt check pending</div>
+</div>
+</div>
+<table class="dk-table">
+<tr><th>Item</th><th>Expected</th><th>Received</th><th>Condition</th></tr>
+<tr><td>Notebook</td><td>2</td><td>2</td><td>✓ good</td></tr>
+<tr><td>Ballpen</td><td>5</td><td>5</td><td>✓ good</td></tr>
+<tr><td>Folder</td><td>1</td><td>1</td><td>✓ good</td></tr>
+<tr><td>Pad paper</td><td>3</td><td>3</td><td>✓ good</td></tr>
+<tr><td>Coloring set</td><td>1</td><td>1</td><td>✓ good</td></tr>
+</table>
+<p class="dk-note" style="margin-top:8px">Payment stays separate: External Cash reference fixture — two-sided reports; acknowledging receipt never confirms payment, and payment never proves Work.</p>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant</div>
+<div class="dk-empty">Mismatch path stays equally visible — reporting a mismatch preserves the original terms and opens clarification/support.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<button class="dk-btn dk-primary" onclick="location.href='ord-003.html'">Acknowledge receipt</button>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note">You acknowledge receipt; payment reports remain separate and two-sided.</p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note">You see the expected vs received comparison and the receipt evidence.</p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">Receipt acknowledgement is an event; no custody or revenue record exists.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="a4-002.html">Prev: A4-002</a> · Next: <a href="ord-003.html">ORD-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SYS-001 — Scenario entry | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">SYS-001</span><span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">SCN-06 — Agent-assisted Owner flow</h1>
+  <p class="dk-note">Goal: review informed delegation, limited permission, attribution, Owner notice, and revocation. Serbizyu never takes cash/goods custody.</p>
+</header>
+
+<div class="dk-banner dk-bn-cond" style="margin-bottom:12px"><span class="dk-banner-ico">⚑</span><span><strong>PILOT-CONDITIONAL access.</strong> Assisted access is granted per Owner consent with a limited scope. The Agent is a helper — the Owner stays the owner.</span></div>
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>REFERENCE ONLY</strong> Lo-fi disposable mockup. Fictional fixture (team_training cohort). No backend, no real payment, no pilot claim.</span></div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Fixture</h3>
+<dl class="dk-kv">
+  <dt>Owner</dt><dd>OWNER-06 — fictional low-data user</dd>
+  <dt>Agent</dt><dd>AGENT-06 — fictional approved assistant</dd>
+  <dt>Task</dt><dd>Draft one Product Listing and submit it for Owner review</dd>
+  <dt>Permission</dt><dd>Listing draft only</dd>
+  <dt>Publication</dt><dd>Requires Owner approval</dd>
+  <dt>Forbidden</dt><dd>Money / goods custody · ownership change</dd>
+  <dt>Cohort</dt><dd>team_training</dd>
+  <dt>Status</dt><dd>PILOT-CONDITIONAL access — persistent label</dd>
+</dl>
+
+<h3 style="font-size:15px;margin:16px 0 8px">SYS-002 · Switch role (shared fixture — nothing is lost)</h3>
+<div id="dk-role-switch" style="display:flex;gap:6px">
+  <button class="dk-chip" data-role-btn="buyer">Owner</button>
+  <button class="dk-chip" data-role-btn="provider">Agent</button>
+  <button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<p class="dk-note">The same grant / listing / notice state is shown to each role; only permissions and next actions differ.</p>
+
+<h3 style="font-size:15px;margin:16px 0 8px">SYS-003 · Journey map</h3>
+<ul class="dk-timeline" data-jstep="consent">
+  <li data-step="consent"><strong>Consent</strong><div class="dk-ev-meta">AGT-001 → AGT-002</div></li>
+  <li data-step="draft"><strong>Assisted drafting</strong><div class="dk-ev-meta">AGT-003 → LST-002 → LST-004 → LST-005 → LST-006 → LST-007</div></li>
+  <li data-step="oversight"><strong>Oversight</strong><div class="dk-ev-meta">AGT-004 → ORD-003</div></li>
+</ul>
+
+<h3 style="font-size:15px;margin:16px 0 8px">SYS-004 · Reset &amp; prototype limits</h3>
+<div class="dk-policy-tbd"><strong>Grant duration is policy-TBD.</strong> No invented expiry window. The grant stays active until the Owner pauses, revokes, or the fixture resets.</div>
+<div style="margin:12px 0"><button class="dk-btn" onclick="location.reload()">↺ Reset fixture</button></div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="agt-001.html">Start SCN-06 as Agent →</a>
+  <a class="dk-btn" style="text-decoration:none" href="../index.html">All scenarios</a>
+</div>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Use the journey map to orient, or reset the fixture. Everything here is fictional. The Agent never takes custody of cash or goods.</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Owner (OWNER-06)',provider:'Actor: Agent (AGENT-06)',admin:'Actor: Admin (ADMIN-06)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

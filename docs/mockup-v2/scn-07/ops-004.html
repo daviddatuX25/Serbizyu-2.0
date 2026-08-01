@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPS-004 — Payment &amp; evidence truth | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">OPS-004</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Admin (ADMIN-07)</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Buyer</button><button class="dk-chip" data-role-btn="provider">Provider</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Payment &amp; evidence truth</h1>
+  <p class="dk-note">Goal: Inspect payment/evidence truth by lane</p>
+</header>
+
+<div class="dk-banner dk-bn-hold" style="margin-bottom:12px"><span class="dk-banner-ico">⏸</span><span><strong>On hold — this payment obligation only (₱90 External Cash attestation).</strong> Reason: evidence mismatch under review. Work and unrelated orders remain usable. <a href="ops-005.html">View hold</a></span></div>
+
+<div class="dk-sep" style="margin-bottom:12px">
+  <div class="dk-agg"><h5>Payment obligation</h5><div class="dk-agg-state">⚠ disputed / on hold</div><small>Purpose: agreed service · Amount: ₱90 exact · Lane: External Cash · Payer BUYER-07 → Recipient PROVIDER-07 (direct) · Serbizyu holds no cash · 0% initial pilot commission · No Tiwala protection</small></div>
+</div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Declarations (attestations, not proof)</h3>
+<div class="dk-cash2" style="margin-bottom:12px">
+  <div class="dk-side dk-done"><strong>Buyer</strong><br><span class="dk-badge dk-b-ok">✓ buyer_reported</span><div class="dk-note">“Cash paid ₱90” · BUYER-07</div></div>
+  <div class="dk-join">＝</div>
+  <div class="dk-side dk-done"><strong>Provider</strong><br><span class="dk-badge dk-b-ok">✓ provider_reported</span><div class="dk-note">“Cash received ₱90” · PROVIDER-07</div></div>
+</div>
+<p><span class="dk-badge dk-b-bad">⚠ mismatch — evidence disputed</span> <span class="dk-note">Reconciliation: amounts match, evidence claim under review. No manual fake verification.</span></p>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Evidence</h3>
+<div class="dk-card dk-evi"><div class="dk-thumb">📎</div><div><span class="dk-badge dk-b-info">processing</span><p class="dk-note" style="margin:6px 0 0">1 item — receipt screenshot placeholder (redacted) · submitted by BUYER-07 · fixture note from PROVIDER-07 requested · upload is not provider-verification</p></div></div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Unknown provider state routes to retry/queue (OPS-007 path) — never a manual fake verification. A failed evidence-processing event is labeled pending/retry and cannot double-change state.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="ops-005.html">Request evidence from parties →</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You inspect purpose, amount, lane, custody/protection, declarations, provider source, evidence, and reconciliation — each as separate truth.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="ops-003.html">Prev: OPS-003</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="ops-005.html">OPS-005</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — evidence requests are recorded with reasons and audit context.</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Buyer (BUYER-07)',provider:'Actor: Provider (PROVIDER-07)',admin:'Actor: Admin (ADMIN-07)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAY-004 — Cash reports comparison | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">PAY-004</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-03)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-03 · OWNER-03</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Cash reports comparison</h1>
+  <p class="dk-note">Goal: Compare both cash reports and resolve match or mismatch</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Mutual acknowledgment</strong> Matching reports become mutually_acknowledged. Mismatch goes to clarification/dispute/support — no automatic refund promise.</span></div>
+
+<div class="dk-cash2" style="margin-bottom:12px">
+  <div class="dk-side dk-wait" id="cash-buyer"><strong>Buyer</strong><br><span class="dk-badge dk-b-neutral" data-cash-badge>not reported</span><div style="margin-top:8px"><button class="dk-btn" data-cash-report="buyer">Report cash paid</button></div></div>
+  <div class="dk-join">→</div>
+  <div class="dk-side dk-wait" id="cash-provider"><strong>Owner</strong><br><span class="dk-badge dk-b-warn" data-cash-badge>report missing</span><div style="margin-top:8px"><button class="dk-btn" data-cash-report="provider">Report cash received</button></div></div>
+</div>
+<p><span class="dk-badge dk-b-neutral" id="cash-status">not_reported — silence is not proof</span> <button class="dk-btn dk-danger" data-cash-report="mismatch" style="margin-left:8px;min-height:auto;padding:4px 12px;font-size:13px">Report a mismatch</button></p>
+
+<div class="dk-spec" style="margin-top:10px"><div class="dk-spec-label">What matching does NOT do</div><p class="dk-note" style="margin:4px 0">It does not complete the handoff, and Serbizyu still holds no cash.</p></div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Mismatch path: affected obligation preserved, dispute/support opened, history kept.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='a4-003.html'">Continue to handoff receipt</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You see your report and the Owner side. The handoff is still ahead.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You report receipt independently; matching reports flip to mutually_acknowledged.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Both attributed attestations visible; mutual-match event only when both match.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="pay-003.html">Prev: PAY-003</a> · Next: <a href="a4-003.html">A4-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

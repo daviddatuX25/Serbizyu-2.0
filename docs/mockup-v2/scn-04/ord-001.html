@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORD-001 — Confirm order terms | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">ORD-001</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-04)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-info">⚑ PILOT-CONDITIONAL</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Confirm order terms</h1>
+<p class="dk-note">Goal: Confirm accepted terms and payment-lane meaning before commitment</p>
+</header>
+<div class="dk-banner dk-bn-cond" style="margin-bottom:12px"><span class="dk-banner-ico">⚑</span><span><strong>PILOT-CONDITIONAL — purchase-on-behalf (cohort capstone_demo).</strong> No fixture spending before Buyer approval. No automatic substitution, payment confirmation, or spending beyond the approved estimate.</span></div>
+
+<dl class="dk-kv">
+<dt>Parties</dt><dd>BUYER-04 (Buyer) · PROVIDER-04 (Provider/helper)</dd>
+<dt>Scope</dt><dd>Fictional school-supply item list (5 lines)</dd>
+<dt>Amount</dt><dd>₱300 approved estimate maximum — actual cost variance requires new approval</dd>
+<dt>Work shape</dt><dd>A4 purchase-on-behalf extension</dd>
+<dt>Lane</dt><dd>External Cash (reference fixture) — Buyer pays helper directly</dd>
+<dt>Custody</dt><dd>Serbizyu holds nothing and never spends fixture cash</dd>
+<dt>Commission</dt><dd>0% (capstone / initial pilot)</dd>
+<dt>Payment ≠ Work</dt><dd>Reporting payment never completes Work; Work never proves payment</dd>
+<dt>Change path</dt><dd>Variance → explicit Buyer approval; request change before any spend</dd>
+</dl>
+<div class="dk-sep" style="margin-top:12px">
+<div class="dk-agg"><h5>Order</h5><div class="dk-agg-state">Pending confirmation</div><small>snapshot v1 will freeze accepted terms</small></div>
+<div class="dk-agg"><h5>Work</h5><div class="dk-agg-state">Not started</div><small>approval gate: no fixture spending before Buyer approval</small></div>
+<div class="dk-agg"><h5>Payment obligation</h5><div class="dk-agg-state">created</div><small>External Cash reference fixture · two-sided reports</small></div>
+</div>
+<div class="dk-spec" style="margin-top:12px">
+<div class="dk-spec-label">Before you confirm</div>
+<p class="dk-note" style="margin:4px 0">PILOT-CONDITIONAL: the helper may only proceed with the approved estimate; ₱330 actual cost stops the flow for your approval.</p>
+</div>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant</div>
+<div class="dk-empty">Changed or stale terms are blocked from confirmation — you return to an explicit re-review.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<button class="dk-btn dk-primary" onclick="location.href='ord-002.html'">Confirm terms</button>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note">You are committing to the ₱300 approved estimate; Work has not started.</p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note">You see the same snapshot. You cannot silently exceed scope or amount after acceptance.</p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">Acceptance emits a snapshot event. Cohort: capstone_demo.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="req-005.html">Prev: REQ-005</a> · Next: <a href="ord-002.html">ORD-002</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

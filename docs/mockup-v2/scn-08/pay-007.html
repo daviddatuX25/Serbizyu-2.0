@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAY-007 — Direct Digital sandbox — simulated event | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">PAY-007</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-08)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-sandbox">🧪 SANDBOX ONLY</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Direct Digital sandbox — simulated event</h1>
+<p class="dk-note">Goal: Explore Direct Digital behavior only as a sandbox</p>
+</header>
+<div class="dk-banner dk-bn-sandbox" style="margin-bottom:12px"><span class="dk-banner-ico">🧪</span><span><strong>SANDBOX ONLY — simulated provider event.</strong> No live-money result. No Tiwala protection. No genuine-pilot metric effect.</span></div>
+
+<dl class="dk-kv">
+<dt>Test obligation</dt><dd>TEST ₱80</dd>
+<dt>Test provider</dt><dd>TEST_PROVIDER (fictional)</dd>
+<dt>Lane</dt><dd>Direct Digital — sandbox</dd>
+<dt>Tiwala protection</dt><dd>None — explicitly not protected</dd>
+<dt>Metric effect</dt><dd>None — sandbox events are not genuine-pilot metrics</dd>
+</dl>
+<div class="dk-banner dk-bn-sandbox" style="margin:12px 0"><span class="dk-banner-ico">🧪</span><span><strong>SANDBOX ONLY — simulated provider event.</strong> Running it updates the sandbox obligation and the Admin inspector only. It does not complete Work and does not create genuine revenue or validation evidence.</span></div>
+<div class="dk-spec">
+<div class="dk-spec-label">Simulated provider event</div>
+<button class="dk-btn dk-primary" onclick="scn08sim()" style="margin-bottom:8px">Run simulated event</button>
+<span id="sim-result" class="dk-badge dk-b-neutral">not run</span>
+</div>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant — duplicate or out-of-order event</div>
+<p class="dk-note" style="margin:4px 0">A duplicate or out-of-order provider event is ignored/reconciled or queued without double effect; Admin sees the failed/reconciliation state.</p>
+<button class="dk-btn dk-ghost" onclick="scn08dup()" style="margin-bottom:8px">Simulate duplicate event</button>
+<span id="dup-result" class="dk-badge dk-b-neutral">not run</span>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<button class="dk-btn dk-primary" onclick="scn08sim()">Run simulated event</button>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note">You run sandbox events; nothing real moves and Work never completes.</p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note">You see simulated event status only.</p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">Inspector view: event accepted into the sandbox obligation; failed states visible.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="pay-002.html">Prev: PAY-002</a> · Next: <a href="ops-004.html">OPS-004</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+<script>
+function scn08sim(){
+  var el=document.getElementById('sim-result');
+  el.className='dk-badge dk-b-ok';
+  el.textContent='event accepted — sandbox obligation updated; Work NOT completed; no revenue';
+}
+function scn08dup(){
+  var el=document.getElementById('dup-result');
+  el.className='dk-badge dk-b-warn';
+  el.textContent='duplicate/out-of-order ignored — reconciled, no double effect (Admin sees it)';
+}
+</script>
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

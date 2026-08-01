@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A3-001 — Choose slot | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">A3-001</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-02)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-02 · PROVIDER-02</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Choose slot</h1>
+  <p class="dk-note">Goal: Choose an available conflict-safe slot</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Conflict-safe</strong> A slot is only offered if it is fresh and available. Conflicts show alternatives — no silent replacement.</span></div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Fixture slots · public meeting point · 45 min each</h3>
+<div class="dk-card dk-card-ok"><div style="display:flex;justify-content:space-between;gap:8px"><strong>Slot A — Today 15:00</strong><span class="dk-badge dk-b-ok">✓ selected</span></div><p class="dk-note" style="margin:6px 0">45 min · Tagudin public market entrance (fictional) · Provider available</p></div>
+<div class="dk-card dk-card-warn" style="margin-top:8px"><div style="display:flex;justify-content:space-between;gap:8px"><strong>Slot B — Today 16:30</strong><span class="dk-badge dk-b-warn">⏳ stale — refresh required</span></div><p class="dk-note" style="margin:6px 0">Became unavailable before confirmation. Not selectable; do not silently substitute.</p></div>
+<div class="dk-card" style="margin-top:8px"><div style="display:flex;justify-content:space-between;gap:8px"><strong>Slot C — Tomorrow 09:00</strong><span class="dk-badge dk-b-neutral">available</span></div><p class="dk-note" style="margin:6px 0">45 min · Tagudin public market entrance (fictional) · Provider available</p></div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">The selected slot became unavailable before confirmation: the old slot is marked stale, alternatives are shown, and no silent substitution occurs.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='a3-002.html'">Request slot A</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You pick a fresh slot; a stale slot is never auto-replaced.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You confirm the slot explicitly before it is committed.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Slot state and freshness are attributable events.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="dsc-005.html">Prev: DSC-005</a> · Next: <a href="a3-002.html">A3-002</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

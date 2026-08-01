@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SYS-001 — Scenario entry | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">SYS-001</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-05)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-05 · PROVIDER-05</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">SCN-05 — A9 digital delivery · External Digital Proof</h1>
+  <p class="dk-note">Goal: digital scope, versioned delivery, revision, acceptance, privacy/retention, and outside-payment evidence. Serbizyu never holds the ₱250.</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>REFERENCE ONLY</strong> Lo-fi disposable mockup. Fictional fixture (capstone_demo cohort). No backend, no real payment, no pilot claim.</span></div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Fixture</h3>
+<dl class="dk-kv">
+  <dt>Buyer</dt><dd>BUYER-05 — fictional</dd>
+  <dt>Provider</dt><dd>PROVIDER-05 — fictional</dd>
+  <dt>Deliverable</dt><dd>Fictional simple digital invitation layout</dd>
+  <dt>Amount</dt><dd>₱250 exact</dd>
+  <dt>Work shape</dt><dd>A9 Digital Delivery</dd>
+  <dt>Payment lane</dt><dd>External Digital Proof — evidence only, not Tiwala</dd>
+  <dt>Cohort</dt><dd>capstone_demo</dd>
+</dl>
+
+<h3 style="font-size:15px;margin:16px 0 8px">SYS-002 · Switch role (shared fixture — nothing is lost)</h3>
+<div id="dk-role-switch" style="display:flex;gap:6px">
+  <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+  <button class="dk-chip" data-role-btn="provider">Provider</button>
+  <button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<p class="dk-note">The same Order/Work/Payment-evidence state is shown to each role; only permissions and next actions differ.</p>
+
+<h3 style="font-size:15px;margin:16px 0 8px">SYS-003 · Journey map</h3>
+<ul class="dk-timeline" data-jstep="discover">
+  <li data-step="discover"><strong>Discover</strong><div class="dk-ev-meta">DSC-005</div></li>
+  <li data-step="order"><strong>Order</strong><div class="dk-ev-meta">ORD-001 → ORD-002</div></li>
+  <li data-step="work"><strong>Digital work</strong><div class="dk-ev-meta">A9-001</div></li>
+  <li data-step="pay"><strong>Payment evidence</strong><div class="dk-ev-meta">PAY-005 → PAY-006</div></li>
+  <li data-step="deliver"><strong>Delivery + acceptance</strong><div class="dk-ev-meta">A9-002 → A9-003</div></li>
+  <li data-step="complete"><strong>Completion</strong><div class="dk-ev-meta">ORD-005 → ORD-003</div></li>
+</ul>
+
+<h3 style="font-size:15px;margin:16px 0 8px">SYS-004 · Reset &amp; prototype limits</h3>
+<div class="dk-policy-tbd"><strong>Prototype limits.</strong> Deterministic fixture only. Resetting returns the fixture to its starting state. No real SMS, no real payment, no identity collection, no production data.</div>
+<div style="margin:12px 0"><button class="dk-btn" onclick="location.reload()">↺ Reset fixture</button></div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="dsc-005.html">Start SCN-05 as Buyer →</a>
+  <a class="dk-btn" style="text-decoration:none" href="../index.html">All scenarios</a>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You review scope, submit evidence, review versions, request revisions, and accept or raise a concern.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You track the version target, deliver without overwriting, and propose completion separately.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Payment evidence, artifact versions, revisions, access, acceptance, and completion stay separate histories.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">All scenarios</a> · Next: <a href="dsc-005.html">DSC-005</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Use the journey map to orient, or reset the fixture. Everything here is fictional.</p><button class="dk-btn dk-ghost" data-modal-close onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

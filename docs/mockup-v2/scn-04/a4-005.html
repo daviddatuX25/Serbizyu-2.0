@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A4-005 — Purchase-on-behalf control | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">A4-005</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-04)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-info">⚑ PILOT-CONDITIONAL</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Purchase-on-behalf control</h1>
+<p class="dk-note">Goal: Control purchase-on-behalf estimate, approval, variance, and receipt</p>
+</header>
+<div class="dk-banner dk-bn-cond" style="margin-bottom:12px"><span class="dk-banner-ico">⚑</span><span><strong>PILOT-CONDITIONAL — purchase-on-behalf (cohort capstone_demo).</strong> No fixture spending before Buyer approval. No automatic substitution, payment confirmation, or spending beyond the approved estimate.</span></div>
+
+<dl class="dk-kv">
+<dt>Acting person</dt><dd>PROVIDER-04 (helper) — purchases on behalf of BUYER-04</dd>
+<dt>Requested items</dt><dd>2 notebooks · 5 ballpens · 1 folder · 3 pad papers · 1 coloring set</dd>
+<dt>Alternatives</dt><dd>Brand substitutes allowed only with explicit Buyer approval</dd>
+<dt>Approved estimate</dt><dd>₱300 maximum (fixture budget) — approved by BUYER-04</dd>
+<dt>Approval gate</dt><dd>No fixture spending before Buyer approval; no automatic substitution or payment confirmation</dd>
+</dl>
+<div class="dk-card dk-card-bad" style="margin-top:12px">
+<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><strong>Variance — actual cost reported</strong><span class="dk-badge dk-b-bad">⚠ variance_pending_approval</span></div>
+<p class="dk-note" style="margin:6px 0">Actual cost reported: ₱330 — above the approved ₱300. The flow stops here. No automatic spending, no automatic payment confirmation, no item substitution.</p>
+<dl class="dk-kv" style="margin-top:8px">
+<dt>Approved estimate</dt><dd>₱300 maximum</dd>
+<dt>Actual cost (PROVIDER-04)</dt><dd>₱330</dd>
+<dt>Variance</dt><dd>+ ₱30 — notebook brand out of stock; substitute priced higher</dd>
+<dt>Next</dt><dd>Explicit Buyer approval required: approve, decline/substitute, or cancel/support</dd>
+</dl>
+</div>
+<div class="dk-spec" style="margin-top:12px">
+<div class="dk-spec-label">Receipt evidence</div>
+<p class="dk-note" style="margin:4px 0">None yet — the receipt fixture is submitted by PROVIDER-04 only after approved spending. Evidence never auto-approves a variance.</p>
+</div>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant</div>
+<div class="dk-empty">Decline/substitute or cancel/support keeps the approved ₱300 limit intact and routes to clarification or support. No spend beyond approval — ever.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<button class="dk-btn dk-primary" onclick="location.href='a4-001.html'">Approve variance (₱330)</button>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note">You approve or decline the variance explicitly — the flow stays stopped until then.</p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note">You cannot spend beyond approval; you see the approved limit, allowed alternatives, and acting identity.</p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">Estimate, approval, actual cost, variance, receipt, and handoff are separate attributable events.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="ord-002.html">Prev: ORD-002</a> · Next: <a href="a4-001.html">A4-001</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

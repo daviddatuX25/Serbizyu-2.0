@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORD-001 — Confirm order terms (sandbox) | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">ORD-001</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-08)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-sandbox">🧪 SANDBOX ONLY</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Confirm order terms (sandbox)</h1>
+<p class="dk-note">Goal: Confirm accepted terms and payment-lane meaning before commitment</p>
+</header>
+<div class="dk-banner dk-bn-sandbox" style="margin-bottom:12px"><span class="dk-banner-ico">🧪</span><span><strong>SANDBOX ONLY — simulated provider event.</strong> No live-money result. No Tiwala protection. No genuine-pilot metric effect.</span></div>
+
+<dl class="dk-kv">
+<dt>Parties</dt><dd>BUYER-08 (Buyer) · PROVIDER-08 (Provider)</dd>
+<dt>Scope</dt><dd>Test delivery — sandbox fixture</dd>
+<dt>Amount</dt><dd>TEST ₱80</dd>
+<dt>Work shape</dt><dd>A1 (sandbox)</dd>
+<dt>Lane</dt><dd>Direct Digital — sandbox</dd>
+<dt>Custody</dt><dd>None — everything here is simulated; nothing moves</dd>
+<dt>Protection</dt><dd>None — no Tiwala protection in this sandbox</dd>
+<dt>Metric effect</dt><dd>None — sandbox cohort is excluded from genuine pilot metrics</dd>
+<dt>Evidence</dt><dd>Simulated provider events only</dd>
+</dl>
+<div class="dk-sep" style="margin-top:12px">
+<div class="dk-agg"><h5>Order</h5><div class="dk-agg-state">Pending confirmation</div><small>snapshot v1 will freeze accepted terms</small></div>
+<div class="dk-agg"><h5>Work</h5><div class="dk-agg-state">Not started</div><small>no steps begun</small></div>
+<div class="dk-agg"><h5>Payment obligation</h5><div class="dk-agg-state">created</div><small>Direct Digital sandbox · simulated only</small></div>
+</div>
+<div class="dk-spec" style="margin-top:12px">
+<div class="dk-spec-label">No live-looking surface</div>
+<p class="dk-note" style="margin:4px 0">No live-looking checkout, no credential entry, no payout, no success claim. Every related state carries a persistent SANDBOX ONLY label.</p>
+</div>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant</div>
+<div class="dk-empty">Changed or stale terms are blocked from confirmation — you return to an explicit re-review.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<button class="dk-btn dk-primary" onclick="location.href='pay-001.html'">Confirm terms</button>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note">You are confirming a sandbox fixture — nothing real moves.</p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note">You see the same snapshot; simulated events are clearly labeled.</p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">Acceptance emits a sandbox snapshot event. Cohort: sandbox.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="sys-001.html">Prev: SYS-001</a> · Next: <a href="pay-001.html">PAY-001</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

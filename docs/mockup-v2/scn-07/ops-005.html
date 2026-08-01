@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPS-005 — Resolve dispute / hold | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">OPS-005</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Admin (ADMIN-07)</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Buyer</button><button class="dk-chip" data-role-btn="provider">Provider</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Resolve dispute / hold</h1>
+  <p class="dk-note">Goal: Resolve dispute/hold with scope and auditability</p>
+</header>
+
+<div class="dk-banner dk-bn-hold" style="margin-bottom:12px"><span class="dk-banner-ico">⏸</span><span><strong>On hold — this payment obligation only (₱90 External Cash attestation).</strong> Reason: evidence mismatch under review. Work, Order snapshot, and unrelated orders remain usable. <a href="ops-003.html">View Order/Work</a></span></div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Affected aggregates</h3>
+<dl class="dk-kv">
+  <dt>Order</dt><dd>#DEMO-07 · snapshot v1 · accepted — unaffected</dd>
+  <dt>Work</dt><dd>A1 Linear Project · in progress · step 2 of 3 — unaffected</dd>
+  <dt>Payment obligation</dt><dd>₱90 External Cash attestation — <span class="dk-badge dk-b-bad">⚠ on hold</span></dd>
+  <dt>Evidence</dt><dd>1 item processing · provider fixture note requested</dd>
+  <dt>Parties</dt><dd>BUYER-07 · PROVIDER-07</dd>
+</dl>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Hold record</h3>
+<dl class="dk-kv">
+  <dt>Creator</dt><dd>ADMIN-07</dd>
+  <dt>Approver</dt><dd>ADMIN-07</dd>
+  <dt>Reason</dt><dd>Evidence mismatch under review — recorded, not invented</dd>
+  <dt>Scope</dt><dd>Payment obligation attestation only; Work and unrelated orders usable</dd>
+</dl>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Possible outcomes (no promise)</h3>
+<p class="dk-note">resolved · rejected · withdrawn · closed — <code>appealed</code> only if policy allows (policy-TBD). Resolution creates a new correction/resolution event; original history is preserved. No automatic refund.</p>
+
+<div class="dk-card dk-card-bad" style="margin-top:12px">
+  <strong>⛔ Release payment obligation</strong>
+  <p class="dk-note" style="margin:6px 0">Release requires sufficient evidence and authorized resolution — both are missing right now.</p>
+  <button class="dk-btn" disabled>Release payment obligation</button>
+  <p class="dk-note" style="margin:6px 0 0">Disabled with reason: evidence under review · missing authority. Retries are idempotent; history preserved.</p>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Missing authority or evidence blocks the action and shows why. Release/correction preserves the original history — nothing is rewritten.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" data-modal-open>Record hold action with reason</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You record an authorized hold/resolution action with reason and confirmation. The resolution appears as a correction event on ORD-003 — original events stay intact.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="ops-004.html">Prev: OPS-004</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="ord-003.html">ORD-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Confirm: record hold action?</h4>
+  <dl class="dk-kv">
+    <dt>Scope</dt><dd>Payment obligation only (₱90 External Cash attestation)</dd>
+    <dt>Reason</dt><dd>Evidence mismatch under review</dd>
+    <dt>Creator / approver</dt><dd>ADMIN-07</dd>
+    <dt>Effect</dt><dd>Creates a correction/resolution event. Original history preserved. Work and unrelated orders unaffected.</dd>
+  </dl>
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <a class="dk-btn dk-primary" style="text-decoration:none" href="ord-003.html">Confirm — record resolution</a>
+    <button class="dk-btn dk-ghost" data-modal-close>Cancel</button>
+  </div>
+</div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Buyer (BUYER-07)',provider:'Actor: Provider (PROVIDER-07)',admin:'Actor: Admin (ADMIN-07)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A4-002 — Confirm handoff | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">A4-002</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-03)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-03 · OWNER-03</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Confirm handoff</h1>
+  <p class="dk-note">Goal: Coordinate a safe pickup or handoff</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Safe handoff</strong> Time, place, instructions, privacy, and who confirms receipt are explicit before either side commits.</span></div>
+
+<dl class="dk-kv">
+  <dt>Item / quantity</dt><dd>2 × seedling tray</dd>
+  <dt>Time / place</dt><dd>Today 10:00 · Tagudin public market entrance (fictional)</dd>
+  <dt>Instructions</dt><dd>Bring a bag or container; trays are watered and ready</dd>
+  <dt>Privacy / safety</dt><dd>Contact masked until both confirm; no home delivery by default</dd>
+  <dt>Who confirms receipt</dt><dd>BUYER-03 at handoff (A4-003), separately from cash reports</dd>
+</dl>
+
+<div class="dk-safety" style="margin-top:12px">
+  <h5>⚠ Before you confirm this handoff</h5>
+  <ul>
+    <li>Prefer a public meeting point (fixture: Tagudin public market entrance).</li>
+    <li>No home entry by default — enable only with explicit consent.</li>
+    <li>Contact details stay masked until both confirm.</li>
+    <li>You can block/report at any point — support path stays visible.</li>
+  </ul>
+  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="dk-btn dk-ghost" onclick="location.href='a4-001.html'">Request different time/place</button>
+    <button class="dk-btn dk-danger" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Report a concern</button>
+  </div>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Unsafe or unavailable place/time? Reschedule, cancel, report, or get support — confirmation is never forced.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='pay-003.html'">Confirm handoff arrangement</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You confirm time, place, and instructions; cash reporting comes next.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You confirm the arrangement and then report cash received independently.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Handoff arrangement is an attributable event, separate from cash.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="a4-001.html">Prev: A4-001</a> · Next: <a href="pay-003.html">PAY-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

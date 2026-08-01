@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSC-005 — Listing detail | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">DSC-005</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-05)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-05 · PROVIDER-05</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Listing detail</h1>
+  <p class="dk-note">Goal: Decide whether this offer fits the need</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Amount semantics</strong> ₱250 is the exact price. Included: one layout version plus one revision.</span></div>
+
+<dl class="dk-kv">
+  <dt>What is offered</dt><dd>Simple digital invitation layout (single page, image file fixture), one revision included</dd>
+  <dt>Not included</dt><dd>Printing, envelopes, extra revisions</dd>
+  <dt>Provider</dt><dd>PROVIDER-05 · New Provider (evidence-based history: 2 demo jobs)</dd>
+  <dt>Format</dt><dd>Digital image file — delivered in-app, no physical meeting</dd>
+  <dt>Work shape</dt><dd>A9 Digital Delivery</dd>
+  <dt>Payment lane</dt><dd>External Digital Proof — evidence only, 0% initial pilot commission, Serbizyu holds nothing, not Tiwala</dd>
+  <dt>Evidence expectation</dt><dd>Outside-payment reference (screenshot fixture) + delivery files per version</dd>
+  <dt>Privacy / retention</dt><dd>Attributable access; fixture files kept for review — exact retention window policy to be defined</dd>
+</dl>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Changed scope or terms? They require refresh and explicit re-review — never a silent switch.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='ord-001.html'">Request this service</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You decide based on format, scope, revision expectation, and lane meaning.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see the same scope; you track the version target and deliver without overwriting.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Listing context only. No payment or identity claim here.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="sys-001.html">Prev: SYS-001</a> · Next: <a href="ord-001.html">ORD-001</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

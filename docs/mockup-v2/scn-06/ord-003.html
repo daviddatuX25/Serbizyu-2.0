@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORD-003 — Event timeline | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">ORD-003</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Owner (OWNER-06)</span><span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Owner</button><button class="dk-chip" data-role-btn="provider">Agent</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Event timeline</h1>
+  <p class="dk-note">Goal: See what happened in a shared attributable timeline</p>
+</header>
+
+<div class="dk-banner dk-bn-cond" style="margin-bottom:12px"><span class="dk-banner-ico">⚑</span><span><strong>PILOT-CONDITIONAL access.</strong> Every event is attributed to an actor; nothing is rewritten or removed. The listing belongs to OWNER-06.</span></div>
+
+<ul class="dk-timeline">
+  <li><strong>Consent proposed</strong> — invitation from AGENT-06<div class="dk-ev-meta">AGT-001 · consent: proposed</div></li>
+  <li><strong>Scoped permission approved</strong> — listing draft only<div class="dk-ev-meta">OWNER-06 · AGT-002 · consent: pending_owner_confirmation → active</div></li>
+  <li><strong>Listing type chosen</strong> — Product Listing<div class="dk-ev-meta">AGENT-06 · LST-002 · draft</div></li>
+  <li><strong>Product draft saved</strong> — notice sent to OWNER-06<div class="dk-ev-meta">AGENT-06 · LST-004 · draft state</div></li>
+  <li><strong>Mechanism &amp; shape confirmed</strong> — Direct + A4 Handoff<div class="dk-ev-meta">AGENT-06 · LST-005</div></li>
+  <li><strong>Availability saved</strong> — 1 unit, Tagudin handoff<div class="dk-ev-meta">AGENT-06 · LST-006</div></li>
+  <li class="dk-ev-warn"><strong>Submitted for Owner review</strong><div class="dk-ev-meta">AGENT-06 · LST-007 · publication pending OWNER-06</div></li>
+  <li><strong>Assistance paused</strong> — future assisted actions blocked, history preserved<div class="dk-ev-meta">OWNER-06 · AGT-004 · consent: active → suspended</div></li>
+</ul>
+
+<div class="dk-spec" style="margin-top:12px"><div class="dk-spec-label">Reviewer check</div>
+  <p class="dk-note" style="margin:4px 0">Who owns the listing after the Agent creates the draft? OWNER-06. AGENT-06 appears only as the acting helper — attribution is visible on every event.</p>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Unknown/failed event is labeled pending/retry/support — history is never rewritten. A revoked grant leaves every past event intact.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="lst-007.html">Open listing under review</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Owner</h3><p class="dk-note">You see the full attributed history from consent to pause, plus the pending publication decision.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Agent</h3><p class="dk-note">You see your own actions attributed to you, with the Owner's decisions around them.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Full audit view: consent grant, Agent actions, Owner notices, approval, and pause — separate from any Order/Work/Payment state.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="agt-004.html">Prev: AGT-004</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · <a href="agt-001.html">Restart route</a></nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in this timeline.</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Owner (OWNER-06)',provider:'Actor: Agent (AGENT-06)',admin:'Actor: Admin (ADMIN-06)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

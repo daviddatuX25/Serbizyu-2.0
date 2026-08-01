@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A4-001 — Preparation &amp; quantity | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">A4-001</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-03)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-03 · OWNER-03</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Preparation &amp; quantity</h1>
+  <p class="dk-note">Goal: Track product preparation and truthful quantity</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Truthful quantity</strong> Only available quantity is reserved and prepared. No oversell is ever displayed as success.</span></div>
+
+<dl class="dk-kv">
+  <dt>Item / unit</dt><dd>Seedling tray (tomato seedlings, fictional)</dd>
+  <dt>Reserved quantity</dt><dd>2 trays</dd>
+  <dt>Stock / capacity</dt><dd>2 trays available</dd>
+  <dt>Buyer expectation</dt><dd>2 trays, seedlings upright and watered</dd>
+</dl>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Preparation steps</h3>
+<ul class="dk-timeline">
+  <li class="dk-ev-warn"><strong>Step 1 — Trays gathered</strong><div class="dk-ev-meta">OWNER-03 · fictional</div></li>
+  <li><strong>Step 2 — Watered &amp; checked</strong><div class="dk-ev-meta">OWNER-03 · fictional</div></li>
+  <li><strong>Step 3 — Ready for pickup</strong><div class="dk-ev-meta">awaits handoff confirmation</div></li>
+</ul>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Only one tray is available: the quantity-two promise is blocked, the conflict is shown, and explicit quantity correction, substitution approval, or cancellation is offered — never false readiness.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='a4-002.html'">Mark item ready</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You see the reserved quantity and the expected condition.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You prepare only available quantity; capacity conflicts block readiness.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Capacity and preparation are separate attributable events.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="ord-002.html">Prev: ORD-002</a> · Next: <a href="a4-002.html">A4-002</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

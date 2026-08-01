@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORD-003 — Event timeline | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">ORD-003</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-03)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-03 · OWNER-03</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Event timeline</h1>
+  <p class="dk-note">Goal: See what happened in a shared attributable timeline</p>
+</header>
+
+<ul class="dk-timeline">
+  <li><strong>Terms accepted — snapshot v1</strong><div class="dk-ev-meta">BUYER-03 + OWNER-03 · 09:00</div></li>
+  <li><strong>Preparation marked ready</strong><div class="dk-ev-meta">OWNER-03 · 09:20</div></li>
+  <li><strong>Handoff confirmed — 10:00 · public meeting point</strong><div class="dk-ev-meta">BUYER-03 + OWNER-03 · 09:30</div></li>
+  <li><strong>buyer_reported — ₱100 cash paid</strong><div class="dk-ev-meta">BUYER-03 · 10:05 · Work unchanged</div></li>
+  <li><strong>owner_reported — ₱100 received</strong><div class="dk-ev-meta">OWNER-03 · 10:08 · mutually_acknowledged when both match</div></li>
+  <li class="dk-ev-warn"><strong>Receipt acknowledged — condition issue reported</strong><div class="dk-ev-meta">BUYER-03 · 10:12 · original terms preserved</div></li>
+  <li class="dk-ev-bad"><strong>Dispute submitted → under_review</strong><div class="dk-ev-meta">BUYER-03 · 10:15 · cash declarations unchanged</div></li>
+</ul>
+
+<div class="dk-spec" style="margin-top:12px"><div class="dk-spec-label">Reviewer check</div>
+  <p class="dk-note" style="margin:4px 0">Did Serbizyu receive or hold the ₱100? No — the Buyer paid the Owner directly; Serbizyu only records declarations. A condition issue was reported without changing the cash report.</p>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Unknown/failed event is labeled pending/retry/support — history is never rewritten.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="sys-001.html">Back to scenario map</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">Your cash report, receipt decision, and dispute are separate attributable events.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see your reports and the dispute without losing the original Order terms.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Capacity, handoff, cash, receipt, mismatch, and dispute as separate histories — no cash revenue record.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="tru-002.html">Prev: TRU-002</a> · Next: <a href="../index.html">All scenarios</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

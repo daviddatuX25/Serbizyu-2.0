@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A4-003 — Acknowledge receipt | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">A4-003</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-03)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-03 · OWNER-03</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Acknowledge receipt</h1>
+  <p class="dk-note">Goal: Confirm actual receipt and condition</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Separate concerns</strong> Condition and payment are independent — acknowledging receipt never claims payment was right, and vice versa.</span></div>
+
+<dl class="dk-kv">
+  <dt>Expected</dt><dd>2 × seedling tray, upright and watered</dd>
+  <dt>Received</dt><dd>2 × seedling tray at public meeting point (fictional)</dd>
+  <dt>Handoff evidence</dt><dd>Optional photo fixture at handoff</dd>
+  <dt>Who confirms</dt><dd>BUYER-03 — receipt is an actor confirmation, not a payment event</dd>
+</dl>
+
+<div class="dk-sep" style="margin-top:12px">
+  <div class="dk-agg"><h5>Order</h5><div class="dk-agg-state">Accepted</div><small>snapshot v1 · ₱100 · A4</small></div>
+  <div class="dk-agg"><h5>Work</h5><div class="dk-agg-state">Handoff done?</div><small>awaiting receipt decision</small></div>
+  <div class="dk-agg"><h5>Payment obligation</h5><div class="dk-agg-state">buyer_reported / owner report</div><small>unchanged by receipt</small></div>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Mismatch path stays equally visible and preserves original terms — reporting a damaged or missing item does not claim payment was wrong.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='ord-003.html'">Acknowledge receipt</button>
+  <button class="dk-btn dk-danger" onclick="location.href='a4-004.html'">Report a mismatch</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">Acknowledge receipt completes the path; the mismatch branch (A4-004) is equally visible.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see Buyer receipt or mismatch without losing the original Order terms.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Receipt, cash declarations, and mismatch stay separate events.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="pay-004.html">Prev: PAY-004</a> · Next: <a href="a4-004.html">A4-004</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

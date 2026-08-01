@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPS-007 — Handle failed events (sandbox) | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">OPS-007</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Admin (ADMIN-08)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-sandbox">🧪 SANDBOX ONLY</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Handle failed events (sandbox)</h1>
+<p class="dk-note">Goal: Handle failed events without duplicate effects</p>
+</header>
+<div class="dk-banner dk-bn-sandbox" style="margin-bottom:12px"><span class="dk-banner-ico">🧪</span><span><strong>SANDBOX ONLY — simulated provider event.</strong> No live-money result. No Tiwala protection. No genuine-pilot metric effect.</span></div>
+
+<table class="dk-table">
+<tr><th>Event</th><th>Correlation</th><th>Result</th></tr>
+<tr><td>provider_event (1st)</td><td>id sandbox-evt-1</td><td><span class="dk-badge dk-b-ok">✓ accepted — obligation updated (sandbox)</span></td></tr>
+<tr><td>provider_event (duplicate)</td><td>id sandbox-evt-1</td><td><span class="dk-badge dk-b-warn">⏳ ignored — no double effect</span></td></tr>
+</table>
+<p class="dk-note" style="margin-top:8px">Idempotency: the correlation id sandbox-evt-1 is reused, so the duplicate cannot double-change state. Work is not completed by any of these events.</p>
+<div class="dk-spec" style="margin-top:12px">
+<div class="dk-spec-label">Retry / dead-letter</div>
+<button class="dk-btn dk-primary" onclick="ops07retry()" style="margin-bottom:8px">Retry safely (sandbox)</button>
+<span id="retry-result" class="dk-badge dk-b-neutral">not run</span>
+</div>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant</div>
+<div class="dk-empty">Retry result stays visible; duplicate/out-of-order events cannot double-change state. Failed events keep a dead-letter/support status.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<button class="dk-btn dk-primary" onclick="ops07retry()">Retry safely (sandbox)</button>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note"></p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note"></p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">You retry or assign support; the outcome is recorded and visible.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="ops-004.html">Prev: OPS-004</a> · Next: <a href="ord-003.html">ORD-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+<script>
+function ops07retry(){
+  var el=document.getElementById('retry-result');
+  el.className='dk-badge dk-b-ok';
+  el.textContent='retry result: duplicate still ignored — state unchanged (sandbox)';
+}
+</script>
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

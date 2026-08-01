@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRU-002 — Open a dispute | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">TRU-002</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-07)</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Buyer</button><button class="dk-chip" data-role-btn="provider">Provider</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Open a dispute</h1>
+  <p class="dk-note">Goal: Open a focused dispute with useful evidence</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Dispute intake — smallest useful set.</strong> No fixed outcome, no universal time window, no automatic refund promised. Missing evidence can be added later.</span></div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Intake summary (TRU-002)</h3>
+<dl class="dk-kv">
+  <dt>What happened</dt><dd>Amount / item evidence does not match the agreed state.</dd>
+  <dt>Affected Order / Work / Payment Obligation</dt><dd>Order #DEMO-07 · Work: A1 Linear Project (in progress, step 2 of 3) · Payment Obligation: ₱90 External Cash attestation</dd>
+  <dt>Evidence available</dt><dd>1 item submitted · <span class="dk-badge dk-b-info">processing</span> · fixture note from PROVIDER-07 expected</dd>
+  <dt>Safety concern</dt><dd>No</dd>
+  <dt>Requested remedy</dt><dd>Clarification with Provider — record corrected state</dd>
+  <dt>State</dt><dd><span class="dk-badge dk-b-warn">opened</span> → evidence_requested → under_review → resolved / rejected / withdrawn → closed. <code>appealed</code> only if policy allows — policy-TBD.</dd>
+</dl>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Dispute form (fictional fixture)</h3>
+<div class="dk-field"><label for="what">What happened</label><textarea id="what" class="dk-textarea">Amount / item evidence does not match the agreed state.</textarea></div>
+<div class="dk-field"><label for="affected">Affected Order / Work / Payment Obligation</label><input id="affected" class="dk-input" value="#DEMO-07 · Work: A1 (in progress) · Payment Obligation: ₱90 External Cash"></div>
+<div class="dk-field"><label for="evidence">Evidence available (fixture only)</label><input id="evidence" class="dk-input" value="1 item — receipt screenshot placeholder, redacted"><span class="dk-hint">Fixture-only upload. Redaction guidance applies. No real document accepted.</span></div>
+<div class="dk-field"><label for="safety">Safety concern</label><select id="safety" class="dk-select"><option>No</option><option>Yes — see support route</option></select></div>
+<div class="dk-field"><label for="remedy">Requested remedy</label><input id="remedy" class="dk-input" value="Clarification with Provider — record corrected state"><span class="dk-hint">Stating a remedy is not a promise of an outcome.</span></div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Missing evidence can be added later (state: evidence_requested). No fixed outcome, no universal time window, no automatic refund — withdrawn and conditional appealed states supported.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="tru-004.html">Submit dispute →</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You describe what happened, the affected Order/Work/Payment Obligation, evidence, safety, and requested remedy. Submission opens a support case.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see the same dispute scope and can respond with your fixture note/evidence. Original terms remain visible.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You see the intake fields, the affected aggregates, and the evidence list — nothing is auto-resolved, no outcome promised.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="ord-003.html">Prev: ORD-003</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="tru-004.html">TRU-004</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the case tracker (TRU-004).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Buyer (BUYER-07)',provider:'Actor: Provider (PROVIDER-07)',admin:'Actor: Admin (ADMIN-07)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

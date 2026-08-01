@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LST-007 — Preview &amp; lifecycle | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">LST-007</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Owner (OWNER-06)</span><span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Owner</button><button class="dk-chip" data-role-btn="provider">Agent</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Preview &amp; lifecycle</h1>
+  <p class="dk-note">Goal: Preview the Buyer view and control lifecycle</p>
+</header>
+
+<div class="dk-banner dk-bn-agent" style="margin-bottom:12px"><span class="dk-banner-ico">🤝</span><span><strong>Acting for OWNER-06.</strong> AGENT-06 · Scope: listing draft only · Publication requires Owner approval · no cash/goods custody · <a href="agt-004.html">Revoke</a></span></div>
+
+<div class="dk-card" style="margin-bottom:12px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">draft</span><span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span></div>
+  <h3 style="font-size:15px;margin:8px 0 4px">Public preview (Buyer view)</h3>
+  <p class="dk-note" style="margin:4px 0">Handwoven bamboo basket — 1 unit · pickup at Tagudin public market entrance · <span class="dk-badge dk-b-warn">⏳ price policy-TBD</span></p>
+  <p class="dk-note" style="margin:4px 0">Attribution: <strong>Created by AGENT-06 for OWNER-06.</strong> The listing belongs to OWNER-06; the Agent is only the acting helper.</p>
+</div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Lifecycle</h3>
+<ul class="dk-timeline">
+  <li><strong>Draft created</strong><div class="dk-ev-meta">AGENT-06 · notice sent to OWNER-06</div></li>
+  <li><strong>Details saved</strong> — item, capacity, mechanism (Direct + A4)<div class="dk-ev-meta">AGENT-06 · draft state</div></li>
+  <li class="dk-ev-warn"><strong>Submitted for Owner review</strong><div class="dk-ev-meta">AGENT-06 · publication awaits OWNER-06</div></li>
+</ul>
+
+<div class="dk-card dk-card-bad" style="margin-top:12px">
+  <strong>⛔ Publication requires Owner approval</strong>
+  <p class="dk-note" style="margin:6px 0">The Agent cannot publish. Only OWNER-06 can approve the review submission.</p>
+  <button class="dk-btn" disabled>Publish listing</button>
+  <p class="dk-note" style="margin:6px 0 0">Disabled with reason: approval-required action — route to OWNER-06 (AGT-004) or support.</p>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Rejected or blocked activation shows the reason, the editable fields, support, and history. Nothing is published without Owner approval.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="agt-004.html">Submit for Owner review →</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Owner</h3><p class="dk-note">You review the Buyer-facing preview, the missing price (policy-TBD), and the attribution. Approving publication is yours alone.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Agent</h3><p class="dk-note">You can submit the draft for review but never publish. The Owner decides the final state.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You see draft → review lifecycle, attribution, and the approval boundary with the Owner.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="lst-006.html">Prev: LST-006</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="agt-004.html">AGT-004</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — the Owner can pause or revoke at any time (AGT-004).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Owner (OWNER-06)',provider:'Actor: Agent (AGENT-06)',admin:'Actor: Admin (ADMIN-06)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

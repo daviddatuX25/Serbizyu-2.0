@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAY-008 — Tiwala sandbox — guarded simulated release | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">PAY-008</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-09)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-sandbox">🧪 SANDBOX ONLY</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Tiwala sandbox — guarded simulated release</h1>
+<p class="dk-note">Goal: Explore protected-release guards only as a sandbox</p>
+</header>
+<div class="dk-banner dk-bn-sandbox" style="margin-bottom:12px"><span class="dk-banner-ico">🧪</span><span><strong>SANDBOX ONLY — protected-release behavior is simulated.</strong> Simulated release clock starts at valid completion/sign-off eligibility, never at Order creation. Never presented as a live legal escrow claim.</span></div>
+
+<div class="dk-sep">
+<div class="dk-agg"><h5>Order</h5><div class="dk-agg-state">Accepted</div><small>snapshot v1 · TEST ₱250 · A1 sandbox</small></div>
+<div class="dk-agg"><h5>Work</h5><div class="dk-agg-state">In progress</div><small>completion proposal pending Buyer review</small></div>
+<div class="dk-agg"><h5>Payment obligation</h5><div class="dk-agg-state">created</div><small>Tiwala sandbox · release blocked until guards pass</small></div>
+</div>
+<div class="dk-spec" style="margin-top:12px">
+<div class="dk-spec-label">Release clock (sandbox rule)</div>
+<p class="dk-note" style="margin:4px 0">The simulated release clock starts at valid completion / sign-off eligibility — never at Order creation. Work, sign-off, hold, reconciliation, eligibility, and release remain separate statuses. This sandbox is not a live legal escrow claim; nothing real is held or released.</p>
+</div>
+<div class="dk-banner dk-bn-sandbox" style="margin:12px 0"><span class="dk-banner-ico">🧪</span><span><strong>SANDBOX ONLY — protected-release behavior is simulated.</strong> Toggle the guards below to explore what blocks a release; the button re-evaluates every time.</span></div>
+<h3 style="font-size:15px;margin:12px 0 8px">Guard checklist — release is blocked while any guard is unmet</h3>
+<ul class="dk-guards">
+<li data-guard><span class="dk-g dk-g-pass">✓</span> Obligation in correct pre-release state</li>
+<li data-guard><span class="dk-g dk-g-fail">✗</span> Work completed under shape contract</li>
+<li data-guard><span class="dk-g dk-g-fail">✗</span> Sign-off / review eligibility valid</li>
+<li data-guard><span class="dk-g dk-g-pass">✓</span> No active dispute</li>
+<li data-guard><span class="dk-g dk-g-pass">✓</span> No fraud / safety / legal / admin hold</li>
+<li data-guard><span class="dk-g dk-g-pass">✓</span> Amount reconciles (TEST ₱250)</li>
+<li data-guard><span class="dk-g dk-g-pass">✓</span> Policy snapshot current</li>
+<li data-guard><span class="dk-g dk-g-pass">✓</span> No prior release event</li>
+</ul>
+<p class="dk-note" style="margin-top:8px">Tap a guard to toggle it in this sandbox demo. Unmet guards are listed next to the release button below.</p>
+<span id="guard-result" class="dk-badge dk-b-neutral">guards pending</span>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant</div>
+<div class="dk-empty">Attempt release while Work is incomplete or a hold is active → blocked and the unmet guards are listed. A repeated attempt after success is idempotent — no second release event.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<button data-guard-attempt class="dk-btn dk-primary" disabled>Attempt simulated release</button>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note">You toggle guards and see exactly which conditions still block the simulated release.</p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note">You see the same guards; provider completion never makes release eligible by itself.</p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">Inspector view: release eligibility, Work, sign-off, hold, and reconciliation are separate statuses.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="pay-002.html">Prev: PAY-002</a> · Next: <a href="ord-005.html">ORD-005</a> → · <span class="dk-note">Route revisit: returns here from OPS-005, then on to ORD-003.</span></nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

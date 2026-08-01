@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRU-004 — Support case | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">TRU-004</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-07)</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Buyer</button><button class="dk-chip" data-role-btn="provider">Provider</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Support case</h1>
+  <p class="dk-note">Goal: Track a support case and know who acts next</p>
+</header>
+
+<div class="dk-banner dk-bn-hold" style="margin-bottom:12px"><span class="dk-banner-ico">⏸</span><span><strong>On hold — this payment obligation only (₱90 External Cash attestation).</strong> Reason: evidence mismatch under review. Work and unrelated orders remain usable. <a href="ops-005.html">View hold</a></span></div>
+
+<dl class="dk-kv">
+  <dt>Case owner</dt><dd>ADMIN-07</dd>
+  <dt>Affected object</dt><dd>Order #DEMO-07 → Payment Obligation (₱90, External Cash) · Work unaffected</dd>
+  <dt>Status</dt><dd><span class="dk-badge dk-b-warn">evidence_requested</span> → under_review next</dd>
+  <dt>Last action</dt><dd>Evidence requested from PROVIDER-07 (fixture note)</dd>
+  <dt>Next action</dt><dd>PROVIDER-07 supplies the fixture note/evidence; then ADMIN-07 reviews</dd>
+  <dt>Escalation</dt><dd>Stalled case exposes retry/escalation — never a dead generic confirmation. Audit context visible to Admin.</dd>
+</dl>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Case timeline</h3>
+<ul class="dk-timeline">
+  <li><strong>Dispute opened</strong> — intake submitted<div class="dk-ev-meta">BUYER-07 · TRU-002</div></li>
+  <li class="dk-ev-warn"><strong>Evidence requested</strong> — fixture note from PROVIDER-07<div class="dk-ev-meta">ADMIN-07 · case owner</div></li>
+  <li><strong>Evidence submitted</strong> — 1 item processing<div class="dk-ev-meta">BUYER-07 · upload is not acceptance</div></li>
+  <li class="dk-ev-warn"><strong>Awaiting Provider fixture note</strong><div class="dk-ev-meta">PROVIDER-07 · response route open</div></li>
+</ul>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Stalled/failed case exposes escalation or retry with the same history intact. No fixed outcome or time window is promised.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="ops-003.html">View next step →</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You see the case owner, status, last/next action, and the exact hold scope. You are never promised an automatic refund or a fixed resolution time.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see the same dispute scope and the evidence request. Your fixture note is the next input; original terms remain visible.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You see the case with audit context, escalation state, and the affected-object scope. Next step opens the admin inspectors (OPS-003).</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="tru-002.html">Prev: TRU-002</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="ops-003.html">OPS-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — escalation/retry stays available here.</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Buyer (BUYER-07)',provider:'Actor: Provider (PROVIDER-07)',admin:'Actor: Admin (ADMIN-07)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORD-003 — Event timeline | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">ORD-003</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-04)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-info">⚑ PILOT-CONDITIONAL</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Event timeline</h1>
+<p class="dk-note">Goal: See what happened in a shared attributable timeline</p>
+</header>
+<div class="dk-banner dk-bn-cond" style="margin-bottom:12px"><span class="dk-banner-ico">⚑</span><span><strong>PILOT-CONDITIONAL — purchase-on-behalf (cohort capstone_demo).</strong> No fixture spending before Buyer approval. No automatic substitution, payment confirmation, or spending beyond the approved estimate.</span></div>
+
+<ul class="dk-timeline">
+<li><strong>Terms accepted — snapshot v1</strong><div class="dk-ev-meta">BUYER-04 + PROVIDER-04 · ₱300 estimate max</div></li>
+<li><strong>Estimate approved — ₱300 maximum</strong><div class="dk-ev-meta">BUYER-04 · approval gate captured</div></li>
+<li class="dk-ev-warn"><strong>actual_cost_reported — ₱330 variance</strong><div class="dk-ev-meta">PROVIDER-04 · flow stopped for Buyer approval</div></li>
+<li><strong>Variance approved — ₱330</strong><div class="dk-ev-meta">BUYER-04 · explicit approval, no automatic spending</div></li>
+<li><strong>Items prepared (5 lines)</strong><div class="dk-ev-meta">PROVIDER-04</div></li>
+<li><strong>Handoff confirmed</strong><div class="dk-ev-meta">BUYER-04 + PROVIDER-04 · Tagudin public market entrance</div></li>
+<li><strong>Receipt acknowledged</strong><div class="dk-ev-meta">BUYER-04 · evidence fixture kept</div></li>
+<li><strong>buyer_reported / provider_reported</strong><div class="dk-ev-meta">External Cash reference fixture · Work unchanged</div></li>
+</ul>
+<div class="dk-spec" style="margin-top:12px">
+<div class="dk-spec-label">Reviewer check</div>
+<p class="dk-note" style="margin:4px 0">Did Serbizyu spend or hold cash? No — the helper spends only after explicit Buyer approval; the ₱330 variance required a new approval. External Cash stays direct and two-sided.</p>
+</div>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant</div>
+<div class="dk-empty">Unknown or failed events are labeled pending/retry/support — history is never rewritten.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<a class="dk-btn dk-primary" style="text-decoration:none" href="sys-001.html">Back to scenario map</a>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note"></p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note"></p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">Full audit view: estimate, approval, variance approval, receipt, handoff, and both cash attestations as separate events.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="a4-003.html">Prev: A4-003</a></nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORD-002 — Shared order | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">ORD-002</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-05)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-05 · PROVIDER-05</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Shared order</h1>
+  <p class="dk-note">Goal: Understand the Order without collapsing its parts</p>
+</header>
+
+<div class="dk-sep">
+  <div class="dk-agg"><h5>Order</h5><div class="dk-agg-state">Accepted</div><small>snapshot v1 · ₱250 · A9</small></div>
+  <div class="dk-agg"><h5>Work</h5><div class="dk-agg-state">Not started</div><small>no version delivered</small></div>
+  <div class="dk-agg"><h5>Payment obligation</h5><div class="dk-agg-state">created</div><small>External Digital Proof · evidence due with delivery</small></div>
+</div>
+
+<div class="dk-spec" style="margin-top:10px"><div class="dk-spec-label">Next responsible action</div>
+  <div data-role-view data-role="buyer"><p>You: review scope and evidence expectations when work starts.</p><button class="dk-btn dk-primary" onclick="location.href='a9-001.html'">View digital work</button></div>
+  <div data-role-view data-role="provider" hidden><p>You: start the digital work and track the version target.</p><button class="dk-btn dk-primary" onclick="location.href='a9-001.html'">Start digital work</button></div>
+  <div data-role-view data-role="admin" hidden><p>Inspect only. Order, Work, and Payment stay separate.</p></div>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Missing/blocked task? It explains which aggregate and who can resolve it.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='a9-001.html'">Continue</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">Payment shows "created", not "paid". No version has been delivered.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You accept the Order; evidence is reported separately.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Snapshot event visible. No cash custody or revenue record exists.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="ord-001.html">Prev: ORD-001</a> · Next: <a href="a9-001.html">A9-001</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAY-001 — Payment obligation (sandbox) | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">PAY-001</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-09)</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-sandbox">🧪 SANDBOX ONLY</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">Payment obligation (sandbox)</h1>
+<p class="dk-note">Goal: Understand each amount owed and its independent state</p>
+</header>
+<div class="dk-banner dk-bn-sandbox" style="margin-bottom:12px"><span class="dk-banner-ico">🧪</span><span><strong>SANDBOX ONLY — protected-release behavior is simulated.</strong> Simulated release clock starts at valid completion/sign-off eligibility, never at Order creation. Never presented as a live legal escrow claim.</span></div>
+
+<dl class="dk-kv">
+<dt>Purpose</dt><dd>Sandbox fixture — A1 test project</dd>
+<dt>Amount</dt><dd>TEST ₱250</dd>
+<dt>Payer → recipient</dt><dd>BUYER-09 → PROVIDER-09</dd>
+<dt>Lane</dt><dd>Tiwala Protected Digital — sandbox</dd>
+<dt>Who controls funds</dt><dd>Simulated protected obligation — no live funds</dd>
+<dt>Protection</dt><dd>Simulated guarded release only — not a live legal escrow claim</dd>
+<dt>Evidence status</dt><dd>None yet — sandbox fixture evidence only</dd>
+<dt>Next action</dt><dd>Confirm the lane (PAY-002), then attempt a guarded simulated release (PAY-008)</dd>
+<dt>What this does not prove</dt><dd>That money moved, that Work is done, or any genuine-pilot metric</dd>
+</dl>
+<div class="dk-spec" style="margin-top:16px">
+<div class="dk-spec-label">Recovery / failure variant</div>
+<div class="dk-empty">Unresolved or corrected obligation links its replacement/history and support — never a fake success state.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<button class="dk-btn dk-primary" onclick="location.href='pay-002.html'">Choose lane</button>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+<section data-role-view="buyer" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3>
+<p class="dk-note">You see the test obligation and the simulated release meaning.</p>
+</section>
+<section data-role-view="provider" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3>
+<p class="dk-note">You see the same obligation; no payout is offered.</p>
+</section>
+<section data-role-view="admin" hidden>
+<h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3>
+<p class="dk-note">Inspector view: TEST ₱250 obligation in the sandbox cohort.</p>
+</section>
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a> · <a href="ord-002.html">Prev: ORD-002</a> · Next: <a href="pay-002.html">PAY-002</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

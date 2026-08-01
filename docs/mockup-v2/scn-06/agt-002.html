@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AGT-002 — Confirm scoped permission | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">AGT-002</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Owner (OWNER-06)</span><span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Owner</button><button class="dk-chip" data-role-btn="provider">Agent</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Confirm scoped permission</h1>
+  <p class="dk-note">Goal: Confirm allowed, approval-required, and forbidden actions</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Consent grant — pending_owner_confirmation.</strong> Nothing activates until the Owner approves. Every action is attributed to AGENT-06 and reversible by the Owner.</span></div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Allowed — Agent may do these</h3>
+<ul class="dk-guards">
+  <li><span class="dk-g dk-g-pass">✓</span> Draft listing details (LST-002 → LST-006)</li>
+  <li><span class="dk-g dk-g-pass">✓</span> Save drafts and edit them before submission</li>
+  <li><span class="dk-g dk-g-pass">✓</span> Submit the draft for Owner review</li>
+</ul>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Approval-required — Owner decides</h3>
+<ul class="dk-guards">
+  <li><span class="dk-g dk-g-pass">✓</span> Publication of the listing (LST-007 → Owner approval)</li>
+  <li><span class="dk-g dk-g-pass">✓</span> Any change to price, quantity, or pickup terms (policy-TBD until fixture defines)</li>
+</ul>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Forbidden — blocked for everyone in this pilot</h3>
+<div class="dk-card dk-card-bad" style="margin-bottom:12px">
+  <strong>⛔ Money / goods custody</strong>
+  <p class="dk-note" style="margin:6px 0">AGENT-06 cannot receive, hold, or move cash or goods for OWNER-06. This capability is globally forbidden — Owner approval cannot override it.</p>
+  <button class="dk-btn" disabled>Take cash custody on behalf of OWNER-06</button>
+  <p class="dk-note" style="margin:6px 0 0">What unblocks it: nothing. The support / report route is the only alternative.</p>
+</div>
+<div class="dk-card dk-card-bad">
+  <strong>⛔ Ownership change</strong>
+  <p class="dk-note" style="margin:6px 0">The Agent cannot change who owns the listing, the payer, or the recipient. Ownership stays with OWNER-06.</p>
+  <button class="dk-btn" disabled>Transfer listing ownership from OWNER-06</button>
+  <p class="dk-note" style="margin:6px 0 0">Blocked with reason — ownership change is not an assisted capability.</p>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Consent grant states</div>
+  <p class="dk-note">proposed → <strong>pending_owner_confirmation</strong> → active → suspended / revoked / expired. History is preserved through every state.</p>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Decline or edit the scope before approving. Forbidden custody/ownership actions stay blocked in every state — even after approval.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="agt-003.html">Approve scoped permission</a>
+  <a class="dk-btn" style="text-decoration:none" href="agt-001.html">Edit scope</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Owner</h3><p class="dk-note">You confirm exactly what the Agent may and may not do. Approving activates the grant; the Agent can then draft only within this scope.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Agent</h3><p class="dk-note">You see the scope the Owner is confirming. You cannot act until it is active, and forbidden actions never become available.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You see the grant proposal, its allowed/approval-required/forbidden lists, and the attributable Owner approval once recorded.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="agt-001.html">Prev: AGT-001</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="agt-003.html">AGT-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — decline/edit scope stays available.</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Owner (OWNER-06)',provider:'Actor: Agent (AGENT-06)',admin:'Actor: Admin (ADMIN-06)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

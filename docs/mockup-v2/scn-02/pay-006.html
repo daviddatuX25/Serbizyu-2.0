@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAY-006 — Evidence status | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">PAY-006</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-02)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-02 · PROVIDER-02</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Evidence status</h1>
+  <p class="dk-note">Goal: Understand external-proof status and next responsibility</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Status vocabulary</strong> submitted → acknowledged → provider-verified (only from a trusted source). Disputed, rejected, and superseded keep history.</span></div>
+
+<ul class="dk-timeline">
+  <li><strong>submitted</strong> — ₱150 · reference <code>EDP-REF-02</code><div class="dk-ev-meta">BUYER-02 · 15:10 · Work unchanged</div></li>
+  <li class="dk-ev-warn"><strong>acknowledged</strong> — Provider confirms receipt of the evidence, not the payment<div class="dk-ev-meta">PROVIDER-02 · 15:20</div></li>
+  <li><strong>provider-verified</strong><div class="dk-ev-meta">not applicable — no trusted adapter event in this fixture</div></li>
+</ul>
+
+<div class="dk-spec" style="margin-top:10px"><div class="dk-spec-label">Evidence access</div>
+  <p class="dk-note" style="margin:4px 0">Attributable and privacy-scoped. A screenshot is submitted evidence until acknowledged or provider-verified by a trusted source.</p>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Unknown or unverified state stays explicit; a correction links the original and the replacement.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='a3-003.html'">Acknowledge evidence</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You see your submission and the Provider acknowledgment state.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You acknowledge, dispute, or wait for a trusted adapter event.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Evidence events are attributable; no verification appears unless the fixture emits it.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="pay-005.html">Prev: PAY-005</a> · Next: <a href="a3-003.html">A3-003</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

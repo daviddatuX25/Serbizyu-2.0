@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORD-003 — Event timeline | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">ORD-003</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-07)</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Buyer</button><button class="dk-chip" data-role-btn="provider">Provider</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Event timeline</h1>
+  <p class="dk-note">Goal: See what happened in a shared attributable timeline</p>
+</header>
+
+<div class="dk-banner dk-bn-hold" style="margin-bottom:12px"><span class="dk-banner-ico">⏸</span><span><strong>On hold — this payment obligation only (₱90 External Cash attestation).</strong> Reason: evidence mismatch under review. Order snapshot, Work, and unrelated orders remain usable. <a href="ops-005.html">View hold</a></span></div>
+
+<ul class="dk-timeline">
+  <li><strong>Terms accepted</strong> — Order snapshot v1<div class="dk-ev-meta">BUYER-07 + PROVIDER-07 · ₱90 · A1 Linear Project · External Cash</div></li>
+  <li><strong>Work started</strong> — Step 1<div class="dk-ev-meta">PROVIDER-07 · Work unchanged by payment events</div></li>
+  <li><strong>buyer_reported</strong> — ₱90 cash paid<div class="dk-ev-meta">BUYER-07 · payment declared; Work unchanged</div></li>
+  <li><strong>provider_reported</strong> — ₱90 cash received<div class="dk-ev-meta">PROVIDER-07 · attestation, not proof</div></li>
+  <li class="dk-ev-bad"><strong>Evidence mismatch reported</strong> — payment/item evidence does not match agreed state<div class="dk-ev-meta">BUYER-07 · PAY-004</div></li>
+  <li class="dk-ev-warn"><strong>Dispute opened</strong> — TRU-002 intake<div class="dk-ev-meta">BUYER-07 · state: opened → evidence_requested</div></li>
+  <li class="dk-ev-warn"><strong>Hold placed</strong> — payment obligation only<div class="dk-ev-meta">ADMIN-07 · reason + scope recorded · Work and unrelated orders usable</div></li>
+  <li class="dk-ev-warn"><strong>Evidence requested</strong> — fixture note from PROVIDER-07<div class="dk-ev-meta">ADMIN-07 · case owner · under_review next</div></li>
+</ul>
+
+<div class="dk-spec" style="margin-top:12px"><div class="dk-spec-label">Reviewer check</div>
+  <p class="dk-note" style="margin:4px 0">What exactly is on hold, and what remains usable? The payment obligation attestation (₱90) is on hold; Order snapshot, Work, and unrelated orders remain usable.</p>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Unknown/failed event is labeled pending/retry/support — history is never rewritten. A failed evidence-processing event shows retry (OPS-007 path) without double effect.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="tru-002.html">Open dispute case →</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You see the timeline with the mismatch event, the dispute state, and the exact hold scope. No fixed outcome, no automatic refund promise.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see the same dispute scope and the evidence request. Original terms remain visible; unrelated work/payment objects are not silently blocked.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Full audit view: separate Order, Work, payment, evidence, dispute, and hold events — resolution adds a correction event instead of rewriting history.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="pay-004.html">Prev: PAY-004</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="tru-002.html">TRU-002</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in this timeline.</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Buyer (BUYER-07)',provider:'Actor: Provider (PROVIDER-07)',admin:'Actor: Admin (ADMIN-07)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

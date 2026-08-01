@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AGT-003 — Assisted tasks | Serbizyu mockup</title><link rel="stylesheet" href="../assets/dk.css"></head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="dk-badge dk-b-neutral">AGT-003</span><span class="dk-badge dk-b-info" data-role-badge>Actor: Agent (AGENT-06)</span><span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span><span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span></div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px"><button class="dk-chip" data-role-btn="buyer">Owner</button><button class="dk-chip" data-role-btn="provider">Agent</button><button class="dk-chip" data-role-btn="admin">Admin</button></div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Assisted tasks</h1>
+  <p class="dk-note">Goal: Work only within an Owner-specific scope</p>
+</header>
+
+<div class="dk-banner dk-bn-agent" style="margin-bottom:12px"><span class="dk-banner-ico">🤝</span><span><strong>Acting for OWNER-06.</strong> AGENT-06 · Scope: listing draft only · Publication requires Owner approval · no cash/goods custody · <a href="agt-004.html">Revoke</a></span></div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Active grant</h3>
+<div class="dk-card">
+  <span class="dk-badge dk-b-ok">✓ active</span>
+  <p class="dk-note" style="margin:6px 0 0">Consent grant: AGENT-06 → OWNER-06 · listing draft only · approved by OWNER-06 · attribution on every action · <span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span></p>
+</div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Permitted tasks (within scope)</h3>
+<ul class="dk-guards">
+  <li><span class="dk-g dk-g-pass">✓</span> Draft a Product Listing for OWNER-06 (LST-002 → LST-006)</li>
+  <li><span class="dk-g dk-g-pass">✓</span> Save drafts — OWNER-06 receives a plain-language notice</li>
+  <li><span class="dk-g dk-g-pass">✓</span> Submit the draft for Owner review (publication is approval-required)</li>
+</ul>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Pending approvals</h3>
+<div class="dk-empty">No listing submitted yet. After submission, publication waits for OWNER-06 approval — the Agent cannot publish.</div>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Owner notices</h3>
+<p class="dk-note">Each saved draft generates a notice to OWNER-06 with what changed and who acted. Notices are not approvals.</p>
+
+<div class="dk-card dk-card-bad" style="margin-top:16px">
+  <strong>⛔ Forbidden — no earnings / custody assumption</strong>
+  <p class="dk-note" style="margin:6px 0">AGENT-06 never takes or moves cash or goods for OWNER-06. This is globally forbidden — Owner approval cannot override it. Support / report is the only route.</p>
+  <button class="dk-btn" disabled>Collect payment on behalf of OWNER-06</button>
+  <p class="dk-note" style="margin:6px 0 0">Blocked with reason: cash/goods custody is not an assisted capability in this pilot.</p>
+</div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Permission expiry or revocation blocks every future assisted action and routes to the Owner (AGT-004) or support. History is preserved.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <a class="dk-btn dk-primary" style="text-decoration:none" href="lst-002.html">Open permitted assisted task →</a>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Owner</h3><p class="dk-note">You see the acting-for context and every permitted task before the Agent starts. Nothing is published without your approval.</p></section>
+<section data-role-view="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Agent</h3><p class="dk-note">You may open the listing draft task. The banner stays visible on every assisted screen — the Owner remains the owner.</p></section>
+<section data-role-view="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">You see the active grant, its scope, and the attribution boundary. Forbidden capabilities never appear as available actions.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="agt-002.html">Prev: AGT-002</a> · <a href="sys-001.html">Scenario map</a> · <a href="../index.html">All scenarios</a> · Next: <a href="lst-002.html">LST-002</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — the Owner can pause or revoke at any time (AGT-004).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+<script>(function(){var M={buyer:'Actor: Owner (OWNER-06)',provider:'Actor: Agent (AGENT-06)',admin:'Actor: Admin (ADMIN-06)'};function paint(){var r=document.body.dataset.role||'buyer';Array.prototype.forEach.call(document.querySelectorAll('[data-role-badge]'),function(el){el.textContent=M[r]||el.textContent});}paint();var sw=document.getElementById('dk-role-switch');if(sw){sw.addEventListener('click',paint);}})();</script>
+</body></html>

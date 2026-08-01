@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SYS-001 — SCN-04 — A4 purchase-on-behalf · External Cash (conditional) | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+<span class="dk-badge dk-b-neutral">SYS-001</span>
+<span class="dk-badge dk-b-info" data-role-badge>Actor: All / reviewer</span>
+<span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+<span class="dk-badge dk-b-info">⚑ PILOT-CONDITIONAL</span>
+</div>
+<div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<h1 style="font-size:22px;margin:8px 0 4px">SCN-04 — A4 purchase-on-behalf · External Cash (conditional)</h1>
+<p class="dk-note">Goal: Choose a useful scenario and understand prototype scope</p>
+</header>
+<div class="dk-banner dk-bn-cond" style="margin-bottom:12px"><span class="dk-banner-ico">⚑</span><span><strong>PILOT-CONDITIONAL — purchase-on-behalf (cohort capstone_demo).</strong> No fixture spending before Buyer approval. No automatic substitution, payment confirmation, or spending beyond the approved estimate.</span></div>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px">
+<span class="dk-banner-ico">🧩</span>
+<span><strong>REFERENCE ONLY</strong> Lo-fi disposable mockup. Fictional fixture (cohort capstone_demo, PILOT-CONDITIONAL). No backend, no real payment, no pilot claim.</span>
+</div>
+<h3 style="font-size:15px;margin:16px 0 8px">Fixture</h3>
+<dl class="dk-kv">
+<dt>Buyer</dt><dd>BUYER-04 — fictional Tagudin parent</dd>
+<dt>Provider/helper</dt><dd>PROVIDER-04 — fictional local helper</dd>
+<dt>Need</dt><dd>Fictional school-supply item list</dd>
+<dt>Approved estimate</dt><dd>₱300 maximum fixture budget</dd>
+<dt>Work shape</dt><dd>A4 purchase-on-behalf extension</dd>
+<dt>Payment lane</dt><dd>External Cash in the reference fixture</dd>
+<dt>Cohort</dt><dd>capstone_demo — persistent PILOT-CONDITIONAL label</dd>
+</dl>
+<h3 style="font-size:15px;margin:16px 0 8px">SYS-002 · Switch role (shared fixture — nothing is lost)</h3>
+<div id="dk-role-switch" style="display:flex;gap:6px">
+<button class="dk-chip" data-role-btn="buyer">Buyer</button>
+<button class="dk-chip" data-role-btn="provider">Provider</button>
+<button class="dk-chip" data-role-btn="admin">Admin</button>
+</div>
+<p class="dk-note">The same Order/Work/Payment state is shown to each role; only permissions and next actions differ.</p>
+<h3 style="font-size:15px;margin:16px 0 8px">SYS-003 · Journey map</h3>
+<ul class="dk-timeline" data-jstep="request">
+<li data-step="request"><strong>Request</strong><div class="dk-ev-meta">REQ-001 → REQ-002 → REQ-003 → REQ-004 → REQ-005</div></li>
+<li data-step="order"><strong>Order</strong><div class="dk-ev-meta">ORD-001 → ORD-002</div></li>
+<li data-step="spend"><strong>Approval gate + spend</strong><div class="dk-ev-meta">A4-005 → A4-001</div></li>
+<li data-step="handoff"><strong>Handoff + receipt</strong><div class="dk-ev-meta">A4-002 → A4-003</div></li>
+<li data-step="timeline"><strong>Timeline</strong><div class="dk-ev-meta">ORD-003</div></li>
+</ul>
+<h3 style="font-size:15px;margin:16px 0 8px">SYS-004 · Reset &amp; prototype limits</h3>
+<div class="dk-policy-tbd"><strong>Prototype limits.</strong> Deterministic fixture only. Resetting returns the fixture to its starting state. No real SMS, no real payment, no identity collection, no production data. Required failure branch: actual cost ₱330 above the approved ₱300 stops the flow for Buyer approval — no automatic spending or substitution.</div>
+<div style="margin:12px 0"><button class="dk-btn" onclick="location.reload()">↺ Reset fixture</button></div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+<a class="dk-btn dk-primary" style="text-decoration:none" href="req-001.html">Start SCN-04 as Buyer →</a>
+<a class="dk-btn" style="text-decoration:none" href="../index.html">All scenarios</a>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="../index.html">Scenario map</a></nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true">
+<div class="dk-modal">
+<h4>Help</h4>
+<p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p>
+<button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button>
+</div>
+</div>
+
+<script src="../assets/mockup.js">
+</script>
+</body>
+</html>

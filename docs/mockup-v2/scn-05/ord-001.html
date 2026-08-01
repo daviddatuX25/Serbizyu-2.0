@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORD-001 — Confirm order terms | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">ORD-001</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-05)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-05 · PROVIDER-05</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Confirm order terms</h1>
+  <p class="dk-note">Goal: Confirm both sides mean the same thing before commitment</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Snapshot</strong> Acceptance creates an immutable Order terms snapshot (v1).</span></div>
+
+<dl class="dk-kv">
+  <dt>Parties</dt><dd>BUYER-05 (Buyer) · PROVIDER-05 (Provider)</dd>
+  <dt>Scope</dt><dd>Simple digital invitation layout · one revision included</dd>
+  <dt>Amount</dt><dd>₱250 exact</dd>
+  <dt>Work shape</dt><dd>A9 Digital Delivery</dd>
+  <dt>Lane</dt><dd>External Digital Proof — evidence only</dd>
+  <dt>Custody</dt><dd>Serbizyu holds nothing</dd>
+  <dt>Commission</dt><dd>0% (capstone / initial pilot)</dd>
+  <dt>Protection</dt><dd>Tiwala does not apply to this lane</dd>
+  <dt>Payment ≠ Work</dt><dd>Submitting payment evidence never completes delivery; delivery never proves payment</dd>
+  <dt>Retention / privacy</dt><dd>Attributable access; fixture files kept for review — exact retention window policy to be defined</dd>
+</dl>
+
+<div class="dk-spec" style="margin-top:10px"><div class="dk-spec-label">Before you confirm</div><p class="dk-note" style="margin:4px 0">Serbizyu does not hold the ₱250, does not guarantee outside payment, and records only submitted evidence and declarations.</p></div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Terms changed or stale? They are blocked from confirmation — return to explicit re-review.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='ord-002.html'">Confirm terms</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">You are committing to the terms above. Work has not started.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You see the same snapshot. You cannot silently change scope or amount after acceptance.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Acceptance emits a snapshot event (ORD-001). Cohort: capstone_demo.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="dsc-005.html">Prev: DSC-005</a> · Next: <a href="ord-002.html">ORD-002</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>

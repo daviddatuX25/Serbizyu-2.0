@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAY-005 — Submit external proof | Serbizyu mockup</title>
+<link rel="stylesheet" href="../assets/dk.css">
+</head>
+<body>
+<main class="dk-main" style="max-width:760px;margin:0 auto;padding:24px">
+<header style="margin-bottom:16px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span class="dk-badge dk-b-neutral">PAY-005</span>
+    <span class="dk-badge dk-b-info" data-role-badge>Actor: Buyer (BUYER-02)</span>
+    <span class="dk-badge dk-b-neutral">Fixture: BUYER-02 · PROVIDER-02</span>
+    <span class="dk-badge dk-b-sandbox">🧩 REFERENCE ONLY</span>
+  </div>
+  <div id="dk-role-switch" style="margin:8px 0;display:flex;gap:6px">
+    <button class="dk-chip" data-role-btn="buyer">Buyer</button>
+    <button class="dk-chip" data-role-btn="provider">Provider</button>
+    <button class="dk-chip" data-role-btn="admin">Admin</button>
+  </div>
+  <h1 style="font-size:22px;margin:8px 0 4px">Submit external proof</h1>
+  <p class="dk-note">Goal: Submit external digital evidence without overclaiming</p>
+</header>
+
+<div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span><span><strong>Evidence meaning</strong> A screenshot or reference is submitted evidence — not a verification. 0% initial pilot commission; Serbizyu holds nothing; Tiwala does not apply.</span></div>
+
+<dl class="dk-kv">
+  <dt>Obligation</dt><dd>₱150 · BUYER-02 → PROVIDER-02 · External Digital Proof</dd>
+  <dt>Provider / reference</dt><dd>PROVIDER-02 · fictional reference <code>EDP-REF-02</code></dd>
+  <dt>Amount / time</dt><dd>₱150 · 15:10 (fictional)</dd>
+  <dt>Evidence</dt><dd>Screenshot fixture (placeholder) — redact anything not needed for the reference</dd>
+</dl>
+
+<h3 style="font-size:15px;margin:16px 0 8px">Evidence lifecycle (annotated states)</h3>
+<div class="dk-card dk-evi"><div class="dk-thumb">📎</div><div><span class="dk-badge dk-b-info">uploaded</span><p class="dk-note" style="margin:6px 0 0">File received; awaiting processing</p></div></div>
+<div class="dk-card dk-evi"><div class="dk-thumb">📎</div><div><span class="dk-badge dk-b-info">processing</span><p class="dk-note" style="margin:6px 0 0">Validation/scan in progress</p></div></div>
+<div class="dk-card dk-evi"><div class="dk-thumb">📎</div><div><span class="dk-badge dk-b-ok">accepted</span><p class="dk-note" style="margin:6px 0 0">Accepted as evidence — does not complete Work or prove payment</p></div></div>
+<div class="dk-card dk-evi"><div class="dk-thumb">📎</div><div><span class="dk-badge dk-b-bad">rejected</span><p class="dk-note" style="margin:6px 0 0">Reason shown; safe resubmission path</p></div></div>
+<div class="dk-card dk-evi"><div class="dk-thumb">📎</div><div><span class="dk-badge dk-b-warn">superseded</span><p class="dk-note" style="margin:6px 0 0">Replaced by newer version; original kept</p></div></div>
+
+<div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Recovery / failure variant</div>
+  <div class="dk-empty">Validation or rejection preserves safe resubmission — and never labels an upload provider-verified.</div>
+</div>
+
+<div class="dk-actionbar" style="position:sticky;bottom:0;margin-top:20px">
+  <button class="dk-btn dk-primary" onclick="location.href='pay-006.html'">Submit evidence</button>
+  <button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.add('dk-open')">Get help</button>
+</div>
+
+<section data-role-view data-role="buyer" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Buyer</h3><p class="dk-note">After submitting you see <code>Evidence submitted</code> — never provider-verified.</p></section>
+<section data-role-view data-role="provider" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Provider</h3><p class="dk-note">You can acknowledge, dispute, or wait for a trusted adapter event if the fixture supplies one.</p></section>
+<section data-role-view data-role="admin" hidden><h3 style="font-size:15px;margin:16px 0 8px">View as Admin</h3><p class="dk-note">Evidence access is attributable and privacy-scoped.</p></section>
+
+<nav style="margin-top:16px;font-size:13px">← <a href="sys-001.html">Scenario map</a> · <a href="pay-002.html">Prev: PAY-002</a> · Next: <a href="pay-006.html">PAY-006</a> →</nav>
+</main>
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true"><div class="dk-modal"><h4>Help</h4><p class="dk-note">Support route always visible: scenario map (SYS-001) to reset, or continue the route — support appears in the timeline (ORD-003).</p><button class="dk-btn dk-ghost" onclick="document.getElementById('dk-modal-veil').classList.remove('dk-open')">Close</button></div></div>
+<script src="../assets/mockup.js"></script>
+</body>
+</html>
