@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Serbizyu 2.0 — Lo-Fi UI Design Kit</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="dk-shell">
+
+  <aside class="dk-rail">
+    <h1>Design Kit</h1>
+    <div class="dk-note">Lo-fi element suite · Reference only · No backend</div>
+    <div class="dk-banner dk-bn-ref" style="margin:12px 0">
+      <span class="dk-banner-ico">🧩</span>
+      <span><strong>REFERENCE ONLY</strong> Elements, not product screens. Fictional data.</span>
+    </div>
+    <nav id="dk-nav">
+      <a href="#s-tokens">0 · Tokens</a>
+      <a href="#s-primitives">1 · Primitives</a>
+      <a href="#s-banners">2 · Banners</a>
+      <a href="#s-states">3 · State variants</a>
+      <a href="#s-payment">4 · Payment elements</a>
+      <a href="#s-trust">5 · Evidence &amp; trust</a>
+      <a href="#s-edge">6 · Edge elements</a>
+      <a href="#s-exemplar">7 · SCN-01 exemplar</a>
+    </nav>
+    <p class="dk-note" style="margin-top:16px">
+      Mapping: <code>10</code> dossier · <code>10a</code> screen matrix · <code>10b</code> scenarios
+    </p>
+  </aside>
+
+  <main class="dk-main">
+
+    <!-- ================= 0 TOKENS ================= -->
+    <section class="dk-section" id="s-tokens">
+      <h2>0 · Tokens</h2>
+      <p class="dk-map">Basis for every element. Grayscale-first; one accent for the primary action. Status hues are always paired with icon + text (dossier §12.6).</p>
+      <div class="dk-grid dk-cols-2">
+        <div class="dk-spec"><div class="dk-spec-label">Color</div>
+          <div class="dk-grid" style="grid-template-columns:repeat(4,1fr)">
+            <div><div style="height:40px;background:var(--dk-ink);border-radius:6px"></div><small>ink</small></div>
+            <div><div style="height:40px;background:var(--dk-ink-3);border-radius:6px"></div><small>ink-3</small></div>
+            <div><div style="height:40px;background:var(--dk-line);border-radius:6px"></div><small>line</small></div>
+            <div><div style="height:40px;background:var(--dk-accent);border-radius:6px"></div><small>accent</small></div>
+            <div><div style="height:40px;background:var(--dk-ok);border-radius:6px"></div><small>ok*</small></div>
+            <div><div style="height:40px;background:var(--dk-warn);border-radius:6px"></div><small>warn*</small></div>
+            <div><div style="height:40px;background:var(--dk-bad);border-radius:6px"></div><small>bad*</small></div>
+            <div><div style="height:40px;background:var(--dk-sandbox);border-radius:6px"></div><small>sandbox*</small></div>
+          </div>
+          <p class="dk-note">*status hues never appear without an icon and a text label.</p>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Type scale</div>
+          <div style="font-size:var(--dk-fs-xl)">Xl 22 — Page title</div>
+          <div style="font-size:var(--dk-fs-lg)">Lg 18 — Section</div>
+          <div style="font-size:var(--dk-fs-md)">Md 15 — Body</div>
+          <div style="font-size:var(--dk-fs-sm)">Sm 13 — Secondary</div>
+          <div style="font-size:var(--dk-fs-xs)">Xs 12 — Meta / mapping</div>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Spacing</div>
+          <div class="dk-kv">
+            <dt>sp-1</dt><dd>4px — inline gaps</dd>
+            <dt>sp-2</dt><dd>8px — field gaps</dd>
+            <dt>sp-3</dt><dd>12px — card inner</dd>
+            <dt>sp-4</dt><dd>16px — card padding</dd>
+            <dt>sp-5</dt><dd>24px — section gap</dd>
+            <dt>sp-6</dt><dd>32px — page padding</dd>
+          </div>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Radius / elevation / target</div>
+          <div class="dk-kv">
+            <dt>r-sm 4</dt><dd>inputs, badges</dd>
+            <dt>r-md 8</dt><dd>cards, buttons</dd>
+            <dt>r-lg 12</dt><dd>modals</dd>
+            <dt>shadow</dt><dd>0 1px 2px — subtle only</dd>
+            <dt>target</dt><dd>≥ 44px touch target</dd>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 1 PRIMITIVES ================= -->
+    <section class="dk-section" id="s-primitives">
+      <h2>1 · Primitives</h2>
+      <p class="dk-map">Dossier §8 screen anatomy; every interactive element shown with its disabled/invalid sibling.</p>
+
+      <h3>Buttons</h3>
+      <div class="dk-grid dk-cols-2">
+        <div class="dk-spec"><div class="dk-spec-label">Variants</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="dk-btn dk-primary">Confirm terms</button>
+            <button class="dk-btn">Secondary</button>
+            <button class="dk-btn dk-ghost">Ghost</button>
+            <button class="dk-btn dk-danger">Report a concern</button>
+          </div>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Disabled (with reason nearby)</div>
+          <button class="dk-btn dk-primary" disabled>Release funds</button>
+          <p class="dk-note">Reason must be listed beside it — e.g. guard checklist failures, never a bare disabled button.</p>
+        </div>
+      </div>
+
+      <h3>Fields</h3>
+      <div class="dk-grid dk-cols-2">
+        <div class="dk-spec"><div class="dk-spec-label">Input + hint</div>
+          <div class="dk-field">
+            <label for="f1">Amount (₱)</label>
+            <input id="f1" class="dk-input" value="80">
+            <span class="dk-hint">Exact peso amount. No hidden minimum.</span>
+          </div>
+          <div class="dk-field">
+            <label for="f2">Work shape</label>
+            <select id="f2" class="dk-select"><option>A1 — Linear Project</option><option>A3 — Appointment</option></select>
+          </div>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Invalid (error next to control)</div>
+          <div class="dk-field">
+            <label for="f3">Tagudin area</label>
+            <input id="f3" class="dk-input dk-invalid" value="">
+            <span class="dk-error-text">Required — e.g. “Poblacion”. Draft preserved.</span>
+          </div>
+          <div class="dk-field">
+            <label for="f4">Scope</label>
+            <textarea id="f4" class="dk-textarea">Hand-drawn greeting card layout, one revision.</textarea>
+          </div>
+        </div>
+      </div>
+
+      <h3>Chips · Badges · Avatar · Progress · Skeleton · Empty · Table</h3>
+      <div class="dk-grid dk-cols-2">
+        <div class="dk-spec"><div class="dk-spec-label">Chips (filters)</div>
+          <span class="dk-chip dk-on">Tagudin ✓</span>
+          <span class="dk-chip">A1 Linear</span>
+          <span class="dk-chip">External Cash</span>
+          <span class="dk-chip">₱50–₱100</span>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Badges (icon + text)</div>
+          <span class="dk-badge dk-b-ok">✓ mutually_acknowledged</span>
+          <span class="dk-badge dk-b-warn">⏳ provider report missing</span>
+          <span class="dk-badge dk-b-bad">⚠ mismatch</span>
+          <span class="dk-badge dk-b-info">ℹ PILOT-CONDITIONAL</span>
+          <span class="dk-badge dk-b-sandbox">🧪 SANDBOX ONLY</span>
+          <span class="dk-badge dk-b-neutral">draft</span>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Avatar + progress</div>
+          <span class="dk-avatar">MA</span>
+          <div class="dk-progress" style="margin-top:12px"><i style="width:40%"></i></div>
+          <p class="dk-note">Step 2 of 5 — never percent-only without named steps.</p>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Skeleton (loading)</div>
+          <div class="dk-skeleton" style="height:16px;width:70%"></div>
+          <div class="dk-skeleton" style="height:16px;width:50%;margin-top:8px"></div>
+          <div class="dk-skeleton" style="height:44px;margin-top:8px"></div>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Empty state</div>
+          <div class="dk-empty">
+            <strong>No matching listings.</strong><br>
+            Try another category family, or post what you need.
+            <div style="margin-top:10px"><button class="dk-btn dk-primary">Post what I need</button></div>
+          </div>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Table (inspectors)</div>
+          <table class="dk-table">
+            <tr><th>Event</th><th>Actor</th><th>State</th></tr>
+            <tr><td>buyer_reported</td><td>BUYER-01</td><td>₱80 cash paid</td></tr>
+            <tr><td>provider_reported</td><td>PROVIDER-01</td><td>— missing</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <h3>Modal · Toast · Sticky action bar</h3>
+      <div class="dk-grid dk-cols-2">
+        <div class="dk-spec"><div class="dk-spec-label">Confirmation modal pattern</div>
+          <button class="dk-btn" data-modal-open>Show modal</button>
+          <p class="dk-note">High-impact actions: scope preview + consequence + reason field before confirm.</p>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Toast (never critical-only)</div>
+          <button class="dk-btn dk-ghost" data-toast>Show toast</button>
+          <p class="dk-note">Critical meaning must also live on the screen/timeline, not only in a toast (§12.4).</p>
+        </div>
+      </div>
+      <div class="dk-spec" style="margin-top:16px"><div class="dk-spec-label">Sticky action bar (mobile-safe)</div>
+        <div class="dk-actionbar" style="position:static;border:1px solid var(--dk-line);border-radius:8px">
+          <button class="dk-btn dk-primary" style="flex:1">Report cash paid</button>
+          <button class="dk-btn dk-ghost">Get help</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 2 BANNERS ================= -->
+    <section class="dk-section" id="s-banners">
+      <h2>2 · Banners</h2>
+      <p class="dk-map">Persistent, non-removable where marked. Dossier §11 variants, §12 special rules.</p>
+      <div class="dk-grid">
+        <div class="dk-banner dk-bn-sandbox"><span class="dk-banner-ico">🧪</span>
+          <span><strong>SANDBOX ONLY — simulated provider event.</strong> No live-money result. No Tiwala protection. Not counted in genuine pilot metrics.</span></div>
+        <div class="dk-banner dk-bn-ref"><span class="dk-banner-ico">🧩</span>
+          <span><strong>REFERENCE ONLY.</strong> Lo-fi disposable design element. Fictional fixture data. No backend.</span></div>
+        <div class="dk-banner dk-bn-offline"><span class="dk-banner-ico">📵</span>
+          <span><strong>You are offline.</strong> Draft saved on this device at 14:02 — not yet submitted. Irreversible actions are unavailable offline.</span></div>
+        <div class="dk-banner dk-bn-agent"><span class="dk-banner-ico">🤝</span>
+          <span><strong>Acting for OWNER-06.</strong> AGENT-06 · Scope: listing draft only · Publication requires Owner approval · <a href="#">Revoke</a></span></div>
+        <div class="dk-banner dk-bn-hold"><span class="dk-banner-ico">⏸</span>
+          <span><strong>On hold — this payment only.</strong> Reason: evidence mismatch under review. Work and unrelated orders remain available. <a href="#">View hold</a></span></div>
+        <div class="dk-banner dk-bn-cond"><span class="dk-banner-ico">⚑</span>
+          <span><strong>PILOT-CONDITIONAL.</strong> Quick Deal is order formation only — not fulfillment. Counterparty confirmation required before an Order exists.</span></div>
+      </div>
+    </section>
+
+    <!-- ================= 3 STATE VARIANTS ================= -->
+    <section class="dk-section" id="s-states">
+      <h2>3 · State variants</h2>
+      <p class="dk-map">One rendered element per dossier §11 variant row. These are the kit’s state vocabulary.</p>
+      <div class="dk-grid dk-cols-2" id="dk-variants"><!-- rendered by kit.js --></div>
+    </section>
+
+    <!-- ================= 4 PAYMENT ELEMENTS ================= -->
+    <section class="dk-section" id="s-payment">
+      <h2>4 · Payment elements</h2>
+      <p class="dk-map">J-11 · PAY-001–008 · PRD-031–043. Payment and Work are never collapsed.</p>
+
+      <h3>4.1 Order / Work / Payment separation panel</h3>
+      <div class="dk-spec"><div class="dk-spec-label">Separation panel — one Order, three truths</div>
+        <div class="dk-sep">
+          <div class="dk-agg"><h5>Order</h5><div class="dk-agg-state">Accepted</div>
+            <small>Terms snapshot v1 · ₱80 · A1 Linear Project · External Cash</small></div>
+          <div class="dk-agg"><h5>Work</h5><div class="dk-agg-state">In progress</div>
+            <small>Step 2 of 3 · evidence v1 uploaded · completion NOT proposed</small></div>
+          <div class="dk-agg"><h5>Payment obligation</h5><div class="dk-agg-state">buyer_reported</div>
+            <small>Provider report missing · Serbizyu holds no cash</small></div>
+        </div>
+        <p class="dk-note">Rule (PRD-031): a payment report never advances Work; Work never proves external payment.</p>
+      </div>
+
+      <h3>4.2 Two-sided External Cash report</h3>
+      <div class="dk-grid dk-cols-2">
+        <div class="dk-spec"><div class="dk-spec-label">One side reported (PAY-003)</div>
+          <div class="dk-cash2">
+            <div class="dk-side dk-done">
+              <strong>Buyer</strong><br><span class="dk-badge dk-b-ok">✓ buyer_reported</span>
+              <div class="dk-note">“Cash paid ₱80” · 14:02</div>
+            </div>
+            <div class="dk-join">→</div>
+            <div class="dk-side dk-wait">
+              <strong>Provider</strong><br><span class="dk-badge dk-b-warn">⏳ report missing</span>
+              <div style="margin-top:8px"><button class="dk-btn dk-primary">Report cash received</button></div>
+            </div>
+          </div>
+          <p class="dk-note">Silence is not proof. 0% pilot commission. No custody, no automatic refund.</p>
+        </div>
+        <div class="dk-spec"><div class="dk-spec-label">Mutually acknowledged (PAY-004)</div>
+          <div class="dk-cash2">
+            <div class="dk-side dk-done"><strong>Buyer</strong><br><span class="dk-badge dk-b-ok">✓ ₱80 paid</span></div>
+            <div class="dk-join">＝</div>
+            <div class="dk-side dk-done"><strong>Provider</strong><br><span class="dk-badge dk-b-ok">✓ ₱80 received</span></div>
+          </div>
+          <p style="margin-top:10px"><span class="dk-badge dk-b-ok">✓ mutually_acknowledged</span>
+            <span class="dk-note">— attested by both parties; still separate from Work.</span></p>
+          <div style="margin-top:8px"><button class="dk-btn dk-ghost">Report a mismatch instead</button></div>
+        </div>
+      </div>
+
+      <h3>4.3 Lane cards</h3>
+      <div class="dk-grid dk-cols-2" id="dk-lanes"><!-- rendered by kit.js --></div>
+
+      <h3>4.4 Tiwala release-guard checklist (sandbox)</h3>
+      <div class="dk-spec"><div class="dk-spec-label">PAY-008 — guarded release attempt</div>
+        <div class="dk-banner dk-bn-sandbox" style="margin-bottom:12px"><span class="dk-banner-ico">🧪</span>
+          <span><strong>SANDBOX ONLY — protected-release behavior is simulated.</strong> Release clock starts at valid completion/sign-off eligibility, never at Order creation.</span></div>
+        <ul class="dk-guards">
+          <li><span class="dk-g dk-g-pass">✓</span> Obligation in correct pre-release state</li>
+          <li><span class="dk-g dk-g-pass">✓</span> Work completed under shape contract</li>
+          <li><span class="dk-g dk-g-fail">✗</span> Sign-off / review eligibility valid</li>
+          <li><span class="dk-g dk-g-pass">✓</span> No active dispute</li>
+          <li><span class="dk-g dk-g-fail">✗</span> No fraud / safety / legal / admin hold</li>
+          <li><span class="dk-g dk-g-pass">✓</span> Amount reconciles</li>
+          <li><span class="dk-g dk-g-na">–</span> Policy snapshot current</li>
+          <li><span class="dk-g dk-g-pass">✓</span> No prior release event</li>
+        </ul>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="dk-btn dk-primary" disabled>Attempt simulated release</button>
+          <span class="dk-note">Blocked: 2 guards unmet. Retries are idempotent.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 5 EVIDENCE & TRUST ================= -->
+    <section class="dk-section" id="s-trust">
+      <h2>5 · Evidence &amp; trust elements</h2>
+      <p class="dk-map">§12.2 evidence lifecycle · J-03 consent · J-12 dispute · timeline.</p>
+
+      <h3>5.1 Evidence card — lifecycle</h3>
+      <div class="dk-grid dk-cols-2" id="dk-evidence"><!-- rendered by kit.js --></div>
+
+      <h3>5.2 Consent grant card (Agent)</h3>
+      <div class="dk-grid dk-cols-2" id="dk-consent"><!-- rendered by kit.js --></div>
+
+      <h3>5.3 Dispute intake summary</h3>
+      <div class="dk-spec"><div class="dk-spec-label">TRU-002 — smallest useful intake</div>
+        <dl class="dk-kv">
+          <dt>What happened</dt><dd>Amount does not match what I paid.</dd>
+          <dt>Affected</dt><dd>Order #DEMO-101 → Payment obligation (₱80, External Cash)</dd>
+          <dt>Evidence</dt><dd>1 item submitted · <span class="dk-badge dk-b-info">processing</span></dd>
+          <dt>Safety concern</dt><dd>No</dd>
+          <dt>Requested remedy</dt><dd>Clarification with Provider</dd>
+          <dt>State</dt><dd><span class="dk-badge dk-b-warn">evidence_requested</span> → under_review next</dd>
+        </dl>
+        <p class="dk-note">No fixed outcome, no universal time window, no automatic refund promised. <code>withdrawn</code> and conditional <code>appealed</code> states supported.</p>
+      </div>
+
+      <h3>5.4 Event timeline</h3>
+      <div class="dk-spec"><div class="dk-spec-label">ORD-003 — attributed, nothing rewritten</div>
+        <ul class="dk-timeline">
+          <li><strong>Terms accepted</strong> — Order snapshot v1<div class="dk-ev-meta">BUYER-01 + PROVIDER-01 · 13:50</div></li>
+          <li><strong>Work started</strong><div class="dk-ev-meta">PROVIDER-01 · 13:58</div></li>
+          <li><strong>buyer_reported</strong> — ₱80 cash paid<div class="dk-ev-meta">BUYER-01 · 14:02 · Work unchanged</div></li>
+          <li class="dk-ev-warn"><strong>Progress evidence v1</strong> — revision requested<div class="dk-ev-meta">BUYER-01 · 15:10</div></li>
+          <li class="dk-ev-bad"><strong>Correction event</strong> — supersedes evidence v1, original kept<div class="dk-ev-meta">PROVIDER-01 · 15:40</div></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================= 6 EDGE ELEMENTS ================= -->
+    <section class="dk-section" id="s-edge">
+      <h2>6 · Edge elements</h2>
+      <p class="dk-map">The fundamentals you flagged: air-gapped QR feed and archetype formulation, plus safety and unresolved-policy placeholders.</p>
+
+      <h3>6.1 QR live feed — air-gapped order formation</h3>
+      <p class="dk-map">J-05 conditional Quick Deal · PRD-020/021 · offline authority boundary.</p>
+      <div class="dk-spec"><div class="dk-spec-label">Chunked frame stream — deterministic placeholder frames</div>
+        <div class="dk-banner dk-bn-offline" style="margin-bottom:12px"><span class="dk-banner-ico">📵</span>
+          <span><strong>OFFLINE — draft intent only.</strong> This exchange cannot authorize digital payment, payout, release, final inventory, or irreversible consent. Counterparty confirmation is still required.</span></div>
+        <div class="dk-qrfeed">
+          <div class="dk-qrframe" id="dk-qrframe" aria-label="QR frame placeholder"></div>
+          <div class="dk-qrmeta">
+            <div class="dk-qr-count" id="dk-qrcount">Frame 1 / 6</div>
+            <div>Payload: <code id="dk-qrhash">qdeal:a3f9…</code></div>
+            <div>Expires in: <span class="dk-qrexpiry" id="dk-qrexpiry">00:45</span></div>
+            <div class="dk-note">Frames loop so a camera can capture chunks without connectivity. Expiry requires re-issue; a stale frame is rejected, never auto-applied.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="dk-btn" id="dk-qrpause">Pause</button>
+              <button class="dk-btn dk-ghost" id="dk-qrreissue">Re-issue (reset expiry)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3>6.2 Archetype formulation interface</h3>
+      <p class="dk-map">LST-005 · mechanism × Work shape × lane composer with validity guards (J-02 stage 2, J-05).</p>
+      <div class="dk-spec"><div class="dk-spec-label">Composer — invalid combos disabled with reason; conditional/sandbox flagged</div>
+        <div class="dk-arch" id="dk-arch"><!-- rendered by kit.js --></div>
+      </div>
+
+      <h3>6.3 Safety at the point of risk</h3>
+      <p class="dk-map">§12.3 · A3/A4 physical interaction · TRU-003.</p>
+      <div class="dk-safety">
+        <h5>⚠ Before you confirm this handoff</h5>
+        <ul>
+          <li>Prefer a public meeting point (fixture: Tagudin public market entrance).</li>
+          <li>No home entry by default — enable only with explicit consent.</li>
+          <li>Contact details stay masked until both confirm.</li>
+          <li>You can block/report at any point — support path stays visible.</li>
+        </ul>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="dk-btn dk-primary">Confirm public meetup</button>
+          <button class="dk-btn dk-ghost">Request different place</button>
+          <button class="dk-btn dk-danger">Report a concern</button>
+        </div>
+      </div>
+
+      <h3>6.4 Policy-to-be-defined placeholder</h3>
+      <p class="dk-map">§13.1 unresolved-policy register — use instead of inventing a rule.</p>
+      <div class="dk-grid dk-cols-2">
+        <div class="dk-policy-tbd"><strong>Policy to be defined.</strong> Cancellation timing for A3 appointments is not yet decided upstream. Shown as “Contact support to change” — no invented deadline.</div>
+        <div class="dk-policy-tbd"><strong>Policy to be defined.</strong> Dispute evidence deadline — do not show a countdown. Route: “Support will review available evidence.”</div>
+      </div>
+    </section>
+
+    <!-- ================= 7 EXEMPLAR ================= -->
+    <section class="dk-section" id="s-exemplar">
+      <h2>7 · SCN-01 composition exemplar</h2>
+      <p class="dk-map">One annotated assembly using only kit elements — proof the suite composes a real view. Not a screen batch.</p>
+      <div class="dk-card">
+        <div class="dk-banner dk-bn-ref" style="margin-bottom:12px"><span class="dk-banner-ico">🧩</span>
+          <span><strong>SCN-01 · A1 low-value service · External Cash · capstone_demo.</strong> ₱80 greeting-card layout.</span></div>
+
+        <div class="dk-sep" style="margin-bottom:12px">
+          <div class="dk-agg"><h5>Order</h5><div class="dk-agg-state">Accepted</div><small>snapshot v1</small></div>
+          <div class="dk-agg"><h5>Work</h5><div class="dk-agg-state">In progress</div><small>step 2/3 · 1 revision open</small></div>
+          <div class="dk-agg"><h5>Payment</h5><div class="dk-agg-state">buyer_reported</div><small>provider report missing</small></div>
+        </div>
+
+        <div class="dk-cash2" style="margin-bottom:12px">
+          <div class="dk-side dk-done"><strong>You (Buyer)</strong><br><span class="dk-badge dk-b-ok">✓ Cash paid ₱80</span></div>
+          <div class="dk-join">→</div>
+          <div class="dk-side dk-wait"><strong>PROVIDER-01</strong><br><span class="dk-badge dk-b-warn">⏳ Awaiting their report</span></div>
+        </div>
+
+        <ul class="dk-timeline" style="margin-bottom:12px">
+          <li><strong>buyer_reported</strong> — ₱80<div class="dk-ev-meta">14:02 · Work unchanged</div></li>
+          <li><strong>Work step 2 in progress</strong><div class="dk-ev-meta">13:58</div></li>
+        </ul>
+
+        <div class="dk-actionbar" style="position:static;border:1px solid var(--dk-line);border-radius:8px">
+          <button class="dk-btn dk-primary">Review progress evidence</button>
+          <button class="dk-btn dk-ghost">Clarify payment</button>
+          <button class="dk-btn dk-danger">Report a concern</button>
+        </div>
+        <p class="dk-note" style="margin-top:8px">Reviewer check: “Did Serbizyu hold the ₱80?” — the view must make “No” obvious.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- modal -->
+<div class="dk-modal-veil" id="dk-modal-veil" role="dialog" aria-modal="true" aria-labelledby="dk-modal-title">
+  <div class="dk-modal">
+    <h4 id="dk-modal-title">Confirm: report cash paid?</h4>
+    <dl class="dk-kv">
+      <dt>Amount</dt><dd>₱80 (exact)</dd>
+      <dt>To</dt><dd>PROVIDER-01, directly</dd>
+      <dt>Serbizyu holds</dt><dd>Nothing — 0% pilot commission</dd>
+      <dt>Effect</dt><dd>Creates <code>buyer_reported</code> only. Work unchanged. Provider still must report.</dd>
+    </dl>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="dk-btn dk-primary" data-modal-close>Yes, report paid</button>
+      <button class="dk-btn dk-ghost" data-modal-close>Cancel</button>
+    </div>
+  </div>
+</div>
+<div class="dk-toast-stack" id="dk-toasts"></div>
+
+<script src="kit.js"></script>
+</body>
+</html>
