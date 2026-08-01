@@ -348,9 +348,41 @@ Trace: UX-002; PRD-001, PRD-009–017; DSC-001–006; ACC-001–003.
 - Payment: show whether the lane is External Cash, External Digital Proof, or sandbox-only.
 - Recovery: if capacity changed, explain and offer a replacement or new request rather than silently switching terms.
 
-### J-02 Provider/Owner onboarding and listing creation
+### J-02A Provider registration, identity, and manual review
 
-Trace: UX-001, UX-003–005; PRD-001–016, PRD-023; ACC-001–007; LST-001–007.
+Trace: UX-001; PRD-001–003; ACC-001–007; OPS-002.
+
+#### Stage 1 — Capability and account setup
+
+- Actor: Provider/Owner, including an assisted user where authorized.
+- User goal: understand which capability they are setting up and which requirements are active, conditional, or unavailable.
+- They see: role/capability choice, fictional account/phone-confirmation state, access context, assistance option, and why additional information may be required.
+- Primary action: `Continue setup`.
+- Recovery: invalid/expired demo confirmation supports safe retry; never imply a real SMS or live account was created.
+
+#### Stage 2 — Identity and privacy explanation
+
+- Explain why information is requested, which capability it affects, who may access it, what public result may be shown, and retention/deletion behavior.
+- Do not collect or display real sensitive identity documents in the disposable prototype.
+- Do not promise a specific government-ID type, face match, clearance, or broad `Verified` badge unless a later approved contract defines it.
+- Primary action: `Review demo evidence requirements`; declining provides a safe exit and explains which conditional capability remains unavailable.
+
+#### Stage 3 — Fictional evidence submission
+
+- If the gated demo flow is enabled, show fixture-only upload/submission guidance, redaction, format/scan state, uploader, subject, and privacy class.
+- Evidence lifecycle may show `uploaded → processing → accepted/rejected/superseded`; acceptance does not imply broad public trust or production readiness.
+- Rejection includes reason and safe resubmission; unauthorized Agents never see full sensitive evidence.
+
+#### Stage 4 — Manual review and decision
+
+- User states: `Pending manual review`, `More information needed`, `Approved for the named capability`, or `Rejected/Unavailable`.
+- The user sees the review purpose, safe-to-display reason, next responsible actor, requested information, help/escalation, and retention/deletion notice.
+- Manual-review fallback remains available where the canonical gate permits it.
+- Admin `OPS-002` shows least-privilege evidence access, reason for access, action attribution, decision scope, correction history, and the boundary between private evidence and public status.
+
+### J-02 Provider/Owner listing creation
+
+Trace: UX-003–005; PRD-004–016, PRD-023; LST-001–007.
 
 #### Stage 1 — Choose capability
 
@@ -417,11 +449,13 @@ Trace: UX-003; PRD-004–008, PRD-023; AGT-001–004.
 - Primary action: task-specific verb such as `Save listing draft for Owner`.
 - Blocked action: money/goods custody or ownership change shows why it is unavailable and offers an Owner approval/support route.
 
-#### Stage 4 — Owner notice/revoke
+#### Stage 4 — Owner notice/pause/revoke/expiry
 
 - Actor: Owner.
 - User goal: see what the Agent did and retain control.
-- They see: action history, affected object, timestamp, permission used, pending approvals, pause/revoke controls.
+- They see: action history, affected object, timestamp, permission used, pending approvals, grant state, pause/revoke controls, and expiry.
+- Consent states: `proposed → pending_owner_confirmation → active`, followed by individually represented `suspended`, `revoked`, or `expired` outcomes.
+- `Suspended` shows reason and reactivation guard; `Expired` blocks new Agent actions and requires a new/renewed scoped grant.
 - Primary action: `Pause assistance` or `Revoke access`.
 - Consequence: future actions blocked; history remains.
 
@@ -472,6 +506,15 @@ Trace: UX-004–007; PRD-017–023; ORD-001–004.
 - Secondary actions: ask clarification, request change, cancel before commitment where allowed.
 - After acceptance: show Order as accepted, but Work and Payment Obligation separately.
 - Cross-role: Buyer sees Provider acceptance; Provider sees Buyer acceptance; Agent sees acting/affected identity; Admin sees snapshot event.
+
+#### Conditional Quick Deal order-formation surface
+
+- Status: `PILOT-CONDITIONAL`; it is an Order-formation mechanism, not a Work shape or fulfillment shortcut.
+- Show explicit terms, parties, amount semantics, Work shape, lane, safety context, counterparty confirmation, expiry/freshness, and retry state before Order formation.
+- One party’s submission remains `Awaiting counterparty confirmation`; it does not create accepted Work, payment success, inventory finality, payout, or release.
+- Expired or failed confirmation offers refresh/retry or a normal listing/request/quote route and preserves attributable history.
+- Air-gapped/offline handling may save a draft/intent only; it cannot authorize digital payment, payout, release, final inventory, or irreversible consent.
+- The mockup may expose this only as a conditional/deferred surface and must not present historical Quick Deal styling as active pilot truth.
 
 ### J-06 A1 Linear Project Work
 
@@ -624,12 +667,17 @@ User-facing truth:
 - Buyer pays Provider/Owner directly.
 - Serbizyu does not hold the cash.
 - Initial pilot commission is 0%.
-- A declaration is not automatic proof.
+- Buyer may report `Cash paid`; Provider/Owner may independently report `Cash received`.
+- Either report is an attestation, not automatic proof.
+- Payment becomes mutually acknowledged only when both reports match.
+- Silence by either party does not prove that cash changed hands.
 - A mismatch goes to clarification/dispute/support; no automatic cash recovery promise.
 
-States to show visually: `Not declared → Payment declared → Awaiting counterparty acknowledgment → Counterparty acknowledged → Mismatch/Disputed → Corrected`.
+States to show visually: `not_reported → buyer_reported and/or provider_reported → mutually_acknowledged`, with `mismatch → disputed → corrected` alternatives. The UI must support either party reporting first and must show whose report is still missing.
 
-Cross-role after Buyer declaration: Buyer sees their declaration; Provider sees a receipt action; Admin sees an event; Work remains unchanged.
+Cross-role after Buyer reports cash paid: Buyer sees `buyer_reported`; Provider sees `Report cash received` or `Report a mismatch`; Admin sees the Buyer attestation; Work remains unchanged.
+
+Cross-role after Provider reports cash received: Provider sees `provider_reported`; Buyer sees `Provider reported receipt`; when both reports match, both see `mutually_acknowledged`; Admin sees both attributed attestations; Work remains unchanged.
 
 #### External Digital Proof
 
@@ -637,6 +685,7 @@ User-facing truth:
 
 - External provider/reference is named.
 - Amount/time/reference and redaction guidance are visible.
+- Initial pilot platform commission is 0%.
 - Screenshot/reference is user evidence, not automatically provider-verified.
 - Serbizyu did not control the external funds.
 - Not protected by Tiwala.
@@ -653,11 +702,11 @@ Show: test provider, simulated amount, event status, reconciliation example, and
 
 Persistent visible label: `SANDBOX ONLY — protected-release behavior is simulated`.
 
-Show separate panels for Work completion, sign-off/review eligibility, dispute, holds, reconciliation, and release guard. A release attempt before guards pass should visibly fail with the unmet guard list. Never present this as an unqualified legal escrow promise.
+Show separate panels for Work completion, sign-off/review eligibility, dispute, holds, reconciliation, and release guard. A release attempt before guards pass should visibly fail with the unmet guard list. The simulated release clock begins only from valid completion/sign-off eligibility, never from Order creation. Never present this as an unqualified legal escrow promise.
 
-### J-12 Completion, review, dispute, and support
+### J-12 Completion, change/cancellation, review, dispute, and support
 
-Trace: UX-016–022; PRD-043–058; ORD-003–005; TRU-001–004; OPS-001–009.
+Trace: UX-016–021; PRD-043–051; ORD-003–005; TRU-001–004.
 
 #### Completion proposal
 
@@ -666,6 +715,20 @@ The user sees what evidence is being submitted, what is complete, what remains, 
 #### Review/sign-off
 
 The Buyer sees the consequence before confirming: Work becomes completed if valid; a protected sandbox may become eligible only if every guard passes; an external payment declaration does not become verified.
+
+#### Change or cancellation
+
+Before payment evidence or a gateway event exists:
+
+- Show the current Order terms, who requests the change/cancellation, affected scope/Work/timing, and whether the applicable snapshotted Order policy allows replacement or cancellation.
+- Primary action: `Request change` or `Cancel under current policy`; the other party sees the request and consequence.
+
+After payment evidence or a gateway event exists:
+
+- Preserve the original Payment Obligation and evidence.
+- Use an attributable correction, cancellation, supersession, refund, or dispute event according to the lane and approved policy.
+- Show affected parties, amount/status, next responsible actor, and what remains unchanged.
+- Do not silently rewrite the original obligation or promise an External Cash refund.
 
 #### Dispute intake
 
@@ -677,7 +740,7 @@ Ask only what is necessary:
 - Is there an immediate safety concern?
 - What outcome is requested?
 
-Show that submitting a dispute may place a hold or pause completion according to policy. Do not promise a fixed outcome, universal time window, or automatic refund.
+Show that submitting a dispute may place a hold or pause completion according to policy. Visually support `opened → evidence_requested → under_review → resolved/rejected/withdrawn → closed`, with `appealed` only when an approved policy enables it. Withdrawal or appeal does not erase prior evidence or decisions. Do not promise a fixed outcome, universal time window, universal appeal right, or automatic refund.
 
 #### Support case
 
@@ -694,6 +757,13 @@ Trace: UX-022–023; PRD-052–059; OPS-001–009.
 - First view: cohort/evidence class, open disputes/holds, safety incidents, failed events, pending review, and support burden.
 - Primary action: `Open item needing attention`.
 - Every count has its class and meaning; no false revenue from External Cash.
+
+#### Identity/evidence review
+
+- `OPS-002` shows the named capability gate, fictional/private evidence class, least-privilege access reason, reviewer, current state, and safe-to-display public result.
+- Actions: `Request more information`, `Approve for named capability`, or `Reject/keep unavailable`, each requiring a reason and attributable event.
+- Manual-review fallback, correction history, retention/deletion state, and unauthorized-Agent exclusion remain visible.
+- The disposable mockup must not display a real identity document or imply live identity-verification readiness.
 
 #### Order/Work inspector
 
@@ -713,6 +783,13 @@ Trace: UX-022–023; PRD-052–059; OPS-001–009.
 - Show reason class, affected scope, evidence requests, creator/approver, active guards, next action, and resolution history.
 - A hold blocks only the relevant action/aggregate; the UI must explain scope.
 
+#### Safety-incident console
+
+- `OPS-006` shows incident severity/context, affected people and object, immediate user protections, response owner, restricted evidence, action history, and next review.
+- High-risk action requires permission, reason, scope preview, confirmation, and audit.
+- Restricted safety/identity evidence remains hidden from unauthorized roles; a block/restriction affects only the approved scope and preserves prior history.
+- The UI distinguishes marketplace support from emergency services and does not invent a hotline or guaranteed emergency response.
+
 #### Failed events/retry
 
 - Show event type, target, attempt count, last error, next safe retry, dead-letter/support route, and idempotency boundary.
@@ -724,6 +801,12 @@ Trace: UX-022–023; PRD-052–059; OPS-001–009.
 - Show counts alongside rates for small samples.
 - Never report External Cash as platform revenue.
 
+#### Backup/recovery status simulation
+
+- `OPS-009` shows the most recent backup fixture, restore-rehearsal fixture, responsible owner, evidence class, result, failure reason, and next rehearsal/recovery action.
+- Distinguish `No evidence recorded`, `Backup recorded`, `Restore rehearsal passed/failed`, and `Recovery action open`; do not display a green readiness claim by default.
+- The reference is a status/evidence simulation only. It does not prove a production backup exists or that a restore was genuinely executed.
+
 ## 10. Cross-role visibility matrix
 
 | Action | Acting role sees | Counterparty sees | Admin sees | Unchanged aggregate |
@@ -733,8 +816,8 @@ Trace: UX-022–023; PRD-052–059; OPS-001–009.
 | Buyer accepts quote | Order terms accepted | Provider sees acceptance | Snapshot event | Work remains not started; payment remains due/created |
 | Provider starts Work | Work in progress | Buyer sees progress and expected next review | Work event | Payment state |
 | Provider adds evidence | Evidence submitted/version | Buyer sees evidence available | Evidence/audit event | Completion, payment |
-| Buyer declares External Cash | Payment declared | Provider sees receipt action | Payment event | Work state |
-| Provider acknowledges cash | Counterparty acknowledged | Buyer sees acknowledgment | Payment event | Work state |
+| Buyer reports External Cash paid | `buyer_reported`; Provider report still missing unless already present | Provider sees `Report cash received` or mismatch action | Buyer attestation event | Work state |
+| Provider reports External Cash received | `provider_reported`; Buyer report still missing unless already present | Buyer sees Provider receipt report; matching reports become `mutually_acknowledged` | Provider attestation and mutual-match event where applicable | Work state |
 | Provider proposes completion | Completion proposed; awaiting Buyer review | Buyer sees sign-off/concern choice | Work event and evidence context | Payment Obligation state; protected-release eligibility is not evaluated from proposal alone |
 | Buyer signs off | Work completed | Provider sees completion | Work event and review | External Cash does not become platform-collected |
 | Buyer reports mismatch | Disputed/needs support | Provider sees concern/evidence request | Dispute/hold candidate | Original history |
@@ -785,7 +868,8 @@ Small jobs such as ₱50–₱100 remain valid examples. Do not use a hidden uni
 - Explain why evidence is requested.
 - Show who may access it.
 - Provide redaction/masking guidance.
-- Distinguish uploaded, submitted, acknowledged, verified, rejected, superseded, and held.
+- Distinguish `created`, `uploaded`, `processing`, `accepted`, `rejected`, `superseded`, `retained_under_hold`, and `deleted` for evidence lifecycle; use `submitted`, `acknowledged`, or `provider verified` only for the related payment/reporting state where applicable.
+- A hold may retain evidence past normal deletion timing; deletion respects approved retention/legal-hold rules and remains auditable.
 - Never show a screenshot as automatically cleared payment.
 - Never collect or display real identity documents in the throwaway prototype.
 
@@ -895,7 +979,7 @@ English is the baseline for individual reference screens. The hub may show an ap
 
 | Situation | Recommended user-facing pattern | Avoid |
 |---|---|---|
-| External Cash declaration | `You reported paying ₱80 directly to the Provider. The Provider still needs to acknowledge receipt. Serbizyu does not hold this cash.` | `Payment successful` |
+| External Cash report | `You reported paying ₱80 directly to the Provider. The Provider still needs to report whether they received it. Payment becomes mutually acknowledged only when both reports match. Serbizyu does not hold this cash.` | `Payment successful` |
 | External evidence submitted | `Evidence submitted. This screenshot supports your report but does not prove the external funds cleared.` | `Payment verified` |
 | Work started | `The Provider started the agreed Work. Payment status did not change.` | `Order successful` |
 | Completion proposal | `The Provider says the agreed Work is ready for review. Check the evidence before confirming.` | `Job completed` before Buyer/sign-off rules pass |
@@ -932,6 +1016,7 @@ The separate design agent should produce a low-fidelity but product-like connect
 18. As a low-data user, lose connection during a form and recover the draft safely.
 19. As an assisted user, understand what the Agent can and cannot do.
 20. As any user, find help when blocked without receiving a generic success toast.
+21. As an L1 kiosk-assisted user, complete a scoped task with visible helper attribution, private-data boundaries, Owner confirmation where required, and no kiosk cash custody.
 
 A screen that only says “feature available” fails these tasks. The designer must show the actual decision, consequence, and recovery.
 
@@ -941,7 +1026,7 @@ A screen that only says “feature available” fails these tasks. The designer 
 
 | UX ID | Dossier sections | Bridge screen families |
 |---|---|---|
-| UX-001 | 5.3, J-02, 12.2 | ACC-001–007, OPS-002 |
+| UX-001 | 5.3, J-02A, 12.2 | ACC-001–007, OPS-002 |
 | UX-002 | 5.1, J-01 | DSC-001–006 |
 | UX-003 | 5.4, J-03 | SYS-002, AGT-001–004 |
 | UX-004 | 5.3, J-02, J-05 | LST-001–007, ORD-001 |
@@ -986,7 +1071,7 @@ The dossier does not replace the PRD; this matrix proves that every PRD requirem
 | PRD ID | Dossier responsibility |
 |---|---|
 | PRD-001 | Actor/access context; J-01/J-02; 6 |
-| PRD-002 | Identity/privacy boundary; J-02; 12.2 |
+| PRD-002 | Identity/privacy boundary and manual review; J-02A; 12.2 |
 | PRD-003 | Evidence-based trust; J-01/J-02; 13 |
 | PRD-004 | Agent consent; J-03 |
 | PRD-005 | Agent custody/ownership boundary; J-03 |
@@ -1014,7 +1099,7 @@ The dossier does not replace the PRD; this matrix proves that every PRD requirem
 | PRD-027 | A4 handoff states; J-08 |
 | PRD-028 | Purchase-on-behalf conditional; J-09 |
 | PRD-029 | A9 version/delivery/acceptance; J-10 |
-| PRD-030 | Deferred Work shapes; 2, 13 |
+| PRD-030 | Deferred Work shapes; 3, 13 |
 | PRD-031 | Payment cannot complete Work; J-06/J-11 |
 | PRD-032 | Payment Obligation anatomy; J-11 |
 | PRD-033 | External Cash declarations; J-11 |
@@ -1051,7 +1136,7 @@ The next mockup is ready for founder feedback only when:
 
 - All 74 canonical screen IDs are traceable to `10a-ux-ui-screen-perspective-matrix.md` and remain addressable in the prototype.
 - `SCN-01` through `SCN-09` are traceable to `10b-ux-ui-scenario-blueprints.md`; the selected design batch implements one connected scenario plus its recovery branch.
-- The designer can demonstrate the 20 review tasks above.
+- The designer can demonstrate the 21 review tasks above.
 - All 23 UX journeys have a visible route or documented non-visual boundary.
 - Buyer, Provider/Owner, Agent, Admin, assisted user, and evaluator perspectives are represented.
 - The prototype shows goals and decisions, not feature summaries.

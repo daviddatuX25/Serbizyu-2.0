@@ -52,7 +52,7 @@ Purpose: demonstrate the lowest-barrier Buyer–Provider loop without Serbizyu c
 1. Starts from the need, not from a feature catalog.
 2. Sees one relevant fictional listing with scope, amount, availability, new/evidence-based Provider context, and External Cash boundary.
 3. Confirms accepted terms and sees: Buyer pays Provider directly; Serbizyu holds no cash; 0% initial pilot commission; payment does not complete Work.
-4. Declares cash payment and sees `Payment declared`, not `Paid`.
+4. Reports `Cash paid` and sees `buyer_reported — Provider report missing`, not `Paid`; matching independent reports later become `mutually_acknowledged`.
 5. Reviews progress evidence and a completion proposal.
 6. Confirms completion or reports a concern.
 
@@ -60,21 +60,22 @@ Purpose: demonstrate the lowest-barrier Buyer–Provider loop without Serbizyu c
 
 1. Sees the same accepted scope and `₱80` obligation.
 2. Starts A1 Work and adds progress evidence.
-3. After Buyer declaration, sees `Buyer declared payment` plus `Acknowledge receipt`; Work remains in progress.
-4. Proposes completion only after required fixture evidence exists.
-5. Sees Buyer sign-off or concern.
+3. After Buyer reports `Cash paid`, sees `buyer_reported` plus `Report cash received` or `Report a mismatch`; Work remains in progress.
+4. Reports their independent `Cash received` attestation; matching reports become `mutually_acknowledged` without changing Work.
+5. Proposes completion only after required fixture evidence exists.
+6. Sees Buyer sign-off or concern.
 
 ### What Admin sees
 
 - Accepted Order snapshot.
 - Separate Work and Payment timelines.
-- Buyer declaration and Provider acknowledgment as separate events.
+- Buyer `Cash paid` and Provider `Cash received` attestations as separate events, followed by `mutually_acknowledged` only when they match.
 - Evidence version and completion proposal.
 - No platform cash revenue/custody record.
 
 ### Required failure/recovery branch
 
-Provider does not acknowledge the Buyer’s declaration. The Buyer sees `Awaiting Provider acknowledgment`, clarification/support choices, and no automatic proof/refund promise. Work status does not change.
+Provider does not submit their `Cash received` report. The Buyer sees `buyer_reported — Provider report missing`, clarification/support choices, and no automatic proof/refund promise. Work status does not change.
 
 ### Feedback task
 
@@ -102,6 +103,7 @@ Purpose: demonstrate schedule, privacy/safety, outside-payment evidence, acknowl
 ### What the Buyer experiences
 
 - Chooses a live fixture slot and sees duration, public location, privacy/contact boundary, cancellation/reschedule, and safer-meeting guidance before confirmation.
+- Sees that the External Digital Proof lane has 0% initial pilot platform commission, Serbizyu does not hold the funds, and Tiwala protection does not apply.
 - Submits fictional outside-payment evidence with provider/reference, amount/time, and redaction guidance.
 - Sees `Evidence submitted`, not provider-verified.
 - Receives appointment reminder/context and can reschedule, cancel, report no-show, or report a safety concern.
@@ -149,14 +151,14 @@ Purpose: demonstrate stock/capacity, preparation, safe handoff, receipt, and con
 ### What the Buyer experiences
 
 - Sees actual quantity/capacity, pickup instructions, safe location/time, and what condition to expect.
-- Declares cash independently from receipt.
+- Reports `Cash paid` independently from product receipt; the Provider separately reports `Cash received`.
 - At handoff chooses `Acknowledge receipt` or `Report a mismatch` after inspecting quantity/condition.
 
 ### What the Provider experiences
 
 - Reserves/prepares only available quantity.
 - Marks ready and confirms the handoff arrangement.
-- Acknowledges cash separately.
+- Reports `Cash received` as an independent attestation; matching Buyer and Provider reports become `mutually_acknowledged`.
 - Sees Buyer receipt or mismatch without losing the original Order terms.
 
 ### What Admin sees
@@ -426,7 +428,7 @@ Ask: “What exact conditions are still missing before simulated release?” The
 
 | Scenario | Primary actors | Work shape | Lane | Required recovery proof |
 |---|---|---|---|---|
-| SCN-01 | Buyer, Provider, Admin | A1 | External Cash | Unacknowledged declaration |
+| SCN-01 | Buyer, Provider, Admin | A1 | External Cash | Missing/mismatched counterparty report |
 | SCN-02 | Buyer, Provider, Admin | A3 | External Digital Proof | Stale slot/no-show or evidence uncertainty |
 | SCN-03 | Buyer, Provider, Admin | A4 | External Cash | Capacity or condition mismatch |
 | SCN-04 | Buyer, Provider/Agent, Admin | A4 conditional | External Cash fixture | Cost variance approval |

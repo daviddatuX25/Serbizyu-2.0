@@ -41,13 +41,14 @@ Status: FOUNDATION
 
 The dossier SHALL document what each authorized role sees after a state-changing action and SHALL preserve separate Order, Work, Payment Obligation, Evidence, Dispute, Consent, and Hold meanings.
 
-#### Scenario: Buyer declares External Cash
+#### Scenario: Buyer reports External Cash paid
 
 - GIVEN Buyer and Provider are viewing the same Order
-- WHEN Buyer declares that cash was paid
-- THEN Buyer sees `Payment declared` and the event appears in the timeline
-- AND Provider sees a receipt-confirmation action rather than automatic confirmation
-- AND Admin can inspect the actor, event, and affected obligation
+- WHEN Buyer reports `Cash paid`
+- THEN Buyer sees `buyer_reported` and the attributed event appears in the timeline
+- AND Provider sees `Report cash received` or `Report a mismatch`, not automatic confirmation
+- AND a matching independent Provider report creates `mutually_acknowledged`
+- AND Admin can inspect both actors, reports, and the affected obligation
 - AND Work remains unchanged.
 
 ### Requirement: Recovery-first interaction detail

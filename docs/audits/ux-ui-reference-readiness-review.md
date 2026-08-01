@@ -32,6 +32,18 @@ The original single dossier was substantially grounded and correctly rejected th
 
 These were design-readiness gaps, not evidence that the canonical product contracts were false.
 
+### 2.1 Independent follow-up audit
+
+A separate source-by-source audit completed after the first hardening commit. It found no P0 fabrication or stale-product contradiction, but identified additional valid gaps that were then corrected:
+
+- External Cash was incorrectly simplified to Buyer declaration plus Provider acknowledgment; it now models independent `buyer_reported` and `provider_reported` attestations with `mutually_acknowledged` only when they match.
+- Identity/manual-review screens were trace-claimed but lacked a body playbook; `J-02A` now covers setup, privacy, fictional evidence, manual review, user decisions, and `OPS-002`.
+- `OPS-006` safety investigation and `OPS-009` backup/recovery simulation were trace-claimed but absent from the Admin playbook; both now have explicit sections.
+- `J-12` overclaimed OPS coverage; its trace is now limited to completion/change/dispute/support, with Admin screen families kept in `J-13`.
+- Change/cancellation now distinguishes before-evidence replacement/cancellation from after-evidence correction/supersession/refund/dispute events.
+- Conditional Quick Deal is now explicitly an Order-formation surface—not fulfillment—with counterparty confirmation, expiry, retry, safety, and offline irreversible-action boundaries.
+- The no-release-clock-at-Order-creation rule, External Digital Proof 0% pilot commission, complete evidence lifecycle, suspended/expired consent, withdrawn/conditional-appeal dispute states, and an L1 kiosk review task are now explicit.
+
 ## 3. Corrections made
 
 ### 3.1 Screen perspective completeness
@@ -93,7 +105,7 @@ Expanded the existing OpenSpec change to govern the three-file reference workspa
 | A1, A3, A4, and A9 are active Work shapes | Canonical PRD/domain/bridge | Confirmed |
 | Purchase-on-behalf is an A4 conditional extension | Canonical PRD/UX | Confirmed; marked conditional |
 | Payment and Work completion are independent | Canonical PRD/domain | Confirmed throughout |
-| External Cash is direct, 0% initial pilot commission, no Serbizyu custody | Canonical PRD/payment contract | Confirmed |
+| External Cash is direct, 0% initial pilot commission, no Serbizyu custody, and mutually acknowledged only from matching Buyer/Provider reports | Canonical PRD/payment/UX contract | Confirmed and corrected to two-sided attestations |
 | External evidence is not automatic provider verification | Canonical PRD/payment contract | Confirmed |
 | Direct Digital is sandbox-only | Canonical PRD/bridge | Confirmed; persistent sandbox treatment required |
 | Tiwala Protected Digital is sandbox-only | Canonical PRD/bridge | Confirmed; no live/legal claim |
@@ -131,6 +143,8 @@ Synthetic names, amounts, references, timestamps, files, and messages in `10b` a
 - Scenario-blueprint headings: 9 unique; 0 missing; 0 extra.
 - OpenSpec requirements: 9.
 - OpenSpec acceptance scenarios: 9.
+- Design review tasks: 21, including a dedicated L1 kiosk-assisted task.
+- Independent-audit P1/P2 regression assertions: pass.
 - Referenced workspace/source files: present.
 - Markdown table/whitespace checks: pass.
 - `git diff --check`: pass.
@@ -169,4 +183,4 @@ This verdict does not mean:
 - The product is implementation-ready.
 - Production identity, payment, Tiwala, deployment, or genuine Tagudin pilot gates are cleared.
 
-Recommended next batch: design `SCN-01` plus its `SCN-07` unacknowledged-payment/mismatch recovery branch, review it with the founder, and then update UX-only details or reopen the earliest affected upstream contract before expanding.
+Recommended next batch: design `SCN-01` plus its `SCN-07` missing-counterparty-report/mismatch recovery branch, review it with the founder, and then update UX-only details or reopen the earliest affected upstream contract before expanding.

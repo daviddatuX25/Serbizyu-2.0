@@ -13,6 +13,7 @@ Status: reference-authoring batch
 - [x] Add 74-screen perspective matrix with exact screen-ID coverage.
 - [x] Add nine connected scenario blueprints with exact scenario-ID coverage.
 - [x] Run adversarial UX audit and correct unsupported/ambiguous claims.
+- [x] Run independent subagent audit and incorporate valid P1/P2 corrections.
 - [ ] Review the reference workspace with founder/design agent.
 - [ ] Record feedback classification: UX-only, domain/state, schema/ADR, or implementation-story impact.
 - [ ] Reopen upstream BMAD artifact first if feedback changes product behavior.
