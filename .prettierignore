@@ -1,0 +1,11 @@
+node_modules/
+vendor/
+public/build/
+storage/
+frontend/
+docs/
+old-docs/
+_bmad/
+_bmad-output/
+openspec/
+*.blade.php

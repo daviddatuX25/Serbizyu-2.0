@@ -1,0 +1,17 @@
+.git
+.github
+.gitea
+.env
+.env.*
+!.env.example
+vendor
+node_modules
+frontend
+_bmad-output
+docs
+openspec
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+public/build

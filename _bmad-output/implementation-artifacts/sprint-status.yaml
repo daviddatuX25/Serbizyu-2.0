@@ -1,0 +1,50 @@
+sprint: 0
+status: in_progress
+story: E1-phone-otp-foundation
+scope: phone-otp-identity-and-first-listing-vertical-slice
+updated: 2026-08-04
+branch: foundation/e1-phone-otp
+authority:
+  hld: _bmad-output/planning-artifacts/architecture-rebuilt.md
+  adr: _bmad-output/planning-artifacts/adr-catalog-rebuilt.md
+  lld: docs/architecture/initial-foundation-plan.md
+  openspec: openspec/changes/real-phone-otp-identity-foundation
+  listings_contract: docs/architecture/listings-connected-slice-implementation-contract.md
+stories:
+  E0-S1:
+    status: completed_with_follow_ons
+    notes: Application skeleton and module boundaries exist; quality toolchain proof remains open.
+  E0-S2:
+    status: partial
+    notes: Canonical migrations exist in-repo and have been exercised; formal E0-S2 evidence gate still required.
+  E0-S3:
+    status: not_started
+  E0-S4:
+    status: not_started
+  E1-phone-otp:
+    status: in_progress
+    owner: technical-lead
+    plane: [C, S]
+    openspec_change: openspec/changes/real-phone-otp-identity-foundation
+    implementation_plan: docs/architecture/initial-foundation-plan.md
+    done:
+      - OtpDeliveryChannel/NotificationChannel ports
+      - Fake/Log adapters
+      - Phone OTP feature tests
+      - Auth phone page and ProductExperience entry
+      - EnsureAuthenticated on my-listings
+      - FirstSlice migrated to phone OTP
+      - /demo/* removed from active routes
+    done_extra_note: mock-v2 ListingCard reused in Browse / My Listings / Preview
+    next:
+      - Browser/Playwright UAT journey
+      - Founder acknowledge ADR-R-030
+      - Deferred cleanup of legacy Home demo UI / DemoController classes
+exclusions:
+  - live SMS provider activation
+  - government-ID / selfie collection
+  - payments, orders, Agent delegation
+  - pilot or production readiness claims
+notes:
+  - Older harden-connected-frontend-experience OpenSpec fixture-auth claims are superseded for the active product path.
+  - Existing frontend/ remains reference-only.

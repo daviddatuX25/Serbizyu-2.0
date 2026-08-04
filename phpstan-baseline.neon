@@ -1,0 +1,103 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^PHPDoc tag @use has invalid type Database\\Factories\\UserFactory\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Type Database\\Factories\\UserFactory in generic type Illuminate\\Database\\Eloquent\\Factories\\HasFactory\<Database\\Factories\\UserFactory\> in PHPDoc tag @use is not subtype of template type TFactory of Illuminate\\Database\\Eloquent\\Factories\\Factory of trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory\.$#'
+			identifier: generics.notSubtype
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Shared\\Application\\CommandEnvelope\:\:__construct\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Application/CommandEnvelope.php
+
+		-
+			message: '#^Method App\\Shared\\Application\\CommandEnvelope\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Application/CommandEnvelope.php
+
+		-
+			message: '#^Method App\\Shared\\Application\\DomainEventEnvelope\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Application/DomainEventEnvelope.php
+
+		-
+			message: '#^Method App\\Shared\\Application\\ErrorEnvelope\:\:__construct\(\) has parameter \$fieldErrors with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Application/ErrorEnvelope.php
+
+		-
+			message: '#^Method App\\Shared\\Application\\ErrorEnvelope\:\:__construct\(\) has parameter \$metadata with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Application/ErrorEnvelope.php
+
+		-
+			message: '#^Method App\\Shared\\Application\\ErrorEnvelope\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Application/ErrorEnvelope.php
+
+		-
+			message: '#^Method App\\Shared\\Application\\JobEnvelope\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Application/JobEnvelope.php
+
+		-
+			message: '#^Method App\\Shared\\Application\\QueryEnvelope\:\:__construct\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Application/QueryEnvelope.php
+
+		-
+			message: '#^Method App\\Shared\\Application\\QueryEnvelope\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Application/QueryEnvelope.php
+
+		-
+			message: '#^Method App\\Shared\\Contracts\\AuditContext\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Contracts/AuditContext.php
+
+		-
+			message: '#^Method App\\Shared\\Contracts\\AuthorizationContext\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Contracts/AuthorizationContext.php
+
+		-
+			message: '#^Method App\\Shared\\Support\\EnvironmentValidator\:\:safeSummary\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Support/EnvironmentValidator.php
+
+		-
+			message: '#^Method App\\Shared\\Support\\EnvironmentValidator\:\:violations\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Shared/Support/EnvironmentValidator.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Shared/Support/EnvironmentValidator.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Shared/Support/EnvironmentValidator.php

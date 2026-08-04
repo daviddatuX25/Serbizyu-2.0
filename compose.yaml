@@ -1,0 +1,116 @@
+name: serbizyu
+
+services:
+  db:
+    image: postgis/postgis:16-3.5
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-serbizyu}
+      POSTGRES_USER: ${DB_USERNAME:-serbizyu}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the ignored .env file}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.27.8
+    ports:
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    environment:
+      APP_NAME: Serbizyu
+      APP_ENV: local
+      APP_KEY: ${APP_KEY:?Set APP_KEY in the ignored .env file}
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:${APP_PORT:-8080}
+      LOG_CHANNEL: stderr
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-serbizyu}
+      DB_USERNAME: ${DB_USERNAME:-serbizyu}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the ignored .env file}
+      DB_READ_HOSTS: ${DB_READ_HOSTS:-db}
+      DB_WRITE_HOSTS: ${DB_WRITE_HOSTS:-db}
+      DB_STICKY: "${DB_STICKY:-true}"
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SESSION_DRIVER: redis
+      SESSION_STORE: redis
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      SERBIZYU_ENV: local
+      SERBIZYU_VALIDATE_ENV: "true"
+      SERBIZYU_EVIDENCE_CLASS: TEAM_TRAINING
+      SERBIZYU_PAYMENT_PROVIDER_MODE: disabled
+      SERBIZYU_NOTIFICATION_PROVIDER_MODE: disabled
+      SERBIZYU_EVIDENCE_PROVIDER_MODE: local
+      SERBIZYU_HEALTH_DATABASE_REQUIRED: "true"
+      SERBIZYU_HEALTH_REDIS_REQUIRED: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php-fpm", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:80"
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/health/ready | grep -q '\"status\":\"ready\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:

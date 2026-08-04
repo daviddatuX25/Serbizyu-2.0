@@ -1,0 +1,68 @@
+name: serbizyu-sail
+
+# Development/test profile for Laravel Sail.
+# It reuses the already-managed Postgres, Redis, and Mailpit services from
+# compose.yaml through the external serbizyu_default network. It intentionally
+# does not replace the production-oriented app/web images.
+services:
+  laravel.test:
+    build:
+      context: ./docker/sail-8.4
+      args:
+        WWWGROUP: "${WWWGROUP:-1000}"
+    image: serbizyu-sail-runtime:8.4
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${SAIL_APP_PORT:-8081}:80"
+    environment:
+      WWWUSER: "${WWWUSER:-1000}"
+      WWWGROUP: "${WWWGROUP:-1000}"
+      LARAVEL_SAIL: 1
+      APP_NAME: Serbizyu
+      APP_ENV: local
+      APP_KEY: "${APP_KEY}"
+      APP_DEBUG: "true"
+      APP_URL: "http://localhost:${SAIL_APP_PORT:-8081}"
+      LOG_CHANNEL: stderr
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: "${DB_DATABASE:-serbizyu}"
+      DB_USERNAME: "${DB_USERNAME:-serbizyu}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_READ_HOSTS: "${DB_READ_HOSTS:-db}"
+      DB_WRITE_HOSTS: "${DB_WRITE_HOSTS:-db}"
+      DB_STICKY: "${DB_STICKY:-true}"
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # Browser sessions must persist across requests and refreshes. PHPUnit
+      # keeps its isolated array session configuration in phpunit.xml instead.
+      SESSION_DRIVER: redis
+      SESSION_STORE: redis
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      SERBIZYU_ENV: local
+      SERBIZYU_VALIDATE_ENV: "true"
+      SERBIZYU_EVIDENCE_CLASS: TEAM_TRAINING
+      SERBIZYU_PAYMENT_PROVIDER_MODE: disabled
+      SERBIZYU_NOTIFICATION_PROVIDER_MODE: disabled
+      SERBIZYU_EVIDENCE_PROVIDER_MODE: local
+      SERBIZYU_HEALTH_DATABASE_REQUIRED: "true"
+      SERBIZYU_HEALTH_REDIS_REQUIRED: "true"
+    working_dir: /var/www/html
+    volumes:
+      - ".:/var/www/html"
+      # PHPStan's PHAR carries the Composer vendor path used during install.
+      - ".:/app"
+    networks:
+      - serbizyu
+
+networks:
+  serbizyu:
+    external: true
+    name: serbizyu_default

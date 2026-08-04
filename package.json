@@ -1,0 +1,44 @@
+{
+  "name": "serbizyu-root",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"resources/**/*.{js,jsx,ts,tsx,css}\" \"e2e/**/*.{js,jsx,ts,tsx}\" \"eslint.config.js\" \"vite.config.ts\" \"vitest.config.ts\" \"playwright.config.ts\" \".prettierrc.json\" \"tsconfig.json\"",
+    "format:check": "prettier --check \"resources/**/*.{js,jsx,ts,tsx,css}\" \"e2e/**/*.{js,jsx,ts,tsx}\" \"eslint.config.js\" \"vite.config.ts\" \"vitest.config.ts\" \"playwright.config.ts\" \".prettierrc.json\" \"tsconfig.json\"",
+    "test": "vitest run",
+    "e2e:smoke": "playwright test",
+    "quality": "npm run typecheck && npm run lint && npm run format:check && npm run test",
+    "build": "npm run typecheck && vite build",
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "@inertiajs/react": "3.6.1",
+    "@playwright/test": "^1.62.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^22.15.0",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.1",
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^16.4.0",
+    "laravel-vite-plugin": "2.1.0",
+    "prettier": "^3.9.6",
+    "typescript-eslint": "^8.65.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.6",
+    "vitest": "^4.1.10",
+    "jsdom": "^30.0.1"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  }
+}

@@ -1,0 +1,89 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main, planning-hardening]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, fileinfo, intl, pdo_sqlite
+          coverage: none
+          tools: composer:2
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Install root JavaScript dependencies
+        run: npm ci
+
+      - name: Validate active OpenSpec change
+        run: |
+          if command -v openspec >/dev/null 2>&1; then
+            openspec validate harden-connected-frontend-experience --strict
+          elif npx --no-install openspec validate harden-connected-frontend-experience --strict >/dev/null 2>&1; then
+            npx --no-install openspec validate harden-connected-frontend-experience --strict
+          else
+            echo 'OpenSpec CLI is not installed; strict validation is an opt-in local/CI prerequisite.'
+          fi
+
+      - name: Validate Composer manifest
+        run: composer validate --strict
+
+      - name: Check PHP formatting
+        run: vendor/bin/pint --test
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress
+
+      - name: Run Pest
+        run: vendor/bin/pest --parallel
+
+      - name: Audit Composer dependencies
+        run: composer audit --no-dev
+
+      - name: Check root TypeScript
+        run: npm run typecheck
+
+      - name: Check root ESLint
+        run: npm run lint
+
+      - name: Check root Prettier formatting
+        run: npm run format:check
+
+      - name: Run root Vitest smoke tests
+        run: npm run test
+
+      - name: Audit root npm dependencies
+        run: npm audit --audit-level=high
+
+      - name: Build root Laravel/Vite assets
+        run: npm run build
+
+      - name: Verify standalone frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run typecheck
+          npm run build
+
+      - name: Check whitespace errors
+        run: git diff --check
