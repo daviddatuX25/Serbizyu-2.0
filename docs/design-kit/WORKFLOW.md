@@ -42,9 +42,9 @@ Kit already accepted → skip alternate prototypes. Align live Auth → Onboardi
 
 ## Stack (accepted)
 
-- Kit: hi-fi SoT  
-- Live: Tailwind + owned shadcn-style primitives themed to kit forest tokens  
-- Until install: do not pretend shadcn is present
+- Kit: hi-fi visual SoT (static HTML/CSS specimens — not a running React app)  
+- Live: Laravel + **Inertia React** + Tailwind v4 + **real shadcn** (Nova/Radix) under `resources/js/components/ui/`, themed to kit forest tokens  
+- Not used: Inertia Svelte  
 
 ## Anti-patterns
 

@@ -41,7 +41,7 @@ Accepted kit already exists → skip alternate prototypes; align live foundation
 
 ## Stack (locked 2026-08-05)
 
-Tailwind + owned shadcn-style primitives themed to `docs/design-kit/` forest tokens. Until install lands, do not pretend shadcn is present.
+Live: Laravel + Inertia **React** + Tailwind v4 + real shadcn (Nova/Radix) in `resources/js/components/ui/`, themed to `docs/design-kit/`. Kit is static visual SoT (not Svelte; not a running React app).
 
 ## Authority
 

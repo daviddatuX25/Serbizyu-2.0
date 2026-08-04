@@ -4,7 +4,7 @@
 **Decision locked (2026-08-04):** One kit only — `docs/design-kit/` (do not fork).  
 **Decision locked (2026-08-05):** Hi-fi taste v2 is **source of truth**. Lo-fi colorful element suite retired.  
 **Decision locked (2026-08-05):** Kit-first dual-track workflow — see [`WORKFLOW.md`](./WORKFLOW.md). New features: UX psychology + light hi-fi → choose → solidify → live UI. Backend Pest/domain stays; both tracks hand-in-hand.  
-**Decision locked (2026-08-05):** Live stack path = Tailwind + owned shadcn-style primitives themed to kit forest tokens.  
+**Decision locked (2026-08-05):** Live stack = Laravel + Inertia **React** + Tailwind v4 + real shadcn (Nova/Radix), themed to kit forest tokens. Kit remains static visual SoT.  
 **Authority (look + foundation specimens):** `docs/design-kit/index.html` + `styles.css`  
 **Authority (behavior):** `ux-spec-rebuilt.md` · `prd-rebuilt.md` · `10-ux-ui-reference-dossier.md` · expansion bridge  
 **This file:** inventory / gap tracker — not a second visual kit.

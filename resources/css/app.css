@@ -1,41 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
 
 /*
-  Serbizyu live theme — aligned to docs/design-kit/styles.css (source of truth).
-  shadcn-compatible semantic tokens for owned primitives.
+  Serbizyu live theme — CSS variables match docs/design-kit (source of truth).
+  shadcn components consume these via @theme inline.
 */
-@theme {
-  --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --color-background: #f3efe4;
-  --color-foreground: #12201c;
-  --color-card: #fffcf6;
-  --color-card-foreground: #12201c;
-  --color-primary: #0d715f;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #f7f2e8;
-  --color-secondary-foreground: #12201c;
-  --color-muted: #f7f2e8;
-  --color-muted-foreground: #7a8f84;
-  --color-accent: #e8f7f1;
-  --color-accent-foreground: #0a574a;
-  --color-destructive: #c24732;
-  --color-destructive-foreground: #ffffff;
-  --color-border: #d5e0d9;
-  --color-input: #b7c9bf;
-  --color-ring: #17866f;
-  --color-forest-50: #e8f7f1;
-  --color-forest-100: #c6eadc;
-  --color-forest-500: #17866f;
-  --color-forest-600: #0d715f;
-  --color-forest-700: #0a574a;
-}
-
 :root {
+  --radius: 0.75rem;
+
   --background: #f3efe4;
   --foreground: #12201c;
   --card: #fffcf6;
@@ -51,13 +27,26 @@
   --accent: #e8f7f1;
   --accent-foreground: #0a574a;
   --destructive: #c24732;
-  --destructive-foreground: #ffffff;
   --border: #d5e0d9;
   --input: #b7c9bf;
   --ring: #17866f;
-  --radius: 0.75rem;
 
-  /* Bridge to existing sz-* product classes during foundation pass */
+  --chart-1: #0d715f;
+  --chart-2: #17866f;
+  --chart-3: #f0b429;
+  --chart-4: #4d655a;
+  --chart-5: #c24732;
+
+  --sidebar: #fffcf6;
+  --sidebar-foreground: #12201c;
+  --sidebar-primary: #0d715f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8f7f1;
+  --sidebar-accent-foreground: #0a574a;
+  --sidebar-border: #d5e0d9;
+  --sidebar-ring: #17866f;
+
+  /* Bridge for existing sz-* shell/layout during foundation migration */
   --sz-canvas: #f3efe4;
   --sz-surface: #fffcf6;
   --sz-surface-muted: #f7f2e8;
@@ -92,42 +81,86 @@
   --sz-target: 2.75rem;
 }
 
-* {
-  box-sizing: border-box;
+@theme inline {
+  --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-forest-50: #e8f7f1;
+  --color-forest-100: #c6eadc;
+  --color-forest-500: #17866f;
+  --color-forest-600: #0d715f;
+  --color-forest-700: #0a574a;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
 }
 
-html {
-  min-width: 320px;
-  scroll-behavior: smooth;
-}
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
 
-body {
-  min-width: 320px;
-  min-height: 100vh;
-  margin: 0;
-  color: var(--foreground);
-  font-family: var(--sz-font-body);
-  background:
-    radial-gradient(circle at 88% 0%, rgba(47, 159, 132, 0.14), transparent 34rem),
-    radial-gradient(circle at 8% 90%, rgba(240, 180, 41, 0.1), transparent 28rem),
-    linear-gradient(180deg, #f3efe4, #e8e1d2);
-}
+  html {
+    min-width: 320px;
+    scroll-behavior: smooth;
+  }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
+  body {
+    @apply bg-background text-foreground;
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    font-family: var(--sz-font-body);
+    background:
+      radial-gradient(circle at 88% 0%, rgba(47, 159, 132, 0.14), transparent 34rem),
+      radial-gradient(circle at 8% 90%, rgba(240, 180, 41, 0.1), transparent 28rem),
+      linear-gradient(180deg, #f3efe4, #e8e1d2);
+  }
 
-a {
-  color: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 
-:focus-visible {
-  outline: 3px solid var(--ring);
-  outline-offset: 2px;
+  a {
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -30,7 +30,7 @@ The canonical **visual + interaction specimen kit** for Serbizyu foundation surf
 - Icon + text actions and statuses
 - Listing cards with real craft/place photos
 - Phone OTP, profile setup, browse, shell/nav
-- shadcn-**shaped** preview (themed tokens only — no shadcn install yet)
+- Visual target for **live** stack: Laravel + Inertia **React** + Tailwind + real shadcn (Nova/Radix) in `resources/js/components/ui/`
 
 Extend this kit when unique features land. Do not revive a separate colorful “lo-fi” page — skeletons and wireframes belong in planning docs if needed, not as a second live kit.
 
@@ -51,7 +51,7 @@ Extend this kit when unique features land. Do not revive a separate colorful “
 3. **Icon + text** for actions and statuses; color alone is never enough.
 4. **No left-border status accents** on listing cards.
 5. **Tagudin fixtures** stay concrete (e.g. Maya Tagudin, greeting-card layout, ₱80 exact).
-6. **shadcn path accepted (2026-08-05):** live target is Tailwind + owned shadcn-style primitives themed to this kit (install during foundation pass).
+6. **Live stack locked:** Laravel + Inertia **React** (not Svelte) + Tailwind v4 + real shadcn components themed to this kit. The kit itself stays static HTML specimens.
 7. **Inventory + workflow first** — for new features, light hi-fi in this kit and founder choose before permanent React.
 
 ## Relationship to other artifacts
