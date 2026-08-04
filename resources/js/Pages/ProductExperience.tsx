@@ -109,21 +109,9 @@ function OnboardingState({
                     <Card muted>
                         <CardContent className="sz-stack">
                             <div>
-                                <p className="sz-eyebrow">Capability intent</p>
-                                <h2 className="sz-section-title">What brings you here today?</h2>
-                            </div>
-                            <label className="sz-card sz-card-pad" style={{ display: 'block', borderColor: 'var(--sz-forest-500)', background: 'var(--sz-forest-50)', cursor: 'default' }}>
-                                <input type="checkbox" checked readOnly style={{ marginRight: '0.6rem' }} />
-                                <strong>I offer something</strong>
-                                <span className="sz-copy" style={{ display: 'block', marginTop: '0.35rem' }}>Create a private listing and understand the review gate before anything is public.</span>
-                            </label>
-                            <div className="sz-card sz-card-pad" style={{ opacity: 0.72 }}>
-                                <strong>I need something</strong>
-                                <span className="sz-copy" style={{ display: 'block', marginTop: '0.35rem' }}>Browse active listings is available now; request creation is the next vertical slice.</span>
-                            </div>
-                            <div className="sz-card sz-card-pad" style={{ opacity: 0.62 }}>
-                                <strong>Help someone else</strong>
-                                <span className="sz-copy" style={{ display: 'block', marginTop: '0.35rem' }}>Agent assistance is intentionally deferred until consent and scope are implemented.</span>
+                                <p className="sz-eyebrow">Your path</p>
+                                <h2 className="sz-section-title">Start by offering something local.</h2>
+                                <p className="sz-copy">You can create a private listing, preview what buyers will see, and submit it for review. Browse is available anytime from your workspace.</p>
                             </div>
                             <Field label="Setup support" error={errors.help_preference}>
                                 <Select name="help_preference" value={help} onChange={(event) => setHelp(event.target.value)}>
@@ -148,7 +136,7 @@ function StatusSummary({ readiness, draft }: { readiness: ReadinessState; draft?
         <div className="sz-grid-3">
             <Card><CardContent><Badge tone="success">Ready</Badge><h3 className="sz-section-title" style={{ marginTop: '0.75rem' }}>Your profile</h3><p className="sz-copy">{readiness.displayName ?? readiness.display_name ?? 'Profile saved'} · {readiness.areaCode ?? readiness.area_code ?? 'Tagudin'}</p></CardContent></Card>
             <Card><CardContent><Badge tone={provider ? 'success' : 'warning'}>{provider ? 'Enabled' : 'Setup needed'}</Badge><h3 className="sz-section-title" style={{ marginTop: '0.75rem' }}>Offer capability</h3><p className="sz-copy">{provider ? 'You can create and manage a listing.' : 'Complete setup before creating a listing.'}</p></CardContent></Card>
-            <Card><CardContent><Badge tone={draft?.status === 'pending_review' ? 'warning' : 'info'}>{draft?.status === 'pending_review' ? 'Pending review' : 'Not public yet'}</Badge><h3 className="sz-section-title" style={{ marginTop: '0.75rem' }}>Publication gate</h3><p className="sz-copy">Identity verification and listing review remain separate future gates.</p></CardContent></Card>
+            <Card><CardContent><Badge tone={draft?.status === 'pending_review' ? 'warning' : 'info'}>{draft?.status === 'pending_review' ? 'Pending review' : 'Not public yet'}</Badge><h3 className="sz-section-title" style={{ marginTop: '0.75rem' }}>Publication gate</h3><p className="sz-copy">Listings stay private until review accepts them.</p></CardContent></Card>
         </div>
     );
 }
@@ -184,7 +172,7 @@ function ListingWorkspace({ draft, errors, action, onCreate, onSave, onSubmit }:
             <CardContent className="sz-stack">
                 <div className="sz-row-between">
                     <div>
-                        <p className="sz-eyebrow">My Listings · first vertical slice</p>
+                        <p className="sz-eyebrow">My Listings</p>
                         <h2 className="sz-section-title">Create something useful for your neighbors.</h2>
                         <p className="sz-copy">Drafts stay private. You can preview the public shape before submitting for review.</p>
                     </div>
@@ -281,7 +269,7 @@ function WorkspaceState({ props, errors, action, notice, onLogout }: { props: Ho
                     <div><p className="sz-eyebrow">{listingOnly ? 'Private workspace' : `Good to see you, ${displayName(props.session, readiness)}`}</p><h1 className="sz-display-title">{listingOnly ? 'My Listings' : 'Make your next useful move.'}</h1><p className="sz-copy">{listingOnly ? 'Save drafts, review the buyer preview, and follow each server-owned publication state.' : 'Your workspace keeps setup, listings, and review status in one place.'}</p></div>
                     <Button type="button" variant="ghost" onClick={onLogout} loading={action === 'logout'}>Sign out</Button>
                 </div>
-                <ReviewBoundary>Foundation slice only. Identity verification, listing review, payments, live SMS, and Agent assistance are not live capabilities yet.</ReviewBoundary>
+                <ReviewBoundary>Drafts and pending review stay private. Only approved active listings appear in public browse.</ReviewBoundary>
                 {!listingOnly ? <section style={{ marginTop: '1.25rem' }}><StatusSummary readiness={readiness} draft={draft} /></section> : null}
                 {notice ? <div style={{ marginTop: '1rem' }}><Notice tone="success">{notice}</Notice></div> : null}
                 {listingNotice ? <div style={{ marginTop: '1rem' }}><Notice tone="success">{listingNotice}</Notice></div> : null}

@@ -1,38 +1,38 @@
 :root {
     /* Serbizyu product brand — green marketplace identity */
-    --sz-canvas: #f8f5ed;
-    --sz-surface: #fffdf9;
-    --sz-surface-muted: #efe9dc;
-    --sz-ink: #14211d;
-    --sz-ink-soft: #5d786b;
-    --sz-ink-muted: #82958a;
-    --sz-border: #dce5df;
-    --sz-forest-50: #ecf8f4;
-    --sz-forest-100: #d1efe5;
+    --sz-canvas: #f3efe4;
+    --sz-surface: #fffcf6;
+    --sz-surface-muted: #f7f2e8;
+    --sz-ink: #12201c;
+    --sz-ink-soft: #4d655a;
+    --sz-ink-muted: #7a8f84;
+    --sz-border: #d5e0d9;
+    --sz-forest-50: #e8f7f1;
+    --sz-forest-100: #c6eadc;
     --sz-forest-300: #6fc7b1;
     --sz-forest-500: #17866f;
     --sz-forest-600: #0d715f;
-    --sz-forest-700: #0b5a4d;
+    --sz-forest-700: #0a574a;
     --sz-forest-950: #052420;
     --sz-mango-50: #fff8e6;
     --sz-mango-200: #ffdb72;
-    --sz-mango-400: #eda824;
+    --sz-mango-400: #f0b429;
     --sz-coral-50: #fff2ee;
     --sz-coral-200: #ffc0ae;
-    --sz-coral-600: #b63a22;
+    --sz-coral-600: #c24732;
     --sz-blue-50: #eff6ff;
     --sz-blue-600: #2563eb;
-    --sz-ok: #0b5a4d;
-    --sz-warn: #95490f;
-    --sz-bad: #b63a22;
+    --sz-ok: #0a574a;
+    --sz-warn: #9a5b10;
+    --sz-bad: #a83422;
     --sz-info: #0d715f;
     --sz-radius-sm: 0.75rem;
     --sz-radius-md: 1rem;
     --sz-radius-lg: 1.5rem;
     --sz-shadow-soft: 0 16px 44px -28px rgba(20, 33, 29, 0.34);
     --sz-shadow-lift: 0 22px 60px -30px rgba(13, 113, 95, 0.38);
-    --sz-font-body: Inter, ui-sans-serif, system-ui, sans-serif;
-    --sz-font-display: 'Plus Jakarta Sans', Inter, ui-sans-serif, system-ui, sans-serif;
+    --sz-font-body: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+    --sz-font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     --sz-target: 2.9rem;
 }
 

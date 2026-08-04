@@ -23,7 +23,7 @@ final class InertiaShellTest extends TestCase
             ->assertHeader('X-Correlation-Id', '0198a3b1-7c40-7abc-8def-f234567890ab')
             ->assertJsonPath('component', 'Home')
             ->assertJsonPath('props.app.name', config('app.name'))
-            ->assertJsonPath('props.app.stage', 'connected_slice')
+            ->assertJsonPath('props.app.stage', 'foundation_slice')
             ->assertJsonPath('props.correlationId', '0198a3b1-7c40-7abc-8def-f234567890ab')
             ->assertJsonPath('props.scope.productFeatures', false)
             ->assertJsonPath('props.scope.externalProviders', false)

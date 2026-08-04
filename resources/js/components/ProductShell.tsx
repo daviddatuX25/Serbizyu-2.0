@@ -9,7 +9,7 @@ export function ProductShell({
     children,
 }: {
     session?: SliceSession | null;
-    active?: 'home' | 'listings' | 'browse' | 'activity';
+    active?: 'home' | 'listings' | 'browse';
     title?: string;
     children: ReactNode;
 }) {
@@ -19,8 +19,17 @@ export function ProductShell({
         { key: 'home', label: 'Home', href: '/' },
         { key: 'listings', label: 'My Listings', href: '/my-listings' },
         { key: 'browse', label: 'Browse', href: '/browse' },
-        { key: 'activity', label: 'Activity', href: '/#activity' },
     ] as const;
+
+    const iconFor = (key: (typeof links)[number]['key']) => {
+        if (key === 'home') {
+            return '⌂';
+        }
+        if (key === 'listings') {
+            return '▤';
+        }
+        return '⌕';
+    };
 
     return (
         <div className="sz-product-shell">
@@ -28,7 +37,9 @@ export function ProductShell({
                 <aside className="sz-sidebar" aria-label="Primary navigation">
                     <div className="sz-sidebar-inner">
                         <Link href="/" className="sz-brand">
-                            <span className="sz-brand-mark" aria-hidden="true">S</span>
+                            <span className="sz-brand-mark" aria-hidden="true">
+                                S
+                            </span>
                             <span>
                                 <span className="sz-brand-name">Serbizyu</span>
                                 <span className="sz-brand-meta">Local marketplace</span>
@@ -36,8 +47,12 @@ export function ProductShell({
                         </Link>
                         <nav className="sz-nav" aria-label="Workspace">
                             {links.map((link) => (
-                                <Link key={link.key} href={link.href} className={`sz-nav-link ${active === link.key ? 'is-active' : ''}`}>
-                                    <span aria-hidden="true">{link.key === 'home' ? '⌂' : link.key === 'listings' ? '▤' : link.key === 'browse' ? '⌕' : '◷'}</span>
+                                <Link
+                                    key={link.key}
+                                    href={link.href}
+                                    className={`sz-nav-link ${active === link.key ? 'is-active' : ''}`}
+                                >
+                                    <span aria-hidden="true">{iconFor(link.key)}</span>
                                     {link.label}
                                 </Link>
                             ))}
@@ -52,7 +67,11 @@ export function ProductShell({
 
             <div className="sz-app-canvas">
                 <header className="sz-topbar">
-                    {authenticated ? <span className="sz-online-dot" aria-hidden="true">●</span> : null}
+                    {authenticated ? (
+                        <span className="sz-online-dot" aria-hidden="true">
+                            ●
+                        </span>
+                    ) : null}
                     <p className="sz-topbar-title">{title}</p>
                     <div className="sz-topbar-meta">
                         <span>{authenticated ? 'Your workspace' : 'Public marketplace'}</span>
@@ -63,7 +82,7 @@ export function ProductShell({
                     <nav className="sz-mobile-nav" aria-label="Mobile navigation">
                         {links.map((link) => (
                             <Link key={link.key} href={link.href} className={active === link.key ? 'is-active' : ''}>
-                                <span aria-hidden="true">{link.key === 'home' ? '⌂' : link.key === 'listings' ? '▤' : link.key === 'browse' ? '⌕' : '◷'}</span>
+                                <span aria-hidden="true">{iconFor(link.key)}</span>
                                 {link.label}
                             </Link>
                         ))}
