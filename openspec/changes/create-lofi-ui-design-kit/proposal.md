@@ -1,6 +1,8 @@
 # OpenSpec Change: Create Lo-Fi UI Design Kit
 
-Status: DRAFT FOR FOUNDER REVIEW
+Status: SUPERSEDED (2026-08-05)
+Superseded by: `docs/design-kit/` hi-fi UI Design Kit (promoted taste v2) as sole visual source of truth.
+Historical note: this change delivered the original lo-fi `dk-*` suite; that suite was retired because it was too designed/colorful for lo-fi intent. Inventory lives on as `docs/design-kit/ELEMENT-INVENTORY.md`.
 Change ID: `create-lofi-ui-design-kit`
 Capability status: REFERENCE-ONLY / DESIGN FOUNDATION
 

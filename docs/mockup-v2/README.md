@@ -1,7 +1,8 @@
-# Serbizyu 2.0 — Connected Mockup (lo-fi, reference only)
+# Serbizyu 2.0 — Connected Mockup (historical, reference only)
 
-Status: SCAFFOLDING IN PROGRESS · REFERENCE ONLY · no backend · fictional fixtures
-Built from: `docs/design-kit/` element suite, guided by `docs/design-kit/SCAFFOLD-GUIDE.md`
+Status: HISTORICAL REFERENCE · no backend · fictional fixtures
+**UI source of truth:** `docs/design-kit/` (hi-fi kit, accepted 2026-08-05) — not this mockup.
+Built originally from the retired lo-fi element suite. Do not treat layouts here as the product design standard.
 
 ## Open it
 
