@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Listings\Infrastructure;
 
 use App\Modules\Listings\Application\Contracts\ListingCommandStore;
+use App\Modules\Listings\Application\Contracts\OwnerListingReader;
 use App\Modules\Listings\Application\Contracts\PublicListingReader;
 use App\Modules\Listings\Application\ListingError;
 use App\Modules\Listings\Application\Projections\ListingProjection;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
-final class ListingRepository implements ListingCommandStore, PublicListingReader
+final class ListingRepository implements ListingCommandStore, OwnerListingReader, PublicListingReader
 {
     public function __construct(private readonly ListingRules $rules) {}
 
@@ -278,6 +279,37 @@ final class ListingRepository implements ListingCommandStore, PublicListingReade
     }
 
     /** @return list<array<string, mixed>> */
+    public function ownerListings(string $ownerUserId, string $correlationId): array
+    {
+        if (! Schema::hasTable('listing_versions') || ! Schema::hasTable('listings') || ! Schema::hasTable('categories')) {
+            return [];
+        }
+
+        return Listing::query()
+            ->join('listing_versions', function ($join): void {
+                $join->on('listing_versions.listing_id', '=', 'listings.id')
+                    ->on('listing_versions.version_number', '=', 'listings.current_version');
+            })
+            ->join('categories', 'categories.id', '=', 'listings.category_id')
+            ->where('listings.owner_user_id', $ownerUserId)
+            ->orderByDesc('listings.updated_at')
+            ->select(
+                'listings.*',
+                'listing_versions.description',
+                'listing_versions.terms',
+                'listing_versions.availability_capacity_summary',
+                'listing_versions.price_amount_minor',
+                'listing_versions.currency',
+                'categories.code as category_code',
+            )
+            ->toBase()
+            ->get()
+            ->map(fn (object $row): array => $this->mapProjection($row, false))
+            ->values()
+            ->all();
+    }
+
+    /** @return list<array<string, mixed>> */
     public function publicListings(string $correlationId): array
     {
         if (! $this->hasPublicTables()) {
@@ -522,6 +554,9 @@ final class ListingRepository implements ListingCommandStore, PublicListingReade
                 'listings.*',
                 'listing_versions.description',
                 'listing_versions.terms',
+                'listing_versions.price_amount_minor',
+                'listing_versions.currency',
+                'listing_versions.availability_capacity_summary',
                 'categories.code as category_code',
                 'user_profiles.display_name as owner_name',
                 'user_profiles.service_area_display as owner_area',
@@ -534,6 +569,7 @@ final class ListingRepository implements ListingCommandStore, PublicListingReade
     {
         $terms = json_decode((string) $row->terms, true) ?: [];
         $geography = json_decode((string) $row->geography, true) ?: [];
+        $capacity = json_decode((string) ($row->availability_capacity_summary ?? 'null'), true) ?: [];
         $projection = [
             'id' => (string) $row->id,
             'title' => (string) ($terms['title'] ?? ''),
@@ -550,8 +586,20 @@ final class ListingRepository implements ListingCommandStore, PublicListingReade
             'public' => $public,
         ];
 
-        if ((string) $row->id === '0198a3b1-7c40-7abc-8def-5234567890ab') {
+        if (isset($terms['fixture_key']) && is_string($terms['fixture_key']) && $terms['fixture_key'] !== '') {
+            $projection['fixture_key'] = $terms['fixture_key'];
+        } elseif ((string) $row->id === '0198a3b1-7c40-7abc-8def-5234567890ab') {
+            // Legacy contract rows written before fixture_key lived in terms.
             $projection['fixture_key'] = 'active-tagudin-service-01';
+        }
+
+        if (property_exists($row, 'price_amount_minor') && $row->price_amount_minor !== null) {
+            $projection['price_amount_minor'] = (int) $row->price_amount_minor;
+            $projection['currency'] = isset($row->currency) && is_string($row->currency) ? $row->currency : null;
+        }
+
+        if (isset($capacity['summary']) && is_string($capacity['summary']) && $capacity['summary'] !== '') {
+            $projection['capacity_summary'] = $capacity['summary'];
         }
 
         if ($public) {

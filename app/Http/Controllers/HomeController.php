@@ -28,11 +28,6 @@ final class HomeController
         return $this->render($request, 'home');
     }
 
-    public function listings(Request $request): InertiaResponse
-    {
-        return $this->render($request, 'listings');
-    }
-
     private function render(Request $request, string $pageMode): InertiaResponse
     {
         $correlationId = (string) $request->attributes->get('correlation_id');

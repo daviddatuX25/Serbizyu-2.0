@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Serbizyu taste drafts — Browse PLP chooser</title>
+<link rel="stylesheet" href="taste-browse-drafts.css">
+</head>
+<body>
+<div class="meta-dock">
+  <button type="button" class="meta-toggle" data-meta-toggle aria-expanded="false" aria-controls="meta-panel">Show notes</button>
+  <div id="meta-panel" class="meta-panel" hidden>
+    <aside class="hint"><b>A refined</b> — separated chrome · Cards/List/Highlight · Pin tray · Motion. SVG icons only. Resize for mobile vs desktop.</aside>
+    <aside class="psych">
+      <strong>PLP UX</strong>
+      <ul>
+        <li>Wide search + Filter/Sort/Layout bar</li>
+        <li>Full-width rec rail: slow marquee · rotates sets after screentime</li>
+        <li>Cards / List · Highlight desktop-only (mobile opens listing)</li>
+        <li>One sticky navbar (logo · search/tools · pinned right)</li>
+        <li>Mobile collapsible nav; rec tags scroll away</li>
+        <li>Pin listing shortlist tray (not cart)</li>
+        <li>Future: comparison table in Highlight</li>
+        <li>Drawn SVG icons only</li>
+        <li>Motion: tile stagger, sticky elevation, filter sheet</li>
+      </ul>
+    </aside>
+  </div>
+</div>
+
+<!-- A -->
+<section id="v-a" class="view-cards" data-name="A — PLP Plus" data-blurb="One sticky navbar · pinned right · mobile collapsible · Highlight desktop-only">
+  <!-- One sticky navbar: brand · search/tools · pinned (right) · mobile collapsible -->
+  <div class="stickybar" data-sticky>
+    <div class="sticky-inner">
+      <div class="nav-brand">
+        <a class="brand-mark" href="#" aria-label="Serbizyu home">
+          <img src="../assets/brand/serbizyu-logo-long.png" alt="Serbizyu" width="1384" height="386" decoding="async">
+        </a>
+        <span class="place-chip" title="Active market">Tagudin</span>
+      </div>
+
+      <div class="nav-panel" data-nav-panel id="v-a-nav-panel">
+        <div class="chrome-bar" aria-label="Browse controls">
+          <input class="search" value="greeting card layout" aria-label="Search need" data-search>
+          <button type="button" class="btn-tool" data-filter-open><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span>Filter</span></button>
+          <button type="button" class="btn-tool" data-sort-open aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6v12M8 18l-3-3M8 18l3-3M16 18V6M16 6l-3 3M16 6l3 3"/></svg><span data-sort-label>Sort</span></button>
+          <div class="view-seg" role="group" aria-label="Browse layout">
+            <button type="button" class="seg is-on" data-view="cards" aria-pressed="true" title="Cards"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h6v6H5zM13 5h6v6h-6zM5 13h6v6H5zM13 13h6v6h-6z"/></svg><span>Cards</span></button>
+            <button type="button" class="seg" data-view="list" aria-pressed="false" title="List"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg><span>List</span></button>
+            <button type="button" class="seg desktop-only" data-view="highlight" aria-pressed="false" title="Highlight (desktop)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h9v12H4zM15 6h5v5h-5zM15 13h5v5h-5z"/></svg><span>Highlight</span></button>
+          </div>
+          <span class="tools-meta"><strong>8</strong> · <span data-sort-hint>Newest</span></span>
+          <div class="sort-menu" data-sort-menu>
+            <button type="button" class="is-on" data-sort="Newest first">Newest first</button>
+            <button type="button" data-sort="Price: low to high">Price: low to high</button>
+            <button type="button" data-sort="Price: high to low">Price: high to low</button>
+            <button type="button" data-sort="Capacity first">Capacity first</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-end">
+        <button type="button" class="pin-tray-launch" data-pin-open aria-expanded="false" title="Pinned listings"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg><span class="pin-label"><span data-pin-count>0</span> pinned</span></button>
+        <button type="button" class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="v-a-nav-panel" aria-label="Open search and filters">
+          <span class="nav-toggle-open" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
+          <span class="nav-toggle-close" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rec tags scroll away — not sticky -->
+    <div class="rec-rail" data-rec-rail aria-live="polite">
+      <div class="rec-head">
+        <span class="rec-kicker" data-rec-kicker>Top searches today</span>
+        <div class="rec-dots" data-rec-dots aria-hidden="true"></div>
+      </div>
+      <div class="rec-marquee" data-rec-marquee>
+        <div class="rec-track" data-rec-track></div>
+      </div>
+    </div>
+
+  <div class="browse-body">
+    <div class="results">
+      <div class="place-band">
+        <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1400&q=80" alt="">
+        <p>Tagudin market · active offers only</p>
+      </div>
+      <div class="pgrid cols-4" data-grid>
+<article class="ptile" data-tile data-id="card-1" data-title="Hand-drawn greeting card layout" data-sub="service · 1 revision" data-price="₱80" data-img="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80" data-detail="A5 layout + 1 revision · printing separate · Maya Tagudin · Tagudin">
+  <div class="ph"><img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span>
+    <button type="button" class="pin-btn" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg></button>
+  </div>
+  <div class="bd">
+    <h3>Hand-drawn greeting card layout</h3>
+    <p class="sub">service · 1 revision</p>
+    <div class="row"><span class="price">₱80</span><a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></a></div>
+  </div>
+</article>
+<article class="ptile" data-tile data-id="card-2" data-title="Simple hem and button fix" data-sub="service · same day" data-price="₱120" data-img="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80" data-detail="Walk-in same day · Tagudin Centro · capacity available">
+  <div class="ph"><img src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span>
+    <button type="button" class="pin-btn" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg></button>
+  </div>
+  <div class="bd">
+    <h3>Simple hem and button fix</h3>
+    <p class="sub">service · same day</p>
+    <div class="row"><span class="price">₱120</span><a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></a></div>
+  </div>
+</article>
+<article class="ptile" data-tile data-id="card-3" data-title="Market errand run" data-sub="service · pickup" data-price="₱150" data-img="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=600&q=80" data-detail="List + pickup · public meeting point · External Cash">
+  <div class="ph"><img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span>
+    <button type="button" class="pin-btn" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg></button>
+  </div>
+  <div class="bd">
+    <h3>Market errand run</h3>
+    <p class="sub">service · pickup</p>
+    <div class="row"><span class="price">₱150</span><a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></a></div>
+  </div>
+</article>
+<article class="ptile" data-tile data-id="card-4" data-title="Small-batch flyer print assist" data-sub="service · Tagudin" data-price="₱200" data-img="https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&w=600&q=80" data-detail="Soft proof first · Tagudin · exact price">
+  <div class="ph"><img src="https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span>
+    <button type="button" class="pin-btn" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg></button>
+  </div>
+  <div class="bd">
+    <h3>Small-batch flyer print assist</h3>
+    <p class="sub">service · Tagudin</p>
+    <div class="row"><span class="price">₱200</span><a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></a></div>
+  </div>
+</article>
+<article class="ptile" data-tile data-id="card-5" data-title="Weekend bibingka tray" data-sub="product · ready Sat" data-price="₱180" data-img="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" data-detail="Ready Saturday morning · pickup only">
+  <div class="ph"><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span>
+    <button type="button" class="pin-btn" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg></button>
+  </div>
+  <div class="bd">
+    <h3>Weekend bibingka tray</h3>
+    <p class="sub">product · ready Sat</p>
+    <div class="row"><span class="price">₱180</span><a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></a></div>
+  </div>
+</article>
+<article class="ptile" data-tile data-id="card-6" data-title="Phone screen protector fit" data-sub="service · walk-in" data-price="₱50" data-img="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80" data-detail="Walk-in fit · protector not included">
+  <div class="ph"><img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span>
+    <button type="button" class="pin-btn" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg></button>
+  </div>
+  <div class="bd">
+    <h3>Phone screen protector fit</h3>
+    <p class="sub">service · walk-in</p>
+    <div class="row"><span class="price">₱50</span><a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></a></div>
+  </div>
+</article>
+<article class="ptile" data-tile data-id="card-7" data-title="Barangay document photo scan" data-sub="service · soft copy" data-price="₱70" data-img="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80" data-detail="Soft copy return · no government ID storage claim">
+  <div class="ph"><img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span>
+    <button type="button" class="pin-btn" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg></button>
+  </div>
+  <div class="bd">
+    <h3>Barangay document photo scan</h3>
+    <p class="sub">service · soft copy</p>
+    <div class="row"><span class="price">₱70</span><a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></a></div>
+  </div>
+</article>
+<article class="ptile" data-tile data-id="card-8" data-title="Fresh greens market bag" data-sub="product · same morning" data-price="₱95" data-img="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" data-detail="Same-morning bag · Tagudin market">
+  <div class="ph"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span>
+    <button type="button" class="pin-btn" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg></button>
+  </div>
+  <div class="bd">
+    <h3>Fresh greens market bag</h3>
+    <p class="sub">product · same morning</p>
+    <div class="row"><span class="price">₱95</span><a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></a></div>
+  </div>
+</article>
+      </div>
+      <div class="plist" data-list>
+<article class="prow" data-tile data-id="card-1" data-title="Hand-drawn greeting card layout" data-sub="service · 1 revision" data-price="₱80" data-img="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80" data-detail="A5 layout + 1 revision · printing separate · Maya Tagudin · Tagudin">
+  <div class="th"><img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Hand-drawn greeting card layout</h3><p>service · 1 revision</p></div>
+  <div class="end">
+    <button type="button" class="pin-btn text" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg><span>Pin</span></button>
+    <span class="price">₱80</span>
+    <a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></a>
+  </div>
+</article>
+<article class="prow" data-tile data-id="card-2" data-title="Simple hem and button fix" data-sub="service · same day" data-price="₱120" data-img="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80" data-detail="Walk-in same day · Tagudin Centro · capacity available">
+  <div class="th"><img src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Simple hem and button fix</h3><p>service · same day</p></div>
+  <div class="end">
+    <button type="button" class="pin-btn text" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg><span>Pin</span></button>
+    <span class="price">₱120</span>
+    <a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></a>
+  </div>
+</article>
+<article class="prow" data-tile data-id="card-3" data-title="Market errand run" data-sub="service · pickup" data-price="₱150" data-img="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=600&q=80" data-detail="List + pickup · public meeting point · External Cash">
+  <div class="th"><img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Market errand run</h3><p>service · pickup</p></div>
+  <div class="end">
+    <button type="button" class="pin-btn text" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg><span>Pin</span></button>
+    <span class="price">₱150</span>
+    <a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></a>
+  </div>
+</article>
+<article class="prow" data-tile data-id="card-4" data-title="Small-batch flyer print assist" data-sub="service · Tagudin" data-price="₱200" data-img="https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&w=600&q=80" data-detail="Soft proof first · Tagudin · exact price">
+  <div class="th"><img src="https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Small-batch flyer print assist</h3><p>service · Tagudin</p></div>
+  <div class="end">
+    <button type="button" class="pin-btn text" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg><span>Pin</span></button>
+    <span class="price">₱200</span>
+    <a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></a>
+  </div>
+</article>
+<article class="prow" data-tile data-id="card-5" data-title="Weekend bibingka tray" data-sub="product · ready Sat" data-price="₱180" data-img="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" data-detail="Ready Saturday morning · pickup only">
+  <div class="th"><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Weekend bibingka tray</h3><p>product · ready Sat</p></div>
+  <div class="end">
+    <button type="button" class="pin-btn text" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg><span>Pin</span></button>
+    <span class="price">₱180</span>
+    <a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></a>
+  </div>
+</article>
+<article class="prow" data-tile data-id="card-6" data-title="Phone screen protector fit" data-sub="service · walk-in" data-price="₱50" data-img="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80" data-detail="Walk-in fit · protector not included">
+  <div class="th"><img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Phone screen protector fit</h3><p>service · walk-in</p></div>
+  <div class="end">
+    <button type="button" class="pin-btn text" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg><span>Pin</span></button>
+    <span class="price">₱50</span>
+    <a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></a>
+  </div>
+</article>
+<article class="prow" data-tile data-id="card-7" data-title="Barangay document photo scan" data-sub="service · soft copy" data-price="₱70" data-img="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80" data-detail="Soft copy return · no government ID storage claim">
+  <div class="th"><img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Barangay document photo scan</h3><p>service · soft copy</p></div>
+  <div class="end">
+    <button type="button" class="pin-btn text" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg><span>Pin</span></button>
+    <span class="price">₱70</span>
+    <a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></a>
+  </div>
+</article>
+<article class="prow" data-tile data-id="card-8" data-title="Fresh greens market bag" data-sub="product · same morning" data-price="₱95" data-img="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" data-detail="Same-morning bag · Tagudin market">
+  <div class="th"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Fresh greens market bag</h3><p>product · same morning</p></div>
+  <div class="end">
+    <button type="button" class="pin-btn text" data-pin aria-pressed="false" aria-label="Pin listing"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg><span>Pin</span></button>
+    <span class="price">₱95</span>
+    <a class="open" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></a>
+  </div>
+</article>
+      </div>
+    </div>
+
+    <div class="sheet-backdrop" data-highlight-backdrop></div>
+    <aside class="highlight-pane" data-highlight-pane aria-label="Highlight preview">
+      <div class="peek-card" data-highlight-card>
+        <div class="peek-sheet-bar">
+          <span class="peek-handle" aria-hidden="true"></span>
+          <strong>Highlight</strong>
+          <button type="button" class="peek-close" data-highlight-close aria-label="Close preview"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+        <div class="media"><img data-h-img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80" alt=""></div>
+        <div class="body">
+          <div class="peek-top">
+            <span class="chip is-on"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span>
+            <button type="button" class="btn-tool" data-pin-from-highlight aria-pressed="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg><span>Pin listing</span></button>
+          </div>
+          <h2 data-h-title>Hand-drawn greeting card layout</h2>
+          <p class="h-detail" data-h-detail>A5 layout + 1 revision · printing separate · Maya Tagudin · Tagudin</p>
+          <div class="peek-actions">
+            <span class="price" data-h-price>₱80</span>
+            <a class="btn btn-primary" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg> Open listing</a>
+          </div>
+          <div class="compare-slot" data-compare-slot>
+            <strong>Compare later</strong>
+            <p>When Highlight is on, pinned listings can open a side-by-side comparison table here. Not in this foundation pass — persisted as a planned feature.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sheet-backdrop" data-sheet-backdrop></div>
+  <div class="sheet" data-filter-sheet role="dialog" aria-label="Filters" aria-modal="true">
+    <h2>Filter active offers</h2>
+    <div class="group"><strong>Type</strong>
+      <div class="chips" style="flex-wrap:wrap"><button type="button" class="chip is-on">Service</button><button type="button" class="chip">Product</button></div>
+    </div>
+    <div class="group"><strong>Place</strong>
+      <div class="chips" style="flex-wrap:wrap"><button type="button" class="chip is-on">Tagudin</button><button type="button" class="chip">Centro</button></div>
+    </div>
+    <div class="group"><strong>Price</strong>
+      <div class="chips" style="flex-wrap:wrap"><button type="button" class="chip is-on">Exact</button><button type="button" class="chip">Under ₱200</button></div>
+    </div>
+    <p class="muted">Drafts and pending review stay out of public Browse.</p>
+    <div class="actions">
+      <button type="button" class="btn btn-ghost" data-filter-close>Clear</button>
+      <button type="button" class="btn btn-primary" data-filter-close>Apply filters</button>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" data-pin-backdrop></div>
+  <div class="sheet pin-sheet" data-pin-sheet role="dialog" aria-label="Pinned listings" aria-modal="true">
+    <h2>Pinned listings</h2>
+    <p class="muted" style="margin-top:-.35rem">Local shortlist while you browse. Not a cart — no checkout implied.</p>
+    <div class="pin-list" data-pin-list></div>
+    <div class="actions">
+      <button type="button" class="btn btn-ghost" data-pin-clear>Clear pins</button>
+      <button type="button" class="btn btn-primary" data-pin-close>Done</button>
+    </div>
+  </div>
+</section>
+
+
+<section id="v-b" class="hidden" data-name="B — Filter Rail" data-blurb="Desktop sidebar filters · mobile Filter/Sort dock">
+  <div class="shell">
+    <aside class="side">
+      <h2 style="font-family:Outfit,system-ui,sans-serif;margin:0 0 .7rem">Refine</h2>
+      <div style="margin-bottom:1rem"><strong style="font-size:.78rem">Type</strong>
+        <div class="chips" style="flex-wrap:wrap;margin-top:.4rem"><span class="chip is-on">Service</span><span class="chip">Product</span></div>
+      </div>
+      <p class="muted">No drafts in public Browse.</p>
+    </aside>
+    <div class="main">
+      <div class="stickybar">
+        <div class="meta-row" style="margin:0 0 .5rem"><strong>Active in Tagudin</strong><span class="muted">8 offers</span></div>
+        <input class="search" value="greeting card layout" aria-label="Search need">
+      </div>
+      <div class="page" style="padding:.85rem"><div class="pgrid"><a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Hand-drawn greeting card layout</h3>
+    <p class="sub">service · 1 revision</p>
+    <div class="row"><span class="price">₱80</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Simple hem and button fix</h3>
+    <p class="sub">service · same day</p>
+    <div class="row"><span class="price">₱120</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Market errand run</h3>
+    <p class="sub">service · pickup</p>
+    <div class="row"><span class="price">₱150</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Small-batch flyer print assist</h3>
+    <p class="sub">service · Tagudin</p>
+    <div class="row"><span class="price">₱200</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Weekend bibingka tray</h3>
+    <p class="sub">product · ready Sat</p>
+    <div class="row"><span class="price">₱180</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Phone screen protector fit</h3>
+    <p class="sub">service · walk-in</p>
+    <div class="row"><span class="price">₱50</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Barangay document photo scan</h3>
+    <p class="sub">service · soft copy</p>
+    <div class="row"><span class="price">₱70</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Fresh greens market bag</h3>
+    <p class="sub">product · same morning</p>
+    <div class="row"><span class="price">₱95</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a></div></div>
+    </div>
+  </div>
+  <div class="mob-filter">
+    <button type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg> Filter</button>
+    <button type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6v12M8 18l-3-3M8 18l3-3M16 18V6M16 6l-3 3M16 6l3 3"/></svg> Sort</button>
+  </div>
+</section>
+
+<section id="v-c" class="hidden" data-name="C — Dense List" data-blurb="Mobile packed list · desktop auto wide grid">
+  <div class="stickybar">
+    <div class="meta-row" style="margin:0 0 .45rem"><strong>Browse</strong><span class="muted">Tagudin · active</span></div>
+    <input class="search" value="greeting card layout" aria-label="Search need">
+    <div class="chips" style="margin-top:.5rem"><span class="chip is-on">Service</span><span class="chip">Product</span><span class="chip is-on">Tagudin</span></div>
+  </div>
+  <div class="page">
+    <div class="plist"><a class="prow" href="#" data-tile>
+  <div class="th"><img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Hand-drawn greeting card layout</h3><p>service · 1 revision</p></div>
+  <div class="end"><span class="price">₱80</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></span></div>
+</a>
+<a class="prow" href="#" data-tile>
+  <div class="th"><img src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Simple hem and button fix</h3><p>service · same day</p></div>
+  <div class="end"><span class="price">₱120</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></span></div>
+</a>
+<a class="prow" href="#" data-tile>
+  <div class="th"><img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Market errand run</h3><p>service · pickup</p></div>
+  <div class="end"><span class="price">₱150</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></span></div>
+</a>
+<a class="prow" href="#" data-tile>
+  <div class="th"><img src="https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Small-batch flyer print assist</h3><p>service · Tagudin</p></div>
+  <div class="end"><span class="price">₱200</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></span></div>
+</a>
+<a class="prow" href="#" data-tile>
+  <div class="th"><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Weekend bibingka tray</h3><p>product · ready Sat</p></div>
+  <div class="end"><span class="price">₱180</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></span></div>
+</a>
+<a class="prow" href="#" data-tile>
+  <div class="th"><img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Phone screen protector fit</h3><p>service · walk-in</p></div>
+  <div class="end"><span class="price">₱50</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></span></div>
+</a>
+<a class="prow" href="#" data-tile>
+  <div class="th"><img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Barangay document photo scan</h3><p>service · soft copy</p></div>
+  <div class="end"><span class="price">₱70</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></span></div>
+</a>
+<a class="prow" href="#" data-tile>
+  <div class="th"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" alt=""></div>
+  <div class="mid"><h3>Fresh greens market bag</h3><p>product · same morning</p></div>
+  <div class="end"><span class="price">₱95</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open</span></span></div>
+</a></div>
+    <div class="pgrid cols-4"><a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Hand-drawn greeting card layout</h3>
+    <p class="sub">service · 1 revision</p>
+    <div class="row"><span class="price">₱80</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Simple hem and button fix</h3>
+    <p class="sub">service · same day</p>
+    <div class="row"><span class="price">₱120</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Market errand run</h3>
+    <p class="sub">service · pickup</p>
+    <div class="row"><span class="price">₱150</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Small-batch flyer print assist</h3>
+    <p class="sub">service · Tagudin</p>
+    <div class="row"><span class="price">₱200</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Weekend bibingka tray</h3>
+    <p class="sub">product · ready Sat</p>
+    <div class="row"><span class="price">₱180</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Phone screen protector fit</h3>
+    <p class="sub">service · walk-in</p>
+    <div class="row"><span class="price">₱50</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Barangay document photo scan</h3>
+    <p class="sub">service · soft copy</p>
+    <div class="row"><span class="price">₱70</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Fresh greens market bag</h3>
+    <p class="sub">product · same morning</p>
+    <div class="row"><span class="price">₱95</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a></div>
+  </div>
+</section>
+
+<section id="v-d" class="hidden" data-name="D — Grid + Peek" data-blurb="Mobile grid · desktop grid + sticky preview">
+  <div class="list">
+    <div class="stickybar" style="border:0;background:transparent;backdrop-filter:none;padding-left:0;padding-right:0">
+      <strong style="font-family:Outfit,system-ui,sans-serif;display:block;margin-bottom:.45rem">Active offers</strong>
+      <input class="search" value="greeting card layout" aria-label="Search need">
+      <div class="chips" style="margin-top:.5rem"><span class="chip is-on">Service</span><span class="chip">Product</span><span class="chip is-on">Tagudin</span></div>
+    </div>
+    <div class="pgrid" style="margin-top:.75rem"><a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Hand-drawn greeting card layout</h3>
+    <p class="sub">service · 1 revision</p>
+    <div class="row"><span class="price">₱80</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Simple hem and button fix</h3>
+    <p class="sub">service · same day</p>
+    <div class="row"><span class="price">₱120</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Market errand run</h3>
+    <p class="sub">service · pickup</p>
+    <div class="row"><span class="price">₱150</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1503694978374-8a2fa686963a?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Small-batch flyer print assist</h3>
+    <p class="sub">service · Tagudin</p>
+    <div class="row"><span class="price">₱200</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Weekend bibingka tray</h3>
+    <p class="sub">product · ready Sat</p>
+    <div class="row"><span class="price">₱180</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Phone screen protector fit</h3>
+    <p class="sub">service · walk-in</p>
+    <div class="row"><span class="price">₱50</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Barangay document photo scan</h3>
+    <p class="sub">service · soft copy</p>
+    <div class="row"><span class="price">₱70</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a>
+<a class="ptile" href="#" data-tile>
+  <div class="ph"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" alt=""><span class="tag"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span></div>
+  <div class="bd">
+    <h3>Fresh greens market bag</h3>
+    <p class="sub">product · same morning</p>
+    <div class="row"><span class="price">₱95</span><span class="open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg><span>Open listing</span></span></div>
+  </div>
+</a></div>
+  </div>
+  <div class="peek">
+    <div class="peek-card">
+      <div class="media"><img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&q=80" alt=""></div>
+      <div class="body">
+        <span class="chip is-on"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 12 2.4 2.4 4.6-4.8"/><circle cx="12" cy="12" r="8.5"/></svg> Active</span>
+        <h2 style="margin:0;font-family:Outfit,system-ui,sans-serif;font-size:1.25rem;letter-spacing:-.03em">Hand-drawn greeting card layout</h2>
+        <p class="muted" style="margin:0;line-height:1.45;font-size:.9rem;color:var(--ink-soft)">₱80 exact · A5 + 1 revision · printing separate · Maya Tagudin</p>
+        <button class="btn btn-primary" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg> Open listing</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="chooser" aria-label="Draft switcher">
+  <button type="button" id="prev" aria-label="Previous draft">Prev</button>
+  <div class="meta"><strong id="name">A — PLP Plus</strong><span id="blurb">Filter · Sort · grid/list · Motion · SVG open · dense shopping baseline</span></div>
+  <button type="button" id="next" aria-label="Next draft">Next</button>
+</nav>
+
+<script type="module">
+import { animate, stagger } from "https://cdn.jsdelivr.net/npm/motion@12.23.12/+esm";
+
+const ids = ['v-a','v-b','v-c','v-d'];
+let i = 0;
+const nameEl = document.getElementById('name');
+const blurbEl = document.getElementById('blurb');
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+const pins = new Set();
+
+const metaToggle = document.querySelector('[data-meta-toggle]');
+const metaPanel = document.getElementById('meta-panel');
+if (metaToggle && metaPanel) {
+  metaToggle.addEventListener('click', () => {
+    const open = metaPanel.hasAttribute('hidden');
+    if (open) metaPanel.removeAttribute('hidden'); else metaPanel.setAttribute('hidden', '');
+    metaToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    metaToggle.textContent = open ? 'Hide notes' : 'Show notes';
+  });
+}
+
+function animateTiles(root) {
+  if (!root || reduce.matches) return;
+  const tiles = root.querySelectorAll('.results [data-tile]');
+  if (!tiles.length) return;
+  animate(tiles, { opacity: [0, 1], y: [12, 0] }, { delay: stagger(0.03), duration: 0.34, ease: [0.16, 1, 0.3, 1] });
+}
+
+function syncPins(root) {
+  const count = root.querySelector('[data-pin-count]');
+  if (count) count.textContent = String(pins.size);
+  root.querySelectorAll('[data-pin], [data-pin-from-highlight]').forEach((btn) => {
+    const tile = btn.closest('[data-id]') || root.querySelector(`[data-id="${root.dataset.activeId || 'card-1'}"]`);
+    const id = btn.hasAttribute('data-pin-from-highlight') ? (root.dataset.activeId || 'card-1') : btn.closest('[data-id]')?.dataset.id;
+    if (!id) return;
+    const on = pins.has(id);
+    btn.classList.toggle('is-on', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  const list = root.querySelector('[data-pin-list]');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!pins.size) {
+    list.innerHTML = '<p class="muted">No pinned listings yet. Pin from a card, list row, or Highlight.</p>';
+    return;
+  }
+  pins.forEach((id) => {
+    const src = root.querySelector(`[data-id="${id}"]`);
+    if (!src) return;
+    const row = document.createElement('div');
+    row.className = 'pin-row';
+    row.innerHTML = `<img src="${src.dataset.img}" alt=""><div><strong>${src.dataset.title}</strong><span>${src.dataset.price} · ${src.dataset.sub}</span></div><button type="button" data-unpin="${id}">Remove</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('[data-unpin]').forEach((b) => b.addEventListener('click', () => {
+    pins.delete(b.dataset.unpin);
+    syncPins(root);
+  }));
+}
+
+function setHighlight(root, tile) {
+  if (!tile) return;
+  root.dataset.activeId = tile.dataset.id;
+  root.querySelectorAll('[data-tile]').forEach((t) => t.classList.toggle('is-active', t.dataset.id === tile.dataset.id));
+  const img = root.querySelector('[data-h-img]');
+  const title = root.querySelector('[data-h-title]');
+  const detail = root.querySelector('[data-h-detail]');
+  const price = root.querySelector('[data-h-price]');
+  if (img) img.src = tile.dataset.img;
+  if (title) title.textContent = tile.dataset.title;
+  if (detail) detail.textContent = tile.dataset.detail;
+  if (price) price.textContent = tile.dataset.price;
+  const pinBtn = root.querySelector('[data-pin-from-highlight]');
+  if (pinBtn) {
+    const on = pins.has(tile.dataset.id);
+    pinBtn.classList.toggle('is-on', on);
+    pinBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+}
+
+function wireA() {
+  const root = document.getElementById('v-a');
+  if (!root || root.dataset.wired) return;
+  root.dataset.wired = '1';
+
+  const sticky = root.querySelector('[data-sticky]');
+  window.addEventListener('scroll', () => {
+    const stuck = window.scrollY > 12;
+    sticky.classList.toggle('is-stuck', stuck);
+    root.classList.toggle('chrome-compact', stuck);
+  }, { passive: true });
+
+  const navToggle = root.querySelector('[data-nav-toggle]');
+  const navPanel = root.querySelector('[data-nav-panel]');
+  const setNavOpen = (open) => {
+    root.classList.toggle('nav-open', open);
+    sticky.classList.toggle('nav-open', open);
+    if (navToggle) {
+      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      navToggle.setAttribute('aria-label', open ? 'Close search and filters' : 'Open search and filters');
+    }
+  };
+  navToggle?.addEventListener('click', () => setNavOpen(!root.classList.contains('nav-open')));
+  // close collapsible after picking filter/sort/view on mobile
+  navPanel?.addEventListener('click', (e) => {
+    if (!window.matchMedia('(max-width: 959px)').matches) return;
+    if (e.target.closest('[data-filter-open], [data-view], [data-sort]')) {
+      // keep open for filter sheet / sort menu; collapse after view change
+      if (e.target.closest('[data-view]')) setNavOpen(false);
+    }
+  });
+  window.addEventListener('resize', () => {
+    if (!window.matchMedia('(max-width: 959px)').matches) setNavOpen(false);
+  });
+
+  const sheet = root.querySelector('[data-filter-sheet]');
+  const backdrop = root.querySelector('[data-sheet-backdrop]');
+  const openSheet = () => { backdrop.classList.add('is-open'); sheet.classList.add('is-open'); };
+  const closeSheet = () => { backdrop.classList.remove('is-open'); sheet.classList.remove('is-open'); };
+  root.querySelector('[data-filter-open]').addEventListener('click', openSheet);
+  root.querySelectorAll('[data-filter-close]').forEach((b) => b.addEventListener('click', closeSheet));
+  backdrop.addEventListener('click', closeSheet);
+
+  const pinSheet = root.querySelector('[data-pin-sheet]');
+  const pinBackdrop = root.querySelector('[data-pin-backdrop]');
+  const openPins = () => { pinBackdrop.classList.add('is-open'); pinSheet.classList.add('is-open'); syncPins(root); };
+  const closePins = () => { pinBackdrop.classList.remove('is-open'); pinSheet.classList.remove('is-open'); };
+  root.querySelector('[data-pin-open]').addEventListener('click', openPins);
+  root.querySelector('[data-pin-close]').addEventListener('click', closePins);
+  pinBackdrop.addEventListener('click', closePins);
+  root.querySelector('[data-pin-clear]').addEventListener('click', () => { pins.clear(); syncPins(root); });
+
+  const sortMenu = root.querySelector('[data-sort-menu]');
+  const sortOpen = root.querySelector('[data-sort-open]');
+  const sortHint = root.querySelector('[data-sort-hint]');
+  sortOpen.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = !sortMenu.classList.contains('is-open');
+    sortMenu.classList.toggle('is-open', open);
+    sortOpen.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  sortMenu.querySelectorAll('[data-sort]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      sortMenu.querySelectorAll('button').forEach((b) => b.classList.remove('is-on'));
+      btn.classList.add('is-on');
+      sortHint.textContent = btn.dataset.sort;
+      sortMenu.classList.remove('is-open');
+      animateTiles(root);
+    });
+  });
+  document.addEventListener('click', () => sortMenu.classList.remove('is-open'));
+
+  const highlightPane = root.querySelector('[data-highlight-pane]');
+  const highlightBackdrop = root.querySelector('[data-highlight-backdrop]');
+  const isMobile = () => window.matchMedia('(max-width: 959px)').matches;
+
+  function setViewMode(mode) {
+    // Highlight is desktop-only — on mobile, listing open is enough
+    if (mode === 'highlight' && isMobile()) mode = 'cards';
+    root.classList.remove('view-cards', 'view-list', 'view-highlight');
+    root.classList.add(`view-${mode}`);
+    root.querySelectorAll('[data-view]').forEach((b) => {
+      const on = b.dataset.view === mode;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    // ensure mobile sheet chrome never stays open
+    highlightBackdrop?.classList.remove('is-open');
+    highlightPane?.classList.remove('is-open');
+    if (mode === 'highlight') {
+      const active = root.querySelector('[data-tile].is-active') || root.querySelector('[data-grid] [data-tile]');
+      setHighlight(root, active);
+    }
+    animateTiles(root);
+  }
+
+  root.querySelectorAll('[data-view]').forEach((btn) => {
+    btn.addEventListener('click', () => setViewMode(btn.dataset.view));
+  });
+
+  window.addEventListener('resize', () => {
+    if (isMobile() && root.classList.contains('view-highlight')) setViewMode('cards');
+  });
+  if (isMobile() && root.classList.contains('view-highlight')) setViewMode('cards');
+
+  const searchInput = root.querySelector('[data-search]');
+  const recSets = [
+    { kicker: 'Top searches today', items: ['greeting card layout', 'hem and button fix', 'market errand', 'bibingka tray', 'flyer print'] },
+    { kicker: 'On sale nearby', items: ['screen protector fit', 'document scan', 'small greens bag', 'errand run · under ₱150'] },
+    { kicker: 'Nearest to you right now', items: ['Centro walk-in hem', 'market pickup today', 'print assist · Tagudin', 'soft-copy scan'] },
+    { kicker: 'You might want', items: ['weekend bibingka', 'greeting card layout', 'phone fit', 'flyer soft proof'] },
+  ];
+  const rail = root.querySelector('[data-rec-rail]');
+  const track = root.querySelector('[data-rec-track]');
+  const kickerEl = root.querySelector('[data-rec-kicker]');
+  const dotsEl = root.querySelector('[data-rec-dots]');
+  let recIndex = 0;
+  let recTimer = null;
+
+  function wireRecChips(scope) {
+    scope.querySelectorAll('.chip.rec').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        rail.querySelectorAll('.chip.rec').forEach((c) => c.classList.remove('is-on'));
+        // mark both marquee copies with same value
+        const val = chip.dataset.rec;
+        rail.querySelectorAll(`.chip.rec[data-rec="${CSS.escape(val)}"]`).forEach((c) => c.classList.add('is-on'));
+        if (searchInput) searchInput.value = val;
+        if (!reduce.matches) animate(chip, { scale: [0.94, 1] }, { type: 'spring', visualDuration: 0.22, bounce: 0.28 });
+        animateTiles(root);
+      });
+    });
+  }
+
+  function renderRecSet(idx, { animateIn = true } = {}) {
+    const set = recSets[idx];
+    kickerEl.textContent = set.kicker;
+    dotsEl.innerHTML = recSets.map((_, n) => `<span class="dot${n === idx ? ' is-on' : ''}"></span>`).join('');
+    const chips = set.items.map((t) => `<button type="button" class="chip rec" data-rec="${t}">${t}</button>`).join('');
+    // duplicate strip for seamless slow marquee
+    track.innerHTML = `<div class="rec-strip">${chips}</div><div class="rec-strip" aria-hidden="true">${chips}</div>`;
+    track.style.animation = 'none';
+    // force reflow then restart
+    void track.offsetWidth;
+    if (!reduce.matches) track.style.animation = '';
+    wireRecChips(track);
+    if (animateIn && !reduce.matches) {
+      animate(rail, { opacity: [0.55, 1], y: [6, 0] }, { duration: 0.45, ease: [0.16, 1, 0.3, 1] });
+    }
+  }
+
+  function nextRecSet() {
+    recIndex = (recIndex + 1) % recSets.length;
+    renderRecSet(recIndex);
+  }
+
+  function startRecRotate() {
+    if (reduce.matches || recTimer) return;
+    recTimer = window.setInterval(nextRecSet, 11000); // screentime before toggle
+  }
+
+  function stopRecRotate() {
+    if (recTimer) { clearInterval(recTimer); recTimer = null; }
+  }
+
+  renderRecSet(0, { animateIn: false });
+  startRecRotate();
+  // pause rotation + marquee while interacting
+  rail.addEventListener('mouseenter', () => { stopRecRotate(); rail.classList.add('is-paused'); });
+  rail.addEventListener('mouseleave', () => { rail.classList.remove('is-paused'); startRecRotate(); });
+  rail.addEventListener('focusin', () => { stopRecRotate(); rail.classList.add('is-paused'); });
+  rail.addEventListener('focusout', (e) => {
+    if (!rail.contains(e.relatedTarget)) { rail.classList.remove('is-paused'); startRecRotate(); }
+  });
+  // manual dots advance on click
+  dotsEl.addEventListener('click', (e) => {
+    const dots = [...dotsEl.querySelectorAll('.dot')];
+    const i = dots.indexOf(e.target.closest('.dot'));
+    if (i < 0) return;
+    recIndex = i;
+    renderRecSet(recIndex);
+    stopRecRotate();
+    startRecRotate();
+  });
+
+  root.addEventListener('click', (e) => {
+    const pinBtn = e.target.closest('[data-pin]');
+    if (pinBtn) {
+      e.preventDefault();
+      const id = pinBtn.closest('[data-id]').dataset.id;
+      if (pins.has(id)) pins.delete(id); else pins.add(id);
+      syncPins(root);
+      if (!reduce.matches) animate(pinBtn, { scale: [0.85, 1] }, { type: 'spring', visualDuration: 0.28, bounce: 0.35 });
+      return;
+    }
+    const pinHighlight = e.target.closest('[data-pin-from-highlight]');
+    if (pinHighlight) {
+      const id = root.dataset.activeId || 'card-1';
+      if (pins.has(id)) pins.delete(id); else pins.add(id);
+      syncPins(root);
+      return;
+    }
+    const tile = e.target.closest('[data-tile]');
+    if (tile && root.classList.contains('view-highlight') && !isMobile() && !e.target.closest('a.open') && !e.target.closest('[data-pin]')) {
+      setHighlight(root, tile);
+      if (!reduce.matches) {
+        const card = root.querySelector('[data-highlight-card]');
+        animate(card, { opacity: [0.6, 1], y: [10, 0] }, { duration: 0.28, ease: [0.16, 1, 0.3, 1] });
+      }
+    }
+  });
+
+  // default highlight target (desktop pane)
+  setHighlight(root, root.querySelector('[data-grid] [data-tile]'));
+  syncPins(root);
+}
+
+function show(idx){
+  i = (idx + ids.length) % ids.length;
+  ids.forEach((id, n) => document.getElementById(id).classList.toggle('hidden', n !== i));
+  const el = document.getElementById(ids[i]);
+  nameEl.textContent = el.dataset.name;
+  blurbEl.textContent = el.dataset.blurb;
+  const url = new URL(location.href);
+  url.searchParams.set('variant', ids[i].replace('v-','').toUpperCase());
+  history.replaceState(null,'',url);
+  if (ids[i] === 'v-a') { wireA(); animateTiles(el); }
+}
+document.getElementById('prev').onclick = () => show(i-1);
+document.getElementById('next').onclick = () => show(i+1);
+window.addEventListener('keydown', (e) => {
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  if (e.key === 'ArrowLeft') show(i-1);
+  if (e.key === 'ArrowRight') show(i+1);
+});
+const start = new URL(location.href).searchParams.get('variant');
+const map = {A:0,B:1,C:2,D:3};
+show(map[(start||'A').toUpperCase()] ?? 0);
+</script>
+</body>
+</html>

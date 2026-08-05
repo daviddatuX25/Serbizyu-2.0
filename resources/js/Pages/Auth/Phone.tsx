@@ -5,7 +5,7 @@ import type { HomeProps } from '../../types';
 
 /** Placeholder — replace with a licensed Tagudin / local market asset later. */
 const AUTH_HERO_IMAGE =
-    'https://images.unsplash.com/photo-1555881403-3269c3e8f3b6?auto=format&fit=crop&w=1400&q=80';
+    'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80';
 
 export default function PhoneAuth(props: HomeProps) {
     const pending = props.session?.status === 'challenge_pending';
@@ -33,7 +33,7 @@ export default function PhoneAuth(props: HomeProps) {
     return (
         <main className="sz-auth-split">
             <aside className="sz-auth-visual" aria-hidden={false}>
-                <img src={AUTH_HERO_IMAGE} alt="Busy Philippine public market aisle with fresh goods" />
+                <img src={AUTH_HERO_IMAGE} alt="Fresh produce at a public market — placeholder until a Tagudin local photo is added" />
                 <div className="sz-auth-visual-copy">
                     <p className="sz-eyebrow">Tagudin · neighbors helping neighbors</p>
                     <h2>Useful work stays close to home.</h2>

@@ -1,0 +1,65 @@
+.mlw-hero {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+}
+
+.mlw-lede {
+    max-width: 36rem;
+}
+
+.mlw-notice {
+    margin-top: 1rem;
+}
+
+.mlw-list {
+    margin-top: 1.25rem;
+}
+
+.mlw-list-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin-bottom: 0.85rem;
+}
+
+.mlw-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.mlw-sticky-create {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 12;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    pointer-events: none;
+}
+
+.mlw-sticky-create .sz-btn {
+    pointer-events: auto;
+    box-shadow: 0 16px 36px -18px color-mix(in srgb, var(--sz-forest-600, #0d715f) 55%, transparent);
+}
+
+.mlw-editor-wrap {
+    margin-top: 1.25rem;
+    scroll-margin-top: 5rem;
+}
+
+.mlw-browse-link {
+    margin-top: 1.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mlw-sticky-create .sz-btn {
+        box-shadow: none;
+    }
+}

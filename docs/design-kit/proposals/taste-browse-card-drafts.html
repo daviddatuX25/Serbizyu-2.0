@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Serbizyu — Browse card · D Split Service (locked)</title>
+  <link rel="stylesheet" href="taste-browse-card-drafts.css">
+</head>
+<body>
+  <div class="notes-dock">
+    <button class="notes-toggle" type="button" aria-expanded="false" aria-controls="taste-notes" data-notes-toggle>
+      Show notes
+    </button>
+    <aside class="taste-notes" id="taste-notes" hidden>
+      <section>
+        <strong>Locked: D — Split Service</strong>
+        <p>Horizontal media | copy. Rating + orders sit beside place + distance. Whole card opens detail; pin stays separate.</p>
+      </section>
+      <section>
+        <strong>Media expand contract</strong>
+        <p>Desktop/mobile dwell is 1.3s before media expand. Single-column touch also needs ≥58% full-card intersection after settle. On 2-col (≥900px), intersection expand is off — hover 1.3s expands full-row; stays until click outside. Photos swipe when expanded; dots pill shows only while expanded and jumps slides. No fake video.</p>
+      </section>
+      <section>
+        <strong>Preview honesty</strong>
+        <p>Stars, order counts, meters/km, and stock photos are layout previews until listing media + ratings + geo project from the backend.</p>
+      </section>
+    </aside>
+  </div>
+
+  <main>
+    <header class="page-head">
+      <p class="kicker">Browse PLP shell remains A · card anatomy locked as D</p>
+      <h1>Serbizyu <span>— Split Service cards</span></h1>
+      <p class="intro">Founder-locked D with longer card intersection expand, swipeable photo rail + dots, numeric rating with order count, and place + distance.</p>
+    </header>
+
+    <section class="truth-strip" aria-label="Capability truth">
+      <strong>Capability truth</strong>
+      <div>
+        <span>active public listings</span>
+        <span>category chip on media</span>
+        <span>punchline · owner · price</span>
+        <span>rating score + orders (preview)</span>
+        <span>place + distance m/km (preview)</span>
+        <span>multi-photo swipe + dots</span>
+        <span>dwell expand (hover · 1-col IO · 2-col hover/tap)</span>
+        <span>whole card opens detail</span>
+        <span>pin separate</span>
+      </div>
+    </section>
+
+    <section class="variant-panel" data-name="Split Service">
+      <header class="variant-head">
+        <div><span>D</span><h2>Split Service</h2></div>
+        <p>Swipe the media. Stop scrolling until a card is mostly on screen to expand it. Rating and place share equal weight beside the offer.</p>
+      </header>
+      <div class="listing-grid" data-card-grid></div>
+    </section>
+  </main>
+
+  <div class="action-toast" role="status" aria-live="polite" data-toast></div>
+
+  <script>
+    (() => {
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+      const multiCol = window.matchMedia("(min-width: 900px)");
+      const allowIoExpand = () => !finePointer.matches && !multiCol.matches && !reducedMotion.matches;
+      const HOVER_DWELL_MS = 1300;
+      const SCROLL_SETTLE_MS = 1300;
+      const CARD_INTERSECT_MIN = 0.58;
+
+      const images = {
+        craft: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1000&q=82",
+        market: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1000&q=82",
+        art: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&q=82",
+        sew: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1000&q=82",
+        food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=82",
+        tools: "https://images.unsplash.com/photo-1581092918056-0c4c5acdfb82?auto=format&fit=crop&w=1000&q=82"
+      };
+
+      const listings = [
+        {
+          slug: "hand-drawn-greeting-card-layout",
+          title: "Hand-drawn greeting card layout",
+          owner: "Maya Tagudin",
+          category: "Greeting cards",
+          place: "Tagudin Centro",
+          distanceMeters: 320,
+          rating: 4.8,
+          orders: 26,
+          price: "₱80",
+          punchline: "A5 hand-drawn layout with one thoughtful revision included.",
+          photos: [images.craft, images.art, images.sew],
+          alt: "Paper, pencils, and craft materials arranged for a handmade card"
+        },
+        {
+          slug: "market-errand-run",
+          title: "Market errand run",
+          owner: "Local service provider",
+          category: "Local services",
+          place: "Tagudin Public Market",
+          distanceMeters: 850,
+          rating: 4.5,
+          orders: 114,
+          price: "₱150",
+          punchline: "Fresh-market pickup with a clear same-day handoff around Tagudin.",
+          photos: [images.market, images.food, images.craft],
+          alt: "Fresh produce displayed at a busy local market"
+        },
+        {
+          slug: "phone-screen-replace",
+          title: "Phone screen replace walk-in",
+          owner: "Centro Fix Desk",
+          category: "Repairs",
+          place: "Barangay Pudoc West",
+          distanceMeters: 2100,
+          rating: 3.9,
+          orders: 47,
+          price: "₱450",
+          punchline: "Same-day glass swap for common Android frames when parts are on hand.",
+          photos: [images.tools, images.craft],
+          alt: "Workbench tools ready for a small device repair"
+        },
+        {
+          slug: "weekend-bibingka",
+          title: "Weekend bibingka tray",
+          owner: "Aling Rosa",
+          category: "Local food",
+          place: "Tagudin Market stall 12",
+          distanceMeters: 640,
+          rating: 4.9,
+          orders: 203,
+          price: "₱220",
+          punchline: "Fresh tray for Saturday pickup — reserve by Friday noon.",
+          photos: [images.food, images.market, images.art],
+          alt: "Warm local food ready for pickup"
+        }
+      ];
+
+      const icon = (name) => {
+        if (name === "pin") {
+          return '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 3 3H7l3-3-1-6Z"/><path d="M12 13v7"/></svg>';
+        }
+        if (name === "star") {
+          return '<svg class="icon icon-fill" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.9 7.2 18.5l.9-5.4L4.2 9.3l5.4-.8z"/></svg>';
+        }
+        return '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg>';
+      };
+
+      const formatDistance = (meters) => {
+        if (meters < 1000) {
+          return `${meters} m`;
+        }
+        const km = meters / 1000;
+        return `${km >= 10 ? km.toFixed(0) : km.toFixed(1)} km`;
+      };
+
+      const formatOrders = (n) => `${n.toLocaleString("en-PH")} ${n === 1 ? "order" : "orders"}`;
+
+      const pinButton = (listing) => `
+        <button class="pin-button" type="button" data-pin aria-pressed="false" aria-label="Pin ${listing.title}">
+          ${icon("pin")}<span class="sr-only">Pin listing</span>
+        </button>`;
+
+      const twinMeta = (listing) => `
+        <div class="twin-meta" title="Preview until ratings, orders, and geo project from backend">
+          <span class="meta-rating">
+            ${icon("star")}<strong class="score">${listing.rating.toFixed(1)}</strong>
+            <span class="meta-sub">${formatOrders(listing.orders)}</span>
+          </span>
+          <span class="meta-place">
+            ${icon("location")}<strong class="place">${listing.place}</strong>
+            <span class="meta-sub">${formatDistance(listing.distanceMeters)}</span>
+          </span>
+        </div>`;
+
+      const mediaRail = (listing) => {
+        const slides = listing.photos.map((src, index) => `
+          <div class="media-slide" data-slide-index="${index}">
+            <img src="${src}" alt="${index === 0 ? listing.alt : ""}" ${index === 0 ? "" : 'aria-hidden="true"'} loading="${index === 0 ? "eager" : "lazy"}">
+          </div>`).join("");
+        const dots = listing.photos.map((_, index) => `
+          <button type="button" class="media-dot${index === 0 ? " is-on" : ""}" data-dot-index="${index}"
+            aria-label="Show photo ${index + 1} of ${listing.photos.length}"${index === 0 ? ' aria-current="true"' : ''}></button>`).join("");
+        return `
+          <div class="media-shell media-split" data-media-stage>
+            <div class="media-rail" data-media-rail tabindex="0" role="region" aria-label="Photos for ${listing.title}">
+              ${slides}
+            </div>
+            <div class="media-chips"><span>${listing.category}</span></div>
+            ${pinButton(listing)}
+            <div class="media-dots" data-media-dots role="group" aria-label="Listing photos">${dots}</div>
+            <span class="expand-hint" data-expand-hint>Hold · swipe photos</span>
+          </div>`;
+      };
+
+      const renderCard = (listing) => `
+        <article class="listing-card horizontal-card dwell-card" tabindex="0" role="link"
+          data-open-card data-listing="${listing.title}" aria-label="Open ${listing.title} detail">
+          ${mediaRail(listing)}
+          <div class="split-copy">
+            <div class="split-offer">
+              <h3>${listing.title}</h3>
+              <p class="punchline clamp-two">${listing.punchline}</p>
+              <p class="owner">By ${listing.owner}</p>
+            </div>
+            ${twinMeta(listing)}
+            <strong class="price">${listing.price}</strong>
+          </div>
+        </article>`;
+
+      const grid = document.querySelector("[data-card-grid]");
+      grid.innerHTML = listings.map(renderCard).join("");
+
+      const notesToggle = document.querySelector("[data-notes-toggle]");
+      const notes = document.getElementById("taste-notes");
+      notesToggle.addEventListener("click", () => {
+        const expanded = notesToggle.getAttribute("aria-expanded") === "true";
+        notesToggle.setAttribute("aria-expanded", String(!expanded));
+        notesToggle.textContent = expanded ? "Show notes" : "Hide notes";
+        notes.hidden = expanded;
+      });
+
+      const toast = document.querySelector("[data-toast]");
+      let toastTimer;
+      const announce = (message) => {
+        toast.textContent = message;
+        toast.classList.add("is-visible");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 1800);
+      };
+
+      document.addEventListener("keydown", (event) => {
+        const card = event.target.closest("[data-open-card]");
+        if (card && (event.key === "Enter" || event.key === " ")) {
+          if (event.target.closest("[data-media-rail], [data-pin], [data-dot-index]")) {
+            return;
+          }
+          event.preventDefault();
+          announce(`Detail action preview: ${card.dataset.listing}`);
+        }
+      });
+
+      const syncDots = (stage) => {
+        const rail = stage.querySelector("[data-media-rail]");
+        const dots = [...stage.querySelectorAll("[data-dot-index]")];
+        if (!rail || dots.length === 0) {
+          return;
+        }
+        const width = rail.clientWidth || 1;
+        const index = Math.round(rail.scrollLeft / width);
+        const clamped = Math.max(0, Math.min(dots.length - 1, index));
+        dots.forEach((dot, i) => {
+          const on = i === clamped;
+          dot.classList.toggle("is-on", on);
+          if (on) { dot.setAttribute("aria-current", "true"); } else { dot.removeAttribute("aria-current"); }
+        });
+      };
+
+      document.querySelectorAll("[data-media-stage]").forEach((stage) => {
+        const rail = stage.querySelector("[data-media-rail]");
+        if (!rail) {
+          return;
+        }
+        let raf = 0;
+        let activeIndex = 0;
+        const snap = () => {
+          const width = rail.clientWidth || 1;
+          rail.scrollLeft = activeIndex * width;
+          syncDots(stage);
+        };
+        rail.addEventListener("scroll", () => {
+          window.cancelAnimationFrame(raf);
+          raf = window.requestAnimationFrame(() => {
+            const width = rail.clientWidth || 1;
+            activeIndex = Math.max(0, Math.min(rail.children.length - 1, Math.round(rail.scrollLeft / width)));
+            syncDots(stage);
+          });
+        }, { passive: true });
+        rail.addEventListener("click", (event) => event.stopPropagation());
+        rail.addEventListener("pointerdown", (event) => event.stopPropagation());
+        if (typeof ResizeObserver !== "undefined") {
+          new ResizeObserver(snap).observe(rail);
+        }
+        syncDots(stage);
+      });
+
+      const dwellCards = [...document.querySelectorAll(".dwell-card")];
+      const dwellState = new WeakMap();
+      let scrollSettled = true;
+      let scrollSettleTimer;
+
+      const stopAdvance = (card) => {
+        const state = dwellState.get(card);
+        if (!state) return;
+        window.clearInterval(state.advanceTimer);
+        state.advanceTimer = null;
+      };
+
+      const startAdvance = (card) => {
+        if (reducedMotion.matches) return;
+        const state = dwellState.get(card);
+        if (!state || state.advanceTimer) return;
+        const rail = card.querySelector("[data-media-rail]");
+        if (!rail || rail.children.length < 2) return;
+        state.advanceTimer = window.setInterval(() => {
+          const width = Math.round(rail.getBoundingClientRect().width) || rail.clientWidth || 1;
+          const current = Math.round(rail.scrollLeft / width);
+          const next = (current + 1) % rail.children.length;
+          rail.scrollTo({ left: next * width, behavior: "smooth" });
+        }, 3000);
+      };
+
+      const expandCard = (card) => {
+        if (reducedMotion.matches) {
+          return;
+        }
+        dwellCards.forEach((other) => {
+          if (other === card) return;
+          const otherState = dwellState.get(other);
+          window.clearTimeout(otherState.hoverTimer);
+          window.clearTimeout(otherState.collapseTimer);
+          stopAdvance(other);
+          other.classList.remove("is-expanded");
+          const otherRail = other.querySelector("[data-media-rail]");
+          if (otherRail) otherRail.scrollTo({ left: 0, behavior: "auto" });
+        });
+        const state = dwellState.get(card);
+        window.clearTimeout(state.collapseTimer);
+        card.classList.add("is-expanded");
+        const hint = card.querySelector("[data-expand-hint]");
+        if (hint) {
+          hint.textContent = "Swipe for more";
+        }
+        startAdvance(card);
+      };
+
+      const collapseCard = (card, delay = 180) => {
+        const state = dwellState.get(card);
+        window.clearTimeout(state.hoverTimer);
+        window.clearTimeout(state.collapseTimer);
+        state.collapseTimer = window.setTimeout(() => {
+          card.classList.remove("is-expanded");
+          stopAdvance(card);
+          const rail = card.querySelector("[data-media-rail]");
+          if (rail) {
+            rail.scrollTo({ left: 0, behavior: "auto" });
+          }
+          const hint = card.querySelector("[data-expand-hint]");
+          if (hint) {
+            hint.textContent = "Hold · swipe photos";
+          }
+        }, delay);
+      };
+
+      const cardMostlyVisible = (card) => {
+        const rect = card.getBoundingClientRect();
+        const viewH = window.innerHeight || 1;
+        const visible = Math.min(rect.bottom, viewH) - Math.max(rect.top, 0);
+        if (visible <= 0 || rect.height <= 0) {
+          return false;
+        }
+        return (visible / rect.height) >= CARD_INTERSECT_MIN;
+      };
+
+      dwellCards.forEach((card) => {
+        dwellState.set(card, {
+          ratio: 0,
+          hoverTimer: null,
+          collapseTimer: null,
+          advanceTimer: null
+        });
+        card.addEventListener("mouseenter", () => {
+          if (!finePointer.matches || reducedMotion.matches) {
+            return;
+          }
+          const state = dwellState.get(card);
+          window.clearTimeout(state.collapseTimer);
+          state.hoverTimer = window.setTimeout(() => expandCard(card), HOVER_DWELL_MS);
+        });
+        card.addEventListener("mouseleave", () => {
+          if (finePointer.matches) {
+            collapseCard(card, 180);
+          }
+        });
+      });
+
+      const cardObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const card = entry.target;
+          const state = dwellState.get(card);
+          state.ratio = entry.intersectionRatio;
+          if (!allowIoExpand() || !scrollSettled) {
+            return;
+          }
+          if (entry.intersectionRatio >= CARD_INTERSECT_MIN && cardMostlyVisible(card)) {
+            expandCard(card);
+          } else if (entry.intersectionRatio < CARD_INTERSECT_MIN * 0.75) {
+            collapseCard(card, 160);
+          }
+        });
+      }, {
+        root: null,
+        rootMargin: "-8% 0px -8% 0px",
+        threshold: [0, 0.25, 0.4, 0.5, 0.58, 0.7, 0.85, 1]
+      });
+
+      dwellCards.forEach((card) => cardObserver.observe(card));
+      document.querySelectorAll("[data-media-rail]").forEach((rail) => {
+        let origin = null;
+        rail.addEventListener("pointerdown", (event) => {
+          origin = { x: event.clientX, y: event.clientY };
+        });
+        rail.addEventListener("pointerup", (event) => {
+          if (!origin) return;
+          const dx = Math.abs(event.clientX - origin.x);
+          const dy = Math.abs(event.clientY - origin.y);
+          origin = null;
+          if (dx >= 10 || dy >= 10) return;
+          const card = event.currentTarget.closest(".dwell-card");
+          if (!card) return;
+          if (card.classList.contains("is-expanded")) {
+            collapseCard(card, 0);
+          } else {
+            expandCard(card);
+          }
+        });
+        rail.addEventListener("pointercancel", () => { origin = null; });
+      });
+
+
+      document.addEventListener("click", (event) => {
+        const dot = event.target.closest("[data-dot-index]");
+        if (dot) {
+          event.preventDefault();
+          event.stopPropagation();
+          const stage = dot.closest("[data-media-stage]");
+          const card = stage.closest(".dwell-card");
+          const rail = stage.querySelector("[data-media-rail]");
+          const index = Number(dot.dataset.dotIndex);
+          const width = Math.round(rail.getBoundingClientRect().width) || rail.clientWidth || 1;
+          if (card) {
+            expandCard(card);
+          }
+          rail.scrollTo({ left: index * width, behavior: reducedMotion.matches ? "auto" : "smooth" });
+          return;
+        }
+
+        const pin = event.target.closest("[data-pin]");
+        if (pin) {
+          event.preventDefault();
+          event.stopPropagation();
+          const pressed = pin.getAttribute("aria-pressed") === "true";
+          pin.setAttribute("aria-pressed", String(!pressed));
+          announce(pressed ? "Removed from pinned listings" : "Pinned separately");
+          return;
+        }
+
+        if (event.target.closest("[data-media-rail]")) {
+          return;
+        }
+
+        const card = event.target.closest("[data-open-card]");
+        if (card) {
+          announce(`Detail action preview: ${card.dataset.listing}`);
+        }
+      });
+
+      
+
+      window.addEventListener("scroll", () => {
+        if (!allowIoExpand()) {
+          return;
+        }
+        scrollSettled = false;
+        window.clearTimeout(scrollSettleTimer);
+        dwellCards.forEach((card) => collapseCard(card, 120));
+        scrollSettleTimer = window.setTimeout(() => {
+          scrollSettled = true;
+          if (!allowIoExpand()) return;
+          let best = null;
+          let bestScore = -Infinity;
+          const viewMid = window.innerHeight / 2;
+          dwellCards.forEach((card) => {
+            const state = dwellState.get(card);
+            if (state.ratio < CARD_INTERSECT_MIN || !cardMostlyVisible(card)) return;
+            const rect = card.getBoundingClientRect();
+            const mid = rect.top + rect.height / 2;
+            const score = state.ratio * 10000 - Math.abs(mid - viewMid);
+            if (score > bestScore) {
+              bestScore = score;
+              best = card;
+            }
+          });
+          if (best) expandCard(best);
+        }, SCROLL_SETTLE_MS);
+      }, { passive: true });
+
+      const onMultiColChange = () => {
+        if (!multiCol.matches) return;
+        window.clearTimeout(scrollSettleTimer);
+        scrollSettled = true;
+        dwellCards.forEach((card) => collapseCard(card, 0));
+      };
+      multiCol.addEventListener("change", onMultiColChange);
+      if (multiCol.matches) onMultiColChange();
+
+      reducedMotion.addEventListener("change", () => {
+        if (reducedMotion.matches) {
+          dwellCards.forEach((card) => collapseCard(card, 0));
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -8,6 +8,7 @@ use App\Modules\IdentityAccess\Infrastructure\Notifications\FakeOtpDelivery;
 use App\Modules\IdentityAccess\Infrastructure\Notifications\LogOtpDelivery;
 use App\Modules\IdentityAccess\Infrastructure\Notifications\MailpitNotificationChannel;
 use App\Modules\Listings\Application\Contracts\ListingCommandStore;
+use App\Modules\Listings\Application\Contracts\OwnerListingReader;
 use App\Modules\Listings\Application\Contracts\PublicListingReader;
 use App\Modules\Listings\Infrastructure\ListingRepository;
 use App\Shared\Support\EnvironmentValidator;
@@ -28,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(EnvironmentValidator::class);
         $this->app->singleton(FakeOtpDelivery::class);
         $this->app->bind(ListingCommandStore::class, ListingRepository::class);
+        $this->app->bind(OwnerListingReader::class, ListingRepository::class);
         $this->app->bind(PublicListingReader::class, ListingRepository::class);
         $this->app->bind(NotificationChannel::class, MailpitNotificationChannel::class);
 

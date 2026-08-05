@@ -2,8 +2,11 @@ import { Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { ProductShell } from '../components/ProductShell';
 import { ListingCard, ListingCardGrid } from '../components/listings/ListingCard';
+import { BrowsePlp } from '../components/browse/BrowsePlp';
+import { AlmostThereOnboarding } from '../components/onboarding/AlmostThereOnboarding';
+import { MyListingsWorkspace } from '../components/listings/MyListingsWorkspace';
 import { ListingPreview } from '../components/listings/ListingPreview';
-import { Badge, Button, Card, CardContent, Field, Notice, Select, Stepper, Textarea, TextInput } from '../components/ui';
+import { Badge, Button, Card, CardContent, Field, Notice, Select, Textarea, TextInput } from '../components/ui';
 import type { HomeProps, ListingDraft, ReadinessState, SliceSession } from '../types';
 
 type ErrorMap = Record<string, string>;
@@ -38,96 +41,6 @@ function displayName(session?: SliceSession | null, readiness?: ReadinessState |
 
 function ReviewBoundary({ children }: { children: string }) {
     return <Notice tone="warning" title="Prototype boundary">{children}</Notice>;
-}
-
-function OnboardingState({
-    readiness,
-    errors,
-    notice,
-    action,
-}: {
-    readiness?: ReadinessState | null;
-    errors: ErrorMap;
-    notice: string | null;
-    action: Action;
-}) {
-    const [display, setDisplay] = useState(readiness?.displayName ?? readiness?.display_name ?? '');
-    const [area, setArea] = useState(readiness?.areaCode ?? readiness?.area_code ?? 'Tagudin');
-    const [language, setLanguage] = useState(readiness?.languageCode ?? readiness?.language_code ?? 'fil');
-    const [help, setHelp] = useState(readiness?.helpPreference ?? readiness?.help_preference ?? 'self_managed');
-    const [lowData, setLowData] = useState(Boolean(readiness?.lowDataMode ?? readiness?.low_data_mode));
-
-    const submit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        router.post('/onboarding', {
-            provider_intent: true,
-            display_name: display.trim(),
-            area_code: area,
-            language_code: language,
-            low_data_mode: lowData,
-            help_preference: help,
-        }, { preserveScroll: true });
-    };
-
-    return (
-        <main className="sz-page">
-            <div style={{ maxWidth: 980, margin: '0 auto' }} className="sz-stack">
-                <Stepper steps={['Account', 'Verify', 'Onboarding', 'Workspace']} current={2} />
-                <div>
-                    <p className="sz-eyebrow">Step 3 of 4 · Setup once, continue later</p>
-                    <h1 className="sz-display-title">Let’s prepare your local workspace.</h1>
-                    <p className="sz-copy" style={{ maxWidth: 690 }}>We only ask for the minimum needed to make the first listing journey understandable. Your setup is saved to your account and can resume after refresh.</p>
-                </div>
-                <form onSubmit={submit} className="sz-grid-2">
-                    <Card>
-                        <CardContent className="sz-stack">
-                            <div>
-                                <p className="sz-eyebrow">Your basics</p>
-                                <h2 className="sz-section-title">How should Serbizyu address you?</h2>
-                            </div>
-                            <Field label="Display name" error={errors.display_name}>
-                                <TextInput name="display_name" value={display} onChange={(event) => setDisplay(event.target.value)} placeholder="Rosa" />
-                            </Field>
-                            <Field label="Safe service area" error={errors.area_code} hint="The first slice is intentionally limited to Tagudin.">
-                                <Select name="area_code" value={area} onChange={(event) => setArea(event.target.value)}>
-                                    <option value="Tagudin">Tagudin</option>
-                                    <option value="Tagudin Centro">Tagudin Centro</option>
-                                </Select>
-                            </Field>
-                            <Field label="Preferred language" error={errors.language_code}>
-                                <Select name="language_code" value={language} onChange={(event) => setLanguage(event.target.value)}>
-                                    <option value="fil">Filipino</option>
-                                    <option value="en">English</option>
-                                </Select>
-                            </Field>
-                            <label style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start', color: 'var(--sz-ink-soft)', fontSize: '0.82rem', lineHeight: 1.5 }}>
-                                <input name="low_data_mode" type="checkbox" checked={lowData} onChange={(event) => setLowData(event.target.checked)} />
-                                <span>Use lower-data presentation where possible.</span>
-                            </label>
-                        </CardContent>
-                    </Card>
-                    <Card muted>
-                        <CardContent className="sz-stack">
-                            <div>
-                                <p className="sz-eyebrow">Your path</p>
-                                <h2 className="sz-section-title">Start by offering something local.</h2>
-                                <p className="sz-copy">You can create a private listing, preview what buyers will see, and submit it for review. Browse is available anytime from your workspace.</p>
-                            </div>
-                            <Field label="Setup support" error={errors.help_preference}>
-                                <Select name="help_preference" value={help} onChange={(event) => setHelp(event.target.value)}>
-                                    <option value="self_managed">I’ll manage it myself</option>
-                                    <option value="assistance_requested">I may need help later</option>
-                                </Select>
-                            </Field>
-                            {errors.form ? <Notice tone="danger">{errors.form}</Notice> : null}
-                            {notice ? <Notice tone="success">{notice}</Notice> : null}
-                            <Button type="submit" loading={action === 'onboarding'}>Save setup and open workspace</Button>
-                        </CardContent>
-                    </Card>
-                </form>
-            </div>
-        </main>
-    );
 }
 
 function StatusSummary({ readiness, draft }: { readiness: ReadinessState; draft?: ListingDraft | null }) {
@@ -290,47 +203,100 @@ function BrowseState({ props }: { props: HomeProps }) {
     const listings = props.publicListings ?? [];
 
     return (
-        <ProductShell session={props.session} active="browse" title="Browse active listings">
-            <main className="sz-page">
-                <div style={{ marginBottom: '1.25rem' }}>
-                    <p className="sz-eyebrow">Public discovery</p>
-                    <h1 className="sz-display-title">What is active in Tagudin.</h1>
-                    <p className="sz-copy">Only server-approved active listings appear here. Drafts and pending review stay private.</p>
-                </div>
-                {listings.length === 0 ? (
-                    <Notice tone="neutral" title="No active listings yet">
-                        Public supply will appear here after review approval.
-                    </Notice>
-                ) : (
-                    <ListingCardGrid>
-                        {listings.map((listing) => (
-                            <ListingCard key={listing.id} listing={listing} variant="public" href={`/listings/${listing.id}`} />
-                        ))}
-                    </ListingCardGrid>
-                )}
-            </main>
+        <ProductShell session={props.session} active="browse" title="Browse" pageChrome={true}>
+            <BrowsePlp listings={listings} />
         </ProductShell>
+    );
+}
+
+function ProtectedAttempt({ listingId }: { listingId: string }) {
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [correlationId, setCorrelationId] = useState<string | null>(null);
+
+    return (
+        <div className="sz-stack" style={{ marginTop: '1rem' }}>
+            <div>
+                <strong>Protected owner action</strong>
+                <p className="sz-copy">This intentional test path should deny a public viewer without exposing protected fields.</p>
+            </div>
+            <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => {
+                    setBusy(true);
+                    setError(null);
+                    setCorrelationId(null);
+                    router.post(
+                        `/listings/${listingId}/protected-edit-attempt`,
+                        {},
+                        {
+                            preserveScroll: true,
+                            onError: (errors) => {
+                                const bag = errors as ErrorMap;
+                                const messages = Object.entries(bag).flatMap(([key, value]) => {
+                                    if (key === 'correlation_id' || key === 'correlationId') {
+                                        return [];
+                                    }
+                                    return [String(Array.isArray(value) ? value[0] ?? '' : value ?? '')].filter(Boolean);
+                                });
+                                setError(messages.join(' ') || 'That action is not available without permission.');
+                                const raw = bag.correlation_id ?? bag.correlationId;
+                                setCorrelationId(Array.isArray(raw) ? String(raw[0] ?? '') : raw ? String(raw) : null);
+                            },
+                            onFinish: () => setBusy(false),
+                        },
+                    );
+                }}
+            >
+                {busy ? 'Checking permission…' : 'Try protected action'}
+            </Button>
+            {error ? (
+                <div className="sz-notice sz-notice-warning" role="alert">
+                    <strong>Needs attention</strong>
+                    <p>{error}</p>
+                    {correlationId ? <p className="sz-copy">Reference: {correlationId}</p> : null}
+                </div>
+            ) : null}
+        </div>
     );
 }
 
 function DetailState({ props }: { props: HomeProps }) {
     const listing = props.activeListingDetail;
+    const denial = props.denial;
 
     return (
         <ProductShell session={props.session} active="browse" title="Listing detail">
             <main className="sz-page">
-                <div style={{ marginBottom: '1.25rem' }}>
-                    <p className="sz-eyebrow">Public listing</p>
-                    <h1 className="sz-display-title">Listing details.</h1>
-                    <p className="sz-copy">Private owner fields stay off this page.</p>
-                </div>
+                <Link href="/browse" className="sz-btn-link" style={{ marginBottom: '1rem', display: 'inline-flex' }}>
+                    Back to active listings
+                </Link>
                 {!listing ? (
                     <Notice tone="warning" title="Listing unavailable">
                         This listing is not available for public viewing.
                     </Notice>
                 ) : (
                     <div className="sz-stack" style={{ maxWidth: 720 }}>
+                        <p className="sz-eyebrow">Public listing detail</p>
+                        <h1 className="sz-display-title">{listing.title}</h1>
                         <ListingCard listing={listing} variant="public" />
+                        <ProtectedAttempt listingId={listing.id} />
+                        {denial ? (
+                            <section className="sz-notice" role="alert">
+                                <strong>Needs attention</strong>
+                                <p>{denial.message}</p>
+                                <p className="sz-copy">
+                                    {denial.recovery ?? 'Return to browse or refresh for the latest server state.'}
+                                </p>
+                                {(denial.correlationId ?? denial.correlation_id ?? props.correlationId) ? (
+                                    <p className="sz-copy">
+                                        Reference: <code>{denial.correlationId ?? denial.correlation_id ?? props.correlationId}</code>
+                                    </p>
+                                ) : null}
+                            </section>
+                        ) : null}
                         <Link href="/browse" className="sz-btn sz-btn-outline">Back to browse</Link>
                     </div>
                 )}
@@ -367,6 +333,20 @@ export default function ProductExperience(props: HomeProps) {
 
     const logout = () => withAction('logout', () => router.post('/auth/logout', {}, { preserveScroll: true, onFinish: () => setAction(null) }));
 
+    if (authenticated && ready && props.pageMode === 'listings') {
+        return (
+            <MyListingsWorkspace
+                session={props.session}
+                myListings={props.myListings}
+                draft={props.draft}
+                errors={visibleErrors}
+                action={action === 'onboarding' ? null : action}
+                notice={notice}
+                onLogout={logout}
+            />
+        );
+    }
+
     if (authenticated && ready) {
         return <WorkspaceState props={props} errors={visibleErrors} action={action} notice={notice} onLogout={logout} />;
     }
@@ -375,7 +355,12 @@ export default function ProductExperience(props: HomeProps) {
     if (authenticated && !ready) {
         return (
             <ProductShell session={session} title="Set up your workspace">
-                <OnboardingState readiness={props.readiness} errors={visibleErrors} notice={notice} action={action} />
+                <AlmostThereOnboarding
+                    readiness={props.readiness}
+                    errors={visibleErrors}
+                    notice={notice}
+                    action={action === 'onboarding' ? 'onboarding' : null}
+                />
             </ProductShell>
         );
     }

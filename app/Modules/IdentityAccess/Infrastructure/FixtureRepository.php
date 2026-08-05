@@ -206,7 +206,7 @@ final class FixtureRepository
                 'listing_id' => self::ACTIVE_LISTING_ID,
                 'version_number' => 1,
                 'description' => 'Reliable local help with errands and simple household tasks in Tagudin.',
-                'terms' => json_encode(['title' => 'Tagudin local help', 'category_code' => 'local-services', 'scope' => 'Fictional active public fixture'], JSON_THROW_ON_ERROR),
+                'terms' => json_encode(['title' => 'Tagudin local help', 'category_code' => 'local-services', 'scope' => 'Fictional active public fixture', 'fixture_key' => 'active-tagudin-service-01', 'evidence_class' => 'CAPSTONE'], JSON_THROW_ON_ERROR),
                 'price_amount_minor' => null,
                 'currency' => null,
                 'payment_lane_availability' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),

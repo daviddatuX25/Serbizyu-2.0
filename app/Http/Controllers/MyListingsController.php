@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Modules\IdentityAccess\Application\DemoFixtureService;
 use App\Modules\IdentityAccess\Application\SliceStateQuery;
 use App\Modules\Listings\Application\PublicListingsQuery;
 use App\Shared\Support\EnvironmentValidator;
@@ -12,19 +11,16 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
-final class BrowseController
+final class MyListingsController
 {
     public function __construct(
         private readonly SliceStateQuery $sliceState,
         private readonly PublicListingsQuery $publicListings,
-        private readonly DemoFixtureService $fixtures,
         private readonly EnvironmentValidator $environment,
     ) {}
 
     public function __invoke(Request $request): InertiaResponse
     {
-        $this->fixtures->ensure();
-
         $correlationId = (string) $request->attributes->get('correlation_id');
         $state = $this->sliceState->for($request);
         $publicListings = $this->publicListings->handle($correlationId);
@@ -35,18 +31,23 @@ final class BrowseController
             'denial' => null,
         ];
 
-        return Inertia::render('Browse', [
+        return Inertia::render('MyListings', [
             'app' => [
                 'name' => (string) config('app.name', 'Serbizyu'),
                 'environment' => (string) config('serbizyu.public_environment', 'local'),
-                'stage' => 'connected_slice',
+                'stage' => 'foundation_slice',
             ],
+            'experience' => 'foundation_v1',
+            'pageMode' => 'listings',
             'runtime' => $this->environment->safeSummary(config('serbizyu', [])),
             'correlationId' => $correlationId,
+            'scope' => [
+                'productFeatures' => false,
+                'externalProviders' => false,
+                'schemaMigrations' => false,
+            ],
             ...$slice,
             'slice' => $slice,
-            'experience' => 'foundation_v1',
-            'pageMode' => 'browse',
         ]);
     }
 }

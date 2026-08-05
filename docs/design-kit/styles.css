@@ -299,3 +299,60 @@ a.tk-listing:hover {
   .tk-shell { grid-template-columns: 1fr; }
   .tk-rail { position: relative; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
 }
+
+
+/* Almost There — onboarding progress specimen (accepted 2026-08-05) */
+.tk-progress-a{
+  margin-bottom:0.85rem; padding:0.9rem 0.95rem; border-radius:calc(var(--radius) + 4px);
+  background:linear-gradient(135deg, color-mix(in srgb, var(--forest-50, #e8f7f1) 88%, #fff), #fff8e8 70%, var(--paper, #fffcf6));
+  border:1px solid color-mix(in srgb, var(--forest-500, #17866f) 24%, var(--line, #d5e0d9));
+}
+.tk-progress-a-head{display:flex; justify-content:space-between; align-items:flex-end; gap:0.75rem; margin-bottom:0.85rem}
+.tk-progress-a-frac{font-family:var(--font-display, Outfit, system-ui, sans-serif); font-weight:800; font-size:2rem; letter-spacing:-0.04em; line-height:0.9; color:var(--forest-700, #0a574a)}
+.tk-progress-a-frac span{font-size:0.48em; color:var(--ink-muted, #7a8f84); font-weight:700}
+.tk-progress-a-head p{margin:0; max-width:18ch; text-align:right; font-size:0.84rem; color:var(--ink-soft, #4d655a); font-weight:600; line-height:1.3}
+.tk-progress-a-track{position:relative; padding-top:0.15rem}
+.tk-progress-a-track > i.tk-progress-a-fill{
+  position:absolute; left:12.5%; right:12.5%; top:1rem; height:4px; border-radius:999px;
+  background:linear-gradient(90deg, var(--forest-500, #17866f), var(--forest-700, #0a574a) 70%, #c9a227);
+  transform:scaleX(0.75); transform-origin:left center; width:auto;
+  /* fill is drawn as a bar under nodes via background track */
+}
+.tk-progress-a-track::before{
+  content:""; position:absolute; left:12.5%; right:12.5%; top:1rem; height:4px; border-radius:999px;
+  background:rgba(18,32,28,0.1);
+}
+.tk-progress-a-track ol{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(4,1fr); gap:0.35rem; position:relative}
+.tk-progress-a-track li{display:grid; justify-items:center; gap:0.4rem; font-size:0.7rem; font-weight:700; color:var(--ink-muted, #7a8f84); text-align:center}
+.tk-progress-a-track li span{
+  width:2rem; height:2rem; border-radius:999px; display:grid; place-items:center;
+  background:var(--paper, #fffcf6); border:2px solid var(--line, #d5e0d9); color:inherit; font-size:0.75rem;
+}
+.tk-progress-a-track li.is-done{color:var(--forest-700, #0a574a)}
+.tk-progress-a-track li.is-done span{background:var(--forest-600, #0d715f); border-color:var(--forest-600, #0d715f); color:#fff}
+.tk-progress-a-track li.is-now{color:var(--ink, #12201c)}
+.tk-progress-a-track li.is-now span{border-color:var(--forest-600, #0d715f); color:var(--forest-700, #0a574a); box-shadow:0 0 0 4px rgba(23,134,111,0.14)}
+
+/* Browse PLP Plus specimen (locked 2026-08-05) */
+.tk-browse-plp { display: grid; gap: 0.75rem; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--bone); }
+.tk-plp-sticky { background: rgba(255,252,246,.96); border-bottom: 1px solid var(--line); padding: 0.65rem 0.9rem; }
+.tk-plp-sticky-inner { display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; }
+.tk-plp-brand { display: inline-flex; align-items: center; gap: 0.45rem; }
+.tk-plp-logo { display: block; height: 1.85rem; width: auto; max-width: 8.5rem; object-fit: contain; }
+.tk-plp-chrome { display: flex; flex: 1 1 16rem; flex-wrap: wrap; gap: 0.4rem; align-items: center; min-width: 0; padding: 0.35rem; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
+.tk-plp-chrome .tk-input { flex: 1 1 10rem; min-width: 0; max-width: none; }
+.tk-plp-rec { padding: 0 0.9rem 0.35rem; display: grid; gap: 0.35rem; }
+.tk-plp-rec strong { font-family: Outfit, system-ui, sans-serif; font-size: 0.78rem; color: var(--forest-700); }
+.tk-plp-rec-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.tk-browse-plp .tk-browse { padding: 0.55rem 0.9rem 1rem; }
+.tk-listing-media-fallback {
+  aspect-ratio: 16 / 10;
+  display: grid; place-items: center;
+  background: linear-gradient(145deg, #c6eadc, #dfe8e3 55%, #e8f7f1);
+  color: var(--forest-700);
+  font-family: Outfit, system-ui, sans-serif;
+  font-weight: 800; font-size: 2rem;
+}
+@media (max-width: 900px) {
+  .tk-desktop-only { display: none !important; }
+}

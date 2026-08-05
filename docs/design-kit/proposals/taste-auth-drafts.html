@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Serbizyu taste drafts — Auth chooser</title>
+<link rel="stylesheet" href="taste-auth-drafts.css">
+</head>
+<body>
+<aside class="hint"><b>Founder chooser</b> — four creative drafts for phone sign-in. Use ← → or the bar. Winner becomes the kit specimen, then live app.</aside>
+
+<!-- A -->
+<section id="v-a" data-name="A — Laguna Split" data-blurb="Asymmetric photo dock · bold Outfit · place-first">
+  <div class="visual">
+    <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=1400&q=80" alt="Hands preparing food at a local kitchen counter">
+    <div class="visual-copy">
+      <div class="eyebrow">Tagudin · neighbors helping neighbors</div>
+      <h2>Useful work stays close to home.</h2>
+      <p>Greeting-card layouts, market errands, and quiet crafts — signed in with your own number.</p>
+    </div>
+  </div>
+  <div class="dock">
+    <div class="brand"><strong>Serbizyu</strong><span>Local marketplace</span></div>
+    <h1>Sign in with your phone</h1>
+    <p class="lede">One-time code to your number. No shared demo accounts. Your listing drafts stay private until review.</p>
+    <div class="stack">
+      <div class="field">
+        <label for="a-phone">Mobile number</label>
+        <input id="a-phone" value="09935240627" placeholder="09XXXXXXXXX">
+        <div class="hint-line">Philippine mobile · code expires in 10 minutes</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" type="button"><svg class="ico" viewBox="0 0 24 24"><rect x="5.5" y="2.5" width="13" height="19" rx="2"/><path d="M12 17.5h.01"/></svg> Send verification code</button>
+        <button class="btn btn-link" type="button">Browse without signing in</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- B -->
+<section id="v-b" class="hidden" data-name="B — Market Stall" data-blurb="Bold local energy · mango accent · listing beside auth">
+  <div class="frame">
+    <div class="stall">
+      <div class="stall-top">
+        <div class="mark">Serbizyu · Tagudin</div>
+        <div class="chip">Active today</div>
+      </div>
+      <div class="stall-body">
+        <div class="photo">
+          <img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=900&q=80" alt="Hand-drawn greeting card craft materials">
+          <div class="price">₱80 exact</div>
+        </div>
+        <div class="offer">
+          <span class="tag"><svg class="ico" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Active service</span>
+          <h2>Hand-drawn greeting card layout</h2>
+          <p>A5 birthday layout · one revision · printing not included. Maya Tagudin.</p>
+          <div class="meta"><span>External Cash</span><span>Tagudin</span><span>New provider</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="auth">
+      <div class="eyebrow">Secure access</div>
+      <h1>Enter with your number, then join the stall.</h1>
+      <p class="lede">Browse is open now. Creating a listing needs a verified phone.</p>
+      <div class="areas"><span>Tagudin</span><span>Nearby barangays</span><span>Public meeting points</span></div>
+      <div class="field">
+        <label for="b-phone">Mobile number</label>
+        <input id="b-phone" value="09935240627" placeholder="09XXXXXXXXX">
+        <div class="hint-line">One-time code · works once</div>
+      </div>
+      <button class="btn btn-primary" type="button">Send verification code</button>
+      <button class="btn btn-link" type="button">Browse Tagudin listings first</button>
+    </div>
+  </div>
+</section>
+
+<!-- C -->
+<section id="v-c" class="hidden" data-name="C — Quiet Ledger" data-blurb="Editorial trust · airy · hairline rules · no heavy card">
+  <div class="wrap">
+    <header>
+      <div class="logo">Serbizyu</div>
+      <nav class="nav"><span>Browse</span><span>Support</span></nav>
+    </header>
+    <div class="grid">
+      <div>
+        <div class="kicker">Phone access</div>
+        <h1>Prove the number. Keep the rest quiet.</h1>
+        <p class="lede">Serbizyu verifies your mobile once, then remembers your local workspace. Drafts stay private. Public browse only shows active offers.</p>
+        <dl class="facts">
+          <div><dt>Code</dt><dd>Expires in 10 minutes · single use</dd></div>
+          <div><dt>Privacy</dt><dd>No shared demo logins · your number only</dd></div>
+          <div><dt>Next</dt><dd>Optional profile setup unlocks listing creation</dd></div>
+        </dl>
+      </div>
+      <div class="panel">
+        <h2>Continue with phone</h2>
+        <div class="stack">
+          <div class="field">
+            <label for="c-phone">Mobile number</label>
+            <input id="c-phone" value="09935240627" placeholder="09XXXXXXXXX">
+            <div class="hint-line">09XXXXXXXXX or +639XXXXXXXXX</div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" type="button">Send verification code</button>
+            <button class="btn btn-ghost" type="button">Browse without signing in</button>
+          </div>
+                  </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- D -->
+<section id="v-d" class="hidden" data-name="D — Evening Patio" data-blurb="Dusk atmosphere · soft glass · focused single column">
+  <div class="shell">
+    <div class="brand-row"><strong>Serbizyu</strong><span>Tagudin evening</span></div>
+    <div class="glass">
+      <div class="eyebrow"><svg class="ico" viewBox="0 0 24 24"><rect x="5.5" y="10" width="13" height="10" rx="2"/><path d="M8.5 10V7.8a3.5 3.5 0 0 1 7 0V10"/></svg> Secure access</div>
+      <h1>Sign in before the night market closes.</h1>
+      <p class="lede">A one-time code keeps your workspace yours. Browse stays open either way.</p>
+      <div class="field">
+        <label for="d-phone">Mobile number</label>
+        <input id="d-phone" value="09935240627" placeholder="09XXXXXXXXX">
+        <div class="hint-line">Philippine mobile · expires in 10 minutes</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" type="button">Send verification code</button>
+        <button class="btn btn-ghost" type="button">Browse without signing in</button>
+      </div>
+    </div>
+    <div class="trust">
+      <div><strong>Private drafts</strong>Only you see unfinished listings.</div>
+      <div><strong>Local truth</strong>Active Tagudin offers only.</div>
+    </div>
+  </div>
+</section>
+
+<nav class="chooser" aria-label="Draft switcher">
+  <button type="button" id="prev" aria-label="Previous draft">←</button>
+  <div class="meta"><strong id="name">A — Laguna Split</strong><span id="blurb">Asymmetric photo dock · bold Outfit · place-first</span></div>
+  <button type="button" id="next" aria-label="Next draft">→</button>
+</nav>
+
+<script>
+const ids = ['v-a','v-b','v-c','v-d'];
+let i = 0;
+const nameEl = document.getElementById('name');
+const blurbEl = document.getElementById('blurb');
+function show(idx){
+  i = (idx + ids.length) % ids.length;
+  ids.forEach((id, n) => document.getElementById(id).classList.toggle('hidden', n !== i));
+  const el = document.getElementById(ids[i]);
+  nameEl.textContent = el.dataset.name;
+  blurbEl.textContent = el.dataset.blurb;
+  const key = ids[i].replace('v-','');
+  const url = new URL(location.href);
+  url.searchParams.set('variant', key.toUpperCase());
+  history.replaceState(null,'',url);
+}
+document.getElementById('prev').onclick = () => show(i-1);
+document.getElementById('next').onclick = () => show(i+1);
+window.addEventListener('keydown', (e) => {
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  if (e.key === 'ArrowLeft') show(i-1);
+  if (e.key === 'ArrowRight') show(i+1);
+});
+const start = new URL(location.href).searchParams.get('variant');
+const map = {A:0,B:1,C:2,D:3};
+show(map[(start||'A').toUpperCase()] ?? 0);
+</script>
+</body>
+</html>

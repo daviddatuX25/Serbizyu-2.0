@@ -48,7 +48,7 @@ The rebuilt planning chain is founder-approved for planning authority. This does
 | `prd-rebuilt.md` | Canonical product requirements — 59 requirements |
 | `ux-spec-rebuilt.md` | Canonical UX and 23-journey traceability contract |
 | `domain-state-contracts-rebuilt.md` | Canonical domain/state machines |
-| `canonical-schema-rebuilt.md` | Canonical 42-table schema authority |
+| `canonical-schema-rebuilt.md` | Canonical core 42 plus approved four-table Deal-Chaining foundation (46-table planning inventory) |
 | `adr-catalog-rebuilt.md` | Canonical 28-ADR catalog |
 | `architecture-rebuilt.md` | Canonical architecture/operations blueprint |
 | `epics-and-stories-rebuilt.md` | Canonical E0–E9 delivery plan; only hardened stories are executable |
@@ -117,4 +117,4 @@ old-docs/
 
 ## 🚀 Deferred (Phase 2+)
 
-Serbi AI · Deal-Chaining · Kiosk · Compliance Dashboard · Boost/Ads · Points/Affiliate · Push Notifications · Channel Connectors · Backup Automation · Reverse Bidding
+Serbi AI · bounded Deal-Chaining functionality · Kiosk · Compliance Dashboard · Boost/Ads · Points/Affiliate · Push Notifications · Channel Connectors · Backup Automation · Reverse Bidding

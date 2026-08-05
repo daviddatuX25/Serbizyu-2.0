@@ -92,8 +92,8 @@
     </section>
 
     <section class="tk-section" id="listings">
-      <h2>Listing cards with photos</h2>
-      <p class="tk-lead">Browse, My Listings, and Preview share one card anatomy. Photos show the real craft or place. Status uses badge + text, never a left stripe.</p>
+      <h2>My Listings — List Dock (locked)</h2>
+      <p class="tk-lead">Founder-chosen <strong>A — List Dock</strong>: owner status list primary · sticky Create listing · draft editor secondary · ReviewBoundary privacy. Live: <code>resources/js/components/listings/MyListingsWorkspace.tsx</code>. Chooser: <a href="proposals/taste-my-listings-drafts.html?variant=A">taste-my-listings-drafts</a>. Shared card anatomy for Browse / owner / Preview — status uses badge + text, never a left stripe. Media placeholders until listing media ERD exists.</p>
       <div class="tk-grid tk-cols-2">
         <a class="tk-listing" href="#browse">
           <div class="tk-listing-media">
@@ -147,14 +147,14 @@
           <span class="tk-badge tk-badge-warn" style="margin-bottom:0.35rem"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> Pending review</span>
           <strong>What this means</strong>
           Maya’s listing is waiting for review. Buyers cannot see it yet.
-          <small>Next actor: Serbizyu review · Maya can still edit the draft</small>
+          <small>Next actor: Serbizyu review · edits stay on draft status only</small>
         </div>
       </div>
     </section>
 
     <section class="tk-section" id="auth">
       <h2>Sign-in &amp; profile setup</h2>
-      <p class="tk-lead">Phone-first access for Tagudin users. No shared demo accounts. Profile setup unlocks listing creation only.</p>
+      <p class="tk-lead">Phone-first access for Tagudin users. Profile setup uses the accepted <strong>Almost There</strong> progress pattern — honest 3/4 goal-gradient, no government ID in this pass.</p>
       <div class="tk-grid tk-cols-2">
         <div class="tk-compose">
           <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
@@ -177,11 +177,26 @@
           </div>
         </div>
         <div class="tk-compose">
-          <div class="tk-status-x" style="padding:0.7rem 0.8rem">
-            <svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 19.5c1.6-3.2 4-4.8 7-4.8s5.4 1.6 7 4.8"/></svg>
-            <div>
-              <strong>Finish your provider profile</strong>
-              <small>Needed before you can create a listing · No government ID in this pass</small>
+          <div class="tk-progress-a" aria-label="Setup progress: step 3 of 4">
+            <div class="tk-progress-a-head">
+              <div class="tk-progress-a-frac">3<span> / 4</span></div>
+              <p>Almost into your workspace</p>
+            </div>
+            <div class="tk-progress-a-track" aria-hidden="true">
+              <i class="tk-progress-a-fill"></i>
+              <ol>
+                <li class="is-done"><span>✓</span>Account</li>
+                <li class="is-done"><span>✓</span>Phone</li>
+                <li class="is-now"><span>3</span>Profile</li>
+                <li><span>4</span>Workspace</li>
+              </ol>
+            </div>
+            <div class="tk-status-x" style="padding:0.7rem 0.8rem;margin-top:0.75rem">
+              <svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg>
+              <div>
+                <strong>Three-quarters done</strong>
+                <small>Phone verified · one short profile unlocks listing creation · No government ID in this pass</small>
+              </div>
             </div>
           </div>
           <div class="tk-field" style="margin:0">
@@ -200,34 +215,54 @@
     </section>
 
     <section class="tk-section" id="browse">
-      <h2>Browse composition</h2>
-      <p class="tk-lead">Start from a need. Show only active listings. Keep the next unfinished marketplace paths out of this screen.</p>
-      <div class="tk-browse">
-        <div>
-          <p class="tk-eyebrow">Public discovery</p>
-          <h3 class="tk-display">What is active in Tagudin.</h3>
-          <p class="tk-copy" style="margin-top:0.45rem">Active offers only. Drafts and pending review stay private.</p>
-        </div>
-        <div class="tk-browse-tools">
-          <input class="tk-input" value="greeting card layout" aria-label="Search need">
-          <span class="tk-chip is-on"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg> Service</span>
-          <span class="tk-chip"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 6.2 4h11.6L20 10.5"/><path d="M4 10.5h16V20H4V10.5Z"/><path d="M9.5 20v-5.5h5V20"/><path d="M4 10.5c1.2 1.4 2.8 1.4 4 0s2.8-1.4 4 0 2.8 1.4 4 0 2.8-1.4 4 0"/></svg> Product</span>
-          <span class="tk-chip is-on"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg> Tagudin</span>
-        </div>
-        <a class="tk-listing" href="#listings">
-          <div class="tk-listing-media">
-            <img src="https://picsum.photos/seed/tagudin-greeting-card-layout/900/520" alt="Greeting card layout sample">
-          </div>
-          <div class="tk-listing-body">
-            <p class="tk-eyebrow">service · Tagudin · ₱80 exact</p>
-            <h3 class="tk-title">Hand-drawn greeting card layout</h3>
-            <p class="tk-copy">Includes one revision. Printing and delivery are separate.</p>
-            <div class="tk-listing-foot">
-              <span class="tk-btn tk-btn-primary" style="pointer-events:none"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg> Open listing</span>
-              <span class="tk-badge tk-badge-ok"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg> Capacity available</span>
+      <h2>Browse composition — PLP Plus (locked)</h2>
+      <p class="tk-lead">Founder-chosen Browse A shell. Cards locked as <strong>D — Split Service</strong> (horizontal media|copy, twin rating/orders + place/distance, swipe photos + dots, dwell expand). Live: <code>resources/js/components/browse/BrowsePlp.tsx</code>. Card specimen: <a href="proposals/taste-browse-card-drafts.html">taste-browse-card-drafts</a>. Shell history: <a href="proposals/taste-browse-drafts.html?variant=A">taste-browse-drafts</a>.</p>
+      <div class="tk-browse-plp" data-specimen="plp-plus">
+        <div class="tk-plp-sticky">
+          <div class="tk-plp-sticky-inner">
+            <div class="tk-plp-brand">
+              <img class="tk-plp-logo" src="assets/brand/serbizyu-logo-long.png" alt="Serbizyu" width="1384" height="386">
+              <span class="tk-chip is-on">Tagudin</span>
             </div>
+            <div class="tk-plp-chrome">
+              <input class="tk-input" value="local help" aria-label="Search need">
+              <button type="button" class="tk-btn tk-btn-outline"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg> Filter</button>
+              <button type="button" class="tk-btn tk-btn-outline"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6v12M8 18l-3-3M8 18l3-3M16 18V6M16 6l-3 3M16 6l3 3"/></svg> Sort</button>
+              <span class="tk-chip is-on">Cards</span>
+              <span class="tk-chip">List</span>
+              <span class="tk-chip tk-desktop-only">Highlight</span>
+            </div>
+            <button type="button" class="tk-btn tk-btn-ghost"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 7h3l-5 6-5-6h3L9 3z"/></svg> 0 pinned</button>
           </div>
-        </a>
+        </div>
+        <div class="tk-plp-rec">
+          <strong>Top searches today</strong>
+          <div class="tk-plp-rec-chips">
+            <span class="tk-chip">local help</span>
+            <span class="tk-chip">Tagudin service</span>
+            <span class="tk-chip">market errand</span>
+            <span class="tk-chip">greeting card</span>
+          </div>
+        </div>
+        <div class="tk-browse">
+          <div>
+            <p class="tk-eyebrow">Buyer view · public supply</p>
+            <h3 class="tk-display">Browse active services in Tagudin</h3>
+            <p class="tk-copy" style="margin-top:0.45rem">Active offers only. No invented prices or listing photos in the live foundation pass.</p>
+          </div>
+          <a class="tk-listing" href="#listings">
+            <div class="tk-listing-media tk-listing-media-fallback" aria-hidden="true">T</div>
+            <div class="tk-listing-body">
+              <p class="tk-eyebrow">service · Tagudin · Active</p>
+              <h3 class="tk-title">Tagudin local help</h3>
+              <p class="tk-copy">Public active projection only. Pin is a shortlist — not a cart.</p>
+              <div class="tk-listing-foot">
+                <span class="tk-btn tk-btn-primary" style="pointer-events:none"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg> Open listing</span>
+                <span class="tk-badge tk-badge-ok"><svg class="tk-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg> Active</span>
+              </div>
+            </div>
+          </a>
+        </div>
       </div>
     </section>
 

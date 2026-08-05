@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Modules\IdentityAccess\Application;
 
+use App\Modules\Listings\Application\OwnerListingsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 final class SliceStateQuery
 {
-    public function __construct(private readonly CurrentSession $session) {}
+    public function __construct(
+        private readonly CurrentSession $session,
+        private readonly OwnerListingsQuery $ownerListings,
+    ) {}
 
     /** @return array<string, mixed> */
     public function for(Request $request): array
@@ -19,6 +23,7 @@ final class SliceStateQuery
         $readiness = null;
         $draft = null;
         $myListings = [];
+        $correlationId = (string) $request->attributes->get('correlation_id', (string) Str::uuid7());
 
         if ($session !== null && ($session['authenticated'] ?? false)) {
             $profile = DB::table('user_profiles')->where('user_id', $session['user_id'])->first();
@@ -38,9 +43,9 @@ final class SliceStateQuery
                 'low_data_mode' => (bool) ($access['low_data_mode'] ?? false),
                 'help_preference' => $access['help_preference'] ?? 'self_managed',
                 'blockers' => $ready ? [] : ['Complete your profile setup before creating a listing.'],
-                'next_route' => $ready ? '/#my-listings' : '/#onboarding',
+                'next_route' => $ready ? '/my-listings' : '/#onboarding',
             ];
-            $myListings = $this->ownerListingsFor((string) $session['user_id']);
+            $myListings = $this->ownerListings->handle((string) $session['user_id'], $correlationId);
             $draft = collect($myListings)->first(static fn (array $listing): bool => ($listing['status'] ?? null) === 'draft');
         }
 
@@ -50,49 +55,6 @@ final class SliceStateQuery
             'readiness' => $readiness,
             'draft' => $draft,
             'myListings' => $myListings,
-        ];
-    }
-
-    /** @return list<array<string, mixed>> */
-    private function ownerListingsFor(string $userId): array
-    {
-        if (! Schema::hasTable('listing_versions')) {
-            return [];
-        }
-
-        $listings = DB::table('listings')
-            ->join('listing_versions', function ($join): void {
-                $join->on('listing_versions.listing_id', '=', 'listings.id')->on('listing_versions.version_number', '=', 'listings.current_version');
-            })
-            ->join('categories', 'categories.id', '=', 'listings.category_id')
-            ->where('listings.owner_user_id', $userId)
-            ->orderByDesc('listings.updated_at')
-            ->select('listings.*', 'listing_versions.description', 'listing_versions.terms', 'categories.code as category_code')
-            ->get();
-
-        return $listings->map(fn (object $listing): array => $this->projection($listing))->values()->all();
-    }
-
-    /** @return array<string, mixed> */
-    private function projection(object $listing): array
-    {
-        $terms = json_decode((string) $listing->terms, true) ?: [];
-        $geography = json_decode((string) $listing->geography, true) ?: [];
-
-        return [
-            'id' => (string) $listing->id,
-            'title' => (string) ($terms['title'] ?? ''),
-            'description' => (string) $listing->description,
-            'category_code' => (string) $listing->category_code,
-            'listing_type' => (string) $listing->listing_type,
-            'status' => (string) $listing->status,
-            'state' => (string) $listing->status,
-            'version' => (int) $listing->version,
-            'expected_version' => (int) $listing->version,
-            'current_version' => (int) $listing->current_version,
-            'area' => $geography['area_code'] ?? 'Tagudin',
-            'public' => false,
-            'owner_user_id' => (string) $listing->owner_user_id,
         ];
     }
 }

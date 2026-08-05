@@ -43,7 +43,8 @@
 | Fields | Input + invalid textarea with guidance |
 | Listings | Photo cards, status badge (no left stripe), Tagudin fixtures |
 | Auth | Phone OTP sign-in, profile setup |
-| Browse | Discovery composition, search, active-only listing |
+| Browse | PLP Plus locked (sticky chrome, rec rail, cards/list/highlight desktop, pin tray) |
+| Browse card anatomy | **D Split Service** locked — horizontal media\|copy, twin rating/orders + place/distance, photo rail + dots, dwell expand |
 | shadcn-shaped | Card / Button / Badge / Input / Avatar preview (not installed) |
 | Shell | Buyer + Provider nav subsets |
 | States | Loading skeleton + empty |
@@ -119,6 +120,7 @@
 | Element | Status | Source | Priority |
 |---|---|---|---|
 | Context / headline / truth / decision (embedded in specimens) | Partial | §8 | Foundation-now |
+| Product shell / primary nav (adaptive rail) | Present / accepted | proposals/taste-shell-nav-drafts.html · ProductShell.tsx | A — Adaptive rail (2026-08-05) |
 | Explicit anatomy shells as labeled blocks | Gap | §8 | Later |
 | Prototype metadata strip | Never in product | §8 | Connected mock only |
 
@@ -139,6 +141,7 @@
 |---|---|---|
 | Buyer nav specimen | Present | — |
 | Provider nav specimen | Present | — |
+| Adaptive product rail + mobile dock | Present / accepted | ProductShell |
 | Agent / Admin nav | Gap | Later |
 | Journey map | Gap | Later |
 
@@ -168,8 +171,8 @@
 |---|---|---|
 | `/auth/phone` | OTP, guided form, primary verb | Roadmap cards, fake SMS provider UI |
 | Onboarding | Profile setup specimen | Identity/gov-ID collection UI |
-| Browse | Discovery + listing card | Draft/pending, unfinished marketplace paths |
-| My Listings | Provider nav + owner card | Dead “Orders/Quotes” buttons |
+| Browse | PLP Plus live on `/browse` | Draft/pending, payment/Activity chrome |
+| My Listings | List Dock (locked) + owner cards + create/save/submit | Pause/archive/capacity, Marketplace hub, Orders/Quotes |
 | Preview / Detail | Listing preview + primary actions | Feature-promise copy |
 
 ---
@@ -180,6 +183,17 @@
 2. Align live product CSS (`sz-*` / design-system) to kit tokens deliberately.
 3. Add specimens when unique features ship (payments, QR, evidence, Deal-Chaining, etc.).
 4. Keep this inventory updated with each kit addition.
+
+### Browse media expand (D Split Service — live scaffold)
+
+**Card media dwell → expand wrapper + swipeable photos** (video later when media schema + consent exist):
+
+- Desktop: hover dwell 2s expands media column / height.
+- Single-column touch: scroll must settle ~1.3s, then the **full card** needs ≥~58% visible intersection before expand. **2-col (≥900px)**: IO expand off — hover/tap only.
+- Photo rail: horizontal scroll-snap + larger tappable dots; swipe left/right when multiple preview frames exist.
+- Dot tap / desktop hover dwell expands media immediately (dot) or after 1.3s dwell; while expanded, auto-advance photos (~3s) and loop; collapse resets to first preview frame. Subtle image scale only. Video play when media schema exists.
+- Later: muted video / Reels lane can reuse the same media stage + dwell contract.
+- Do not claim stock/preview frames as listing-owned media until projected from backend.
 
 ---
 

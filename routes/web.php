@@ -7,6 +7,7 @@ use App\Http\Controllers\BrowseController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ListingController;
+use App\Http\Controllers\MyListingsController;
 use App\Http\Middleware\EnsureAuthenticated;
 use Illuminate\Support\Facades\Route;
 
@@ -18,7 +19,7 @@ Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logou
 Route::get('/health/ready', [HealthController::class, 'readiness'])->name('health.ready');
 
 Route::post('/onboarding', [HomeController::class, 'onboarding'])->name('onboarding.store');
-Route::get('/my-listings', [HomeController::class, 'listings'])
+Route::get('/my-listings', MyListingsController::class)
     ->middleware(EnsureAuthenticated::class)
     ->name('listings.mine');
 

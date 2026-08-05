@@ -61,6 +61,17 @@ final readonly class ListingProjection
             $projection['fixture_key'] = (string) $attributes['fixture_key'];
         }
 
+        if (array_key_exists('price_amount_minor', $attributes) && $attributes['price_amount_minor'] !== null) {
+            $projection['price_amount_minor'] = (int) $attributes['price_amount_minor'];
+            $projection['currency'] = isset($attributes['currency']) && $attributes['currency'] !== null
+                ? (string) $attributes['currency']
+                : null;
+        }
+
+        if (array_key_exists('capacity_summary', $attributes) && $attributes['capacity_summary'] !== null) {
+            $projection['capacity_summary'] = (string) $attributes['capacity_summary'];
+        }
+
         if ($public) {
             $projection['owner_name'] = (string) $attributes['owner_name'];
             $projection['owner'] = [

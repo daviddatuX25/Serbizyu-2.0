@@ -64,6 +64,8 @@ export type ListingRecord = {
     listing_type?: string | null;
     state?: ListingLifecycle | null;
     status?: ListingLifecycle | null;
+    review_status?: string | null;
+    reviewStatus?: string | null;
     version?: number | null;
     expectedVersion?: number | null;
     expected_version?: number | null;
@@ -73,6 +75,10 @@ export type ListingRecord = {
     owner_name?: string | null;
     owner?: { displayName?: string | null; display_name?: string | null } | null;
     public?: boolean;
+    fixture_key?: string | null;
+    price_amount_minor?: number | null;
+    currency?: string | null;
+    capacity_summary?: string | null;
 };
 
 export type ListingDraft = ListingRecord & {

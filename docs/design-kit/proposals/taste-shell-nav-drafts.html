@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Serbizyu taste drafts — Product shell / nav</title>
+<link rel="stylesheet" href="taste-shell-nav-drafts.css">
+</head>
+<body data-frame="desktop">
+<div class="meta-dock">
+  <button type="button" class="meta-toggle" data-meta-toggle aria-expanded="false" aria-controls="meta-panel">Show notes</button>
+  <div id="meta-panel" class="meta-panel" hidden>
+    <aside class="hint"><b>Founder chooser</b> — ← → switch A/B. Use Phone / Tablet / Desktop frames. One product nav for all future pages — not per-page chrome.</aside>
+    <aside class="psych">
+      <strong>Capability truth (now)</strong>
+      Live destinations only: Home/workspace · Browse · Create listing · My Listings. QuickDeal / Activity stay out until backend exists.
+      <ul>
+        <li><b>Primary job</b> — always know where I am and how to switch mode</li>
+        <li><b>Mobile</b> — fixed bottom dock (thumb reach)</li>
+        <li><b>Tablet</b> — slim side rail, icons only</li>
+        <li><b>Desktop</b> — labeled side rail (A) or top strip (B)</li>
+        <li><b>Create</b> — one elevated verb, same place every breakpoint</li>
+        <li><b>Avoid</b> — Activity, payment, QuickDeal dead links, duplicate page-local primary nav</li>
+      </ul>
+    </aside>
+  </div>
+</div>
+
+<div class="frame-bar" role="group" aria-label="Preview frame">
+  <button type="button" data-frame="phone">Phone</button>
+  <button type="button" data-frame="tablet">Tablet</button>
+  <button type="button" data-frame="desktop" class="is-on">Desktop</button>
+</div>
+
+<svg class="hidden" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 3l8 7.5"/><path d="M6.5 9.5V20h11V9.5"/><path d="M10 20v-6h4v6"/></symbol>
+  <symbol id="i-browse" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16.5 16.5 4 4"/></symbol>
+  <symbol id="i-create" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-mine" viewBox="0 0 24 24"><path d="M8 7h12M8 12h12M8 17h12"/><path d="M4 7h.01M4 12h.01M4 17h.01"/></symbol>
+</svg>
+
+<div class="stage">
+  <div class="device" data-device>
+    <span class="device-tag" data-frame-label>Desktop</span>
+
+    <!-- A — Adaptive rail -->
+    <section id="v-a" class="view is-on" data-name="A — Adaptive rail" data-blurb="Bottom phone · icon rail tablet · labeled rail desktop">
+      <div class="app">
+        <aside class="side" aria-label="Primary navigation">
+          <a class="brand-mark" href="#" aria-label="Serbizyu home">
+            <img class="logo-long" src="../assets/brand/serbizyu-logo-long.png" alt="Serbizyu" width="184" height="51" decoding="async">
+            <img class="logo-mark" src="../assets/brand/serbizyu-logo-circle.png" alt="" width="64" height="64" decoding="async">
+          </a>
+          <a class="nav-item" href="#"><svg class="ico"><use href="#i-home"/></svg><span class="label">Home</span></a>
+          <a class="nav-item is-on" href="#"><svg class="ico"><use href="#i-browse"/></svg><span class="label">Browse</span></a>
+          <a class="nav-item create" href="#" title="Create listing"><svg class="ico"><use href="#i-create"/></svg><span class="label">Create</span></a>
+          <a class="nav-item" href="#"><svg class="ico"><use href="#i-mine"/></svg><span class="label">My Listings</span></a>
+          <p class="side-meta">Maya Tagudin · Tagudin pilot</p>
+        </aside>
+
+        <div class="app-top">
+          <a class="brand-mark" href="#" aria-label="Serbizyu home">
+            <img src="../assets/brand/serbizyu-logo-long.png" alt="Serbizyu" width="184" height="51" decoding="async">
+          </a>
+          <span class="place"><svg class="ico" viewBox="0 0 24 24"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg> Tagudin</span>
+        </div>
+
+        <div class="canvas">
+          <p style="margin:0;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)">Product shell</p>
+          <h1>Browse stays the page. Nav is the product.</h1>
+          <p class="lede">Same four destinations on every screen. Phone uses the thumb dock; tablet keeps a slim icon rail; desktop shows labels so you do not hunt icons.</p>
+          <div class="cards">
+            <article class="card"><strong>Page chrome stays page-local</strong><p>Browse still owns search / filter / pin. Shell only switches destinations.</p></article>
+            <article class="card"><strong>Create is one verb</strong><p>Elevated in the rail / dock — opens My Listings create flow, not a fake QuickDeal.</p></article>
+            <article class="card"><strong>Later slots</strong><p>QuickDeal and Activity wait for capability truth before they take a nav seat.</p></article>
+          </div>
+        </div>
+
+        <nav class="bottom" aria-label="Primary navigation">
+          <a class="nav-item" href="#"><svg class="ico"><use href="#i-home"/></svg><span class="label">Home</span></a>
+          <a class="nav-item is-on" href="#"><svg class="ico"><use href="#i-browse"/></svg><span class="label">Browse</span></a>
+          <a class="nav-item create" href="#"><svg class="ico"><use href="#i-create"/></svg><span class="label">Create</span></a>
+          <a class="nav-item" href="#"><svg class="ico"><use href="#i-mine"/></svg><span class="label">Mine</span></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- B — Top strip -->
+    <section id="v-b" class="view" data-name="B — Top strip" data-blurb="Bottom phone · horizontal top nav on tablet/desktop">
+      <div class="app">
+        <div class="app-top">
+          <a class="brand-mark" href="#" aria-label="Serbizyu home">
+            <img src="../assets/brand/serbizyu-logo-long.png" alt="Serbizyu" width="184" height="51" decoding="async">
+          </a>
+          <span class="place"><svg class="ico" viewBox="0 0 24 24"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg> Tagudin</span>
+        </div>
+
+        <nav class="top-nav" aria-label="Primary navigation">
+          <a class="brand-mark" href="#" aria-label="Serbizyu home">
+            <img src="../assets/brand/serbizyu-logo-long.png" alt="Serbizyu" width="184" height="51" decoding="async">
+          </a>
+          <a class="nav-item" href="#"><svg class="ico"><use href="#i-home"/></svg><span class="label">Home</span></a>
+          <a class="nav-item is-on" href="#"><svg class="ico"><use href="#i-browse"/></svg><span class="label">Browse</span></a>
+          <a class="nav-item" href="#"><svg class="ico"><use href="#i-mine"/></svg><span class="label">My Listings</span></a>
+          <a class="nav-item create" href="#"><svg class="ico"><use href="#i-create"/></svg><span class="label">Create</span></a>
+        </nav>
+
+        <div class="canvas">
+          <p style="margin:0;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)">Alt shell</p>
+          <h1>Same destinations, top strip on wide screens.</h1>
+          <p class="lede">Useful if you want maximum horizontal canvas for Browse. Tradeoff: nav fights page stickybars (search/tools) on the same edge.</p>
+          <div class="cards">
+            <article class="card"><strong>Pros</strong><p>More width for PLP grids; familiar “website header” pattern.</p></article>
+            <article class="card"><strong>Cons</strong><p>Stacks with Browse sticky chrome; weaker persistent mode switch on desktop.</p></article>
+          </div>
+        </div>
+
+        <nav class="bottom" aria-label="Primary navigation">
+          <a class="nav-item" href="#"><svg class="ico"><use href="#i-home"/></svg><span class="label">Home</span></a>
+          <a class="nav-item is-on" href="#"><svg class="ico"><use href="#i-browse"/></svg><span class="label">Browse</span></a>
+          <a class="nav-item create" href="#"><svg class="ico"><use href="#i-create"/></svg><span class="label">Create</span></a>
+          <a class="nav-item" href="#"><svg class="ico"><use href="#i-mine"/></svg><span class="label">Mine</span></a>
+        </nav>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="chooser" role="group" aria-label="Variant switcher">
+  <button type="button" id="prev" aria-label="Previous variant">←</button>
+  <div class="meta"><strong id="name">A — Adaptive rail</strong><span id="blurb">Bottom phone · icon rail tablet · labeled rail desktop</span></div>
+  <button type="button" id="next" aria-label="Next variant">→</button>
+</div>
+
+<script>
+const views = [...document.querySelectorAll('.view')];
+let i = 0;
+const nameEl = document.getElementById('name');
+const blurbEl = document.getElementById('blurb');
+const frameLabel = document.querySelector('[data-frame-label]');
+const frameButtons = [...document.querySelectorAll('.frame-bar button')];
+
+function show(n) {
+  i = (n + views.length) % views.length;
+  views.forEach((v, idx) => v.classList.toggle('is-on', idx === i));
+  nameEl.textContent = views[i].dataset.name;
+  blurbEl.textContent = views[i].dataset.blurb;
+  const url = new URL(location.href);
+  url.searchParams.set('variant', i === 0 ? 'A' : 'B');
+  history.replaceState(null, '', url);
+}
+
+function setFrame(frame) {
+  document.body.dataset.frame = frame;
+  frameButtons.forEach((b) => b.classList.toggle('is-on', b.dataset.frame === frame));
+  frameLabel.textContent = frame.charAt(0).toUpperCase() + frame.slice(1);
+  const url = new URL(location.href);
+  url.searchParams.set('frame', frame);
+  history.replaceState(null, '', url);
+}
+
+document.getElementById('prev').onclick = () => show(i - 1);
+document.getElementById('next').onclick = () => show(i + 1);
+frameButtons.forEach((b) => b.addEventListener('click', () => setFrame(b.dataset.frame)));
+
+document.querySelector('[data-meta-toggle]').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  const panel = document.getElementById('meta-panel');
+  const open = panel.hasAttribute('hidden');
+  if (open) panel.removeAttribute('hidden'); else panel.setAttribute('hidden', '');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.textContent = open ? 'Hide notes' : 'Show notes';
+});
+
+window.addEventListener('keydown', (e) => {
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  if (e.key === 'ArrowLeft') show(i - 1);
+  if (e.key === 'ArrowRight') show(i + 1);
+  if (e.key === '1') setFrame('phone');
+  if (e.key === '2') setFrame('tablet');
+  if (e.key === '3') setFrame('desktop');
+});
+
+const params = new URL(location.href).searchParams;
+const map = { A: 0, B: 1 };
+show(map[(params.get('variant') || 'A').toUpperCase()] ?? 0);
+setFrame((params.get('frame') || 'desktop').toLowerCase());
+</script>
+</body>
+</html>
