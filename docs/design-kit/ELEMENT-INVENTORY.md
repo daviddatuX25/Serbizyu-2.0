@@ -146,7 +146,7 @@
 
 | Element | Status | Priority |
 |---|---|---|
-| Phone OTP challenge | Present | — |
+| Phone OTP challenge | Present (Laguna Split accepted 2026-08-05) | — |
 | Onboarding profile step | Present | — |
 | Listing card (no left stripe) + photos | Present | — |
 | Listing status badge set (draft→rejected) | Partial | Foundation-now |

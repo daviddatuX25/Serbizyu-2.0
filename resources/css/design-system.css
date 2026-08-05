@@ -700,7 +700,134 @@ a.sz-listing-card:focus-visible {
 }
 
 
-/* Auth / mock-v2 screen composition */
+/* Auth — Laguna Split (accepted 2026-08-05) */
+.sz-auth-split {
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    background: linear-gradient(180deg, #f7f3ea, #efe8d8);
+}
+
+.sz-auth-visual {
+    position: relative;
+    min-height: 100dvh;
+    overflow: hidden;
+    background: var(--sz-forest-700);
+}
+
+.sz-auth-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.88;
+}
+
+.sz-auth-visual::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10, 87, 74, 0.15), rgba(10, 87, 74, 0.72) 70%, rgba(8, 48, 42, 0.92));
+}
+
+.sz-auth-visual-copy {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 1;
+    padding: 2.2rem 2rem 2.6rem;
+    color: #f7fffb;
+}
+
+.sz-auth-visual-copy .sz-eyebrow {
+    color: rgba(247, 255, 251, 0.85);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.sz-auth-visual-copy h2 {
+    margin: 0.55rem 0 0.4rem;
+    font-family: var(--sz-font-display);
+    font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    font-weight: 800;
+}
+
+.sz-auth-visual-copy p {
+    margin: 0;
+    max-width: 34ch;
+    color: #d7efe6;
+    line-height: 1.55;
+}
+
+.sz-auth-dock {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(1.5rem, 4vw, 3.5rem);
+}
+
+.sz-auth-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 0.65rem;
+    margin-bottom: 2rem;
+}
+
+.sz-auth-brand strong {
+    font-family: var(--sz-font-display);
+    font-size: 1.35rem;
+    letter-spacing: -0.04em;
+    color: var(--sz-forest-700);
+}
+
+.sz-auth-brand span {
+    color: var(--sz-ink-muted);
+    font-size: 0.85rem;
+}
+
+.sz-auth-dock .sz-display-title {
+    margin: 0 0 0.55rem;
+}
+
+.sz-auth-dock .sz-auth-note {
+    margin: 0 0 1.6rem;
+    max-width: 38ch;
+}
+
+.sz-auth-stack {
+    display: grid;
+    gap: 1rem;
+    max-width: 26rem;
+}
+
+.sz-auth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    align-items: center;
+}
+
+.sz-auth-actions .sz-btn-link {
+    background: transparent;
+    border: 0;
+    color: var(--sz-ink-soft);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    min-height: auto;
+    padding: 0.4rem;
+    font-weight: 600;
+}
+
+@media (max-width: 900px) {
+    .sz-auth-split {
+        grid-template-columns: 1fr;
+    }
+
+    .sz-auth-visual {
+        min-height: 38vh;
+    }
+}
+
+/* Legacy helpers still used by other screens */
 .sz-auth-screen {
     width: min(760px, calc(100% - 2rem));
     margin: 0 auto;
@@ -733,3 +860,4 @@ a.sz-listing-card:focus-visible {
     bottom: 0;
     background: transparent;
 }
+
