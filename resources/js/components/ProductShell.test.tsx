@@ -1,6 +1,6 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ProductSecondaryBar, ProductShell } from './ProductShell';
+import { ProductSecondaryBar, ProductShell, useRegisterShellDrawerActions } from './ProductShell';
 
 vi.mock('@inertiajs/react', () => ({
     Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
@@ -62,5 +62,74 @@ describe('ProductShell', () => {
         expect(slot).toBeTruthy();
         expect(within(slot as HTMLElement).getByRole('link', { name: /serbizyu home/i })).toBeTruthy();
         expect(screen.getByRole('button', { name: /search/i })).toBeTruthy();
+    });
+
+    it('uses switching drawer instead of plain dock when page registers actions', () => {
+        function PageWithActions() {
+            useRegisterShellDrawerActions(
+                <div>
+                    <button type="button">Pin this listing</button>
+                    <button type="button">Message</button>
+                    <button type="button">Buy</button>
+                </div>,
+                [],
+            );
+            return <main>Detail</main>;
+        }
+
+        render(
+            <ProductShell active="browse">
+                <PageWithActions />
+            </ProductShell>,
+        );
+
+        expect(document.querySelector('[data-shell="switch-drawer"]')).toBeTruthy();
+        expect(document.querySelector('[data-has-switch-drawer="true"]')).toBeTruthy();
+        expect(document.querySelector('.sz-dock')).toBeNull();
+        expect(screen.getByRole('button', { name: /^message$/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /show navigation/i })).toBeTruthy();
+
+        fireEvent.click(screen.getByRole('button', { name: /show navigation/i }));
+        const drawer = document.querySelector('[data-shell="switch-drawer"]') as HTMLElement;
+        expect(within(drawer).getByRole('link', { name: /^browse$/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /show listing actions/i })).toBeTruthy();
+    });
+
+    it('auto-returns to listing actions about 3s after opening navigation', () => {
+        vi.useFakeTimers();
+
+        function PageWithActions() {
+            useRegisterShellDrawerActions(
+                <div>
+                    <button type="button">Message</button>
+                </div>,
+                [],
+            );
+            return <main>Detail</main>;
+        }
+
+        try {
+            render(
+                <ProductShell active="browse">
+                    <PageWithActions />
+                </ProductShell>,
+            );
+
+            fireEvent.click(screen.getByRole('button', { name: /show navigation/i }));
+            expect(screen.getByRole('button', { name: /show listing actions/i })).toBeTruthy();
+
+            act(() => {
+                vi.advanceTimersByTime(2999);
+            });
+            expect(screen.getByRole('button', { name: /show listing actions/i })).toBeTruthy();
+
+            act(() => {
+                vi.advanceTimersByTime(1);
+            });
+            expect(screen.getByRole('button', { name: /show navigation/i })).toBeTruthy();
+            expect(screen.getByRole('button', { name: /^message$/i })).toBeTruthy();
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });

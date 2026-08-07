@@ -54,6 +54,7 @@ body.sz-body {
     --sz-rail-wide: 15.5rem;
     --sz-rail-icon: 4.75rem;
     --sz-dock-clear: 5.1rem;
+    --sz-switch-drawer-clear: 4.1rem;
     min-height: 100dvh;
     background: transparent;
 }
@@ -269,6 +270,225 @@ body.sz-body {
     color: #fff;
 }
 
+
+/* Switching drawer: page actions ↔ nav (conditional shell bottom chrome) */
+.sz-switch-drawer {
+    --sz-switch-bar-h: 3.15rem;
+    position: fixed;
+    left: 0.65rem;
+    right: 0.65rem;
+    bottom: 0.65rem;
+    z-index: 45;
+    display: flex;
+    align-items: stretch; /* same height open + closed — no grow from circle */
+    gap: 0.35rem;
+    height: var(--sz-switch-bar-h);
+    pointer-events: none;
+}
+
+.sz-switch-drawer > * {
+    pointer-events: auto;
+}
+
+.sz-switch-card {
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    border: 1px solid var(--sz-border);
+    background: rgba(255, 252, 246, 0.96);
+    box-shadow: 0 14px 32px -20px rgba(18, 32, 28, 0.55);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+    height: 100%;
+    transition:
+        flex-basis 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+        flex-grow 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Expanded: one full pill taking remaining width */
+.sz-switch-card.is-open {
+    flex: 1 1 auto;
+    border-radius: 999px;
+}
+
+/* Collapsed: slim pill tab, same bar height — width-only change, no height grow */
+.sz-switch-card.is-closed {
+    flex: 0 0 2.15rem;
+    width: 2.15rem;
+    border-radius: 999px;
+}
+
+.sz-switch-card.is-open > .sz-switch-handle,
+.sz-switch-card.is-closed > .sz-switch-panel {
+    display: none !important;
+}
+
+.sz-switch-handle {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sz-ink-soft);
+    cursor: pointer;
+}
+
+.sz-switch-handle:hover {
+    color: var(--sz-forest-700);
+    background: rgba(13, 113, 95, 0.08);
+}
+
+.sz-switch-chevron {
+    width: 0.7rem;
+    height: 0.7rem;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.sz-switch-panel {
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+}
+
+/* Actions pill: pin + message + primary CTA */
+.sz-switch-card.is-open > .sz-switch-panel-actions {
+    display: flex;
+    padding: 0.28rem 0.28rem 0.28rem 0.45rem;
+}
+
+.sz-switch-actions {
+    display: flex;
+    align-items: stretch;
+    gap: 0.1rem;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+}
+
+.sz-switch-act {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: 0;
+    height: 100%;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--sz-ink);
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 750;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.sz-switch-act-pin {
+    color: var(--sz-ink-soft);
+    padding-inline: 0.7rem;
+}
+
+.sz-switch-act-pin.is-on {
+    background: var(--sz-forest-100);
+    color: var(--sz-forest-700);
+}
+
+.sz-switch-act-pin.is-on .ldv-ico {
+    fill: currentColor;
+}
+
+.sz-switch-act-pin .ldv-ico {
+    width: 1rem;
+    height: 1rem;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.sz-switch-act-msg {
+    flex: 1 1 auto;
+}
+
+.sz-switch-act-msg:hover {
+    background: rgba(13, 113, 95, 0.08);
+}
+
+.sz-switch-act-buy {
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding-inline: 1.15rem;
+    background: var(--sz-forest-600);
+    color: #fff;
+}
+
+.sz-switch-act-buy:hover {
+    background: var(--sz-forest-700);
+}
+
+/* Nav pill: 4 equal columns — no left-clustered empty gap */
+.sz-switch-card.is-open > .sz-switch-panel-nav {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 0.15rem;
+    padding: 0.28rem;
+}
+
+.sz-switch-nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.08rem;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding: 0.2rem 0.1rem;
+    border-radius: 999px;
+    color: var(--sz-ink-soft);
+    font-size: 0.58rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.sz-switch-nav-link .sz-nav-ico {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+.sz-switch-nav-link.is-active {
+    color: var(--sz-forest-700);
+    background: var(--sz-forest-50);
+}
+
+.sz-switch-nav-link.is-create {
+    background: var(--sz-forest-600);
+    color: #fff;
+}
+
+.sz-switch-nav-link.is-create.is-active,
+.sz-switch-nav-link.is-create:hover {
+    background: var(--sz-forest-700);
+    color: #fff;
+}
+
+.sz-product-shell[data-has-switch-drawer='true'] .sz-shell-canvas {
+    padding-bottom: var(--sz-switch-drawer-clear);
+}
+
+
 /* Page sticky create clears the mobile dock */
 .sz-product-shell .mlw-sticky-create {
     bottom: calc(var(--sz-dock-clear) + 0.35rem);
@@ -318,6 +538,35 @@ body.sz-body {
         display: none;
     }
 
+    /* Tablet/desktop: no bottom nav — sticky CTA bar only */
+    .sz-switch-drawer {
+        left: calc(var(--sz-rail-icon) + 0.85rem);
+        right: auto;
+        bottom: 1rem;
+        width: min(28rem, calc(100vw - var(--sz-rail-icon) - 1.7rem));
+        height: 3.35rem;
+    }
+
+    .sz-switch-card[data-side='nav'] {
+        display: none !important;
+    }
+
+    .sz-switch-card[data-side='actions'] {
+        flex: 1 1 auto !important;
+    }
+
+    .sz-switch-card[data-side='actions'] > .sz-switch-handle {
+        display: none !important;
+    }
+
+    .sz-switch-card[data-side='actions'] > .sz-switch-panel {
+        display: flex !important;
+    }
+
+    .sz-product-shell[data-has-switch-drawer='true'] .sz-shell-canvas {
+        padding-bottom: calc(var(--sz-switch-drawer-clear) + 0.75rem);
+    }
+
     .sz-shell-secondary {
         display: none;
     }
@@ -332,6 +581,7 @@ body.sz-body {
         bottom: 1rem;
     }
 
+
     .sz-product-shell .sz-browse-plp {
         padding-bottom: 1.5rem;
     }
@@ -339,6 +589,11 @@ body.sz-body {
 
 /* Desktop: labeled rail + long wordmark */
 @media (min-width: 1100px) {
+    .sz-switch-drawer {
+        left: calc(var(--sz-rail-wide) + 0.85rem);
+        width: min(28rem, calc(100vw - var(--sz-rail-wide) - 1.7rem));
+    }
+
     .sz-rail {
         width: var(--sz-rail-wide);
         padding: 1.15rem 0.85rem 1.25rem;

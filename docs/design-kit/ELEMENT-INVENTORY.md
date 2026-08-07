@@ -173,7 +173,9 @@
 | Onboarding | Profile setup specimen | Identity/gov-ID collection UI |
 | Browse | PLP Plus live on `/browse` | Draft/pending, payment/Activity chrome |
 | My Listings | List Dock (locked) + owner cards + create/save/submit | Pause/archive/capacity, Marketplace hub, Orders/Quotes |
-| Preview / Detail | Listing preview + primary actions | Feature-promise copy |
+| Preview / Detail | **A — Media lead** live on `/listings/{id}` | Request/Book/Pay chrome |
+| Detail taste **C — Stitch Media dock** | Open option in kit chooser `?variant=C` | Founder lock before live |
+| Detail badges / adapted A1 steps / sample reviews / Deal&message later seam | Present (honesty-labeled preview) | Live verification badges, reviews projection, dealing+unified inbox |
 
 ---
 

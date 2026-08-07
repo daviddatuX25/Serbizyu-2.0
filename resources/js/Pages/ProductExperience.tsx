@@ -5,6 +5,7 @@ import { ListingCard, ListingCardGrid } from '../components/listings/ListingCard
 import { BrowsePlp } from '../components/browse/BrowsePlp';
 import { AlmostThereOnboarding } from '../components/onboarding/AlmostThereOnboarding';
 import { MyListingsWorkspace } from '../components/listings/MyListingsWorkspace';
+import { ListingDetailView } from '../components/listings/ListingDetailView';
 import { ListingPreview } from '../components/listings/ListingPreview';
 import { Badge, Button, Card, CardContent, Field, Notice, Select, Textarea, TextInput } from '../components/ui';
 import type { HomeProps, ListingDraft, ReadinessState, SliceSession } from '../types';
@@ -209,97 +210,15 @@ function BrowseState({ props }: { props: HomeProps }) {
     );
 }
 
-function ProtectedAttempt({ listingId }: { listingId: string }) {
-    const [busy, setBusy] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [correlationId, setCorrelationId] = useState<string | null>(null);
-
-    return (
-        <div className="sz-stack" style={{ marginTop: '1rem' }}>
-            <div>
-                <strong>Protected owner action</strong>
-                <p className="sz-copy">This intentional test path should deny a public viewer without exposing protected fields.</p>
-            </div>
-            <Button
-                type="button"
-                variant="outline"
-                disabled={busy}
-                onClick={() => {
-                    setBusy(true);
-                    setError(null);
-                    setCorrelationId(null);
-                    router.post(
-                        `/listings/${listingId}/protected-edit-attempt`,
-                        {},
-                        {
-                            preserveScroll: true,
-                            onError: (errors) => {
-                                const bag = errors as ErrorMap;
-                                const messages = Object.entries(bag).flatMap(([key, value]) => {
-                                    if (key === 'correlation_id' || key === 'correlationId') {
-                                        return [];
-                                    }
-                                    return [String(Array.isArray(value) ? value[0] ?? '' : value ?? '')].filter(Boolean);
-                                });
-                                setError(messages.join(' ') || 'That action is not available without permission.');
-                                const raw = bag.correlation_id ?? bag.correlationId;
-                                setCorrelationId(Array.isArray(raw) ? String(raw[0] ?? '') : raw ? String(raw) : null);
-                            },
-                            onFinish: () => setBusy(false),
-                        },
-                    );
-                }}
-            >
-                {busy ? 'Checking permission…' : 'Try protected action'}
-            </Button>
-            {error ? (
-                <div className="sz-notice sz-notice-warning" role="alert">
-                    <strong>Needs attention</strong>
-                    <p>{error}</p>
-                    {correlationId ? <p className="sz-copy">Reference: {correlationId}</p> : null}
-                </div>
-            ) : null}
-        </div>
-    );
-}
-
 function DetailState({ props }: { props: HomeProps }) {
-    const listing = props.activeListingDetail;
-    const denial = props.denial;
-
     return (
         <ProductShell session={props.session} active="browse" title="Listing detail">
             <main className="sz-page">
-                <Link href="/browse" className="sz-btn-link" style={{ marginBottom: '1rem', display: 'inline-flex' }}>
-                    Back to active listings
-                </Link>
-                {!listing ? (
-                    <Notice tone="warning" title="Listing unavailable">
-                        This listing is not available for public viewing.
-                    </Notice>
-                ) : (
-                    <div className="sz-stack" style={{ maxWidth: 720 }}>
-                        <p className="sz-eyebrow">Public listing detail</p>
-                        <h1 className="sz-display-title">{listing.title}</h1>
-                        <ListingCard listing={listing} variant="public" />
-                        <ProtectedAttempt listingId={listing.id} />
-                        {denial ? (
-                            <section className="sz-notice" role="alert">
-                                <strong>Needs attention</strong>
-                                <p>{denial.message}</p>
-                                <p className="sz-copy">
-                                    {denial.recovery ?? 'Return to browse or refresh for the latest server state.'}
-                                </p>
-                                {(denial.correlationId ?? denial.correlation_id ?? props.correlationId) ? (
-                                    <p className="sz-copy">
-                                        Reference: <code>{denial.correlationId ?? denial.correlation_id ?? props.correlationId}</code>
-                                    </p>
-                                ) : null}
-                            </section>
-                        ) : null}
-                        <Link href="/browse" className="sz-btn sz-btn-outline">Back to browse</Link>
-                    </div>
-                )}
+                <ListingDetailView
+                    listing={props.activeListingDetail}
+                    denial={props.denial}
+                    correlationId={props.correlationId}
+                />
             </main>
         </ProductShell>
     );

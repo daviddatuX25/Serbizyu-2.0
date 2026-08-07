@@ -107,11 +107,46 @@ Chooser: [taste-shell-nav-drafts.html](./taste-shell-nav-drafts.html)?variant=A&
 
 B — Top strip rejected (stacks with Browse sticky chrome; weaker persistent mode switch).
 
+
+## Accepted (2026-08-05) — Public listing detail
+
+Chooser: [taste-listing-detail-drafts.html](./taste-listing-detail-drafts.html)?variant=A
+
+**Winner (updated): C — Stitch Media dock** (themed into live Media lead)
+
+- Live: `resources/js/components/listings/ListingDetailView.tsx` on `/listings/{id}`
+- See Accepted C block below for dock / workflow / review-suite details
+- Book/Message are docked for offer listings and remain capability-gated on click
+
+B — Truth sheet rejected for foundation (copy-first fights continuity with Split Service PLP).
+
+### Accepted (2026-08-06) — C · Stitch Media dock → live
+
+Chooser: [taste-listing-detail-drafts.html](./taste-listing-detail-drafts.html)?variant=C
+
+Adopted into live `ListingDetailView` with Serbizyu theme tokens (not raw Stitch chrome).
+
+- Dock: **Pin** · **Message me** · **Book** / **Buy** (offers only; product → Buy)
+- How this works: provider step **titles** + short descriptions (expand when long) — no “from Request” wording
+- Reviews: pronounced stacked cards + swipe / desktop pills + horizontal mini strip that drives the stack
+- Badges: Work shape · category · New Provider · Local safety · Verified · later
+- No play/pause · no Deal&message card · no Local safety essay block
+
+
+
 ## Next draft surfaces (foundation)
 
-1. Listing preview / public detail polish
-2. Keep Auth Laguna + Onboarding Almost There + Browse PLP Plus + My Listings List Dock + Adaptive rail shell aligned
+1. Keep Auth Laguna + Onboarding Almost There + Browse PLP Plus + My Listings List Dock + Adaptive rail shell + Listing detail Media lead aligned
 
 Do not invent Activity or payment chrome until capability exists.
 
 **Not next:** rebuilding a full lo-fi element suite — kit inventory already tracks foundation Present vs Later gaps.
+
+
+## Listing detail knowledge lock (2026-08-05)
+
+- **Archetypes** (A1…): base step contracts; listing may rename/detail/adapt labels; JSONB `structure` + API extension later — not a new engine per category.
+- **Badges now:** Work shape, category, mechanism, New Provider. Verification badges only from performed `identity_verifications`.
+- **Reviews hi-fi:** sample rows OK when labeled Preview; live reviews need completed-work eligibility.
+- **Dealing:** shared offer/counter/accept seam with Quick Deal — later on detail and/or chat.
+- **Channels:** unified inbox (in-app + SMS + Messenger); channel is message metadata — later.
