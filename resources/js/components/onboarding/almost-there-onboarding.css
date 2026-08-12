@@ -169,6 +169,11 @@
     }
 }
 
+@media (max-width: 900px) {
+    .sz-page.ato .sz-auth-visual {
+        display: none;
+    }
+}
 
 .ato-track {
     position: relative;
@@ -285,10 +290,6 @@
     line-height: 1.4;
 }
 
-.ato-banner-trivia {
-    min-height: 2.5em;
-}
-
 .ato-done-chip {
     display: inline-flex;
     align-items: center;
@@ -357,149 +358,5 @@
 @media (prefers-reduced-motion: reduce) {
     .ato-track-fill {
         transition: none;
-    }
-}
-
-@media (max-width: 900px) {
-    /* Match the auth pages' compact hero strip — do NOT hide the visual. */
-    .ato-progress {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.16);
-        box-shadow: none;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-    }
-
-    .ato-step-title,
-    .ato-fraction,
-    .ato-compact-fraction {
-        color: #ffffff;
-    }
-
-    .ato-compact-progress {
-        background: rgba(10, 40, 34, 0.92);
-        border-color: rgba(255, 255, 255, 0.16);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-    }
-
-    .ato-compact-copy {
-        color: #d7efe6;
-    }
-
-    .ato-track::before {
-        background: rgba(255, 255, 255, 0.16);
-    }
-
-    .ato-track li {
-        color: rgba(215, 239, 230, 0.7);
-    }
-
-    .ato-track li span {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.25);
-        color: inherit;
-    }
-
-    .ato-track li.is-now {
-        color: #ffffff;
-    }
-
-    .ato-banner {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.16);
-    }
-
-    .ato-banner strong {
-        color: #ffffff;
-    }
-
-    .ato-banner p,
-    .ato-banner-trivia {
-        color: #d7efe6;
-    }
-
-    .ato-done-chip {
-        background: rgba(255, 255, 255, 0.12);
-        color: #ffffff;
-    }
-
-    .ato-sheet .sz-display-title {
-        color: #ffffff;
-    }
-
-    .ato-sheet .sz-copy,
-    .ato-lede {
-        color: #d7efe6;
-    }
-
-    /* Transparent dark form sheet, same as sz-auth-card on mobile */
-    .ato-sheet .card,
-    .ato-sheet [data-slot='card'],
-    .ato-sheet [data-slot='card-content'] {
-        background: transparent;
-        border: 0;
-        box-shadow: none;
-    }
-
-    .ato-sheet label,
-    .ato-sheet [data-slot='label'] {
-        color: #ffffff !important;
-    }
-
-    .ato-sheet span.text-muted-foreground,
-    .ato-sheet .sz-auth-note {
-        color: #b0d7cb !important;
-    }
-
-    .ato-sheet input,
-    .ato-sheet [data-slot='input'],
-    .ato-sheet select {
-        background-color: rgba(0, 0, 0, 0.25) !important;
-        color: #ffffff !important;
-        border-color: rgba(255, 255, 255, 0.2) !important;
-        backdrop-filter: blur(8px);
-    }
-
-    .ato-sheet input:focus,
-    .ato-sheet [data-slot='input']:focus,
-    .ato-sheet input:focus-visible,
-    .ato-sheet [data-slot='input']:focus-visible {
-        border-color: #72e5d1 !important;
-        background-color: rgba(0, 0, 0, 0.35) !important;
-    }
-
-    .ato-sheet input::placeholder {
-        color: rgba(255, 255, 255, 0.45) !important;
-    }
-
-    .ato-sheet input + button {
-        color: rgba(255, 255, 255, 0.75) !important;
-    }
-
-    .ato-sheet input + button:hover {
-        color: #ffffff !important;
-    }
-
-    .ato-optional-signin {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.18);
-    }
-
-    .ato-optional-head strong {
-        color: #ffffff;
-    }
-
-    .ato-optional-head p,
-    .ato-check,
-    .ato-footnote {
-        color: #b0d7cb;
-    }
-
-    .ato-sheet .sz-btn-link {
-        color: #72e5d1;
-    }
-
-    .ato-sheet .card {
-        color: #d7efe6;
     }
 }

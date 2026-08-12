@@ -7,9 +7,7 @@ import './almost-there-onboarding.css';
 const AUTH_HERO_IMAGE =
     'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80';
 
-// Per-step Tagudin local facts. Typed slowly and held with a long pause before
-// the next one, so onboarding feels calm and readable instead of flickering.
-const STEP_FACTS = [
+const ONBOARDING_TRIVIA = [
     'Tagudin Fact · Tagudin is the southernmost coastal town of Ilocos Sur, known for its rich agriculture, fishing, and vibrant local marketplace.',
     'Local Trust · Setting a verified display name and safe service area ensures your neighbors can trade and request services with confidence.',
     'Secured Identity · Everyday return sign-ins use your phone number & password. Verification documents or ID permits can be added anytime.',
@@ -62,16 +60,14 @@ function TypewriterText({
     items,
     text,
     active,
-    speed = 70,
-    itemPause = 7500,
-    continuePause = 1400,
+    speed = 45,
+    pause = 3500,
 }: {
     items?: string[];
     text?: string;
     active: boolean;
     speed?: number;
-    itemPause?: number;
-    continuePause?: number;
+    pause?: number;
 }) {
     const [maxChars, setMaxChars] = useState(getResponsiveMaxChars);
 
@@ -86,17 +82,6 @@ function TypewriterText({
     const itemList = useMemo(() => items ?? (text ? [text] : []), [items, text]);
     const batches = useMemo(
         () => itemList.flatMap((item) => splitIntoBatches(item, maxChars)),
-        [itemList, maxChars],
-    );
-    // True when a batch is the final segment of its item — only then does the
-    // long itemPause run; mid-item batches use the short continuePause so a
-    // single fact keeps flowing on narrow screens.
-    const batchEndsItem = useMemo(
-        () =>
-            itemList.flatMap((item) => {
-                const parts = splitIntoBatches(item, maxChars);
-                return parts.map((_, index) => index === parts.length - 1);
-            }),
         [itemList, maxChars],
     );
     const fullText = useMemo(() => itemList.join(' · '), [itemList]);
@@ -125,10 +110,9 @@ function TypewriterText({
 
             if (characterIndex >= batch.length) {
                 window.clearInterval(interval);
-                const isLastOfItem = batchEndsItem[batchIndex % batches.length];
                 pauseTimeout = window.setTimeout(() => {
                     setBatchIndex((current) => (current + 1) % batches.length);
-                }, isLastOfItem ? itemPause : continuePause);
+                }, pause);
             }
         }, speed);
 
@@ -136,7 +120,7 @@ function TypewriterText({
             window.clearInterval(interval);
             window.clearTimeout(pauseTimeout);
         };
-    }, [active, batchIndex, batches, batchEndsItem, itemPause, continuePause, speed]);
+    }, [active, batchIndex, batches, pause, speed]);
     return (
         <span key={batchIndex} className="ato-typewriter" aria-label={fullText}>
             {displayed}
@@ -270,11 +254,10 @@ export function AlmostThereOnboarding({
                         >
                             <div className="ato-compact-copy">
                                 <TypewriterText
-                                    items={STEP_FACTS}
+                                    items={ONBOARDING_TRIVIA}
                                     active={isScrolled}
-                                    speed={70}
-                                    itemPause={7500}
-                                    continuePause={1400}
+                                    speed={45}
+                                    pause={3500}
                                 />
                             </div>
                             <div className="ato-compact-fraction" aria-hidden="true">
@@ -310,15 +293,11 @@ export function AlmostThereOnboarding({
                             </ol>
                         </div>
                         <div className="ato-banner">
-                            <strong>Mobile verified · Step 3 of 4</strong>
-                            <p className="ato-banner-trivia">
-                                <TypewriterText
-                                    items={STEP_FACTS}
-                                    active
-                                    speed={70}
-                                    itemPause={7500}
-                                    continuePause={1400}
-                                />
+                            <strong>Mobile verified · Finalizing your profile</strong>
+                            <p>
+                                Your number is verified. Completing your profile builds trust with
+                                local Tagudin buyers and servicers, enables valid transactions, and
+                                prepares your account for future ID verification.
                             </p>
                         </div>
                     </div>

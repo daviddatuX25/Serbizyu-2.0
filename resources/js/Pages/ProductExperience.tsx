@@ -273,16 +273,15 @@ export default function ProductExperience(props: HomeProps) {
 
 
     if (authenticated && !ready) {
-        // Full-bleed auth-style split (no ProductShell chrome) so onboarding
-        // matches SignIn/Register: hero visual side on desktop, transparent
-        // dark sheet on mobile.
         return (
-            <AlmostThereOnboarding
-                readiness={props.readiness}
-                errors={visibleErrors}
-                notice={notice}
-                action={action === 'onboarding' ? 'onboarding' : null}
-            />
+            <ProductShell session={session} title="Set up your workspace">
+                <AlmostThereOnboarding
+                    readiness={props.readiness}
+                    errors={visibleErrors}
+                    notice={notice}
+                    action={action === 'onboarding' ? 'onboarding' : null}
+                />
+            </ProductShell>
         );
     }
 
