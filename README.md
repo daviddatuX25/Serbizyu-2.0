@@ -1,120 +1,95 @@
-# 🏪 Serbizyu 2.0
+# Serbizyu
 
-> **Bayanihan Street → Digital Marketplace**  
-> Inclusive services & goods commerce for provincial Philippines  
+> **Bayanihan Street → Digital Marketplace** · Inclusive services & goods commerce for provincial Philippines
 > Tagudin, Ilocos Sur · BSIT Capstone · dxtechph.online
 
----
+## What Serbizyu is
 
-## 📊 Status
+Serbizyu turns the bayanihan street into a **local-first marketplace**: neighbors in Tagudin
+can browse what's active nearby, sign in with their phone number, set up a verified local
+profile, and offer or request services and goods — with clear, honest information at every
+step.
+
+- **Local first** — pilot scope is Tagudin only; geography, trust, and cash-first dealing are the product.
+- **Cash-first, low barrier** — the platform never holds money. Payment is declared between neighbors (External Cash / External Digital Proof today; Direct & Tiwala Protected Digital are sandbox-only).
+- **Capability-honest** — deferred features render as deferred, never as committed promises.
+- **Identity-forward** — phone-first OTP sign-in; profile & trust setup first, ID verification and permits come later as their own formalization track.
+
+## Status
 
 ```
-Phase 1 · Analysis    ████████████ ✅ Canonical planning authority
-Phase 2 · Planning    ████████████ ✅ Canonical planning authority
-Phase 3 · Solutioning ████████████ ✅ Canonical planning authority
-E0 · Implementation   ░░░░░░░░░░░░ 🔒 Conditional — foundation contracts first
-Tagudin pilot        ░░░░░░░░░░░░ 🔒 Not cleared
-Live connected money ░░░░░░░░░░░░ 🔒 Blocked
+Phase 1–3 · Analysis/Planning/Solutioning ✅ Canonical planning authority
+E0 · Implementation               🔒 Conditional — foundation contracts first
+Tagudin pilot / live money        🔒 Not cleared
 ```
 
-The rebuilt planning chain is founder-approved for planning authority. This does not authorize production migrations, live payments, production Tiwala, sensitive-ID collection, deployment, or genuine Tagudin validation.
+The rebuilt planning chain is founder-approved for planning authority. This does **not**
+authorize production migrations, live payments, production Tiwala, sensitive-ID collection,
+deployment, or genuine Tagudin validation.
 
----
+## Development
 
-## 🧱 Stack
+**Docker Compose is the primary run & deploy path** (`compose.yaml`: `db` postgis → `redis` →
+`mailpit` → `app` php-fpm → `web` nginx, all healthchained):
+
+```bash
+cp .env.example .env          # then set APP_KEY + DB_PASSWORD (compose refuses to start without them)
+docker compose up -d --build
+docker compose exec app php artisan key:generate   # first run only
+docker compose exec app php artisan migrate
+docker compose exec app php artisan test
+
+# App → http://localhost:8080 · Mailpit UI → http://127.0.0.1:8025
+# The Dockerfile runs `npm run typecheck && npm run build` in its assets stage,
+# so a compose build also verifies the frontend.
+```
+
+Frontend-only work (React 19 · Inertia 3 · TypeScript 5.9 · Vite):
+
+```bash
+npm install
+npm run dev          # or: npm run build / npm test / npm run typecheck
+```
+
+Sail (`compose.sail.yaml`) and ephemeral `composer:2` containers remain valid
+alternatives for isolated backend work; `compose.yaml` is the canonical stack.
 
 | Layer | Locked baseline |
 |---|---|
-| Backend | PHP 8.4 · Laravel 12 · PHP-FPM |
-| Frontend | React 19.2 · Inertia 3.6 · TypeScript 5.9 · Node 22 LTS SSR |
-| UI | Rebuilt UX token/CSS contract; Tailwind/shadcn are not authority |
+| Backend | PHP 8.4 · Laravel 12 · PHP-FPM, modular monolith w/ hexagonal ports & adapters |
+| Frontend | React 19 · Inertia 3 · TypeScript 5.9 · Vite |
+| UI | Rebuilt UX token/CSS contract (`resources/css/design-system.css`); Tailwind/shadcn are utilities, not authority |
 | Database | PostgreSQL 16 + PostGIS 3.x |
-| Cache/queue | Redis 7; never financial authority |
-| Search | PostgreSQL baseline; Meilisearch optional adapter |
-| Realtime | Polling/notifications baseline; Reverb optional adapter |
-| Evidence | Private storage adapter; local disposable implementation for tests |
 | Payments | External Cash + External Digital Proof baseline; Direct/Tiwala sandbox-only |
-| Infra | Docker Compose local/test; Dokploy later promotion target only |
+| Infra | Docker Compose (`compose.yaml`) primary run path; Dokploy later promotion target only |
 
----
+**Agent/editor context lives in the repo** so any machine picks up the same conventions:
+`AGENTS.md` (workflow), `.ai/rules/` (settled decisions & standing constraints), `.agents/skills/`
+& `.cursor/skills/` (framework guidance), `openspec/changes/` (OpenSpec change packages).
 
-## 📁 Planning Artifacts (Phase 1–3)
+## Architecture & data model
 
-| Canonical document | What it is |
+- **Canonical ERD — full table view** [`docs/planning-hardening/07-canonical-erd.svg`](docs/planning-hardening/07-canonical-erd.svg) — the founder-approved 58-table schema across eight bounded modules ([PNG export](docs/planning-hardening/07-canonical-erd.png), [Deal-Chaining foundation ERD](docs/planning-hardening/07-deal-chaining-foundation-erd.svg)). Schema authority: `_bmad-output/planning-artifacts/canonical-schema-rebuilt.md` + `docs/planning-hardening/07-schema-implementation-and-erd-contract.md`.
+- **Generated architecture export (2026-08-09)** — `_bmad-output/planning-artifacts/architecture/architecture-serbizyu-platform-2026-08-09/`:
+  - `ARCHITECTURE-SPINE.md` — paradigm, scope, module map, binds E0–E9
+  - `PROGRAM-IMPLEMENTATION-PLAN.md` — delivery sequencing
+  - `FOUNDER-DECISION-BRIEF.md` — decisions needing the founder
+  - `FINAL-READINESS-REPORT.md` — readiness baseline + review records (`reviews/`)
+- **Architecture deep-dives** — `docs/critical-decision-brainstorming/` (01 academic baseline · 02 agent network rationale · 03 cost model · 04 engineering master reference · 05 Quick Deal & Deal-Chaining spec).
+- **Implementation contracts** — `docs/planning-hardening/` (payment-lane policy, capability matrix, artifact authority map, story contract & E0 pack, runtime/environment contract, dev standards, UX/UI dossier).
+
+## Docs & planning artifacts
+
+| Where | What |
 |---|---|
-| `product-vision-rebuilt.md` | Canonical product vision and working-backwards brief |
-| `listing-model-taxonomy-rebuilt.md` | Canonical listing/transaction/fulfillment/access taxonomy |
-| `phase-1-handoff-rebuilt.md` | Canonical Phase 1→2 handoff |
-| `prd-rebuilt.md` | Canonical product requirements — 59 requirements |
-| `ux-spec-rebuilt.md` | Canonical UX and 23-journey traceability contract |
-| `domain-state-contracts-rebuilt.md` | Canonical domain/state machines |
-| `canonical-schema-rebuilt.md` | Canonical core 42 plus approved four-table Deal-Chaining foundation (46-table planning inventory) |
-| `adr-catalog-rebuilt.md` | Canonical 28-ADR catalog |
-| `architecture-rebuilt.md` | Canonical architecture/operations blueprint |
-| `epics-and-stories-rebuilt.md` | Canonical E0–E9 delivery plan; only hardened stories are executable |
-| `readiness-report-rebuilt.md` | Canonical conditional readiness baseline; not pilot/live-money clearance |
-| `prfaq-press-release.md`, `prd.md`, `ux-spec.md`, etc. | Historical/non-authoritative inputs with visible notices |
+| `_bmad-output/planning-artifacts/` | Canonical planning authority: PRD (59 reqs), UX spec (23 journeys), domain/state contracts, canonical schema (58 tables), ADR catalog (28), architecture blueprint, E0–E9 epics |
+| `docs/planning-hardening/` | P0 implementation contracts, ERD exports, UX/UI reference dossier, founder decision records |
+| `openspec/changes/` | OpenSpec change packages (proposal → design → tasks → delta spec) |
+| `docs/audits/` | Verified audit evidence (schema, UX closure, deal-chaining ERD) |
+| `old-docs/mockup/` | Historical 39-screen HTML mockup — visual input only, **not** implementation authority |
+| `docs/research/` | Research notes (auth UX guidance, etc.) |
 
-All canonical planning artifacts remain under `_bmad-output/planning-artifacts/`. P0 implementation contracts are under `docs/planning-hardening/`.
+## Deferred (Phase 2+)
 
----
-
-## 🧠 Architecture Deep-Dives
-
-```
-01 · Academic baseline & scope
-02 · Agent network design rationale
-03 · Cost model analysis
-04 · Engineering architecture master reference
-05 · Quick Deal & Deal-Chaining spec
-```
-
-Under `docs/critical-decision-brainstorming/`.
-
----
-
-## 📱 Mockups & Decks
-
-| File | Purpose |
-|---|---|
-| `docs/mockup.html` | Current entry placeholder; remains historical redirect until the approved connected mockup is promoted |
-| `old-docs/mockup.html` | Historical EN/Taglish guided hub — visual input only |
-| `old-docs/mockup/index.html` | Historical plain-grid hub — visual input only |
-| `docs/planning-hardening/07-canonical-erd.svg` | Canonical relationship ERD |
-| `docs/deck-defense.html` | Historical defense deck |
-| `presenter-script.html` | Historical printable speaker notes |
-
-The connected mockup will be produced later from `mockup-experience-expansion-bridge.md`; no current mockup is implementation authority.
-
----
-
-## 🗄️ Archived (Pre-BMAD)
-
-```
-old-docs/
-  ├── architecture/     Connector, deal system, archetypes, inbox
-  ├── brand/            Colors, typography, voice
-  ├── case-studies/     Tricycle fulfillment
-  ├── decisions/        D1–D29 decision matrix
-  ├── mockup/           39 HTML screens + shared CSS/JS
-  ├── roadmap/          Phased build plan
-  ├── spikes/           Xendit, SMS, GPS validation
-  └── strategies/       Industry coverage, strategy matrix
-```
-
----
-
-## 🔬 Research
-
-| Document | Topic |
-|---|---|
-| `serbizyu-ph-regulatory-report.md` | BIR · BSP · DPA · DOLE · DTI · LGU |
-| `serbi-ai-assistant-research.md` | Serbi AI — SDK patterns, caching, guardrails |
-| `serbizyu-financial-architecture-research.md` | Balance caching + Xendit dependency |
-| `serbizyu-stack-compatibility-report.md` | 13-component version audit |
-
----
-
-## 🚀 Deferred (Phase 2+)
-
-Serbi AI · bounded Deal-Chaining functionality · Kiosk · Compliance Dashboard · Boost/Ads · Points/Affiliate · Push Notifications · Channel Connectors · Backup Automation · Reverse Bidding
+Serbi AI · bounded Deal-Chaining functionality · Kiosk · Compliance Dashboard · Boost/Ads ·
+Points/Affiliate · Push Notifications · Channel Connectors · Backup Automation · Reverse Bidding

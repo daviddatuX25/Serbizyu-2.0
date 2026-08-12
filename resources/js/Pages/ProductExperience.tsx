@@ -218,6 +218,7 @@ function DetailState({ props }: { props: HomeProps }) {
                     listing={props.activeListingDetail}
                     denial={props.denial}
                     correlationId={props.correlationId}
+                    booking={props.booking}
                 />
             </main>
         </ProductShell>
@@ -272,21 +273,22 @@ export default function ProductExperience(props: HomeProps) {
 
 
     if (authenticated && !ready) {
+        // Full-bleed auth-style split (no ProductShell chrome) so onboarding
+        // matches SignIn/Register: hero visual side on desktop, transparent
+        // dark sheet on mobile.
         return (
-            <ProductShell session={session} title="Set up your workspace">
-                <AlmostThereOnboarding
-                    readiness={props.readiness}
-                    errors={visibleErrors}
-                    notice={notice}
-                    action={action === 'onboarding' ? 'onboarding' : null}
-                />
-            </ProductShell>
+            <AlmostThereOnboarding
+                readiness={props.readiness}
+                errors={visibleErrors}
+                notice={notice}
+                action={action === 'onboarding' ? 'onboarding' : null}
+            />
         );
     }
 
     return (
         <ProductShell title="Welcome to Serbizyu">
-            <main className="sz-page"><Card><CardContent><p className="sz-eyebrow">Your marketplace</p><h1 className="sz-display-title">Discover local listings built on clear information.</h1><p className="sz-copy">Browse what is active, or sign in securely to create and manage your own listings.</p><a className="sz-btn sz-btn-primary" href="/auth/phone">Sign in securely</a></CardContent></Card></main>
+            <main className="sz-page"><Card><CardContent><p className="sz-eyebrow">Your marketplace</p><h1 className="sz-display-title">Discover local listings built on clear information.</h1><p className="sz-copy">Browse what is active, or sign in securely to create and manage your own listings.</p><a className="sz-btn sz-btn-primary" href="/auth/sign-in">Sign in securely</a></CardContent></Card></main>
         </ProductShell>
     );
 }

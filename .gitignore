@@ -23,3 +23,9 @@ storage/framework/views/*
 storage/framework/cache/*
 !storage/framework/cache/.gitignore
 storage/inertia-devtools/
+
+# Agent scratch (never commit)
+tmp/
+.tmp-*
+.tmp-test-storage/
+xd/
