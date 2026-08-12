@@ -31,7 +31,7 @@ function inertiaGetMyListings(string $uri)
 
 it('redirects guests from my-listings to phone auth', function (): void {
     $this->get('/my-listings')
-        ->assertRedirect(route('auth.phone'));
+        ->assertRedirect(route('auth.sign-in'));
 
     expect(session('auth_return_to'))->toBe('/my-listings');
 });
@@ -45,6 +45,8 @@ it('projects owner my listings with review_status on the List Dock route', funct
         'service_area_display' => 'Tagudin, Ilocos Sur',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'password' => 'Password1!',
+        'password_confirmation' => 'Password1!',
     ])->assertRedirect();
 
     $created = $this->postJson('/listings', [
@@ -84,6 +86,8 @@ it('keeps submitted listings private on my-listings projection and out of browse
         'service_area_display' => 'Tagudin, Ilocos Sur',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'password' => 'Password1!',
+        'password_confirmation' => 'Password1!',
     ])->assertRedirect();
 
     $created = $this->postJson('/listings', [

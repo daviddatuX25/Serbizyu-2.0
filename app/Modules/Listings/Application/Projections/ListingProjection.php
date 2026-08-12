@@ -63,7 +63,7 @@ final readonly class ListingProjection
 
         if (array_key_exists('price_amount_minor', $attributes) && $attributes['price_amount_minor'] !== null) {
             $projection['price_amount_minor'] = (int) $attributes['price_amount_minor'];
-            $projection['currency'] = isset($attributes['currency']) && $attributes['currency'] !== null
+            $projection['currency'] = isset($attributes['currency'])
                 ? (string) $attributes['currency']
                 : null;
         }

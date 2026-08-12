@@ -50,6 +50,10 @@ export type ReadinessState = {
     low_data_mode?: boolean;
     helpPreference?: string | null;
     help_preference?: string | null;
+    emailAttached?: boolean;
+    email_attached?: boolean;
+    passwordSet?: boolean;
+    password_set?: boolean;
     blockers?: string[];
     nextRoute?: string | null;
 };
@@ -117,6 +121,16 @@ export type HomeProps = PageProps & {
     draft?: ListingDraft | null;
     publicListings?: ListingRecord[];
     activeListingDetail?: ListingRecord | null;
+    booking?: {
+        direct_booking_enabled?: boolean;
+        can_propose?: boolean;
+        requires_auth?: boolean;
+        is_owner?: boolean;
+        expected_listing_version?: number;
+        default_amount_minor?: number | null;
+        currency?: string;
+        start_url?: string;
+    } | null;
     myListings?: ListingRecord[];
     denial?: DenialState | null;
     pageMode?: 'home' | 'browse' | 'detail' | 'listings';

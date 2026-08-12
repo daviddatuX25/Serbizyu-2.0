@@ -1,0 +1,224 @@
+{
+  "mode": "quickdeal",
+  "base": "https://daviddatux25.github.io/Serbizyu-2.0/app/?independent-e2e=1#/",
+  "ran_at": "2026-08-01T15:12:58+0800",
+  "steps": [
+    {
+      "step": "ready",
+      "state": {
+        "hash": "#/quick-deal",
+        "h1": "₱70",
+        "main": "Point at the other phone\n\nQuick Deal · Pick up medicine or small items\n\n₱70\n\nwith Noel Ramos\n\n₱-50\n₱-10\n+₱10\n+₱50\n\nQR loops automatically · frame 1/6\n\nStart camera\n\nCash is handled directly. This QR never moves money.",
+        "buttons": [
+          {
+            "text": "₱-50",
+            "disabled": false
+          },
+          {
+            "text": "₱-10",
+            "disabled": false
+          },
+          {
+            "text": "+₱10",
+            "disabled": false
+          },
+          {
+            "text": "+₱50",
+            "disabled": false
+          },
+          {
+            "text": "Start camera",
+            "disabled": false
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "adjust",
+      "clicked": true,
+      "state": {
+        "hash": "#/quick-deal",
+        "h1": "₱120",
+        "main": "Point at the other phone\n\nQuick Deal · Pick up medicine or small items\n\n₱120\n\nwith Noel Ramos\n\n₱-50\n₱-10\n+₱10\n+₱50\n\nQR loops automatically · frame 6/6\n\nSend ₱120 offer\n\nCash is handled directly. This QR never moves money.",
+        "buttons": [
+          {
+            "text": "₱-50",
+            "disabled": false
+          },
+          {
+            "text": "₱-10",
+            "disabled": false
+          },
+          {
+            "text": "+₱10",
+            "disabled": false
+          },
+          {
+            "text": "+₱50",
+            "disabled": false
+          },
+          {
+            "text": "Send ₱120 offer",
+            "disabled": false
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "send",
+      "clicked": true,
+      "state": {
+        "hash": "#/quick-deal",
+        "h1": "₱120",
+        "main": "Point at the other phone\n\nQuick Deal · Pick up medicine or small items\n\n₱120\n\nwith Noel Ramos\n\n₱-50\n₱-10\n+₱10\n+₱50\n\nQR loops automatically · frame 2/6\n\nSend ₱120 offer\n\nCash is handled directly. This QR never moves money.",
+        "buttons": [
+          {
+            "text": "₱-50",
+            "disabled": false
+          },
+          {
+            "text": "₱-10",
+            "disabled": false
+          },
+          {
+            "text": "+₱10",
+            "disabled": false
+          },
+          {
+            "text": "+₱50",
+            "disabled": false
+          },
+          {
+            "text": "Send ₱120 offer",
+            "disabled": true
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "accept",
+      "clicked": true,
+      "state": {
+        "hash": "#/quick-deal",
+        "h1": "₱120",
+        "main": "Point at the other phone\n\nQuick Deal · Pick up medicine or small items\n\n₱120\n\nwith Noel Ramos\n\n₱-50\n₱-10\n+₱10\n+₱50\n\nQR loops automatically · frame 6/6\n\nBoth agree · confirm\n\nCash is handled directly. This QR never moves money.",
+        "buttons": [
+          {
+            "text": "₱-50",
+            "disabled": false
+          },
+          {
+            "text": "₱-10",
+            "disabled": false
+          },
+          {
+            "text": "+₱10",
+            "disabled": false
+          },
+          {
+            "text": "+₱50",
+            "disabled": false
+          },
+          {
+            "text": "Both agree · confirm",
+            "disabled": false
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "confirm",
+      "clicked": true,
+      "state": {
+        "hash": "#/quick-deal",
+        "h1": "₱120",
+        "main": "Point at the other phone\n\nQuick Deal · Pick up medicine or small items\n\n₱120\n\nwith Noel Ramos\n\n₱-50\n₱-10\n+₱10\n+₱50\n\nQR loops automatically · frame 3/6\n\nSave when connected\n\nCash is handled directly. This QR never moves money.",
+        "buttons": [
+          {
+            "text": "₱-50",
+            "disabled": false
+          },
+          {
+            "text": "₱-10",
+            "disabled": false
+          },
+          {
+            "text": "+₱10",
+            "disabled": false
+          },
+          {
+            "text": "+₱50",
+            "disabled": false
+          },
+          {
+            "text": "Save when connected",
+            "disabled": false
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "sync",
+      "clicked": true,
+      "state": {
+        "hash": "#/quick-deal",
+        "h1": "₱120",
+        "main": "Point at the other phone\n\nQuick Deal · Pick up medicine or small items\n\n₱120\n\nwith Noel Ramos\n\n₱-50\n₱-10\n+₱10\n+₱50\n\nQR loops automatically · frame 6/6\n\nSaved · receipt QD-260801-019\n\nCash is handled directly. This QR never moves money.",
+        "buttons": [
+          {
+            "text": "₱-50",
+            "disabled": false
+          },
+          {
+            "text": "₱-10",
+            "disabled": false
+          },
+          {
+            "text": "+₱10",
+            "disabled": false
+          },
+          {
+            "text": "+₱50",
+            "disabled": false
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "activity_after_sync",
+      "receipt_visible": false,
+      "state": {
+        "hash": "#/activity",
+        "h1": "Your activity",
+        "main": "Your activity\n\nThings you asked for, offer, and help with.\n\nYOU ASKED FOR THIS\n\nHand-drawn invitation layout\n\nMaya is making the first drawing.\n\nNext: Maya will send the first draft\n\nYOU OFFER HELP\n\nYour invitation listing\n\nVisible in Browse · Can start today\n\nManage listing\n\nPLAN A BIGGER JOB\n\nBirthday lunch at home\n\nEach task has its own person and agreement.\n\nLunch trays\n\nAling Tessie · in progress\n\n₱1200\nSimple banner\n\nMaya Dela Cruz · accepted\n\n₱250\nPick up ice and drinks\n\nFind someone\n\nDo this after the lunch pickup time is confirmed\n\n₱300\n\nAdd another task\n\nAdd task",
+        "buttons": [
+          {
+            "text": "Manage listing",
+            "disabled": false
+          },
+          {
+            "text": "Add task",
+            "disabled": true
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "after_reload",
+      "state": {
+        "hash": "#/activity",
+        "h1": "",
+        "main": "",
+        "buttons": [],
+        "links": []
+      }
+    }
+  ]
+}

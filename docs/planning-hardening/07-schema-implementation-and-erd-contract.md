@@ -68,17 +68,17 @@ Review trigger: revisit only if measured index/write performance or a provider c
 - Unique constraints are database-enforced, not comment-enforced.
 - Migration CI compares the live disposable catalog against the manifest and fails on missing/extra required constraints or indexes.
 
-## 2. Canonical 42-table inventory
+## 2. Canonical 58-table inventory
 
-The inventory is unchanged from `canonical-schema-rebuilt.md` and is reproduced here to make the implementation contract self-contained:
+The implementation target is the observed 47-table migrated baseline plus eleven founder-approved initiative additions. The total planning inventory is **58 tables**; this remains planning authority, not migration/catalog proof.
 
 ### Identity and authorization
 
-`users`, `user_profiles`, `role_assignments`, `identity_verifications`, `evidence_files`, `consent_grants`
+`users`, `auth_otps`, `user_profiles`, `role_assignments`, `identity_verifications`, `evidence_files`, `consent_grants`
 
 ### Product contract
 
-`categories`, `capability_profiles`, `listings`, `listing_versions`, `listing_capacity`, `requests`, `quotes`, `policy_versions`
+`categories`, `category_versions`, `capability_profiles`, `listings`, `listing_versions`, `listing_capacity`, `listing_capacity_reservations`, `requests`, `quotes`, `policy_versions`
 
 ### Order and Work
 
@@ -98,9 +98,27 @@ The inventory is unchanged from `canonical-schema-rebuilt.md` and is reproduced 
 
 ### Integrity and operations
 
-`audit_events`, `outbox_messages`, `idempotency_keys`, `retention_holds`, `migration_checkpoints`
+`audit_events`, `outbox_messages`, `inbox_messages`, `idempotency_keys`, `retention_holds`, `migration_checkpoints`, `capability_activations`, `command_approvals`
 
-Count: 42 tables.
+### Deal coordination
+
+`deal_chains`, `deal_needs`, `deal_dependencies`, `deal_invitations`
+
+### Owner-scoped integrations
+
+`integration_clients`, `integration_credentials`, `integration_object_mappings`, `integration_webhook_subscriptions`, `integration_webhook_deliveries`, `integration_sync_cursors`
+
+Count: 58 tables (47 observed migrated baseline + eleven approved additions).
+
+Foundation rules:
+
+- Every new entity uses application-generated UUIDv7/native UUID and UTC timestamps; operation-spanning records carry `correlation_id`. Every mutable aggregate uses optimistic `row_version`; immutable business/contract/payload/event versions use explicit semantic names and never share that counter.
+- DealChain is a coordination aggregate only. Parent progress/cost is derived; no parent Payment Obligation, wallet, escrow, pooled balance, automatic split, or parent-wide liability exists.
+- DealNeed is one ordered service/product slot. Requests/Quotes reuse the existing workflows; a Need may have many of them and at most one active non-cancelled/non-closed child Order.
+- DealDependency uses same-chain composite FKs, rejects self-edges, enforces active-edge uniqueness, and rejects cycles through a locked command transaction plus database reachability/constraint-trigger enforcement.
+- DealInvitation targets one Need, has explicit scope/expiry/response/actor/revocation and `row_version`, and uses shared idempotency/audit/outbox records. Acceptance does not itself create an Order.
+- Existing `requests`, `quotes`, and `orders` receive nullable `(deal_chain_id, deal_need_id)` lineage pairs with all-or-none checks and composite FKs. Child Orders use `origin = 'deal_chain'` and retain ordinary Order/Work/Payment/Evidence/Dispute boundaries.
+- Replacement creates new Need/Order history and preserves prior records; it never rewrites or deletes child history. Pilot visibility remains separately gated.
 
 ## 3. Migration manifest
 
@@ -108,18 +126,20 @@ Migration files use monotonically ordered batches plus stable names. Each batch 
 
 | Batch | Contents | Gate |
 |---|---|---|
-| 000 | PostgreSQL extensions permitted by runtime baseline; UUID/UTC conventions; shared audit/version helpers; migration checkpoints | Disposable catalog test |
-| 001 | `users`, `user_profiles`, `role_assignments`, `evidence_files`, `identity_verifications`, `consent_grants` | Identity/privacy contract test |
-| 002 | `categories`, `capability_profiles`, `policy_versions`, `listings`, `listing_versions`, `listing_capacity`, `requests`, `quotes` | Taxonomy/listing contract test |
-| 003 | `orders`, `order_parties`, `order_terms_snapshots`, `work_instances`, `work_events` | Order/Work state contract test |
-| 004 | `payment_obligations`, `payment_events`, `financial_accounts`, `financial_transactions`, `financial_entries`, `provider_events`, `financial_adjustments` | Payment/ledger invariant test |
-| 005 | `disputes`, `dispute_events`, `administrative_holds`, `support_cases`, `safety_incidents`, `reviews`, `conversations`, `messages`, `notifications`, `notification_deliveries` | Trust/support/notification test |
-| 006 | `cohort_classifications`, `audit_events`, `outbox_messages`, `idempotency_keys`, `retention_holds` | Evidence/measurement/integrity test |
-| 007 | Named indexes, partial indexes, checks, posting procedure, transition guards, catalog verification, test fixtures | Full disposable rehearsal |
+| 000 | PostgreSQL extensions; UUID/UTC, currency, audit/version conventions; `migration_checkpoints` | Disposable catalog test |
+| 001 | `users`, `auth_otps`, profiles, roles, evidence, identity verification, consent | Identity/privacy/OTP contract test |
+| 002 | Governed category versions, capability profiles, policies, listings/versions, capacity/reservations, requests/quotes | Taxonomy/version/capacity contract test |
+| 003 | Deal-Chain foundation, same-Chain/Need keys, dependency/invitation integrity, active-edge uniqueness, and cycle trigger | Deal coordination contract test |
+| 004 | Orders, parties, exact terms snapshots, Work instances/events, same-Order and child-Order same-Chain/Need lineage, one-active-child-per-Need uniqueness | Order/Work contract test |
+| 005 | Payment obligations/events, accounts, transactions/entries, provider events, adjustments | Ledger/lane invariant test |
+| 006 | Trust, disputes, holds, support, safety, reviews, conversations, messages, notifications/deliveries | Trust/support/notification test |
+| 007 | Cohorts, audit, ordered outbox/inbox, idempotency, retention, client attribution | Integrity/ordering contract test |
+| 008 | Six owner-scoped integration tables, capability activations, command approvals, cross-table FKs | Integration/activation/approval contract test |
+| 009 | Backfill/cutover, named/partial indexes, checks/triggers, deterministic local/test factories, forward/rollback/restore rehearsal | Full disposable rehearsal |
 
 Rules:
 
-- Batch 007 is not a substitute for application transition guards; it closes database integrity enforcement.
+- Batch 009 is not a substitute for application transition guards; it closes database integrity enforcement.
 - A failed batch never advances its checkpoint.
 - Destructive schema changes require expand/contract sequencing and restore rehearsal.
 - No production migration exists until E0-S2 passes and a separate implementation-entry gate approves it.
@@ -135,12 +155,15 @@ erDiagram
   users ||--o{ identity_verifications : submits
   users ||--o{ evidence_files : owns
   users ||--o{ consent_grants : grants
+  users ||--o{ auth_otps : authenticates
 
-  categories ||--o{ listings : classifies
-  capability_profiles ||--o{ listings : governs
+  categories ||--o{ category_versions : versions
+  category_versions ||--o{ listing_versions : pins
+  capability_profiles ||--o{ listing_versions : pins
   users ||--o{ listings : owns
   listings ||--o{ listing_versions : versions
-  listings ||--o| listing_capacity : limits
+  listing_versions ||--o{ listing_capacity : defines
+  listing_capacity ||--o{ listing_capacity_reservations : reserves
   users ||--o{ requests : creates
   requests ||--o{ quotes : receives
 
@@ -155,7 +178,7 @@ erDiagram
   orders ||--o{ payment_obligations : requires
   payment_obligations ||--o{ payment_events : records
   payment_obligations ||--o{ financial_transactions : posts
-  financial_accounts ||--o{ financial_transactions : owns
+  financial_accounts ||--o{ financial_entries : owns
   financial_transactions ||--o{ financial_entries : contains
   payment_events ||--o{ provider_events : reconciles
   financial_transactions ||--o{ financial_adjustments : corrects
@@ -184,6 +207,26 @@ erDiagram
   idempotency_keys ||--o{ audit_events : explains
   evidence_files ||--o{ retention_holds : protects
   migration_checkpoints ||--o{ audit_events : records
+  outbox_messages ||--o{ inbox_messages : consumed_as
+  capability_activations ||--o{ command_approvals : evidenced_by
+  evidence_files ||--o{ command_approvals : supports
+
+  users ||--o{ integration_clients : owns
+  integration_clients ||--o{ integration_credentials : authenticates
+  integration_clients ||--o{ integration_object_mappings : maps
+  integration_clients ||--o{ integration_webhook_subscriptions : subscribes
+  integration_webhook_subscriptions ||--o{ integration_webhook_deliveries : attempts
+  outbox_messages ||--o{ integration_webhook_deliveries : delivers
+  integration_clients ||--o{ integration_sync_cursors : consumes
+
+  users ||--o{ deal_chains : coordinates
+  deal_chains ||--o{ deal_needs : contains
+  deal_needs ||--o{ deal_dependencies : predecessor
+  deal_needs ||--o{ deal_dependencies : successor
+  deal_needs ||--o{ deal_invitations : receives
+  deal_needs ||--o{ requests : sources
+  deal_needs ||--o{ quotes : sources
+  deal_needs ||--o{ orders : forms
 ```
 
 ## 5. Required verification before implementation entry
@@ -191,13 +234,13 @@ erDiagram
 E0-S2 cannot be marked complete until all of the following are real tool outputs:
 
 1. PostgreSQL 16 disposable database created.
-2. Batch 000–007 migrations run from empty state.
-3. Catalog comparison reports exactly 42 required tables.
-4. Constraint/index comparison passes.
-5. Invalid status, negative amount, duplicate provider event, duplicate idempotency key, deleted-held evidence, unbalanced ledger, and invalid FK tests fail as intended.
-6. Backup/restore rehearsal passes with matching migration checksums.
-7. Mermaid ERD renders successfully to SVG.
-8. Schema implementation contract and canonical schema remain synchronized.
+2. Batch 000–009 migrations run from empty state and from the observed 47-table baseline.
+3. Catalog comparison reports exactly 58 required application tables.
+4. Constraint/index comparison passes, including version, capacity, lineage, ordered inbox, owner/client, activation, and exact-approval constraints.
+5. Invalid status, negative amount/capacity, duplicate provider/inbox/idempotency identity, cross-owner lookup, expired approval, deleted-held evidence, unbalanced ledger, invalid FK, and dependency-cycle tests fail as intended.
+6. Backup/restore and rollback rehearsals pass with matching migration checksums.
+7. The canonical 58-table ERD renders successfully to SVG and is reviewed against the manifest.
+8. This implementation contract, canonical schema, domain/state contract, ADR catalog, architecture spine, epics, and the E0-S2 LLD/OpenSpec remain synchronized.
 
 No production migration, live payment, sensitive-ID upload, or deployment may be inferred from a successful disposable rehearsal.
 

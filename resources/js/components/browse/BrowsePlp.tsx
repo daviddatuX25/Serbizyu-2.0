@@ -247,16 +247,6 @@ function formatPrice(listing: ListingRecord): string | null {
     return formatMoney(minor, currency);
 }
 
-function detailLine(listing: ListingRecord): string {
-    const parts = [
-        listingCategoryLabel(listing),
-        listingType(listing),
-        listingBarangay(listing),
-        listingFulfillmentPreview(listing),
-        ownerLabel(listing) || null,
-    ].filter(Boolean);
-    return parts.join(' · ');
-}
 
 function hashSeed(value: string): number {
     let hash = 0;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Listings\Application;
 
 use App\Modules\Listings\Application\Contracts\ListingCommandStore;
+use App\Shared\Application\ResourceActor;
 
 final class CreateListingDraft
 {
@@ -14,8 +15,8 @@ final class CreateListingDraft
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */
-    public function handle(string $ownerId, array $input, string $correlationId): array
+    public function handle(ResourceActor $actor, array $input, string $correlationId): array
     {
-        return $this->store->createDraft($ownerId, $input, $correlationId);
+        return $this->store->createDraft($actor, $input, $correlationId);
     }
 }

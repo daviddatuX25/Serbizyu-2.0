@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Epics, Stories, and Delivery Plan
 
-Status: CANONICAL DELIVERY PLAN — founder-approved 2026-07-31; only individually hardened stories are implementation-ready
+Status: CANONICAL DELIVERY PLAN — founder-approved 2026-07-31; initiative extension accepted 2026-08-09; only individually hardened stories are implementation-ready
 BMAD phase: Phase 3 — Implementation planning
 Depends on:
 
@@ -17,7 +17,7 @@ Depends on:
 - `docs/planning-hardening/08-runtime-stack-and-environment-contract.md`
 - `docs/planning-hardening/09-development-standards-and-bmad-openspec-contract.md`
 
-This replaces the historical epics/stories plan after approval. Stories below are implementation candidates, not proof that implementation is currently cleared.
+This replaces the historical epics/stories plan. Stories below are implementation candidates; only a story with its complete LLD/OpenSpec and passing readiness gate is cleared to build.
 
 ## 1. Delivery rules
 
@@ -45,13 +45,13 @@ This replaces the historical epics/stories plan after approval. Stories below ar
 | E0 | Build/test/security/operational foundation | C,S | Approved schema/architecture |
 | E1 | Identity, roles, verification, and Agent consent | C,T,S | E0 |
 | E2 | Listings, taxonomy, capacity, and discovery | C,T,S | E0,E1 |
-| E3 | Orders and A1/A3/A4/A9 Work | C,T,S | E1,E2 |
+| E3 | Orders and A1/A3/A4/A9 Work | C,T,S | E1 and E2-S1/E2-S2/E2-S5; E2-S3/E2-S4 consume E3 final-formation seam |
 | E4 | External Cash and External Digital Proof | C,T,S | E3 |
 | E5 | Evidence, notifications, support, disputes, safety | C,T,S | E1–E4 |
-| E6 | Admin operations, financial integrity, recovery, measurement | C,T,S | E0–E5 |
-| E7 | Direct Digital/Tiwala sandbox demonstrations | C,SB,S | E3,E4,E6; never live pilot |
-| E8 | Controlled Tagudin validation readiness | T,S | E1–E6 and G3 |
-| E9 | Future capability activation seams | S,F | Post-pilot evidence |
+| E6 | Admin operations, financial integrity, recovery, measurement | C,T,S | E6-S2/S4/S6: E0; E6-S1/S5: E1–E5; E6-S3: E4 and the T6 posting baseline |
+| E7 | Direct Digital/Tiwala sandbox demonstrations | C,SB,S | E3,E4,E6-S1/S2/S3/S4/S6; E6-S3 executes first within T7; never live pilot |
+| E8 | Controlled Tagudin validation readiness | T,S | E1–E5, E6-S1/S2/S4/S5/S6, and G3; never waits on sandbox/future E7/E9 |
+| E9 | Phased Deal-Chaining, account integrations, AI handoff, and future activation | C,S,COND,FUT | E9-S5: stable E0–E6 and T4/T5/T6; E9-S7/S8: stable E0–E6 application ports; E9-S6/S9 add their named activation/UAT gates |
 
 ## 4. Epic E0 — Foundation and verification
 
@@ -81,11 +81,13 @@ Refs: canonical schema, domain contract
 
 Acceptance:
 
-- Migration order follows Batch 0–7.
-- 42-table inventory is represented or deviations have approved schema decision.
-- FKs, uniqueness, checks, indexes, retention metadata, and version fields exist.
-- Forward migration rehearses successfully.
-- Destructive changes have rollback/restore procedure.
+- Migration order follows canonical Batch 0–9.
+- Observed 47-table baseline plus eleven approved initiative additions is represented as the 58-table authority.
+- Required columns/types, FK/delete behavior, checks, composite/partial uniqueness, indexes, retention, business/row/payload versions, and migration/backfill order exist.
+- Forward migration rehearses on production-shaped data.
+- Destructive/backfill changes have rollback/restore procedure.
+
+Authority note: E0-S2 consumes the approved Deal-Chaining foundation and lineage contract as schema headroom; it does not implement or expose the later coordination UX. A separate bounded story and activation review must be approved before any user-facing Deal-Chaining work, and Slice 1 remains unchanged.
 
 ### E0-S3 — Test harness and contract fixtures
 
@@ -112,6 +114,21 @@ Acceptance:
 - Environment-specific values are validated at startup.
 - Sensitive values are redacted in logs/errors.
 - Rotation/revocation procedure is documented.
+
+### E0-S5 — Initiative authority, ERD, and kernel contract propagation
+
+Status: C,T,S — completed planning-authority propagation; no implementation train
+
+Refs: PRD-060–076; domain §16; canonical schema §2.2; ADR-R-031–040; architecture spine AD-1–29; UX-025–031.
+Completion record (2026-08-09): founder acceptance, canonical propagation, final reviews, and mechanical authority/traceability checks passed. T0 begins with the still-pending E0-S2 LLD/OpenSpec and migration evidence; it does not repeat E0-S5.
+
+Acceptance:
+
+- Founder acceptance and identical capability/module/version/state/security/activation terms are propagated across every canonical artifact.
+- Canonical schema, relationship ERD, migration manifest, retention classes, and planned catalog/constraint evidence agree on the 58-table authority.
+- Every later train is mapped to one future LLD/OpenSpec packet using the mandatory 15-section contract; those executable packets remain train entry gates, not E0-S5 work.
+- The superseded 46-table planning count cannot authorize an integration/platform-kernel migration or endpoint.
+- Final planning reviews contain no unresolved architecture/domain/schema/authorization/privacy/financial/operations decision; T0 execution evidence remains exclusively E0-S2.
 
 ## 5. Epic E1 — Identity, access, and delegation
 
@@ -214,13 +231,13 @@ Acceptance:
 
 Status: C,COND,T,S
 
-Refs: PRD-018; UX-006/007
+Refs: PRD-018, PRD-063; UX-006/007, UX-027
 
 Acceptance:
 
 - Quote captures amount, scope, inclusions/exclusions, expiry, shape, and lane.
 - Expired quote cannot be accepted.
-- Accepted quote creates immutable Order terms snapshot.
+- Accepted quote invokes E3-S8 `FinalizeOrderAgreement`; it never creates a quote-specific Order path.
 - No quote implies payment/work completion.
 
 ### E2-S5 — Search/discovery baseline
@@ -236,20 +253,33 @@ Acceptance:
 - Anonymous and authenticated cache behavior is safe.
 - Search failure has a usable fallback.
 
+### E2-S6 — Governed business versions and capacity reservations
+
+Status: C,T,S
+
+Refs: PRD-061–062; UX-026; ADR-R-032–033
+
+Acceptance:
+
+- Category and capability-profile family identity, immutable positive business version, and optimistic `row_version` are separate and database-guarded.
+- Published Listing Versions pin exact Category and Capability business-version candidate keys; later edits cannot change accepted meaning.
+- Capacity buckets identify listing version, capacity type, and resource; reservations transition held→committed/released/expired with one terminal release.
+- Concurrent quantity, slot, and resource tests reject oversell/double booking and cross-listing/version references.
+
 ## 7. Epic E3 — Orders and fulfillment
 
 ### E3-S1 — Direct Booking Order and terms snapshot
 
 Status: C,T,S
 
-Refs: PRD-017, PRD-024, PRD-032; UX-004/005
+Refs: PRD-017, PRD-024, PRD-032, PRD-063; UX-004/005, UX-027
 
 Acceptance:
 
-- Buyer selects approved listing/profile.
-- Terms, amount, lane, policy, and capability snapshot atomically.
-- Duplicate submission is idempotent.
-- Order and required Work/Payment records are linked.
+- Buyer selects an approved Listing/Profile and submits a typed proposal; no mechanism writes an accepted Order directly.
+- E3-S8 finalization snapshots terms, amount, lane, policy, category/profile/source versions and acceptance proof atomically.
+- Duplicate submission returns the prior result; stale terms/source/capacity require refresh and reconfirmation.
+- Accepted Order and required Work/Payment children are same-Order linked.
 
 ### E3-S2 — A1 Linear Project Work
 
@@ -327,6 +357,31 @@ Acceptance:
 - Work/payment/dispute effects are explicit.
 - Close is blocked until required terminal conditions satisfy domain contract.
 
+### E3-S8 — Sole atomic final agreement
+
+Status: C,T,S
+
+Refs: PRD-063; UX-027; ADR-R-033
+
+Acceptance:
+
+- Every Listing, Quote/Bid, Quick Deal, and Deal-Need mechanism converges on `SubmitOrderProposal` then `FinalizeOrderAgreement`.
+- Order Management owns one fixed-lock-order PostgreSQL transaction that validates source/category/profile/policy/capacity/parties/acceptance.
+- Accepted Order, parties, exact terms, required Work, one-lane Obligations, committed reservations, audit, idempotency result, and outbox all commit or all roll back.
+- Concurrency, stale-version, duplicate, constraint-failure, and required-child-failure tests prove no partial accepted Order.
+
+### E3-S9 — Retained Work contract-version registry
+
+Status: C,T,S
+
+Refs: PRD-064; UX-027; ADR-R-032
+
+Acceptance:
+
+- One registry resolves each pinned profile to shape code, shape-contract version, and payload-schema version for A1/A3/A4/A9.
+- Validators/readers remain available for every version referenced by retained Work/events/evidence.
+- Unknown or unavailable versions park with stable no-effect recovery and never fall through to the latest handler.
+- Aggregate `row_version`, event version, shape-contract version, payload version, and artifact/revision version remain distinct.
 ## 8. Epic E4 — Initial payment/evidence lanes
 
 ### E4-S1 — External Cash declaration
@@ -514,6 +569,20 @@ Acceptance:
 - Operating cost/support effort is tracked.
 - Cash pilot produces no false revenue.
 
+### E6-S6 — Ordered consumers, activation, approvals, and financial containment
+
+Status: C,T,S
+
+Refs: PRD-068–073; UX-030–031; ADR-R-034–039.
+
+Acceptance:
+
+- Inbox deduplicates and applies per aggregate sequence; gaps/unknown versions/dead letters remain inspectable and replayable without duplicate effect.
+- Every adapter and queued irreversible effect evaluates dimensioned activation in the owning service.
+- Exact approvals consume atomically; configured high-risk actions enforce maker/checker and reject self-approval.
+- Separate financial gates safely contain intents, release/payout, refund/reversal, outbound, inbound, query, and reconciliation without blocking required recovery.
+- Operations can inspect cause, impact, actor/client, evidence, retry/disable/replay outcome, and last-success health.
+
 ## 11. Epic E7 — Connected-payment sandbox only
 
 ### E7-S1 — Direct Digital sandbox adapter
@@ -538,6 +607,20 @@ Acceptance:
 - Release is idempotent/concurrency-safe.
 - Refund/reversal/reconciliation cases are tested.
 - UI says sandbox and not legal escrow.
+
+### E7-S3 — Balanced financial posting and reconciliation
+
+Status: C,SB,T,S
+
+Refs: PRD-070–074; UX-028, UX-030; ADR-R-035, ADR-R-038.
+
+Acceptance:
+
+- One Obligation has one lane and each money effect posts one immutable idempotency-linked transaction.
+- Debits equal credits per currency; entry, transaction, and active account currencies match.
+- Obligation/event↔provider↔ledger mismatch enters reconciliation, blocks protected release, and resolves through attributable evidence plus linked compensation.
+- Refund/reversal/release races and duplicate/reordered/mismatched provider events cannot double-post.
+- Xendit/Tiwala records remain sandbox-classified and production effects cannot activate through configuration alone.
 
 ## 12. Epic E8 — Tagudin validation readiness
 
@@ -574,7 +657,7 @@ Acceptance:
 - No critical red-line condition is open.
 - Pilot cohort classification is verified.
 
-## 13. Epic E9 — Future activation seams
+## 13. Epic E9 — Phased platform capabilities and future activation seams
 
 ### E9-S1 — Request liquidity activation
 
@@ -600,6 +683,62 @@ Status: FUT
 
 Requires legal/provider/financial/operations/security/reconciliation gates from scorecard.
 
+### E9-S5 — Bounded Deal-Chaining coordination slice
+
+Status: C,T,S,F,COND — committed T8 implementation; capstone/Tagudin/customer exposure remains activation-gated
+
+Refs: PRD-022, PRD-076; UX-024; ADR-R-020, ADR-R-021, ADR-R-024, ADR-R-027, ADR-R-029; canonical `deal_chains`, `deal_needs`, `deal_dependencies`, `deal_invitations` and `(deal_chain_id, deal_need_id)` lineage.
+
+This story is intentionally contract-ready rather than an authorization to build the complete feature now. It follows the ordinary Request/Quote/Order/Work spine and consumes the approved foundation propagated before E0-S2.
+
+Acceptance:
+
+- Chain/Need/Dependency/Invitation commands use actor, acting-for grant, expected version, correlation, idempotency, audit, and outbox context.
+- Open Needs reuse existing Requests/Quotes; direct invitations target one Need; invitation acceptance does not itself create an Order.
+- A separate accepted-Need command creates/links one ordinary child Order with isolated parties, terms, Work, Payment Obligations, evidence, disputes, cancellation, replacement, and liability.
+- Same-chain, no-self-edge, active-edge uniqueness, and cycle prevention are enforced; dependencies block only named transitions.
+- Partial completion, failure, cancellation, and replacement preserve child history and never perform an automatic sibling/parent financial cascade.
+- The feature remains behind a separate pilot activation record and is absent from normal pilot navigation until authorization, recovery, operations, browser, accessibility, and founder activation evidence pass.
+
+### E9-S6 — Deal-Chaining pilot activation review
+
+Status: COND,FUT
+
+Requires the bounded slice, child-isolation tests, dependency-cycle and idempotency tests, failure/replacement/partial-completion recovery, support/observability runbook, and founder activation decision. Foundation presence or a capstone lab does not pass this gate.
+
+### E9-S7 — Account integration foundation and secure service principals
+
+Status: C,S,COND — committed T9 implementation; endpoint/client activation remains gated
+
+Refs: PRD-065–066, PRD-068–069, PRD-072–073; UX-029–031; ADR-R-036–040; canonical integration tables.
+
+Acceptance:
+
+- One owner-scoped client has restrictive versioned scopes and separately rotatable/revocable environment-bound credentials.
+- Owner derives only from authenticated client; cross-owner identifiers are non-enumerating and idempotency/mappings/cursors remain client-scoped.
+- `/api/v1` adapters call the same application commands/queries and cannot bypass policies, versions, activation, or reservations.
+- Signed webhook retries are observable and reject DNS rebinding, redirects/private/reserved/metadata IPv4/IPv6, invalid TLS/ports, and oversized/slow responses.
+- Credential issuance/scope expansion requires recent attributable human step-up; no plaintext secret is recoverable.
+
+### E9-S8 — Exact AI handoff
+
+Status: C,S,COND — committed T9 implementation; command activation remains gated
+
+Refs: PRD-067, PRD-073, PRD-075; UX-029, UX-031; ADR-R-038.
+
+Acceptance:
+
+- AI drafts/explanations have no mutation authority.
+- Confirmation-required command binds exact human/client/command/payload/target/version/economics/policy/evidence/expiry/idempotency.
+- Changed, stale, expired, revoked, consumed, cross-owner, out-of-scope, or inactive approvals fail with no effect.
+- Publication, Order/Work, money, consent, dispute, credential, export, hold, correction, release/payout, and activation remain absent by default.
+
+### E9-S9 — Integration and AI activation review
+
+Status: COND,FUT
+
+Requires authority/schema completion, client/webhook/approval abuse and concurrency evidence, operations/support runbook, restore/revocation drill, browser/accessibility/low-data UAT, and founder activation. Contract presence does not expose endpoints or navigation.
+
 ## 13.1 Complete PRD-to-story coverage index
 
 This index makes coverage mechanically verifiable. It does not replace the detailed story acceptance criteria.
@@ -609,24 +748,64 @@ This index makes coverage mechanically verifiable. It does not replace the detai
 | PRD-001, PRD-002, PRD-003 | E1-S1, E1-S2, E1-S3 |
 | PRD-004, PRD-005, PRD-006, PRD-007, PRD-008, PRD-009 | E1-S1, E1-S3, E1-S4 |
 | PRD-010, PRD-011, PRD-012, PRD-013, PRD-014, PRD-015, PRD-016 | E2-S1, E2-S2, E2-S5 |
-| PRD-017, PRD-018, PRD-019, PRD-020, PRD-021, PRD-022, PRD-023 | E2-S3, E2-S4, E3-S1, E1-S4 |
+| PRD-017, PRD-018, PRD-019, PRD-020, PRD-021, PRD-023 | E2-S3, E2-S4, E3-S1, E1-S4 |
+| PRD-022 | E0-S2 foundation contract; E9-S5 bounded coordination slice; E9-S6 pilot activation review |
 | PRD-024, PRD-025, PRD-026, PRD-027, PRD-028, PRD-029, PRD-030, PRD-031 | E3-S1, E3-S2, E3-S3, E3-S4, E3-S5, E3-S6, E3-S7 |
 | PRD-032, PRD-033, PRD-034, PRD-035, PRD-036, PRD-037 | E4-S1, E4-S2, E4-S3 |
 | PRD-038, PRD-039, PRD-040, PRD-041, PRD-042, PRD-043 | E4-S3, E4-S4, E7-S1, E7-S2, E3-S7 |
 | PRD-044, PRD-045, PRD-046, PRD-047, PRD-048, PRD-049, PRD-050, PRD-051 | E5-S1, E5-S2, E5-S3, E5-S4, E5-S5 |
 | PRD-052, PRD-053, PRD-054, PRD-055, PRD-056, PRD-057, PRD-058, PRD-059 | E6-S1, E6-S2, E6-S3, E6-S4, E6-S5 |
+| PRD-060 | E0-S5 |
+| PRD-061 | E2-S6 |
+| PRD-062 | E2-S6 |
+| PRD-063 | E3-S1, E3-S8; E2-S4 consumes E3-S8 |
+| PRD-064 | E3-S2–S6, E3-S9 |
+| PRD-065 | E9-S7, E9-S9 |
+| PRD-066 | E9-S7, E9-S9 |
+| PRD-067 | E9-S8, E9-S9 |
+| PRD-068 | E6-S2, E6-S6 |
+| PRD-069 | E6-S6, E8-S2 |
+| PRD-070 | E4-S4, E6-S3, E7-S3 |
+| PRD-071 | E5-S1, E6-S3, E7-S1 |
+| PRD-072 | E0-S4, E6-S2, E6-S4 |
+| PRD-073 | E1-S4, E6-S1, E6-S6 |
+| PRD-074 | E7-S1–S3 |
+| PRD-075 | Every implementation story; E8-S1–S3; E9-S6/S9 |
+| PRD-076 | E0-S2, E9-S5, E9-S6 |
+
+### 13.2 Initiative requirement execution matrix
+
+| PRD | UX | Domain/schema/ADR authority | Story / train | Verification intent / evidence |
+| --- | --- | --- | --- | --- |
+| 060 | UX-031 | Domain §16; Schema §16; ADR-R-031 | E0-S5 / T0 | authority/spine lint + readiness report / TEAM |
+| 061 | UX-026 | Domain §16.1; Schema §2.2, §5; ADR-R-032 | E2-S6 / T2 | immutable-version/FK/catalog tests / TEAM |
+| 062 | UX-026 | Domain §16.1–16.2; Schema §2.2, §5; ADR-R-032/033 | E2-S6 / T2 | quantity/slot/resource concurrency tests / TEAM |
+| 063 | UX-027 | Domain §16.2; Schema §2.2, §15; ADR-R-033 | E3-S8 / T3 | atomic rollback/idempotency/required-child tests / TEAM |
+| 064 | UX-027 | Domain §16.1; Schema §2.2; ADR-R-032 | E3-S9 / T4 | retained-handler/unknown-version no-effect tests / TEAM |
+| 065 | UX-029 | Domain §16.5–16.6; Schema §2.2; ADR-R-036 | E9-S7 / T9 | credential/owner/scope/revocation abuse tests / TEAM |
+| 066 | UX-029 | Domain §16.6–16.7; Schema §2.2; ADR-R-036/037 | E9-S7 / T9 | API conflict/idempotency/SSRF/webhook tests / TEAM |
+| 067 | UX-029 | Domain §16.6/16.8; Schema §2.2; ADR-R-038 | E9-S8 / T9 | exact-approval mutation/no-effect tests / TEAM |
+| 068 | UX-030 | Domain §16.4; Schema §2.2; ADR-R-034 | E6-S2/S6 / T1 | duplicate/gap/order/dead-letter replay tests / TEAM |
+| 069 | UX-030 | Domain §16.5; Schema §2.2; ADR-R-039 | E6-S6 / T1 | activation matrix/queued-effect recheck tests / TEAM |
+| 070 | UX-028/030 | Domain §16.7; Schema §2.2, §7; ADR-R-035 | E4-S4/E7-S3 / T6–T7 | per-currency balance/race/reconciliation tests / TEAM+SANDBOX |
+| 071 | UX-028/030 | Domain §16.7; Schema §4/§7; ADR-R-037 | E5-S1/E6-S3 / T6–T7 | quarantine/binding/replay/retention tests / TEAM+SANDBOX |
+| 072 | UX-030/031 | Domain §16.9; Schema §14–16; ADR-R-039 | E0-S4/E6-S2/S4 / T0–T1 | process health/degradation/restore rehearsal / TEAM |
+| 073 | UX-029–031 | Domain §16.8; Schema §2.2; ADR-R-038 | E6-S1/S6 / T1/T6 | deny-by-default/maker-checker/atomic-consume tests / TEAM |
+| 074 | UX-028 | Domain §16.7; ADR-R-035/037 | E7-S1–S3 / T7 | sandbox contract/reconciliation/no-live-effect tests / SANDBOX |
+| 075 | UX-031 | Domain §16.10; ADR-R-031 | all trains / T10 gate | browser accessibility/low-data/recovery + human UAT / matching plane |
+| 076 | UX-024 | Domain §16.11; Schema §2.2/§15; ADR-R-029/033 | E9-S5 / T8 | same-Chain/Need/cycle/replacement/child-isolation tests / TEAM |
 
 ## 14. Thin vertical-slice sequence
 
 ### Slice 1 — Identity to Service Listing
 
-E0-S1–S4, E1-S1–S2, E2-S1, E2-S5.
+Consumes completed E0-S5 authority propagation; implements E0-S1–S4, E1-S1–S2, E2-S1, E2-S5, and E2-S6.
 
 Evidence: Provider registers, publishes a Tagudin service listing, Buyer discovers it, unauthorized access is denied.
 
 ### Slice 2 — Direct Booking to A1 completion
 
-E3-S1, E3-S2, E5-S1, E5-S2.
+E3-S1, E3-S2, E3-S8, E3-S9, E5-S1, E5-S2; consumes E2-S6 governed-version/reservation contracts from Slice 1.
 
 Evidence: Buyer books, Provider performs Work, evidence/sign-off occurs, notifications and audit history exist.
 
@@ -664,17 +843,23 @@ Evidence: failed event, dispute, hold, evidence access, backup/restore, and metr
 
 E7-S1–S2 only after core slices and operations are stable.
 
+### Slice 9 — Account integration and AI sandbox
+
+E9-S7–S9 only after T0/T1/T2 and stable owner application ports.
+
+Evidence: owner issues and revokes a restricted client, guarded capacity sync preserves reservations, webhook failure recovers without SSRF/replay, and AI exact approval cannot exceed owner/client/policy/activation authority.
+
 ## 15. Dependency and sequencing rules
 
 - E0 precedes all data/domain implementation.
 - E1 precedes listings with ownership/consent.
-- E2 precedes Orders.
+- E2-S1/S2/S5/S6 precede E3 Order formation; E2-S3/S4 execute after and consume the E3-S8 exact final-agreement seam.
 - E3 precedes payment evidence tied to an Order/Work.
 - E4/E5 must exist before connected-payment sandbox claims.
-- E6 must exist before G3 pilot launch.
+- E6-S1/S2/S4/S5/S6 precede E8/G3 pilot readiness; E6-S3 precedes E7-S1–S3 within T7 and does not block the non-connected pilot.
 - E7 never unblocks live-money use by itself.
 - E8 is a readiness gate, not a feature epic.
-- E9 begins only after genuine pilot evidence.
+- Deal-Chaining foundation propagation is an E0-S2 prerequisite; E9-S5/S6 begin only after the ordinary marketplace spine and their explicit activation evidence exist.
 
 ## 16. Delivery capacity and schedule guard
 
@@ -719,5 +904,6 @@ The epics/stories plan is ready for implementation only when:
 - Payment, consent, safety, outbox, scheduler, backup, and recovery stories exist.
 - Direct Digital/Tiwala stories are sandbox-only.
 - Conditional/deferred capabilities have no accidental pilot stories.
+- Deal-Chaining foundation, later bounded implementation, and pilot activation are traced as separate gates.
 - Estimates, capacity, dependencies, and buffer are reviewed.
 - A fresh readiness audit passes after all rebuilt artifacts are approved.

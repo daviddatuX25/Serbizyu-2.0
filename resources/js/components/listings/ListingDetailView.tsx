@@ -663,10 +663,18 @@ export function ListingDetailView({
     listing,
     denial = null,
     correlationId = null,
+    booking = null,
 }: {
     listing: ListingRecord | null | undefined;
     denial?: DenialState | null;
     correlationId?: string | null;
+    booking?: {
+        direct_booking_enabled?: boolean;
+        can_propose?: boolean;
+        requires_auth?: boolean;
+        is_owner?: boolean;
+        start_url?: string;
+    } | null;
 }) {
     const [pins, setPins] = useState<Set<string>>(() => new Set());
     const [photoIndex, setPhotoIndex] = useState(0);
@@ -749,18 +757,26 @@ export function ListingDetailView({
                     <button
                         type="button"
                         className="sz-switch-act sz-switch-act-buy"
-                        onClick={() =>
+                        onClick={() => {
+                            if (booking?.direct_booking_enabled && booking.start_url) {
+                                if (booking.is_owner) {
+                                    setActionNote('You cannot book your own listing.');
+                                    return;
+                                }
+                                router.visit(booking.start_url);
+                                return;
+                            }
                             setActionNote(
                                 `${primaryCta} opens when Direct Booking / purchase is capability-true for this ${isProductListing(listing) ? 'product' : 'service'} offer.`,
-                            )
-                        }
+                            );
+                        }}
                     >
                         {primaryCta}
                     </button>
                 ) : null}
             </div>
         ) : null,
-        [listing?.id, pinned, offer, primaryCta],
+        [listing?.id, pinned, offer, primaryCta, booking],
     );
 
     if (!listing) {

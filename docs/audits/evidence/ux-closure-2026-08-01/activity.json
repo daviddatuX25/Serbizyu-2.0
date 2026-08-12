@@ -1,0 +1,83 @@
+{
+  "mode": "activity",
+  "base": "https://daviddatux25.github.io/Serbizyu-2.0/app/?independent-e2e=1#/",
+  "ran_at": "2026-08-01T15:13:13+0800",
+  "steps": [
+    {
+      "step": "initial",
+      "state": {
+        "hash": "#/activity",
+        "h1": "Your activity",
+        "main": "Your activity\n\nThings you asked for, offer, and help with.\n\nYOU ASKED FOR THIS\n\nHand-drawn invitation layout\n\nMaya is making the first drawing.\n\nNext: Maya will send the first draft\n\nYOU OFFER HELP\n\nYour invitation listing\n\nVisible in Browse · Can start today\n\nManage listing\n\nPLAN A BIGGER JOB\n\nBirthday lunch at home\n\nEach task has its own person and agreement.\n\nLunch trays\n\nAling Tessie · in progress\n\n₱1200\nSimple banner\n\nMaya Dela Cruz · accepted\n\n₱250\nPick up ice and drinks\n\nFind someone\n\nDo this after the lunch pickup time is confirmed\n\n₱300\n\nAdd another task\n\nAdd task",
+        "buttons": [
+          {
+            "text": "Manage listing",
+            "disabled": false
+          },
+          {
+            "text": "Add task",
+            "disabled": true
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "add_task",
+      "clicked": true,
+      "state": {
+        "hash": "#/activity",
+        "h1": "Your activity",
+        "main": "Your activity\n\nThings you asked for, offer, and help with.\n\nYOU ASKED FOR THIS\n\nHand-drawn invitation layout\n\nMaya is making the first drawing.\n\nNext: Maya will send the first draft\n\nYOU OFFER HELP\n\nYour invitation listing\n\nVisible in Browse · Can start today\n\nManage listing\n\nPLAN A BIGGER JOB\n\nBirthday lunch at home\n\nEach task has its own person and agreement.\n\nLunch trays\n\nAling Tessie · in progress\n\n₱1200\nSimple banner\n\nMaya Dela Cruz · accepted\n\n₱250\nPick up ice and drinks\n\nFind someone\n\nDo this after the lunch pickup time is confirmed\n\n₱300\nCollect cake\n\nFind someone\n\n₱100\n\nAdd another task\n\nAdd task",
+        "buttons": [
+          {
+            "text": "Manage listing",
+            "disabled": false
+          },
+          {
+            "text": "Add task",
+            "disabled": true
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "manage_listing",
+      "clicked": true,
+      "hash_before": "#/activity",
+      "hash_after": "#/activity",
+      "unchanged": true
+    },
+    {
+      "step": "after_reload",
+      "collect_cake_visible": false,
+      "state": {
+        "hash": "#/activity",
+        "h1": "Your activity",
+        "main": "Your activity\n\nThings you asked for, offer, and help with.\n\nYOU ASKED FOR THIS\n\nHand-drawn invitation layout\n\nMaya is making the first drawing.\n\nNext: Maya will send the first draft\n\nYOU OFFER HELP\n\nYour invitation listing\n\nVisible in Browse · Can start today\n\nManage listing\n\nPLAN A BIGGER JOB\n\nBirthday lunch at home\n\nEach task has its own person and agreement.\n\nLunch trays\n\nAling Tessie · in progress\n\n₱1200\nSimple banner\n\nMaya Dela Cruz · accepted\n\n₱250\nPick up ice and drinks\n\nFind someone\n\nDo this after the lunch pickup time is confirmed\n\n₱300\n\nAdd another task\n\nAdd task",
+        "buttons": [
+          {
+            "text": "Manage listing",
+            "disabled": false
+          },
+          {
+            "text": "Add task",
+            "disabled": true
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "me",
+      "state": {
+        "hash": "#/me",
+        "h1": "Me",
+        "main": "Me\nRosa Mendoza\n\nYou can ask for help, offer services, and help Lola Nena with permission.\n\nRequests\n\nPost what you need\n\nListings\n\nOffer your work\n\nAgent help\n\nLola Nena",
+        "buttons": [],
+        "links": []
+      }
+    }
+  ]
+}

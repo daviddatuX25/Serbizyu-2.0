@@ -21,6 +21,16 @@ return [
             'credentials' => env('SERBIZYU_EVIDENCE_PROVIDER_CREDENTIALS', ''),
         ],
     ],
+    'identity' => [
+        'live_government_id_collection' => filter_var(
+            env('SERBIZYU_LIVE_GOVERNMENT_ID_COLLECTION', false),
+            FILTER_VALIDATE_BOOL
+        ),
+        'google_oauth_enabled' => filter_var(
+            env('SERBIZYU_GOOGLE_OAUTH_ENABLED', false),
+            FILTER_VALIDATE_BOOL
+        ),
+    ],
     'approved_live_environments' => ['pilot', 'production-connected'],
     'live_modes' => ['live', 'connected', 'production'],
     'health' => [

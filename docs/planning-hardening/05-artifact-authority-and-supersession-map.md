@@ -11,7 +11,11 @@ For the rebuilt planning sequence:
 2. Rebuilt BMAD artifacts control product/domain/technical requirements after approval.
 3. Supporting research supplies evidence but does not silently become policy.
 4. Historical artifacts are preserved as evidence only.
-5. The fresh readiness audit is produced last and cannot make an unresolved artifact authoritative.
+5. The fresh Stage E audit is produced last and cannot make an unresolved artifact authoritative.
+
+### 1.1 Deal-Chaining propagation amendment — 2026-08-01
+
+The founder-approved Deal-Chaining charter supersedes any downstream wording that treats Deal-Chaining as rejected or as having no foundation. The canonical interpretation is now: foundation committed before E0-S2; bounded user-facing functionality sequenced later; pilot activation separately gated. Historical Deal-Chaining specifications remain supporting evidence only, especially where they imply pooled custody, automatic splitting, parent-wide liability, offline cryptographic authority, or aggregate guarantees.
 
 ## 2. Replacement map
 
@@ -75,6 +79,8 @@ No historical file may be used to reintroduce a superseded revenue split, geogra
 - Approved scope: product vision, taxonomy, handoff, PRD, UX, domain/state, schema/ERD, ADRs, architecture/operations, epics/stories, and readiness baseline.
 - Exclusions: this promotion does not authorize production migrations, live connected payments, production Tiwala, sensitive government-ID collection, Tagudin market validation, or deployment.
 - Remaining implementation conditions are governed by the P0 closure artifacts: story pack, schema implementation contract, runtime baseline, and development standards.
+
+Propagation status: the approved foundation is represented in the canonical schema/domain/ADR/architecture/PRD/UX/epic/OpenSpec chain and in the E0-S2 contract. E0-S2 remains blocked pending independent evidence-only review and later real migration/catalog/rollback/restore outputs.
 
 ## 5. File naming rule
 

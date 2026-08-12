@@ -2,7 +2,7 @@ sprint: 0
 status: in_progress
 story: E1-phone-otp-foundation
 scope: phone-otp-identity-and-first-listing-vertical-slice
-updated: 2026-08-04
+updated: 2026-08-10
 branch: foundation/e1-phone-otp
 authority:
   hld: _bmad-output/planning-artifacts/architecture-rebuilt.md
@@ -15,12 +15,24 @@ stories:
     status: completed_with_follow_ons
     notes: Application skeleton and module boundaries exist; quality toolchain proof remains open.
   E0-S2:
-    status: partial
-    notes: Canonical migrations exist in-repo and have been exercised; formal E0-S2 evidence gate still required.
+    status: completed
+    notes: GO 2026-08-10 — disposable T01–T06 evidence under docs/audits/evidence/e0s2-rehearsal-2026-08-10/
   E0-S3:
     status: not_started
   E0-S4:
     status: not_started
+  T1-kernel:
+    status: completed
+    notes: GO 2026-08-10 — Shared idempotency/audit/outbox/inbox + Listings adoption
+  T1A-identity:
+    status: completed
+    notes: GO 2026-08-10 — roles/consent/ID-gate; OpenSpec t1a-identity-onboarding-delegation
+  T2-catalog:
+    status: completed
+    notes: GO 2026-08-10 — governed category pins, capacity reservations, Tagudin discovery
+  T3-orders:
+    status: completed
+    notes: GO 2026-08-10 — thin propose/finalize Direct Booking via Shared ports; OpenSpec t3-ordinary-order-formation
   E1-phone-otp:
     status: in_progress
     owner: technical-lead
@@ -48,3 +60,6 @@ exclusions:
 notes:
   - Older harden-connected-frontend-experience OpenSpec fixture-auth claims are superseded for the active product path.
   - Existing frontend/ remains reference-only.
+
+notes_trains:
+  - After T3 GO the next implementation packet is T4 work engine (shapes). Do not start Quotes (T5) or payments UI silently.

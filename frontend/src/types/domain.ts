@@ -14,6 +14,9 @@ export interface ViewerAccount {
   agentFor: string[];
 }
 
+export interface AgentGrant { id: string; ownerId: string; ownerName: string; scope: string[]; status: "active" | "expiring" | "revoked"; expiresLabel: string; }
+export interface AgentTask { id: string; title: string; ownerId: string; ownerName: string; urgency: "now" | "today" | "waiting"; status: "needs_action" | "waiting_owner" | "blocked" | "done"; nextAction: string; requiresApproval: boolean; relatedRoute?: string; }
+
 export interface Actor {
   id: string;
   name: string;

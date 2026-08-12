@@ -124,23 +124,23 @@ Delete the disposable application skeleton and revert the module-boundary commit
 
 ### E0-S2 — Canonical schema migration baseline
 
-Status: IMPLEMENTATION-READY ONLY AFTER P0-03 SCHEMA CONTRACT COMMIT
+Status: CONDITIONAL — 58-table planning authority accepted; implementation requires a dedicated E0-S2 LLD/OpenSpec and passing readiness gate
 Plane: `C`, `S`
 Estimate: 5 engineering days
 Owner: Data/Backend lead; reviewed by Architect and QA lead
 
 #### Direct traceability
 
-- PRD: `PRD-024`, `PRD-032`, `PRD-055`, `PRD-056`, `PRD-057`, `PRD-058`, `PRD-059`
-- UX: `UX-020`, `UX-021`, `UX-022`, `UX-023`
-- Domain/state: all canonical aggregate identifiers, transition-history, audit, outbox, and idempotency boundaries
-- Schema: all 42 canonical tables; `migration_checkpoints`; every declared FK, unique constraint, check constraint, index, retention field, and version field
-- ADRs: `ADR-R-001`, `ADR-R-002`, `ADR-R-003`, `ADR-R-006`, `ADR-R-007`, `ADR-R-008`, `ADR-R-009`, `ADR-R-010`, `ADR-R-011`, `ADR-R-012`, `ADR-R-013`, `ADR-R-014`, `ADR-R-015`, `ADR-R-016`, `ADR-R-017`, `ADR-R-018`, `ADR-R-019`, `ADR-R-020`, `ADR-R-021`, `ADR-R-023`, `ADR-R-024`, `ADR-R-025`, `ADR-R-026`, `ADR-R-027`, `ADR-R-028`
-- Architecture: database ownership, backup/restore, migration promotion, transaction boundaries, and observability
+- PRD: `PRD-024`, `PRD-032`, `PRD-055`–`PRD-076`
+- UX: `UX-020`–`UX-031`
+- Domain/state: all canonical aggregate identifiers, transition-history, reservation, integration-client, approval, audit, inbox/outbox, and idempotency boundaries
+- Schema: the approved 58-table inventory, Batch 0–9 manifest, lineage/version/capacity/integration additions, and every declared FK, unique constraint, check constraint, index, retention field, and version field
+- ADRs: `ADR-R-001`–`ADR-R-040`, excluding retired identifiers
+- Architecture: `ARCHITECTURE-SPINE.md` AD-1–AD-29; database ownership, backup/restore, migration promotion, transaction boundaries, and observability
 
 #### Scope
 
-- Generate migrations in the approved Batch 0–7 order.
+- Generate migrations in the approved Batch 0–9 order; reconcile the existing 47-table migrated baseline rather than replaying an obsolete 46-table model.
 - Create the canonical ERD and migration manifest from the P0-03 schema contract.
 - Rehearse forward migration, clean rebuild, backup restore, and a documented rollback rehearsal in disposable environments.
 - Prove all declared constraints and indexes exist in the database catalog.
@@ -155,7 +155,7 @@ Owner: Data/Backend lead; reviewed by Architect and QA lead
 
 #### Acceptance scenarios
 
-- Given an empty disposable PostgreSQL 16 database, when Batch 0–7 migrations run, then all 42 tables, constraints, indexes, audit fields, retention fields, and checkpoints exist.
+- Given an empty disposable PostgreSQL 16 database, when the approved Batch 0–9 migration plan runs, then all 58 canonical tables, lineage/version/capacity/integration columns, constraints, indexes, audit fields, retention fields, and checkpoints exist.
 - Given a clean rebuild, when the migration manifest is replayed, then the resulting catalog matches the canonical ERD inventory.
 - Given an intentionally invalid FK, duplicate idempotency key, invalid status, negative amount, or unbalanced financial transaction, when the database receives it, then the write is rejected at the declared application/DB enforcement boundary.
 - Given a backup taken after the final checkpoint, when it is restored into a disposable database, then schema version and migration checksums match.
@@ -198,7 +198,7 @@ Owner: QA/Platform lead; reviewed by Backend, UX, and Architect
 #### Direct traceability
 
 - PRD: `PRD-024`, `PRD-032`, `PRD-055`, `PRD-056`, `PRD-057`, `PRD-058`, `PRD-059`
-- UX: all 23 canonical journeys through the fixture coverage index; minimum E0 smoke paths `UX-001`, `UX-004`, `UX-008`, `UX-009`, `UX-010`, `UX-011`, `UX-012`, `UX-013`, `UX-014`, `UX-015`, `UX-016`, `UX-017`, `UX-018`, `UX-019`, `UX-020`, `UX-021`, `UX-022`, `UX-023`
+- UX: contract fixtures cover all 31 canonical journeys and their plane/actor/status rows; minimum E0 smoke paths are `UX-001`, `UX-004`, `UX-008`–`UX-023`, `UX-025`–`UX-028`, `UX-030`, and `UX-031`. `UX-024` and `UX-029` receive deterministic contract fixtures but no activation or unfinished navigation claim.
 - Domain/state: order, Work, payment obligation, external evidence, dispute, hold, release/payout, and Agent consent contracts
 - Schema: all state-bearing tables plus `audit_events`, `outbox_messages`, `idempotency_keys`, `cohort_classifications`
 - ADRs: `ADR-R-006`, `ADR-R-007`, `ADR-R-008`, `ADR-R-009`, `ADR-R-010`, `ADR-R-011`, `ADR-R-012`, `ADR-R-013`, `ADR-R-014`, `ADR-R-015`, `ADR-R-016`, `ADR-R-017`, `ADR-R-018`, `ADR-R-019`, `ADR-R-020`, `ADR-R-021`, `ADR-R-022`, `ADR-R-023`, `ADR-R-024`, `ADR-R-025`, `ADR-R-026`, `ADR-R-027`, `ADR-R-028`

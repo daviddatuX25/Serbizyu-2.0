@@ -1,0 +1,15 @@
+ application_table_count 
+-------------------------
+                      46
+(1 row)
+
+                   name                   
+------------------------------------------
+ cohort_classifications_classified_at_idx
+ idempotency_keys_scope_key_uq
+ outbox_messages_pending_delivery_idx
+ outbox_messages_status_ck
+ retention_holds_active_evidence_idx
+ retention_holds_status_ck
+(6 rows)
+

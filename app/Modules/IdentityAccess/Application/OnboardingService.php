@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\IdentityAccess\Application;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -11,7 +12,12 @@ use Illuminate\Support\Str;
 
 final class OnboardingService
 {
-    public function __construct(private readonly CurrentSession $session) {}
+    public function __construct(
+        private readonly CurrentSession $session,
+        private readonly RoleAssignmentService $roles,
+        private readonly SetAccountPassword $passwords,
+        private readonly LinkEmail $emails,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $input
@@ -27,9 +33,11 @@ final class OnboardingService
         $language = trim((string) ($input['language_code'] ?? $input['language'] ?? 'fil'));
         $displayName = trim((string) ($input['display_name'] ?? ''));
         $help = trim((string) ($input['help_preference'] ?? 'self_managed'));
+        $providerIntent = (bool) ($input['provider_intent'] ?? false);
+        $password = (string) ($input['password'] ?? '');
 
         $errors = [];
-        if (! (bool) ($input['provider_intent'] ?? false)) {
+        if (! $providerIntent) {
             $errors['provider_intent'][] = 'Provider capability intent is required for this listing slice.';
         }
         if ($displayName === '' || mb_strlen($displayName) > 120) {
@@ -44,14 +52,20 @@ final class OnboardingService
         if (! in_array($help, ['self_managed', 'assistance_requested'], true)) {
             $errors['help_preference'][] = 'Choose an available setup support preference.';
         }
+        if (trim($password) === '') {
+            $errors['password'][] = 'Choose a password so you can sign in without SMS next time.';
+        }
         if ($errors !== []) {
             throw new IdentityAccessError('VALIDATION_FAILED', 'Review the readiness fields and try again.', $correlationId, fieldErrors: $errors);
         }
 
-        DB::transaction(function () use ($userId, $displayName, $area, $language, $input, $help, $correlationId): void {
+        $activeRoles = [];
+
+        DB::transaction(function () use ($userId, $displayName, $area, $language, $input, $help, $correlationId, &$activeRoles): void {
             $now = now();
             DB::table('users')->where('id', $userId)->update([
                 'primary_access_tier' => 'L1',
+                'status' => 'active',
                 'correlation_id' => $correlationId,
                 'updated_at' => $now,
             ]);
@@ -68,20 +82,19 @@ final class OnboardingService
                 'updated_at' => $now,
             ]);
 
-            DB::table('role_assignments')->updateOrInsert(
-                ['user_id' => $userId, 'role_code' => 'provide', 'status' => 'active'],
-                [
-                    'id' => (string) Str::uuid7(),
-                    'granted_by_user_id' => $userId,
-                    'effective_at' => $now,
-                    'expires_at' => null,
-                    'scope' => json_encode(['source' => 'onboarding', 'area' => 'Tagudin'], JSON_THROW_ON_ERROR),
-                    'version' => 1,
-                    'correlation_id' => $correlationId,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ],
+            $this->roles->ensureActive(
+                userId: $userId,
+                roleCode: 'buy',
+                correlationId: $correlationId,
+                scope: ['source' => 'onboarding'],
             );
+            $this->roles->ensureActive(
+                userId: $userId,
+                roleCode: 'provide',
+                correlationId: $correlationId,
+                scope: ['source' => 'onboarding', 'area' => 'Tagudin'],
+            );
+            $activeRoles = $this->roles->activeRoleCodes($userId);
 
             if (Schema::hasTable('identity_verifications')) {
                 DB::table('identity_verifications')->updateOrInsert(
@@ -104,6 +117,27 @@ final class OnboardingService
             }
         });
 
+        $user = User::query()->findOrFail($userId);
+        $this->passwords->handle($user, $password, $correlationId);
+        $user = $user->fresh() ?? $user;
+
+        $emailAttached = false;
+        $email = strtolower(trim((string) ($input['email'] ?? '')));
+        if ($email !== '') {
+            $this->emails->handle($user, $email, $correlationId);
+            $emailAttached = true;
+        } elseif (Schema::hasColumn('users', 'email')) {
+            $emailAttached = filled(DB::table('users')->where('id', $userId)->value('email'));
+        }
+
+        $identityReview = 'none';
+        if (Schema::hasTable('identity_verifications')) {
+            $identityReview = (string) (DB::table('identity_verifications')
+                ->where('user_id', $userId)
+                ->where('verification_type', 'provider_readiness')
+                ->value('status') ?? 'none');
+        }
+
         return [
             'status' => 'ready',
             'ready' => true,
@@ -119,6 +153,13 @@ final class OnboardingService
             'lowDataMode' => (bool) ($input['low_data_mode'] ?? false),
             'help_preference' => $help,
             'helpPreference' => $help,
+            'email_attached' => $emailAttached,
+            'emailAttached' => $emailAttached,
+            'password_set' => true,
+            'passwordSet' => true,
+            'roles' => $activeRoles,
+            'identity_review_status' => $identityReview,
+            'identityReviewStatus' => $identityReview,
             'blockers' => ['Identity review remains a fictional pending gate; submission moves to pending review only.'],
             'next_route' => '/#workspace',
         ];

@@ -1,40 +1,27 @@
+initial-foundation-plan.md 339L
 # Serbizyu 2.0 — Initial Product Foundation Plan
-
-**Status:** Active implementation contract — phone OTP identity foundation (E1)
-**Authority:** implementation LLD for the first vertical slice; complements rebuilt HLD/ADR/schema; does not authorize live SMS, payments, or pilot activation
-**Supersedes for this slice:** fixture/demo auth assumptions in older connected-frontend OpenSpecs  
-**Date:** 2026-08-04  
-**Scope:** Real identity foundation, mockable notification delivery, mock-v2-aligned frontend foundation, and first listing vertical slice.
-
+**Status:** Active implementation contract — identity foundation (E1); **amended 2026-08-10** for multi-method sign-in + strict mobile signup
+**Authority:** implementation LLD for the first vertical slice; complements rebuilt HLD/ADR/schema; does not authorize live SMS, live Google OAuth, payments, or pilot activation
+**Supersedes for this slice:** fixture/demo auth assumptions in older connected-frontend OpenSpecs; pre-2026-08-10 “phone-only primary login” wording
+... [lean-ctx: omitted 2 lines]
 ## 1. Objective
-
 Build the first credible Serbizyu slice without fictional accounts, shared credentials, or UI-only state:
-
-> Real phone identity → OTP verification → Laravel session → onboarding → listing draft → mock-v2 listing-card preview → review submission → privacy-safe public discovery.
-
+... [lean-ctx: omitted 3 lines]
 This plan is deliberately narrower than the full marketplace. Payments, orders, agent delegation, government-ID verification, live SMS, and pilot activation remain separate gates.
-
 ## 2. Decisions
-
 ### 2.1 Identity
-
-Use the existing product direction: **phone-first OTP authentication**. Email/password is not the primary identity path because the canonical product artifacts target mobile-first Tagudin users and explicitly define phone OTP as the identity contract.
-
-The implementation must use:
-
-- E.164-normalized phone identity;
-- a persisted `auth_otps` record with a hashed code;
-- ten-minute expiry;
-- five-attempt maximum;
-- single-use consumption;
-- Laravel's session guard for browser sessions;
-- rate limiting and generic failure messages;
-- no OTP or account bypass in production-shaped application code.
-
+Follow **ADR-R-030 (amended 2026-08-10)** and `openspec/changes/hybrid-browser-auth-phone-step-up/`:
+- **Signup:** strict E.164 mobile OTP verification is required before registration is complete (`phone_verified_at`).
+- **Onboarding:** password **required** (account-level) to finish readiness; email optional.
+- **Sign-in:** password-first for phone-verified accounts — phone/password and email/password preferred, SMS OTP fallback, Google OAuth (phased adapters; live Google/SMS gated).
+- **Recovery:** email reset link (if email linked) or SMS-OTP-verified reset; single-use tokens, short expiry, named `auth-password-reset*` limiters, generic copy.
+... [lean-ctx: omitted 3 lines]
+- persisted `auth_otps` records with hashed codes, ten-minute expiry, five-attempt maximum, single-use consumption, and purpose codes;
+... [lean-ctx: omitted 1 lines]
+- swappable `OtpDeliveryChannel`, mail/`NotificationChannel`, and `OAuthLoginPort`;
+... [lean-ctx: omitted 2 lines]
 ### 2.2 OTP and notification providers
-
 Do **not** couple the domain to TextBee, Twilio, Mailpit, or any other provider. Use application contracts:
-
 ```php
 interface NotificationChannel
 {
@@ -46,53 +33,21 @@ interface OtpDeliveryChannel
     public function deliver(OtpDelivery $delivery): DeliveryResult;
 }
 ```
-
-Recommended implementations:
-
-| Environment | Adapter | Purpose |
-|---|---|---|
-| `local` | `LogOtpDelivery` or `FakeOtpDelivery` | Development only; records a redacted/test-classified delivery event, never a UI bypass |
-| `test` | `InMemoryOtpDelivery` / `FakeOtpDelivery` | Deterministic assertions on recipient, purpose, and delivery result |
-| `capstone` | `Mailpit` for email; explicitly labelled `FakeOtpDelivery` for SMS | Demonstration without external credentials or real SMS |
-| future pilot | `TextBeeOtpDelivery` or approved SMS adapter | Activated only after provider, operations, privacy, and pilot gates |
-
-The fake adapter must expose test inspection through a test seam, not through a user-visible universal code. The application verifies the persisted hashed OTP exactly like the future real adapter path.
-
-For local/capstone UAT only, operators may inspect the latest fake delivery with `php artisan serbizyu:otp:peek {phone}`. The command is environment-gated and must never appear in product UI.
-
-**Existing infrastructure:** Compose already includes Mailpit for SMTP capture. Keep it for email notifications and account/recovery messages. Mailpit is not an SMS simulator and must not be presented as one.
-
+... [lean-ctx: omitted 10 lines]
 **Library recommendation:** Do not add a random OTP package yet. Laravel already provides the session, validation, hashing, throttling, notifications, queues, and testing primitives required here. TOTP libraries solve authenticator-app codes, not the product's SMS OTP delivery problem. A provider adapter is more portable and keeps provider state outside the domain.
-
 ### 2.3 Frontend foundation
-
 Use the Laravel/Inertia React application in `resources/js` as the only live product frontend. The standalone `frontend/` directory remains reference material until explicitly migrated.
-
 Use the mock-v2 branding, hierarchy, spacing, card composition, status language, and responsive behavior as the visual authority.
-
-Recommended implementation:
-
-- retain a small Serbizyu token layer for brand colors, typography, spacing, radii, focus states, and responsive breakpoints;
+... [lean-ctx: omitted 2 lines]
 - build accessible reusable primitives in `resources/js/components/ui`;
 - build domain components such as `ListingCard`, `ListingStatusBadge`, `ListingPreview`, `OtpForm`, and `OnboardingStep` on top of those primitives;
-- keep server state in Inertia props and server actions;
-- keep only transient form state in React;
-- avoid React Query/Redux/global stores for ordinary Inertia page data.
-
+... [lean-ctx: omitted 3 lines]
 ### 2.4 shadcn/ui and Taste Skill
-
 Do not replace the existing visual foundation wholesale with shadcn/ui. shadcn is a useful source-code component pattern, but its default styling would risk replacing the approved mock-v2 design language and adding unnecessary migration work.
-
-Use this approach:
-
-1. Keep Serbizyu tokens and mock-v2 visual contracts as the source of truth.
-2. Borrow shadcn-style composition, accessibility, variants, and copy-owned component code where useful.
-3. Add Radix primitives only when a real interaction needs their accessibility behavior; do not add a dependency merely for buttons/cards/forms.
+... [lean-ctx: omitted 4 lines]
 4. Use Taste Skill (`https://github.com/Leonxlnx/taste-skill`) as an **agent/design-review skill**, not as a runtime dependency. It is useful for anti-generic layout, typography, density, and redesign audits, but it must not override product UX contracts or generate unapproved visual divergence.
 5. Any Taste Skill output is accepted only after comparison against `docs/mockup-v2/` and the UX planning artifacts.
-
 ## 3. Architecture shape
-
 ```text
 Inertia React page
         |
@@ -108,124 +63,68 @@ PostgreSQL              Queue/outbox
                          +--> Mailpit/local fake
                          +--> approved SMS adapter later
 ```
-
-Rules:
-
-- PostgreSQL owns identity, OTP lifecycle, listing lifecycle, audit, and idempotency truth.
-- Redis may hold sessions, rate-limit state, and queues; it is not domain truth.
-- Providers never become the source of truth.
-- Controllers do not contain business state transitions.
-- All state-changing actions have authorization, validation, correlation IDs, and safe recovery behavior.
-- Authenticated and private pages use no-store/cache-safe response behavior.
-
+... [lean-ctx: omitted 7 lines]
 ## 4. Implementation sequence
-
 ### Phase E0 — Foundation gate
-
 - Confirm Laravel/Inertia/React versions and Compose health.
-- Run the canonical migrations from a clean database.
+... [lean-ctx: omitted 1 lines]
 - Remove accidental generated/scaffold artifacts from the active runtime path.
-- Record the active route/page authority.
+... [lean-ctx: omitted 1 lines]
 - Add a short architecture test or static check preventing fixture/demo authentication from being used by protected product routes.
-
 **Exit evidence:** clean migration, route list, health/readiness, no fictional login UI on the active path.
-
 ### Phase E1 — Real identity vertical slice
-
 Backend:
-
 - finalize `users` model for UUID/string identity;
 - finalize `auth_otps` migration and indexes;
 - add `OtpDeliveryChannel`, `NotificationChannel`, message/result value objects;
 - add local/test fake adapter and provider binding in `AppServiceProvider`;
-- add OTP request/verify actions;
-- add rate limits, expiry, attempt lockout, single-use consumption;
+... [lean-ctx: omitted 2 lines]
 - use `Auth::login()` and session regeneration;
-- invalidate session on logout;
-- add generic errors that do not reveal account existence;
+... [lean-ctx: omitted 2 lines]
 - remove fictional demo authentication from active web routes after migration tests pass.
-
-Tests:
-
-- new phone registration;
-- existing phone login;
-- valid verification;
+... [lean-ctx: omitted 4 lines]
 - invalid verification increments attempts;
-- fifth failure locks the challenge;
-- expiry is rejected;
-- reuse is rejected;
+... [lean-ctx: omitted 3 lines]
 - duplicate request invalidates the prior pending challenge;
-- suspended/closed account is denied;
+... [lean-ctx: omitted 1 lines]
 - session fixation protection;
-- logout invalidates the authenticated session;
-- rate-limit behavior;
+... [lean-ctx: omitted 2 lines]
 - fake delivery contract assertions.
-
-Frontend:
-
-- phone entry state;
-- code entry state;
-- resend/wait state;
-- invalid/expired/locked recovery;
-- loading and network failure states;
+... [lean-ctx: omitted 6 lines]
 - accessible labels and focus management;
 - no test code displayed in the user-facing product.
-
 ### Phase E2 — Authenticated onboarding
-
 - bind onboarding to `Auth::user()` only;
 - persist display name, area, language, accessibility preferences, and capability intent;
-- use an explicit onboarding state query;
-- add authorization tests for profile ownership;
+... [lean-ctx: omitted 2 lines]
 - remove fictional readiness/review language;
-- distinguish profile setup from future identity verification.
-
-**Exit evidence:** authenticated user can refresh and resume setup; another user cannot read or mutate the profile.
-
+... [lean-ctx: omitted 2 lines]
 ### Phase E3 — Mock-v2 listing foundation
-
 First implement the visual contract, then connect it to data:
-
 - `ListingCard` for public discovery;
 - `OwnerListingCard` for My Listings;
 - `ListingPreview` reusing the same card structure;
-- status badges: Draft, Pending review, Active, Paused, Rejected;
+... [lean-ctx: omitted 1 lines]
 - category, area, description, fulfillment shape, and safe action treatment;
-- responsive grid/list behavior matching the mock;
-- empty, loading, unavailable, and error states;
-- no fake price, stock, verification, or availability claims.
-
-Keep public projections privacy-safe. Draft and pending-review records remain excluded from Browse.
-
+... [lean-ctx: omitted 4 lines]
 ### Phase E4 — First listing lifecycle
-
 - create draft;
-- edit with expected version;
+... [lean-ctx: omitted 1 lines]
 - preview using `ListingCard`;
-- submit with idempotency key;
+... [lean-ctx: omitted 1 lines]
 - preserve audit/outbox records;
-- expose recovery for stale writes;
+... [lean-ctx: omitted 1 lines]
 - show server-owned state after every mutation;
-- verify owner authorization through the real session.
-
+... [lean-ctx: omitted 1 lines]
 ### Phase E5 — Browser and runtime gate
-
 Run:
-
-- PHP feature/unit tests;
-- static analysis and formatting;
+... [lean-ctx: omitted 2 lines]
 - `npm run typecheck`;
 - `npm run lint`;
 - `npm run test`;
-- `npm run build`;
-- Playwright auth/onboarding/listing tests;
-- clean Compose migration and readiness;
-- browser verification through the disposable ngrok tunnel.
-
+... [lean-ctx: omitted 4 lines]
 Ngrok evidence is transport/runtime evidence only. It is not pilot or production approval.
-
 ## 5. Proposed initial file structure
-
 ```text
 app/
   Contracts/Notifications/
@@ -278,57 +177,35 @@ e2e/
   listing-card.spec.ts
   listing-lifecycle.spec.ts
 ```
-
-Names may be adjusted to match existing module conventions; the boundaries must remain.
-
+... [lean-ctx: omitted 1 lines]
 ## 6. Non-goals for this initial work
-
 - live SMS credentials or provider activation;
 - government-ID/selfie collection;
-- email/password as a competing primary identity path;
-- payments, escrow, payouts, or orders;
-- Agent delegation and owner consent;
-- AI-generated listing content;
-- a second production frontend;
+... [lean-ctx: omitted 6 lines]
 - a wholesale shadcn/Taste visual rewrite;
 - pilot or production readiness claims.
-
 ## 7. Definition of done
-
 This foundation is complete only when:
-
-- no fictional account is needed to use the active auth path;
-- OTP verification uses the same persisted challenge rules in local, test, and future provider modes;
+... [lean-ctx: omitted 2 lines]
 - provider delivery is replaceable without changing domain/application code;
-- auth and onboarding are covered by backend and browser tests;
+... [lean-ctx: omitted 1 lines]
 - the mock-v2 listing card is a reusable component used by Browse, My Listings, and Preview;
 - listing privacy, authorization, stale-version, idempotency, audit, and recovery contracts remain green;
-- npm build and full frontend checks pass;
-- the Compose runtime and ngrok browser flow are verified;
+... [lean-ctx: omitted 2 lines]
 - pilot/production remains explicitly NO-GO until separate gates are satisfied.
-
 ## 8. Immediate next physical actions
-
 1. Fix and verify the current auth scaffold before adding more UI.
-2. Add the notification/OTP interfaces and deterministic fake adapter.
-3. Add backend OTP feature tests before connecting any external provider.
-4. Run migrations in a clean Compose database and verify Laravel session auth.
-5. Remove the old demo auth from the active route/page path.
+... [lean-ctx: omitted 4 lines]
 6. Build the mock-v2 `ListingCard` and reuse it in Browse, My Listings, and Preview.
 7. Run the complete E1/E2 verification gate before starting the next marketplace feature.
-
 **Owner decision requested after E1:** approve the local fake delivery behavior and the exact mock-v2 listing-card contract before expanding into additional marketplace features.
-
 ## References
-
 - `docs/planning-hardening/08-runtime-stack-and-environment-contract.md`
 - `docs/architecture/frontend-inertia-react-ssr-foundation.md`
-- `docs/mockup-v2/`
+... [lean-ctx: omitted 1 lines]
 - `docs/planning-hardening/10-ux-ui-reference-dossier.md`
-- `docs/planning-hardening/11a-data-backed-frontend-system-mockup-plan.md`
-- `_bmad-output/planning-artifacts/epics-and-stories.md`
-- `_bmad-output/planning-artifacts/adr-catalog-rebuilt.md`
-- `https://github.com/Leonxlnx/taste-skill`
-- Compose Mailpit service in `compose.yaml`
-
+... [lean-ctx: omitted 5 lines]
 This document is a planning artifact. It does not authorize provider activation, live credentials, sensitive-data collection, pilot promotion, or production release.
+
+
+[lean-ctx] full source: read "/home/user/Serbizyu-2.0/docs/architecture/initial-foundation-plan.md" directly (no MCP)  ·  or ctx_read("/home/user/Serbizyu-2.0/docs/architecture/initial-foundation-plan.md", mode="full")

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Listings\Application;
 
-use App\Modules\Listings\Application\Contracts\OwnerListingReader;
+use App\Shared\Contracts\OwnerListingReader;
 
 final class OwnerListingsQuery
 {

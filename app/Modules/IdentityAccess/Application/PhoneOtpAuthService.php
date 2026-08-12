@@ -11,11 +11,21 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+/**
+ * SMS OTP return sign-in (P1, ADR-R-030 decision 2).
+ *
+ * The `/auth/phone/*` routes are a return-login fallback for phone-verified
+ * accounts only. Unknown, unverified, and suspended numbers all answer the
+ * same generic shape and never mint an OTP (non-enumerating). Signup OTP
+ * lives in StartSignup/CompleteSignupPhoneOtp via `/auth/register/*`.
+ */
 final class PhoneOtpAuthService
 {
     private const MAX_ATTEMPTS = 5;
 
     private const TTL_SECONDS = 600;
+
+    public const PURPOSE = 'login';
 
     public function __construct(private readonly OtpDeliveryChannel $otpDelivery) {}
 
@@ -25,8 +35,12 @@ final class PhoneOtpAuthService
         $phone = $this->normalize($phone);
         $user = User::query()->where('phone_e164', $phone)->first();
 
-        if ($user !== null && in_array((string) $user->status, ['suspended', 'closed', 'archived'], true)) {
-            // Generic response — do not reveal account existence or suspension details.
+        $mayLogin = $user !== null
+            && $user->phone_verified_at !== null
+            && ! in_array((string) $user->status, ['suspended', 'closed', 'archived'], true);
+
+        if (! $mayLogin) {
+            // Generic — no OTP minted, no delivery (login is return-only).
             return [
                 'phone_e164' => $phone,
                 'status' => 'code_pending',
@@ -34,53 +48,19 @@ final class PhoneOtpAuthService
             ];
         }
 
-        if ($user === null) {
-            $user = DB::transaction(function () use ($phone, $correlationId): User {
-                $now = now();
-                $userId = (string) Str::uuid7();
-                DB::table('users')->insert([
-                    'id' => $userId,
-                    'phone_e164' => $phone,
-                    'status' => 'pending',
-                    'primary_access_tier' => 'L0',
-                    'locale' => 'en',
-                    'timezone' => 'Asia/Manila',
-                    'version' => 1,
-                    'correlation_id' => $correlationId,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
-                DB::table('user_profiles')->insert([
-                    'user_id' => $userId,
-                    'display_name' => '',
-                    'public_bio' => null,
-                    'avatar_file_id' => null,
-                    'service_area_display' => null,
-                    'accessibility_preferences' => json_encode([], JSON_THROW_ON_ERROR),
-                    'language_preferences' => json_encode(['primary' => 'en'], JSON_THROW_ON_ERROR),
-                    'emergency_contact_policy' => null,
-                    'version' => 1,
-                    'correlation_id' => $correlationId,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
-
-                return User::query()->findOrFail($userId);
-            });
-        }
-
         $code = (string) random_int(100000, 999999);
 
         DB::transaction(function () use ($phone, $code, $correlationId): void {
             DB::table('auth_otps')
                 ->where('phone_e164', $phone)
+                ->where('purpose', self::PURPOSE)
                 ->whereNull('consumed_at')
                 ->update(['consumed_at' => now(), 'updated_at' => now()]);
 
             DB::table('auth_otps')->insert([
                 'id' => (string) Str::uuid7(),
                 'phone_e164' => $phone,
-                'purpose' => 'login',
+                'purpose' => self::PURPOSE,
                 'code_hash' => hash('sha256', $code),
                 'attempts' => 0,
                 'expires_at' => now()->addSeconds(self::TTL_SECONDS),
@@ -93,7 +73,7 @@ final class PhoneOtpAuthService
 
         $this->otpDelivery->deliver(new OtpDelivery(
             phoneE164: $phone,
-            purpose: 'login',
+            purpose: self::PURPOSE,
             code: $code,
             correlationId: $correlationId,
             expiresInSeconds: self::TTL_SECONDS,
@@ -111,7 +91,7 @@ final class PhoneOtpAuthService
         $phone = $this->normalize($phone);
         $otp = DB::table('auth_otps')
             ->where('phone_e164', $phone)
-            ->where('purpose', 'login')
+            ->where('purpose', self::PURPOSE)
             ->whereNull('consumed_at')
             ->latest('created_at')
             ->first();
@@ -137,7 +117,10 @@ final class PhoneOtpAuthService
         }
 
         $user = User::query()->where('phone_e164', $phone)->first();
-        if ($user === null || in_array((string) $user->status, ['suspended', 'closed', 'archived'], true)) {
+        if ($user === null
+            || $user->phone_verified_at === null
+            || in_array((string) $user->status, ['suspended', 'closed', 'archived'], true)
+        ) {
             throw new IdentityAccessError(
                 'ACCOUNT_UNAVAILABLE',
                 'This account is not available.',
@@ -152,8 +135,6 @@ final class PhoneOtpAuthService
                 'updated_at' => now(),
             ]);
             DB::table('users')->where('id', $user->id)->update([
-                'status' => 'active',
-                'phone_verified_at' => now(),
                 'last_login_at' => now(),
                 'updated_at' => now(),
                 'correlation_id' => $correlationId,
@@ -175,16 +156,6 @@ final class PhoneOtpAuthService
 
     private function normalize(string $phone): string
     {
-        $phone = preg_replace('/[\s().-]+/', '', trim($phone)) ?? '';
-
-        if (preg_match('/^09\d{9}$/', $phone) === 1) {
-            $phone = '+63'.substr($phone, 1);
-        }
-
-        if (preg_match('/^\+639\d{9}$/', $phone) !== 1) {
-            throw new \RuntimeException('Use a valid Philippine mobile number.');
-        }
-
-        return $phone;
+        return PhoneNumber::normalizePhilippineMobile($phone);
     }
 }

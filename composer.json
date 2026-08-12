@@ -12,9 +12,10 @@
         "laravel/tinker": "^2.10.1"
     },
     "require-dev": {
+        "albertoarena/laravel-truss": "^1.8",
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.10",
-        "laravel/boost": "^2.4",
+        "laravel/boost": "^2.5",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.30",
         "laravel/sail": "^1.41",
@@ -64,7 +65,8 @@
             "@php artisan package:discover --ansi"
         ],
         "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+            "@php artisan boost:update --ansi"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""

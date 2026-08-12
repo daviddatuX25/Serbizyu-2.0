@@ -1,0 +1,31 @@
+SET
+CREATE TABLE
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+        ?column?        
+------------------------
+ NEGATIVE_PASS_COUNT=10
+(1 row)
+
+                ?column?                 
+-----------------------------------------
+ audit_event_mutation|55000
+ evidence_delete_under_active_hold|55000
+ idempotency_duplicate_scope_key|23505
+ outbox_invalid_status|23514
+ payment_negative_amount|23514
+ provider_event_duplicate_identity|23505
+ retention_hold_invalid_status|23514
+ retention_hold_missing_target|23514
+ unbalanced_financial_transaction|23514
+ user_profile_invalid_user_fk|23503
+(10 rows)
+

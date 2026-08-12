@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "vendor/bin/sail",
+            "args": [
+                "artisan",
+                "boost:mcp"
+            ],
+            "env": {
+                "COMPOSE_FILE": "compose.sail.yaml"
+            }
+        }
+    }
+}

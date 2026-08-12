@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Domain and State Contracts
 
-Status: CANONICAL DOMAIN/STATE AUTHORITY — founder-approved 2026-07-31; implementation/live-money gates remain separate
+Status: CANONICAL DOMAIN/STATE AUTHORITY — founder-approved 2026-07-31; initiative extension accepted 2026-08-09; implementation/live-money gates remain separate
 BMAD phase: Phase 3 — Domain/state design
 Depends on:
 
@@ -136,6 +136,110 @@ Owns:
 - Resolution/appeal history
 
 There is no fixed universal dispute-round cap in this contract. Any category-specific limit requires a new decision.
+
+### 2.10 DealChain coordination aggregate
+
+DealChain is a coordinator-owned plan and derived roll-up boundary. It is not an Order, wallet, escrow, financial account, or parent-wide liability owner. Its cost/progress summary is derived from child Needs and ordinary child Orders and cannot overwrite child truth.
+
+Owns:
+
+- Coordination goal, coordinator, target context, and ordered Need membership
+- Dependency edges and chain-level derived status
+- Invitation and sourcing references for child Needs
+- Parent-level notices, audit correlation, and operational visibility
+
+Does not own:
+
+- Commercial terms, Work completion, Payment Obligations, evidence, disputes, refunds, or liability for child Orders
+- Pooled custody, automatic fund splitting, automatic liability reassignment, or parent-wide cancellation/refund guarantees
+
+### 2.11 DealNeed
+
+DealNeed is one required service/product slot within a DealChain. It is independently stateful and may reuse many existing Requests/Quotes. It has at most one active child Order; replacement creates a new Need and preserves the prior Need/Order history.
+
+### 2.12 DealDependency
+
+DealDependency is a directed same-chain `blocks` edge from a predecessor Need to a successor Need. Self-edges, cross-chain edges, duplicate active edges, and cycles are invalid. An edge blocks only the named downstream transitions and never performs parent-wide cancellation or payment effects.
+
+### 2.13 DealInvitation
+
+DealInvitation targets exactly one Need and records purpose, scope, expiry, response, inviter/invitee, acting-for context where applicable, revocation, version, idempotency, audit, and outbox causality. Accepting an invitation is an attributed sourcing/assignment decision; it does not itself create an Order.
+
+The bounded model is the approved foundation contract. The later user-facing coordination slice remains a separately sequenced story and pilot activation gate.
+
+## 2.14 Deal-Chaining state machines and commands
+
+### DealChain states
+
+`draft`, `planning`, `sourcing`, `in_progress`, `partially_complete`, `blocked`, `completed`, `cancelled`, `archived`
+
+| From | Command/event | To | Guard/effect |
+|---|---|---|---|
+| draft | `start_planning` | planning | coordinator or scoped Agent; active consent and valid version |
+| planning | `open_sourcing` | sourcing | at least one valid Need; no invalid dependency |
+| sourcing | `begin_execution` | in_progress | required downstream guards satisfied; does not complete any child |
+| in_progress | `record_partial_completion` | partially_complete | one or more child Needs terminal while another remains nonterminal |
+| any nonterminal | `mark_blocked` | blocked | named dependency/operational hold; reason required |
+| partially_complete/in_progress | `close_chain` | completed | every required Need completed or explicitly resolved; derived summary only |
+| any nonterminal | `cancel_chain` | cancelled | coordinator/Admin command; records impact; never silently cascades child cancellation/refund |
+| cancelled/completed | `archive_chain` | archived | retention/history rules satisfied |
+
+### DealNeed states
+
+`draft`, `open`, `sourcing`, `invited`, `quoted`, `accepted`, `in_progress`, `blocked`, `completed`, `failed`, `cancelled`, `replacement_needed`, `superseded`
+
+| From | Command/event | To | Guard/effect |
+|---|---|---|---|
+| draft | `open_need` | open | required service/product slot is valid |
+| open | `publish_need_request` | sourcing | creates/links existing Request; no new bidding primitive |
+| sourcing | `send_invitation` | invited | invitation targets this Need and is idempotent |
+| sourcing/invited | `record_quote` | quoted | existing Quote is valid and unexpired |
+| invited | `accept_invitation` | accepted | invite response is current, authorized, and idempotent; **no Order is created** |
+| quoted/accepted | `form_child_order` | in_progress | explicit terms/party acceptance creates or links one ordinary child Order |
+| in_progress | `complete_need` | completed | child Work completion and Order guards remain authoritative |
+| any nonterminal | `mark_need_failed` | failed | actor/reason/recovery recorded; no sibling auto-cascade |
+| any nonterminal | `request_need_cancel` | cancelled | explicit Need/child Order impact handling; history retained |
+| failed/cancelled | `request_replacement` | replacement_needed | replacement plan recorded |
+| replacement_needed | `create_replacement_need` | superseded (old) / draft (new) | new Need references `replaces_deal_need_id`; old history remains |
+| any eligible state | `mark_need_blocked` | blocked | only named active dependencies/holds block the transition |
+
+### DealDependency states
+
+`active`, `removed`, `superseded`.
+
+`add_dependency` requires same-chain Needs, distinct endpoints, active-edge uniqueness, and a cycle check under the chain lock. `remove_dependency` and replacement are version-checked, actor-attributed, idempotent, audited, and outbox-backed. A dependency can block only the transitions named by its `condition_code`.
+
+### DealInvitation states
+
+`draft`, `sent`, `viewed`, `accepted`, `declined`, `expired`, `revoked`, `superseded`, `cancelled`.
+
+`send_invitation` requires a current Need and explicit invitation scope. `accept_invitation`, `decline_invitation`, `revoke_invitation`, and expiry are actor-attributed and version/idempotency guarded. Acceptance records the response and may advance Need sourcing state, but child Order formation is a separate command with a separate idempotency boundary.
+
+## 2.15 Deal-Chaining invariants, partial completion, and recovery
+
+- Every child Order is an ordinary Order with its own parties, immutable terms, Work, Payment Obligations, evidence, disputes, cancellation, authorization, version, audit history, and idempotency boundary.
+- A Need may have many Requests/Quotes but at most one active non-cancelled/non-closed child Order. Database partial uniqueness and application CAS enforce this.
+- Requests/Quotes reuse existing workflows. Open sourcing never bypasses Request/Quote expiry, authorization, or acceptance guards.
+- Parent status and cost are derived summaries. Payment confirmation never completes Work; Work completion never proves payment.
+- Partial completion is valid: completed children remain completed while other Needs are open, blocked, failed, or replacement-needed. The chain is not complete until all required Needs are completed or explicitly resolved.
+- A failed/cancelled child does not automatically cancel, refund, release, dispute, or reassign another child. Replacement creates new Need/Order history and preserves old records.
+- A parent cancellation records an impact plan and requires explicit child commands where cancellation is appropriate; it never deletes child truth or performs a parent-wide financial cascade.
+- No offline client authorizes a final chain, Need, invitation, Order, payment, inventory, consent, or release state. Offline drafts remain non-authoritative.
+- Every command carries actor, optional acting-for Owner, active consent grant when an Agent acts, target aggregate, expected version, correlation ID, idempotency key, audit event, and transactional outbox intent.
+
+## 2.16 Deal-Chaining authorization and Agent acting-for matrix
+
+| Action | Coordinator/Owner | Invited Provider | Scoped Agent | Admin/Operator |
+|---|---:|---:|---:|---:|
+| Create/update own Chain and Need | yes | no | scoped + active Owner consent | support override with reason |
+| Add/remove dependency | yes | no | scoped + explicit dependency permission | controlled override; audit |
+| Send/revoke invitation | yes | no | scoped + Owner consent | support action with reason |
+| Accept/decline own invitation | no unless also invited party | yes | only for own invited Provider identity | no except controlled resolution |
+| Form/link child Order | authorized party by child terms | authorized party | scoped + acting-for context; no ownership transfer | controlled resolution |
+| Cancel/replace a Need | coordinator/authorized child parties by policy | own child response | scoped + Owner consent | controlled resolution |
+| Inspect chain roll-up | authorized participants | authorized invited/child party | scoped Owner view | authorized operations scope |
+
+Agent activity never changes the Owner/coordinator, child parties, payer/recipient, custody, or final authority. Revocation stops future actions but preserves prior attribution.
 
 ### 2.9 Administrative Hold
 
@@ -537,3 +641,86 @@ The domain contract is ready for canonical schema design only when:
 - A1/A3/A4/A9 differences are represented without separate ad hoc products.
 - Deferred shapes have no accidental pilot transitions.
 - The schema artifact can reference this contract without inventing states.
+
+## 16. Accepted initiative extension — 2026-08-09
+
+This section is canonical for the capabilities in PRD-060–076 and supersedes any legacy use of one generic `version`, one blanket feature flag, or provider/upload success as business truth.
+
+### 16.1 Version roles
+
+| Version | Meaning | Mutation rule |
+|---|---|---|
+| Business version | Immutable published category/profile/listing/quote/terms/policy meaning | New row/version only; accepted references never repoint. |
+| `row_version` | Optimistic concurrency counter for one mutable aggregate row | Increment on guarded mutation; never used as semantic identity. |
+| Shape/payload contract version | Validator/reader required for Work/event payload | Registry retains referenced readers; unknown version parks with no effect. |
+| Event contract and aggregate sequence | Consumer interpretation and causal order | Append-only; consumer applies only next sequence. |
+| Artifact/revision version | A9 file/deliverable revision | Append-only artifact history; not Work aggregate version. |
+
+### 16.2 Proposal and final Order formation
+
+- `SubmitOrderProposal` may create/update only a `pending_acceptance` proposal and party acceptance records.
+- `FinalizeOrderAgreement` requires an allowed discriminated source, exact immutable source versions, current acceptance proofs, eligible capability/activation, held or atomically reservable capacity, required Work/Obligation specifications, expected versions, actor/client context, and idempotency.
+- One Order-owned transaction locks source/listing/capacity, then Order, Work, Obligation, and integrity records. It creates accepted Order, exact terms, parties, required Work, one-lane Obligations, committed reservations, audit, idempotency result, and outbox or rolls everything back.
+- A standing listing/provider quote counts as provider acceptance only when its snapshotted capability policy explicitly grants that meaning.
+- Accepted Order requires a same-Order terms snapshot; any Obligation→Work link must share that Order.
+
+### 16.3 Capacity reservation lifecycle
+
+| From | Command | To | Guard/effect |
+|---|---|---|---|
+| none | hold | held | Exact listing version/bucket/resource, positive quantity or free slot, expected bucket version, expiry and command identity; atomic decrement/lock. |
+| held | commit | committed | Final Order transaction, current hold/source/acceptance; attach same Order exactly once. |
+| held | release/expire | released/expired | Authorized terminal reason or elapsed expiry; restore capacity exactly once. |
+| committed | cancel/reverse | released | Order policy allows release; append event and restore exactly once. |
+
+Quantity remaining never becomes negative; active slot/resource reservations do not overlap; external synchronization cannot overwrite held/committed marketplace authority.
+
+### 16.4 Ordered asynchronous consumption
+
+Every event has event ID, aggregate type/ID/version/sequence, event and payload contract versions, causation/correlation, actor/client, occurred/effective times, and payload hash. A consumer inbox transitions `received → processing → processed`; repeats are no-ops, a future sequence becomes `gap`, an unknown contract becomes `unsupported`, and exhausted safe retries become `dead_letter`. None is acknowledged as business success before its durable effect and next sequence are recorded. Replay is operator-attributed and idempotent.
+
+### 16.5 Service principal and integration states
+
+| Aggregate | States / transition rule |
+|---|---|
+| Integration Client | `draft → active ↔ suspended → revoked → archived`; revocation is immediate and history-preserving. |
+| Credential | `issued → active → overlap → expired or revoked`; rotation overlap is bounded, environment/audience must match, plaintext is never recoverable. |
+| Mapping | `active → conflicted or archived`; expected version prevents blind overwrite and owner/client lineage never changes. |
+| Webhook Subscription | `pending_verification → active ↔ suspended → revoked`; each delivery revalidates destination and signing state. |
+| Webhook Delivery | `pending → delivering → delivered, retry_wait, or dead_letter`; HTTP success is delivery only, never marketplace state authority. |
+| Sync Cursor | `active → expired or reset`; sequence is monotonic and reset is explicit/audited. |
+
+Authenticated client derives one owner and immutable granted-scope version. Authorization is `owner resource policy ∩ client scope ∩ acting-for consent if any ∩ capability activation ∩ exact approval if required`; no operand may expand another.
+
+### 16.6 Activation and exact approval
+
+- Activation identity is the tuple of capability/version and explicit environment, cohort, geography, owner, category/profile version, mechanism, Work shape, lane/provider, and client dimensions. `NULL` means wildcard. Every current matching `disabled` record is an absolute deny and no narrower enable may override it. Only when zero denies match may at least one current matching enable authorize; the most specific enable (greatest number of bound dimensions, then latest effective time/ID) supplies attribution. Absence defaults deny for conditional/live-money effects.
+- Effective ranges are UTC half-open `[effective_at, expires_at)`; one fingerprint cannot have overlapping current ranges. Supersession is lock-serialized, append-only, and every queued/adapter irreversible effect re-evaluates immediately before mutation.
+- Disablement blocks new starts and irreversible forward effects but preserves reads, support, reconciliation, refund/reversal, evidence/holds, and safe completion/cancellation.
+- Exact approval states are `pending → approved → consumed` or `expired|revoked`. Approval binds initiator, approver, client, command, normalized payload hash, targets/versions/scopes, amount/currency where relevant, policy, evidence/reason, expiry, and idempotency.
+- Approval consumption and command effect are one transaction. Maker/checker policy rejects self-approval; emergency override has a distinct scope, alert, expiry, audit, and review.
+
+### 16.7 Financial, provider, evidence, and webhook states
+
+- One Obligation has one immutable lane. Each provider/payment/refund/reversal/release/correction event produces at most one idempotency-linked immutable financial transaction.
+- Posting is rejected unless debits equal credits per currency and every entry currency equals both transaction and active account currency. Corrections link compensating transactions.
+- Reconciliation compares Obligation/event, provider object/settlement, and ledger. Mismatch enters `reconciliation_required`, blocks protected release/payout, and resolves only through attributable evidence plus any compensating correction.
+- Provider authenticity binds canonical raw bytes, algorithm/header, replay window, provider account/environment/object, owner, amount, currency, expected transition, and business-effect key. Unknown/mismatched results have no business effect.
+- Evidence transitions `quarantined → validating → scanning → available|rejected`; hold may block deletion from any retained state. Retrieval re-authorizes purpose/aggregate participant/admin access and produces an audit event.
+- Outbound webhook destination validation rejects private/loopback/link-local/reserved/metadata IPv4/IPv6 before and after DNS resolution and redirect; delivery pins the validated address and bounds TLS, ports, time, and response size.
+
+### 16.8 Authorization matrix extension
+
+| Action | Owner/human | Service principal / AI | Admin/operations |
+|---|---|---|---|
+| Create/update owned listing/capacity | Policy + expected version | Owner policy + explicit scope + activation | Governed support action with reason |
+| Publish/submit or form Order | Explicit policy/acceptance | Absent by default; exact approval if separately enabled | Maker/checker where override allowed |
+| Work/money/consent/dispute/evidence export | Actor-specific policy | Absent by default; never inferred from general consent | Narrow role + exact approval; maker/checker for configured high-risk actions |
+| Credential/scope/activation change | Recent step-up may issue/rotate within current approved scopes, reduce scopes, or revoke immediately; scope expansion, environment change, and webhook-signing-secret change also require an independent Operations checker | Never self-authorized | Operations checker for elevated changes; live-money activation keeps its independent role quorum; emergency credential revocation cannot wait for a checker |
+| Reconcile/correct/refund/release/payout | Authorized financial role | No default scope | Exact target/economics approval, mismatch/hold guards, separation of duties |
+
+### 16.9 Extension acceptance gate
+
+- PRD-060–076, canonical 58-table schema, ADR-R-030–040, architecture spine AD-1–29, UX-025–031, and owning epic stories use the same names, states, versions, ownership, and gates.
+- Every transition has actor/client, authorization, source/target versions, event, transaction boundary, failure/no-effect behavior, recovery, and activation.
+- PostgreSQL examples prove reservation, lineage, accepted-child, per-currency ledger, inbox-order, owner/client, approval-consumption, and active-dimension constraints before each implementation train starts.

@@ -1,0 +1,32 @@
+# Serbizyu UX Branch Audit — Session Summary (public build, real-browser testing)
+
+**Scope executed:** Live testing of `https://daviddatux25.github.io/Serbizyu-2.0/app/` (published React SPA) via real browser. Home, Me, Activity, Quick Deal routes, request composer, listing management, deal-chain scaffold, refresh behavior. **No files created/edited** (task constraint). Source/authority-doc corroboration was planned but not reached — session hit its tool-iteration cap mid-flow. Classifications below are from direct DOM/React-props/behavioral evidence, not prior audit files.
+
+## Verified findings
+
+- **App shell / identity** — Loads clean (zero console/JS errors). Signed in as **Rosa Mendoza**; persistent shell tag: *"Rosa's account · Requests · listings · helps Lola Nena"*. Bilingual (Tagalog/English) with large CTAs — strong low-literacy signals present.
+- **Branch D: My Profile/account management** — **PARTIAL (mostly DISPLAY-ONLY).** Me page shows profile card + 3 cards (Requests / Listings / Agent help). All 3 cards are plain `<div>`s with **no onClick, cursor:auto** — verified via React props introspection. No Edit Profile, no Settings, no sign-out, no consent/revoke UI anywhere in tested routes.
+- **Branch E: Request→response→quote→Order** — **PARTIAL (front half only).** "I need help" opens a genuine 3-step composer (What you need → Details w/ budget+area+payment lane → Review). Payment lane copy is explicit: *"External Cash · Pay provider directly · 0% pilot commission · Serbizyu holds nothing."* Final button honestly labeled **"Post synthetic request"**; success screen states *"No backend or genuine Tagudin record was created."* **Gap:** posted request does **not** appear in Activity; there is no response/proposal/quote/Order lifecycle — the flow dead-ends after posting.
+- **Branch A: Genuine Deal Chaining** — **DISPLAY-ONLY scaffold, not genuine chaining.** Activity has "PLAN A BIGGER JOB — Birthday lunch at home" with 3 child rows (Lunch trays ₱1200 in-progress; Simple banner ₱250 accepted; Pick up ice ₱300 "Find someone" + dependency hint *"Do this after the lunch pickup time is confirmed"*). Zero click targets on the chain or its tasks (verified: no onClick handlers in section). "Add task" works in-memory only. **Gaps:** no parent/child agreements, no assignment, no handoff, no aggregate progress/cost, no blocked/failure states, no way to set dependencies or people on new tasks.
+- **Branch F: Listing ownership / Manage listing** — **DEAD CONTROL.** "Manage listing" renders as a styled button (cursor:pointer) but has **no onClick handler** — clicking does nothing. No edit/pause/visibility management reachable.
+- **Branch G: Quick Deal** — **PARTIAL.** Fully live synthetic page: price adjusters (−₱50/−₱10/+₱10/+₱50) correctly update headline and CTA to "Send ₱80 offer"; QR frame counter ("frame 1/6"), "Start camera" present; explicit copy *"Cash is handled directly. This QR never moves money."* **Unverified this session:** outcome of "Send offer" (conditional Order formation) — session capped immediately after that click. Order-formation semantics unconfirmed.
+- **Branch H: Work vs Payment independence** — **MESSAGING PRESENT, behavior unverifiable.** Request review: *"Reports from both sides are independent; Work remains separate"*; Quick Deal: QR "never moves money." Consistent mental model in copy; no backend to verify execution.
+- **Branch I: External cash dual attestations** — **MISSING as executable flow.** Payment-lane messaging exists only; no dual-attestation UI (both-sides-confirm) found in tested routes.
+- **Branch B: Agent tasks for today** — **MISSING in tested routes.** Only evidence is the shell/Me tagline "helps Lola Nena"; no agent task list, today view, or delegation surface found.
+- **Branch C: Principal/delegation / acting on behalf** — **MISSING as UI.** "helps Lola Nena with permission" appears twice; no principal switcher, "for [person]" affordance, or delegation control exists in tested routes; the Me "Agent help" card is display-only.
+- **Branch J: Trust/reviews/disputes** — **NOT VERIFIED this session** (Browse/listing-detail/review routes not reached before cap).
+- **Branch K: Notifications/help** — **NOT VERIFIED; absent from tested routes.** "I need help" is a request composer, not help/support; no notification center or help page encountered.
+- **Branch L: Permissions/consent/revocation** — **MISSING in all surfaces explored.** Permission language is decorative ("with permission"); no consent grant/deny/revoke controls found.
+- **Refresh / downstream continuity** — **Broken by design (no persistence).** Added chain task lost after hard reload; posted request never reflected anywhere; app resets to seed state every load. Honest synthetic labeling throughout (good), but zero continuity.
+
+## Acceptance gaps for the founder's planning
+
+1. Request posting → no response/quote/Order downstream (flow dead-ends).
+2. Deal chains are a static checklist — no agreements, dependencies, handoffs, aggregates, or blocked states.
+3. Manage listing is a dead button; listing ownership is read-only.
+4. Me page cards are display-only; no account settings, sign-out, or consent/revocation.
+5. Agent/delegation is language-only; no principal context or agent-task surfaces.
+6. Quick Deal negotiation is live but its Order-formation outcome was not reachable/verified — needs explicit confirmation.
+7. External-cash dual attestations, trust/disputes, notifications, and help are absent from every route tested.
+
+**Not yet tested (recommend as follow-up):** Browse + listing detail + request-response side, invitation/order detail ("Open activity" cards), review/dispute surfaces, Quick Deal "Send offer" outcome, camera/QR flow, 360px viewport (mobile), and source/authority-doc corroboration.

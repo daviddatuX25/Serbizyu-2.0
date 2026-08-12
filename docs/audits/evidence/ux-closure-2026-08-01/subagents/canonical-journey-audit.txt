@@ -1,0 +1,51 @@
+The browser session hit the iteration cap before I could exercise the remaining routes (`#/quick-deal` click-through, `#/activity`, `#/me`, mobile viewport). Below is the complete audit outcome with evidence gathered to that point.
+
+## Audit summary
+
+**What I did**
+- Read all 6 canonical journey authorities (ux-spec-rebuilt.md, prd-rebuilt.md, epics-and-stories-rebuilt.md, 10a screen matrix, 10b scenario blueprints, 05 quick-deal/deal-chaining spec).
+- Mapped every frontend source file (App.tsx, 4 live pages, RequestComposer, Cards, AppShell, api/mock.ts, api/hooks.ts, data/fixtures.ts) to journeys; confirmed dead/unwired components (PaymentsPage, DealRoomPage, PatternsPage — not imported by App.tsx; `useAdvanceWork` hook defined but never called).
+- Verified deployed bundle at `https://daviddatux25.github.io/Serbizyu-2.0/app/` is byte-identical to the repo build (sha256 e9362235… matches `docs/app/assets/index-F3kWF9tF.js`).
+- Exercised the published app in a real headless browser (1280×633 desktop, no JS errors): Home, RequestComposer full 3-step flow, Explore search/tabs, refresh-reset. **No files edited.**
+
+**Browser evidence captured (planned → observed)**
+- **Request creation (REQ-001/002; feeds UX-006/007):** "I need help" → 3-step composer (What you need → Details → Review). Gated Continue (>4-char title, >8-char details), category picker, budget, area select (4 Tagudin barangays), single fixed lane button "External Cash · Pay provider directly · 0% pilot commission · Serbizyu holds nothing", review snapshot with "Reports from both sides are independent; Work remains separate" → post → "Synthetic request created … No backend or genuine Tagudin record was created." New card appeared in Home "People need help" with "0 replies" (state transition in-memory).
+- **Refresh/reset:** reloading wiped the created request → all state is in-memory fixtures, fully reset on refresh (no persistence, no backend).
+- **Discovery (DSC-001/003):** `#/explore` renders search + Services/People-need-help tabs; typing "trouser" filtered to 1 service card. Switching to requests tab with an active query showed **empty content with no no-results guidance/fallback** (blocks DSC-001/002 "no-results path offers request/reply/help").
+- **Quick Deal (PRD-020 mock; per 05-spec):** only source-verified (ServiceCard arrow → `navigate("/quick-deal")`; QuickDealPage mock state machine ready→scanning→offer_received→counter_streaming→dual_confirm→waiting_sync→synced, camera getUserMedia + fake QR frames) — click-through not completed before cap → **unverified**.
+
+## Planned-vs-observed matrix
+
+**Requirements refs:** UX-spec §4 matrix/§6 specs; screens: 10a; scenarios: 10b §SCN-01–09; PRD statuses: prd-rebuilt §7. **Impl evidence:** frontend/src files.
+
+| Journey | Planned (actor/entry) | Actual route/entry | Observed controls & state | First blocked/missing step | Class |
+|---|---|---|---|---|---|
+| **UX-001** Provider reg + identity (§4/§6; ACC-001–007; PRD-001–003) | Provider, Admin | None — no role choice, no reg, no ID, no admin | — | Entry itself absent | **ABSENT** (static "I offer something"→`#/me` static card only) |
+| **UX-002** Buyer reg + discovery (DSC-001–006; PRD-001,009–013) | Buyer | `#/` Home + `#/explore` | Hero, 4 listing cards, search filter, tabs | Registration/geography gate absent; no listing-detail screen (DSC-005), no trust summary (DSC-006), no no-results path | **PARTIAL** (discovery only; single hard-coded viewer) |
+| **UX-003** Agent consent (AGT-001–004; PRD-004–008,023) | Owner, Agent | None | Only static text "helps Lola Nena" (MePage, AppShell) | Consent grant/permission/revoke all absent | **ABSENT** (label only) |
+| **UX-004/005** Service/Product listing creation (LST-001–007; PRD-010–016,023) | Provider, Agent | None | No listing editor; Activity "Manage listing" button inert | Form entry absent | **ABSENT** |
+| **UX-006/007** Request + quote (REQ-001–005; PRD-018–020) | Buyer, Provider | "I need help" → 3-step composer → Home card | Full synthetic post flow (see evidence); lane copy correct | Post-creation: no responses/quotes/accept/decline UI; no purchase-on-behalf | **PARTIAL** (request half only) |
+| **UX-008** A1 (A1-001–003; PRD-025,031) | Buyer, Provider | `#/activity` order card "You asked for this" | Static 3-step plan + timeline; `advanceWork` mock defined but **unused** | Completion proposal/sign-off UI absent; no step controls | **PARTIAL/STUB** |
+| **UX-009** A3 (A3-001–004; PRD-026) | Buyer, Provider | None | Fixture text "3 slots this week" only | Slot select/confirm/reschedule/no-show absent | **ABSENT** |
+| **UX-010** A4 handoff (A4-001–005; PRD-027–028) | Buyer, Provider | None | Fixture card "8 trays ready" only | Handoff/receipt/mismatch UI absent | **ABSENT** |
+| **UX-011** A9 delivery (A9-001–003; PRD-029) | Buyer, Provider | None | — | Entry absent | **ABSENT** |
+| **UX-012** External Cash (PAY-003/004; PRD-032–034,043,049) | Buyer, Provider | Composer lane tile + review copy | Correct disclosure copy ("0% commission", "holds nothing", "reports independent") | No `Cash paid`/`Cash received` report actions; fixture `cashStatus:"not_reported"` never changes | **PARTIAL-COPY** (disclosure only, no state flow) |
+| **UX-013** External Digital Proof (PAY-005/006; PRD-035–037) | Buyer, Provider, Admin | None | — | Evidence submission absent | **ABSENT** |
+| **UX-014/015** Direct Digital / Tiwala sandbox (PAY-007/008; PRD-038–041) | Buyer, Provider, Admin | None | — | Entry absent | **ABSENT-in-frontend** (requirement SANDBOX-ONLY/deferred — not a pilot gap) |
+| **UX-016** Completion/sign-off (ORD-005; PRD-025–031,040) | Buyer, Provider | None | — | Completion proposal screen absent (`useAdvanceWork` unwired) | **ABSENT** |
+| **UX-017** Cancellation/changes (ORD-004; PRD-043,048) | Buyer, Provider, Admin | None | — | Entry absent | **ABSENT** |
+| **UX-018** Dispute + hold (TRU-002; PRD-046–050,052–055) | Buyer, Provider, Admin | None | — | Entry absent | **ABSENT** |
+| **UX-019** Notifications/messaging (TRU-001/004; PRD-044–045) | All | None | "Message Maya" only in **unwired** DealRoomPage | No inbox/notices/retry UI | **ABSENT** |
+| **UX-020** Low-literacy/low-data (PRD-004–009,042) | Buyer, Provider, Agent | Across existing pages | Plain language, icon+text, peso amounts, draft preserved per-open composer | L0/L1/L2 gating, assisted flow, offline/draft rules absent | **PARTIAL-COPY** |
+| **UX-021** Safety (TRU-003; PRD-050–051) | All | None | — | Meeting guidance/block/report absent | **ABSENT** |
+| **UX-022/023** Admin recovery + classification (OPS-001–009; PRD-052–059) | Admin | None | Only "Synthetic request" honest-copy label | Entire admin surface absent | **ABSENT** (also unverified-by-classification) |
+
+**Scenario blueprints (10b):** SCN-01 (A1+External Cash) blocked at DSC-005 detail screen; SCN-02 (A3+EDP), SCN-03 (A4+External Cash), SCN-04 (PoB variance), SCN-05 (A9), SCN-07 (dispute/hold/retry), SCN-08/09 (sandbox lanes) **absent**; SCN-06 (Agent) absent (static label only); SYS-001–004 simulation shell (scenario cards/role switch/reset) **absent**.
+
+**Deferred/backend-dependent vs absent:** Deal-Chaining + air-gapped Quick Deal (05-spec) have **no frontend at all** — correctly deferred (PRD-021/022 DEFERRED); the online Quick Deal interactive mock **exists** but is a synthetic simulation (PRD-020 PILOT-CONDITIONAL; no backend). Sandbox lanes UX-014/015, SCN-08/09 are requirement-deferred, not regressions.
+
+**Unverified (conservative):** full `#/quick-deal` click-through, `#/activity` "Manage listing"/plan-add controls, `#/me` interactions, requests-tab repopulation after clearing search, mobile viewport (only 1280×633 exercised).
+
+**Verification of counterfactuals applied:** labels ("helps Lola Nena", "3 slots this week", "8 trays ready"), fixture data, direct URLs (`#/quick-deal` reachable but that's just the route), and unwired components (PaymentsPage, DealRoomPage, PatternsPage, advanceWork) were **not** counted as implementation.
+
+**Files created/modified:** none (per task constraint).

@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Technical Architecture and Operations Blueprint
 
-Status: CANONICAL ARCHITECTURE/OPERATIONS AUTHORITY — founder-approved 2026-07-31; deployment/live-money gates remain separate
+Status: CANONICAL ARCHITECTURE/OPERATIONS AUTHORITY — founder-approved 2026-07-31; initiative extension accepted 2026-08-09; deployment/live-money gates remain separate
 BMAD phase: Phase 3 — Architecture and operations
 Depends on:
 
@@ -72,6 +72,16 @@ Owns Agent grants, scopes, notices, revocations, and action attribution.
 
 Owns categories, capability profiles, listings, versions, capacity, requests, and quotes.
 
+### Deal Coordination
+
+Owns `DealChain`, ordered `DealNeed` slots, same-chain `DealDependency` edges, `DealInvitation` lifecycle, derived parent roll-up, and coordination notifications. It owns neither commercial settlement nor child fulfillment truth.
+
+The module exposes a small command/read seam: create/update Chain, add/reorder/replace Need, publish an open Need through the existing Request/Quote adapters, send/respond/revoke Invitation, add/remove Dependency, and inspect a derived roll-up. Every command carries actor, optional acting-for Owner and consent grant, target ID, expected version, correlation ID, and idempotency key. State change, audit event, and outbox intent commit together.
+
+It must not create a parent Payment Obligation, pooled balance, automatic split, parent-wide refund/cancellation cascade, or child-liability reassignment. Child Order formation is handed to Order Management through an explicit child-agreement command; the resulting Order remains independently authoritative.
+
+Foundation dependency: `deal_chains`, `deal_needs`, `deal_dependencies`, and `deal_invitations`, plus nullable lineage on existing Request/Quote/Order records, are required schema headroom before E0-S2 under the schema contract. Their planning presence is not migration/catalog proof and does not enable a user-facing feature. The later bounded coordination story and pilot activation review remain separate gates.
+
 ### Order Management
 
 Owns Order parties, accepted terms, commercial lifecycle, cancellation, and closure eligibility.
@@ -100,19 +110,25 @@ Owns cohort classification, audit events, operational dashboards, incident recor
 
 ### 4.1 Normal listing-to-work flow
 
-1. User authenticates.
-2. Authorization policy resolves role/access/consent.
-3. Listing/read model returns active version and capability profile.
-4. Buyer creates Booking/Request through an application command.
-5. Domain validates listing, terms, capacity, geography, and mechanism.
-6. Order and terms snapshot commit transactionally.
-7. Work Instance and required Payment Obligations are created.
-8. Domain events/outbox records commit with the state change.
-9. Worker sends notifications and processes noncritical side effects.
-10. Provider performs Work and submits evidence.
-11. Buyer sign-off/review/dispute command transitions Work.
-12. Payment subsystem updates obligations independently.
-13. Admin/support can inspect and intervene through audited commands.
+1. User authenticates; policy resolves role, access, ownership, and acting-for consent.
+2. Read models return the active Listing Version and exact Category/Capability business versions.
+3. A mechanism submits `SubmitOrderProposal` with source proof, exact terms, expected versions, capacity intent, actor, correlation, and idempotency context.
+4. Standing acceptance or an attributable counterparty acceptance makes the proposal eligible; Request, Quote, bid, Quick Deal, and Deal Need do not create accepted Orders directly.
+5. `FinalizeOrderAgreement` revalidates source/category/profile/policy/capacity/parties/acceptance under one fixed lock order.
+6. One Order-owned PostgreSQL transaction creates the accepted Order, parties, exact terms snapshot, required Work, one-lane Payment Obligations, committed reservations, audit, idempotency result, and outbox—or creates none.
+7. Workers publish notifications and other noncritical post-commit effects; jobs never repair missing required children.
+8. Provider performs Work and submits purpose-bound evidence.
+9. Buyer sign-off/review/dispute commands transition Work independently from Payment Obligation state.
+10. Payment events use their lane contract and cannot complete Work; admin/support interventions remain attributable audited commands.
+
+### 4.5 Bounded Deal-Chaining coordination flow
+
+1. Coordinator/authorized Agent creates a Chain and ordered Needs under the active acting-for grant.
+2. An open Need reuses `requests`/`quotes`; a direct branch sends a Need-specific Invitation. Neither branch creates an Order merely by being published or accepted.
+3. A separate child-agreement command validates current terms, parties, dependency guards, and idempotency, then creates/links one ordinary child Order with `(deal_chain_id, deal_need_id)` lineage.
+4. Order Management creates the child’s own terms, Work, Payment Obligations, parties, evidence, disputes, and notices. Deal Coordination reads derived status/cost only.
+5. Dependencies block only declared downstream transitions. Partial completion, failure, cancellation, and replacement are shown per Need; no sibling or parent financial cascade is automatic.
+6. A worker recomputes/read-models roll-up and sends notifications from outbox events. It never overwrites child state or authorizes offline final state.
 
 ### 4.2 External Cash flow
 
@@ -147,17 +163,17 @@ Owns cohort classification, audit events, operational dashboards, incident recor
 |---|---|---|---|
 | Web/application | Authenticated/public HTTP, commands, reads | Request error; no partial domain effect | HTTP health + dependency check |
 | Database | Transactional state/ledger | Stop writes safely; alert | Connection/latency/storage |
+| Redis | Queue, cache, locks/coordination; never domain authority | Queue-dependent effects stop safely; authenticated reads use defined degradation where safe | Connection/latency/memory/eviction |
 | Queue worker | Outbox, notifications, scans, retries, non-request jobs | Retry/backoff/dead-letter/support queue | Queue age/failure count |
 | Scheduler | Expiry, reminders, review-window checks, retention, reconciliation candidates | Alert and retry; no guard bypass | Last successful run per job |
 | Private file storage | Evidence/artifact bytes | Block sensitive use; retain metadata | Availability/access/error |
 | Observability | Logs/metrics/audit/alerts | Alert delivery fallback | Alert health |
 
-### Conditional/optional
+### Separate and conditional processes
 
 | Process | Initial stance | Activation condition |
 |---|---|---|
-| SSR Node process | Use only if approved UX requires SSR | Separate health check, deployment, cache policy, and rollback |
-| Redis | Use for queue/cache/coordination if needed | Database remains authority; eviction/flush is survivable |
+| SSR Node process | Separate presentation optimization with mandatory safe client-render fallback | Deploy and health-check independently when server rendering is enabled; never domain/cache authority |
 | Realtime process | Optional | Pilot user value and operational capacity justify it; polling fallback exists |
 | External search | Optional | Measured PostgreSQL search limitation and owned index rebuild/recovery |
 | Connected payment adapter | Sandbox-only | G6 provider/legal/financial/operations gate |
@@ -237,6 +253,7 @@ Refund/reversal is a new financial adjustment and event linked to the original e
 Before any connected-money pilot, Admin must inspect:
 
 - Order/Work timeline
+- Deal Chain/Need/dependency/invitation timeline and child-Order lineage
 - Payment Obligations
 - Provider events
 - Ledger transactions/entries
@@ -307,6 +324,7 @@ Structured logs include:
 - Support/dispute volume
 - Safety incidents
 - Pilot activation/liquidity/completion/repeat/support cost
+- Deal-Chaining dependency-cycle rejections, invitation expiry/idempotency conflicts, child-Order isolation, replacement recovery, and pilot-gate status
 
 ### Alerts
 
@@ -322,6 +340,7 @@ Page or notify the named owner for:
 - Sensitive evidence exposure
 - Severe safety incident
 - Backup verification failure
+- Parent roll-up divergence from child Order truth
 
 Thresholds, owners, and channels must be configuration/runbook decisions before G3.
 
@@ -444,6 +463,7 @@ Do not add distributed services merely because future scale is imaginable. Add a
 - Critical jobs monitored.
 - External Cash/Proof copy reviewed.
 - No connected-money lane accidentally enabled.
+- Deal-Chaining foundation exists in the approved schema/domain/ADR chain, but the bounded capability remains disabled until its separate activation gate passes.
 
 ### Before G6 connected money
 
@@ -470,3 +490,50 @@ The architecture is ready for epics/build planning only when:
 - Pilot runtime is not overloaded with future deployment ambitions.
 - A small team can operate the selected topology.
 - The architecture can be implemented as thin vertical slices.
+- Deal Coordination is isolated from Order/Payment authority and its failure/replacement/partial-completion operations are explicit.
+
+## 16. Accepted initiative architecture extension — 2026-08-09
+
+`ARCHITECTURE-SPINE.md` AD-1–29 is the lean implementation spine for PRD-060–076, domain §16, canonical schema §2.2, and ADR-R-031–040. The following additions are authoritative:
+
+### 16.1 Brownfield topology
+
+- `IdentityAccess`: users, OTP, profile, roles, identity review, delegation, consent.
+- `Listings`: category/profile business versions, listings/versions, capacity/reservations, requests, quotes.
+- `OrdersWork`: proposal/final Order formation, parties/terms, A1/A3/A4/A9 Work/events.
+- `PaymentObligations`: one-lane Obligations, provider events/ports, balanced ledger, refund/reversal/release, reconciliation.
+- `TrustSupport`: evidence, disputes, holds, safety, conversations/messages/notifications, support.
+- `Operations`: audit, outbox/inbox, idempotency, activations/approvals, jobs, recovery, measurement.
+- `DealCoordination` and `Integrations`: only their named aggregates; both call existing owner ports and never rewrite marketplace truth.
+- Cross-module commands use application ports and neutral shared envelopes; only owners write aggregates.
+
+### 16.2 Synchronous correctness boundary
+
+Order Management owns `FinalizeOrderAgreement`. One PostgreSQL transaction locks source/listing/capacity → Order → Work → Obligation → integrity rows and either creates the accepted Order, exact terms, parties, required Work, one-lane Obligations, reservations, audit, idempotency result, and outbox or creates none. Jobs never repair required child creation after a nominal success.
+
+Published category/profile/listing/policy meaning is immutable and distinct from `row_version`. Capacity bucket/version/resource and Reservation lifecycle, Deal/Request/Quote lineage, accepted terms, and same-Order child references are relationally guarded.
+
+### 16.3 Asynchronous and activation boundary
+
+Every consumer uses inbox deduplication and per-aggregate ordering; gaps and unsupported contract versions park visibly. Activation is an immutable evidence/approval-backed decision over explicit dimensions and is evaluated inside each owning service. Effect-specific financial containment blocks only unsafe directions and preserves authenticated intake, reads, reconciliation, refunds/reversals, evidence, and support recovery.
+
+### 16.4 Runtime and environment topology
+
+- Required: Nginx→PHP-FPM web, PostgreSQL/PostGIS, Redis, queue worker, scheduler, private evidence adapter, health/alerts, backup/restore.
+- Separate presentation optimization: Node SSR with safe client-render fallback.
+- Baseline discovery/realtime: PostgreSQL search and polling/notifications; Meilisearch/Reverb require measured adoption evidence.
+- Local/test Compose is the reference topology, not production deployment authority.
+- Local/test, capstone sandbox, genuine pilot, and production isolate accounts, secrets, data classes, metrics, activations, and promotion evidence.
+
+### 16.5 Integration, AI, evidence, and financial security
+
+Owner derives from authenticated client. Client scope only reduces owner/resource policy. Credentials are selector-plus-hash/secret-reference, environment/audience bound, rotatable/revocable, and issued/expanded after recent step-up. Webhook delivery revalidates DNS/IP/redirect on every attempt and rejects private/reserved/metadata destinations.
+
+AI uses the same application ports and exact single-use approval for confirmation-required commands; general consent/model output is never authority. High-risk admin/financial/security actions use maker/checker policy. Provider events require authenticity plus expected business binding. Evidence stays private/quarantined until validated/scanned and is re-authorized for each isolated-origin download.
+
+### 16.6 Architecture extension gate
+
+- Canonical authorities cite the same PRD/domain/schema/ADR/UX/story identifiers and 58-table inventory.
+- Each train OpenSpec uses `PROGRAM-IMPLEMENTATION-PLAN.md` §6 and contains executable transaction, constraint, event-order, security, operations, UX, verification, activation, and rollback contracts.
+- Connected UI is not complete on Pest evidence alone; browser paths plus target-user comprehension/accessibility/low-data UAT are required.
+- Xendit/Tiwala stay sandbox-only until a current G6 activation record and independent approvals exist.

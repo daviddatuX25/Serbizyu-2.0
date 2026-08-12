@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Listings\Application;
 
-use App\Modules\IdentityAccess\Application\DemoFixtureService;
-use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
 use App\Modules\Listings\Infrastructure\Demo\TagudinBrowseCatalog;
 use App\Shared\Application\CapabilityCatalog;
 use App\Shared\Contracts\CorrelationId;
+use App\Shared\Contracts\FixtureConstants;
+use App\Shared\Contracts\FixtureManager;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -20,7 +20,7 @@ use JsonException;
 final class SeedTagudinBrowseCatalog
 {
     public function __construct(
-        private readonly DemoFixtureService $fixtures,
+        private readonly FixtureManager $fixtures,
         private readonly CapabilityCatalog $capabilities,
     ) {}
 
@@ -51,7 +51,7 @@ final class SeedTagudinBrowseCatalog
 
             DB::table('listings')->upsert([[
                 'id' => $row['listing_id'],
-                'owner_user_id' => FixtureRepository::ACTIVE_OWNER_ID,
+                'owner_user_id' => FixtureConstants::ACTIVE_OWNER_ID,
                 'capability_profile_id' => $capability['capability_profile_id'],
                 'category_id' => $capability['category_id'],
                 'listing_type' => $row['listing_type'],
@@ -75,7 +75,8 @@ final class SeedTagudinBrowseCatalog
                 'updated_at',
             ]);
 
-            DB::table('listing_versions')->upsert([[
+            $profile = DB::table('capability_profiles')->where('id', $capability['capability_profile_id'])->first();
+            $versionRow = [
                 'id' => $row['version_id'],
                 'listing_id' => $row['listing_id'],
                 'version_number' => 1,
@@ -96,14 +97,15 @@ final class SeedTagudinBrowseCatalog
                 'safety_copy' => 'Agree scope and handoff details directly; Serbizyu holds no funds. Capstone fictional supply.',
                 'effective_from' => $now,
                 'effective_to' => null,
-                'authored_by_user_id' => FixtureRepository::ACTIVE_OWNER_ID,
+                'authored_by_user_id' => FixtureConstants::ACTIVE_OWNER_ID,
                 'payload_version' => 1,
                 'version' => 1,
                 'correlation_id' => $row['listing_id'],
                 'published_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
-            ]], ['id'], [
+            ];
+            $updateCols = [
                 'description',
                 'terms',
                 'price_amount_minor',
@@ -113,7 +115,24 @@ final class SeedTagudinBrowseCatalog
                 'safety_copy',
                 'published_at',
                 'updated_at',
-            ]);
+            ];
+            if (Schema::hasColumn('listing_versions', 'category_id') && $profile !== null) {
+                $versionRow['category_id'] = $capability['category_id'];
+                $versionRow['category_business_version'] = 1;
+                $versionRow['capability_profile_family_code'] = (string) $profile->profile_family_code;
+                $versionRow['capability_profile_business_version'] = (int) $profile->business_version;
+                $versionRow['row_version'] = 1;
+                $updateCols = [
+                    ...$updateCols,
+                    'category_id',
+                    'category_business_version',
+                    'capability_profile_family_code',
+                    'capability_profile_business_version',
+                    'row_version',
+                ];
+            }
+
+            DB::table('listing_versions')->upsert([$versionRow], ['id'], $updateCols);
 
             $seeded++;
             $keys[] = $row['fixture_key'];

@@ -10,9 +10,22 @@ final class PublicListingsQuery
 {
     public function __construct(private readonly PublicListingReader $reader) {}
 
-    /** @return list<array<string, mixed>> */
-    public function handle(string $correlationId): array
-    {
-        return $this->reader->publicListings($correlationId);
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function handle(
+        string $correlationId,
+        string $areaCode = 'Tagudin',
+        ?string $categoryCode = null,
+        ?string $cursor = null,
+        int $limit = 24,
+    ): array {
+        return $this->reader->discoverPublicListings(
+            $correlationId,
+            $areaCode,
+            $categoryCode,
+            $cursor,
+            $limit,
+        );
     }
 }

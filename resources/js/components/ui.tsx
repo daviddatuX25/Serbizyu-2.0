@@ -1,10 +1,15 @@
-import type {
-    ButtonHTMLAttributes,
-    HTMLAttributes,
-    InputHTMLAttributes,
-    ReactNode,
-    SelectHTMLAttributes,
-    TextareaHTMLAttributes,
+import {
+    cloneElement,
+    isValidElement,
+    useId,
+    useState,
+    type ButtonHTMLAttributes,
+    type HTMLAttributes,
+    type InputHTMLAttributes,
+    type ReactElement,
+    type ReactNode,
+    type SelectHTMLAttributes,
+    type TextareaHTMLAttributes,
 } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge as ShadcnBadge } from '@/components/ui/badge';
@@ -17,7 +22,10 @@ import { cn } from '@/lib/utils';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'warm' | 'outline' | 'ghost' | 'danger';
 
-const buttonVariantMap: Record<ButtonVariant, 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive'> = {
+const buttonVariantMap: Record<
+    ButtonVariant,
+    'default' | 'secondary' | 'outline' | 'ghost' | 'destructive'
+> = {
     primary: 'default',
     secondary: 'secondary',
     warm: 'secondary',
@@ -44,7 +52,13 @@ export function Button({
             {...props}
             variant={buttonVariantMap[variant]}
             size="lg"
-            className={cn(wide && 'w-full', 'min-h-[var(--sz-target)]', variant === 'warm' && 'bg-[var(--sz-mango-400)] text-[var(--sz-ink)] hover:bg-[var(--sz-mango-400)]/90', className)}
+            className={cn(
+                wide && 'w-full',
+                'min-h-[var(--sz-target)]',
+                variant === 'warm' &&
+                    'bg-[var(--sz-mango-400)] text-[var(--sz-ink)] hover:bg-[var(--sz-mango-400)]/90',
+                className,
+            )}
             disabled={disabled || loading}
         >
             {loading ? 'Working…' : children}
@@ -52,7 +66,12 @@ export function Button({
     );
 }
 
-export function Card({ className = '', muted = false, children, ...props }: HTMLAttributes<HTMLDivElement> & { muted?: boolean }) {
+export function Card({
+    className = '',
+    muted = false,
+    children,
+    ...props
+}: HTMLAttributes<HTMLDivElement> & { muted?: boolean }) {
     return (
         <ShadcnCard {...props} className={cn(muted && 'bg-muted/40', className)}>
             {children}
@@ -60,7 +79,11 @@ export function Card({ className = '', muted = false, children, ...props }: HTML
     );
 }
 
-export function CardContent({ className = '', children, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function CardContent({
+    className = '',
+    children,
+    ...props
+}: HTMLAttributes<HTMLDivElement>) {
     return (
         <ShadcnCardContent {...props} className={cn('p-5', className)}>
             {children}
@@ -78,31 +101,103 @@ const badgeToneClass: Record<BadgeTone, string> = {
     info: 'bg-[var(--sz-forest-50)] text-[var(--sz-info)]',
 };
 
-export function Badge({ tone = 'neutral', children, className = '', ...props }: HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone }) {
+export function Badge({
+    tone = 'neutral',
+    children,
+    className = '',
+    ...props
+}: HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone }) {
     return (
-        <ShadcnBadge {...props} variant="outline" className={cn('border-transparent', badgeToneClass[tone], className)}>
+        <ShadcnBadge
+            {...props}
+            variant="outline"
+            className={cn('border-transparent', badgeToneClass[tone], className)}
+        >
             {children}
         </ShadcnBadge>
     );
 }
 
-export function Field({ label, error, hint, children }: { label: string; error?: string | null; hint?: string; children: ReactNode }) {
+type FieldControlProps = {
+    id?: string;
+    'aria-describedby'?: string;
+    'aria-invalid'?: boolean;
+};
+
+export function Field({
+    label,
+    error,
+    hint,
+    children,
+}: {
+    label: string;
+    error?: string | null;
+    hint?: string;
+    children: ReactNode;
+}) {
+    const fieldId = useId();
+    const hintId = `${fieldId}-hint`;
+    const errorId = `${fieldId}-error`;
+    const describedBy = error ? errorId : hint ? hintId : undefined;
+    const controlId = isValidElement<FieldControlProps>(children)
+        ? (children.props.id ?? fieldId)
+        : fieldId;
+    const control = isValidElement<FieldControlProps>(children)
+        ? cloneElement(children as ReactElement<FieldControlProps>, {
+              id: controlId,
+              'aria-describedby':
+                  [children.props['aria-describedby'], describedBy].filter(Boolean).join(' ') ||
+                  undefined,
+              'aria-invalid': error ? true : undefined,
+          })
+        : children;
+
     return (
-        <label className="grid gap-1.5">
-            <Label className="text-sm font-semibold text-foreground">{label}</Label>
-            {children}
-            {hint && !error ? <span className="text-sm text-muted-foreground">{hint}</span> : null}
+        <div className="flex flex-col gap-1.5">
+            <Label htmlFor={controlId} className="text-sm font-semibold text-foreground">
+                {label}
+            </Label>
+            {control}
+            {hint && !error ? (
+                <span id={hintId} className="text-sm text-muted-foreground">
+                    {hint}
+                </span>
+            ) : null}
             {error ? (
-                <span className="text-sm text-destructive" role="alert">
+                <span id={errorId} className="text-sm text-destructive" role="alert">
                     {error}
                 </span>
             ) : null}
-        </label>
+        </div>
     );
 }
 
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
     return <ShadcnInput {...props} className={cn('min-h-[var(--sz-target)]', props.className)} />;
+}
+
+export function PasswordInput({ className = '', ...props }: InputHTMLAttributes<HTMLInputElement>) {
+    const [visible, setVisible] = useState(false);
+    const label = visible ? 'Hide password' : 'Show password';
+
+    return (
+        <div className="relative">
+            <ShadcnInput
+                {...props}
+                type={visible ? 'text' : 'password'}
+                className={cn('min-h-[var(--sz-target)] pr-16', className)}
+            />
+            <button
+                type="button"
+                className="absolute inset-y-0 right-2.5 my-auto h-7 rounded px-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={label}
+                aria-pressed={visible}
+                onClick={() => setVisible((current) => !current)}
+            >
+                {visible ? 'Hide' : 'Show'}
+            </button>
+        </div>
+    );
 }
 
 export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
@@ -160,13 +255,17 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
                         key={step}
                         className={cn(
                             'flex min-h-11 items-center gap-2 border-b-2 pb-2 text-xs font-semibold',
-                            complete || active ? 'border-primary text-foreground' : 'border-border text-muted-foreground',
+                            complete || active
+                                ? 'border-primary text-foreground'
+                                : 'border-border text-muted-foreground',
                         )}
                     >
                         <span
                             className={cn(
                                 'grid size-7 place-items-center rounded-md font-mono text-[0.65rem]',
-                                complete || active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+                                complete || active
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted text-muted-foreground',
                             )}
                         >
                             {String(index + 1).padStart(2, '0')}

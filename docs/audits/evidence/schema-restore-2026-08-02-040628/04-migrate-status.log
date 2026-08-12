@@ -1,0 +1,12 @@
+
+  Migration name .............................................. Batch / Status  
+  2026_08_01_000000_batch_000_foundation ............................. [1] Ran  
+  2026_08_01_000100_batch_001_identity_authorization ................. [1] Ran  
+  2026_08_01_000200_batch_002_product_taxonomy_requests_quotes ....... [1] Ran  
+  2026_08_01_0002a0_batch_002a_deal_chaining_foundation .............. [1] Ran  
+  2026_08_01_003000_batch_003_orders_and_work ........................ [1] Ran  
+  2026_08_01_004000_batch_004_payment_and_accounting ................. [1] Ran  
+  2026_08_01_005000_batch_005_trust_support_communications ........... [1] Ran  
+  2026_08_01_006000_batch_006_integrity_measurement .................. [1] Ran  
+  2026_08_01_007000_batch_007_integrity_indexes_checks_and_guards .... [1] Ran  
+

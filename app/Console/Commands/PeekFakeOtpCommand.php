@@ -37,7 +37,7 @@ final class PeekFakeOtpCommand extends Command
             ];
         }
 
-        if ($record === null || ! isset($record['code']) || $record['code'] === '') {
+        if ($record === null || $record['code'] === '') {
             $this->warn('No fake OTP delivery found for that phone/purpose.');
 
             return self::FAILURE;

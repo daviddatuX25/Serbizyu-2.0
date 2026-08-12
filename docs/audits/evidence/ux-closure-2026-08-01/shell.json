@@ -1,0 +1,182 @@
+{
+  "mode": "shell",
+  "base": "https://daviddatux25.github.io/Serbizyu-2.0/app/?independent-e2e=1#/",
+  "ran_at": "2026-08-01T15:14:42+0800",
+  "steps": [
+    {
+      "step": "home",
+      "state": {
+        "hash": "#/",
+        "h1": "Ano ang gagawin natin today?",
+        "main": "Kumusta, Rosa\n\nAno ang gagawin natin today?\nI need help\nI offer a service\nNear you\nSee all \nCreative\nHand-drawn invitation layout\nMD\nMaya · Tagudin Centro\n₱80\nQuick Deal\n\nCan start today\n\nErrands\nPick up medicine or small items\nNR\nNoel · Tagudin Public Market\nfrom ₱70\nQuick Deal\n\nAvailable until 5 PM\n\nRepair\nBasic trouser alteration\nLA\nLina · Brgy. Quirino\n₱150\n\n3 slots this week\n\nLocal goods\nSeedling trays for home gardens\nAG\nAna · Brgy. Becques\n₱50\n\n8 trays ready\n\nYOUR NEXT STEP\n\nMaya will send the first draft\n\nHand-drawn invitation layout · ₱80\n\nOpen activity\n\nFACE TO FACE\n\nQuick Deal\n\nScan, agree on price, then confirm together.\n\nOpen Quick Deal\nPeople need help\nLocal goods\nNeed two seedling trays\n₱100\n\nTomato or pechay seedlings. Pickup near the public market.\n\nTagudin Centro · 2 replies\n\nErrands\nPlease fetch school supplies\n₱300\n\nNotebook, pencil, and colored paper. Ask before spending beyond budget.\n\nBrgy. Bio · 1 replies",
+        "buttons": [
+          {
+            "text": "I need help",
+            "disabled": false
+          },
+          {
+            "text": "I offer a service",
+            "disabled": false
+          },
+          {
+            "text": "See all",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "Open activity",
+            "disabled": false
+          },
+          {
+            "text": "Open Quick Deal",
+            "disabled": false
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "click_offer",
+      "clicked": true
+    },
+    {
+      "step": "offer_result",
+      "state": {
+        "hash": "#/me",
+        "h1": "Me",
+        "main": "Me\nRosa Mendoza\n\nYou can ask for help, offer services, and help Lola Nena with permission.\n\nRequests\n\nPost what you need\n\nListings\n\nOffer your work\n\nAgent help\n\nLola Nena",
+        "buttons": [],
+        "links": []
+      }
+    },
+    {
+      "step": "browse",
+      "state": {
+        "hash": "#/explore",
+        "h1": "Browse near you",
+        "main": "Browse near you\nServices\nPeople need help\nCreative\nHand-drawn invitation layout\nMD\nMaya · Tagudin Centro\n₱80\nQuick Deal\n\nCan start today\n\nErrands\nPick up medicine or small items\nNR\nNoel · Tagudin Public Market\nfrom ₱70\nQuick Deal\n\nAvailable until 5 PM\n\nRepair\nBasic trouser alteration\nLA\nLina · Brgy. Quirino\n₱150\n\n3 slots this week\n\nLocal goods\nSeedling trays for home gardens\nAG\nAna · Brgy. Becques\n₱50\n\n8 trays ready",
+        "buttons": [
+          {
+            "text": "Services",
+            "disabled": false
+          },
+          {
+            "text": "People need help",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "open_trouser",
+      "clicked": true,
+      "state": {
+        "hash": "#/quick-deal",
+        "h1": "₱70",
+        "main": "Point at the other phone\n\nQuick Deal · Pick up medicine or small items\n\n₱70\n\nwith Noel Ramos\n\n₱-50\n₱-10\n+₱10\n+₱50\n\nQR loops automatically · frame 3/6\n\nStart camera\n\nCash is handled directly. This QR never moves money.",
+        "buttons": [
+          {
+            "text": "₱-50",
+            "disabled": false
+          },
+          {
+            "text": "₱-10",
+            "disabled": false
+          },
+          {
+            "text": "+₱10",
+            "disabled": false
+          },
+          {
+            "text": "+₱50",
+            "disabled": false
+          },
+          {
+            "text": "Start camera",
+            "disabled": false
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "step": "payments_hash",
+      "state": {
+        "hash": "#/payments",
+        "h1": "Ano ang gagawin natin today?",
+        "main": "Kumusta, Rosa\n\nAno ang gagawin natin today?\nI need help\nI offer a service\nNear you\nSee all \nCreative\nHand-drawn invitation layout\nMD\nMaya · Tagudin Centro\n₱80\nQuick Deal\n\nCan start today\n\nErrands\nPick up medicine or small items\nNR\nNoel · Tagudin Public Market\nfrom ₱70\nQuick Deal\n\nAvailable until 5 PM\n\nRepair\nBasic trouser alteration\nLA\nLina · Brgy. Quirino\n₱150\n\n3 slots this week\n\nLocal goods\nSeedling trays for home gardens\nAG\nAna · Brgy. Becques\n₱50\n\n8 trays ready\n\nYOUR NEXT STEP\n\nMaya will send the first draft\n\nHand-drawn invitation layout · ₱80\n\nOpen activity\n\nFACE TO FACE\n\nQuick Deal\n\nScan, agree on price, then confirm together.\n\nOpen Quick Deal\nPeople need help\nLocal goods\nNeed two seedling trays\n₱100\n\nTomato or pechay seedlings. Pickup near the public market.\n\nTagudin Centro · 2 replies\n\nErrands\nPlease fetch school supplies\n₱300\n\nNotebook, pencil, and colored paper. Ask before spending beyond budget.\n\nBrgy. Bio · 1 replies",
+        "buttons": [
+          {
+            "text": "I need help",
+            "disabled": false
+          },
+          {
+            "text": "I offer a service",
+            "disabled": false
+          },
+          {
+            "text": "See all",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "",
+            "disabled": false
+          },
+          {
+            "text": "Open activity",
+            "disabled": false
+          },
+          {
+            "text": "Open Quick Deal",
+            "disabled": false
+          }
+        ],
+        "links": []
+      }
+    }
+  ]
+}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
+use App\Models\User;
 use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryChannel;
 use App\Modules\IdentityAccess\Infrastructure\Notifications\FakeOtpDelivery;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -14,7 +15,7 @@ use Tests\TestCase;
  */
 trait AuthenticatesWithPhoneOtp
 {
-    private FakeOtpDelivery $otpDelivery;
+    protected FakeOtpDelivery $otpDelivery;
 
     protected function bootPhoneOtpAuth(): void
     {
@@ -26,21 +27,23 @@ trait AuthenticatesWithPhoneOtp
         $this->withoutMiddleware(ThrottleRequests::class);
     }
 
+    /**
+     * Deterministic authenticated setup: a phone-verified active user via the
+     * native factory (reused if the same phone is authenticated again within a
+     * test). The SMS/register HTTP journeys have their own suites.
+     */
     protected function authenticateWithPhone(string $phone): string
     {
-        $this->postJson('/auth/phone/request', ['phone' => $phone])->assertOk();
-        $code = $this->otpDelivery->lastCodeFor($this->normalizePhone($phone));
-        self::assertNotNull($code);
+        $phone = $this->normalizePhone($phone);
+        $user = User::query()->where('phone_e164', $phone)->first()
+            ?? User::factory()->create([
+                'phone_e164' => $phone,
+                'status' => 'active',
+                'phone_verified_at' => now(),
+            ]);
+        $this->actingAs($user);
 
-        $this->postJson('/auth/phone/verify', [
-            'phone' => $phone,
-            'code' => $code,
-        ])->assertOk();
-
-        $userId = (string) auth()->id();
-        self::assertNotSame('', $userId);
-
-        return $userId;
+        return (string) $user->id;
     }
 
     protected function authenticateProvider(): string

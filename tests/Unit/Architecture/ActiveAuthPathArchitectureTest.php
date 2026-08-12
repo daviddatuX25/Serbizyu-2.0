@@ -27,6 +27,9 @@ final class ActiveAuthPathArchitectureTest extends TestCase
 
     public function test_auth_phone_page_is_registered_as_named_route(): void
     {
+        $this->assertSame(url('/auth/sign-in'), route('auth.sign-in'));
+        $this->assertSame(url('/auth/register'), route('auth.register'));
+        $this->assertSame(url('/auth/phone/login'), route('auth.phone.login'));
         $this->assertSame(url('/auth/phone'), route('auth.phone'));
         $this->assertSame(url('/auth/phone/request'), route('auth.phone.request'));
         $this->assertSame(url('/auth/phone/verify'), route('auth.phone.verify'));

@@ -7,42 +7,15 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 ## Foundational Context
 
-This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
+This application is a Laravel application running on PHP 8.4. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
-- php - 8.4
-- inertiajs/inertia-laravel (INERTIA_LARAVEL) - v3
-- laravel/framework (LARAVEL) - v12
-- laravel/prompts (PROMPTS) - v0
-- larastan/larastan (LARASTAN) - v3
-- laravel/boost (BOOST) - v2
-- laravel/mcp (MCP) - v0
-- laravel/pail (PAIL) - v1
-- laravel/pint (PINT) - v1
-- laravel/sail (SAIL) - v1
-- pestphp/pest (PEST) - v4
-- phpunit/phpunit (PHPUNIT) - v12
-- react (REACT) - v19
-- @inertiajs/react (INERTIA_REACT) - v3
-- eslint (ESLINT) - v9
-- prettier (PRETTIER) - v3
+Before relying on a package's API, confirm its installed version:
+- PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
+- JS packages: check `package.json` for the installed versions.
 
 ## Skills Activation
 
 This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
-
-- `ui-kit-first-development` — **required** for product UI / new feature surfaces: hi-fi kit light prototype → founder choose → solidify kit → then permanent React. Process contract: `docs/design-kit/WORKFLOW.md`. Runs hand-in-hand with backend Pest/domain skills; do not invent live chrome without capability truth.
-- `inertia-react-development` — Inertia React pages, forms, navigation.
-- `laravel-best-practices` / `pest-testing` — backend and tests (unchanged).
-
-## HLD/LLD Architecture Gate
-
-- Before implementing, modifying, refactoring, scaffolding, or reviewing behavior, activate the `hld-lld-architecture-alignment` skill.
-- Read the authoritative decision register, product/UX contract, domain/state contract, schema/ERD, ADRs, HLD/operations, LLD/OpenSpec/story sources relevant to the change before editing.
-- Trace the active route/use-case/page path and record the target delta, affected artifacts, invariants, authorization, failure/recovery behavior, persistence/constraint implications, and verification plan.
-- Treat Laravel Boost, skills, generated scaffolds, and agent summaries as implementation aids. They do not override canonical HLD/LLD/ADR/domain/schema decisions.
-- Use Laravel-native patterns deliberately: Form Requests, Policies/Gates, Actions/queries, backed PHP enums with model casts where domain vocabulary is finite, value objects for invariants, Eloquent/Query Builder inside the approved persistence seam, service-provider bindings, and database constraints/transactions for correctness.
-- Stop and mark the change BLOCKED when unresolved architecture/domain/state/schema/authorization/privacy/payment/operations decisions would make implementation speculative. Record bounded reversible assumptions and review triggers explicitly.
-- After editing, re-read the affected authority sections, run focused behavior and static/architecture checks, rebuild runtime assets when applicable, and update the implementation story/OpenSpec/evidence record.
 
 ## Conventions
 
@@ -96,6 +69,11 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
 3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
 4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
+
+## Project Rules
+
+- This project contains committed, area-grouped rules in `.ai/rules` when that directory exists (settled decisions, non-obvious traps, standing constraints). Framework and package guidelines that only apply to specific paths (testing, frontend, components) also live there, under `.ai/rules/boost` — this is not just recorded decisions, it is load-bearing guidance you have not seen inline. Before you enter plan mode or create/edit any file, you MUST first: open @.ai/rules/index.md (it maps file globs to rule files), read every rule file whose globs cover the path(s) in scope, and run `grep -rin 'keyword' .ai/rules` to catch what a path match alone misses. Do not write code until you have read and are following every matching rule. If `.ai/rules` does not exist, continue without it.
+- Record durable rules with `record-rule` so the next agent or teammate inherits them instead of working them out again. Pass a `glob` (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`. Always use `record-rule`, never your native memory or notes tool — native memory is personal and session-scoped; only `.ai/rules` is shared with the team and persists in the repo.
 
 ## Artisan
 
@@ -219,6 +197,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 ## Database
 
 - When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
+
 - Laravel 12 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
 
 ### Models

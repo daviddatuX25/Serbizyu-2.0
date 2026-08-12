@@ -1,47 +1,6 @@
-<?php
-
-declare(strict_types=1);
-
-namespace Tests\Feature\FirstSlice;
-
-use App\Modules\IdentityAccess\Application\DemoFixtures;
-use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Support\Facades\DB;
-use Tests\Support\AuthenticatesWithPhoneOtp;
-use Tests\TestCase;
-
-final class FirstSliceFeatureTest extends TestCase
-{
-    use AuthenticatesWithPhoneOtp;
-    use DatabaseTransactions;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        if (DB::connection()->getDriverName() !== 'pgsql') {
-            self::markTestSkipped('The first connected slice uses the PostgreSQL 16/PostGIS baseline.');
-        }
-
-        $this->bootPhoneOtpAuth();
-        app(FixtureRepository::class)->ensure();
-    }
-
-    public function test_phone_otp_login_creates_an_authenticated_session(): void
-    {
-        $userId = $this->authenticateProvider();
-
-        $this->inertiaGet('/')
-            ->assertOk()
-            ->assertJsonPath('component', 'Home')
-            ->assertJsonPath('props.slice.session.status', 'authenticated')
-            ->assertJsonPath('props.slice.session.source', 'phone_otp')
-            ->assertJsonPath('props.slice.session.user_id', $userId)
-            ->assertJsonPath('props.slice.demoNotice', null)
-            ->assertJsonPath('props.slice.readiness.provider_intent', false);
-    }
-
+FirstSliceFeatureTest.php 296L cognitive
+// /home/user/Serbizyu-2.0/tests/Feature/FirstSlice/FirstSliceFeatureTest.php
+§ test test_guest_and_logout_have_safe_recovery_states (L45-L59)
     public function test_guest_and_logout_have_safe_recovery_states(): void
     {
         $this->postJson('/auth/phone/request', ['phone' => 'not-a-phone'])
@@ -55,9 +14,10 @@ final class FirstSliceFeatureTest extends TestCase
             ->assertOk()
             ->assertJsonPath('props.slice.session', null);
 
-        $this->get('/my-listings')->assertRedirect(route('auth.phone'));
+        $this->get('/my-listings')->assertRedirect(route('auth.sign-in'));
     }
-
+// ... 1 lines omitted
+§ test test_onboarding_persists_additive_provider_readiness_facts_without_persona_switching (L61-L93)
     public function test_onboarding_persists_additive_provider_readiness_facts_without_persona_switching(): void
     {
         $userId = $this->authenticateProvider();
@@ -70,6 +30,8 @@ final class FirstSliceFeatureTest extends TestCase
             'accessibility_preferences' => ['plain_language' => true],
             'category_code' => 'home-help',
             'listing_type' => 'service',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ])->assertRedirect();
 
         self::assertSame('L1', DB::table('users')->where('id', $userId)->value('primary_access_tier'));
@@ -91,7 +53,8 @@ final class FirstSliceFeatureTest extends TestCase
             ->assertJsonPath('props.slice.readiness.provider_intent', true)
             ->assertJsonPath('props.slice.readiness.can_create_draft', true);
     }
-
+// ... 1 lines omitted
+§ test test_owner_can_create_save_and_submit_a_listing_but_pending_review_is_not_public (L95-L147)
     public function test_owner_can_create_save_and_submit_a_listing_but_pending_review_is_not_public(): void
     {
         $this->authenticateProvider();
@@ -145,7 +108,8 @@ final class FirstSliceFeatureTest extends TestCase
             'Pending review listings must stay out of public browse.',
         );
     }
-
+// ... 1 lines omitted
+§ test test_submit_is_idempotent_and_immutable_and_stale_writes_are_rejected (L149-L207)
     public function test_submit_is_idempotent_and_immutable_and_stale_writes_are_rejected(): void
     {
         $userId = $this->authenticateProvider();
@@ -205,7 +169,8 @@ final class FirstSliceFeatureTest extends TestCase
         ])->assertStatus(409)
             ->assertJsonPath('code', 'VERSION_CONFLICT');
     }
-
+// ... 1 lines omitted
+§ test test_public_discovery_includes_the_deterministic_active_tagudin_fixture_and_detail_is_safe (L209-L227)
     public function test_public_discovery_includes_the_deterministic_active_tagudin_fixture_and_detail_is_safe(): void
     {
         $this->authenticateProvider();
@@ -225,7 +190,8 @@ final class FirstSliceFeatureTest extends TestCase
             ->assertJsonMissingPath('props.slice.activeListingDetail.owner_phone_e164')
             ->assertJsonMissingPath('props.slice.activeListingDetail.private_profile');
     }
-
+// ... 1 lines omitted
+§ test test_non_owner_protected_edit_attempt_returns_safe_denial_with_correlation_id (L229-L249)
     public function test_non_owner_protected_edit_attempt_returns_safe_denial_with_correlation_id(): void
     {
         $this->authenticateProvider();
@@ -247,7 +213,8 @@ final class FirstSliceFeatureTest extends TestCase
             ->assertJsonPath('correlation_id', '0198a3b1-7c40-7abc-8def-f234567890ab')
             ->assertHeader('X-Correlation-Id', '0198a3b1-7c40-7abc-8def-f234567890ab');
     }
-
+// ... 1 lines omitted
+§ test test_http_form_requests_keep_validation_at_the_http_boundary (L251-L273)
     public function test_http_form_requests_keep_validation_at_the_http_boundary(): void
     {
         $this->postJson('/auth/phone/request', [])
@@ -258,7 +225,7 @@ final class FirstSliceFeatureTest extends TestCase
 
         $this->postJson('/onboarding', ['provider_intent' => true])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['display_name']);
+            ->assertJsonValidationErrors(['display_name', 'password']);
 
         $this->postJson('/listings', [
             'title' => 'x',
@@ -268,24 +235,5 @@ final class FirstSliceFeatureTest extends TestCase
         ])->assertStatus(422)
             ->assertJsonValidationErrors(['title', 'description', 'category_code', 'listing_type']);
     }
-
-    private function completeProviderOnboarding(): void
-    {
-        $this->post('/onboarding', [
-            'provider_intent' => true,
-            'display_name' => 'Rosa Provider Fixture',
-            'service_area_display' => 'Tagudin, Ilocos Sur',
-            'category_code' => 'home-help',
-            'listing_type' => 'service',
-        ])->assertRedirect();
-    }
-
-    private function inertiaGet(string $uri)
-    {
-        return $this->withHeaders([
-            'X-Inertia' => 'true',
-            'X-Requested-With' => 'XMLHttpRequest',
-            'X-Inertia-Version' => hash_file('xxh128', public_path('build/manifest.json')),
-        ])->get($uri);
-    }
-}
+7/14 chunks shown (2318 tokens)
+[lean-ctx] full source: read "/home/user/Serbizyu-2.0/tests/Feature/FirstSlice/FirstSliceFeatureTest.php" directly (no MCP)  ·  or ctx_read("/home/user/Serbizyu-2.0/tests/Feature/FirstSlice/FirstSliceFeatureTest.php", mode="full")

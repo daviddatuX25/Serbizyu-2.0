@@ -16,7 +16,7 @@ final class EnsureAuthenticated
             // Persist across the multi-step OTP flow (flash would be consumed too early).
             $request->session()->put('auth_return_to', $request->getRequestUri());
 
-            return redirect()->route('auth.phone');
+            return redirect()->route('auth.sign-in');
         }
 
         return $next($request);

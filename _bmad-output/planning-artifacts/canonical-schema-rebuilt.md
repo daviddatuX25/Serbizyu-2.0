@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Canonical Schema and ERD Decision Contract
 
-Status: CANONICAL SCHEMA/ERD AUTHORITY — founder-approved 2026-07-31; migration execution remains separately gated by P0-03 contract
+Status: CANONICAL SCHEMA/ERD AUTHORITY — founder-approved 2026-07-31; initiative extension accepted 2026-08-09; migration execution remains separately gated
 BMAD phase: Phase 3 — Data model / schema contract
 Depends on:
 
@@ -30,7 +30,7 @@ This document is the sole current schema inventory for the rebuilt plan. It repl
 
 ## 2. Canonical inventory
 
-The current proposed canonical inventory contains **42 tables**. This is the count for this schema contract; no additional application table may be introduced without updating this artifact or an approved schema ADR.
+The approved canonical inventory contains the observed **47-table migrated baseline** (the prior core 42, four-table Deal-Chaining foundation, and `auth_otps`) plus **eleven approved initiative-extension tables**. The resulting planning inventory is **58 tables**. Deal-Chaining remains coordination-only, account integrations remain owner-scoped adapters, and no pooled finance, custody, offline authority, or parent liability is implied.
 
 ### Identity and authorization
 
@@ -97,14 +97,205 @@ The current proposed canonical inventory contains **42 tables**. This is the cou
 
 `migration_checkpoints` is operational migration metadata, not product data. It must not be used as a substitute for backups or a schema migration tool’s own history.
 
+### 2.1 Approved bounded Deal-Chaining foundation inventory
+
+This is the founder-approved foundation contract required before E0-S2. It commits persistence headroom and aggregate boundaries; it does **not** authorize the later bounded user-facing feature or pilot activation.
+
+43. `deal_chains`
+44. `deal_needs`
+45. `deal_dependencies`
+46. `deal_invitations`
+
+#### `deal_chains`
+
+Purpose: coordinator-owned parent plan and derived roll-up boundary. It is not an Order, wallet, escrow, financial account, or parent-wide liability owner.
+
+Required columns:
+
+- `id UUID PRIMARY KEY`
+- `coordinator_user_id UUID NOT NULL` → `users(id)` with `ON DELETE RESTRICT`
+- `status TEXT NOT NULL` — `draft`, `planning`, `sourcing`, `in_progress`, `partially_complete`, `blocked`, `completed`, `cancelled`, `archived`
+- `title TEXT NOT NULL`, `goal TEXT NOT NULL`
+- `target_at TIMESTAMPTZ NULL`, `target_location JSONB NULL` with `payload_version INTEGER NOT NULL` when present
+- `row_version INTEGER NOT NULL`, `correlation_id UUID NOT NULL`, timestamps, `archived_at TIMESTAMPTZ NULL`
+
+The chain’s progress and cost are derived from child Needs and independent child Orders; no parent payment obligation, pooled balance, automatic split, or parent-wide guarantee is stored.
+
+#### `deal_needs`
+
+Purpose: one required ordered service/product slot within a Deal Chain.
+
+Required columns:
+
+- `id UUID PRIMARY KEY`, `deal_chain_id UUID NOT NULL` → `deal_chains(id)` with `ON DELETE RESTRICT`
+- `ordinal INTEGER NOT NULL CHECK (ordinal > 0)`
+- `need_kind TEXT NOT NULL` — `service` or `product`
+- `title TEXT NOT NULL`, `description TEXT NOT NULL`
+- `status TEXT NOT NULL` — `draft`, `open`, `sourcing`, `invited`, `quoted`, `accepted`, `in_progress`, `blocked`, `completed`, `failed`, `cancelled`, `replacement_needed`, `superseded`
+- `requested_at TIMESTAMPTZ NOT NULL`, `due_at TIMESTAMPTZ NULL`
+- `replaces_deal_need_id UUID NULL` → same-chain `deal_needs(id)` with `ON DELETE RESTRICT`
+- `row_version INTEGER NOT NULL`, `correlation_id UUID NOT NULL`, timestamps
+
+One Need may have many linked Requests and Quotes, but at most one active non-cancelled child Order. Replacement creates a new Need and preserves the prior Need/Order history.
+
+#### `deal_dependencies`
+
+Purpose: explicit directed `blocks` edge between two Needs in the same Chain.
+
+Required columns:
+
+- `id UUID PRIMARY KEY`, `deal_chain_id UUID NOT NULL` → `deal_chains(id)` with `ON DELETE RESTRICT`
+- `predecessor_need_id UUID NOT NULL`, `successor_need_id UUID NOT NULL`
+- `dependency_type TEXT NOT NULL CHECK (dependency_type = 'blocks')`
+- `status TEXT NOT NULL` — `active`, `removed`, `superseded`
+- `condition_code TEXT NOT NULL`, `created_by_user_id UUID NOT NULL` → `users(id)`
+- `row_version INTEGER NOT NULL`, `correlation_id UUID NOT NULL`, timestamps, `removed_at TIMESTAMPTZ NULL`
+
+Composite foreign keys `(deal_chain_id, predecessor_need_id)` and `(deal_chain_id, successor_need_id)` reference `(deal_chain_id, id)` on `deal_needs`, proving same-chain membership. `CHECK (predecessor_need_id <> successor_need_id)` rejects self-edges. A partial unique index on `(deal_chain_id, predecessor_need_id, successor_need_id, dependency_type)` where `status = 'active'` rejects duplicate active edges. Cycle prevention is enforced by the command transaction under a chain dependency lock plus a database constraint-trigger/reachability check; cycles are never accepted.
+
+#### `deal_invitations`
+
+Purpose: invitation to one specific Need; accepting it is not Order creation.
+
+Required columns:
+
+- `id UUID PRIMARY KEY`, `deal_need_id UUID NOT NULL` → `deal_needs(id)` with `ON DELETE RESTRICT`
+- `invited_provider_user_id UUID NOT NULL` → `users(id)` with `ON DELETE RESTRICT`
+- `invited_by_user_id UUID NOT NULL` → `users(id)` with `ON DELETE RESTRICT`
+- `acting_for_user_id UUID NULL` → `users(id)` with `ON DELETE SET NULL` only when audit/anonymization policy permits
+- `purpose TEXT NOT NULL`, `scope JSONB NOT NULL`, `payload_version INTEGER NOT NULL`
+- `status TEXT NOT NULL` — `draft`, `sent`, `viewed`, `accepted`, `declined`, `expired`, `revoked`, `superseded`, `cancelled`
+- `expires_at TIMESTAMPTZ NOT NULL`, `responded_at TIMESTAMPTZ NULL`, `response_note TEXT NULL`
+- `acceptance_idempotency_key TEXT NULL`, `acceptance_correlation_id UUID NULL`
+- `row_version INTEGER NOT NULL`, `correlation_id UUID NOT NULL`, timestamps, `revoked_at TIMESTAMPTZ NULL`
+
+Direct invitation response is actor-attributed, version-checked, idempotent through the shared `idempotency_keys` boundary (with a unique invitation/key guard), and audit/outbox-backed. Acceptance may move a Need to `accepted`; a separate child-agreement command forms or links an ordinary Order.
+
+#### Existing-table lineage columns and rules
+
+- `requests.deal_chain_id UUID NULL` and `requests.deal_need_id UUID NULL`; both null or both non-null, with composite FK to `deal_needs` and indexes on `(deal_need_id, status, expires_at)`.
+- `quotes.deal_chain_id UUID NULL` and `quotes.deal_need_id UUID NULL`; both null or both non-null, with composite FK to `deal_needs`. When a Quote references a Request, the lineage pair must match the Request through an application/constraint-trigger check; no parallel bidding model is introduced.
+- `orders.deal_chain_id UUID NULL`, `orders.deal_need_id UUID NULL`, and `origin = 'deal_chain'` for child Orders. Both lineage columns are null or both non-null, with composite FK to `deal_needs`; a partial unique index on `deal_need_id` where the Order is non-cancelled and non-closed allows at most one active child Order per Need.
+- `order_terms_snapshots`, `work_instances`, `payment_obligations`, `order_parties`, `evidence_files`, and `disputes` remain ordinary child-Order records. They retain independent parties, terms, Work, evidence, payment, dispute, cancellation, audit, and idempotency boundaries.
+- Shared `audit_events`, `outbox_messages`, and `idempotency_keys` carry actor, acting-for, correlation, expected-version, command, and publication causality for all four foundation aggregates and lineage changes. No Deal-Chaining-specific history table is added.
+
+
+### 2.2 Approved 2026-08-09 initiative-extension inventory
+
+The numbers below extend, rather than renumber, the founder-approved inventory:
+
+47. `auth_otps` — observed permanent phone-authentication table already migrated
+48. `category_versions`
+49. `listing_capacity_reservations`
+50. `integration_clients`
+51. `integration_credentials`
+52. `integration_object_mappings`
+53. `integration_webhook_subscriptions`
+54. `integration_webhook_deliveries`
+55. `integration_sync_cursors`
+56. `inbox_messages`
+57. `capability_activations`
+58. `command_approvals`
+
+#### `auth_otps`
+
+- Columns: `id UUID PK`, normalized `phone_e164 TEXT`, `purpose TEXT`, `code_hash CHAR(64)`, `status pending|invalidated|consumed|expired`, `attempts SMALLINT`, `expires_at`, nullable `invalidated_at`/`consumed_at`, `row_version`, `correlation_id UUID`, timestamps.
+- Checks/indexes: `attempts BETWEEN 0 AND 5`; lifecycle/time consistency; partial unique `(phone_e164, purpose) WHERE status = 'pending'`; phone/purpose/expiry, correlation, and purge indexes.
+- Concurrency: issuance takes a transaction-scoped phone/purpose advisory lock, invalidates the current pending row, then inserts one pending challenge. Verification selects that row under lock and atomically increments attempts or changes it to consumed; expiry/invalidated/consumed rows never verify and concurrent verification cannot consume twice.
+- Ownership/retention: `IdentityAccess`, P1 security data; purge expired/consumed/invalidated challenge rows after the policy period while preserving non-secret audit evidence.
+
+#### `category_versions`
+
+- Columns: `id UUID PK`, `category_id UUID NOT NULL`, `business_version INTEGER NOT NULL`, `status TEXT`, name/description/safety/data/policy content, `content_schema_version INTEGER`, `checksum TEXT`, nullable effective/published/paused/retired times, `created_by_user_id`, `correlation_id`, timestamps.
+- FKs: category and creator `ON DELETE RESTRICT`.
+- Checks/indexes: unique `(category_id, business_version)`; positive versions; lifecycle/time consistency; one current active version per category by partial unique index; published content is immutable.
+- Ownership/retention: `Listings`, P2 governed policy; retain every version referenced by profile/listing/terms.
+
+#### `listing_capacity_reservations`
+
+- Columns: `id UUID PK`, `listing_capacity_id`, `listing_version_id`, nullable `order_id`, `source_mechanism`, `source_reference_id`, positive `quantity`, nullable slot start/end, `status held|committed|released|expired`, `command_scope`, `idempotency_key`, `row_version`, nullable expiry/committed/released timestamps, `correlation_id`, timestamps.
+- FKs: composite capacity/listing-version membership and optional Order use `ON DELETE RESTRICT`; source records are retained or explicitly nullable only by their retention contract.
+- Checks/indexes: quantity/slot/status-time consistency; unique `(command_scope, idempotency_key)`; partial unique slot/resource ownership for held/committed rows; active expiry and Order indexes.
+- Ownership/retention: `Listings`, P2 transaction history; terminal records remain with Order/audit history.
+
+#### `integration_clients`
+
+- Columns: `id UUID PK`, `owner_user_id UUID`, name, `status draft|active|suspended|revoked|archived`, `environment`, `audience`, `granted_scopes JSONB`, `scope_schema_version`, `scope_version`, `row_version`, nullable activated/revoked/archived times, `created_by_user_id`, `correlation_id`, timestamps.
+- FKs: owner/creator `ON DELETE RESTRICT`. Unique `(owner_user_id, name)` among non-archived clients and `(id, owner_user_id)` for composite owner guards.
+- Checks/indexes: scope is a versioned allow-list; lifecycle/time consistency; owner/status and revocation indexes.
+- Ownership/retention: `Integrations`, P1/P2; archive, never delete while credentials/mappings/audit remain.
+
+#### `integration_credentials`
+
+- Columns: `id UUID PK`, `integration_client_id`, globally unique unguessable `public_selector`, `secret_hash` or `secret_reference`, algorithm/version, environment/audience, immutable `granted_scopes JSONB`, `scope_schema_version`, `granted_scope_version`, `status active|overlap|revoked|expired`, nullable `rotates_from_credential_id`, `overlap_ends_at`, `revoked_at`, `last_used_at`, revoke reason, issued/expiry times, `row_version`, `correlation_id`, timestamps.
+- FKs/checks/indexes: client/issuer/self rotation predecessor `ON DELETE RESTRICT`; exactly one secret storage form; positive grant version; rotation lineage cannot self-reference; active/overlap require unexpired secret and lifecycle-consistent times; unique selector plus client/status/expiry and overlap indexes.
+- Authorization: effective scopes are the intersection of the credential's immutable grant, current restrictive client policy, owner/resource policy, and activation. Client scope expansion never expands an existing credential and requires a newly issued credential; reduction/suspension/revocation invalidates affected credentials immediately in web/workers/caches. Overlap has one bounded end and both generations remain auditable.
+- Ownership/retention: `Integrations`, P1 secret metadata; plaintext is never stored/recoverable, and retired records remain for security audit.
+
+#### `integration_object_mappings`
+
+- Columns: `id UUID PK`, `integration_client_id`, `owner_user_id`, resource type, external ID, internal UUID, expected sync/business version, status, mapping schema version, nullable archived time, `correlation_id`, timestamps.
+- FKs: composite `(client, owner)` to client ownership `ON DELETE RESTRICT`; internal resource FK is materialized per allowed resource type rather than an unconstrained polymorphic owner.
+- Checks/indexes: unique `(client, resource_type, external_id)` and `(client, resource_type, internal_id)`; owner/client/resource/status indexes.
+- Ownership/retention: `Integrations`, P2; archived mapping preserves sync and attribution history.
+
+#### `integration_webhook_subscriptions`
+
+- Columns: `id UUID PK`, `integration_client_id`, `owner_user_id`, normalized HTTPS endpoint, event allow-list, filter schema/version, secret reference, environment, status/version, endpoint-verification evidence, nullable suspended/revoked times, `correlation_id`, timestamps.
+- FKs: composite client/owner `ON DELETE RESTRICT`; unique active `(client, endpoint)`; no secret value; lifecycle/time and HTTPS-outside-local checks.
+- Ownership/retention: `Integrations`, P1/P2; preserve configuration and revocation history while deliveries/audit exist.
+
+#### `integration_webhook_deliveries`
+
+- Columns: `id UUID PK`, subscription/client/owner IDs, `outbox_message_id`, event/payload contract versions and hash, attempt number, destination host/IP snapshot, status, HTTP response class, retry count, next-attempt/dead-letter times, bounded error code, `correlation_id`, timestamps.
+- FKs: subscription, composite client/owner, and outbox source `ON DELETE RESTRICT`.
+- Checks/indexes: unique `(subscription_id, outbox_message_id, attempt_number)`; attempt/time/status consistency; due-retry, dead-letter, and correlation indexes.
+- Ownership/retention: `Integrations`, P2; minimized payload follows source data class, delivery metadata survives through audit/replay policy.
+
+#### `integration_sync_cursors`
+
+- Columns: `id UUID PK`, client/owner IDs, resource stream, opaque cursor plus monotonic numeric sequence, contract version, status, nullable expiry/reset time/reason, `row_version`, `correlation_id`, timestamps.
+- FKs: composite client/owner `ON DELETE RESTRICT`; unique `(client, resource_stream)`; sequence nonnegative and reset/time consistency.
+- Ownership/retention: `Integrations`, P2; resets append audit and never silently move the sequence backward.
+
+#### `inbox_messages`
+
+- Columns: `id UUID PK`, consumer, source event ID, aggregate type/ID/version/sequence, event/payload contract versions, payload hash, status received|processing|processed|gap|unsupported|dead_letter, attempts, nullable prior-sequence/processed/next-attempt times, bounded error code, `correlation_id`, timestamps.
+- Checks/indexes: unique `(consumer, source_event_id)` and `(consumer, aggregate_type, aggregate_id, aggregate_sequence)`; positive versions/sequences; lifecycle/time checks; due/gap/dead-letter indexes.
+- Ownership/retention: `Operations`, P2 or source-higher class; retain beyond the maximum replay/reconciliation window.
+
+#### `capability_activations`
+
+- Columns: `id UUID PK`, capability code/version, explicit environment/cohort/geography, nullable owner/category/profile/mechanism/shape/lane/provider/client dimensions (`NULL` = wildcard), deterministic dimension fingerprint, decision enabled|disabled, evidence/approval references, accountable owner, `effective_at`, nullable `expires_at`, generated half-open `effective_range`, rollback/incident owner, supersedes ID, `correlation_id`, timestamps.
+- FKs/checks/indexes: governed dimensions and superseded record `ON DELETE RESTRICT`; no polymorphic owner; `effective_at < expires_at` when bounded; GiST exclusion prevents overlapping current `effective_range` for one fingerprint; supersession is append-only and lock-serialized; matching-dimension/current-decision indexes support one deterministic query.
+- Evaluation: fetch all current tuple matches. Any matching deny is absolute. With zero denies, at least one enable is required; the enable with most non-null dimensions, then latest `effective_at`/ID, supplies attribution. Conditional/live-money absence denies. Every adapter and queued irreversible effect rechecks immediately before mutation.
+- Ownership/retention: `Operations`, P2/P4 when financial; append-only decisions remain with audit and accepted snapshots.
+
+#### `command_approvals`
+
+- Columns: `id UUID PK`, `approval_set_id UUID`, initiator/approver user IDs, `required_approver_role`, `approver_role`, nullable integration client, command type, immutable `command_fingerprint`, normalized payload hash, target IDs/versions/scopes, nullable amount/currency, policy version, reason/evidence, status pending|approved|consumed|expired|revoked, issued/expiry/consumed times, idempotency scope/key, `correlation_id`, timestamps.
+- FKs: users/client/evidence `ON DELETE RESTRICT`; initiator differs from approver whenever maker/checker applies. Every row in one set binds the same command/payload/target/version/economics/policy/evidence/expiry fingerprint.
+- Checks/indexes: unique `(approval_set_id, approver_user_id, approver_role)` and `(idempotency_scope, idempotency_key)`; required/actual role compatibility; one atomic set consumption; expiry/status/time, amount/currency, target/version checks; pending/expiry/fingerprint/actor indexes.
+- Quorum: policy maps a command fingerprint to required independent roles. Live connected-money activation requires distinct founder, financial, security, and operations attestations; no actor satisfies two required roles in one set. The guarded command locks the set, proves the exact quorum current, then atomically consumes every attestation with activation/state/audit/idempotency/outbox or consumes none.
+- Ownership/retention: `Operations`, P2/P4 by command; append-only approval, attestation, and consumption evidence.
+
+#### Existing-table amendments
+
+- `capability_profiles` uses `profile_family_code`, immutable positive `business_version`, `content_schema_version`, and optimistic `row_version`; unique `(profile_family_code, business_version)` is the referenced candidate key and only one current active version exists per family. `category_versions` follows the equivalent category/business-version contract.
+- `listing_versions` stores `category_id` + `category_business_version` and `capability_profile_family_code` + `capability_profile_business_version`; composite `ON DELETE RESTRICT` FKs pin the exact candidate keys. `listing_capacity` replaces unique `listing_id` with bucket identity `(listing_id, listing_version_id, capacity_type, resource_key)` and a composite membership key.
+- Accepted `orders` require a same-Order current terms snapshot; `payment_obligations` require exactly one lane and any Work reference must be same-Order.
+- Request/Quote and Deal replacement/dependency lineage use composite same-parent FKs plus the documented partial uniqueness/constraint triggers.
+- `financial_transactions` and entries store one currency; entry currency equals transaction and active account currency, and posting is rejected unless debits equal credits.
+- `audit_events`, `idempotency_keys`, outbox/event envelopes gain nullable client attribution while preserving owner and human/system actor. Core owner remains `users(id)`.
+
 ## 3. Shared column conventions
 
 Every table uses:
 
-- `id BIGINT` or UUID according to the implementation ADR; one identifier strategy must be selected before migrations.
+- `id UUID PRIMARY KEY`, generated by the application with UUIDv7 semantics and stored in PostgreSQL native `uuid` format; this follows the implementation contract and remains the authority before migrations.
 - `created_at TIMESTAMPTZ NOT NULL`
 - `updated_at TIMESTAMPTZ NOT NULL` where mutable
-- `version INTEGER NOT NULL DEFAULT 1` where concurrency-sensitive
+- `row_version INTEGER NOT NULL DEFAULT 1` where optimistic concurrency is required; immutable business/contract/payload/event versions use explicit semantic names and never share this counter.
 
 Additional conventions:
 
@@ -206,20 +397,17 @@ Purpose: metadata for uploaded evidence/artifacts.
 Columns:
 
 - `owner_user_id`
-- `storage_key`
-- media type/size/hash
-- evidence/data class
-- scan status
-- visibility/access policy
-- retention policy
-- deleted_at
+- constrained `subject_type` enum (`identity_verification`, `listing`, `work_instance`, `payment_obligation`, `dispute`, `safety_incident`, `support_case`, `command_approval`, `capability_activation`) and `subject_id UUID`
+- `subject_owner_user_id`, `purpose_code`, and `resolver_contract_version`
+- `storage_key`, media type/size/hash, evidence/data class, scan/quarantine status
+- visibility/access policy, retention policy, and `deleted_at`
 
 Constraints/indexes:
 
-- No public storage key exposure.
-- File type/size/hash checks.
-- Malware scan status required before sensitive use.
-- Hash index for duplicate detection where appropriate.
+- Each row is a typed attachment. A deferred constraint trigger resolves the declared subject table, proves that the subject exists and `subject_owner_user_id` matches its canonical owner, and rejects an unsupported type/purpose pair; subject identity is never hidden in JSON.
+- Access grants are short-lived signed envelopes, not a new authority table: unique grant ID, evidence ID, principal, purpose, resolver version, issued/expiry times, and correlation ID are authenticated in the envelope; issuance/use persist only minimized `audit_events`.
+- Retrieval re-resolves current subject participants/admin purpose, active hold, data class, scan state, and grant expiry. Failure is non-enumerating; no public storage key, unsafe byte, or stale grant is exposed.
+- File type/size/hash checks and malware/active-content policy pass before sensitive use; active retention hold blocks delete/purge.
 
 ### 4.6 `consent_grants`
 
@@ -263,19 +451,19 @@ Purpose: approved composition of taxonomy dimensions.
 
 Columns:
 
-- listing type
-- mechanism
-- work shape
-- allowed payment lanes
-- allowed access tiers
+- `profile_family_code`
+- immutable positive `business_version`
+- `content_schema_version`
+- listing type, mechanism, Work shape/contract version
+- allowed payment lanes and access tiers
 - safety/data class
-- status
-- activation record reference
-- version
+- lifecycle status and activation record reference
+- optimistic `row_version`
 
 Constraints:
 
-- Unique versioned profile code.
+- Unique candidate key `(profile_family_code, business_version)`; one current active version per family by partial unique index.
+- Published content and business-version identity are immutable; changes create a new version, while `row_version` guards mutable draft/review state.
 - No active profile may reference an excluded lane/shape.
 - Pilot profile must have safety/operations gate status.
 
@@ -305,16 +493,16 @@ Purpose: immutable terms/capacity/price snapshots.
 
 Columns:
 
-- listing id/version number
+- listing ID and immutable version number
+- exact `category_id` + `category_business_version`
+- exact `capability_profile_family_code` + `capability_profile_business_version`
 - description/terms
 - price/quote/budget mode
 - payment-lane availability
 - availability/capacity summary
-- safety copy
-- effective dates
-- authored actor
+- safety copy, effective dates, authored actor
 
-Constraints: unique `(listing_id, version_number)`; no update to published version.
+Constraints: unique `(listing_id, version_number)`; composite FKs reference the exact Category and Capability business-version candidate keys with `ON DELETE RESTRICT`; published versions are immutable.
 
 ### 5.5 `listing_capacity`
 
@@ -436,7 +624,7 @@ Constraints:
 
 - Shape must be supported by capability profile.
 - Completion requires domain guards.
-- A future Deal-Chaining parent/child relation requires an approved schema extension; initial pilot permits only the defined relationship form.
+- The approved Deal-Chaining foundation uses nullable lineage on existing Request/Quote/Order records; child Work remains an ordinary Order boundary. This schema headroom does not authorize the later user-facing feature or pilot activation.
 
 ### 6.5 `work_events`
 
@@ -568,16 +756,20 @@ Purpose: external gateway/provider events.
 
 Columns:
 
-- provider
-- provider_event_id
-- event type
-- raw/minimized payload reference
-- authenticated status
-- received/processed times
-- processing status/error
-- related obligation/transaction
+- provider, authenticated provider-account ID, environment/audience
+- provider event ID/type and provider object ID/type
+- canonical-payload hash, signature algorithm/key reference, verification result, replay timestamp/window result
+- expected owner, Payment Obligation, amount/currency, and transition
+- stable `business_effect_key`
+- raw encrypted/minimized payload reference
+- received/quarantined/processed times, processing/reconciliation status and bounded error
+- nullable related financial transaction
 
-Constraints: unique `(provider, provider_event_id)`; authenticity validation before financial effect.
+Constraints:
+
+- Unique `(provider, provider_account_id, environment, provider_event_id)` and `(provider, provider_account_id, environment, business_effect_key)`.
+- Amount/currency/owner/object/Obligation/expected-transition binding and canonical-byte authenticity/replay checks become immutable verification outcomes before any financial effect.
+- One transaction records accepted provider receipt, payment event, balanced financial transaction, audit/idempotency result, and outbox; mismatch/unknown/replay enters visible quarantine/reconciliation with no effect.
 
 ### 7.8 `financial_adjustments`
 
@@ -713,9 +905,9 @@ Sensitive values are redacted or referenced, not copied into broad audit payload
 
 ### 10.2 `outbox_messages`
 
-Transactional event publication intent, event ID/type, aggregate, payload version, status, attempt count, next attempt, and failure.
+Typed transactional envelope columns: unique event ID; event type and event-contract version; aggregate type/ID, aggregate `row_version`, and positive aggregate sequence; payload-contract version and payload hash/reference; causation/correlation IDs; owner, human/system actor and nullable client attribution; occurred/effective time; status, attempt count, next attempt, and bounded failure.
 
-Constraint: created in the same transaction as the state change it announces.
+Constraints: unique `(aggregate_type, aggregate_id, aggregate_sequence)` and event ID. The owning aggregate allocates the next sequence under its mutation lock; state, sequence, audit, idempotency result, and outbox insert share one transaction. A consumer locks its inbox/checkpoint, applies the next effect plus advances sequence/status in one transaction, then acknowledges; duplicate, gap, unsupported version, or failed effect never advances acknowledgment.
 
 ### 10.3 `idempotency_keys`
 
@@ -781,122 +973,121 @@ Required indexes include:
 - Dispute active target/severity
 - Hold active target
 - Notification recipient/status/next attempt
-- Outbox status/next attempt
+- Outbox status/next attempt and aggregate sequence
+- Inbox consumer/event and aggregate sequence/status
 - Idempotency scope/key
 - Evidence subject/data class/retention
+- Capacity bucket/version/resource and active reservation expiry
+- Client owner/status/environment and credential selector/expiry/revocation
+- Mapping client/resource/external/internal identity
+- Webhook subscription status and delivery retry/dead-letter
+- Activation dimension fingerprint/effective/expiry
+- Approval actor/status/expiry/command/payload hash
 
 Required integrity checks include:
 
-- No negative money or capacity values.
-- No duplicate provider event identity.
-- No duplicate idempotency scope/key.
-- Balanced financial transaction entries.
-- Valid status transitions.
-- No active listing without capability/category approval.
-- No protected release with active relevant hold.
+- No negative money, quantity, or capacity values.
+- No duplicate provider event, inbox event, business-effect, or idempotency identity.
+- Balanced financial transaction entries per currency; entry/transaction/account currencies match.
+- Valid lifecycle and timestamp transitions.
+- No active listing without exact capability/category business-version approval.
+- No capacity or reservation linked to another listing/version and no active slot overlap.
+- Accepted Orders have same-Order terms and required children; Obligation→Work remains same-Order.
+- No protected release with mismatch, active dispute, or relevant hold.
 - No deleted evidence under active retention hold.
-- No Agent action without applicable consent.
+- No Agent/client action without owner authority, scope, activation, and required exact approval.
+- No cross-owner integration lookup/mapping/cursor/subscription/delivery identity.
 
 ## 14. Migration order
 
 ### Batch 0 — Database foundations
 
-- Extensions and identifier strategy
-- Currency/time conventions
-- Shared audit/version conventions
-- Migration metadata
+- Extensions and UUID strategy
+- Currency/time/shared audit/version conventions
+- `migration_checkpoints`
 
 ### Batch 1 — Identity and authorization
 
-- users
-- user_profiles
-- role_assignments
-- evidence_files
-- identity_verifications
-- consent_grants
+- `users`, `auth_otps`, `user_profiles`, `role_assignments`
+- `evidence_files`, `identity_verifications`, `consent_grants`
 
 ### Batch 2 — Product contract
 
-- categories
-- capability_profiles
-- policy_versions
-- listings
-- listing_versions
-- listing_capacity
-- requests
-- quotes
+- `categories`, `category_versions`, `capability_profiles`, `policy_versions`
+- `listings`, `listing_versions`, `listing_capacity`, `listing_capacity_reservations`
+- `requests`, `quotes`
 
-### Batch 3 — Order/work contract
+### Batch 3 — Deal coordination foundation
 
-- orders
-- order_parties
-- order_terms_snapshots
-- work_instances
-- work_events
+- `deal_chains`, `deal_needs`, `deal_dependencies`, `deal_invitations`
+- same-Chain/Need keys, dependency/invitation integrity, active-edge uniqueness, and cycle constraint trigger
 
-### Batch 4 — Payment/accounting
+### Batch 4 — Order/work contract
 
-- payment_obligations
-- payment_events
-- financial_accounts
-- financial_transactions
-- financial_entries
-- provider_events
-- financial_adjustments
+- `orders`, `order_parties`, `order_terms_snapshots`
+- `work_instances`, `work_events`
+- same-Order accepted-terms/Work/Obligation lineage keys
+- child-Order same-Chain/Need lineage and one-active-child-per-Need partial uniqueness
 
-### Batch 5 — Trust/support/communication
+### Batch 5 — Payment/accounting
 
-- disputes
-- dispute_events
-- administrative_holds
-- support_cases
-- safety_incidents
-- reviews
-- conversations
-- messages
-- notifications
-- notification_deliveries
+- `payment_obligations`, `payment_events`
+- `financial_accounts`, `financial_transactions`, `financial_entries`
+- `provider_events`, `financial_adjustments`
 
-### Batch 6 — Integrity and measurement
+### Batch 6 — Trust/support/communication
 
-- cohort_classifications
-- audit_events
-- outbox_messages
-- idempotency_keys
-- retention_holds
+- `disputes`, `dispute_events`, `administrative_holds`, `support_cases`
+- `safety_incidents`, `reviews`, `conversations`, `messages`
+- `notifications`, `notification_deliveries`
 
-### Batch 7 — Indexes, checks, and rehearsal
+### Batch 7 — Platform integrity and ordered processing
 
-- concurrent-safe indexes
-- transition constraints
-- ledger balance checks
-- privacy/retention checks
-- seed/test fixtures
-- forward migration rehearsal
-- rollback/restore rehearsal
+- `cohort_classifications`, `audit_events`, `outbox_messages`, `inbox_messages`
+- `idempotency_keys`, `retention_holds`
+- event/payload/aggregate-sequence and client-attribution amendments
+
+### Batch 8 — Account integrations, activation, and approvals
+
+- `integration_clients`, `integration_credentials`, `integration_object_mappings`
+- `integration_webhook_subscriptions`, `integration_webhook_deliveries`, `integration_sync_cursors`
+- `capability_activations`, `command_approvals`
+- cross-table owner/client, outbox causality, governed-dimension, and evidence FKs
+
+### Batch 9 — Indexes, checks, backfill, and rehearsal
+
+- immutable business-version backfill and legacy `version`→`row_version` compatibility cutover
+- concurrent-safe, composite, partial, and constraint-trigger indexes/checks
+- ledger balance/currency, reservation, lineage, activation, approval, privacy/retention checks
+- deterministic Laravel factories/seeders for local/test only
+- forward migration and rollback/restore rehearsal on production-shaped data
 
 ## 15. ERD relationship summary
 
-- User owns Profile, Roles, Listings, Requests, Evidence, and Consent Grants.
-- Listing has Versions, Capacity, Requests/Orders, and one Capability Profile.
-- Request may receive Quotes and create an Order.
-- Order has Parties, Terms Snapshots, Work Instances, Payment Obligations, Disputes, Conversations, and Notifications.
-- Work Instance has Work Events, Evidence, Disputes, and shape-specific references.
-- Payment Obligation has Payment Events, Financial Transactions/Entries, Provider Events, Adjustments, Disputes, and Holds.
-- Evidence may support Identity, Listing, Work, Payment, Dispute, Safety, or Support records.
-- All critical operations emit Audit Events and Outbox Messages with Idempotency Keys.
+- User owns Profile, Roles, Listings, Requests, Evidence, Consent Grants, Integration Clients, and accountable Activations.
+- Category has immutable Versions; Listing pins one Category/Capability version and has Listing Versions, Capacity Buckets, and Reservations.
+- Request may receive Quotes; only final agreement creates one accepted ordinary Order.
+- Order has Parties, exact Terms Snapshots, Work Instances, one-lane Payment Obligations, Disputes, Conversations, and Notifications.
+- Work Instance has versioned Work Events, Evidence, Disputes, and shape-contract references.
+- Payment Obligation has Payment Events, immutable balanced Financial Transactions/Entries, Provider Events, Adjustments, Disputes, and Holds.
+- Deal Chain has same-chain Needs/Dependencies/Invitations and isolated ordinary child Orders.
+- Integration Client has Credentials, Mappings, Subscriptions/Deliveries, and Sync Cursors under one owner.
+- Outbox Events feed consumer Inbox records; critical commands link Audit, Idempotency, Activation, and where required exact Approval.
+- Evidence may support Identity, Listing, Work, Payment, Dispute, Safety, Support, Approval, and Activation under purpose/data-class access.
 
 ## 16. Schema acceptance gate
 
 This schema is ready for implementation design only when:
 
-- The 42-table inventory is accepted as the canonical baseline or changed through a schema decision.
-- Every table has owner/bounded context, required columns, FK behavior, retention class, and indexes.
-- Domain states and transitions match the domain contract.
-- Payment/release constraints are represented.
-- Ledger balancing and correction rules are explicit.
-- Provider webhook authenticity/idempotency is represented.
-- Sensitive evidence handling and retention are represented.
-- Migration order and rollback/restore rehearsal are defined.
+- The 58-table inventory (47 observed baseline plus eleven approved initiative additions) is the only active planning count.
+- Every table has owner/bounded context, required columns/types, FK/delete behavior, checks, unique/partial indexes, retention class, and migration order.
+- Domain states and business/row/event/payload versions match the domain contract.
+- Capacity/reservation, Deal/Request/Quote, accepted terms, and same-Order child lineage are relationally guarded.
+- One-lane obligations, balanced per-currency ledger posting, immutable corrections, and three-way reconciliation are explicit.
+- Provider/webhook authenticity, business binding, replay/idempotency, SSRF controls, and recovery are represented.
+- Sensitive evidence quarantine/access/download/retention/hold controls are represented.
+- Inbox ordering, dimensioned activation, exact approval, and maker/checker state are represented.
+- Forward/backfill/rollback and backup/restore rehearsal are defined.
 - No historical table count remains an active source.
 - ERD is generated from this inventory, not drawn independently.
+- DealChain remains coordination-only; child Orders remain isolated ordinary Orders.

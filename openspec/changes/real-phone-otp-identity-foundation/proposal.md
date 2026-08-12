@@ -1,5 +1,8 @@
 # Real phone OTP identity foundation
 
+> **Supersession (2026-08-10):** Ordinary L3 “phone OTP is the only primary login” is superseded by ADR-R-030 amended + `openspec/changes/hybrid-browser-auth-phone-step-up/`. **Kept:** hashed `auth_otps`, OTP ports, session guard, Fake/Log adapters, no UI OTP bypass, live SMS gated. Signup still requires mobile OTP under the new contract.
+
+
 ## Why
 
 The connected frontend OpenSpecs still describe fictional fixture authentication. Product authority and the active implementation plan require phone-first OTP with Laravel sessions, hashed challenges, and swappable delivery adapters. Continuing listing/onboarding work without this change would leave code as the silent authority.

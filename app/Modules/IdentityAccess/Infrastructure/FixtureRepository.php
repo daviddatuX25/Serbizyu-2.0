@@ -116,6 +116,7 @@ final class FixtureRepository
             DB::table('capability_profiles')->upsert([[
                 'id' => self::SERVICE_PROFILE_ID,
                 'code' => 'service_listing',
+                'profile_family_code' => 'service_listing',
                 'listing_type' => 'service',
                 'mechanism' => 'listing',
                 'work_shape' => 'local_service',
@@ -126,10 +127,13 @@ final class FixtureRepository
                 'status' => 'active',
                 'activation_record_reference' => 'capstone-fixture',
                 'version' => 1,
+                'business_version' => 1,
+                'content_schema_version' => 1,
+                'row_version' => 1,
                 'correlation_id' => self::SERVICE_PROFILE_ID,
                 'created_at' => $now,
                 'updated_at' => $now,
-            ]], ['id'], ['status', 'updated_at']);
+            ]], ['id'], ['status', 'profile_family_code', 'business_version', 'row_version', 'updated_at']);
         }
 
         if (Schema::hasTable('role_assignments')) {

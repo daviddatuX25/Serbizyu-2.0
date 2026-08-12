@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
 final class OnboardingRequest extends FormRequest
 {
@@ -34,7 +35,7 @@ final class OnboardingRequest extends FormRequest
         return true;
     }
 
-    /** @return array<string, list<string>> */
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [
@@ -47,6 +48,9 @@ final class OnboardingRequest extends FormRequest
             'low_data_mode' => ['sometimes', 'boolean'],
             'accessibility_preferences' => ['nullable', 'array'],
             'help_preference' => ['sometimes', 'string', 'in:self_managed,assistance_requested'],
+            'password' => ['required', 'confirmed', Password::defaults()],
+            'password_confirmation' => ['required', 'string'],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
         ];
     }
 }

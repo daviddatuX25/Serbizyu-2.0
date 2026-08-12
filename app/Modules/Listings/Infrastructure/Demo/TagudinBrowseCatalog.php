@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Listings\Infrastructure\Demo;
 
-use App\Modules\IdentityAccess\Application\DemoFixtures;
-use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
+use App\Shared\Contracts\FixtureConstants;
 
 /**
  * Declarative Tagudin browse supply for local/capstone demos.
@@ -145,11 +144,11 @@ final class TagudinBrowseCatalog
 
     public static function contractListingId(): string
     {
-        return FixtureRepository::ACTIVE_LISTING_ID;
+        return FixtureConstants::ACTIVE_LISTING_ID;
     }
 
     public static function contractFixtureKey(): string
     {
-        return DemoFixtures::ACTIVE_LISTING_FIXTURE;
+        return FixtureConstants::ACTIVE_LISTING_FIXTURE;
     }
 }

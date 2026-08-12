@@ -1,0 +1,447 @@
+;
+; Archive created at 2026-08-01 20:12:38 UTC
+;     dbname: serbizyu_e0
+;     TOC Entries: 437
+;     Compression: gzip
+;     Dump Version: 1.15-0
+;     Format: CUSTOM
+;     Integer: 4 bytes
+;     Offset: 8 bytes
+;     Dumped from database version: 16.9 (Debian 16.9-1.pgdg110+1)
+;     Dumped by pg_dump version: 16.9 (Debian 16.9-1.pgdg110+1)
+;
+;
+; Selected TOC Entries:
+;
+11; 2615 19314 SCHEMA - tiger serbizyu_e0
+12; 2615 19570 SCHEMA - tiger_data serbizyu_e0
+10; 2615 19132 SCHEMA - topology serbizyu_e0
+5606; 0 0 COMMENT - SCHEMA topology serbizyu_e0
+4; 3079 19302 EXTENSION - fuzzystrmatch 
+5607; 0 0 COMMENT - EXTENSION fuzzystrmatch 
+2; 3079 18050 EXTENSION - postgis 
+5608; 0 0 COMMENT - EXTENSION postgis 
+5; 3079 19315 EXTENSION - postgis_tiger_geocoder 
+5609; 0 0 COMMENT - EXTENSION postgis_tiger_geocoder 
+3; 3079 19133 EXTENSION - postgis_topology 
+5610; 0 0 COMMENT - EXTENSION postgis_topology 
+1272; 1255 21082 PROCEDURE public post_financial_transaction(uuid, integer) serbizyu_e0
+1276; 1255 21089 FUNCTION public prevent_audit_event_mutation() serbizyu_e0
+1271; 1255 20213 FUNCTION public prevent_deal_dependency_cycles() serbizyu_e0
+1273; 1255 21083 FUNCTION public prevent_direct_financial_transaction_posting() serbizyu_e0
+1275; 1255 21087 FUNCTION public prevent_evidence_delete_under_retention_hold() serbizyu_e0
+1274; 1255 21085 FUNCTION public prevent_posted_financial_entry_mutation() serbizyu_e0
+321; 1259 20674 TABLE public administrative_holds serbizyu_e0
+330; 1259 20959 TABLE public audit_events serbizyu_e0
+296; 1259 19896 TABLE public capability_profiles serbizyu_e0
+295; 1259 19876 TABLE public categories serbizyu_e0
+332; 1259 21010 TABLE public cohort_classifications serbizyu_e0
+294; 1259 19837 TABLE public consent_grants serbizyu_e0
+325; 1259 20847 TABLE public conversations serbizyu_e0
+303; 1259 20083 TABLE public deal_chains serbizyu_e0
+305; 1259 20126 TABLE public deal_dependencies serbizyu_e0
+306; 1259 20157 TABLE public deal_invitations serbizyu_e0
+304; 1259 20101 TABLE public deal_needs serbizyu_e0
+320; 1259 20645 TABLE public dispute_events serbizyu_e0
+319; 1259 20607 TABLE public disputes serbizyu_e0
+290; 1259 19748 TABLE public evidence_files serbizyu_e0
+314; 1259 20468 TABLE public financial_accounts serbizyu_e0
+318; 1259 20567 TABLE public financial_adjustments serbizyu_e0
+316; 1259 20514 TABLE public financial_entries serbizyu_e0
+315; 1259 20487 TABLE public financial_transactions serbizyu_e0
+329; 1259 20945 TABLE public idempotency_keys serbizyu_e0
+293; 1259 19810 TABLE public identity_verifications serbizyu_e0
+300; 1259 19980 TABLE public listing_capacity serbizyu_e0
+299; 1259 19956 TABLE public listing_versions serbizyu_e0
+298; 1259 19928 TABLE public listings serbizyu_e0
+326; 1259 20876 TABLE public messages serbizyu_e0
+288; 1259 19721 TABLE public migration_checkpoints serbizyu_e0
+287; 1259 19715 TABLE public migrations serbizyu_e0
+286; 1259 19714 SEQUENCE public migrations_id_seq serbizyu_e0
+5611; 0 0 SEQUENCE OWNED BY public migrations_id_seq serbizyu_e0
+328; 1259 20923 TABLE public notification_deliveries serbizyu_e0
+327; 1259 20904 TABLE public notifications serbizyu_e0
+308; 1259 20265 TABLE public order_parties serbizyu_e0
+309; 1259 20293 TABLE public order_terms_snapshots serbizyu_e0
+307; 1259 20216 TABLE public orders serbizyu_e0
+331; 1259 20996 TABLE public outbox_messages serbizyu_e0
+313; 1259 20436 TABLE public payment_events serbizyu_e0
+312; 1259 20390 TABLE public payment_obligations serbizyu_e0
+297; 1259 19909 TABLE public policy_versions serbizyu_e0
+317; 1259 20536 TABLE public provider_events serbizyu_e0
+302; 1259 20035 TABLE public quotes serbizyu_e0
+301; 1259 20003 TABLE public requests serbizyu_e0
+333; 1259 21037 TABLE public retention_holds serbizyu_e0
+324; 1259 20806 TABLE public reviews serbizyu_e0
+292; 1259 19787 TABLE public role_assignments serbizyu_e0
+323; 1259 20762 TABLE public safety_incidents serbizyu_e0
+322; 1259 20718 TABLE public support_cases serbizyu_e0
+291; 1259 19767 TABLE public user_profiles serbizyu_e0
+289; 1259 19733 TABLE public users serbizyu_e0
+311; 1259 20360 TABLE public work_events serbizyu_e0
+310; 1259 20330 TABLE public work_instances serbizyu_e0
+4690; 2604 19718 DEFAULT public migrations id serbizyu_e0
+5586; 0 20674 TABLE DATA public administrative_holds serbizyu_e0
+5595; 0 20959 TABLE DATA public audit_events serbizyu_e0
+5561; 0 19896 TABLE DATA public capability_profiles serbizyu_e0
+5560; 0 19876 TABLE DATA public categories serbizyu_e0
+5597; 0 21010 TABLE DATA public cohort_classifications serbizyu_e0
+5559; 0 19837 TABLE DATA public consent_grants serbizyu_e0
+5590; 0 20847 TABLE DATA public conversations serbizyu_e0
+5568; 0 20083 TABLE DATA public deal_chains serbizyu_e0
+5570; 0 20126 TABLE DATA public deal_dependencies serbizyu_e0
+5571; 0 20157 TABLE DATA public deal_invitations serbizyu_e0
+5569; 0 20101 TABLE DATA public deal_needs serbizyu_e0
+5585; 0 20645 TABLE DATA public dispute_events serbizyu_e0
+5584; 0 20607 TABLE DATA public disputes serbizyu_e0
+5555; 0 19748 TABLE DATA public evidence_files serbizyu_e0
+5579; 0 20468 TABLE DATA public financial_accounts serbizyu_e0
+5583; 0 20567 TABLE DATA public financial_adjustments serbizyu_e0
+5581; 0 20514 TABLE DATA public financial_entries serbizyu_e0
+5580; 0 20487 TABLE DATA public financial_transactions serbizyu_e0
+5594; 0 20945 TABLE DATA public idempotency_keys serbizyu_e0
+5558; 0 19810 TABLE DATA public identity_verifications serbizyu_e0
+5565; 0 19980 TABLE DATA public listing_capacity serbizyu_e0
+5564; 0 19956 TABLE DATA public listing_versions serbizyu_e0
+5563; 0 19928 TABLE DATA public listings serbizyu_e0
+5591; 0 20876 TABLE DATA public messages serbizyu_e0
+5553; 0 19721 TABLE DATA public migration_checkpoints serbizyu_e0
+5552; 0 19715 TABLE DATA public migrations serbizyu_e0
+5593; 0 20923 TABLE DATA public notification_deliveries serbizyu_e0
+5592; 0 20904 TABLE DATA public notifications serbizyu_e0
+5573; 0 20265 TABLE DATA public order_parties serbizyu_e0
+5574; 0 20293 TABLE DATA public order_terms_snapshots serbizyu_e0
+5572; 0 20216 TABLE DATA public orders serbizyu_e0
+5596; 0 20996 TABLE DATA public outbox_messages serbizyu_e0
+5578; 0 20436 TABLE DATA public payment_events serbizyu_e0
+5577; 0 20390 TABLE DATA public payment_obligations serbizyu_e0
+5562; 0 19909 TABLE DATA public policy_versions serbizyu_e0
+5582; 0 20536 TABLE DATA public provider_events serbizyu_e0
+5567; 0 20035 TABLE DATA public quotes serbizyu_e0
+5566; 0 20003 TABLE DATA public requests serbizyu_e0
+5598; 0 21037 TABLE DATA public retention_holds serbizyu_e0
+5589; 0 20806 TABLE DATA public reviews serbizyu_e0
+5557; 0 19787 TABLE DATA public role_assignments serbizyu_e0
+5588; 0 20762 TABLE DATA public safety_incidents serbizyu_e0
+4660; 0 18372 TABLE DATA public spatial_ref_sys serbizyu_e0
+5587; 0 20718 TABLE DATA public support_cases serbizyu_e0
+5556; 0 19767 TABLE DATA public user_profiles serbizyu_e0
+5554; 0 19733 TABLE DATA public users serbizyu_e0
+5576; 0 20360 TABLE DATA public work_events serbizyu_e0
+5575; 0 20330 TABLE DATA public work_instances serbizyu_e0
+4664; 0 19321 TABLE DATA tiger geocode_settings serbizyu_e0
+4665; 0 19653 TABLE DATA tiger pagc_gaz serbizyu_e0
+4666; 0 19663 TABLE DATA tiger pagc_lex serbizyu_e0
+4667; 0 19673 TABLE DATA tiger pagc_rules serbizyu_e0
+4662; 0 19135 TABLE DATA topology topology serbizyu_e0
+4663; 0 19147 TABLE DATA topology layer serbizyu_e0
+5612; 0 0 SEQUENCE SET public migrations_id_seq serbizyu_e0
+5613; 0 0 SEQUENCE SET topology topology_id_seq serbizyu_e0
+5195; 2606 20712 CONSTRAINT public administrative_holds administrative_holds_pkey serbizyu_e0
+5250; 2606 20995 CONSTRAINT public audit_events audit_events_pkey serbizyu_e0
+5063; 2606 19908 CONSTRAINT public capability_profiles capability_profiles_pkey serbizyu_e0
+5058; 2606 19890 CONSTRAINT public categories categories_pkey serbizyu_e0
+5259; 2606 21036 CONSTRAINT public cohort_classifications cohort_classifications_pkey serbizyu_e0
+5054; 2606 19863 CONSTRAINT public consent_grants consent_grants_pkey serbizyu_e0
+5219; 2606 20874 CONSTRAINT public conversations conversations_pkey serbizyu_e0
+5097; 2606 20100 CONSTRAINT public deal_chains deal_chains_pkey serbizyu_e0
+5108; 2606 20156 CONSTRAINT public deal_dependencies deal_dependencies_pkey serbizyu_e0
+5112; 2606 20189 CONSTRAINT public deal_invitations deal_invitations_pkey serbizyu_e0
+5101; 2606 20120 CONSTRAINT public deal_needs deal_needs_pkey serbizyu_e0
+5190; 2606 20670 CONSTRAINT public dispute_events dispute_events_pkey serbizyu_e0
+5183; 2606 20640 CONSTRAINT public disputes disputes_pkey serbizyu_e0
+5037; 2606 19766 CONSTRAINT public evidence_files evidence_files_pkey serbizyu_e0
+5157; 2606 20486 CONSTRAINT public financial_accounts financial_accounts_pkey serbizyu_e0
+5179; 2606 20603 CONSTRAINT public financial_adjustments financial_adjustments_pkey serbizyu_e0
+5169; 2606 20533 CONSTRAINT public financial_entries financial_entries_pkey serbizyu_e0
+5163; 2606 20510 CONSTRAINT public financial_transactions financial_transactions_pkey serbizyu_e0
+5244; 2606 20958 CONSTRAINT public idempotency_keys idempotency_keys_pkey serbizyu_e0
+5246; 2606 20951 CONSTRAINT public idempotency_keys idempotency_keys_scope_key_uq serbizyu_e0
+5050; 2606 19836 CONSTRAINT public identity_verifications identity_verifications_pkey serbizyu_e0
+5083; 2606 20002 CONSTRAINT public listing_capacity listing_capacity_pkey serbizyu_e0
+5078; 2606 19979 CONSTRAINT public listing_versions listing_versions_pkey serbizyu_e0
+5075; 2606 19955 CONSTRAINT public listings listings_pkey serbizyu_e0
+5226; 2606 20902 CONSTRAINT public messages messages_pkey serbizyu_e0
+5028; 2606 19732 CONSTRAINT public migration_checkpoints migration_checkpoints_pkey serbizyu_e0
+5030; 2606 19730 CONSTRAINT public migration_checkpoints migration_checkpoints_version_batch_uq serbizyu_e0
+5025; 2606 19720 CONSTRAINT public migrations migrations_pkey serbizyu_e0
+5239; 2606 20943 CONSTRAINT public notification_deliveries notification_deliveries_pkey serbizyu_e0
+5232; 2606 20921 CONSTRAINT public notifications notifications_pkey serbizyu_e0
+5127; 2606 20291 CONSTRAINT public order_parties order_parties_pkey serbizyu_e0
+5131; 2606 20328 CONSTRAINT public order_terms_snapshots order_terms_snapshots_pkey serbizyu_e0
+5122; 2606 20260 CONSTRAINT public orders orders_pkey serbizyu_e0
+5253; 2606 21002 CONSTRAINT public outbox_messages outbox_messages_event_id_uq serbizyu_e0
+5256; 2606 21009 CONSTRAINT public outbox_messages outbox_messages_pkey serbizyu_e0
+5153; 2606 20462 CONSTRAINT public payment_events payment_events_pkey serbizyu_e0
+5149; 2606 20429 CONSTRAINT public payment_obligations payment_obligations_pkey serbizyu_e0
+5069; 2606 19927 CONSTRAINT public policy_versions policy_versions_pkey serbizyu_e0
+5175; 2606 20564 CONSTRAINT public provider_events provider_events_pkey serbizyu_e0
+5093; 2606 20064 CONSTRAINT public quotes quotes_pkey serbizyu_e0
+5089; 2606 20034 CONSTRAINT public requests requests_pkey serbizyu_e0
+5264; 2606 21058 CONSTRAINT public retention_holds retention_holds_pkey serbizyu_e0
+5215; 2606 20844 CONSTRAINT public reviews reviews_pkey serbizyu_e0
+5047; 2606 19809 CONSTRAINT public role_assignments role_assignments_pkey serbizyu_e0
+5211; 2606 20804 CONSTRAINT public safety_incidents safety_incidents_pkey serbizyu_e0
+5206; 2606 20761 CONSTRAINT public support_cases support_cases_pkey serbizyu_e0
+5066; 2606 19905 CONSTRAINT public capability_profiles uq_capability_profiles_code_version serbizyu_e0
+5061; 2606 19887 CONSTRAINT public categories uq_categories_code serbizyu_e0
+5104; 2606 20110 CONSTRAINT public deal_needs uq_deal_needs_chain_id serbizyu_e0
+5106; 2606 20112 CONSTRAINT public deal_needs uq_deal_needs_chain_ordinal serbizyu_e0
+5193; 2606 20667 CONSTRAINT public dispute_events uq_dispute_events_idempotency serbizyu_e0
+5041; 2606 19757 CONSTRAINT public evidence_files uq_evidence_files_storage_key serbizyu_e0
+5161; 2606 20482 CONSTRAINT public financial_accounts uq_financial_accounts_code_scope_currency serbizyu_e0
+5167; 2606 20506 CONSTRAINT public financial_transactions uq_financial_transactions_idempotency serbizyu_e0
+5085; 2606 19989 CONSTRAINT public listing_capacity uq_listing_capacity_listing serbizyu_e0
+5080; 2606 19966 CONSTRAINT public listing_versions uq_listing_versions_listing_version serbizyu_e0
+5228; 2606 20898 CONSTRAINT public messages uq_messages_idempotency serbizyu_e0
+5241; 2606 20938 CONSTRAINT public notification_deliveries uq_notification_deliveries_attempt serbizyu_e0
+5234; 2606 20917 CONSTRAINT public notifications uq_notifications_idempotency serbizyu_e0
+5133; 2606 20325 CONSTRAINT public order_terms_snapshots uq_order_terms_order_version serbizyu_e0
+5155; 2606 20458 CONSTRAINT public payment_events uq_payment_events_idempotency serbizyu_e0
+5071; 2606 19919 CONSTRAINT public policy_versions uq_policy_versions_identity serbizyu_e0
+5177; 2606 20560 CONSTRAINT public provider_events uq_provider_events_identity serbizyu_e0
+5095; 2606 20045 CONSTRAINT public quotes uq_quotes_request_version serbizyu_e0
+5217; 2606 20840 CONSTRAINT public reviews uq_reviews_order_author_subject serbizyu_e0
+5033; 2606 19744 CONSTRAINT public users uq_users_phone_e164 serbizyu_e0
+5142; 2606 20382 CONSTRAINT public work_events uq_work_events_idempotency serbizyu_e0
+5043; 2606 19786 CONSTRAINT public user_profiles user_profiles_pkey serbizyu_e0
+5035; 2606 19747 CONSTRAINT public users users_pkey serbizyu_e0
+5144; 2606 20386 CONSTRAINT public work_events work_events_pkey serbizyu_e0
+5138; 2606 20357 CONSTRAINT public work_instances work_instances_pkey serbizyu_e0
+5247; 1259 21062 INDEX public audit_events_actor_occurred_at_idx serbizyu_e0
+5248; 1259 21063 INDEX public audit_events_correlation_idx serbizyu_e0
+5251; 1259 21061 INDEX public audit_events_target_occurred_at_idx serbizyu_e0
+5257; 1259 21059 INDEX public cohort_classifications_classified_at_idx serbizyu_e0
+5260; 1259 21060 INDEX public cohort_classifications_subject_idx serbizyu_e0
+5242; 1259 21065 INDEX public idempotency_keys_open_idx serbizyu_e0
+5196; 1259 20717 INDEX public idx_administrative_holds_active_target serbizyu_e0
+5197; 1259 20710 INDEX public idx_administrative_holds_obligation_status serbizyu_e0
+5198; 1259 20708 INDEX public idx_administrative_holds_order_status serbizyu_e0
+5199; 1259 20707 INDEX public idx_administrative_holds_status_effective serbizyu_e0
+5200; 1259 20709 INDEX public idx_administrative_holds_work_status serbizyu_e0
+5064; 1259 19906 INDEX public idx_capability_profiles_active_shape serbizyu_e0
+5059; 1259 19888 INDEX public idx_categories_status_pilot serbizyu_e0
+5055; 1259 19846 INDEX public idx_consent_grants_grantee_status_expiry serbizyu_e0
+5056; 1259 19845 INDEX public idx_consent_grants_grantor_status_expiry serbizyu_e0
+5220; 1259 20870 INDEX public idx_conversations_order_status serbizyu_e0
+5221; 1259 20872 INDEX public idx_conversations_status_updated serbizyu_e0
+5222; 1259 20871 INDEX public idx_conversations_work_status serbizyu_e0
+5098; 1259 20092 INDEX public idx_deal_chains_coordinator_status serbizyu_e0
+5099; 1259 20093 INDEX public idx_deal_chains_status_target serbizyu_e0
+5109; 1259 20134 INDEX public idx_deal_dependencies_chain_status serbizyu_e0
+5113; 1259 20166 INDEX public idx_deal_invitations_need_status_expiry serbizyu_e0
+5114; 1259 20167 INDEX public idx_deal_invitations_provider_status serbizyu_e0
+5102; 1259 20113 INDEX public idx_deal_needs_chain_status serbizyu_e0
+5191; 1259 20668 INDEX public idx_dispute_events_dispute_time serbizyu_e0
+5184; 1259 20635 INDEX public idx_disputes_active_severity serbizyu_e0
+5185; 1259 20644 INDEX public idx_disputes_active_target serbizyu_e0
+5186; 1259 20638 INDEX public idx_disputes_obligation_status serbizyu_e0
+5187; 1259 20636 INDEX public idx_disputes_order_status serbizyu_e0
+5188; 1259 20637 INDEX public idx_disputes_work_status serbizyu_e0
+5038; 1259 19758 INDEX public idx_evidence_files_hash_class serbizyu_e0
+5039; 1259 19759 INDEX public idx_evidence_files_owner_class_retention serbizyu_e0
+5158; 1259 20484 INDEX public idx_financial_accounts_context_status serbizyu_e0
+5159; 1259 20483 INDEX public idx_financial_accounts_owner_status serbizyu_e0
+5180; 1259 20600 INDEX public idx_financial_adjustments_obligation_status serbizyu_e0
+5181; 1259 20601 INDEX public idx_financial_adjustments_transaction_time serbizyu_e0
+5170; 1259 20530 INDEX public idx_financial_entries_account_time serbizyu_e0
+5171; 1259 20531 INDEX public idx_financial_entries_transaction_direction serbizyu_e0
+5164; 1259 20507 INDEX public idx_financial_transactions_source_time serbizyu_e0
+5165; 1259 20508 INDEX public idx_financial_transactions_status_effective serbizyu_e0
+5051; 1259 19819 INDEX public idx_identity_verifications_evidence_retention serbizyu_e0
+5052; 1259 19818 INDEX public idx_identity_verifications_user_status serbizyu_e0
+5081; 1259 19990 INDEX public idx_listing_capacity_reservation_window serbizyu_e0
+5076; 1259 19967 INDEX public idx_listing_versions_listing_published serbizyu_e0
+5072; 1259 19937 INDEX public idx_listings_active_category_profile serbizyu_e0
+5073; 1259 19938 INDEX public idx_listings_active_geography serbizyu_e0
+5223; 1259 20899 INDEX public idx_messages_conversation_time serbizyu_e0
+5224; 1259 20900 INDEX public idx_messages_delivery_time serbizyu_e0
+5235; 1259 20940 INDEX public idx_notification_deliveries_notification_status serbizyu_e0
+5236; 1259 20941 INDEX public idx_notification_deliveries_provider serbizyu_e0
+5237; 1259 20939 INDEX public idx_notification_deliveries_retry serbizyu_e0
+5229; 1259 20918 INDEX public idx_notifications_recipient_status serbizyu_e0
+5230; 1259 20919 INDEX public idx_notifications_source serbizyu_e0
+5124; 1259 20288 INDEX public idx_order_parties_order_status serbizyu_e0
+5125; 1259 20289 INDEX public idx_order_parties_user_status serbizyu_e0
+5129; 1259 20326 INDEX public idx_order_terms_order_created serbizyu_e0
+5116; 1259 20256 INDEX public idx_orders_buyer_status serbizyu_e0
+5117; 1259 20258 INDEX public idx_orders_deal_need_status serbizyu_e0
+5118; 1259 20255 INDEX public idx_orders_geography_status serbizyu_e0
+5119; 1259 20257 INDEX public idx_orders_provider_status serbizyu_e0
+5120; 1259 20254 INDEX public idx_orders_status_updated serbizyu_e0
+5150; 1259 20460 INDEX public idx_payment_events_external_provider serbizyu_e0
+5151; 1259 20459 INDEX public idx_payment_events_obligation_occurred serbizyu_e0
+5145; 1259 20425 INDEX public idx_payment_obligations_order_status_lane serbizyu_e0
+5146; 1259 20427 INDEX public idx_payment_obligations_status_lane serbizyu_e0
+5147; 1259 20426 INDEX public idx_payment_obligations_work_status serbizyu_e0
+5067; 1259 19920 INDEX public idx_policy_versions_active_key serbizyu_e0
+5172; 1259 20562 INDEX public idx_provider_events_obligation_received serbizyu_e0
+5173; 1259 20561 INDEX public idx_provider_events_processing serbizyu_e0
+5090; 1259 20047 INDEX public idx_quotes_deal_need_status_expiry serbizyu_e0
+5091; 1259 20046 INDEX public idx_quotes_request_status_expiry serbizyu_e0
+5086; 1259 20012 INDEX public idx_requests_deal_need_status_expiry serbizyu_e0
+5087; 1259 20011 INDEX public idx_requests_status_expiry serbizyu_e0
+5212; 1259 20842 INDEX public idx_reviews_order_status serbizyu_e0
+5213; 1259 20841 INDEX public idx_reviews_subject_status serbizyu_e0
+5044; 1259 19797 INDEX public idx_role_assignments_expiry_status serbizyu_e0
+5045; 1259 19796 INDEX public idx_role_assignments_user_status serbizyu_e0
+5207; 1259 20801 INDEX public idx_safety_incidents_order_status serbizyu_e0
+5208; 1259 20800 INDEX public idx_safety_incidents_response serbizyu_e0
+5209; 1259 20802 INDEX public idx_safety_incidents_work_status serbizyu_e0
+5201; 1259 20758 INDEX public idx_support_cases_order_status serbizyu_e0
+5202; 1259 20757 INDEX public idx_support_cases_owner_status serbizyu_e0
+5203; 1259 20759 INDEX public idx_support_cases_sla serbizyu_e0
+5204; 1259 20756 INDEX public idx_support_cases_status_severity serbizyu_e0
+5031; 1259 19745 INDEX public idx_users_active_login serbizyu_e0
+5139; 1259 20384 INDEX public idx_work_events_status_occurred serbizyu_e0
+5140; 1259 20383 INDEX public idx_work_events_work_occurred serbizyu_e0
+5134; 1259 20354 INDEX public idx_work_instances_order_status serbizyu_e0
+5135; 1259 20353 INDEX public idx_work_instances_status_schedule serbizyu_e0
+5136; 1259 20355 INDEX public idx_work_instances_status_updated serbizyu_e0
+5026; 1259 21068 INDEX public migration_checkpoints_batch_status_idx serbizyu_e0
+5254; 1259 21064 INDEX public outbox_messages_pending_delivery_idx serbizyu_e0
+5261; 1259 21067 INDEX public retention_holds_active_evidence_idx serbizyu_e0
+5262; 1259 21066 INDEX public retention_holds_active_target_idx serbizyu_e0
+5110; 1259 20211 INDEX public uq_deal_dependencies_active_edge serbizyu_e0
+5115; 1259 20212 INDEX public uq_deal_invitations_acceptance_key serbizyu_e0
+5128; 1259 20292 INDEX public uq_order_parties_active_scope serbizyu_e0
+5123; 1259 20264 INDEX public uq_orders_active_deal_need serbizyu_e0
+5048; 1259 19875 INDEX public uq_role_assignments_active_scope serbizyu_e0
+5402; 2620 21090 TRIGGER public audit_events audit_events_append_only_guard serbizyu_e0
+5398; 2620 21088 TRIGGER public evidence_files evidence_files_retention_hold_guard serbizyu_e0
+5401; 2620 21086 TRIGGER public financial_entries financial_entries_posted_guard serbizyu_e0
+5400; 2620 21084 TRIGGER public financial_transactions financial_transactions_posting_guard serbizyu_e0
+5399; 2620 20214 TRIGGER public deal_dependencies trg_deal_dependencies_no_cycles serbizyu_e0
+5384; 2606 20969 FK CONSTRAINT public audit_events audit_events_acting_for_user_fk serbizyu_e0
+5385; 2606 20964 FK CONSTRAINT public audit_events audit_events_actor_user_fk serbizyu_e0
+5386; 2606 20989 FK CONSTRAINT public audit_events audit_events_checkpoint_fk serbizyu_e0
+5387; 2606 20984 FK CONSTRAINT public audit_events audit_events_idempotency_key_fk serbizyu_e0
+5388; 2606 20974 FK CONSTRAINT public audit_events audit_events_order_fk serbizyu_e0
+5389; 2606 20979 FK CONSTRAINT public audit_events audit_events_payment_obligation_fk serbizyu_e0
+5391; 2606 21015 FK CONSTRAINT public cohort_classifications cohort_classifications_actor_user_fk serbizyu_e0
+5392; 2606 21025 FK CONSTRAINT public cohort_classifications cohort_classifications_audit_event_fk serbizyu_e0
+5393; 2606 21030 FK CONSTRAINT public cohort_classifications cohort_classifications_classifier_fk serbizyu_e0
+5394; 2606 21020 FK CONSTRAINT public cohort_classifications cohort_classifications_order_fk serbizyu_e0
+5353; 2606 20702 FK CONSTRAINT public administrative_holds fk_administrative_holds_approver serbizyu_e0
+5354; 2606 20697 FK CONSTRAINT public administrative_holds fk_administrative_holds_creator serbizyu_e0
+5355; 2606 20692 FK CONSTRAINT public administrative_holds fk_administrative_holds_obligation serbizyu_e0
+5356; 2606 20682 FK CONSTRAINT public administrative_holds fk_administrative_holds_order serbizyu_e0
+5357; 2606 20687 FK CONSTRAINT public administrative_holds fk_administrative_holds_work serbizyu_e0
+5276; 2606 19891 FK CONSTRAINT public categories fk_categories_parent serbizyu_e0
+5273; 2606 19857 FK CONSTRAINT public consent_grants fk_consent_grants_evidence serbizyu_e0
+5274; 2606 19852 FK CONSTRAINT public consent_grants fk_consent_grants_grantee serbizyu_e0
+5275; 2606 19847 FK CONSTRAINT public consent_grants fk_consent_grants_grantor serbizyu_e0
+5375; 2606 20865 FK CONSTRAINT public conversations fk_conversations_creator serbizyu_e0
+5376; 2606 20855 FK CONSTRAINT public conversations fk_conversations_order serbizyu_e0
+5377; 2606 20860 FK CONSTRAINT public conversations fk_conversations_work serbizyu_e0
+5294; 2606 20094 FK CONSTRAINT public deal_chains fk_deal_chains_coordinator serbizyu_e0
+5297; 2606 20135 FK CONSTRAINT public deal_dependencies fk_deal_dependencies_chain serbizyu_e0
+5298; 2606 20150 FK CONSTRAINT public deal_dependencies fk_deal_dependencies_creator serbizyu_e0
+5299; 2606 20140 FK CONSTRAINT public deal_dependencies fk_deal_dependencies_predecessor serbizyu_e0
+5300; 2606 20145 FK CONSTRAINT public deal_dependencies fk_deal_dependencies_successor serbizyu_e0
+5301; 2606 20183 FK CONSTRAINT public deal_invitations fk_deal_invitations_acting_for serbizyu_e0
+5302; 2606 20178 FK CONSTRAINT public deal_invitations fk_deal_invitations_inviter serbizyu_e0
+5303; 2606 20168 FK CONSTRAINT public deal_invitations fk_deal_invitations_need serbizyu_e0
+5304; 2606 20173 FK CONSTRAINT public deal_invitations fk_deal_invitations_provider serbizyu_e0
+5295; 2606 20114 FK CONSTRAINT public deal_needs fk_deal_needs_chain serbizyu_e0
+5296; 2606 20121 FK CONSTRAINT public deal_needs fk_deal_needs_replacement serbizyu_e0
+5350; 2606 20656 FK CONSTRAINT public dispute_events fk_dispute_events_actor serbizyu_e0
+5351; 2606 20651 FK CONSTRAINT public dispute_events fk_dispute_events_dispute serbizyu_e0
+5352; 2606 20661 FK CONSTRAINT public dispute_events fk_dispute_events_evidence serbizyu_e0
+5346; 2606 20630 FK CONSTRAINT public disputes fk_disputes_obligation serbizyu_e0
+5347; 2606 20620 FK CONSTRAINT public disputes fk_disputes_order serbizyu_e0
+5348; 2606 20615 FK CONSTRAINT public disputes fk_disputes_reporter serbizyu_e0
+5349; 2606 20625 FK CONSTRAINT public disputes fk_disputes_work serbizyu_e0
+5265; 2606 19760 FK CONSTRAINT public evidence_files fk_evidence_files_owner serbizyu_e0
+5333; 2606 20476 FK CONSTRAINT public financial_accounts fk_financial_accounts_owner serbizyu_e0
+5341; 2606 20590 FK CONSTRAINT public financial_adjustments fk_financial_adjustments_approver serbizyu_e0
+5342; 2606 20575 FK CONSTRAINT public financial_adjustments fk_financial_adjustments_obligation serbizyu_e0
+5343; 2606 20595 FK CONSTRAINT public financial_adjustments fk_financial_adjustments_policy serbizyu_e0
+5344; 2606 20585 FK CONSTRAINT public financial_adjustments fk_financial_adjustments_result_transaction serbizyu_e0
+5345; 2606 20580 FK CONSTRAINT public financial_adjustments fk_financial_adjustments_source_transaction serbizyu_e0
+5336; 2606 20525 FK CONSTRAINT public financial_entries fk_financial_entries_account serbizyu_e0
+5337; 2606 20520 FK CONSTRAINT public financial_entries fk_financial_entries_transaction serbizyu_e0
+5334; 2606 20500 FK CONSTRAINT public financial_transactions fk_financial_transactions_obligation serbizyu_e0
+5335; 2606 20495 FK CONSTRAINT public financial_transactions fk_financial_transactions_payment_event serbizyu_e0
+5270; 2606 19830 FK CONSTRAINT public identity_verifications fk_identity_verifications_evidence serbizyu_e0
+5271; 2606 19825 FK CONSTRAINT public identity_verifications fk_identity_verifications_reviewer serbizyu_e0
+5272; 2606 19820 FK CONSTRAINT public identity_verifications fk_identity_verifications_user serbizyu_e0
+5283; 2606 19991 FK CONSTRAINT public listing_capacity fk_listing_capacity_listing serbizyu_e0
+5284; 2606 19996 FK CONSTRAINT public listing_capacity fk_listing_capacity_listing_version serbizyu_e0
+5281; 2606 19973 FK CONSTRAINT public listing_versions fk_listing_versions_author serbizyu_e0
+5282; 2606 19968 FK CONSTRAINT public listing_versions fk_listing_versions_listing serbizyu_e0
+5278; 2606 19944 FK CONSTRAINT public listings fk_listings_capability_profile serbizyu_e0
+5279; 2606 19949 FK CONSTRAINT public listings fk_listings_category serbizyu_e0
+5280; 2606 19939 FK CONSTRAINT public listings fk_listings_owner serbizyu_e0
+5378; 2606 20887 FK CONSTRAINT public messages fk_messages_actor serbizyu_e0
+5379; 2606 20892 FK CONSTRAINT public messages fk_messages_attachment serbizyu_e0
+5380; 2606 20882 FK CONSTRAINT public messages fk_messages_conversation serbizyu_e0
+5382; 2606 20932 FK CONSTRAINT public notification_deliveries fk_notification_deliveries_notification serbizyu_e0
+5381; 2606 20911 FK CONSTRAINT public notifications fk_notifications_recipient serbizyu_e0
+5311; 2606 20283 FK CONSTRAINT public order_parties fk_order_parties_consent serbizyu_e0
+5312; 2606 20273 FK CONSTRAINT public order_parties fk_order_parties_order serbizyu_e0
+5313; 2606 20278 FK CONSTRAINT public order_parties fk_order_parties_user serbizyu_e0
+5314; 2606 20319 FK CONSTRAINT public order_terms_snapshots fk_order_terms_acceptor serbizyu_e0
+5315; 2606 20304 FK CONSTRAINT public order_terms_snapshots fk_order_terms_listing_version serbizyu_e0
+5316; 2606 20299 FK CONSTRAINT public order_terms_snapshots fk_order_terms_order serbizyu_e0
+5317; 2606 20314 FK CONSTRAINT public order_terms_snapshots fk_order_terms_policy serbizyu_e0
+5318; 2606 20309 FK CONSTRAINT public order_terms_snapshots fk_order_terms_quote serbizyu_e0
+5305; 2606 20239 FK CONSTRAINT public orders fk_orders_buyer serbizyu_e0
+5306; 2606 20249 FK CONSTRAINT public orders fk_orders_deal_need serbizyu_e0
+5307; 2606 20224 FK CONSTRAINT public orders fk_orders_listing serbizyu_e0
+5308; 2606 20244 FK CONSTRAINT public orders fk_orders_provider serbizyu_e0
+5309; 2606 20234 FK CONSTRAINT public orders fk_orders_quote serbizyu_e0
+5310; 2606 20229 FK CONSTRAINT public orders fk_orders_request serbizyu_e0
+5330; 2606 20447 FK CONSTRAINT public payment_events fk_payment_events_actor serbizyu_e0
+5331; 2606 20452 FK CONSTRAINT public payment_events fk_payment_events_evidence serbizyu_e0
+5332; 2606 20442 FK CONSTRAINT public payment_events fk_payment_events_obligation serbizyu_e0
+5325; 2606 20400 FK CONSTRAINT public payment_obligations fk_payment_obligations_order serbizyu_e0
+5326; 2606 20415 FK CONSTRAINT public payment_obligations fk_payment_obligations_payer serbizyu_e0
+5327; 2606 20410 FK CONSTRAINT public payment_obligations fk_payment_obligations_policy serbizyu_e0
+5328; 2606 20420 FK CONSTRAINT public payment_obligations fk_payment_obligations_recipient serbizyu_e0
+5329; 2606 20405 FK CONSTRAINT public payment_obligations fk_payment_obligations_work serbizyu_e0
+5277; 2606 19921 FK CONSTRAINT public policy_versions fk_policy_versions_author serbizyu_e0
+5338; 2606 20549 FK CONSTRAINT public provider_events fk_provider_events_obligation serbizyu_e0
+5339; 2606 20544 FK CONSTRAINT public provider_events fk_provider_events_payment_event serbizyu_e0
+5340; 2606 20554 FK CONSTRAINT public provider_events fk_provider_events_transaction serbizyu_e0
+5290; 2606 20195 FK CONSTRAINT public quotes fk_quotes_deal_need serbizyu_e0
+5291; 2606 20053 FK CONSTRAINT public quotes fk_quotes_listing serbizyu_e0
+5292; 2606 20058 FK CONSTRAINT public quotes fk_quotes_provider serbizyu_e0
+5293; 2606 20048 FK CONSTRAINT public quotes fk_quotes_request serbizyu_e0
+5285; 2606 20028 FK CONSTRAINT public requests fk_requests_capability_profile serbizyu_e0
+5286; 2606 20023 FK CONSTRAINT public requests fk_requests_category serbizyu_e0
+5287; 2606 20190 FK CONSTRAINT public requests fk_requests_deal_need serbizyu_e0
+5288; 2606 20018 FK CONSTRAINT public requests fk_requests_listing serbizyu_e0
+5289; 2606 20013 FK CONSTRAINT public requests fk_requests_requester serbizyu_e0
+5370; 2606 20824 FK CONSTRAINT public reviews fk_reviews_author serbizyu_e0
+5371; 2606 20834 FK CONSTRAINT public reviews fk_reviews_eligibility_evidence serbizyu_e0
+5372; 2606 20814 FK CONSTRAINT public reviews fk_reviews_order serbizyu_e0
+5373; 2606 20829 FK CONSTRAINT public reviews fk_reviews_subject serbizyu_e0
+5374; 2606 20819 FK CONSTRAINT public reviews fk_reviews_work serbizyu_e0
+5268; 2606 19803 FK CONSTRAINT public role_assignments fk_role_assignments_granted_by serbizyu_e0
+5269; 2606 19798 FK CONSTRAINT public role_assignments fk_role_assignments_user serbizyu_e0
+5364; 2606 20775 FK CONSTRAINT public safety_incidents fk_safety_incidents_affected serbizyu_e0
+5365; 2606 20790 FK CONSTRAINT public safety_incidents fk_safety_incidents_listing serbizyu_e0
+5366; 2606 20780 FK CONSTRAINT public safety_incidents fk_safety_incidents_order serbizyu_e0
+5367; 2606 20795 FK CONSTRAINT public safety_incidents fk_safety_incidents_owner serbizyu_e0
+5368; 2606 20770 FK CONSTRAINT public safety_incidents fk_safety_incidents_reporter serbizyu_e0
+5369; 2606 20785 FK CONSTRAINT public safety_incidents fk_safety_incidents_work serbizyu_e0
+5358; 2606 20746 FK CONSTRAINT public support_cases fk_support_cases_obligation serbizyu_e0
+5359; 2606 20736 FK CONSTRAINT public support_cases fk_support_cases_order serbizyu_e0
+5360; 2606 20751 FK CONSTRAINT public support_cases fk_support_cases_owner serbizyu_e0
+5361; 2606 20726 FK CONSTRAINT public support_cases fk_support_cases_reporter serbizyu_e0
+5362; 2606 20731 FK CONSTRAINT public support_cases fk_support_cases_requester serbizyu_e0
+5363; 2606 20741 FK CONSTRAINT public support_cases fk_support_cases_work serbizyu_e0
+5266; 2606 19780 FK CONSTRAINT public user_profiles fk_user_profiles_avatar_file serbizyu_e0
+5267; 2606 19775 FK CONSTRAINT public user_profiles fk_user_profiles_user serbizyu_e0
+5322; 2606 20371 FK CONSTRAINT public work_events fk_work_events_actor serbizyu_e0
+5323; 2606 20376 FK CONSTRAINT public work_events fk_work_events_evidence serbizyu_e0
+5324; 2606 20366 FK CONSTRAINT public work_events fk_work_events_work serbizyu_e0
+5319; 2606 20343 FK CONSTRAINT public work_instances fk_work_instances_capability serbizyu_e0
+5320; 2606 20348 FK CONSTRAINT public work_instances fk_work_instances_completion_evidence serbizyu_e0
+5321; 2606 20338 FK CONSTRAINT public work_instances fk_work_instances_order serbizyu_e0
+5383; 2606 20952 FK CONSTRAINT public idempotency_keys idempotency_keys_actor_user_fk serbizyu_e0
+5390; 2606 21003 FK CONSTRAINT public outbox_messages outbox_messages_audit_event_fk serbizyu_e0
+5395; 2606 21042 FK CONSTRAINT public retention_holds retention_holds_evidence_file_fk serbizyu_e0
+5396; 2606 21047 FK CONSTRAINT public retention_holds retention_holds_placed_by_fk serbizyu_e0
+5397; 2606 21052 FK CONSTRAINT public retention_holds retention_holds_released_by_fk serbizyu_e0

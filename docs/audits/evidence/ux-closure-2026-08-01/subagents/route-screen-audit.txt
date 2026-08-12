@@ -1,0 +1,37 @@
+**SERBIZYU PUBLISHED FRONTEND — E2E ROUTE & SCREEN AUDIT**
+Executed the verified runner (`docs/audits/evidence/ux-closure-2026-08-01/serbizyu-e2e-cdp.py`) in all 3 modes (shell / quickdeal / activity) plus independent live-navigation via headless Chrome CDP against `https://daviddatux25.github.io/Serbizyu-2.0/app/`. Source inspection used only to explain observed behavior. No files created/edited.
+
+---
+
+**A. Evidence report**
+
+| # | Route / control | Exact trigger | Result observed | Status |
+|---|---|---|---|---|
+| 1 | `#/` Home | direct load | Hero "Ano ang gagawin natin today?", Near you ×4, YOUR NEXT STEP, Quick Deal banner, People need help ×2. 0 console errors. | **END-TO-END WORKING** |
+| 2 | Composer open | button "I need help" (header + hero) | 3-step dialog "Post a request"; Continue gated until text entered. | **END-TO-END WORKING** |
+| 3 | Composer step 2 | "Repair & craft" + Continue | Details/Budget ₱100/Area/Tab pagligid lane "External Cash"; Back/Continue gating works. | **END-TO-END WORKING** |
+| 4 | Composer step 3 | "Post synthetic request" | Review correct → success "Ready for provider proposals"; new "Fix my bike tire" card appears in Home feed same session. | **END-TO-END WORKING (session-only)** |
+| 5 | Posted request persistence | full reload | "Fix my bike tire" **gone after reload** — mock state resets. | **MISLEADING** (implies fixture persists; it doesn't) |
+| 6 | `#/explore` Browse | "See all" / nav Browse | Search "What do you need?", Services / People need help tabs, 4 cards. | **END-TO-END WORKING** |
+| 7 | Listing cards (all 4) | "Open Basic trouser alteration" etc. | **Every card opens the SAME Quick Deal**: "Quick Deal · Pick up medicine or small items · ₱70 · with Noel Ramos" (opened Lina's ₱150 trouser card → got Noel's errand). Card-to-deal wiring wrong for invitation, trouser, seedlings, and medicine card alike. | **MISLEADING** |
+| 8 | `#/quick-deal` Quick Deal | nav Quick Deal / card | Full state machine advances: ₱-50/+₱50 adjust (70→120) → "Send ₱120 offer" → "Other phone scanned · accept" → "Both agree · confirm" → "Save when connected"; QR frames 1..6 loop; "Start camera" present (headless: camera deferred). | **END-TO-END WORKING** (simulated 2-phone flow) |
+| 9 | `#/payments` Payments | direct hash | `PaymentsPage.tsx` exists in source but App.tsx routes only /explore, /quick-deal, /activity, /me → silently renders **Home**. | **UNREACHABLE** |
+| 10 | `#/deal-room` Deal Room | direct hash | `DealRoomPage.tsx` exists but not routed → silently renders **Home**. | **UNREACHABLE** |
+| 11 | `#/totally-unknown-route` | direct hash | No 404/unknown state — silent fallback to Home; user cannot distinguish. | **MISLEADING** |
+| 12 | `#/activity` Activity | nav Activity | Renders "Your activity" (asked-for, offer help, PLAN A BIGGER JOB w/ tasks). | **END-TO-END WORKING** |
+| 13 | Activity "Manage listing" | button "Manage listing" | Click → no sheet, no dialog, no hash change, no state change. | **DEAD CONTROL** |
+| 14 | Activity "Add task" | input "e.g. Pick up ice" → "Add task" | "Collect cake · Find someone · ₱100" rendered in session; **gone after `Page.reload`**. | **PARTIAL** (works, not persisted) |
+| 15 | `#/me` Me | nav Me / "I offer a service" | Profile renders; **Requests / Listings / Agent help cards are inert `<div>`s** — clicked programmatically: no nav, no dialog. | **DISPLAY-ONLY / DEAD CONTROL** |
+| 16 | Global console/runtime | throughout | 0 JS errors, 0 console warnings in every flow. | **PASS** |
+
+**B. Verified-runner outputs (executed fresh by me, not read from stored JSON)**
+- `shell`: Home ✓ → offer→`#/me` ✓ → browse h1 ✓ → trouser card opens Noel ₱70 deal (same mis-wiring) → `#/payments` shows Home (unreachable).
+- `quickdeal`: full 4-step deal progression ✓; **receipt `QD-` NOT visible in Activity after "Save when connected"** (expected downstream continuity missing); reload wipes state.
+- `activity`: add-task renders ✓; **not persisted across reload** ✓ (confirmed); Manage listing no-op ✓ (confirmed); Me renders display-only ✓.
+
+**C. Summary of state**
+- **Working E2E:** Home shell, composer (3-step + post in-session), Browse render, Quick Deal single-phone flow, Activity render.
+- **Broken / misleading:** all listing cards open the wrong Quick Deal; posted requests & tasks vanish on refresh; `#/payments` and `#/deal-room` unreachable though pages exist; unknown hashes silently render Home; Activity "Manage listing" and Me's three cards are dead controls.
+- **Intentionally deferred:** real camera QR scan (no permission in headless), true 2-device round-trip handshake, 360px viewport sweep, offline/error-state injection, network-throttle refresh tests — not completed within my iteration budget; desktop (≈1280px) and 390×844 mobile executed.
+
+**D. Files created/modified:** none. **Issues encountered:** iteration budget cut the run before the 360px viewport pass and offline/error-state tests could complete; everything else exercised as captured above.

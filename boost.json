@@ -1,6 +1,7 @@
 {
     "agents": [
-        "codex"
+        "codex",
+        "cursor"
     ],
     "cloud": false,
     "guidelines": true,
@@ -8,8 +9,10 @@
     "nightwatch": false,
     "sail": true,
     "skills": [
+        "infer-conventions",
         "laravel-best-practices",
         "pest-testing",
-        "inertia-react-development"
+        "inertia-react-development",
+        "tailwindcss-development"
     ]
 }

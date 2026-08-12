@@ -77,7 +77,7 @@ Pilot-conditional requests do not become live merely because the underlying data
 | Quote Request | CAPSTONE | PILOT-CONDITIONAL | Must reuse the request/quote contract; hidden-price listings cannot bypass a defined quote state |
 | Quick Deal — connected | CAPSTONE | PILOT-CONDITIONAL | Online-only pilot version first; clear counter-offer, dual confirmation, safety, and payment-lane behavior |
 | Quick Deal — air-gapped/offline | CAPSTONE prototype only | DEFERRED | Requires threat model, device tests, conflict/replay protection, sync contract, and a safe fallback; no money authorization offline |
-| Deal-Chaining | CAPSTONE scenario | DEFERRED | Requires parent/child financial obligations, responsibility boundaries, cancellation, subcontractor evidence, and operations support |
+| Deal-Chaining | CAPSTONE scenario + FOUNDATION | FUNCTIONALITY DEFERRED / PILOT-GATED | Foundation requires bounded Chain/Need/Dependency/Invitation schema/domain/ADR propagation; later functionality requires child-Order isolation, failure/replacement/partial-completion recovery, authorization, operations, and browser evidence |
 | Offline Sync | CAPSTONE prototype | FOUNDATION/DEFERRED | Browse and draft-only behaviors may be explored; cloud remains authority and no digital payment/release is authorized offline |
 | Agent-created listing | CAPSTONE | PILOT | Treated as Agent-Mediated origin, not a separate listing type; owner approval and attribution required |
 
@@ -86,7 +86,7 @@ Pilot-conditional requests do not become live merely because the underlying data
 - A mechanism creates or modifies an Order; it does not replace the Work Instance.
 - A Quick Deal is an initiation mechanism, not a universal fulfillment archetype.
 - A Quote Request is a non-competitive request-to-quote path, not a separate listing primitive.
-- Deal-Chaining is a coordination container that creates child obligations/orders; it is not part of the initial pilot.
+- Deal-Chaining is a coordination container that may later create independent child Orders; its bounded foundation is committed before E0-S2, while user-facing functionality and pilot activation remain separately gated.
 - Offline drafts may be queued, but server authority decides final order, payment, inventory, consent, and release state.
 
 ## 6. Fulfillment-archetype matrix
@@ -211,7 +211,7 @@ The following are not optional decorations. Every PILOT combination depends on t
 | Channel distribution | Demonstrate only if non-blocking | Foundation or conditional; no promise of broad channel liquidity | Consent, adapter, publishing, inbound routing architecture |
 | Kiosk | Demonstrate assisted access | Conditional; no cash custody | Access-point operating model |
 | Quick Deal | Demonstrate online/safe contract | Conditional online version | Offline protocol only after spike and threat model |
-| Deal-Chaining | Demonstrate concept only | Deferred | Parent/child order and financial model |
+| Deal-Chaining | Demonstrate bounded concept only | Not enabled; later pilot gate | Approved parent/Need/dependency/invitation model, ordinary child-Order isolation, recovery/operations/browser evidence |
 
 ## 12. Activation-gate template for deferred capabilities
 

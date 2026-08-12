@@ -1,0 +1,5 @@
+ restored_application_table_count 
+----------------------------------
+                               46
+(1 row)
+

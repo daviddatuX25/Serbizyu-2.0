@@ -6,6 +6,7 @@ namespace App\Shared\Application;
 
 use App\Shared\Contracts\CorrelationId;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 final class CapabilityCatalog
@@ -36,6 +37,39 @@ final class CapabilityCatalog
             $categoryId = (string) $category->id;
         }
 
+        if (Schema::hasTable('category_versions')) {
+            $published = DB::table('category_versions')
+                ->where('category_id', $categoryId)
+                ->where('status', 'published')
+                ->orderByDesc('business_version')
+                ->first();
+            if ($published === null) {
+                $name = ucwords(str_replace(['-', '_'], ' ', $categoryCode));
+                $now = now();
+                DB::table('category_versions')->insert([
+                    'id' => (string) Str::uuid7(),
+                    'category_id' => $categoryId,
+                    'business_version' => 1,
+                    'status' => 'published',
+                    'name' => $name,
+                    'description' => null,
+                    'safety_class' => 'standard',
+                    'data_class' => 'public',
+                    'policy_content' => json_encode(new \stdClass, JSON_THROW_ON_ERROR),
+                    'content_schema_version' => 1,
+                    'checksum' => hash('sha256', $categoryId.':'.$name.':1'),
+                    'effective_at' => $now,
+                    'published_at' => $now,
+                    'paused_at' => null,
+                    'retired_at' => null,
+                    'created_by_user_id' => null,
+                    'correlation_id' => (string) $correlationId,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
+        }
+
         $code = $listingType.':'.$categoryCode;
         $profile = DB::table('capability_profiles')
             ->where('code', $code)
@@ -47,6 +81,7 @@ final class CapabilityCatalog
             DB::table('capability_profiles')->insert([
                 'id' => $profileId,
                 'code' => $code,
+                'profile_family_code' => $code,
                 'listing_type' => $listingType,
                 'mechanism' => 'direct',
                 'work_shape' => 'request_based',
@@ -57,6 +92,9 @@ final class CapabilityCatalog
                 'status' => 'active',
                 'activation_record_reference' => 'capstone:first-connected-slice',
                 'version' => 1,
+                'business_version' => 1,
+                'content_schema_version' => 1,
+                'row_version' => 1,
                 'correlation_id' => (string) $correlationId,
                 'created_at' => now(),
                 'updated_at' => now(),

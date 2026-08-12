@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace App\Modules\Listings\Infrastructure;
 
 use App\Modules\Listings\Application\Contracts\ListingCommandStore;
-use App\Modules\Listings\Application\Contracts\OwnerListingReader;
 use App\Modules\Listings\Application\Contracts\PublicListingReader;
+use App\Modules\Listings\Application\GovernedCatalogService;
 use App\Modules\Listings\Application\ListingError;
 use App\Modules\Listings\Application\Projections\ListingProjection;
 use App\Modules\Listings\Domain\ListingRules;
 use App\Modules\Listings\Infrastructure\Models\Listing;
+use App\Shared\Application\AuditRecorder;
+use App\Shared\Application\IdempotencyGuard;
+use App\Shared\Application\KernelException;
+use App\Shared\Application\OutboxWriter;
+use App\Shared\Application\ResourceActor;
+use App\Shared\Contracts\ActingForAuthorizer;
+use App\Shared\Contracts\OwnerListingReader;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -18,28 +25,40 @@ use Illuminate\Support\Str;
 
 final class ListingRepository implements ListingCommandStore, OwnerListingReader, PublicListingReader
 {
-    public function __construct(private readonly ListingRules $rules) {}
+    public function __construct(
+        private readonly ListingRules $rules,
+        private readonly IdempotencyGuard $idempotency,
+        private readonly AuditRecorder $audits,
+        private readonly OutboxWriter $outbox,
+        private readonly ActingForAuthorizer $actingFor,
+        private readonly GovernedCatalogService $catalog,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */
-    public function createDraft(string $ownerId, array $input, string $correlationId): array
+    public function createDraft(ResourceActor $actor, array $input, string $correlationId): array
     {
         $this->ensureStorage($correlationId);
         $this->validate($input, $correlationId);
 
-        return DB::transaction(function () use ($ownerId, $input, $correlationId): array {
+        return DB::transaction(function () use ($actor, $input, $correlationId): array {
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.create');
+            $ownerId = $actor->resourceOwnerId;
             $now = now();
-            $categoryId = $this->categoryId((string) $input['category_code'], $correlationId, $now);
-            $profileId = $this->capabilityProfileId((string) $input['listing_type'], $correlationId, $now);
+            $pins = $this->catalog->ensurePublished(
+                (string) $input['category_code'],
+                (string) $input['listing_type'],
+                $correlationId,
+            );
             $listingId = (string) Str::uuid7();
 
             Listing::query()->insert([
                 'id' => $listingId,
                 'owner_user_id' => $ownerId,
-                'capability_profile_id' => $profileId,
-                'category_id' => $categoryId,
+                'capability_profile_id' => $pins['capability_profile_id'],
+                'category_id' => $pins['category_id'],
                 'listing_type' => (string) $input['listing_type'],
                 'status' => 'draft',
                 'geography' => json_encode(['area_code' => 'Tagudin'], JSON_THROW_ON_ERROR),
@@ -52,7 +71,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'updated_at' => $now,
             ]);
 
-            $this->insertVersion($listingId, 1, $ownerId, $input, $correlationId, $now);
+            $this->insertVersion($listingId, 1, $actor->actorUserId, $input, $correlationId, $now, $pins);
 
             return $this->ownerProjection($listingId, $ownerId, $correlationId);
         });
@@ -64,14 +83,16 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
      */
     public function updateDraft(
         string $listingId,
-        string $ownerId,
+        ResourceActor $actor,
         int $expectedVersion,
         array $input,
         string $correlationId,
     ): array {
         $this->ensureStorage($correlationId);
 
-        return DB::transaction(function () use ($listingId, $ownerId, $expectedVersion, $input, $correlationId): array {
+        return DB::transaction(function () use ($listingId, $actor, $expectedVersion, $input, $correlationId): array {
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.update');
+            $ownerId = $actor->resourceOwnerId;
             $listing = Listing::query()->where('id', $listingId)->lockForUpdate()->first();
             $this->assertOwnerAndVersion($listing, $listingId, $ownerId, $expectedVersion, $correlationId);
             if ((string) $listing->status !== 'draft') {
@@ -97,13 +118,16 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
 
             $now = now();
             $nextVersion = ((int) $listing->version) + 1;
-            $this->categoryId((string) $payload['category_code'], $correlationId, $now);
-            $this->capabilityProfileId((string) $payload['listing_type'], $correlationId, $now);
-            $this->insertVersion($listingId, $nextVersion, $ownerId, $payload, $correlationId, $now);
+            $pins = $this->catalog->ensurePublished(
+                (string) $payload['category_code'],
+                (string) $payload['listing_type'],
+                $correlationId,
+            );
+            $this->insertVersion($listingId, $nextVersion, $actor->actorUserId, $payload, $correlationId, $now, $pins);
 
             Listing::query()->where('id', $listingId)->update([
-                'category_id' => $this->categoryId((string) $payload['category_code'], $correlationId, $now),
-                'capability_profile_id' => $this->capabilityProfileId((string) $payload['listing_type'], $correlationId, $now),
+                'category_id' => $pins['category_id'],
+                'capability_profile_id' => $pins['capability_profile_id'],
                 'listing_type' => (string) $payload['listing_type'],
                 'current_version' => $nextVersion,
                 'version' => $nextVersion,
@@ -118,7 +142,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
     /** @return array<string, mixed> */
     public function submit(
         string $listingId,
-        string $ownerId,
+        ResourceActor $actor,
         int $expectedVersion,
         string $idempotencyKey,
         string $correlationId,
@@ -133,7 +157,9 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             );
         }
 
-        return DB::transaction(function () use ($listingId, $ownerId, $expectedVersion, $idempotencyKey, $correlationId): array {
+        return DB::transaction(function () use ($listingId, $actor, $expectedVersion, $idempotencyKey, $correlationId): array {
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.submit');
+            $ownerId = $actor->resourceOwnerId;
             $listing = Listing::query()->where('id', $listingId)->lockForUpdate()->first();
             if ($listing === null) {
                 throw new ListingError('LISTING_NOT_FOUND', 'The listing could not be found.', $correlationId, status: 404);
@@ -143,53 +169,34 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             }
 
             $scope = 'listing.submit:'.$listingId.':'.$ownerId;
-            $requestHash = hash('sha256', json_encode([
-                'operation' => 'listing.submit',
-                'listing_id' => $listingId,
-                'owner_id' => $ownerId,
-                'expected_version' => $expectedVersion,
-            ], JSON_THROW_ON_ERROR));
-            $existing = DB::table('idempotency_keys')
-                ->where('scope', $scope)
-                ->where('key', $idempotencyKey)
-                ->lockForUpdate()
-                ->first();
+            try {
+                $reservation = $this->idempotency->begin(
+                    scope: $scope,
+                    key: $idempotencyKey,
+                    fingerprint: [
+                        'operation' => 'listing.submit',
+                        'listing_id' => $listingId,
+                        'owner_id' => $ownerId,
+                        'expected_version' => $expectedVersion,
+                    ],
+                    correlationId: $correlationId,
+                    actorUserId: $actor->actorUserId,
+                );
+            } catch (KernelException $exception) {
+                throw new ListingError(
+                    $exception->envelope->code,
+                    $exception->getMessage(),
+                    $correlationId,
+                    status: $exception->status,
+                );
+            }
 
-            if ($existing !== null) {
-                if ((string) $existing->request_hash !== $requestHash) {
-                    throw new ListingError(
-                        'IDEMPOTENCY_KEY_REUSED',
-                        'That idempotency key was already used for a different submission.',
-                        $correlationId,
-                        status: 409,
-                    );
+            if ($reservation->isReplay) {
+                if (is_array($reservation->replayPayload)) {
+                    return $reservation->replayPayload;
                 }
-                if ((string) $existing->status === 'succeeded' && $existing->response_payload !== null) {
-                    $replayed = json_decode((string) $existing->response_payload, true);
-                    if (is_array($replayed)) {
-                        return $replayed;
-                    }
-                }
-                if ((string) $existing->status === 'succeeded') {
-                    return $this->ownerProjection($listingId, $ownerId, $correlationId);
-                }
-            } else {
-                $existingId = (string) Str::uuid7();
-                DB::table('idempotency_keys')->insert([
-                    'id' => $existingId,
-                    'scope' => $scope,
-                    'key' => $idempotencyKey,
-                    'actor_user_id' => $ownerId,
-                    'request_hash' => $requestHash,
-                    'response_event_id' => null,
-                    'response_reference' => null,
-                    'status' => 'in_progress',
-                    'expires_at' => now()->addDay(),
-                    'correlation_id' => $correlationId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                $existing = DB::table('idempotency_keys')->where('id', $existingId)->lockForUpdate()->first();
+
+                return $this->ownerProjection($listingId, $ownerId, $correlationId);
             }
 
             $this->assertVersion($listing, $expectedVersion, $correlationId);
@@ -208,12 +215,17 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             $terms = json_decode((string) $current->terms, true) ?: [];
             $nextVersion = ((int) $listing->version) + 1;
             $now = now();
-            $this->insertVersion($listingId, $nextVersion, $ownerId, [
+            $pins = $this->catalog->ensurePublished(
+                (string) ($terms['category_code'] ?? ''),
+                (string) $listing->listing_type,
+                $correlationId,
+            );
+            $this->insertVersion($listingId, $nextVersion, $actor->actorUserId, [
                 'title' => (string) ($terms['title'] ?? ''),
                 'description' => (string) $current->description,
                 'category_code' => (string) ($terms['category_code'] ?? ''),
                 'listing_type' => (string) $listing->listing_type,
-            ], $correlationId, $now);
+            ], $correlationId, $now, $pins);
 
             Listing::query()->where('id', $listingId)->update([
                 'status' => 'pending_review',
@@ -224,61 +236,40 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'updated_at' => $now,
             ]);
 
-            $auditId = (string) Str::uuid7();
-            DB::table('audit_events')->insert([
-                'id' => $auditId,
-                'actor_user_id' => $ownerId,
-                'acting_for_user_id' => null,
-                'action' => 'listing.submit_review',
-                'target_type' => 'listing',
-                'target_id' => $listingId,
-                'order_id' => null,
-                'payment_obligation_id' => null,
-                'idempotency_key_id' => $existing->id,
-                'migration_checkpoint_id' => null,
-                'previous_value_summary' => json_encode(['status' => 'draft', 'version' => $expectedVersion], JSON_THROW_ON_ERROR),
-                'new_value_summary' => json_encode(['status' => 'pending_review', 'version' => $nextVersion], JSON_THROW_ON_ERROR),
-                'reason' => 'Owner submitted a fictional listing for review.',
-                'command_name' => 'SubmitListing',
-                'expected_version' => $expectedVersion,
-                'correlation_id' => $correlationId,
-                'occurred_at' => $now,
-                'created_at' => $now,
-            ]);
-            DB::table('outbox_messages')->insert([
-                'id' => (string) Str::uuid7(),
-                'event_id' => $auditId,
-                'event_type' => 'listing.submitted_for_review',
-                'aggregate_type' => 'listing',
-                'aggregate_id' => $listingId,
-                'audit_event_id' => $auditId,
-                'payload_version' => 1,
-                'payload' => json_encode(['listing_id' => $listingId, 'status' => 'pending_review', 'version' => $nextVersion], JSON_THROW_ON_ERROR),
-                'status' => 'pending',
-                'attempt_count' => 0,
-                'next_attempt_at' => $now,
-                'last_error' => null,
-                'published_at' => null,
-                'correlation_id' => $correlationId,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
+            $auditActor = $actor->toActorContext();
+            $auditId = $this->audits->record(
+                action: 'listing.submit_review',
+                targetType: 'listing',
+                targetId: $listingId,
+                correlationId: $correlationId,
+                actor: $auditActor,
+                idempotencyKeyId: (string) $reservation->row->id,
+                commandName: 'SubmitListing',
+                expectedVersion: $expectedVersion,
+                previous: ['status' => 'draft', 'version' => $expectedVersion],
+                next: ['status' => 'pending_review', 'version' => $nextVersion],
+                reason: 'Listing submitted for review',
+            );
+            $this->outbox->enqueue(
+                eventType: 'listing.submitted_for_review',
+                aggregateType: 'listing',
+                aggregateId: $listingId,
+                payload: ['listing_id' => $listingId, 'status' => 'pending_review', 'version' => $nextVersion],
+                correlationId: $correlationId,
+                auditEventId: $auditId,
+            );
             $response = $this->ownerProjection($listingId, $ownerId, $correlationId);
-            DB::table('idempotency_keys')->where('id', $existing->id)->update([
-                'status' => 'succeeded',
-                'response_event_id' => $auditId,
-                'response_reference' => $listingId,
-                'response_status' => 200,
-                'response_payload' => json_encode($response, JSON_THROW_ON_ERROR),
-                'fingerprint_version' => 1,
-                'updated_at' => $now,
-            ]);
+            $this->idempotency->succeed(
+                row: $reservation->row,
+                responsePayload: $response,
+                responseEventId: $auditId,
+                responseReference: $listingId,
+            );
 
             return $response;
         });
     }
 
-    /** @return list<array<string, mixed>> */
     public function ownerListings(string $ownerUserId, string $correlationId): array
     {
         if (! Schema::hasTable('listing_versions') || ! Schema::hasTable('listings') || ! Schema::hasTable('categories')) {
@@ -429,68 +420,97 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         }
     }
 
-    private function categoryId(string $code, string $correlationId, mixed $now): string
-    {
-        $category = DB::table('categories')->where('code', $code)->where('status', 'active')->first();
-        if ($category !== null) {
-            return (string) $category->id;
+    /** @return list<array<string, mixed>> */
+    public function discoverPublicListings(
+        string $correlationId,
+        string $areaCode = 'Tagudin',
+        ?string $categoryCode = null,
+        ?string $cursor = null,
+        int $limit = 24,
+    ): array {
+        if (! $this->hasPublicTables()) {
+            return [];
         }
 
-        $id = (string) Str::uuid7();
-        DB::table('categories')->insert([
-            'id' => $id,
-            'parent_id' => null,
-            'code' => $code,
-            'name' => ucwords(str_replace(['-', '_'], ' ', $code)),
-            'safety_class' => 'standard',
-            'data_class' => 'public',
-            'status' => 'active',
-            'pilot_status' => 'approved',
-            'metadata' => json_encode(['area' => 'Tagudin'], JSON_THROW_ON_ERROR),
-            'metadata_version' => 1,
-            'version' => 1,
-            'correlation_id' => $correlationId,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ]);
+        $limit = max(1, min($limit, 50));
+        $query = $this->publicQuery()
+            ->whereRaw("listings.geography->>'area_code' = ?", [$areaCode]);
 
-        return $id;
-    }
-
-    private function capabilityProfileId(string $listingType, string $correlationId, mixed $now): string
-    {
-        $code = $listingType === 'service' ? 'service_listing' : 'product_listing';
-        $profile = DB::table('capability_profiles')->where('code', $code)->where('status', 'active')->first();
-        if ($profile !== null) {
-            return (string) $profile->id;
+        if ($categoryCode !== null && $categoryCode !== '') {
+            $query->where('categories.code', $categoryCode);
         }
 
-        $id = (string) Str::uuid7();
-        DB::table('capability_profiles')->insert([
-            'id' => $id,
-            'code' => $code,
-            'listing_type' => $listingType,
-            'mechanism' => 'listing',
-            'work_shape' => 'local_service',
-            'allowed_payment_lanes' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),
-            'allowed_access_tiers' => json_encode(['L1', 'L2', 'L3'], JSON_THROW_ON_ERROR),
-            'safety_class' => 'standard',
-            'data_class' => 'public',
-            'status' => 'active',
-            'activation_record_reference' => 'capstone-fixture',
-            'version' => 1,
-            'correlation_id' => $correlationId,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ]);
+        if ($cursor !== null && $cursor !== '') {
+            $query->where('listings.id', '>', $cursor);
+        }
 
-        return $id;
+        return $query
+            ->orderBy('listings.id')
+            ->limit($limit)
+            ->get()
+            ->map(fn (object $row): array => $this->mapProjection($row, true))
+            ->values()
+            ->all();
     }
 
-    /** @param array<string, mixed> $input */
-    private function insertVersion(string $listingId, int $version, string $ownerId, array $input, string $correlationId, mixed $now): void
+    private function assertActingForIfNeeded(ResourceActor $actor, string $correlationId, string $requiredAction): void
     {
-        DB::table('listing_versions')->insert([
+        if (! $actor->isActingFor() || $actor->consentGrantId === null) {
+            return;
+        }
+
+        try {
+            $this->actingFor->assertActive(
+                grantId: $actor->consentGrantId,
+                granteeUserId: $actor->actorUserId,
+                grantorUserId: $actor->resourceOwnerId,
+                correlationId: $correlationId,
+                resourceType: 'listing',
+                requiredAction: $requiredAction,
+            );
+        } catch (KernelException $error) {
+            throw new ListingError(
+                $error->envelope->code,
+                $error->getMessage(),
+                $correlationId,
+                status: $error->status,
+            );
+        } catch (\Throwable $error) {
+            if (property_exists($error, 'envelope') && isset($error->envelope->code)) {
+                $status = property_exists($error, 'status') ? (int) $error->status : 403;
+                throw new ListingError(
+                    (string) $error->envelope->code,
+                    $error->getMessage(),
+                    $correlationId,
+                    status: $status,
+                );
+            }
+
+            throw $error;
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @param  array{
+     *     category_id: string,
+     *     category_business_version: int,
+     *     capability_profile_id: string,
+     *     capability_profile_family_code: string,
+     *     capability_profile_business_version: int,
+     *     code: string
+     * }  $pins
+     */
+    private function insertVersion(
+        string $listingId,
+        int $version,
+        string $authoredByUserId,
+        array $input,
+        string $correlationId,
+        mixed $now,
+        array $pins,
+    ): void {
+        $row = [
             'id' => (string) Str::uuid7(),
             'listing_id' => $listingId,
             'version_number' => $version,
@@ -507,14 +527,24 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             'safety_copy' => 'Agree scope and handoff details directly; this demo does not hold funds.',
             'effective_from' => $now,
             'effective_to' => null,
-            'authored_by_user_id' => $ownerId,
+            'authored_by_user_id' => $authoredByUserId,
             'payload_version' => 1,
             'version' => 1,
             'correlation_id' => $correlationId,
             'published_at' => null,
             'created_at' => $now,
             'updated_at' => $now,
-        ]);
+        ];
+
+        if (Schema::hasColumn('listing_versions', 'category_id')) {
+            $row['category_id'] = $pins['category_id'];
+            $row['category_business_version'] = $pins['category_business_version'];
+            $row['capability_profile_family_code'] = $pins['capability_profile_family_code'];
+            $row['capability_profile_business_version'] = $pins['capability_profile_business_version'];
+            $row['row_version'] = 1;
+        }
+
+        DB::table('listing_versions')->insert($row);
     }
 
     /** @return array<string, mixed> */

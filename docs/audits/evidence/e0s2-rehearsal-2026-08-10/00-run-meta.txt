@@ -1,0 +1,4 @@
+Date: 2026-08-10T12:18:03+08:00
+Evidence class: CAPSTONE / TEAM_TRAINING
+Scope: E0-S2-T06 brownfield, E0-S2-T04 restore, E0-S2-T05 rollback
+Database targets: disposable local PostgreSQL 16 via compose service db

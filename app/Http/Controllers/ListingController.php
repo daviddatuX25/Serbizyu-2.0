@@ -9,6 +9,7 @@ use App\Http\Requests\SubmitListingRequest;
 use App\Http\Requests\UpdateListingDraftRequest;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
+use App\Modules\IdentityAccess\Application\ResourceActorResolver;
 use App\Modules\IdentityAccess\Application\SliceStateQuery;
 use App\Modules\Listings\Application\CreateListingDraft;
 use App\Modules\Listings\Application\ListingError;
@@ -19,6 +20,7 @@ use App\Modules\Listings\Application\SubmitListing;
 use App\Modules\Listings\Application\UpdateListingDraft;
 use App\Shared\Support\EnvironmentValidator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -26,6 +28,7 @@ final class ListingController
 {
     public function __construct(
         private readonly CurrentSession $session,
+        private readonly ResourceActorResolver $resourceActors,
         private readonly CreateListingDraft $createListing,
         private readonly UpdateListingDraft $updateListing,
         private readonly SubmitListing $submitListing,
@@ -42,11 +45,14 @@ final class ListingController
         $state = $this->sliceState->for($request);
         $publicListings = $this->publicListings->handle($correlationId);
         $activeListingDetail = $this->publicListingDetail->handle($listing, $correlationId);
+        $booking = $this->bookingContext($request, $activeListingDetail);
+
         $slice = [
             ...$state,
             'publicListings' => $publicListings,
             'activeListingDetail' => $activeListingDetail,
             'denial' => null,
+            'booking' => $booking,
         ];
 
         return Inertia::render('ListingDetail', [
@@ -59,6 +65,7 @@ final class ListingController
             'correlationId' => $correlationId,
             ...$slice,
             'slice' => $slice,
+            'booking' => $booking,
             'experience' => 'foundation_v1',
             'pageMode' => 'detail',
         ]);
@@ -70,8 +77,9 @@ final class ListingController
         $correlationId = $this->correlationId($request);
 
         try {
-            $ownerId = $this->session->requireUser($request, $correlationId);
-            $listing = $this->createListing->handle($ownerId, $validated, $correlationId);
+            $sessionUserId = $this->session->requireUser($request, $correlationId);
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.create');
+            $listing = $this->createListing->handle($actor, $validated, $correlationId);
 
             return $this->success($request, ['data' => $listing], $correlationId, 201);
         } catch (IdentityAccessError|ListingError $error) {
@@ -87,8 +95,9 @@ final class ListingController
         $correlationId = $this->correlationId($request);
 
         try {
-            $ownerId = $this->session->requireUser($request, $correlationId);
-            $saved = $this->updateListing->handle($listing, $ownerId, $expectedVersion, $validated, $correlationId);
+            $sessionUserId = $this->session->requireUser($request, $correlationId);
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.update');
+            $saved = $this->updateListing->handle($listing, $actor, $expectedVersion, $validated, $correlationId);
 
             return $this->success($request, ['data' => $saved], $correlationId);
         } catch (IdentityAccessError|ListingError $error) {
@@ -111,10 +120,11 @@ final class ListingController
                     fieldErrors: ['idempotency_key' => ['The Idempotency-Key header is invalid or missing.']],
                 );
             }
-            $ownerId = $this->session->requireUser($request, $correlationId);
+            $sessionUserId = $this->session->requireUser($request, $correlationId);
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.submit');
             $submitted = $this->submitListing->handle(
                 $listing,
-                $ownerId,
+                $actor,
                 (int) $validated['expected_version'],
                 $idempotencyKey,
                 $correlationId,
@@ -139,6 +149,40 @@ final class ListingController
         } catch (ListingError $error) {
             return $this->failure($request, $error);
         }
+    }
+
+    /**
+     * Throwaway Direct Booking affordance for founder confirm — does not redesign Detail.
+     *
+     * @param  array<string, mixed>|null  $detail
+     * @return array<string, mixed>
+     */
+    private function bookingContext(Request $request, ?array $detail): array
+    {
+        if ($detail === null || ! isset($detail['id'])) {
+            return [
+                'direct_booking_enabled' => false,
+                'can_propose' => false,
+                'requires_auth' => true,
+                'is_owner' => false,
+            ];
+        }
+
+        $listingId = (string) $detail['id'];
+        $ownerId = (string) (DB::table('listings')->where('id', $listingId)->value('owner_user_id') ?? '');
+        $userId = $request->user() !== null ? (string) $request->user()->getAuthIdentifier() : null;
+        $expectedVersion = (int) ($detail['current_version'] ?? $detail['expected_version'] ?? 0);
+
+        return [
+            'direct_booking_enabled' => true,
+            'can_propose' => $userId !== null && $userId !== '' && $userId !== $ownerId,
+            'requires_auth' => $userId === null,
+            'is_owner' => $userId !== null && $userId === $ownerId,
+            'expected_listing_version' => $expectedVersion,
+            'default_amount_minor' => isset($detail['price_amount_minor']) ? (int) $detail['price_amount_minor'] : null,
+            'currency' => isset($detail['currency']) && is_string($detail['currency']) ? $detail['currency'] : 'PHP',
+            'start_url' => route('orders.start', ['listing' => $listingId]),
+        ];
     }
 
     private function correlationId(Request $request): string

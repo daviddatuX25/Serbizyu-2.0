@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 650" role="img" aria-labelledby="title desc">
+  <title id="title">Deal-Chaining Foundation ERD</title>
+  <desc id="desc">Planning companion ERD, not migration proof. It contains exactly four entities and their approved coordination relationships.</desc>
+  <style>
+    .entity { fill: #eef4ff; stroke: #1d4ed8; stroke-width: 2; }
+    .entity-name { fill: #123b78; font: 700 20px sans-serif; }
+    .relation { fill: #243447; font: 16px sans-serif; }
+    .edge { fill: none; stroke: #475569; stroke-width: 2; marker-end: url(#arrow); }
+    .note { fill: #475569; font: 15px sans-serif; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <text x="550" y="38" text-anchor="middle" class="entity-name">Deal-Chaining Foundation — Companion ERD</text>
+  <text x="550" y="62" text-anchor="middle" class="note">Planning evidence only; not migration or catalog proof</text>
+
+  <g id="deal_chains">
+    <rect class="entity" x="70" y="245" width="235" height="82" rx="8"/>
+    <text class="entity-name" x="187.5" y="294" text-anchor="middle">deal_chains</text>
+  </g>
+  <g id="deal_needs">
+    <rect class="entity" x="430" y="245" width="235" height="82" rx="8"/>
+    <text class="entity-name" x="547.5" y="294" text-anchor="middle">deal_needs</text>
+  </g>
+  <g id="deal_dependencies">
+    <rect class="entity" x="790" y="130" width="235" height="82" rx="8"/>
+    <text class="entity-name" x="907.5" y="179" text-anchor="middle">deal_dependencies</text>
+  </g>
+  <g id="deal_invitations">
+    <rect class="entity" x="790" y="360" width="235" height="82" rx="8"/>
+    <text class="entity-name" x="907.5" y="409" text-anchor="middle">deal_invitations</text>
+  </g>
+
+  <path class="edge" d="M305 286 L430 286"/>
+  <text class="relation" x="367" y="270" text-anchor="middle">contains</text>
+  <text class="relation" x="187" y="365" text-anchor="middle">users coordinates</text>
+  <path class="edge" d="M187 245 L187 115 L430 115 L430 245"/>
+
+  <path class="edge" d="M665 267 L790 172"/>
+  <text class="relation" x="730" y="198" text-anchor="middle">predecessor edge</text>
+  <path class="edge" d="M665 305 L720 305 L720 190 L790 190"/>
+  <text class="relation" x="740" y="223" text-anchor="middle">successor edge</text>
+  <path class="edge" d="M665 286 L725 286 L725 401 L790 401"/>
+  <text class="relation" x="722" y="270" text-anchor="middle">receives</text>
+
+  <text class="note" x="550" y="555" text-anchor="middle">Four-entity coordination foundation: no product, payment, or financial entities shown.</text>
+</svg>

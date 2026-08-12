@@ -69,9 +69,7 @@ final class FakeOtpDelivery implements OtpDeliveryChannel
             return null;
         }
 
-        $code = $mirrored['code'] ?? null;
-
-        return is_string($code) && $code !== '' ? $code : null;
+        return $mirrored['code'] !== '' ? $mirrored['code'] : null;
     }
 
     /**

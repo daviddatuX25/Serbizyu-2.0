@@ -1,9 +1,12 @@
 # Serbizyu 2.0 — UX/UI Perspective and Flow Reference Dossier
 
-Status: DRAFT FOR FOUNDER/DESIGNER REVIEW
+Status: DRAFT FOR FOUNDER/DESIGNER REVIEW — founder review recorded; revision required before design handoff
 Artifact type: design reference / disposable mockup input
 Authority: downstream of canonical BMAD artifacts; not a replacement for them
 OpenSpec change: `openspec/changes/create-ux-ui-reference-dossier/`
+Latest founder review and replanning table: `docs/planning-hardening/11-founder-frontend-review-and-replanning-table.md`
+ERD-backed connected mockup plan: `docs/planning-hardening/11a-data-backed-frontend-system-mockup-plan.md`
+Implementation-grade connected frontend change: `openspec/changes/harden-connected-frontend-experience/`
 
 ## 1. Purpose
 
@@ -1091,7 +1094,7 @@ The dossier does not replace the PRD; this matrix proves that every PRD requirem
 | PRD-019 | Response/selection/expiry; J-04 |
 | PRD-020 | Conditional order-formation behavior; J-04/J-05 |
 | PRD-021 | Offline irreversible-action boundary; 6, 11 |
-| PRD-022 | Deferred Deal-Chaining boundary; 13 |
+| PRD-022 | Approved bounded Deal-Chaining foundation; later coordination lab and separate pilot gate; 13 |
 | PRD-023 | Agent attribution; J-03, 10 |
 | PRD-024 | Order/Work separation; J-05/J-06 |
 | PRD-025 | A1 scope/evidence/revision/sign-off; J-06 |

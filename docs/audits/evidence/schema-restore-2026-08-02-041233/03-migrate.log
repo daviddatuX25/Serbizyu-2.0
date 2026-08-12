@@ -1,0 +1,17 @@
+
+   INFO  Preparing database.  
+
+  Creating migration table ....................................... 6.79ms DONE
+
+   INFO  Running migrations.  
+
+  2026_08_01_000000_batch_000_foundation ........................ 25.68ms DONE
+  2026_08_01_000100_batch_001_identity_authorization ............ 27.13ms DONE
+  2026_08_01_000200_batch_002_product_taxonomy_requests_quotes .. 35.35ms DONE
+  2026_08_01_0002a0_batch_002a_deal_chaining_foundation ......... 21.38ms DONE
+  2026_08_01_003000_batch_003_orders_and_work ................... 27.41ms DONE
+  2026_08_01_004000_batch_004_payment_and_accounting ............ 39.70ms DONE
+  2026_08_01_005000_batch_005_trust_support_communications ...... 54.73ms DONE
+  2026_08_01_006000_batch_006_integrity_measurement ............. 18.90ms DONE
+  2026_08_01_007000_batch_007_integrity_indexes_checks_and_guards  12.96ms DONE
+

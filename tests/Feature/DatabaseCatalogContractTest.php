@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 final class DatabaseCatalogContractTest extends TestCase
 {
-    public function test_postgresql_catalog_contains_the_canonical_application_tables_and_batch_006_007_objects(): void
+    public function test_postgresql_catalog_contains_the_canonical_58_application_tables_and_e0s2_objects(): void
     {
         if (DB::connection()->getDriverName() !== 'pgsql') {
             self::markTestSkipped('The E0-S2 catalog contract is PostgreSQL-only.');
@@ -44,20 +44,49 @@ final class DatabaseCatalogContractTest extends TestCase
                 'retention_holds_active_evidence_idx',
                 'idempotency_keys_scope_key_uq',
                 'outbox_messages_status_ck',
-                'retention_holds_status_ck'
+                'retention_holds_status_ck',
+                'uq_category_versions_category_business',
+                'uq_inbox_messages_consumer_event',
+                'uq_listing_capacity_reservations_command',
+                'uq_integration_credentials_selector',
+                'excl_capability_activations_fingerprint_range',
+                'uq_command_approvals_idempotency',
+                'ck_listing_capacity_reservations_quantity',
+                'ck_command_approvals_maker_checker'
             )
             ORDER BY name
             SQL
         ))->pluck('name')->all();
 
         self::assertSame([
+            'ck_command_approvals_maker_checker',
+            'ck_listing_capacity_reservations_quantity',
             'cohort_classifications_classified_at_idx',
+            'excl_capability_activations_fingerprint_range',
             'idempotency_keys_scope_key_uq',
             'outbox_messages_pending_delivery_idx',
             'outbox_messages_status_ck',
             'retention_holds_active_evidence_idx',
             'retention_holds_status_ck',
+            'uq_category_versions_category_business',
+            'uq_command_approvals_idempotency',
+            'uq_inbox_messages_consumer_event',
+            'uq_integration_credentials_selector',
+            'uq_listing_capacity_reservations_command',
         ], $objects);
+
+        $canonicalCheckpoints = collect(DB::select(<<<'SQL'
+            SELECT batch
+            FROM migration_checkpoints
+            WHERE migration_version = 'canonical-58-v1'
+              AND status = 'completed'
+            ORDER BY batch
+            SQL
+        ))->pluck('batch')->all();
+
+        self::assertSame([
+            '000', '001', '002', '003', '004', '005', '006', '007', '008', '009',
+        ], $canonicalCheckpoints);
     }
 
     /** @return list<string> */
@@ -66,9 +95,13 @@ final class DatabaseCatalogContractTest extends TestCase
         return [
             'administrative_holds',
             'audit_events',
+            'auth_otps',
+            'capability_activations',
             'capability_profiles',
             'categories',
+            'category_versions',
             'cohort_classifications',
+            'command_approvals',
             'consent_grants',
             'conversations',
             'deal_chains',
@@ -84,17 +117,27 @@ final class DatabaseCatalogContractTest extends TestCase
             'financial_transactions',
             'idempotency_keys',
             'identity_verifications',
+            'inbox_messages',
+            'integration_clients',
+            'integration_credentials',
+            'integration_object_mappings',
+            'integration_sync_cursors',
+            'integration_webhook_deliveries',
+            'integration_webhook_subscriptions',
             'listing_capacity',
+            'listing_capacity_reservations',
             'listing_versions',
             'listings',
             'messages',
             'migration_checkpoints',
             'notification_deliveries',
             'notifications',
+            'oauth_identities',
             'order_parties',
             'order_terms_snapshots',
             'orders',
             'outbox_messages',
+            'password_reset_tokens',
             'payment_events',
             'payment_obligations',
             'policy_versions',

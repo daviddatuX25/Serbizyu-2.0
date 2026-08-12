@@ -1,0 +1,4 @@
+import { ArrowLeft, Compass } from "lucide-react";
+import { Button, Card } from "@/components/ui";
+import { useRouter } from "@/context/RouterContext";
+export function NotFoundPage({ path }: { path: string }) { const { navigate } = useRouter(); return <main className="page-wrap max-w-2xl"><Card className="p-7"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-mango-50 text-mango-700"><Compass /></span><h1 className="display-title mt-5">We can’t find that page</h1><p className="mt-3 text-sm leading-6 text-ink-600">This route is not connected in the current fictional frontend: <code className="rounded bg-ink-50 px-1.5 py-0.5">{path}</code></p><div className="mt-6 flex flex-wrap gap-3"><Button leftIcon={<ArrowLeft className="h-4 w-4" />} onClick={() => navigate("/")}>Go home</Button><Button variant="outline" onClick={() => navigate("/explore")}>Browse instead</Button></div></Card></main>; }
