@@ -4,8 +4,6 @@ import { Button, Card, CardContent, Field, Notice, PasswordInput, Select, TextIn
 import { cn } from '../../lib/utils';
 import type { ReadinessState } from '../../types';
 import './almost-there-onboarding.css';
-const AUTH_HERO_IMAGE =
-    'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80';
 
 // Per-step Tagudin local facts. Typed slowly and held with a long pause before
 // the next one, so onboarding feels calm and readable instead of flickering.
@@ -244,25 +242,9 @@ export function AlmostThereOnboarding({
     };
 
     return (
-        <main className="sz-auth-split">
-            <aside className="sz-auth-visual" aria-hidden={false}>
-                <img
-                    src={AUTH_HERO_IMAGE}
-                    alt="Fresh produce at a public market — placeholder until a Tagudin local photo is added"
-                />
-                <div className="sz-auth-visual-copy">
-                    <p className="sz-eyebrow">Tagudin · profile & trust setup</p>
-                    <h2>Building a verified local community.</h2>
-                    <p>
-                        Completing your profile enables trusted local transactions, safe service
-                        requests, and prepares your account for future ID verification.
-                    </p>
-                </div>
-            </aside>
-
-            <section className="sz-auth-dock">
-                <div className="ato-sheet">
-                    <div className="ato-compact-sticky-wrapper">
+        <main className="sz-page ato">
+            <div className="ato-sheet">
+                <div className="ato-compact-sticky-wrapper">
                         <div
                             className={cn('ato-compact-progress', isScrolled && 'is-visible')}
                             aria-live="polite"
@@ -502,7 +484,6 @@ export function AlmostThereOnboarding({
                         </Card>
                     </form>
                 </div>
-            </section>
         </main>
     );
 }
