@@ -1911,109 +1911,91 @@
 
       </section>
 
-      <!-- Section 3: Work Pipeline & Sourcing (Step 3 in Guided Mode) -->
+      <!-- Section 3: Coordination & Publishing (Step 3 in Guided Mode) -->
       <section class="editor-card-section" id="card-step-3">
         <div class="step-friendly-ask">
-          <h2 class="step-ask-title">Work Pipeline &amp; Sourcing</h2>
-          <p class="step-ask-sub">Define operational milestone stages and optional partner slots.</p>
+          <h2 class="step-ask-title">Partnered Services</h2>
+          <p class="step-ask-sub">Optionally attach partner slots and publish to Tagudin.</p>
         </div>
 
-        <div class="section-header-row">
-          <h2 class="section-title">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
-            <span>Flow of Work (Milestones)</span>
-          </h2>
+        <div style="border-top: 1.5px solid var(--line); margin: 14px 0 8px; padding-top: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 11.5px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.5px;">Partnered Services</span>
+            <span style="font-size: 9px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 1.5px 6px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">DEAL CHAIN</span>
+          </div>
         </div>
 
-        <!-- Bounded N8N Work Canvas -->
-        <div class="work-flow-panel" style="display: block;">
-          <div class="bounded-canvas-viewport" id="work-bounded-canvas">
-            <div class="bounded-canvas-track" id="work-bounded-track">
-              <!-- Step 1 Node -->
-              <div class="canvas-work-node" title="Step 1: Intake Diagnostic">
-                <div class="canvas-work-node-header" style="background: #E8F7F1; color: #0D715F;">
-                  <span>1 &bull; 15m</span>
-                  <span>&check;</span>
+        <div id="extend-service-content-container">
+          <!-- Combination 1: Turnkey Sourced Parts -->
+          <div class="extension-partner-card active" id="service-combo-parts" style="border-color: #0F2F58; background: #F8FAFD; margin-bottom: 8px;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon icon-pickup">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                 </div>
-                <div class="canvas-work-node-body">
-                  <div class="canvas-work-node-title">Intake Triage</div>
-                  <div class="canvas-work-node-sub">Voltage &amp; Freon</div>
+                <div>
+                  <div class="extension-name-title">Turnkey Sourced Parts</div>
                 </div>
               </div>
-
-              <!-- Wire 1 -> 2 -->
-              <div class="canvas-work-wire">
-                <svg viewBox="0 0 24 16" fill="none">
-                  <line x1="1" y1="8" x2="23" y2="8" class="canvas-work-wire-line"></line>
-                </svg>
-              </div>
-
-              <!-- Step 2 Node -->
-              <div class="canvas-work-node" title="Step 2: Coil Chemical Wash">
-                <div class="canvas-work-node-header" style="background: #CCFBF1; color: #0F766E;">
-                  <span>2 &bull; 20m</span>
-                  <span>⚡</span>
-                </div>
-                <div class="canvas-work-node-body">
-                  <div class="canvas-work-node-title">Coil Wash</div>
-                  <div class="canvas-work-node-sub">Alkaline Clean</div>
-                </div>
-              </div>
-
-              <!-- Wire 2 -> 3 -->
-              <div class="canvas-work-wire">
-                <svg viewBox="0 0 24 16" fill="none">
-                  <line x1="1" y1="8" x2="23" y2="8" class="canvas-work-wire-line" style="stroke: #D97706;"></line>
-                </svg>
-              </div>
-
-              <!-- Step 3 Node -->
-              <div class="canvas-work-node" title="Step 3: Cold Run Amperage Check">
-                <div class="canvas-work-node-header" style="background: #FEF3C7; color: #B45309;">
-                  <span>3 &bull; 15m</span>
-                  <span>⏳</span>
-                </div>
-                <div class="canvas-work-node-body">
-                  <div class="canvas-work-node-title">Cold Run</div>
-                  <div class="canvas-work-node-sub">Amperage Delta</div>
-                </div>
-              </div>
-
-              <!-- Wire 3 -> 4 -->
-              <div class="canvas-work-wire">
-                <svg viewBox="0 0 24 16" fill="none">
-                  <line x1="1" y1="8" x2="23" y2="8" class="canvas-work-wire-line"></line>
-                </svg>
-              </div>
-
-              <!-- Step 4 Node -->
-              <div class="canvas-work-node" title="Step 4: Final Sign-off & Delta Test">
-                <div class="canvas-work-node-header" style="background: #F1F5F9; color: #475569;">
-                  <span>4 &bull; 15m</span>
-                  <span>🔒</span>
-                </div>
-                <div class="canvas-work-node-body">
-                  <div class="canvas-work-node-title">Delta Test</div>
-                  <div class="canvas-work-node-sub">Dual Sign-off</div>
-                </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <button type="button" class="btn-default-badge active" onclick="setAsServiceListingDefault(this)">★ Default</button>
+                <button type="button" class="btn-item-remove" onclick="removeServiceCombinationCard('service-combo-parts')" title="Detach combination">&times;</button>
               </div>
             </div>
+
+            <!-- Slot 1: Hardware Store Depot -->
+            <div class="partner-selector-box" onclick="openSlotListingPicker('store')" style="margin-bottom: 6px;">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="store-partner-name">Open Slot</div>
+                <div class="partner-current-meta" id="store-partner-meta">₱180.00 parts budget</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+
+            <!-- Slot 2: Parts Courier Runner -->
+            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="delivery-partner-name">Open Slot</div>
+                <div class="partner-current-meta" id="delivery-partner-meta">₱80.00 route fee</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
           </div>
-          <button type="button" class="btn-add-item-dashed" onclick="addWorkStageNode()" style="margin-top: 8px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add Work Stage</span>
-          </button>
+
+          <!-- Combination 2: Post-Service Safety Inspection -->
+          <div class="extension-partner-card" id="service-combo-audit" style="border-color: var(--line); background: #FFFFFF; margin-bottom: 8px;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon icon-labor" style="background:#EDE9FE; color:#7C3AED;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <div>
+                  <div class="extension-name-title">Post-Service Safety Audit</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <button type="button" class="btn-default-badge" onclick="setAsServiceListingDefault(this)">Make Default</button>
+                <button type="button" class="btn-item-remove" onclick="removeServiceCombinationCard('service-combo-audit')" title="Detach combination">&times;</button>
+              </div>
+            </div>
+
+            <!-- Slot: Safety Auditor -->
+            <div class="partner-selector-box" onclick="openSlotListingPicker('audit')">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="audit-partner-name">Open Slot</div>
+                <div class="partner-current-meta" id="audit-partner-meta">₱150.00 audit fee</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+          </div>
         </div>
 
-        <!-- Section Divider: Partnered Services (Deal Chain) -->
-        <div style="border-top: 1px solid var(--line); margin: 14px 0 10px; padding-top: 12px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <label class="field-label" style="margin: 0;">Multi-Provider Coordination</label>
-            <span style="font-size: 8.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 1.5px 6px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">DEAL CHAIN</span>
-          </div>
-          <button type="button" class="btn-add-item-dashed" onclick="openBundleCatalog()" style="height: 42px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed #0F2F58; background: #F8FAFD; border-radius: var(--radius-md); font-size: 11.5px; font-weight: 700; color: #0F2F58; cursor: pointer;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            <span>Attach Partner Listing (Store / Courier)</span>
+        <!-- Deal Chain Dedicated Action Button -->
+        <div style="margin-top: 10px;">
+          <button type="button" class="btn-add-item-dashed" onclick="openBundleCatalog()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span>Attach Partner Listing</span>
+            <span style="font-size: 9.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.2px;">DEAL CHAIN</span>
           </button>
         </div>
       </section>
