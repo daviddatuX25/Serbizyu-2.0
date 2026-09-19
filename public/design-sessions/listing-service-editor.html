@@ -1618,22 +1618,6 @@
         </div>
 
         <div class="field-group">
-          <label class="field-label">Work Shape</label>
-          <div class="option-pills-row" id="service-shape-pills">
-            <button type="button" class="option-pill active" onclick="selectSinglePill(this, 'service-shape-pills')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>A1 Linear Project</span>
-            </button>
-            <button type="button" class="option-pill" onclick="selectSinglePill(this, 'service-shape-pills')">
-              <span>A3 Time Appointment</span>
-            </button>
-            <button type="button" class="option-pill" onclick="selectSinglePill(this, 'service-shape-pills')">
-              <span>A9 Digital / Remote</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="field-group">
           <label class="field-label">Category</label>
           <select class="field-select" id="listing-category">
             <option value="appliance" selected>Appliance Repair &amp; Cleaning</option>
@@ -1938,40 +1922,73 @@
 
           <!-- Mode 3: Single-Provider Package Tiers -->
           <div id="pricing-panel-packages" style="display: none;">
-            <div class="inclusions-dynamic-list" id="package-tiers-list" style="margin-bottom: 8px;">
+            <div class="inclusions-dynamic-list" id="package-tiers-list" style="margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
               <!-- Tier 1 -->
-              <div class="package-tier-row" style="background:#FAFCFB; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:4px;">
+              <div class="package-tier-row" style="background:#FFFFFF; border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                  <input type="text" class="tier-title-input" value="1 Unit Standard" style="font-size:12px; font-weight:800; color:var(--ink); border:none; background:transparent; outline:none; flex:1;" placeholder="Tier name...">
-                  <input type="text" class="tier-price-input" value="₱ 450.00" oninput="updateDockRate()" style="font-size:12px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); border:1px solid var(--line); border-radius:6px; padding:2px 6px; width:82px; text-align:right; background:#FFFFFF;">
-                  <button type="button" class="btn-item-remove" onclick="removePackageTier(this)" aria-label="Remove tier" style="font-size:14px; color:var(--ink-muted); cursor:pointer; background:none; border:none;">&times;</button>
+                  <div style="flex:1; min-width:0;">
+                    <span style="font-size:9px; font-weight:800; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Package Name</span>
+                    <input type="text" class="tier-title-input" value="1 Unit Standard" style="width:100%; font-size:12.5px; font-weight:800; color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB; margin-top:2px;" placeholder="e.g. 1 Unit Standard">
+                  </div>
+                  <button type="button" class="btn-item-remove" onclick="removePackageTier(this)" aria-label="Remove tier" style="font-size:16px; color:var(--ink-muted); cursor:pointer; background:none; border:none; padding:4px 6px; margin-top:12px;">&times;</button>
                 </div>
-                <input type="text" class="tier-sub-input" value="Deep coil &amp; drain clean" style="font-size:9.5px; color:var(--ink-muted); border:none; background:transparent; outline:none;" placeholder="Tier description / scope...">
+                <div style="display:flex; align-items:flex-start; gap:8px;">
+                  <div style="width:105px; flex-shrink:0;">
+                    <span style="font-size:9px; font-weight:800; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Price</span>
+                    <input type="text" class="tier-price-input" value="₱ 450.00" oninput="updateDockRate()" style="width:100%; font-size:12.5px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB; margin-top:2px;" placeholder="₱ 0.00">
+                  </div>
+                  <div style="flex:1; min-width:0;">
+                    <span style="font-size:9px; font-weight:800; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Scope / Inclusions</span>
+                    <input type="text" class="tier-sub-input" value="Deep coil &amp; drain clean" style="width:100%; font-size:11px; color:var(--ink-soft); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB; margin-top:2px;" placeholder="Tier scope or batch size...">
+                  </div>
+                </div>
               </div>
 
               <!-- Tier 2 -->
-              <div class="package-tier-row" style="background:#FAFCFB; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:4px;">
+              <div class="package-tier-row" style="background:#FFFFFF; border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                  <input type="text" class="tier-title-input" value="2 Units Dual Split" style="font-size:12px; font-weight:800; color:var(--ink); border:none; background:transparent; outline:none; flex:1;" placeholder="Tier name...">
-                  <input type="text" class="tier-price-input" value="₱ 850.00" oninput="updateDockRate()" style="font-size:12px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); border:1px solid var(--line); border-radius:6px; padding:2px 6px; width:82px; text-align:right; background:#FFFFFF;">
-                  <button type="button" class="btn-item-remove" onclick="removePackageTier(this)" aria-label="Remove tier" style="font-size:14px; color:var(--ink-muted); cursor:pointer; background:none; border:none;">&times;</button>
+                  <div style="flex:1; min-width:0;">
+                    <span style="font-size:9px; font-weight:800; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Package Name</span>
+                    <input type="text" class="tier-title-input" value="2 Units Dual Split" style="width:100%; font-size:12.5px; font-weight:800; color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB; margin-top:2px;" placeholder="e.g. 2 Units Dual Split">
+                  </div>
+                  <button type="button" class="btn-item-remove" onclick="removePackageTier(this)" aria-label="Remove tier" style="font-size:16px; color:var(--ink-muted); cursor:pointer; background:none; border:none; padding:4px 6px; margin-top:12px;">&times;</button>
                 </div>
-                <input type="text" class="tier-sub-input" value="Dual room package · Save ₱50" style="font-size:9.5px; color:var(--ink-muted); border:none; background:transparent; outline:none;" placeholder="Tier description / scope...">
+                <div style="display:flex; align-items:flex-start; gap:8px;">
+                  <div style="width:105px; flex-shrink:0;">
+                    <span style="font-size:9px; font-weight:800; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Price</span>
+                    <input type="text" class="tier-price-input" value="₱ 850.00" oninput="updateDockRate()" style="width:100%; font-size:12.5px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB; margin-top:2px;" placeholder="₱ 0.00">
+                  </div>
+                  <div style="flex:1; min-width:0;">
+                    <span style="font-size:9px; font-weight:800; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Scope / Inclusions</span>
+                    <input type="text" class="tier-sub-input" value="Dual room package · Save ₱50" style="width:100%; font-size:11px; color:var(--ink-soft); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB; margin-top:2px;" placeholder="Tier scope or batch size...">
+                  </div>
+                </div>
               </div>
 
               <!-- Tier 3 -->
-              <div class="package-tier-row" style="background:#FAFCFB; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:4px;">
+              <div class="package-tier-row" style="background:#FFFFFF; border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                  <input type="text" class="tier-title-input" value="3 Units Full Home" style="font-size:12px; font-weight:800; color:var(--ink); border:none; background:transparent; outline:none; flex:1;" placeholder="Tier name...">
-                  <input type="text" class="tier-price-input" value="₱ 1,200.00" oninput="updateDockRate()" style="font-size:12px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); border:1px solid var(--line); border-radius:6px; padding:2px 6px; width:82px; text-align:right; background:#FFFFFF;">
-                  <button type="button" class="btn-item-remove" onclick="removePackageTier(this)" aria-label="Remove tier" style="font-size:14px; color:var(--ink-muted); cursor:pointer; background:none; border:none;">&times;</button>
+                  <div style="flex:1; min-width:0;">
+                    <span style="font-size:9px; font-weight:800; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Package Name</span>
+                    <input type="text" class="tier-title-input" value="3 Units Full Home" style="width:100%; font-size:12.5px; font-weight:800; color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB; margin-top:2px;" placeholder="e.g. 3 Units Full Home">
+                  </div>
+                  <button type="button" class="btn-item-remove" onclick="removePackageTier(this)" aria-label="Remove tier" style="font-size:16px; color:var(--ink-muted); cursor:pointer; background:none; border:none; padding:4px 6px; margin-top:12px;">&times;</button>
                 </div>
-                <input type="text" class="tier-sub-input" value="Whole home cleaning · Save ₱150" style="font-size:9.5px; color:var(--ink-muted); border:none; background:transparent; outline:none;" placeholder="Tier description / scope...">
+                <div style="display:flex; align-items:flex-start; gap:8px;">
+                  <div style="width:105px; flex-shrink:0;">
+                    <span style="font-size:9px; font-weight:800; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Price</span>
+                    <input type="text" class="tier-price-input" value="₱ 1,200.00" oninput="updateDockRate()" style="width:100%; font-size:12.5px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB; margin-top:2px;" placeholder="₱ 0.00">
+                  </div>
+                  <div style="flex:1; min-width:0;">
+                    <span style="font-size:9px; font-weight:800; color:var(--ink-muted); text-transform:uppercase; letter-spacing:0.04em;">Scope / Inclusions</span>
+                    <input type="text" class="tier-sub-input" value="Whole home cleaning · Save ₱150" style="width:100%; font-size:11px; color:var(--ink-soft); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB; margin-top:2px;" placeholder="Tier scope or batch size...">
+                  </div>
+                </div>
               </div>
             </div>
-            <button type="button" class="btn-add-item-dashed" onclick="addPackageTier()" style="width: 100%; height: 34px; font-size: 11px;">
+            <button type="button" class="btn-add-item-dashed" onclick="addPackageTier()" style="width: 100%; height: 38px; font-size: 11.5px; font-weight: 700;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>Add Package Tier</span>
+              <span>+ Add Package Tier</span>
             </button>
           </div>
         </div>
@@ -1979,37 +1996,49 @@
         <div class="field-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <label class="field-label" style="margin: 0;">Inclusions &amp; Add-ons</label>
-            <span style="font-size: 10px; color: var(--ink-muted);">Deliverables &amp; Optional Upgrades</span>
+            <span style="font-size: 10px; color: var(--ink-muted);">Tasks &amp; Optional Upgrades</span>
           </div>
-          <div class="inclusions-dynamic-list" id="inclusions-list">
-            <div class="custom-item-row">
-              <span class="custom-item-bullet"></span>
-              <input type="text" class="custom-item-input" value="Evaporator coil alkaline foam wash" placeholder="Describe deliverable...">
-              <button type="button" class="inclusion-type-chip active" onclick="cycleInclusionType(this)">✓ Included</button>
-              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
+          <div class="inclusions-dynamic-list" id="inclusions-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="custom-item-card" style="background:#FFFFFF; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+              <input type="text" class="custom-item-input" value="Evaporator coil alkaline foam wash" style="width:100%; font-size:12px; font-weight:700; color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB;" placeholder="Describe deliverable task...">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="inclusion-type-chip active" onclick="cycleInclusionType(this)">✓ Included in Base</button>
+                <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:11px; color:var(--ink-muted); background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:3px;">
+                  <span>✕ Remove</span>
+                </button>
+              </div>
             </div>
-            <div class="custom-item-row">
-              <span class="custom-item-bullet"></span>
-              <input type="text" class="custom-item-input" value="Freon operating pressure inspection" placeholder="Describe deliverable...">
-              <button type="button" class="inclusion-type-chip active" onclick="cycleInclusionType(this)">✓ Included</button>
-              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
+            <div class="custom-item-card" style="background:#FFFFFF; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+              <input type="text" class="custom-item-input" value="Freon operating pressure inspection" style="width:100%; font-size:12px; font-weight:700; color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB;" placeholder="Describe deliverable task...">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="inclusion-type-chip active" onclick="cycleInclusionType(this)">✓ Included in Base</button>
+                <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:11px; color:var(--ink-muted); background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:3px;">
+                  <span>✕ Remove</span>
+                </button>
+              </div>
             </div>
-            <div class="custom-item-row">
-              <span class="custom-item-bullet"></span>
-              <input type="text" class="custom-item-input" value="Outdoor condenser pressure clean" placeholder="Describe deliverable...">
-              <button type="button" class="inclusion-type-chip optional" data-price="150" onclick="cycleInclusionType(this)">+ ₱150 Add-on</button>
-              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
+            <div class="custom-item-card" style="background:#FFFFFF; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+              <input type="text" class="custom-item-input" value="Outdoor condenser pressure clean" style="width:100%; font-size:12px; font-weight:700; color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB;" placeholder="Describe deliverable task...">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="inclusion-type-chip optional" data-price="150" onclick="cycleInclusionType(this)">+ ₱150 Add-on</button>
+                <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:11px; color:var(--ink-muted); background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:3px;">
+                  <span>✕ Remove</span>
+                </button>
+              </div>
             </div>
-            <div class="custom-item-row">
-              <span class="custom-item-bullet"></span>
-              <input type="text" class="custom-item-input" value="30-day labor workmanship warranty" placeholder="Describe deliverable...">
-              <button type="button" class="inclusion-type-chip active" onclick="cycleInclusionType(this)">✓ Included</button>
-              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
+            <div class="custom-item-card" style="background:#FFFFFF; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+              <input type="text" class="custom-item-input" value="30-day labor workmanship warranty" style="width:100%; font-size:12px; font-weight:700; color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:#FAFCFB;" placeholder="Describe deliverable task...">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="inclusion-type-chip active" onclick="cycleInclusionType(this)">✓ Included in Base</button>
+                <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:11px; color:var(--ink-muted); background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:3px;">
+                  <span>✕ Remove</span>
+                </button>
+              </div>
             </div>
           </div>
-          <button type="button" class="btn-add-item-dashed" onclick="addInclusionItem()">
+          <button type="button" class="btn-add-item-dashed" onclick="addInclusionItem()" style="width: 100%; height: 38px; font-size: 11.5px; font-weight: 700; margin-top: 8px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add Deliverable / Add-on</span>
+            <span>+ Add Deliverable / Add-on</span>
           </button>
         </div>
 
