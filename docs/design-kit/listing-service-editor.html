@@ -874,7 +874,7 @@
     }
     .builder-view-guided .editor-scroll-body {
       background: #FFFFFF;
-      padding: 20px 20px 100px;
+      padding: 20px 20px 200px;
     }
     .builder-view-guided .editor-topbar {
       background: #FFFFFF;
@@ -1894,41 +1894,122 @@
         </div>
 
         <div class="field-group">
-          <label class="field-label">Standard Labor Price</label>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <input type="text" class="field-input-text" id="listing-price" value="₱ 450.00">
-            <span style="font-size: 12px; font-weight: 700; color: var(--ink-muted); white-space: nowrap;">Fixed Rate / Unit</span>
+          <label class="field-label">Pricing Model</label>
+          <div class="option-pills-row" id="pricing-model-tabs" style="margin-bottom: 8px;">
+            <button type="button" class="option-pill active" id="btn-price-mode-fixed" onclick="setServicePricingMode('fixed', this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Fixed Rate</span>
+            </button>
+            <button type="button" class="option-pill" id="btn-price-mode-range" onclick="setServicePricingMode('range', this)">
+              <span>Price Range</span>
+            </button>
+            <button type="button" class="option-pill" id="btn-price-mode-packages" onclick="setServicePricingMode('packages', this)">
+              <span>Package Tiers</span>
+            </button>
+          </div>
+
+          <!-- Mode 1: Fixed Rate Input -->
+          <div id="pricing-panel-fixed" style="display: block;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="text" class="field-input-text" id="listing-price" value="₱ 450.00" oninput="updateDockRate()" placeholder="e.g. ₱ 450.00">
+              <select class="field-select" style="width: 140px; flex-shrink: 0;" id="pricing-unit-select" onchange="updateDockRate()">
+                <option value="unit" selected>Per Unit / Job</option>
+                <option value="hour">Per Hour</option>
+                <option value="day">Per Day</option>
+                <option value="sqm">Per Sqm</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Mode 2: Price Range Inputs -->
+          <div id="pricing-panel-range" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="flex: 1;">
+                <span style="font-size: 9.5px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase;">Minimum</span>
+                <input type="text" class="field-input-text" id="listing-price-min" value="₱ 450.00" oninput="updateDockRate()" placeholder="₱ Min">
+              </div>
+              <span style="color: var(--ink-muted); font-weight: 700; margin-top: 14px;">—</span>
+              <div style="flex: 1;">
+                <span style="font-size: 9.5px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase;">Maximum</span>
+                <input type="text" class="field-input-text" id="listing-price-max" value="₱ 850.00" oninput="updateDockRate()" placeholder="₱ Max">
+              </div>
+            </div>
+          </div>
+
+          <!-- Mode 3: Single-Provider Package Tiers -->
+          <div id="pricing-panel-packages" style="display: none;">
+            <div class="inclusions-dynamic-list" id="package-tiers-list" style="margin-bottom: 8px;">
+              <!-- Tier 1 -->
+              <div class="package-tier-row" style="background:#FAFCFB; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                  <input type="text" class="tier-title-input" value="1 Unit Standard" style="font-size:12px; font-weight:800; color:var(--ink); border:none; background:transparent; outline:none; flex:1;" placeholder="Tier name...">
+                  <input type="text" class="tier-price-input" value="₱ 450.00" oninput="updateDockRate()" style="font-size:12px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); border:1px solid var(--line); border-radius:6px; padding:2px 6px; width:82px; text-align:right; background:#FFFFFF;">
+                  <button type="button" class="btn-item-remove" onclick="removePackageTier(this)" aria-label="Remove tier" style="font-size:14px; color:var(--ink-muted); cursor:pointer; background:none; border:none;">&times;</button>
+                </div>
+                <input type="text" class="tier-sub-input" value="Deep coil &amp; drain clean" style="font-size:9.5px; color:var(--ink-muted); border:none; background:transparent; outline:none;" placeholder="Tier description / scope...">
+              </div>
+
+              <!-- Tier 2 -->
+              <div class="package-tier-row" style="background:#FAFCFB; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                  <input type="text" class="tier-title-input" value="2 Units Dual Split" style="font-size:12px; font-weight:800; color:var(--ink); border:none; background:transparent; outline:none; flex:1;" placeholder="Tier name...">
+                  <input type="text" class="tier-price-input" value="₱ 850.00" oninput="updateDockRate()" style="font-size:12px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); border:1px solid var(--line); border-radius:6px; padding:2px 6px; width:82px; text-align:right; background:#FFFFFF;">
+                  <button type="button" class="btn-item-remove" onclick="removePackageTier(this)" aria-label="Remove tier" style="font-size:14px; color:var(--ink-muted); cursor:pointer; background:none; border:none;">&times;</button>
+                </div>
+                <input type="text" class="tier-sub-input" value="Dual room package · Save ₱50" style="font-size:9.5px; color:var(--ink-muted); border:none; background:transparent; outline:none;" placeholder="Tier description / scope...">
+              </div>
+
+              <!-- Tier 3 -->
+              <div class="package-tier-row" style="background:#FAFCFB; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                  <input type="text" class="tier-title-input" value="3 Units Full Home" style="font-size:12px; font-weight:800; color:var(--ink); border:none; background:transparent; outline:none; flex:1;" placeholder="Tier name...">
+                  <input type="text" class="tier-price-input" value="₱ 1,200.00" oninput="updateDockRate()" style="font-size:12px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); border:1px solid var(--line); border-radius:6px; padding:2px 6px; width:82px; text-align:right; background:#FFFFFF;">
+                  <button type="button" class="btn-item-remove" onclick="removePackageTier(this)" aria-label="Remove tier" style="font-size:14px; color:var(--ink-muted); cursor:pointer; background:none; border:none;">&times;</button>
+                </div>
+                <input type="text" class="tier-sub-input" value="Whole home cleaning · Save ₱150" style="font-size:9.5px; color:var(--ink-muted); border:none; background:transparent; outline:none;" placeholder="Tier description / scope...">
+              </div>
+            </div>
+            <button type="button" class="btn-add-item-dashed" onclick="addPackageTier()" style="width: 100%; height: 34px; font-size: 11px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add Package Tier</span>
+            </button>
           </div>
         </div>
 
         <div class="field-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="field-label" style="margin: 0;">Included in this Base Labor</label>
-            <span style="font-size: 10px; color: var(--ink-muted);">Custom Deliverables</span>
+            <label class="field-label" style="margin: 0;">Inclusions &amp; Add-ons</label>
+            <span style="font-size: 10px; color: var(--ink-muted);">Deliverables &amp; Optional Upgrades</span>
           </div>
           <div class="inclusions-dynamic-list" id="inclusions-list">
             <div class="custom-item-row">
               <span class="custom-item-bullet"></span>
               <input type="text" class="custom-item-input" value="Evaporator coil alkaline foam wash" placeholder="Describe deliverable...">
-              <button type="button" class="inclusion-type-chip active" onclick="toggleInclusionType(this)">✓ Included</button>
+              <button type="button" class="inclusion-type-chip active" onclick="cycleInclusionType(this)">✓ Included</button>
               <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
             </div>
             <div class="custom-item-row">
               <span class="custom-item-bullet"></span>
               <input type="text" class="custom-item-input" value="Freon operating pressure inspection" placeholder="Describe deliverable...">
-              <button type="button" class="inclusion-type-chip active" onclick="toggleInclusionType(this)">✓ Included</button>
+              <button type="button" class="inclusion-type-chip active" onclick="cycleInclusionType(this)">✓ Included</button>
+              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
+            </div>
+            <div class="custom-item-row">
+              <span class="custom-item-bullet"></span>
+              <input type="text" class="custom-item-input" value="Outdoor condenser pressure clean" placeholder="Describe deliverable...">
+              <button type="button" class="inclusion-type-chip optional" data-price="150" onclick="cycleInclusionType(this)">+ ₱150 Add-on</button>
               <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
             </div>
             <div class="custom-item-row">
               <span class="custom-item-bullet"></span>
               <input type="text" class="custom-item-input" value="30-day labor workmanship warranty" placeholder="Describe deliverable...">
-              <button type="button" class="inclusion-type-chip active" onclick="toggleInclusionType(this)">✓ Included</button>
+              <button type="button" class="inclusion-type-chip active" onclick="cycleInclusionType(this)">✓ Included</button>
               <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
             </div>
           </div>
           <button type="button" class="btn-add-item-dashed" onclick="addInclusionItem()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add Deliverable / Inclusion</span>
+            <span>Add Deliverable / Add-on</span>
           </button>
         </div>
 
@@ -2736,11 +2817,81 @@
       }
     }
 
-    function toggleInclusionType(btn) {
+    let currentServicePricingMode = 'fixed'; // 'fixed' | 'range' | 'packages'
+
+    function setServicePricingMode(mode, btn) {
+      currentServicePricingMode = mode;
+      document.querySelectorAll('#pricing-model-tabs .option-pill').forEach(b => {
+        b.classList.remove('active');
+        const check = b.querySelector('svg');
+        if (check) check.remove();
+      });
+      if (btn) {
+        btn.classList.add('active');
+        btn.insertAdjacentHTML('afterbegin', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>');
+      }
+
+      document.getElementById('pricing-panel-fixed').style.display = (mode === 'fixed') ? 'block' : 'none';
+      document.getElementById('pricing-panel-range').style.display = (mode === 'range') ? 'block' : 'none';
+      document.getElementById('pricing-panel-packages').style.display = (mode === 'packages') ? 'block' : 'none';
+
+      updateDockRate();
+    }
+
+    function updateDockRate() {
+      const rateVal = document.getElementById('dock-preview-rate');
+      const metaTxt = document.querySelector('#dock-summary .dock-meta-txt');
+      if (!rateVal || !metaTxt) return;
+
+      if (currentServicePricingMode === 'fixed') {
+        const val = document.getElementById('listing-price').value || '₱ 450.00';
+        const unit = document.getElementById('pricing-unit-select')?.value || 'unit';
+        rateVal.innerText = val;
+        metaTxt.innerText = (unit === 'hour') ? 'Hourly Labor Rate' : ((unit === 'day') ? 'Daily Labor Rate' : 'Fixed Labor Rate');
+      } else if (currentServicePricingMode === 'range') {
+        const minVal = document.getElementById('listing-price-min').value || '₱ 450.00';
+        const maxVal = document.getElementById('listing-price-max').value || '₱ 850.00';
+        rateVal.innerText = `${minVal} – ${maxVal}`;
+        metaTxt.innerText = 'Price Range / Unit';
+      } else if (currentServicePricingMode === 'packages') {
+        const tiers = document.querySelectorAll('#package-tiers-list .package-tier-row');
+        const firstTierPrice = tiers[0]?.querySelector('.tier-price-input')?.value || '₱ 450.00';
+        rateVal.innerText = `Starting ${firstTierPrice}`;
+        metaTxt.innerText = `${tiers.length} Package Tiers`;
+      }
+    }
+
+    function addPackageTier() {
+      const list = document.getElementById('package-tiers-list');
+      if (!list) return;
+      const count = list.querySelectorAll('.package-tier-row').length + 1;
+      const div = document.createElement('div');
+      div.className = 'package-tier-row';
+      div.style.cssText = 'background:#FAFCFB; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:4px;';
+      div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <input type="text" class="tier-title-input" value="${count} Units Bundle" style="font-size:12px; font-weight:800; color:var(--ink); border:none; background:transparent; outline:none; flex:1;" placeholder="Tier name...">
+          <input type="text" class="tier-price-input" value="₱ 1,500.00" oninput="updateDockRate()" style="font-size:12px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); border:1px solid var(--line); border-radius:6px; padding:2px 6px; width:82px; text-align:right; background:#FFFFFF;">
+          <button type="button" class="btn-item-remove" onclick="removePackageTier(this)" aria-label="Remove tier" style="font-size:14px; color:var(--ink-muted); cursor:pointer; background:none; border:none;">&times;</button>
+        </div>
+        <input type="text" class="tier-sub-input" value="Commercial volume tier" style="font-size:9.5px; color:var(--ink-muted); border:none; background:transparent; outline:none;" placeholder="Tier description / scope...">
+      `;
+      list.appendChild(div);
+      updateDockRate();
+    }
+
+    function removePackageTier(btn) {
+      const row = btn.closest('.package-tier-row');
+      if (row) row.remove();
+      updateDockRate();
+    }
+
+    function cycleInclusionType(btn) {
       if (btn.classList.contains('active')) {
         btn.classList.remove('active');
         btn.classList.add('optional');
-        btn.innerText = '+ Optional';
+        const p = btn.getAttribute('data-price') || '150';
+        btn.innerText = `+ ₱${p} Add-on`;
       } else {
         btn.classList.remove('optional');
         btn.classList.add('active');
