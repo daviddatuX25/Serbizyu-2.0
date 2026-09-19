@@ -1664,49 +1664,52 @@
           </div>
         </div>
 
-        <!-- Work Execution Pipeline (Operational Archetype) -->
-        <div class="field-group" style="margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="field-label" style="margin: 0;">Work Execution Pipeline</label>
-            <span style="font-size: 8.5px; font-weight: 800; background: var(--forest-50); color: var(--forest-700); border: 1px solid var(--forest-100); padding: 1px 6px; border-radius: var(--radius-pill);">WORK ARCHETYPE</span>
+        <!-- Work Execution Pipeline (From Work Catalog) -->
+        <div class="field-group" style="margin-top: 14px; padding-top: 12px; border-top: 1.5px solid var(--line);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div>
+              <label class="field-label" style="margin: 0; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #0F2F58; font-weight: 800;">Work Execution Pipeline</label>
+              <div style="font-size: 9.5px; color: var(--ink-muted); margin-top: 1px;">Governed operational stages &amp; milestone SLA</div>
+            </div>
+            <span style="font-size: 8.5px; font-weight: 800; background: var(--forest-50); color: var(--forest-700); border: 1px solid var(--forest-200); padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">WORK CATALOG</span>
           </div>
 
-          <!-- Suggested Work Presets from Work Catalog -->
-          <div class="option-pills-row" id="work-catalog-presets" style="margin-bottom: 8px;">
-            <button type="button" class="option-pill active" id="btn-work-preset-standard" onclick="selectWorkPreset('standard', this)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>4-Stage Standard Clean (75m)</span>
-            </button>
-            <button type="button" class="option-pill" id="btn-work-preset-parallel" onclick="selectWorkPreset('parallel', this)">
-              <span>Parallel Streams (45m)</span>
-            </button>
-            <button type="button" class="option-pill" id="btn-work-preset-branch" onclick="selectWorkPreset('branch', this)">
-              <span>Leak Decision Fork</span>
+          <!-- Active Work Catalog Item Card -->
+          <div style="background: #FAFCFB; border: 1.5px solid var(--forest-200); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--forest-50); border: 1px solid var(--forest-200); display: flex; align-items: center; justify-content: center; color: var(--forest-700); flex-shrink: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div>
+                <div style="font-size: 12px; font-weight: 800; color: #0F2F58;" id="active-work-title">Standard Inverter Deep Clean</div>
+                <div style="font-size: 10px; color: var(--ink-muted); font-family: 'JetBrains Mono', monospace;" id="active-work-meta">A1 Linear · 4 Stages · 75m SLA</div>
+              </div>
+            </div>
+            <button type="button" onclick="openWorkCatalogModal()" style="font-size: 11px; font-weight: 800; color: var(--forest-700); background: #FFFFFF; border: 1px solid var(--forest-300); border-radius: var(--radius-pill); padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <span>Change ▾</span>
             </button>
           </div>
 
           <!-- Compact Visual Work Pipeline Preview (Horizontal Bounded Canvas) -->
-          <div style="background: #060A17; border: 1px solid #1E293B; border-radius: 12px; padding: 10px 12px; overflow-x: auto; scrollbar-width: thin;" id="work-preview-canvas-box">
+          <div style="background: #060A17; border: 1px solid #1E293B; border-radius: 12px; padding: 12px 14px; overflow-x: auto; scrollbar-width: thin;" id="work-preview-canvas-box">
             <div id="work-preview-pipeline-track" style="display: flex; align-items: center; gap: 6px; min-width: 360px;">
               <!-- Rendered dynamically by JS -->
             </div>
           </div>
 
-          <!-- Action Row: Detailed Stage Breakdown toggle + Link to Full Work Studio -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-            <button type="button" id="btn-toggle-work-details" onclick="toggleWorkStageDetails()" style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--forest-700); background: none; border: none; cursor: pointer; padding: 0;">
-              <span id="work-details-toggle-icon" style="font-size: 10px; display: inline-block; transition: transform 0.2s;">▸</span>
-              <span id="work-details-toggle-text">Detailed Stage &amp; Evidence Breakdown</span>
+          <!-- Editable Operational Milestones & Evidence List -->
+          <div style="margin-top: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 10.5px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.3px;">Stage Milestones &amp; Evidence</span>
+              <span style="font-size: 9px; color: var(--forest-700); font-weight: 700;" id="work-stages-count-badge">4 Tracked Gates</span>
+            </div>
+            <div id="work-stages-editable-list" style="display: flex; flex-direction: column; gap: 6px;">
+              <!-- Rendered dynamically as editable stage cards -->
+            </div>
+            <button type="button" class="btn-add-item-dashed" onclick="addWorkStageNode()" style="width: 100%; height: 32px; font-size: 11px; font-weight: 700; margin-top: 6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add Stage Node</span>
             </button>
-            <a href="work-workspace.html" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; color: var(--forest-700); text-decoration: none; background: var(--forest-50); border: 1px solid var(--forest-100); padding: 3px 8px; border-radius: var(--radius-pill);">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-              <span>Customize in Work Studio ↗</span>
-            </a>
-          </div>
-
-          <!-- Collapsible Detailed View Container -->
-          <div id="work-stage-details-container" style="display: none; margin-top: 8px; background: #FAFCFB; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;">
-            <!-- Rendered dynamically by renderWorkDetails() -->
           </div>
         </div>
       </section>
@@ -2072,6 +2075,61 @@
         <span id="switch-mode-text">Switch to all-in-one form</span>
       </button>
     </footer>
+
+    <!-- 0. Work Execution Catalog Modal (Opens when Change ▾ is clicked on Work Pipeline) -->
+    <div class="sheet-backdrop" id="work-catalog-modal" onclick="closeWorkCatalogModal()">
+      <div class="glovo-organic-modal" onclick="event.stopPropagation()">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+        <div class="glovo-modal-content" style="max-height: 84vh; display: flex; flex-direction: column; padding: 4px 18px 16px;">
+          <div class="modal-fixed-top" style="flex-shrink: 0; padding-bottom: 6px;">
+            <div class="sheet-header-row">
+              <div>
+                <h3 class="glovo-modal-title">Work Execution Catalog</h3>
+                <p style="font-size: 10px; color: var(--ink-muted); margin: 2px 0 0;">
+                  Pick a standardized workflow template for your service category
+                </p>
+              </div>
+              <button type="button" class="glovo-close-circle" onclick="closeWorkCatalogModal()" aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <!-- Search Bar in Modal -->
+            <div class="chain-catalog-search-box" style="margin: 8px 0 6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input type="text" id="work-catalog-search-input" placeholder="Search workflows, stages, or shapes..." oninput="handleWorkCatalogSearch(this.value)">
+            </div>
+
+            <!-- Category Filter Chips in Modal -->
+            <div class="chain-category-chips" id="work-catalog-filter-chips" style="margin-bottom: 8px;">
+              <button type="button" class="chain-cat-chip active" onclick="filterWorkCatalogCategory('all', this)">All Workflows</button>
+              <button type="button" class="chain-cat-chip" onclick="filterWorkCatalogCategory('appliance', this)">Appliance</button>
+              <button type="button" class="chain-cat-chip" onclick="filterWorkCatalogCategory('electrical', this)">Electrical</button>
+              <button type="button" class="chain-cat-chip" onclick="filterWorkCatalogCategory('plumbing', this)">Plumbing</button>
+            </div>
+            <div class="search-section-header" style="margin-top: 2px;">Available Work Templates</div>
+          </div>
+
+          <!-- Scrollable Catalog Items List -->
+          <div class="modal-scroll-list" id="work-catalog-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px 10px;">
+            <!-- Rendered dynamically by renderWorkCatalogItems() -->
+          </div>
+
+          <!-- Bottom Action: Custom Workflow in Work Studio (Dedicated Affordance) -->
+          <div style="flex-shrink: 0; padding-top: 10px; border-top: 1.5px solid var(--line); background: #FFFFFF;">
+            <a href="work-workspace.html" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 38px; background: #0F2F58; color: #FFFFFF; border-radius: var(--radius-pill); text-decoration: none; font-size: 12px; font-weight: 800; letter-spacing: 0.2px; box-shadow: 0 4px 12px rgba(15,47,88,0.2);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Build Custom Workflow in Work Studio ↗</span>
+            </a>
+            <div style="text-align: center; font-size: 9.5px; color: var(--ink-muted); margin-top: 4px;">
+              Design complex multi-branch DAGs, parallel lanes, and custom sensor gates
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- 1. Single-Slot Listing Selector Modal (for [Change Partner ▾]) -->
     <div class="sheet-backdrop" id="slot-listing-picker-modal" onclick="closeSlotListingPicker()">
@@ -2759,202 +2817,274 @@
       }
     }
     // =========================================================================
-    // WORK PIPELINE PRESETS & CATALOG EMBED
+    // WORK PIPELINE: WORK CATALOG & EDITABLE STAGES
     // =========================================================================
-    let selectedWorkPreset = 'standard';
-    let isWorkDetailsOpen = false;
-
-    const workDetailsData = {
-      standard: [
-        { stage: 'Stage 1: Intake Triage', time: '15 mins SLA', desc: 'Isolate main breaker, inspect coil status, customer intake interview.', evidence: 'Breaker lock-out photo' },
-        { stage: 'Stage 2: Coil Wash', time: '20 mins SLA', desc: 'Apply specialized chemical foam on evaporator fins and pressure flush.', evidence: 'Chemical foam coverage photo' },
-        { stage: 'Stage 3: Cold Run', time: '15 mins SLA', desc: 'Restore power and verify compressor startup, amp draw, and fan cycle.', evidence: 'Amperage reading photo' },
-        { stage: 'Stage 4: Delta Test', time: '15 mins SLA', desc: 'Verify temperature drop (ΔT ≥ 12°C) with dual digital thermometer probes.', evidence: 'Dual-probe delta photo + Customer OTP sign-off' }
-      ],
-      parallel: [
-        { stage: 'Stage 1: Intake Triage', time: '15 mins SLA', desc: 'Breaker safety isolation & dual-technician work assignment.', evidence: 'Service unit arrival photo' },
-        { stage: 'Stage 2A: Indoor Coil (Parallel Lane)', time: '25 mins SLA', desc: 'Technician A disassembles blower wheel & flushes evaporator indoor.', evidence: 'Disassembled blower photo' },
-        { stage: 'Stage 2B: Outdoor Unit (Parallel Lane)', time: '20 mins SLA', desc: 'Technician B combs condenser fins & cleans outdoor unit simultaneously.', evidence: 'Condenser pressure photo' },
-        { stage: 'Stage 3: Joint Test', time: '15 mins SLA', desc: 'Both technicians converge to verify joint cooling and delta temperature.', evidence: 'Delta test photo + Customer OTP sign-off' }
-      ],
-      branch: [
-        { stage: 'Stage 1: Pressure Triage', time: '15 mins SLA', desc: 'Connect nitrogen manifold to check system line pressure.', evidence: 'Nitrogen manifold gauge photo' },
-        { stage: 'Decision Gate: Leak > 0 PSI?', time: 'Branch Gate', desc: 'System checks for pressure drop. If leak: fork to brazing; else: flush.', evidence: 'Pressure drop telemetry' },
-        { stage: 'Stage 2A / 2B: Braze or Flush', time: '15m - 30m', desc: 'Braze leaking copper joint or perform standard chemical foam wash.', evidence: 'Braze joint photo or foam photo' },
-        { stage: 'Stage 3: Temp Test', time: '10 mins SLA', desc: 'Final cooling efficiency and customer delivery sign-off.', evidence: 'Customer OTP sign-off' }
-      ]
+    const workCatalogTemplates = {
+      'standard': {
+        id: 'standard',
+        category: 'appliance',
+        title: 'Standard Inverter Deep Clean',
+        shape: 'A1 Linear',
+        sla: '75m',
+        flowType: 'linear',
+        description: 'Standard sequential 4-stage chemical foam wash and dual-probe delta temperature test.',
+        stages: [
+          { id: 's1', num: '1', title: 'Intake Triage', dur: '15m', desc: 'Isolate main breaker, inspect coil status, customer intake interview.', evidence: 'Breaker lock-out photo', color: '#0D715F', bg: '#E8F7F1' },
+          { id: 's2', num: '2', title: 'Coil Wash', dur: '20m', desc: 'Apply specialized chemical foam on evaporator fins and pressure flush.', evidence: 'Chemical foam coverage photo', color: '#0F766E', bg: '#CCFBF1' },
+          { id: 's3', num: '3', title: 'Cold Run', dur: '15m', desc: 'Restore power and verify compressor startup, amp draw, and fan cycle.', evidence: 'Amperage reading photo', color: '#B45309', bg: '#FEF3C7' },
+          { id: 's4', num: '4', title: 'Delta Test', dur: '15m', desc: 'Verify temperature drop (ΔT ≥ 12°C) with dual digital thermometer probes.', evidence: 'Dual-probe delta photo + Customer OTP sign-off', color: '#475569', bg: '#F1F5F9' }
+        ]
+      },
+      'parallel': {
+        id: 'parallel',
+        category: 'appliance',
+        title: 'Express Dual-Tech Clean',
+        shape: 'A9 Parallel Streams',
+        sla: '45m',
+        flowType: 'parallel',
+        description: 'Concurrent indoor and outdoor execution with two synchronized technicians.',
+        stages: [
+          { id: 's1', num: '1', title: 'Intake Triage', dur: '15m', desc: 'Breaker safety isolation & dual-technician work assignment.', evidence: 'Service unit arrival photo', color: '#0D715F', bg: '#E8F7F1' },
+          { id: 's2a', num: '2A', lane: 'top', title: 'Indoor Coil', dur: '25m', desc: 'Technician A disassembles blower wheel & flushes evaporator indoor.', evidence: 'Disassembled blower photo', color: '#0284C7', bg: '#E0F2FE' },
+          { id: 's2b', num: '2B', lane: 'btm', title: 'Outdoor Unit', dur: '20m', desc: 'Technician B combs condenser fins & cleans outdoor unit simultaneously.', evidence: 'Condenser pressure photo', color: '#166534', bg: '#DCFCE7' },
+          { id: 's3', num: '3', title: 'Joint Test', dur: '15m', desc: 'Both technicians converge to verify joint cooling and delta temperature.', evidence: 'Delta test photo + Customer OTP sign-off', color: '#7E22CE', bg: '#F3E8FF' }
+        ]
+      },
+      'branch': {
+        id: 'branch',
+        category: 'appliance',
+        title: 'AC Leak Detection & Braze Triage',
+        shape: 'A1 Decision Branch',
+        sla: '60m',
+        flowType: 'branch',
+        description: 'Pressure gate triage with conditional branch to copper brazing or standard flush.',
+        stages: [
+          { id: 's1', num: '1', title: 'Pressure Triage', dur: '15m', desc: 'Connect nitrogen manifold to check system line pressure.', evidence: 'Nitrogen manifold gauge photo', color: '#0D715F', bg: '#E8F7F1' },
+          { id: 'sgate', num: 'GATE', title: 'Leak > 0 PSI?', dur: 'Gate', desc: 'System checks for pressure drop. If leak: fork to brazing; else: flush.', evidence: 'Pressure drop telemetry', color: '#B45309', bg: '#FEF3C7' },
+          { id: 's2a', num: '2A', title: 'Braze Joint', dur: '30m', desc: 'Braze leaking copper joint with oxy-acetylene torch.', evidence: 'Braze joint photo', color: '#D97706', bg: '#FEF3C7' },
+          { id: 's3', num: '3', title: 'Temp Test', dur: '10m', desc: 'Final cooling efficiency and customer delivery sign-off.', evidence: 'Customer OTP sign-off', color: '#0D715F', bg: '#E8F7F1' }
+        ]
+      },
+      'window_soak': {
+        id: 'window_soak',
+        category: 'appliance',
+        title: 'Window AC Chemical Immersion Soak',
+        shape: 'A1 Linear',
+        sla: '50m',
+        flowType: 'linear',
+        description: 'Full chassis pull-out, chemical tank immersion, high-pressure rinse, and re-housing.',
+        stages: [
+          { id: 's1', num: '1', title: 'Chassis Pull', dur: '15m', desc: 'Dismount unit from wall frame and remove metal housing.', evidence: 'Dismount photo', color: '#0D715F', bg: '#E8F7F1' },
+          { id: 's2', num: '2', title: 'Chemical Soak', dur: '25m', desc: 'Submerge base pan and coil in foaming wash basin.', evidence: 'Soak bath photo', color: '#0F766E', bg: '#CCFBF1' },
+          { id: 's3', num: '3', title: 'Mount & Test', dur: '10m', desc: 'Re-seat in sleeve, seal accordion panels, and check airflow.', evidence: 'Sealed frame photo + Customer sign-off', color: '#475569', bg: '#F1F5F9' }
+        ]
+      },
+      'rapid_filter': {
+        id: 'rapid_filter',
+        category: 'appliance',
+        title: 'Rapid Filter Wash & Sanitization',
+        shape: 'A1 Express',
+        sla: '20m',
+        flowType: 'linear',
+        description: 'Express front panel removal, mesh filter wash, and ultrasonic antibacterial room fogging.',
+        stages: [
+          { id: 's1', num: '1', title: 'Mesh Wash', dur: '10m', desc: 'Extract and wash washable dust filters with degreaser.', evidence: 'Clean mesh photo', color: '#0D715F', bg: '#E8F7F1' },
+          { id: 's2', num: '2', title: 'Antibacterial Fog', dur: '10m', desc: 'Mist discharge louvers with non-toxic sanitizing aerosol.', evidence: 'Discharge vent photo', color: '#0284C7', bg: '#E0F2FE' }
+        ]
+      }
     };
 
-    function toggleWorkStageDetails() {
-      isWorkDetailsOpen = !isWorkDetailsOpen;
-      const container = document.getElementById('work-stage-details-container');
-      const icon = document.getElementById('work-details-toggle-icon');
-      const text = document.getElementById('work-details-toggle-text');
-      if (!container) return;
+    let currentWorkWorkflowId = 'standard';
+    let currentWorkStages = JSON.parse(JSON.stringify(workCatalogTemplates['standard'].stages));
+    let currentCatalogCategoryFilter = 'all';
+    let currentCatalogSearchQuery = '';
 
-      if (isWorkDetailsOpen) {
-        container.style.display = 'block';
-        if (icon) icon.style.transform = 'rotate(90deg)';
-        if (text) text.innerText = 'Hide Stage & Evidence Breakdown';
-        renderWorkDetails();
-      } else {
-        container.style.display = 'none';
-        if (icon) icon.style.transform = 'rotate(0deg)';
-        if (text) text.innerText = 'Detailed Stage & Evidence Breakdown';
+    function openWorkCatalogModal() {
+      const modal = document.getElementById('work-catalog-modal');
+      if (modal) {
+        modal.classList.add('open');
+        renderWorkCatalogItems();
       }
     }
 
-    function renderWorkDetails() {
-      const container = document.getElementById('work-stage-details-container');
-      if (!container) return;
-      const items = workDetailsData[selectedWorkPreset] || [];
+    function closeWorkCatalogModal() {
+      const modal = document.getElementById('work-catalog-modal');
+      if (modal) modal.classList.remove('open');
+    }
 
-      let html = `
-        <div style="font-size: 10px; font-weight: 800; color: #0F2F58; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px; display: flex; justify-content: space-between; align-items: center;">
-          <span>Operational Milestones &amp; Evidence</span>
-          <span style="font-size: 9px; color: var(--forest-700); font-weight: 700;">${items.length} Tracked Gates</span>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-      `;
+    function filterWorkCatalogCategory(category, btn) {
+      currentCatalogCategoryFilter = category;
+      document.querySelectorAll('#work-catalog-filter-chips .chain-cat-chip').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderWorkCatalogItems();
+    }
 
-      items.forEach(it => {
+    function handleWorkCatalogSearch(val) {
+      currentCatalogSearchQuery = (val || '').toLowerCase();
+      renderWorkCatalogItems();
+    }
+
+    function renderWorkCatalogItems() {
+      const list = document.getElementById('work-catalog-list');
+      if (!list) return;
+
+      const keys = Object.keys(workCatalogTemplates);
+      const filtered = keys.filter(k => {
+        const item = workCatalogTemplates[k];
+        const matchesCategory = currentCatalogCategoryFilter === 'all' || item.category === currentCatalogCategoryFilter;
+        const matchesQuery = !currentCatalogSearchQuery ||
+                             item.title.toLowerCase().includes(currentCatalogSearchQuery) ||
+                             item.shape.toLowerCase().includes(currentCatalogSearchQuery) ||
+                             item.description.toLowerCase().includes(currentCatalogSearchQuery);
+        return matchesCategory && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:20px; font-size:11px; color:var(--ink-muted);">No matching workflows found in catalog.</div>`;
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(k => {
+        const item = workCatalogTemplates[k];
+        const isActive = k === currentWorkWorkflowId;
         html += `
-          <div style="background: #FFFFFF; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; gap: 2px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 10.5px; font-weight: 800; color: #0F2F58;">${it.stage}</span>
-              <span style="font-size: 9.5px; font-weight: 700; color: var(--forest-700); font-family: 'JetBrains Mono', monospace;">${it.time}</span>
+          <div onclick="selectWorkCatalogWorkflow('${k}')" style="background:${isActive ? '#F0FDF4' : '#FAFCFB'}; border:${isActive ? '1.5px solid var(--forest-600)' : '1px solid var(--line)'}; border-radius:10px; padding:10px 12px; cursor:pointer; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; transition:all 0.15s ease;">
+            <div style="flex:1;">
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+                <span style="font-size:12px; font-weight:800; color:#0F2F58;">${item.title}</span>
+                ${isActive ? '<span style="font-size:8px; font-weight:800; background:var(--forest-600); color:#FFFFFF; padding:1px 5px; border-radius:4px;">ACTIVE</span>' : ''}
+              </div>
+              <div style="font-size:10px; color:var(--ink-muted); margin-bottom:4px; line-height:1.35;">${item.description}</div>
+              <div style="display:flex; align-items:center; gap:8px; font-size:9.5px; font-family:'JetBrains Mono',monospace;">
+                <span style="color:var(--forest-700); font-weight:700;">${item.shape}</span>
+                <span style="color:var(--ink-muted);">·</span>
+                <span style="color:#0284C7; font-weight:700;">${item.stages.length} Stages</span>
+                <span style="color:var(--ink-muted);">·</span>
+                <span style="color:#D97706; font-weight:700;">${item.sla} SLA</span>
+              </div>
             </div>
-            <div style="font-size: 9.5px; color: var(--ink-muted); line-height: 1.35;">${it.desc}</div>
-            <div style="font-size: 9px; font-weight: 700; color: #0284C7; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
-              <span>Mandatory Evidence:</span>
-              <span style="color: var(--ink); font-weight: 600;">${it.evidence}</span>
-            </div>
+            <button type="button" style="font-size:10.5px; font-weight:700; color:${isActive ? 'var(--forest-700)' : 'var(--ink)'}; background:${isActive ? '#FFFFFF' : '#F1F5F9'}; border:1px solid ${isActive ? 'var(--forest-300)' : 'var(--line)'}; border-radius:var(--radius-pill); padding:3px 8px; cursor:pointer; flex-shrink:0;">
+              ${isActive ? 'Selected' : 'Use Template'}
+            </button>
           </div>
         `;
       });
 
-      html += '</div>';
-      container.innerHTML = html;
+      list.innerHTML = html;
     }
 
-    function selectWorkPreset(presetKey, btn) {
-      selectedWorkPreset = presetKey;
-      document.querySelectorAll('#work-catalog-presets .option-pill').forEach(b => {
-        b.classList.remove('active');
-        const check = b.querySelector('svg');
-        if (check) check.remove();
-      });
-      if (btn) {
-        btn.classList.add('active');
-        btn.insertAdjacentHTML('afterbegin', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>');
-      }
+    function selectWorkCatalogWorkflow(k) {
+      const template = workCatalogTemplates[k];
+      if (!template) return;
+      currentWorkWorkflowId = k;
+      currentWorkStages = JSON.parse(JSON.stringify(template.stages));
 
-      renderWorkPreviewPipeline();
-      if (isWorkDetailsOpen) {
-        renderWorkDetails();
-      }
+      const titleEl = document.getElementById('active-work-title');
+      const metaEl = document.getElementById('active-work-meta');
+      if (titleEl) titleEl.innerText = template.title;
+      if (metaEl) metaEl.innerText = `${template.shape} · ${currentWorkStages.length} Stages · ${template.sla} SLA`;
+
+      closeWorkCatalogModal();
+      renderWorkPreviewCanvas();
+      renderEditableStagesList();
     }
 
-    function renderWorkPreviewPipeline() {
+    function renderWorkPreviewCanvas() {
       const track = document.getElementById('work-preview-pipeline-track');
       if (!track) return;
+      const template = workCatalogTemplates[currentWorkWorkflowId] || workCatalogTemplates['standard'];
 
-      if (selectedWorkPreset === 'parallel') {
-        // Render TRUE Parallel DAG (Fork -> Vertical Lanes -> Join)
+      if (template.flowType === 'parallel') {
+        const s1 = currentWorkStages[0] || { num: '1', title: 'Intake', dur: '15m' };
+        const s2a = currentWorkStages[1] || { num: '2A', title: 'Lane A', dur: '25m' };
+        const s2b = currentWorkStages[2] || { num: '2B', title: 'Lane B', dur: '20m' };
+        const s3 = currentWorkStages[3] || { num: '3', title: 'Joint Test', dur: '15m' };
+
         track.innerHTML = `
           <div style="display: flex; align-items: center; gap: 4px; min-width: 380px;">
-            <!-- Stage 1 -->
             <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">1</span>
-                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">15m</span>
+                <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">${s1.num || '1'}</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s1.dur}</span>
               </div>
-              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Intake Triage</div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s1.title}</div>
             </div>
 
-            <!-- Fork SVG Wire -->
             <svg width="26" height="70" viewBox="0 0 26 70" fill="none" style="flex-shrink:0;">
               <path d="M0 35 H8 C14 35 14 17 26 17" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
               <path d="M0 35 H8 C14 35 14 53 26 53" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
             </svg>
 
-            <!-- Parallel Lanes (Stacked vertically) -->
             <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
-              <!-- Lane 2A -->
               <div style="background:#FFFFFF; border:1.5px solid #0284C7; border-radius:8px; padding:4px 8px; display:flex; flex-direction:column; gap:2px; width:98px; box-shadow:0 2px 6px rgba(2,132,199,0.12);">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-size:7.5px; font-weight:800; background:#E0F2FE; color:#0284C7; padding:1px 4px; border-radius:4px;">2A · PARALLEL</span>
-                  <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">25m</span>
+                  <span style="font-size:7.5px; font-weight:800; background:#E0F2FE; color:#0284C7; padding:1px 4px; border-radius:4px;">${s2a.num || '2A'} · PARALLEL</span>
+                  <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s2a.dur}</span>
                 </div>
-                <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Indoor Coil</div>
+                <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s2a.title}</div>
               </div>
-              <!-- Lane 2B -->
               <div style="background:#FFFFFF; border:1.5px solid #166534; border-radius:8px; padding:4px 8px; display:flex; flex-direction:column; gap:2px; width:98px; box-shadow:0 2px 6px rgba(22,101,52,0.12);">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-size:7.5px; font-weight:800; background:#DCFCE7; color:#166534; padding:1px 4px; border-radius:4px;">2B · PARALLEL</span>
-                  <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">20m</span>
+                  <span style="font-size:7.5px; font-weight:800; background:#DCFCE7; color:#166534; padding:1px 4px; border-radius:4px;">${s2b.num || '2B'} · PARALLEL</span>
+                  <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s2b.dur}</span>
                 </div>
-                <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Outdoor Unit</div>
+                <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s2b.title}</div>
               </div>
             </div>
 
-            <!-- Join SVG Wire -->
             <svg width="26" height="70" viewBox="0 0 26 70" fill="none" style="flex-shrink:0;">
               <path d="M0 17 C12 17 12 35 18 35 H26" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
               <path d="M0 53 C12 53 12 35 18 35 H26" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
             </svg>
 
-            <!-- Stage 3 (Rejoined) -->
             <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:7.5px; font-weight:800; background:#F3E8FF; color:#7E22CE; padding:1px 4px; border-radius:4px;">3</span>
-                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">15m</span>
+                <span style="font-size:7.5px; font-weight:800; background:#F3E8FF; color:#7E22CE; padding:1px 4px; border-radius:4px;">${s3.num || '3'}</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s3.dur}</span>
               </div>
-              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Joint Test</div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s3.title}</div>
             </div>
           </div>
         `;
-      } else if (selectedWorkPreset === 'branch') {
-        // Render Decision Branch Fork (Gate -> Yes/No Lanes -> Join)
+      } else if (template.flowType === 'branch') {
+        const s1 = currentWorkStages[0] || { num: '1', title: 'Pressure Triage', dur: '15m' };
+        const sgate = currentWorkStages[1] || { num: 'GATE', title: 'Leak > 0 PSI?', dur: 'Gate' };
+        const s2a = currentWorkStages[2] || { num: '2A', title: 'Braze Joint', dur: '30m' };
+        const s3 = currentWorkStages[3] || { num: '3', title: 'Temp Test', dur: '10m' };
+
         track.innerHTML = `
           <div style="display: flex; align-items: center; gap: 4px; min-width: 380px;">
-            <!-- Stage 1 -->
             <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">1</span>
-                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">15m</span>
+                <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">${s1.num || '1'}</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s1.dur}</span>
               </div>
-              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Pressure Triage</div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s1.title}</div>
             </div>
 
-            <!-- Wire to Gate -->
             <svg width="14" height="10" viewBox="0 0 14 10" fill="none" style="flex-shrink:0;">
               <line x1="0" y1="5" x2="14" y2="5" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2"/>
             </svg>
 
-            <!-- Decision Gate -->
             <div style="background:#FFFBEB; border:1.5px solid #D97706; border-radius:8px; padding:4px 6px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; width:58px;">
               <span style="font-size:7.5px; font-weight:800; color:#B45309;">GATE</span>
-              <span style="font-size:8.5px; font-weight:800; color:#92400E;">Leak &gt; 0?</span>
+              <span style="font-size:8px; font-weight:800; color:#92400E; white-space:nowrap;">Leak &gt; 0?</span>
             </div>
 
-            <!-- Fork SVG Wire -->
             <svg width="22" height="70" viewBox="0 0 22 70" fill="none" style="flex-shrink:0;">
               <path d="M0 35 H6 C12 35 12 17 22 17" stroke="#D97706" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
               <path d="M0 35 H6 C12 35 12 53 22 53" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
             </svg>
 
-            <!-- Conditional Branches -->
             <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
-              <!-- Yes: Braze -->
               <div style="background:#FFFFFF; border:1.5px solid #D97706; border-radius:8px; padding:4px 8px; display:flex; flex-direction:column; gap:2px; width:98px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <span style="font-size:7.5px; font-weight:800; background:#FEF3C7; color:#B45309; padding:1px 4px; border-radius:4px;">YES · BRAZE</span>
-                  <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">30m</span>
+                  <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s2a.dur}</span>
                 </div>
-                <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Braze Joint</div>
+                <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s2a.title}</div>
               </div>
-              <!-- No: Pass -->
               <div style="background:#FFFFFF; border:1.5px solid #10B981; border-radius:8px; padding:4px 8px; display:flex; flex-direction:column; gap:2px; width:98px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">NO · PASS</span>
@@ -2964,42 +3094,33 @@
               </div>
             </div>
 
-            <!-- Join SVG Wire -->
             <svg width="22" height="70" viewBox="0 0 22 70" fill="none" style="flex-shrink:0;">
               <path d="M0 17 C10 17 10 35 16 35 H22" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
               <path d="M0 53 C10 53 10 35 16 35 H22" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
             </svg>
 
-            <!-- Stage 3 (Rejoined) -->
             <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">3</span>
-                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">10m</span>
+                <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">${s3.num || '3'}</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s3.dur}</span>
               </div>
-              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Temp Test</div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s3.title}</div>
             </div>
           </div>
         `;
       } else {
-        // Render Standard Sequential 4-Stage DAG
-        const nodes = [
-          { num: '1', title: 'Intake Triage', dur: '15m', color: '#0D715F', bg: '#E8F7F1' },
-          { num: '2', title: 'Coil Wash', dur: '20m', color: '#0F766E', bg: '#CCFBF1' },
-          { num: '3', title: 'Cold Run', dur: '15m', color: '#B45309', bg: '#FEF3C7' },
-          { num: '4', title: 'Delta Test', dur: '15m', color: '#475569', bg: '#F1F5F9' }
-        ];
-        let html = '';
-        nodes.forEach((n, idx) => {
+        let html = '<div style="display:flex; align-items:center; gap:6px; min-width:340px;">';
+        currentWorkStages.forEach((s, idx) => {
           html += `
             <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:4px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; min-width:74px;">
               <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
-                <span style="font-size:7.5px; font-weight:800; background:${n.bg}; color:${n.color}; padding:1px 4px; border-radius:4px;">${n.num}</span>
-                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${n.dur}</span>
+                <span style="font-size:7.5px; font-weight:800; background:${s.bg || '#E8F7F1'}; color:${s.color || '#0D715F'}; padding:1px 4px; border-radius:4px;">${s.num || (idx + 1)}</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s.dur}</span>
               </div>
-              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.title}</div>
             </div>
           `;
-          if (idx < nodes.length - 1) {
+          if (idx < currentWorkStages.length - 1) {
             html += `
               <svg width="18" height="10" viewBox="0 0 18 10" fill="none" style="flex-shrink:0;">
                 <line x1="0" y1="5" x2="18" y2="5" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2"/>
@@ -3007,12 +3128,98 @@
             `;
           }
         });
+        html += '</div>';
         track.innerHTML = html;
       }
     }
+
+    function renderEditableStagesList() {
+      const list = document.getElementById('work-stages-editable-list');
+      const badge = document.getElementById('work-stages-count-badge');
+      if (!list) return;
+      if (badge) badge.innerText = `${currentWorkStages.length} Tracked Gates`;
+
+      let html = '';
+      currentWorkStages.forEach((stage, idx) => {
+        html += `
+          <div class="work-stage-edit-row" data-stage-idx="${idx}" style="background:#FFFFFF; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+              <div style="display:flex; align-items:center; gap:6px; flex:1;">
+                <span style="font-size:8px; font-weight:800; background:${stage.bg || '#E8F7F1'}; color:${stage.color || '#0D715F'}; padding:2px 5px; border-radius:4px;">${stage.num || (idx + 1)}</span>
+                <input type="text" class="stage-title-input" value="${stage.title}" oninput="updateStageProperty(${idx}, 'title', this.value)" style="font-size:11.5px; font-weight:800; color:#0F2F58; border:none; background:transparent; outline:none; flex:1;" placeholder="Stage title...">
+              </div>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <input type="text" class="stage-dur-input" value="${stage.dur}" oninput="updateStageProperty(${idx}, 'dur', this.value)" style="font-size:11px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--forest-700); width:48px; text-align:right; border:1px solid var(--line); border-radius:6px; padding:1px 4px; background:#FAFCFB;">
+                <button type="button" class="btn-item-remove" onclick="removeWorkStageNode(${idx})" aria-label="Remove stage" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+              </div>
+            </div>
+            <input type="text" class="stage-desc-input" value="${stage.desc || ''}" oninput="updateStageProperty(${idx}, 'desc', this.value)" style="font-size:10px; color:var(--ink-muted); border:none; background:transparent; outline:none;" placeholder="Stage scope description...">
+            <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px dashed var(--line); padding-top:4px; margin-top:2px;">
+              <span style="font-size:9px; font-weight:700; color:#0284C7;">Mandatory Evidence:</span>
+              <input type="text" class="stage-evidence-input" value="${stage.evidence || ''}" oninput="updateStageProperty(${idx}, 'evidence', this.value)" style="font-size:9.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none; text-align:right; flex:1; margin-left:6px;" placeholder="Evidence required...">
+            </div>
+          </div>
+        `;
+      });
+
+      list.innerHTML = html;
+    }
+
+    function updateStageProperty(idx, prop, val) {
+      if (currentWorkStages[idx]) {
+        currentWorkStages[idx][prop] = val;
+        if (prop === 'title' || prop === 'dur') {
+          renderWorkPreviewCanvas();
+          recalculateTotalSLA();
+        }
+      }
+    }
+
+    function addWorkStageNode() {
+      const nextNum = currentWorkStages.length + 1;
+      currentWorkStages.push({
+        id: `custom-${Date.now()}`,
+        num: String(nextNum),
+        title: `Milestone Stage ${nextNum}`,
+        dur: '15m',
+        desc: 'Operational verification and testing task.',
+        evidence: 'Inspection photo required',
+        color: '#0D715F',
+        bg: '#E8F7F1'
+      });
+      renderWorkPreviewCanvas();
+      renderEditableStagesList();
+      recalculateTotalSLA();
+    }
+
+    function removeWorkStageNode(idx) {
+      if (currentWorkStages.length <= 1) {
+        alert('Listing must have at least 1 operational work stage.');
+        return;
+      }
+      currentWorkStages.splice(idx, 1);
+      renderWorkPreviewCanvas();
+      renderEditableStagesList();
+      recalculateTotalSLA();
+    }
+
+    function recalculateTotalSLA() {
+      let totalMins = 0;
+      currentWorkStages.forEach(s => {
+        const m = parseInt(s.dur) || 0;
+        totalMins += m;
+      });
+      const metaEl = document.getElementById('active-work-meta');
+      const template = workCatalogTemplates[currentWorkWorkflowId] || { shape: 'Custom Workflow' };
+      if (metaEl) {
+        metaEl.innerText = `${template.shape} · ${currentWorkStages.length} Stages · ${totalMins}m SLA`;
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       updateStepUI();
-      renderWorkPreviewPipeline();
+      renderWorkPreviewCanvas();
+      renderEditableStagesList();
     });
     function goBack() {
       window.location.href = 'browse-mobile.html';
