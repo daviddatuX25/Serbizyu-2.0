@@ -43,8 +43,8 @@ it('is idempotent when ensuring the same published category twice', function ():
     $catalog = app(GovernedCatalogService::class);
     $correlationId = (string) Str::uuid7();
 
-    $first = $catalog->ensurePublished('home-help', 'service', $correlationId);
-    $second = $catalog->ensurePublished('home-help', 'service', $correlationId);
+    $first = $catalog->ensurePublished('home-help', 'service', 'A1', $correlationId);
+    $second = $catalog->ensurePublished('home-help', 'service', 'A1', $correlationId);
 
     expect($second)->toBe($first)
         ->and(DB::table('category_versions')->where('category_id', $first['category_id'])->where('status', 'published')->count())->toBe(1);
@@ -56,7 +56,7 @@ it('resolves published pins after ensure and rejects unknown category codes', fu
     $catalog = app(GovernedCatalogService::class);
     $correlationId = (string) Str::uuid7();
 
-    $ensured = $catalog->ensurePublished('home-help', 'service', $correlationId);
+    $ensured = $catalog->ensurePublished('home-help', 'service', 'A1', $correlationId);
     $resolved = $catalog->resolvePublished('home-help', 'service', $correlationId);
 
     expect($resolved['category_id'])->toBe($ensured['category_id'])
@@ -73,7 +73,7 @@ it('rejects resolve when the only category version is paused', function (): void
 
     $catalog = app(GovernedCatalogService::class);
     $correlationId = (string) Str::uuid7();
-    $pins = $catalog->ensurePublished('paused-cat-'.substr((string) Str::uuid7(), 0, 8), 'service', $correlationId);
+    $pins = $catalog->ensurePublished('paused-cat-'.substr((string) Str::uuid7(), 0, 8), 'service', 'A1', $correlationId);
 
     DB::table('category_versions')
         ->where('category_id', $pins['category_id'])
@@ -104,6 +104,7 @@ it('re-pins category and capability versions when a draft is updated', function 
         'description' => 'Initial draft for pin edge coverage.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
 
     $updated = app(UpdateListingDraft::class)->handle(
@@ -151,6 +152,7 @@ it('excludes non-Tagudin geography and pending review from discovery', function 
         'description' => 'Should be discoverable.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
 
     $pending = app(CreateListingDraft::class)->handle($actor, [
@@ -158,6 +160,7 @@ it('excludes non-Tagudin geography and pending review from discovery', function 
         'description' => 'Should stay private.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
 
     $elsewhere = app(CreateListingDraft::class)->handle($actor, [
@@ -165,6 +168,7 @@ it('excludes non-Tagudin geography and pending review from discovery', function 
         'description' => 'Wrong geography.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
 
     DB::table('listings')->where('id', $tagudin['id'])->update([
@@ -204,18 +208,21 @@ it('filters discovery by category and supports cursor pagination', function (): 
         'description' => 'Home help listing A for cursor tests.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
     $homeB = app(CreateListingDraft::class)->handle($actor, [
         'title' => 'Home B',
         'description' => 'Home help listing B for cursor tests.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
     $food = app(CreateListingDraft::class)->handle($actor, [
         'title' => 'Food C',
         'description' => 'Food listing should be filtered out.',
         'category_code' => 'food',
         'listing_type' => 'product',
+        'work_shape' => 'A4',
     ], $correlationId);
 
     foreach ([$homeA['id'], $homeB['id'], $food['id']] as $id) {
@@ -264,6 +271,7 @@ it('clamps discovery limit and returns empty safely for unknown category', funct
         'description' => 'Used to verify discovery limit clamping.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
     DB::table('listings')->where('id', $created['id'])->update([
         'status' => 'active',

@@ -29,7 +29,7 @@ it('ensures a published category version for listing pins', function (): void {
     $catalog = app(GovernedCatalogService::class);
     $correlationId = (string) Str::uuid7();
 
-    $pins = $catalog->ensurePublished('home-help', 'service', $correlationId);
+    $pins = $catalog->ensurePublished('home-help', 'service', 'A1', $correlationId);
 
     expect($pins['category_id'])->not->toBeEmpty()
         ->and($pins['category_business_version'])->toBeGreaterThan(0)
@@ -91,6 +91,7 @@ it('pins category and capability business versions on listing draft create', fun
         'description' => 'Wash and fold for Tagudin households.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
 
     $version = DB::table('listing_versions')
@@ -120,6 +121,7 @@ it('rejects capacity oversell and replays identical hold keys', function (): voi
         'description' => 'Limited daily packs from Tagudin market.',
         'category_code' => 'food',
         'listing_type' => 'product',
+        'work_shape' => 'A4',
     ], $correlationId);
 
     $version = DB::table('listing_versions')->where('listing_id', $created['id'])->first();
@@ -183,6 +185,7 @@ it('discovers only Tagudin approved active listings and omits owner ids', functi
         'description' => 'Should not appear in public discovery.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
 
     $active = app(CreateListingDraft::class)->handle($actor, [
@@ -190,6 +193,7 @@ it('discovers only Tagudin approved active listings and omits owner ids', functi
         'description' => 'Should appear in public discovery.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
 
     DB::table('listings')->where('id', $active['id'])->update([

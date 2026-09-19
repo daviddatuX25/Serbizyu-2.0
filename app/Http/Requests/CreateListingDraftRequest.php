@@ -21,6 +21,7 @@ final class CreateListingDraftRequest extends FormRequest
             'description' => ['required', 'string', 'min:10', 'max:4000'],
             'category_code' => ['required', 'string', 'regex:/^[a-z0-9][a-z0-9_-]{1,63}$/'],
             'listing_type' => ['required', 'string', 'in:service,product'],
+            'work_shape' => ['required', 'string', 'in:A1,A3,A4,A9'],
         ];
     }
 }

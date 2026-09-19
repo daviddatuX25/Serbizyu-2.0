@@ -106,3 +106,19 @@ Earlier review verdicts remain unchanged inside their historical reports so the 
 ## Next action
 
 Produce the dedicated **T0/E0-S2 LLD/OpenSpec** from the accepted 58-table authority. It must specify exact migration files, clean and observed-baseline paths, backfill/cutover, PostgreSQL constraints/triggers/indexes, destructive-boundary handling, catalog assertions, rollback, restore rehearsal, evidence owners, and the implementation stop/go gate. Do not begin T1 or feature migrations until that packet passes readiness.
+
+## Status Amendment & Current Pipeline Progression (2026-08-27)
+
+This amendment records the verified progression of the implementation pipeline since the initial 2026-08-10 readiness verdict while preserving all original findings, security reviews, and activation gates:
+
+1. **T0 (E0-S2 Canonical Schema Migration Baseline):** COMPLETED & GO RECORDED (2026-08-10). 58-table schema baseline established and verified.
+2. **T1 (Application Kernel Spine):** COMPLETED & GO RECORDED (2026-08-10). Shared idempotency, audit, outbox, and inbox primitives verified.
+3. **T1A (Identity Onboarding & Delegation):** COMPLETED & GO RECORDED (2026-08-10). Additive roles, consent acting-for on listing writes, and UserFactory verified.
+4. **Hybrid Browser Auth:** ACCEPTED (2026-08-10). P0–P1/P0c foundation delivered (phone OTP signup, password auth, role assignment, fake delivery); P2 Google OAuth and P3 live SMS/phone providers remain deferred behind provider-neutral ports.
+5. **T2 (Governed Catalog, Listings, Capacity, and Discovery):** COMPLETED & GO RECORDED (2026-08-10). Governed category versions, capability profiles, listing version pins, capacity reservation hold/commit/release/oversell rejection, and Tagudin discovery verified.
+6. **T3 (Ordinary Order Formation — Thin Direct Booking):** COMPLETED & GO RECORDED (2026-08-10). `SubmitOrderProposal` and sole atomic `FinalizeOrderAgreement` seam verified with immutable terms v1, work stub `not_started`, and obligation `created`/`external_cash`.
+7. **Next Authorized Train:** **T4 Work Fulfillment & Extension Engine** (`openspec/changes/t4-work-fulfillment/`). First implementation unit is common Work kernel + A1 Linear Project only; A3/A4/A9 and broader closure remain sequenced.
+
+**Gating Reminders:**
+- Synthetic/mockup records never count as genuine Tagudin validation; no pilot activation without founder review.
+- Live connected payments, production Tiwala, sensitive-ID collection, and production migrations remain strictly gated.

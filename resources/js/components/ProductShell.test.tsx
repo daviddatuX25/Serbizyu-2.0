@@ -23,17 +23,18 @@ describe('ProductShell', () => {
         );
 
         expect(screen.getByRole('navigation', { name: /primary navigation/i })).toBeTruthy();
+        fireEvent.click(screen.getByRole('button', { name: /open navigation menu/i }));
         expect(screen.getByRole('navigation', { name: /mobile navigation/i })).toBeTruthy();
 
         expect(screen.getAllByRole('link', { name: /^home$/i }).length).toBeGreaterThan(0);
-        expect(screen.getAllByRole('link', { name: /^browse$/i }).length).toBeGreaterThan(0);
-        expect(screen.getAllByRole('link', { name: /^create$/i }).length).toBeGreaterThan(0);
+        expect(screen.getAllByRole('link', { name: /browse marketplace/i }).length).toBeGreaterThan(0);
+        expect(screen.getAllByRole('link', { name: /create listing/i }).length).toBeGreaterThan(0);
         expect(screen.getAllByRole('link', { name: /my listings|mine/i }).length).toBeGreaterThan(0);
 
         expect(screen.queryByRole('link', { name: /activity/i })).toBeNull();
         expect(screen.queryByRole('link', { name: /quick.?deal/i })).toBeNull();
 
-        const create = screen.getAllByRole('link', { name: /^create$/i })[0];
+        const create = screen.getAllByRole('link', { name: /create listing/i })[0];
         expect(create.getAttribute('href')).toBe('/my-listings#my-listings-editor');
 
         const circle = document.querySelector('.sz-rail-logo-circle');

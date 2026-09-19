@@ -17,6 +17,14 @@ For the rebuilt planning sequence:
 
 The founder-approved Deal-Chaining charter supersedes any downstream wording that treats Deal-Chaining as rejected or as having no foundation. The canonical interpretation is now: foundation committed before E0-S2; bounded user-facing functionality sequenced later; pilot activation separately gated. Historical Deal-Chaining specifications remain supporting evidence only, especially where they imply pooled custody, automatic splitting, parent-wide liability, offline cryptographic authority, or aggregate guarantees.
 
+### 1.2 Frontend-first projection amendment — 2026-09-08
+
+The founder-directed frontend-first architecture at `_bmad-output/planning-artifacts/architecture/frontend-view-projection-architecture-2026-09-08/` governs implementation structure for role-, relationship-, view-, and state-dependent frontend behavior. It inherits the initiative architecture and promoted domain/UX authorities without overriding them. The static mobile HTML prototypes remain visual-reference evidence only for these behaviors. Documents 15, 16, and 26 are historical/supporting research wherever they conflict with the promoted no-pooled-money, contextual-role, React/Inertia, and 58-table authorities. `openspec/changes/harden-connected-frontend-experience/` remains the program requirement inventory; reviewable implementation proceeds through child OpenSpec changes beginning with `establish-frontend-view-projection-kernel`.
+
+### 1.3 Static session discovery amendment — 2026-09-08
+
+The next UI-planning workstream is the 37-session fixed-perspective mobile mock backlog in `_bmad-output/planning-artifacts/architecture/frontend-view-projection-architecture-2026-09-08/FRONTEND-FIRST-SOLUTION-DESIGN.md` §8.3, executed one URL at a time through `docs/design-kit/WORKFLOW.md`. Its purpose is to reveal missing interfaces and upstream behavior/schema/policy decisions before broad React/Inertia plus Laravel integration. `docs/design-kit/index.html` and accepted Serbizyu forest tokens remain visual authority; Glovo is interaction inspiration only and cannot override Serbizyu brand, accessibility, domain, navigation, or business rules. Static session files are non-authoritative visual evidence and contain no shared role/state runtime. The backlog does not authorize bulk mock generation or production implementation.
+
 ## 2. Replacement map
 
 | Historical artifact | Rebuilt authority | Classification after approval |

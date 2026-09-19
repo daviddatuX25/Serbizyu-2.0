@@ -53,10 +53,12 @@ Extend this kit when unique features land. Do not revive a separate colorful “
 5. **Tagudin fixtures** stay concrete (e.g. Maya Tagudin, greeting-card layout, ₱80 exact).
 6. **Live stack locked:** Laravel + Inertia **React** (not Svelte) + Tailwind v4 + real shadcn components themed to this kit. The kit itself stays static HTML specimens.
 7. **Inventory + workflow first** — for new features, light hi-fi in this kit and founder choose before permanent React.
+8. **Current workstream:** execute the 37 fixed-perspective mobile sessions in `../../_bmad-output/planning-artifacts/architecture/frontend-view-projection-architecture-2026-09-08/FRONTEND-FIRST-SOLUTION-DESIGN.md` §8.3 one at a time through `WORKFLOW.md`; do not build a shared role/state static runtime.
 
 ## Relationship to other artifacts
 
 - Behavior contract: `docs/planning-hardening/10-ux-ui-reference-dossier.md`
 - Experience / product rules: EXPERIENCE / PRD rebuilt sources under planning docs
 - Prior disposable prototype (`docs/mockup-v2/`): not the design standard
+- Static session backlog and architecture boundary: `../../_bmad-output/planning-artifacts/architecture/frontend-view-projection-architecture-2026-09-08/FRONTEND-FIRST-SOLUTION-DESIGN.md` §8.3 and `ARCHITECTURE-SPINE.md` AD-2
 - Retired: lo-fi `dk-*` suite, `kit.js`, `SCAFFOLD-GUIDE.md`, and `proposals/hi-fi-taste-v*`

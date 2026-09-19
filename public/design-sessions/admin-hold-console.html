@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>OPS-005 · Targeted Hold Console | Serbizyu 2.0</title>
+  <link rel="stylesheet" href="admin-kit.css">
+</head>
+<body>
+
+<div class="admin-workspace">
+  <!-- Top Navigation & Context Bar -->
+  <header class="admin-top-bar">
+    <div class="brand-badge">
+      <span class="dot"></span>
+      <span>Serbizyu Ops</span>
+      <span style="color: var(--text-muted); font-weight: 500; font-size: 11px;">/ Hold Console (OPS-005)</span>
+    </div>
+
+    <nav class="admin-nav-links">
+      <a href="admin-ui-kit.html" class="admin-nav-item" data-snd="tap">UI Kit</a>
+      <a href="admin-triage.html" class="admin-nav-item" data-snd="tap">Triage Queue (OPS-001)</a>
+      <a href="admin-inspector.html" class="admin-nav-item" data-snd="tap">Inspector (OPS-003)</a>
+      <a href="admin-hold-console.html" class="admin-nav-item active" data-snd="tap">Hold Console (OPS-005)</a>
+    </nav>
+
+    <div class="top-controls">
+      <button type="button" class="btn-snd-toggle sound-on">
+        <span>🔊</span> Sound: ON
+      </button>
+    </div>
+  </header>
+
+  <!-- Header with Navigation and Subject -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+        <a href="admin-inspector.html" class="badge badge-neutral" style="text-decoration: none;" data-snd="tap">
+          ← Back to Inspector
+        </a>
+        <span class="badge badge-purple">Screen: OPS-005</span>
+        <span class="badge badge-hold">Active Hold in Effect</span>
+      </div>
+      <h1 style="font-size: 22px; font-weight: 800; color: var(--text-pure); letter-spacing: -0.02em;">
+        Administrative Hold &amp; Resolution Console
+      </h1>
+      <p style="font-size: 13px; color: var(--text-secondary);">
+        Target: <strong style="color: var(--text-pure);">Order #ORD-2026-09</strong> (Ceiling Fan Repair). 
+        All privileged actions create immutable rows in <code class="font-mono">audit_events</code>.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      <a href="admin-inspector.html" class="btn btn-secondary" data-snd="tap">
+        View Live Inspector →
+      </a>
+    </div>
+  </div>
+
+  <!-- ACTIVE HOLD STATUS CARD -->
+  <div class="hold-banner">
+    <div class="hold-banner-icon">⏸</div>
+    <div class="hold-banner-body">
+      <div class="hold-banner-title">
+        Current State: Active Hold on Payment Obligation (#OBL-881)
+      </div>
+      <div class="hold-banner-text">
+        Placed by: <strong style="color: var(--text-pure);">ADMIN-01</strong> at 
+        <strong style="color: var(--text-pure);">14:30:15 PHT</strong> · 
+        Reason Class: <code class="font-mono" style="color: var(--hold-amber-light);">dispute</code>.
+        <br>
+        <span style="color: var(--text-secondary);">
+          Scope is surgical: Work execution and listing availability remain active and unblocked.
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONSOLE TABS: RELEASE vs MODIFY -->
+  <div class="admin-card">
+    <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--line-subtle); padding-bottom: 14px; margin-bottom: 20px;">
+      <button type="button" class="btn btn-secondary" id="tab-btn-release" style="font-size: 13px; padding: 8px 16px;" data-snd="switch" onclick="switchConsoleTab('release')">
+        <span>✓</span> 1. Resolve &amp; Release Hold
+      </button>
+      <button type="button" class="btn btn-ghost" id="tab-btn-modify" style="font-size: 13px; padding: 8px 16px;" data-snd="switch" onclick="switchConsoleTab('modify')">
+        <span>⏸</span> 2. Modify Hold Scope or Reason
+      </button>
+    </div>
+
+    <!-- TAB 1: RESOLUTION & RELEASE -->
+    <div id="tab-content-release">
+      <div style="margin-bottom: 18px;">
+        <h2 style="font-size: 16px; font-weight: 700; color: var(--text-pure);">
+          Record Authorized Resolution &amp; Release Hold
+        </h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+          Releasing the hold removes the block on the Payment Obligation and appends an audited resolution event.
+        </p>
+      </div>
+
+      <form onsubmit="handleReleaseSubmit(event)">
+        <!-- Step 1: Resolution Outcome -->
+        <div class="form-group">
+          <label class="form-label">Resolution Outcome</label>
+          <select class="form-select" id="release-outcome" data-snd="tap" required>
+            <option value="mutually_agreed">Resolved — Mismatch Clarified (Buyer &amp; Provider Reconciled Cash)</option>
+            <option value="dismissed">Dismissed — Erroneous Dispute Report (Declaration Validated)</option>
+            <option value="manual_adjustment">Resolved with Manual Off-Platform Receipt Recorded</option>
+            <option value="converted_to_restriction">Converted to Account Restriction (Severe Policy Violation)</option>
+          </select>
+        </div>
+
+        <!-- Step 2: Mandatory Operational Reason -->
+        <div class="form-group">
+          <label class="form-label">Mandatory Resolution Justification (audit_events)</label>
+          <textarea class="form-textarea" id="release-reason" placeholder="Detail the evidence examined, party communications, or verified receipts justifying this release..." required>Spoke directly with both parties via phone. Buyer sent cash via son who arrived at the job site at 14:40 PHT. Provider confirmed full payment of ₱90 cash received in hand. Both agree the transaction is settled.</textarea>
+        </div>
+
+        <!-- Step 3: Consequence & Audit Preview -->
+        <div style="background: var(--card-inset); border: 1px solid var(--line-subtle); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 20px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--forest-100); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span>🛡</span> Invariant Check &amp; Audit Trail Consequence
+          </div>
+          <ul style="font-size: 12px; color: var(--text-secondary); padding-left: 18px; line-height: 1.6;">
+            <li>Hold status will transition: <span class="badge badge-hold">active</span> → <span class="badge badge-success">released</span>.</li>
+            <li>Payment Obligation #OBL-881 returns to <span style="color: var(--success-green-light);">mutually_acknowledged</span>.</li>
+            <li>Zero past events are rewritten or deleted; a new resolution event is appended to <code class="font-mono">audit_events</code>.</li>
+            <li>PRD-059 check: Zero commission receivable generated.</li>
+          </ul>
+        </div>
+
+        <!-- Action Button -->
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <a href="admin-inspector.html" class="btn btn-secondary" data-snd="tap">
+            Cancel
+          </a>
+          <button type="submit" class="btn btn-primary" id="btn-release-submit" data-snd="confirm">
+            <span>✓</span> Confirm &amp; Release Hold
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- TAB 2: MODIFY HOLD SCOPE -->
+    <div id="tab-content-modify" style="display: none;">
+      <div style="margin-bottom: 18px;">
+        <h2 style="font-size: 16px; font-weight: 700; color: var(--text-pure);">
+          Surgical Hold Target Selection (chk_administrative_holds_target)
+        </h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+          Select the exact boundary to freeze. Never freeze an entire order when only a payment declaration is questioned.
+        </p>
+      </div>
+
+      <form onsubmit="handleModifySubmit(event)">
+        <!-- Target Scope Radio Grid -->
+        <div class="form-group">
+          <label class="form-label">Select Target Aggregate</label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+            <label style="background: rgba(245, 158, 11, 0.08); border: 1px solid var(--hold-border); border-radius: var(--radius-sm); padding: 12px; display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+              <input type="radio" name="hold_target" value="obligation" checked style="margin-top: 3px;">
+              <div>
+                <strong style="font-size: 13px; color: var(--hold-amber-light);">Payment Obligation Only</strong>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                  Target: #OBL-881 (₱90 External Cash). Work fulfillment continues unblocked.
+                </div>
+              </div>
+            </label>
+
+            <label style="background: var(--card-inset); border: 1px solid var(--line-subtle); border-radius: var(--radius-sm); padding: 12px; display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+              <input type="radio" name="hold_target" value="work" style="margin-top: 3px;">
+              <div>
+                <strong style="font-size: 13px; color: var(--text-primary);">Work Instance Only</strong>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                  Target: #WRK-401. Halts step sign-off; order terms remain unaffected.
+                </div>
+              </div>
+            </label>
+
+            <label style="background: var(--card-inset); border: 1px solid var(--line-subtle); border-radius: var(--radius-sm); padding: 12px; display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+              <input type="radio" name="hold_target" value="order" style="margin-top: 3px;">
+              <div>
+                <strong style="font-size: 13px; color: var(--text-primary);">Entire Order Aggregate</strong>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                  Target: #ORD-2026-09. Full freeze on work and payments (Emergency only).
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Reason Class Constraint -->
+        <div class="form-group">
+          <label class="form-label">Reason Class (chk_administrative_holds_reason)</label>
+          <select class="form-select" required>
+            <option value="dispute" selected>dispute — Evidence mismatch / party contest</option>
+            <option value="fraud">fraud — Suspicious account or synthetic activity</option>
+            <option value="safety">safety — Physical safety report at job location</option>
+            <option value="legal">legal — Formal dispute or legal hold notice</option>
+            <option value="provider">provider — Provider unavailable / abandonment</option>
+            <option value="operational">operational — System anomaly or failed event</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Operational Note</label>
+          <textarea class="form-textarea" placeholder="Explain the rationale for this hold target..." required>Holding payment attestation pending confirmation of cash handover.</textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <a href="admin-inspector.html" class="btn btn-secondary" data-snd="tap">
+            Cancel
+          </a>
+          <button type="submit" class="btn btn-amber" data-snd="warn">
+            <span>⏸</span> Save Scoped Hold Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SUCCESS CONFIRMATION MODAL OVERLAY -->
+  <div class="modal-veil" id="release-success-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px; color: var(--success-green-light);">✓</span>
+          <div class="modal-title">Hold Successfully Released</div>
+        </div>
+      </div>
+      <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
+        The administrative hold on <strong style="color: var(--text-pure);">#OBL-881</strong> has been released. 
+        A permanent audit record has been committed with correlation ID 
+        <code class="font-mono" style="color: var(--forest-100);">0198a3-rel-7f9</code>.
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <a href="admin-inspector.html" class="btn btn-primary" data-snd="tap">
+          Return to Inspector →
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="admin-snd.js"></script>
+<script>
+  function switchConsoleTab(tab) {
+    var releaseTab = document.getElementById('tab-content-release');
+    var modifyTab = document.getElementById('tab-content-modify');
+    var btnRelease = document.getElementById('tab-btn-release');
+    var btnModify = document.getElementById('tab-btn-modify');
+
+    if (tab === 'release') {
+      releaseTab.style.display = 'block';
+      modifyTab.style.display = 'none';
+      btnRelease.className = 'btn btn-secondary';
+      btnModify.className = 'btn btn-ghost';
+    } else {
+      releaseTab.style.display = 'none';
+      modifyTab.style.display = 'block';
+      btnRelease.className = 'btn btn-ghost';
+      btnModify.className = 'btn btn-secondary';
+    }
+  }
+
+  function handleReleaseSubmit(e) {
+    e.preventDefault();
+    var modal = document.getElementById('release-success-modal');
+    modal.classList.add('open');
+    if (window.AdminSound) {
+      window.AdminSound.confirm();
+    }
+  }
+
+  function handleModifySubmit(e) {
+    e.preventDefault();
+    alert('Hold scope updated. Event appended to audit trail.');
+    if (window.AdminSound) {
+      window.AdminSound.confirm();
+    }
+  }
+</script>
+</body>
+</html>

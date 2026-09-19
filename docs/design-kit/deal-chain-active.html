@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Live Deal Chain Execution</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Serbizyu Forest Brand Tokens */
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      /* Serbizyu Warm Accents & Ink */
+      --brand-navy: #0F2F58;
+      --brand-yellow: #FFC244;
+      --brand-yellow-light: #FEF8E7;
+      --brand-yellow-dark: #D97706;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+      --ink-subtle: #94a3b8;
+
+      /* Surfaces & Lines */
+      --canvas: #F4F6F5;
+      --surface: #FFFFFF;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      /* Radii */
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 3px rgba(10, 87, 74, 0.06);
+      --shadow-md: 0 4px 14px rgba(10, 87, 74, 0.08);
+      --shadow-dock: 0 -4px 20px rgba(18, 32, 28, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0D1B1E;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .studio-context-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #A4B8B0;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .studio-crumb { display: flex; align-items: center; gap: 6px; }
+    .studio-pill-tag {
+      background: rgba(232, 247, 241, 0.12);
+      border: 1px solid rgba(232, 247, 241, 0.25);
+      color: #A7F3D0;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: var(--canvas); }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+    .notch-island {
+      width: 110px;
+      height: 24px;
+      background: #000000;
+      border-radius: 16px;
+      margin: 0 auto;
+    }
+
+    .chain-topbar {
+      height: 52px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      flex-shrink: 0;
+    }
+    .circle-nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-pill);
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .topbar-center-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .live-pulse-badge {
+      background: #DCFCE7;
+      color: #166534;
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .green-dot-pulse {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #166534;
+      animation: pulseGreen 1.5s infinite;
+    }
+    @keyframes pulseGreen {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .chain-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Macro Deal Chain Progress Strip */
+    .macro-progress-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .macro-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .macro-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .macro-total-val {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--forest-600);
+    }
+    .macro-flow-track {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #F8FAFC;
+      border-radius: 8px;
+      padding: 6px 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .macro-node-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 7px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .macro-node-chip.done { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+    .macro-node-chip.active { background: #FEF3C7; color: #B45309; border: 1.5px solid #FDE68A; }
+    .macro-node-chip.queued { background: #FFFFFF; color: var(--ink-muted); border: 1px solid var(--line); }
+    .macro-arrow { color: var(--forest-600); font-size: 10px; font-weight: 800; }
+
+    /* Micro Work Pipeline: The Technician's Active Screen */
+    .micro-work-card {
+      background: #FFFFFF;
+      border: 2px solid var(--brand-navy);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-md);
+    }
+    .micro-header-strip {
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .micro-title-bold {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .micro-body-steps {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Steps */
+    .work-step-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      position: relative;
+    }
+    .step-status-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10.5px;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-status-icon.done { background: #DCFCE7; color: #166534; }
+    .step-status-icon.gated { background: #FEF3C7; color: #B45309; border: 1.5px dashed #D97706; }
+    .step-status-icon.locked { background: #F1F5F9; color: var(--ink-subtle); border: 1px solid var(--line); }
+
+    .step-content-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .step-title-txt {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .step-desc-sub {
+      font-size: 11px;
+      color: var(--ink-muted);
+      line-height: 1.35;
+    }
+
+    /* Live Dependency Gate Amber Box */
+    .dependency-gate-active-box {
+      background: #FFFDF9;
+      border: 1.5px solid #D97706;
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+      animation: gentlePulse 2.5s infinite;
+    }
+    @keyframes gentlePulse {
+      0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.2); }
+      70% { box-shadow: 0 0 0 6px rgba(217, 119, 6, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+    }
+    .gate-header-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #92400E;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .gate-courier-status {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .gate-eta-pill {
+      background: #FEF3C7;
+      color: #92400E;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      font-size: 10.5px;
+      font-weight: 800;
+    }
+
+    /* Interactive n8n Simulation Tools */
+    .simulation-actions-tray {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px dashed #FDE68A;
+    }
+    .btn-sim-event {
+      height: 30px;
+      border-radius: var(--radius-pill);
+      font-family: inherit;
+      font-size: 10.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .btn-sim-unlock {
+      background: var(--forest-600);
+      color: #FFFFFF;
+    }
+    .btn-sim-unlock:hover { background: #0A5A4C; }
+    .btn-sim-delay {
+      background: #FEF3C7;
+      color: #92400E;
+      border-color: #FDE68A;
+    }
+    .btn-sim-bypass {
+      background: #F1F5F9;
+      color: var(--ink-soft);
+      border-color: var(--line);
+    }
+
+    /* Independent Child Order Escrow Isolation Strip */
+    .child-orders-escrow-card {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .escrow-header {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .order-obligation-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      background: #F8FAFC;
+      border: 1px solid var(--line-subtle);
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    .order-name-bold {
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .order-status-pill {
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: var(--radius-pill);
+    }
+    .status-held { background: #E0F2FE; color: #0369A1; }
+    .status-settled { background: #DCFCE7; color: #166534; }
+
+    /* Sticky Bottom Action Dock */
+    .chain-sticky-dock {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: #FFFFFF;
+      border-top: 1px solid var(--line);
+      padding: 12px 18px 20px;
+      box-shadow: var(--shadow-dock);
+      z-index: 40;
+      display: flex;
+    /* Floating In-Page Toast */
+    .chain-event-toast {
+      position: absolute;
+      top: 56px;
+      left: 16px;
+      right: 16px;
+      background: #0F2F58;
+      color: #FFFFFF;
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      z-index: 80;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      animation: dropFade 0.25s ease;
+    }
+    @keyframes dropFade {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dock-call-btn {
+      height: 42px;
+      padding: 0 16px;
+      border-radius: var(--radius-pill);
+      background: #F1F5F9;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .btn-complete-step-action {
+      height: 42px;
+      padding: 0 20px;
+      border-radius: var(--radius-pill);
+      background: var(--forest-600);
+      color: #FFFFFF;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 3px 12px rgba(13, 113, 95, 0.3);
+    }
+    .btn-complete-step-action:disabled {
+      background: #94A3B8;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    /* ==========================================================================
+       AGNOSTIC ARCHITECTURE:
+       - Perspective 1: Project View (Buyer / Coordinator)
+       - Perspective 2: Agnostic Worker View (Unified for ALL providers)
+       Driven purely by URL request parameter (?view=project vs ?view=worker)
+       No role-switcher tabs shown on the actual page.
+    /* Animated Visual Workflow Chain Connectors (No Arrows!) */
+    .chain-animated-connector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 0 0 20px;
+    }
+    .connector-track-box {
+      width: 18px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .flow-dots-v {
+      stroke: var(--forest-600);
+      stroke-width: 3.2;
+      stroke-linecap: round;
+      stroke-dasharray: 5 6;
+      animation: dashMoveV 1.2s linear infinite;
+    }
+    .flow-dots-v-amber {
+      stroke: #D97706;
+      stroke-width: 3.2;
+      stroke-linecap: round;
+      stroke-dasharray: 5 6;
+      animation: dashMoveV 1.2s linear infinite;
+    }
+    @keyframes dashMoveV {
+      0% { stroke-dashoffset: 22; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .connector-badge-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 9px;
+      border-radius: var(--radius-pill);
+      background: var(--forest-50);
+      border: 1px solid rgba(13, 113, 95, 0.2);
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--forest-600);
+    }
+    .pulse-dot-forest {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--forest-600);
+      box-shadow: 0 0 0 0 rgba(13, 113, 95, 0.7);
+      animation: pulseForest 1.6s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulseForest {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 113, 95, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(13, 113, 95, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 113, 95, 0); }
+    }
+
+    /* Slot Milestone Steps Track */
+    .steps-mini-track {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .step-chip {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+    .step-chip.done { background: #DCFCE7; color: #166534; }
+    .step-chip.active { background: #FEF3C7; color: #B45309; }
+    .step-chip.gated { background: #FEE2E2; color: #991B1B; border: 1px dashed #F87171; }
+    .step-chip.queued { background: #F1F5F9; color: var(--ink-muted); }
+
+    /* Perspective Views */
+    .perspective-view {
+      display: none !important;
+    }
+    .perspective-view.active {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px;
+    }
+
+    /* Project View (Buyer Overview) */
+    .project-hero-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .project-live-status-banner {
+      background: var(--forest-50);
+      border: 1px solid var(--forest-100);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 11.5px;
+      color: var(--forest-800);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .project-slot-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .project-slot-card.is-active-focus {
+      background: #FFFFFF;
+      border: 2px solid var(--forest-600);
+      box-shadow: 0 4px 16px rgba(13, 113, 95, 0.12);
+    }
+    .project-slot-card.is-settled-muted {
+      background: #F8FAFC;
+      border: 1px solid var(--line);
+      box-shadow: none;
+      opacity: 0.72;
+    }
+    .project-slot-card.is-settled-muted:hover {
+      opacity: 1;
+    }
+    .project-slot-card.is-gated-muted {
+      background: #F8FAFC;
+      border: 1px dashed #CBD5E1;
+      box-shadow: none;
+      opacity: 0.72;
+    }
+    .project-slot-card.is-gated-muted:hover {
+      opacity: 1;
+    }
+    .project-slot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .project-slot-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .project-slot-meta {
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+    .project-slot-price {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--forest-700);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .project-slot-action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 6px;
+      border-top: 1px solid var(--line-subtle);
+    }
+    .btn-slot-call {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: var(--radius-pill);
+      background: #F8FAFC;
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-slot-call:hover {
+      background: #FFFFFF;
+      border-color: var(--forest-500);
+      color: var(--forest-800);
+    }
+
+    /* Agnostic Worker View (Unified for Any Provider) */
+    .worker-order-hero {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .worker-order-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.25;
+      margin: 0;
+    }
+    .worker-order-meta {
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      line-height: 1.4;
+    }
+
+    /* Standard Normalized Dependency Gate */
+    .worker-dependency-gate {
+      background: #FEF3C7;
+      border: 1.5px solid #FDE68A;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .worker-dependency-gate.unblocked {
+      background: #F0FDF4;
+      border-color: #BBF7D0;
+    }
+    .gate-header-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 800;
+      color: #92400E;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .worker-dependency-gate.unblocked .gate-header-line {
+      color: #166534;
+    }
+    .gate-eta-pill {
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      background: #FDE68A;
+      color: #78350F;
+    }
+    .worker-dependency-gate.unblocked .gate-eta-pill {
+      background: #DCFCE7;
+      color: #166534;
+    }
+    .gate-message-txt {
+      font-size: 11.5px;
+      color: #78350F;
+      line-height: 1.4;
+      margin: 0;
+    }
+    .worker-dependency-gate.unblocked .gate-message-txt {
+      color: #14532D;
+    }
+
+    /* Agnostic Scope / Instructions Card */
+    .worker-scope-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .worker-scope-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--forest-900);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .worker-scope-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--ink-soft);
+      line-height: 1.45;
+    }
+    .worker-scope-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .worker-scope-item span:first-child {
+      color: var(--forest-600);
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="studio-context-banner">
+    <div class="studio-crumb">
+      <span>Active Coordination Workspace</span>
+      <span>&rsaquo;</span>
+      <span style="color:#FFF;">deal-chain-active.html</span>
+    </div>
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <span style="font-size: 10px; color: #94A3B8;">URL View:</span>
+      <a href="deal-chain-active.html?order=ORD-7721&chain=DC-892&view=project" class="studio-pill-tag" id="tag-view-project" style="text-decoration:none;">Project View</a>
+      <a href="deal-chain-active.html?order=ORD-7721&chain=DC-892&view=worker&worker=ben" class="studio-pill-tag" id="tag-view-ben" style="text-decoration:none;">Worker (Blocked)</a>
+      <a href="deal-chain-active.html?order=ORD-7721&chain=DC-892&view=worker&worker=danny" class="studio-pill-tag" id="tag-view-danny" style="text-decoration:none;">Worker (Ready)</a>
+    </div>
+  </div>
+
+  <div class="phone-shell">
+
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div>●●●</div>
+    </div>
+
+    <!-- Topbar -->
+    <header class="chain-topbar">
+      <button type="button" class="circle-nav-btn" onclick="goBack()" aria-label="Back" title="Back to Marketplace">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="topbar-center-title">
+        <span id="topbar-title">Deal Chain #DC-892</span>
+        <span class="live-pulse-badge">
+          <span class="green-dot-pulse"></span>
+          <span>Live Relay</span>
+        </span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <button type="button" class="circle-nav-btn" onclick="window.location.href='deal-chain-chat-mobile.html?chain=DC-892'" title="Open Team Coordination Room">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </button>
+        <button type="button" class="circle-nav-btn" onclick="window.location.href='order-detail-mobile.html?order=ORD-7721&chain=DC-892'" title="View Order #ORD-7721 Details">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </button>
+      </div>
+    </header>
+    <!-- Scrollable Active Chain Body -->
+    <main class="chain-scroll-body">
+
+      <!-- 1. Perspective 1: Project View (Buyer / Coordinator) -->
+      <div class="perspective-view active" id="view-project">
+        <!-- Project Summary Card -->
+        <section class="project-hero-card">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span class="macro-title">Deal Chain #DC-892</span>
+            <span class="macro-total-val">₱610.00 Total</span>
+          </div>
+          <h2 style="font-size: 17px; font-weight: 800; color: var(--ink); margin: 0; line-height: 1.25;">
+            Fiesta AC Overhaul
+          </h2>
+          <div class="project-live-status-banner">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; flex-shrink: 0;"></span>
+            <span><strong>Active Project:</strong> Parts in transit to job site · Technician on-site prepping unit</span>
+          </div>
+        </section>
+
+        <!-- Coordinated Project Slots (3 Services) -->
+        <div style="font-size: 11px; font-weight: 800; color: var(--forest-900); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px;">
+          Project Slots
+        </div>
+
+        <!-- Slot 1: Hardware (Settled / Muted) -->
+        <section class="project-slot-card is-settled-muted">
+          <div class="project-slot-header">
+            <div>
+              <div class="project-slot-title">1. Materials · Tagudin Hardware</div>
+              <div class="project-slot-meta">35uF AC Run Capacitor · Counter Lane 2</div>
+            </div>
+            <span class="project-slot-price">₱180.00</span>
+          </div>
+          <div class="steps-mini-track">
+            <span class="step-chip done">&check; Ordered</span>
+            <span class="step-chip done">&check; Packaged</span>
+            <span class="step-chip done">&check; Handed to Courier</span>
+          </div>
+          <div class="project-slot-action-row">
+            <span class="order-status-pill status-settled">&check; Sourced at Counter</span>
+            <span style="font-size: 10.5px; color: var(--ink-muted);">Order #ORD-101</span>
+          </div>
+        </section>
+
+        <!-- Live Animated Connector between Slot 1 and Slot 2 -->
+        <div class="chain-animated-connector">
+          <div class="connector-track-box">
+            <svg width="18" height="28" viewBox="0 0 18 28" fill="none">
+              <line x1="9" y1="2" x2="9" y2="26" class="flow-dots-v"></line>
+            </svg>
+          </div>
+          <span class="connector-badge-text">
+            <span class="pulse-dot-forest"></span>
+            <span>Part Dispatched to Courier Node</span>
+          </span>
+        </div>
+
+        <!-- Slot 2: Transit (Active Focus) -->
+        <section class="project-slot-card is-active-focus">
+          <div class="project-slot-header">
+            <div>
+              <div class="project-slot-title">2. Transit · Danny Express</div>
+              <div class="project-slot-meta">Counter to Jobsite · In Transit · ETA 8 mins</div>
+            </div>
+            <span class="project-slot-price">₱80.00</span>
+          </div>
+          <div class="steps-mini-track">
+            <span class="step-chip done">&check; Picked Up</span>
+            <span class="step-chip active">&bull; En Route · 8m</span>
+            <span class="step-chip queued">&bull; Jobsite Dropoff</span>
+          </div>
+            <span class="order-status-pill status-held">In Transit</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" class="btn-slot-call" onclick="alert('Calling Kuya Danny: 0917-882-9912')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <span>Call</span>
+              </button>
+              <a href="order-chat-mobile.html?order=ORD-7722&chain=DC-892&provider=danny" class="btn-slot-call" style="background:#FFFFFF; color:var(--forest-700); border:1px solid var(--forest-600); text-decoration:none;" title="Chat with Danny Express">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>Chat</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Live Animated Connector between Slot 2 and Slot 3 (Amber: Gating Dependency) -->
+        <div class="chain-animated-connector">
+          <div class="connector-track-box">
+            <svg width="18" height="28" viewBox="0 0 18 28" fill="none">
+              <line x1="9" y1="2" x2="9" y2="26" class="flow-dots-v-amber"></line>
+            </svg>
+          </div>
+          <span class="connector-badge-text" style="background: #FEF3C7; border-color: #FDE68A; color: #92400E;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: #D97706;"></span>
+            <span>Transit Gating On-Site Labor</span>
+          </span>
+        </div>
+
+        <!-- Slot 3: Labor (Gated / Muted) -->
+        <section class="project-slot-card is-gated-muted">
+          <div class="project-slot-header">
+            <div>
+              <div class="project-slot-title">3. Labor · Kuya Ben AC Services</div>
+              <div class="project-slot-meta">Deep Clean &amp; Part Install · On-Site Prepping</div>
+            </div>
+            <span class="project-slot-price">₱350.00</span>
+          </div>
+          <div class="steps-mini-track">
+            <span class="step-chip done">&check; Triage</span>
+            <span class="step-chip gated">&bull; Awaiting Part</span>
+            <span class="step-chip queued">&bull; Load Test</span>
+            <span class="step-chip queued">&bull; Sign-off</span>
+          </div>
+          <div class="project-slot-action-row">
+            <span style="font-size: 10.5px; color: var(--ink-muted); font-weight: 600;">
+              Waiting on Slot 2 delivery
+            </span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" class="btn-slot-call" onclick="alert('Calling Kuya Ben: 0917-555-0192')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <span>Call</span>
+              </button>
+              <a href="order-chat-mobile.html?order=ORD-7721&chain=DC-892&provider=kuyaben" class="btn-slot-call" style="background:#FFFFFF; color:var(--forest-700); border:1px solid var(--forest-600); text-decoration:none;" title="Chat with Kuya Ben">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>Chat</span>
+              </a>
+            </div>
+          </div>
+        </section>
+        <!-- Escrow Protection Breakdown -->
+        <section class="child-orders-escrow-card">
+          <div class="escrow-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Escrow Protection Summary</span>
+          </div>
+          <p style="font-size: 11px; color: var(--ink-soft); line-height: 1.4;">
+            ₱180.00 settled · ₱430.00 held pending delivery and completion sign-off.
+          </p>
+        </section>
+      </div>
+
+      <!-- 2. Perspective 2: Unified Agnostic Worker View -->
+      <div class="perspective-view" id="view-worker">
+        <!-- Order Context Hero -->
+        <section class="worker-order-hero">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span class="macro-title" id="worker-order-id">Order #ORD-103</span>
+            <span class="macro-total-val" id="worker-payout-val">₱350.00 Payout</span>
+          </div>
+          <h2 class="worker-order-title" id="worker-task-title">
+            AC Deep Clean &amp; Part Install
+          </h2>
+          <div class="worker-order-meta">
+            Customer: Maria Santos · Poblacion East, Tagudin<br>
+            Deal Chain: #DC-892 · Fiesta AC Overhaul
+          </div>
+        </section>
+
+        <!-- Standard Normalized Dependency Gate (Only rendered when slot has dependencies) -->
+        <div class="worker-dependency-gate" id="worker-gate-container">
+          <div class="gate-header-line">
+            <span style="display: flex; align-items: center; gap: 4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span id="worker-gate-status-text">Dependency Gate</span>
+            </span>
+            <span class="gate-eta-pill" id="worker-gate-eta">ETA: ~8 mins</span>
+          </div>
+          <p class="gate-message-txt" id="worker-gate-desc">
+            Waiting for Slot 2 (Danny Express) to deliver 35uF capacitor to job site before installation.
+          </p>
+          <div id="worker-gate-actions" style="display: flex; gap: 6px; margin-top: 4px;">
+            <button type="button" class="btn-slot-call" onclick="alert('Calling Kuya Danny: 0917-882-9912')">Call Courier</button>
+            <button type="button" class="btn-slot-call" onclick="simulateHomeownerBypass()">Bypass (Part on Site)</button>
+          </div>
+        </div>
+
+        <!-- Scope of Work (The tasks / instructions) -->
+        <section class="worker-scope-card">
+          <div class="worker-scope-title">Scope of Work</div>
+          <div class="worker-scope-list" id="worker-scope-items">
+            <div class="worker-scope-item"><span>•</span><span>Intake electrical triage &amp; Freon check</span></div>
+            <div class="worker-scope-item"><span>•</span><span>Install 35uF capacitor &amp; crimp terminals</span></div>
+            <div class="worker-scope-item"><span>•</span><span>15-minute compressor cold air load test</span></div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <!-- Floating Event Toast -->
+    <div id="chain-toast" class="chain-event-toast" style="display: none;">
+      <div style="font-weight: 800; font-size: 12px;" id="toast-title">Event Emitted</div>
+      <div style="font-size: 11px; opacity: 0.9; line-height: 1.3;" id="toast-body">Message</div>
+    </div>
+
+    <!-- Sticky Bottom Dock with View Actions -->
+    <footer class="chain-sticky-dock" id="chain-dock">
+      <!-- Action for Project View -->
+      <div id="dock-actions-project" style="display: flex; gap: 8px; width: 100%;">
+        <button type="button" class="dock-call-btn" onclick="alert('Calling Kuya Ben: 0918-771-4432')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>Call Provider</span>
+        </button>
+        <button type="button" class="btn-complete-step-action" id="btn-project-action" disabled style="flex: 1;" onclick="alert('All work verified! Payment released to providers.')">
+          <span id="btn-project-text">Work in Progress</span>
+        </button>
+      </div>
+
+      <!-- Action for Worker View -->
+      <div id="dock-actions-worker" style="display: none; gap: 8px; width: 100%;">
+        <button type="button" class="dock-call-btn" onclick="alert('Calling Customer Maria Santos: 0917-123-4567')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>Call Customer</span>
+        </button>
+        <button type="button" class="btn-complete-step-action" id="btn-worker-action" disabled style="flex: 1;" onclick="executeWorkerTask()">
+          <span id="btn-worker-text">Waiting for Dependency...</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    let gateState = 'gated'; // 'gated' | 'unblocked' | 'bypassed' | 'delayed'
+
+    function goBack() {
+      const referrer = document.referrer;
+      if (referrer && referrer.includes('bookings-checklist')) {
+        window.location.href = 'bookings-checklist.html?chain=complete';
+      } else {
+        window.location.href = 'browse-mobile.html';
+      }
+    }
+
+    // Event 1: Courier Arrives & Unlocks Dependency Gate
+    function simulateCourierArrival() {
+      gateState = 'unblocked';
+      document.getElementById('gate-box').style.background = '#F0FDF4';
+      document.getElementById('gate-box').style.borderColor = '#86EFAC';
+      document.getElementById('gate-box').style.animation = 'none';
+      document.getElementById('gate-eta-text').innerText = 'DELIVERED ON-SITE';
+      document.getElementById('gate-eta-text').style.background = '#DCFCE7';
+      document.getElementById('gate-eta-text').style.color = '#166534';
+      document.getElementById('gate-courier-desc').innerText = 'Danny handed 35uF capacitor to Kuya Ben at 2:25 PM';
+
+      // Unblock Step 2
+      document.getElementById('step-2-icon').className = 'step-status-icon done';
+      document.getElementById('step-2-icon').innerHTML = '&check;';
+      document.getElementById('step-2-title').style.color = 'var(--ink)';
+      document.getElementById('step-2-desc').innerText = 'Part verified on-site. Ready to install.';
+
+      // Update Macro progress
+      document.getElementById('macro-courier-chip').className = 'macro-node-chip done';
+      document.getElementById('macro-courier-text').innerText = 'Danny Delivered';
+
+      // Update Escrow
+      document.getElementById('escrow-courier-badge').className = 'order-status-pill status-settled';
+      document.getElementById('escrow-courier-badge').innerText = 'Delivered';
+
+      // Enable Primary Action
+      const primaryBtn = document.getElementById('btn-primary-action');
+      primaryBtn.disabled = false;
+      document.getElementById('btn-primary-text').innerText = 'Install Capacitor';
+
+      showToast('DealChainGateUnblocked(step_install)', 'Kuya Danny confirmed delivery. Gate unblocked! Kuya Ben is authorized to install.');
+    }
+
+    // Event 2: Weather Delay Disruption
+    function simulateWeatherDelay() {
+      gateState = 'delayed';
+      document.getElementById('gate-eta-text').innerText = 'ETA: ~25 mins (RAIN)';
+      document.getElementById('gate-eta-text').style.background = '#FEE2E2';
+      document.getElementById('gate-eta-text').style.color = '#991B1B';
+      document.getElementById('gate-courier-desc').innerText = 'Kuya Danny paused under shelter on Tagudin Highway (Heavy Downpour)';
+      showToast('DealChainNodeDisrupted(weather_delay)', 'Technician step parked with revised ETA. No sibling penalty or dispute triggered.');
+    }
+
+    // Event 3: Homeowner Bypass
+    function simulateHomeownerBypass() {
+      gateState = 'bypassed';
+      document.getElementById('gate-box').style.background = '#F8FAFC';
+      document.getElementById('gate-box').style.borderColor = '#CBD5E1';
+      document.getElementById('gate-eta-text').innerText = 'GATE BYPASSED';
+      document.getElementById('gate-courier-desc').innerText = 'Homeowner provided compatible 35uF capacitor. Verified by technician photo.';
+
+      document.getElementById('step-2-icon').className = 'step-status-icon done';
+      document.getElementById('step-2-icon').innerHTML = '&check;';
+      document.getElementById('step-2-title').style.color = 'var(--ink)';
+
+      // Enable Primary Action
+      const primaryBtn = document.getElementById('btn-primary-action');
+      primaryBtn.disabled = false;
+      document.getElementById('btn-primary-text').innerText = 'Install Homeowner Part';
+
+      showToast('DealChainGateBypassed(step_install)', 'External delivery gate bypassed with verified homeowner part. Technician work unblocked.');
+    }
+
+    function executeInstallation() {
+      showToast('WorkStepCompleted(step_install)', 'Capacitor installed. Unlocked Step 3: 15-Minute Cold Air Compressor Load Test.');
+      document.getElementById('step-3-icon').className = 'step-status-icon done';
+      document.getElementById('step-3-icon').innerHTML = '&check;';
+      document.getElementById('step-3-title').style.color = 'var(--ink)';
+      document.getElementById('btn-primary-text').innerText = 'Complete All Work';
+    }
+
+    function showToast(title, body) {
+      const el = document.getElementById('chain-toast');
+      document.getElementById('toast-title').innerText = title;
+      document.getElementById('toast-body').innerText = body;
+      el.style.display = 'flex';
+      setTimeout(() => { el.style.display = 'none'; }, 4500);
+    }
+    // Agnostic URL View Controller (Project View vs Worker View)
+    function initViewFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const view = params.get('view') || 'project';
+      const worker = params.get('worker') || 'ben';
+
+      // Update studio banner tags
+      document.querySelectorAll('.studio-pill-tag').forEach(t => {
+        t.style.background = 'rgba(232, 247, 241, 0.12)';
+        t.style.color = '#A7F3D0';
+      });
+      const activeTagId = view === 'project' ? 'tag-view-project' : (worker === 'danny' ? 'tag-view-danny' : 'tag-view-ben');
+      const activeTag = document.getElementById(activeTagId);
+      if (activeTag) {
+        activeTag.style.background = '#0D715F';
+        activeTag.style.color = '#FFFFFF';
+      }
+
+      const topbarTitle = document.getElementById('topbar-title');
+      const viewProject = document.getElementById('view-project');
+      const viewWorker = document.getElementById('view-worker');
+      const dockProject = document.getElementById('dock-actions-project');
+      const dockWorker = document.getElementById('dock-actions-worker');
+
+      if (view === 'worker') {
+        viewProject.classList.remove('active');
+        viewWorker.classList.add('active');
+        dockProject.style.display = 'none';
+        dockWorker.style.display = 'flex';
+
+        if (worker === 'danny') {
+          // Independent Worker (Danny - Courier)
+          topbarTitle.innerText = 'My Work · Order #ORD-102';
+          document.getElementById('worker-order-id').innerText = 'Order #ORD-102';
+          document.getElementById('worker-payout-val').innerText = '₱80.00 Payout';
+          document.getElementById('worker-task-title').innerText = 'Parts Transit Delivery';
+
+          const gate = document.getElementById('worker-gate-container');
+          gate.className = 'worker-dependency-gate unblocked';
+          document.getElementById('worker-gate-status-text').innerText = 'Ready for Transit';
+          document.getElementById('worker-gate-eta').innerText = 'ACTIVE';
+          document.getElementById('worker-gate-desc').innerText = 'Pickup: Tagudin Hardware (Counter Lane 2) · Dropoff: Maria Santos Residence.';
+          document.getElementById('worker-gate-actions').style.display = 'none';
+
+          document.getElementById('worker-scope-items').innerHTML = `
+            <div class="worker-scope-item"><span>•</span><span>Pickup 35uF capacitor at counter</span></div>
+            <div class="worker-scope-item"><span>•</span><span>Transport via motorcycle to Maria Santos residence</span></div>
+            <div class="worker-scope-item"><span>•</span><span>Handoff to Kuya Ben on-site</span></div>
+          `;
+
+          const workerBtn = document.getElementById('btn-worker-action');
+          workerBtn.disabled = false;
+          workerBtn.style.background = '#0284C7';
+          document.getElementById('btn-worker-text').innerText = 'Confirm Delivery & Handoff';
+        } else {
+          // Gated Worker (Ben - Technician)
+          topbarTitle.innerText = 'My Work · Order #ORD-103';
+          document.getElementById('worker-order-id').innerText = 'Order #ORD-103';
+          document.getElementById('worker-payout-val').innerText = '₱350.00 Payout';
+          document.getElementById('worker-task-title').innerText = 'AC Deep Clean & Part Install';
+
+          const gate = document.getElementById('worker-gate-container');
+          gate.className = 'worker-dependency-gate';
+          document.getElementById('worker-gate-status-text').innerText = 'Dependency Gate';
+          document.getElementById('worker-gate-eta').innerText = 'ETA: ~8 mins';
+          document.getElementById('worker-gate-desc').innerText = 'Waiting for Slot 2 (Danny Express) to deliver 35uF capacitor to job site before installation.';
+          document.getElementById('worker-gate-actions').style.display = 'flex';
+
+          document.getElementById('worker-scope-items').innerHTML = `
+            <div class="worker-scope-item"><span>•</span><span>Diagnostic check &amp; coil foam wash</span></div>
+            <div class="worker-scope-item"><span>•</span><span>Install 35uF capacitor &amp; crimp terminals</span></div>
+            <div class="worker-scope-item"><span>•</span><span>15-minute compressor cold air load test</span></div>
+          `;
+
+          const workerBtn = document.getElementById('btn-worker-action');
+          workerBtn.disabled = true;
+          workerBtn.style.background = '#94A3B8';
+          document.getElementById('btn-worker-text').innerText = 'Waiting for Dependency...';
+        }
+      } else {
+        // Project View
+        topbarTitle.innerText = 'Deal Chain #DC-892';
+        viewProject.classList.add('active');
+        viewWorker.classList.remove('active');
+        dockProject.style.display = 'flex';
+        dockWorker.style.display = 'none';
+      }
+    }
+
+    function simulateHomeownerBypass() {
+      const gate = document.getElementById('worker-gate-container');
+      gate.className = 'worker-dependency-gate unblocked';
+      document.getElementById('worker-gate-status-text').innerText = 'Gate Bypassed';
+      document.getElementById('worker-gate-eta').innerText = 'UNBLOCKED';
+      document.getElementById('worker-gate-desc').innerText = 'Homeowner provided verified 35uF capacitor on site. Dependency cleared.';
+      document.getElementById('worker-gate-actions').style.display = 'none';
+
+      const workerBtn = document.getElementById('btn-worker-action');
+      workerBtn.disabled = false;
+      workerBtn.style.background = 'var(--forest-600)';
+      document.getElementById('btn-worker-text').innerText = 'Start Work';
+      showToast('Dependency Bypassed', 'Homeowner part verified on site. Work unblocked.');
+    }
+
+    function executeWorkerTask() {
+      showToast('Work Completed', 'Task executed and verified. Payout obligation ready for release.');
+      const workerBtn = document.getElementById('btn-worker-action');
+      workerBtn.disabled = true;
+      workerBtn.style.background = '#10B981';
+      document.getElementById('btn-worker-text').innerText = 'Completed & Logged';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initViewFromUrl();
+    });
+  </script>
+</body>
+</html>

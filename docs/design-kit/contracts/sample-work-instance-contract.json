@@ -1,0 +1,97 @@
+{
+  "$schema": "https://serbizyu.ph/schemas/work-instance-contract.v1.json",
+  "schema_version": "1.0",
+  "contract_type": "work_instance",
+  "work_id": "WORK-AC-892",
+  "order_id": "ORD-103",
+  "title": "Inverter Split AC Deep Clean & Checkup",
+  "shape": "A9",
+  "lead_provider": {
+    "provider_id": "usr_kuya_ben",
+    "business_name": "Kuya Ben Aircon Services",
+    "lead_technician": "Kuya Ben Bataller"
+  },
+  "customer": {
+    "customer_id": "usr_maria_santos",
+    "name": "Maria Santos",
+    "location": "Poblacion East, Tagudin"
+  },
+  "total_sla_minutes": 75,
+  "labor_fee_minor": 35000,
+  "currency": "PHP",
+  "topology": "parallel",
+  "milestones": [
+    {
+      "id": "step_1",
+      "phase": "triage",
+      "title": "Voltage Intake & Triage",
+      "assigned_crew": "Kuya Ben (Lead)",
+      "duration_minutes": 15,
+      "status": "settled",
+      "evidence_rule": {
+        "type": "photo_proof",
+        "description": "Multimeter reading across compressor terminals",
+        "verified_file": "intake_multimeter_234V.jpg"
+      },
+      "depends_on": []
+    },
+    {
+      "id": "step_2a",
+      "phase": "execution_parallel",
+      "stream_label": "2A",
+      "title": "Indoor Coil Foam Wash",
+      "assigned_crew": "Junior (Apprentice)",
+      "duration_minutes": 25,
+      "status": "settled",
+      "evidence_rule": {
+        "type": "before_after_photo",
+        "description": "Evaporator fin flush and blower wheel clean",
+        "verified_file": "indoor_coil_cleaned.jpg"
+      },
+      "depends_on": ["step_1"]
+    },
+    {
+      "id": "step_2b",
+      "phase": "execution_parallel",
+      "stream_label": "2B",
+      "title": "Outdoor Condenser & Freon Test",
+      "assigned_crew": "Kuya Ben (Lead)",
+      "duration_minutes": 20,
+      "status": "in_progress",
+      "evidence_rule": {
+        "type": "gauge_reading",
+        "description": "High/low manifold pressure PSI reading",
+        "verified_file": null
+      },
+      "depends_on": ["step_1"]
+    },
+    {
+      "id": "step_3",
+      "phase": "convergence_test",
+      "title": "Combined Compressor Cold Air Test",
+      "assigned_crew": "Joint Crew",
+      "duration_minutes": 15,
+      "status": "gated",
+      "evidence_rule": {
+        "type": "delta_test",
+        "description": "15-minute compressor load run and temperature delta test",
+        "verified_file": null
+      },
+      "depends_on": ["step_2a", "step_2b"]
+    },
+    {
+      "id": "step_4",
+      "phase": "completion_signoff",
+      "title": "Citizen Completion Sign-Off",
+      "assigned_crew": "Maria Santos & Kuya Ben",
+      "duration_minutes": 5,
+      "status": "queued",
+      "evidence_rule": {
+        "type": "dual_signature",
+        "description": "Attestation of 30-day workmanship warranty",
+        "verified_file": null
+      },
+      "depends_on": ["step_3"]
+    }
+  ]
+}

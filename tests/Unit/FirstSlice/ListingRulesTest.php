@@ -18,12 +18,75 @@ final class ListingRulesTest extends TestCase
             'description' => 'Reliable local help for errands and household tasks.',
             'category_code' => 'home-help',
             'listing_type' => 'service',
+            'work_shape' => 'A1',
         ]));
         self::assertArrayHasKey('title', $rules->validateDraft([
             'title' => 'x',
             'description' => 'short',
             'category_code' => 'home-help',
             'listing_type' => 'service',
+        ]));
+        self::assertArrayHasKey('work_shape', $rules->validateDraft([
+            'title' => 'Household help in Tagudin',
+            'description' => 'Reliable local help for errands and household tasks.',
+            'category_code' => 'home-help',
+            'listing_type' => 'service',
+        ]));
+        self::assertSame([], $rules->validateDraft([
+            'title' => 'Household help in Tagudin',
+            'description' => 'Reliable local help for errands and household tasks.',
+            'category_code' => 'home-help',
+            'listing_type' => 'service',
+            'work_shape' => 'A1',
+        ]));
+        self::assertSame([], $rules->validateDraft([
+            'title' => 'Household help in Tagudin',
+            'description' => 'Reliable local help for errands and household tasks.',
+            'category_code' => 'home-help',
+            'listing_type' => 'service',
+            'work_shape' => 'A3',
+        ]));
+        self::assertSame([], $rules->validateDraft([
+            'title' => 'Household help in Tagudin',
+            'description' => 'Reliable local help for errands and household tasks.',
+            'category_code' => 'home-help',
+            'listing_type' => 'service',
+            'work_shape' => 'A9',
+        ]));
+        self::assertSame([], $rules->validateDraft([
+            'title' => 'Bibingka tray Tagudin',
+            'description' => 'Reliable local product for household celebrations.',
+            'category_code' => 'food',
+            'listing_type' => 'product',
+            'work_shape' => 'A4',
+        ]));
+        self::assertSame([], $rules->validateDraft([
+            'title' => 'Digital print Tagudin',
+            'description' => 'Reliable local digital product for household needs.',
+            'category_code' => 'food',
+            'listing_type' => 'product',
+            'work_shape' => 'A9',
+        ]));
+        self::assertArrayHasKey('work_shape', $rules->validateDraft([
+            'title' => 'Household help in Tagudin',
+            'description' => 'Reliable local help for errands and household tasks.',
+            'category_code' => 'home-help',
+            'listing_type' => 'service',
+            'work_shape' => 'A4', // A4 not supported for service
+        ]));
+        self::assertArrayHasKey('work_shape', $rules->validateDraft([
+            'title' => 'Bibingka tray Tagudin',
+            'description' => 'Reliable local product for household celebrations.',
+            'category_code' => 'food',
+            'listing_type' => 'product',
+            'work_shape' => 'A1', // A1 not supported for product
+        ]));
+        self::assertArrayHasKey('work_shape', $rules->validateDraft([
+            'title' => 'Household help in Tagudin',
+            'description' => 'Reliable local help for errands and household tasks.',
+            'category_code' => 'home-help',
+            'listing_type' => 'service',
+            'work_shape' => 'INVALID_SHAPE',
         ]));
     }
 

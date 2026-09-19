@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Deal Chain Tri-Modal UI Comparison</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      --brand-navy: #0F2F58;
+      --brand-yellow: #FFC244;
+      --brand-yellow-light: #FEF8E7;
+      --brand-yellow-dark: #D97706;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+      --ink-subtle: #94a3b8;
+
+      --canvas: #F8FAFC;
+      --surface: #FFFFFF;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(10, 87, 74, 0.05);
+      --shadow-md: 0 4px 14px rgba(10, 87, 74, 0.08);
+      --shadow-dock: 0 -4px 20px rgba(18, 32, 28, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0D1B1E;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    /* Studio Header */
+    .studio-header {
+      width: 100%;
+      max-width: 960px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: #A4B8B0;
+    }
+    .studio-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .studio-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #F8FAFC;
+    }
+    .studio-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-toggle-btn {
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 700;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      background: transparent;
+      color: #CBD5E1;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-toggle-btn.active {
+      background: #0D715F;
+      color: #FFFFFF;
+      border-color: #0D715F;
+      box-shadow: 0 2px 8px rgba(13, 113, 95, 0.35);
+    }
+
+    /* Layout Containers */
+    #mobile-view-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    #desktop-grid-container {
+      display: none;
+      width: 100%;
+      max-width: 1140px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      align-items: flex-start;
+      margin-top: 10px;
+    }
+
+    /* Desktop View Column */
+    .desktop-col-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--line);
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+    }
+    .col-header {
+      padding: 12px 14px;
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--line);
+    }
+    .col-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--brand-navy);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .col-desc {
+      font-size: 10.5px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+      line-height: 1.35;
+    }
+    .col-body {
+      padding: 14px;
+      background: var(--canvas);
+      min-height: 580px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Mobile Phone Shell */
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+    .notch-island {
+      width: 110px;
+      height: 25px;
+      background: #000000;
+      border-radius: var(--radius-pill);
+    }
+
+    /* Form Mode Switcher Inside Mobile Frame */
+    .form-mode-segmented {
+      background: #F1F5F9;
+      border-radius: 12px;
+      padding: 3px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin: 8px 14px 4px;
+    }
+    .seg-btn {
+      background: transparent;
+      border: none;
+      padding: 6px 4px;
+      font-size: 10px;
+      font-weight: 800;
+      color: #64748B;
+      border-radius: 9px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .seg-btn.active {
+      background: #FFFFFF;
+      color: var(--brand-navy);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    /* Topbar */
+    .phone-topbar {
+      height: 48px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .topbar-center {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--brand-navy);
+    }
+
+    /* Scrollable Container */
+    .showcase-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .showcase-scroll-body::-webkit-scrollbar { display: none; }
+
+    /* ==========================================================================
+       FORM 1: COMPACT NODE-WIRE PIPELINE (FROM listing-detail.html)
+       ========================================================================== */
+    .combo-preview-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .combo-preview-card.highlight {
+      border-color: var(--forest-600);
+      background: #F0FDF4;
+    }
+    .combo-head-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .combo-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--brand-navy);
+    }
+    .combo-price {
+      font-size: 12.5px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--forest-700);
+    }
+
+    .n8n-pipeline-row {
+      display: flex;
+      align-items: center;
+      background: #F8FAFC;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 10px;
+      overflow-x: auto;
+      gap: 6px;
+    }
+    .n8n-pipeline-row::-webkit-scrollbar { display: none; }
+
+    .n8n-capsule-node {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      padding: 4px 8px;
+      flex-shrink: 0;
+    }
+    .n8n-capsule-node.active-node {
+      border-color: #0284C7;
+      background: #F0F9FF;
+    }
+    .n8n-capsule-role {
+      font-size: 8.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 1.5px 5px;
+      border-radius: var(--radius-pill);
+    }
+    .role-part { background: #FEF3C7; color: #92400E; }
+    .role-rider { background: #E0F2FE; color: #0284C7; }
+    .role-labor { background: #DCFCE7; color: #166534; }
+    .role-audit { background: #F3E8FF; color: #7E22CE; }
+
+    .n8n-capsule-title {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--brand-navy);
+      white-space: nowrap;
+    }
+    .n8n-capsule-price {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--forest-700);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .n8n-connecting-wire {
+      width: 24px;
+      height: 14px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wire-line-svg {
+      width: 100%;
+      height: 2px;
+      background: #CBD5E1;
+      position: relative;
+    }
+    .wire-line-svg.flow {
+      background: repeating-linear-gradient(90deg, #0D715F, #0D715F 4px, transparent 4px, transparent 8px);
+      animation: wireFlow 0.8s linear infinite;
+    }
+    @keyframes wireFlow {
+      from { background-position: 0 0; }
+      to { background-position: 16px 0; }
+    }
+
+    /* ==========================================================================
+       FORM 2: ACTIVE EXECUTION STACK (FROM deal-chain-active.html)
+       ========================================================================== */
+    .exec-slot-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .exec-slot-card.is-active {
+      border-color: #0284C7;
+      background: #F0F9FF;
+      box-shadow: 0 2px 10px rgba(2, 132, 199, 0.08);
+    }
+    .exec-slot-card.is-blocked {
+      border-color: #CBD5E1;
+      background: #F8FAFC;
+      opacity: 0.85;
+    }
+    .exec-slot-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .exec-slot-title {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--brand-navy);
+    }
+    .exec-slot-price {
+      font-size: 11.5px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--brand-navy);
+    }
+    .exec-chips-track {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .exec-chip {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: var(--radius-pill);
+      background: #F1F5F9;
+      color: #64748B;
+    }
+    .exec-chip.done {
+      background: #DCFCE7;
+      color: #166534;
+    }
+    .exec-chip.active {
+      background: #E0F2FE;
+      color: #0369A1;
+    }
+    .exec-chip.blocked {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .exec-connector-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 8px;
+      margin: -4px 0;
+    }
+    .exec-connector-line {
+      width: 2px;
+      height: 18px;
+      background: #0D715F;
+      margin-left: 10px;
+    }
+    .exec-connector-line.dashed {
+      background: repeating-linear-gradient(180deg, #CBD5E1, #CBD5E1 3px, transparent 3px, transparent 6px);
+    }
+    .exec-connector-text {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--forest-700);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10B981;
+      display: inline-block;
+    }
+
+    /* ==========================================================================
+       FORM 3: AUTHENTIC N8N DAG CANVAS (FROM flow-canvas-builder.html)
+       ========================================================================== */
+    .n8n-dag-canvas {
+      background: #0B132B;
+      border: 1.5px solid #1E293B;
+      border-radius: var(--radius-lg);
+      padding: 16px 14px;
+      overflow-x: auto;
+      position: relative;
+    }
+    .n8n-dag-canvas::-webkit-scrollbar { display: none; }
+
+    .n8n-nodes-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      min-width: 480px;
+      position: relative;
+      padding: 4px 0 8px;
+    }
+
+    .n8n-node-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      width: 96px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .n8n-node-box {
+      width: 66px;
+      height: 66px;
+      border-radius: 16px;
+      background: #1E293B;
+      border: 1.5px solid #334155;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+    .n8n-node-wrapper.selected .n8n-node-box {
+      border-color: #10B981;
+      box-shadow: 0 0 0 2.5px rgba(16, 185, 129, 0.7), 0 8px 24px rgba(0, 0, 0, 0.55);
+    }
+
+    /* Category Accent Stripes */
+    .n8n-node-box.part { border-top: 3.5px solid #F59E0B; }
+    .n8n-node-box.transit { border-top: 3.5px solid #38BDF8; }
+    .n8n-node-box.labor { border-top: 3.5px solid #10B981; }
+    .n8n-node-box.audit { border-top: 3.5px solid #A855F7; }
+
+    /* Node Ports */
+    .n8n-port-in {
+      position: absolute;
+      left: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #334155;
+      border: 2px solid #64748B;
+    }
+    .n8n-port-out {
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10B981;
+      border: 2px solid #FFFFFF;
+    }
+
+    /* Attached Edge Plus Button */
+    .n8n-edge-add-btn {
+      position: absolute;
+      right: -15px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      background: #0F172A;
+      border: 1.5px solid #475569;
+      color: #94A3B8;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      z-index: 25;
+      line-height: 1;
+    }
+    .n8n-edge-add-btn:hover {
+      background: #10B981;
+      border-color: #10B981;
+      color: #FFFFFF;
+      transform: translateY(-50%) scale(1.15);
+    }
+
+    /* Connecting Wire */
+    .n8n-wire-svg-block {
+      width: 40px;
+      height: 66px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* External Typography Underneath */
+    .n8n-label-block {
+      margin-top: 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      width: 96px;
+    }
+    .n8n-label-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: #F8FAFC;
+      line-height: 1.2;
+    }
+    .n8n-label-sub {
+      font-size: 8.5px;
+      font-weight: 600;
+      color: #94A3B8;
+      line-height: 1.2;
+    }
+
+    /* Node Inspector Drawer */
+    .dag-inspector-panel {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .inspector-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--brand-navy);
+    }
+    .inspector-fields-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--ink-soft);
+      padding: 4px 0;
+      border-bottom: 1px dashed var(--line);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Header -->
+  <header class="studio-header">
+    <div class="studio-top-row">
+      <span class="studio-title">Deal Chain &amp; Workflow Tri-Modal Representation</span>
+      <div class="studio-controls">
+        <button type="button" class="tab-toggle-btn active" id="btn-mode-phone" onclick="setViewMode('phone')">Mobile Shell</button>
+        <button type="button" class="tab-toggle-btn" id="btn-mode-desktop" onclick="setViewMode('desktop')">Side-by-Side Grid</button>
+      </div>
+    </div>
+    <div style="font-size: 11px; line-height: 1.4; color: #94A3B8;">
+      Comparing the 3 canonical representations derived from recent development: (1) Compact Node-Wire Preview, (2) Detailed Active Execution Stack, and (3) Interactive DAG Creation Canvas.
+    </div>
+  </header>
+
+  <!-- Container A: Mobile Phone Shell with Interactive Tab Switcher -->
+  <div id="mobile-view-container">
+    <div class="phone-shell">
+
+      <!-- Status Bar -->
+      <div class="phone-status-bar">
+        <span>9:41</span>
+        <div class="notch-island"></div>
+        <div>5G</div>
+      </div>
+
+      <!-- Segmented Control to switch between the 3 representations -->
+      <div class="form-mode-segmented">
+        <button type="button" class="seg-btn active" id="seg-1" onclick="switchPhoneTab(1)">1. Compact</button>
+        <button type="button" class="seg-btn" id="seg-2" onclick="switchPhoneTab(2)">2. Execution</button>
+        <button type="button" class="seg-btn" id="seg-3" onclick="switchPhoneTab(3)">3. DAG Canvas</button>
+      </div>
+
+      <div class="phone-topbar">
+        <span class="topbar-center" id="phone-topbar-title">1. Compact Node-Wire Preview</span>
+        <span style="font-size: 9.5px; font-weight: 800; background: #EBF2FA; color: #0F2F58; padding: 2px 6px; border-radius: var(--radius-pill);">Canonical</span>
+      </div>
+
+      <main class="showcase-scroll-body">
+
+        <!-- TAB 1 CONTENT: COMPACT NODE-WIRE PIPELINES (listing-detail.html) -->
+        <div id="tab-content-1" style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="font-size: 11px; font-weight: 800; color: var(--brand-navy); text-transform: uppercase;">
+            Glanceable Pipelines (Buyer Listing &amp; Catalog View)
+          </div>
+
+          <!-- Combination 1 -->
+          <article class="combo-preview-card">
+            <div class="combo-head-row">
+              <span class="combo-title">Doorstep Delivery</span>
+              <span class="combo-price">₱35.00</span>
+            </div>
+            <div class="n8n-pipeline-row">
+              <div class="n8n-capsule-node">
+                <span class="n8n-capsule-role role-part">Part</span>
+                <span class="n8n-capsule-title">35uF Cap</span>
+                <span class="n8n-capsule-price">₱180</span>
+              </div>
+              <div class="n8n-connecting-wire">
+                <div class="wire-line-svg flow"></div>
+              </div>
+              <div class="n8n-capsule-node">
+                <span class="n8n-capsule-role role-rider">Rider</span>
+                <span class="n8n-capsule-title">Danny Exp</span>
+                <span class="n8n-capsule-price">₱35</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Combination 2 -->
+          <article class="combo-preview-card highlight">
+            <div class="combo-head-row">
+              <span class="combo-title">Part + Courier + Installation</span>
+              <span class="combo-price">₱285.00</span>
+            </div>
+            <div class="n8n-pipeline-row">
+              <div class="n8n-capsule-node">
+                <span class="n8n-capsule-role role-part">Part</span>
+                <span class="n8n-capsule-title">35uF Cap</span>
+                <span class="n8n-capsule-price">₱180</span>
+              </div>
+              <div class="n8n-connecting-wire">
+                <div class="wire-line-svg flow"></div>
+              </div>
+              <div class="n8n-capsule-node">
+                <span class="n8n-capsule-role role-rider">Rider</span>
+                <span class="n8n-capsule-title">Danny Exp</span>
+                <span class="n8n-capsule-price">₱35</span>
+              </div>
+              <div class="n8n-connecting-wire">
+                <div class="wire-line-svg flow"></div>
+              </div>
+              <div class="n8n-capsule-node active-node">
+                <span class="n8n-capsule-role role-labor">Labor</span>
+                <span class="n8n-capsule-title">Kuya Ben</span>
+                <span class="n8n-capsule-price">₱250</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Combination 3 -->
+          <article class="combo-preview-card">
+            <div class="combo-head-row">
+              <span class="combo-title">Turnkey Sourced Repair + Audit</span>
+              <span class="combo-price">₱680.00</span>
+            </div>
+            <div class="n8n-pipeline-row">
+              <div class="n8n-capsule-node">
+                <span class="n8n-capsule-role role-part">Store</span>
+                <span class="n8n-capsule-title">Hardware</span>
+                <span class="n8n-capsule-price">₱180</span>
+              </div>
+              <div class="n8n-connecting-wire">
+                <div class="wire-line-svg flow"></div>
+              </div>
+              <div class="n8n-capsule-node">
+                <span class="n8n-capsule-role role-rider">Courier</span>
+                <span class="n8n-capsule-title">Danny</span>
+                <span class="n8n-capsule-price">₱80</span>
+              </div>
+              <div class="n8n-connecting-wire">
+                <div class="wire-line-svg flow"></div>
+              </div>
+              <div class="n8n-capsule-node">
+                <span class="n8n-capsule-role role-labor">Labor</span>
+                <span class="n8n-capsule-title">Kuya Ben</span>
+                <span class="n8n-capsule-price">₱350</span>
+              </div>
+              <div class="n8n-connecting-wire">
+                <div class="wire-line-svg"></div>
+              </div>
+              <div class="n8n-capsule-node">
+                <span class="n8n-capsule-role role-audit">Audit</span>
+                <span class="n8n-capsule-title">Safety Check</span>
+                <span class="n8n-capsule-price">₱150</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- TAB 2 CONTENT: DETAILED ACTIVE RUN STACK (deal-chain-active.html) -->
+        <div id="tab-content-2" style="display: none; flex-direction: column; gap: 8px;">
+          <div style="font-size: 11px; font-weight: 800; color: var(--brand-navy); text-transform: uppercase;">
+            Live Project Run · Order #ORD-7721
+          </div>
+
+          <!-- Slot 1: Settled -->
+          <article class="exec-slot-card">
+            <div class="exec-slot-top">
+              <span class="exec-slot-title">1. Materials · Tagudin Hardware</span>
+              <span class="exec-slot-price">₱180.00</span>
+            </div>
+            <div class="exec-chips-track">
+              <span class="exec-chip done">Ordered</span>
+              <span class="exec-chip done">Packaged</span>
+              <span class="exec-chip done">Handed Over</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+              <span style="font-size: 9.5px; font-weight: 800; color: #166534; background: #DCFCE7; padding: 2px 6px; border-radius: var(--radius-pill);">Settled at Counter</span>
+              <span style="font-size: 9.5px; color: var(--ink-muted);">#ORD-101</span>
+            </div>
+          </article>
+
+          <!-- Connector 1 -> 2 -->
+          <div class="exec-connector-bar">
+            <div class="exec-connector-line"></div>
+            <div class="exec-connector-text">
+              <span class="pulse-dot"></span>
+              <span>Part Dispatched to Courier Node</span>
+            </div>
+          </div>
+
+          <!-- Slot 2: Active Courier -->
+          <article class="exec-slot-card is-active">
+            <div class="exec-slot-top">
+              <span class="exec-slot-title">2. Transit · Danny Express</span>
+              <span class="exec-slot-price">₱80.00</span>
+            </div>
+            <div class="exec-chips-track">
+              <span class="exec-chip done">Picked Up</span>
+              <span class="exec-chip active">En Route · 8m</span>
+              <span class="exec-chip">Dropoff</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+              <span style="font-size: 9.5px; font-weight: 800; color: #0369A1; background: #E0F2FE; padding: 2px 6px; border-radius: var(--radius-pill);">In Transit</span>
+              <span style="font-size: 9.5px; color: var(--forest-700); font-weight: 700;">ETA 8 mins</span>
+            </div>
+          </article>
+
+          <!-- Connector 2 -> 3 (Blocked Gate) -->
+          <div class="exec-connector-bar">
+            <div class="exec-connector-line dashed"></div>
+            <div class="exec-connector-text" style="color: #92400E;">
+              <span style="color: #D97706; font-size: 10px;">●</span>
+              <span>Installation Blocked: Awaiting Part Dropoff</span>
+            </div>
+          </div>
+
+          <!-- Slot 3: Labor Gated -->
+          <article class="exec-slot-card is-blocked">
+            <div class="exec-slot-top">
+              <span class="exec-slot-title">3. Labor · Kuya Ben AC Services</span>
+              <span class="exec-slot-price">₱350.00</span>
+            </div>
+            <div class="exec-chips-track">
+              <span class="exec-chip done">Triage</span>
+              <span class="exec-chip blocked">Awaiting Part</span>
+              <span class="exec-chip">Load Test</span>
+              <span class="exec-chip">Sign-off</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+              <span style="font-size: 9.5px; font-weight: 800; color: #991B1B; background: #FEE2E2; padding: 2px 6px; border-radius: var(--radius-pill);">Gated by Transit</span>
+              <span style="font-size: 9.5px; color: var(--ink-muted);">Order #ORD-103</span>
+            </div>
+          </article>
+        </div>
+
+        <!-- TAB 3 CONTENT: INTERACTIVE DAG CREATION CANVAS (request-service-builder.html) -->
+        <div id="tab-content-3" style="display: none; flex-direction: column; gap: 10px;">
+          <div style="font-size: 11px; font-weight: 800; color: var(--brand-navy); text-transform: uppercase;">
+            Interactive DAG Canvas · N8N Node Pipeline
+          </div>
+
+          <div class="n8n-dag-canvas">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span style="font-size: 9.5px; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">DAG Node Network</span>
+              <span style="font-size: 9px; color: #10B981; font-weight: 700;">Tap [+] on edge to chain step</span>
+            </div>
+
+            <div class="n8n-nodes-row" id="n8n-canvas-nodes-row">
+              <!-- Node 1: Part -->
+              <div class="n8n-node-wrapper selected" id="dag-node-1" onclick="selectDagNode(1)">
+                <div class="n8n-node-box part">
+                  <div class="n8n-node-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><path d="m7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+                  </div>
+                  <div class="n8n-port-out"></div>
+                  <button type="button" class="n8n-edge-add-btn" onclick="addConnectedNode(event, 1)" title="Add Connected Step">+</button>
+                </div>
+                <div class="n8n-label-block">
+                  <div class="n8n-label-title">35uF Capacitor</div>
+                  <div class="n8n-label-sub">Tagudin HW · ₱180</div>
+                </div>
+              </div>
+
+              <!-- Wire 1 -> 2 -->
+              <div class="n8n-wire-svg-block">
+                <svg width="40" height="66" viewBox="0 0 40 66" fill="none">
+                  <path d="M 0 33 C 20 33, 20 33, 40 33" stroke="#10B981" stroke-width="2.2" stroke-dasharray="4 3"/>
+                </svg>
+              </div>
+
+              <!-- Node 2: Courier -->
+              <div class="n8n-node-wrapper" id="dag-node-2" onclick="selectDagNode(2)">
+                <div class="n8n-node-box transit">
+                  <div class="n8n-port-in"></div>
+                  <div class="n8n-node-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
+                  </div>
+                  <div class="n8n-port-out"></div>
+                  <button type="button" class="n8n-edge-add-btn" onclick="addConnectedNode(event, 2)" title="Add Connected Step">+</button>
+                </div>
+                <div class="n8n-label-block">
+                  <div class="n8n-label-title">Courier Transit</div>
+                  <div class="n8n-label-sub">Danny Exp · ₱35</div>
+                </div>
+              </div>
+
+              <!-- Wire 2 -> 3 -->
+              <div class="n8n-wire-svg-block">
+                <svg width="40" height="66" viewBox="0 0 40 66" fill="none">
+                  <path d="M 0 33 C 20 33, 20 33, 40 33" stroke="#38BDF8" stroke-width="2.2" stroke-dasharray="4 3"/>
+                </svg>
+              </div>
+
+              <!-- Node 3: Labor -->
+              <div class="n8n-node-wrapper" id="dag-node-3" onclick="selectDagNode(3)">
+                <div class="n8n-node-box labor">
+                  <div class="n8n-port-in"></div>
+                  <div class="n8n-node-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                  </div>
+                  <div class="n8n-port-out"></div>
+                  <button type="button" class="n8n-edge-add-btn" onclick="addConnectedNode(event, 3)" title="Add Next Connected Step">+</button>
+                </div>
+                <div class="n8n-label-block">
+                  <div class="n8n-label-title">AC Installation</div>
+                  <div class="n8n-label-sub">Kuya Ben · ₱250</div>
+                </div>
+              </div>
+
+              <!-- Node 4: Dynamic (Revealed when tapping [+] on Node 3) -->
+              <div id="dag-node-4-wrap" style="display: none; align-items: flex-start;">
+                <div class="n8n-wire-svg-block">
+                  <svg width="40" height="66" viewBox="0 0 40 66" fill="none">
+                    <path d="M 0 33 C 20 33, 20 33, 40 33" stroke="#A855F7" stroke-width="2.2" stroke-dasharray="4 3"/>
+                  </svg>
+                </div>
+                <div class="n8n-node-wrapper" id="dag-node-4" onclick="selectDagNode(4)">
+                  <div class="n8n-node-box audit">
+                    <div class="n8n-port-in"></div>
+                    <div class="n8n-node-icon">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                    </div>
+                  </div>
+                  <div class="n8n-label-block">
+                    <div class="n8n-label-title">Safety Audit</div>
+                    <div class="n8n-label-sub">Open Slot · ₱150</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Node Inspector Panel -->
+          <div class="dag-inspector-panel">
+            <div class="inspector-head">
+              <span id="insp-step-label">Step 1 Node Inspector</span>
+              <span style="font-size: 9.5px; font-weight: 800; color: #0D715F; background: #E8F7F1; padding: 2px 6px; border-radius: var(--radius-pill);">Editable Slot</span>
+            </div>
+            <div class="inspector-fields-row">
+              <span>Node Title:</span>
+              <strong id="insp-title" style="color: var(--brand-navy);">35uF Run Capacitor</strong>
+            </div>
+            <div class="inspector-fields-row">
+              <span>Assigned Partner:</span>
+              <strong id="insp-provider" style="color: var(--forest-700);">Tagudin Hardware</strong>
+            </div>
+            <div class="inspector-fields-row">
+              <span>Handoff Trigger:</span>
+              <strong>item_ready_at_counter</strong>
+            </div>
+            <div class="inspector-fields-row">
+              <span>Budget Allocation:</span>
+              <strong id="insp-cost" style="font-family:'JetBrains Mono';">₱180.00</strong>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Container B: Side-by-Side Desktop Grid -->
+  <div id="desktop-grid-container">
+
+    <!-- Column 1: Form 1 -->
+    <div class="desktop-col-card">
+      <div class="col-header">
+        <div class="col-title">1. Compact Node-Wire Preview</div>
+        <div class="col-desc">Universal glanceable pipeline. Used in Buyer Listing Detail, Card Previews, and Quote Pipelines.</div>
+      </div>
+      <div class="col-body" id="desktop-col-1-target">
+        <!-- Cloned or rendered for side-by-side comparison -->
+      </div>
+    </div>
+
+    <!-- Column 2: Form 2 -->
+    <div class="desktop-col-card">
+      <div class="col-header">
+        <div class="col-title">2. Detailed Execution Stack</div>
+        <div class="col-desc">Operational real-time run. Used in Active Order Details and Live Tracking with dependency gating.</div>
+      </div>
+      <div class="col-body" id="desktop-col-2-target">
+        <!-- Cloned or rendered for side-by-side comparison -->
+      </div>
+    </div>
+
+    <!-- Column 3: Form 3 -->
+    <div class="desktop-col-card">
+      <div class="col-header">
+        <div class="col-title">3. Interactive DAG Canvas</div>
+        <div class="col-desc">Customizer &amp; Builder. Used in Request Builder and Custom Deal Chain Assembly.</div>
+      </div>
+      <div class="col-body" id="desktop-col-3-target">
+        <!-- Cloned or rendered for side-by-side comparison -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function setViewMode(mode) {
+      document.getElementById('btn-mode-phone').classList.toggle('active', mode === 'phone');
+      document.getElementById('btn-mode-desktop').classList.toggle('active', mode === 'desktop');
+
+      const phoneCont = document.getElementById('mobile-view-container');
+      const deskCont = document.getElementById('desktop-grid-container');
+
+      if (mode === 'desktop') {
+        phoneCont.style.display = 'none';
+        deskCont.style.display = 'grid';
+
+        // Populate desktop columns from tab templates
+        document.getElementById('desktop-col-1-target').innerHTML = document.getElementById('tab-content-1').innerHTML;
+        document.getElementById('desktop-col-2-target').innerHTML = document.getElementById('tab-content-2').innerHTML;
+        document.getElementById('desktop-col-3-target').innerHTML = document.getElementById('tab-content-3').innerHTML;
+      } else {
+        phoneCont.style.display = 'flex';
+        deskCont.style.display = 'none';
+      }
+    }
+
+    function switchPhoneTab(tabNum) {
+      document.querySelectorAll('.seg-btn').forEach((b, i) => b.classList.toggle('active', i + 1 === tabNum));
+      document.getElementById('tab-content-1').style.display = (tabNum === 1) ? 'flex' : 'none';
+      document.getElementById('tab-content-2').style.display = (tabNum === 2) ? 'flex' : 'none';
+      document.getElementById('tab-content-3').style.display = (tabNum === 3) ? 'flex' : 'none';
+
+      const titles = [
+        "1. Compact Node-Wire Preview",
+        "2. Detailed Active Execution Stack",
+        "3. Interactive DAG Creation Canvas"
+      ];
+      document.getElementById('phone-topbar-title').innerText = titles[tabNum - 1];
+    }
+    const dagNodeInfo = {
+      1: { title: "35uF Run Capacitor", provider: "Tagudin Hardware", cost: "180.00", role: "Part", trigger: "item_ready_at_counter" },
+      2: { title: "Doorstep Transit", provider: "Danny Express", cost: "35.00", role: "Transit", trigger: "delivered_on_site" },
+      3: { title: "AC Installation", provider: "Kuya Ben AC Services", cost: "250.00", role: "Labor", trigger: "installation_complete" },
+      4: { title: "Safety Audit", provider: "Open Slot", cost: "150.00", role: "Audit", trigger: "safety_certified" }
+    };
+
+    function selectDagNode(num) {
+      document.querySelectorAll('.n8n-node-wrapper').forEach(w => w.classList.remove('selected'));
+      const node = document.getElementById(`dag-node-${num}`);
+      if (node) node.classList.add('selected');
+
+      const info = dagNodeInfo[num];
+      if (info) {
+        document.getElementById('insp-step-label').innerText = `Step ${num} Node Inspector · ${info.role}`;
+        document.getElementById('insp-title').innerText = info.title;
+        document.getElementById('insp-provider').innerText = info.provider;
+        document.getElementById('insp-cost').innerText = `₱${info.cost}`;
+      }
+    }
+
+    function addConnectedNode(e, fromNum) {
+      e.stopPropagation();
+      const wrap4 = document.getElementById('dag-node-4-wrap');
+      if (wrap4) {
+        wrap4.style.display = 'flex';
+        selectDagNode(4);
+      }
+    }
+
+    function inspectDagNode(step, title, provider, cost, role) {
+      document.getElementById('insp-step-label').innerText = `Step ${step} Node Inspector (${role})`;
+      document.getElementById('insp-title').innerText = title;
+      document.getElementById('insp-provider').innerText = provider;
+      document.getElementById('insp-cost').innerText = `₱${cost}.00`;
+    }
+  </script>
+</body>
+</html>

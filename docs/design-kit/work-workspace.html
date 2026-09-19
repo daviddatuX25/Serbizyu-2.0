@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Work Pipeline DAG Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      --brand-navy: #0F2F58;
+      --brand-yellow: #FFC244;
+      --brand-yellow-light: #FEF8E7;
+      --brand-yellow-dark: #D97706;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+      --ink-subtle: #94a3b8;
+
+      --canvas: #0B132B;
+      --surface: #FFFFFF;
+      --line: #1E293B;
+      --line-subtle: #334155;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+      --shadow-dock: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(13, 113, 95, 0.3) transparent;
+    }
+
+    *::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: rgba(13, 113, 95, 0.28);
+      border-radius: 9999px;
+      border: 1px solid transparent;
+      background-clip: padding-box;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: rgba(13, 113, 95, 0.55);
+    }
+
+    .dag-interactive-canvas,
+    #json-payload-display {
+      scrollbar-color: rgba(52, 211, 153, 0.35) transparent !important;
+    }
+
+    .dag-interactive-canvas::-webkit-scrollbar-thumb,
+    #json-payload-display::-webkit-scrollbar-thumb {
+      background: rgba(52, 211, 153, 0.35) !important;
+    }
+
+    .dag-interactive-canvas::-webkit-scrollbar-thumb:hover,
+    #json-payload-display::-webkit-scrollbar-thumb:hover {
+      background: rgba(52, 211, 153, 0.65) !important;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #060A17;
+      color: #F8FAFC;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+    }
+
+    /* Desktop Studio Bar */
+    .studio-context-banner {
+      width: 100%;
+      max-width: 440px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: #94A3B8;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .meta-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
+    .meta-tag-btn {
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      background: transparent;
+      color: #CBD5E1;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .meta-tag-btn.active {
+      background: #0D715F;
+      color: #FFFFFF;
+      border-color: #0D715F;
+    }
+
+    /* Phone Shell */
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.8);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: var(--canvas); }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    /* Status Bar */
+    .phone-status-bar {
+      height: 44px;
+      background: #0B132B;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFFFFF;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .notch-island {
+      width: 110px;
+      height: 25px;
+      background: #000000;
+      border-radius: var(--radius-pill);
+    }
+
+    /* Topbar */
+    .work-topbar {
+      height: 50px;
+      background: #0B132B;
+      border-bottom: 1px solid #1E293B;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .circle-nav-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid #334155;
+      background: #1E293B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #F8FAFC;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .topbar-center-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+      font-size: 13.5px;
+      color: #F8FAFC;
+    }
+
+    /* Sub-Header: Live Projection Mode Switcher */
+    .projection-mode-row {
+      background: #131E3A;
+      border-bottom: 1px solid #1E293B;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .projection-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94A3B8;
+    }
+    .projection-toggles {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .proj-btn {
+      background: transparent;
+      border: 1px solid #334155;
+      color: #94A3B8;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .proj-btn.active {
+      background: #0D715F;
+      border-color: #0D715F;
+      color: #FFFFFF;
+    }
+
+    /* Main Viewport */
+    .builder-main-viewport {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .builder-main-viewport::-webkit-scrollbar { display: none; }
+
+    /* View: Canvas */
+    #view-canvas {
+      flex: 1;
+      padding: 16px 14px 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* N8N DAG Canvas Box */
+    .dag-interactive-canvas {
+      background: #060A17;
+      border: 1.5px solid #1E293B;
+      border-radius: var(--radius-lg);
+      padding: 16px 14px;
+      overflow-x: auto;
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(52, 211, 153, 0.35) transparent;
+    }
+    .dag-interactive-canvas::-webkit-scrollbar {
+      height: 4px;
+    }
+    .dag-interactive-canvas::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .dag-interactive-canvas::-webkit-scrollbar-thumb {
+      background: rgba(52, 211, 153, 0.35);
+      border-radius: 9999px;
+    }
+    .dag-interactive-canvas::-webkit-scrollbar-thumb:hover {
+      background: rgba(52, 211, 153, 0.65);
+    }
+    .dag-nodes-flow-track {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      min-width: 480px;
+      position: relative;
+      padding: 4px 0 8px;
+    }
+
+    .n8n-node-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      width: 96px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .n8n-node-box {
+      width: 66px;
+      height: 66px;
+      border-radius: 16px;
+      background: #1E293B;
+      border: 1.5px solid #334155;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+    .n8n-node-wrapper.selected .n8n-node-box {
+      border-color: #10B981;
+      box-shadow: 0 0 0 2.5px rgba(16, 185, 129, 0.7), 0 8px 24px rgba(0, 0, 0, 0.55);
+    }
+
+    /* Category Stripes for Work */
+    .n8n-node-box.triage { border-top: 3.5px solid #F59E0B; }
+    .n8n-node-box.wash { border-top: 3.5px solid #38BDF8; }
+    .n8n-node-box.condenser { border-top: 3.5px solid #10B981; }
+    .n8n-node-box.test { border-top: 3.5px solid #A855F7; }
+    .n8n-node-box.signoff { border-top: 3.5px solid #00A699; }
+
+    .n8n-port-in {
+      position: absolute;
+      left: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #334155;
+      border: 2px solid #64748B;
+    }
+    .n8n-port-out {
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10B981;
+      border: 2px solid #FFFFFF;
+    }
+
+    /* Edge Add [+] Button */
+    .n8n-edge-add-btn {
+      position: absolute;
+      right: -15px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      background: #0F172A;
+      border: 1.5px solid #475569;
+      color: #94A3B8;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      z-index: 25;
+      line-height: 1;
+    }
+    .n8n-edge-add-btn:hover {
+      background: #10B981;
+      border-color: #10B981;
+      color: #FFFFFF;
+      transform: translateY(-50%) scale(1.15);
+    }
+
+    .n8n-wire-block {
+      width: 40px;
+      height: 66px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .n8n-label-block {
+      margin-top: 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      width: 96px;
+    }
+    .n8n-label-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: #F8FAFC;
+      line-height: 1.2;
+    }
+    .n8n-label-sub {
+      font-size: 8.5px;
+      font-weight: 600;
+      color: #94A3B8;
+      line-height: 1.2;
+    }
+
+    /* Live Node Inspector for Work */
+    .work-inspector-card {
+      background: #131E3A;
+      border: 1.5px solid #1E293B;
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .insp-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .insp-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #F8FAFC;
+    }
+    .insp-badge {
+      font-size: 9.5px;
+      font-weight: 800;
+      background: rgba(16, 185, 129, 0.2);
+      color: #34D399;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+    }
+    .insp-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .insp-label {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .insp-input {
+      width: 100%;
+      height: 34px;
+      background: #0B132B;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #FFFFFF;
+      font-size: 11.5px;
+      padding: 0 8px;
+      font-family: inherit;
+    }
+    .insp-input:focus {
+      outline: none;
+      border-color: #10B981;
+    }
+
+    /* Pinned Bottom SLA Dock */
+    .work-sticky-dock {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 64px;
+      background: #0B132B;
+      border-top: 1px solid #1E293B;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 30;
+      box-shadow: var(--shadow-dock);
+    }
+    .dock-total-col {
+      display: flex;
+      flex-direction: column;
+    }
+    .dock-total-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: #F8FAFC;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .dock-total-sub {
+      font-size: 9.5px;
+      color: #94A3B8;
+    }
+    .dock-action-btn {
+      height: 38px;
+      background: #0D715F;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 0 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Discovery Modal for Work Steps */
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(3px);
+      z-index: 50;
+      display: none;
+      align-items: flex-end;
+    }
+    .sheet-backdrop.open { display: flex; }
+    .work-category-drawer {
+      width: 100%;
+      background: #0B132B;
+      border-top: 1.5px solid #334155;
+      border-radius: 24px 24px 0 0;
+      padding: 16px 18px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 80vh;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+    }
+    .drawer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .drawer-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #F8FAFC;
+    }
+    .drawer-close-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #1E293B;
+      border: none;
+      color: #94A3B8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .work-cat-option {
+      background: #131E3A;
+      border: 1px solid #1E293B;
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .work-cat-option:hover {
+      border-color: #0D715F;
+      background: #16254A;
+    }
+
+    /* Projections Container */
+    #view-projection-compact, #view-projection-detailed, #view-projection-execution {
+      display: none;
+      padding: 16px 14px 100px;
+      flex-direction: column;
+      gap: 12px;
+      background: #F8FAFC;
+      color: #12201C;
+      min-height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Header -->
+  <div class="studio-context-banner">
+    <div class="meta-row">
+      <span style="font-size:13px; font-weight:800; color:#F8FAFC;">Work Pipeline DAG Studio</span>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:10px; color:#64748B; font-weight:600;">Single Provider Execution</span>
+        <button type="button" class="meta-tag-btn" onclick="openWorkJsonModal()" style="border-color:#10B981; color:#10B981; padding:2px 8px;">{ } Payload JSON</button>
+      </div>
+    </div>
+    <div class="meta-row" style="margin-top: 4px;">
+      <span style="font-size: 10px; text-transform: uppercase; color: #64748B; font-weight: 700;">Topology:</span>
+      <button class="meta-tag-btn active" id="btn-topol-parallel" onclick="loadWorkTopology('parallel')">Parallel Streams</button>
+      <button class="meta-tag-btn" id="btn-topol-linear" onclick="loadWorkTopology('linear')">Linear Steps</button>
+      <button class="meta-tag-btn" id="btn-topol-branch" onclick="loadWorkTopology('branch')">Conditional Branch</button>
+    </div>
+  </div>
+
+  <div class="phone-shell">
+
+    <!-- Status Bar -->
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div>5G</div>
+    </div>
+
+    <!-- Topbar -->
+    <header class="work-topbar">
+      <a href="deal-chain-ui-kit-comparison.html" class="circle-nav-btn" aria-label="Back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <div class="topbar-center-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>Work Pipeline DAG</span>
+      </div>
+      <button type="button" class="circle-nav-btn" onclick="resetWorkDemo()" title="Reset Pipeline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+      </button>
+    </header>
+
+    <!-- Sub-Header: Live Projection Mode Switcher -->
+    <div class="projection-mode-row">
+      <span class="projection-label">Mode Projection:</span>
+      <div class="projection-toggles">
+        <button type="button" class="proj-btn active" id="btn-proj-canvas" onclick="switchWorkProjection('canvas')">DAG Canvas</button>
+        <button type="button" class="proj-btn" id="btn-proj-compact" onclick="switchWorkProjection('compact')">Compact</button>
+        <button type="button" class="proj-btn" id="btn-proj-detailed" onclick="switchWorkProjection('detailed')">Detailed</button>
+        <button type="button" class="proj-btn" id="btn-proj-execution" onclick="switchWorkProjection('execution')">Execution</button>
+      </div>
+    </div>
+
+    <main class="builder-main-viewport">
+
+      <!-- PROJECTION 1: INTERACTIVE WORK DAG CANVAS -->
+      <div id="view-canvas">
+
+        <section class="dag-interactive-canvas">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:9.5px; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:0.5px;">Work Step Graph</span>
+            <span style="font-size:9px; color:#10B981; font-weight:700;">Tap [+] on edge to chain task</span>
+          </div>
+
+          <div class="dag-nodes-flow-track" id="work-canvas-track">
+            <!-- Rendered by JavaScript -->
+          </div>
+        </section>
+
+        <!-- Dynamic Work Node Inspector -->
+        <section class="work-inspector-card">
+          <div class="insp-head">
+            <span class="insp-title" id="work-insp-head">Step Inspector · Intake Diagnosis</span>
+            <span class="insp-badge" id="work-insp-badge">Photo Required</span>
+          </div>
+
+          <div class="insp-field-group">
+            <label class="insp-label">Task Deliverable Name</label>
+            <input type="text" class="insp-input" id="work-input-title" value="Voltage &amp; Intake Triage" oninput="updateWorkStepTitle(this.value)">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div class="insp-field-group">
+              <label class="insp-label">Assigned Technician</label>
+              <input type="text" class="insp-input" id="work-input-crew" value="Kuya Ben (Lead)" oninput="updateWorkStepCrew(this.value)">
+            </div>
+            <div class="insp-field-group">
+              <label class="insp-label">Duration SLA</label>
+              <input type="text" class="insp-input" id="work-input-duration" value="15 mins" oninput="updateWorkStepDuration(this.value)">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div class="insp-field-group">
+              <label class="insp-label">Evidence Verification</label>
+              <input type="text" class="insp-input" id="work-input-evidence" value="photo_proof" readonly style="color:#94A3B8;">
+            </div>
+            <div class="insp-field-group">
+              <label class="insp-label">Prerequisite Gate</label>
+              <input type="text" class="insp-input" id="work-input-trigger" value="arrival_confirmed" readonly style="color:#94A3B8;">
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- PROJECTION 2: COMPACT WORK ROADMAP (BUYER / PROPOSAL VIEW) -->
+      <div id="view-projection-compact">
+        <div style="font-size: 11px; font-weight: 800; color: #0F2F58; text-transform: uppercase;">
+          Compact Work Roadmap Projection
+        </div>
+        <div style="font-size: 10.5px; color: #64748B; margin-top: -6px;">
+          Deterministic conversion of active Work DAG into buyer-facing milestone timeline.
+        </div>
+
+        <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:14px; padding:12px; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="font-size:12.5px; color:#0F2F58;" id="proj-work-title">AC Service Execution Roadmap</strong>
+            <span style="font-family:'JetBrains Mono'; font-weight:800; color:#0A574A;" id="proj-work-sla">Total SLA: 75m</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px;" id="proj-roadmap-container">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PROJECTION 3: ON-SITE EXECUTION (FIELD TECHNICIAN VIEW) -->
+      <div id="view-projection-execution">
+        <div style="font-size: 11px; font-weight: 800; color: #0F2F58; text-transform: uppercase;">
+          On-Site Task Execution
+        </div>
+        <div style="font-size: 10.5px; color: #64748B; margin-top: -6px;">
+          Live on-site execution with photo proof, gauge readings, and step sign-offs.
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;" id="proj-execution-container">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- PROJECTION: DETAILED WORK MILESTONE SPEC -->
+      <div id="view-projection-detailed" style="display: none; padding: 16px 14px 100px; flex-direction: column; gap: 12px; background: #F8FAFC; color: #12201C; min-height: 100%;">
+        <div style="font-size: 11px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.5px;">
+          Detailed Work Milestones
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;" id="proj-work-detailed-stack">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Pinned Bottom SLA Dock -->
+    <footer class="work-sticky-dock">
+      <div class="dock-total-col">
+        <span class="dock-total-val" id="dock-work-sla">75m Total SLA</span>
+        <span class="dock-total-sub" id="dock-work-steps">4 Steps · ₱350.00 Labor Fee</span>
+      </div>
+      <button type="button" class="dock-action-btn" onclick="alert('Work Pipeline contract successfully compiled!')">
+        <span>Save Pipeline</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </footer>
+
+    <!-- Slide-Up Discovery Drawer: Add Connected Work Step -->
+    <div class="sheet-backdrop" id="work-discovery-modal" onclick="closeWorkDiscovery()">
+      <div class="work-category-drawer" onclick="event.stopPropagation()">
+        <div class="drawer-head">
+          <div class="drawer-title">Chain Next Work Task</div>
+          <button type="button" class="drawer-close-btn" onclick="closeWorkDiscovery()">&times;</button>
+        </div>
+
+        <div style="font-size: 10.5px; color: #94A3B8;">
+          Attach connected work task downstream from Step <strong id="work-discovery-src">3</strong>:
+        </div>
+
+        <div class="work-cat-option" onclick="attachNewWorkStep('inspection')">
+          <div style="width:32px; height:32px; border-radius:8px; background:#E0F2FE; color:#0369A1; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div>
+            <div style="font-size:12px; font-weight:800; color:#F8FAFC;">Post-Service Airflow Calibration</div>
+            <div style="font-size:9.5px; color:#94A3B8;">Anemometer airflow CFM reading · 10 mins</div>
+          </div>
+        </div>
+        <div class="work-cat-option" onclick="attachNewWorkStep('signoff')">
+          <div style="width:32px; height:32px; border-radius:8px; background:#DCFCE7; color:#166534; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div style="font-size:12px; font-weight:800; color:#F8FAFC;">Citizen Completion Sign-Off</div>
+            <div style="font-size:9.5px; color:#94A3B8;">Dual digital signature · Unlocks escrow payout · 5 mins</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Slide-Up Code Modal: Live Work Contract Payload JSON -->
+    <div class="sheet-backdrop" id="json-work-modal" onclick="closeWorkJsonModal()">
+      <div class="work-category-drawer" onclick="event.stopPropagation()" style="max-height:85vh;">
+        <div class="drawer-head">
+          <div class="drawer-title" style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#10B981;">Work Contract Payload JSON</div>
+          <button type="button" class="drawer-close-btn" onclick="closeWorkJsonModal()">&times;</button>
+        </div>
+        <div style="font-size:10px; color:#94A3B8;">Single source of truth for DAG Canvas, Compact Roadmap, Detailed Milestones, and Execution projections.</div>
+        <pre id="json-work-payload-display" style="background:#060A17; border:1px solid #1E293B; border-radius:10px; padding:12px; font-family:'JetBrains Mono',monospace; font-size:10px; color:#A7F3D0; overflow:auto; max-height:420px; line-height:1.4;"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const workTopologies = {
+      parallel: {
+        id: "WORK-AC-892",
+        title: "Split AC Deep Clean with Parallel Unit Streams",
+        totalSla: "75m",
+        steps: [
+          { id: "1", type: "triage", title: "Voltage Intake & Triage", crew: "Kuya Ben (Lead)", duration: "15m", evidence: "photo_proof", status: "completed" },
+          { id: "2a", type: "wash", title: "Indoor Coil Foam Wash", crew: "Junior (Tech A)", duration: "25m", evidence: "before_after_photo", status: "completed", dependsOn: ["1"] },
+          { id: "2b", type: "condenser", title: "Outdoor Condenser & Freon", crew: "Kuya Ben (Lead)", duration: "20m", evidence: "gauge_reading", status: "in_progress", dependsOn: ["1"] },
+          { id: "3", type: "test", title: "Combined Compressor Test", crew: "Crew Joint", duration: "15m", evidence: "delta_test", status: "gated", dependsOn: ["2a", "2b"] }
+        ]
+      },
+      linear: {
+        id: "WORK-AC-891",
+        title: "Standard Sequential AC Service",
+        totalSla: "65m",
+        steps: [
+          { id: "1", type: "triage", title: "Intake Diagnosis", crew: "Kuya Ben", duration: "15m", evidence: "photo_proof", status: "completed" },
+          { id: "2", type: "wash", title: "Chemical Coil Wash", crew: "Kuya Ben", duration: "25m", evidence: "photo_proof", status: "in_progress", dependsOn: ["1"] },
+          { id: "3", type: "test", title: "Compressor Load Test", crew: "Kuya Ben", duration: "15m", evidence: "meter_reading", status: "gated", dependsOn: ["2"] },
+          { id: "4", type: "signoff", title: "Citizen Sign-Off", crew: "Kuya Ben", duration: "10m", evidence: "signature", status: "queued", dependsOn: ["3"] }
+        ]
+      },
+      branch: {
+        id: "WORK-AC-894",
+        title: "Diagnostic Triage with Conditional Repair Branch",
+        totalSla: "60m",
+        steps: [
+          { id: "1", type: "triage", title: "Pressure Leak Diagnosis", crew: "Kuya Ben", duration: "15m", evidence: "pressure_delta", status: "completed" },
+          { id: "2a", type: "labor", title: "Braze Joint (If Leak Found)", crew: "Kuya Ben", duration: "30m", evidence: "solder_photo", status: "bypassed", dependsOn: ["1"], condition: "leak_found == true" },
+          { id: "2b", type: "wash", title: "Standard Foam Wash (No Leak)", crew: "Kuya Ben", duration: "25m", evidence: "clean_photo", status: "in_progress", dependsOn: ["1"], condition: "leak_found == false" }
+        ]
+      }
+    };
+
+    let activeWorkTopology = 'parallel';
+    let currentWork = JSON.parse(JSON.stringify(workTopologies.parallel));
+    let selectedStepId = '1';
+
+    function loadWorkTopology(key) {
+      activeWorkTopology = key;
+      currentWork = JSON.parse(JSON.stringify(workTopologies[key]));
+
+      document.querySelectorAll('.studio-context-banner .meta-tag-btn').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById(`btn-topol-${key}`);
+      if (btn) btn.classList.add('active');
+
+      renderWorkCanvasTrack();
+      selectWorkStep(currentWork.steps[0].id);
+
+      // Reactively re-render all projections
+      renderWorkRoadmap();
+      renderWorkDetailed();
+      renderWorkExecution();
+    }
+
+    function renderWorkCanvasTrack() {
+      const track = document.getElementById('work-canvas-track');
+      if (!track) return;
+
+      if (activeWorkTopology === 'parallel') {
+        track.innerHTML = `
+          <!-- Step 1 -->
+          <div class="n8n-node-wrapper selected" id="work-node-1" onclick="selectWorkStep('1')" style="margin-top:35px;">
+            <div class="n8n-node-box triage">
+              <div class="n8n-node-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+              <div class="n8n-port-out"></div>
+            </div>
+            <div class="n8n-label-block"><div class="n8n-label-title">1. Intake Triage</div><div class="n8n-label-sub">15m · Photo</div></div>
+          </div>
+
+          <!-- Parallel Fan-Out Wire Block -->
+          <div class="n8n-wire-block" style="height:140px;">
+            <svg width="40" height="140" viewBox="0 0 40 140" fill="none">
+              <path d="M 0 70 C 25 70, 15 35, 40 35" stroke="#38BDF8" stroke-width="2.2" stroke-dasharray="4 3"/>
+              <path d="M 0 70 C 25 70, 15 105, 40 105" stroke="#10B981" stroke-width="2.2" stroke-dasharray="4 3"/>
+            </svg>
+          </div>
+
+          <!-- Parallel Streams Stack -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div class="n8n-node-wrapper" id="work-node-2a" onclick="selectWorkStep('2a')">
+              <div class="n8n-node-box wash">
+                <div class="n8n-port-in"></div>
+                <div class="n8n-node-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg></div>
+                <div class="n8n-port-out"></div>
+              </div>
+              <div class="n8n-label-block"><div class="n8n-label-title">2A. Indoor Wash</div><div class="n8n-label-sub">25m · Junior</div></div>
+            </div>
+
+            <div class="n8n-node-wrapper" id="work-node-2b" onclick="selectWorkStep('2b')">
+              <div class="n8n-node-box condenser">
+                <div class="n8n-port-in"></div>
+                <div class="n8n-node-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg></div>
+                <div class="n8n-port-out"></div>
+              </div>
+              <div class="n8n-label-block"><div class="n8n-label-title">2B. Outdoor Unit</div><div class="n8n-label-sub">20m · Ben</div></div>
+            </div>
+          </div>
+
+          <!-- Fan-In Wire Block Converging into Step 3 -->
+          <div class="n8n-wire-block" style="height:140px;">
+            <svg width="40" height="140" viewBox="0 0 40 140" fill="none">
+              <path d="M 0 35 C 25 35, 15 70, 40 70" stroke="#A855F7" stroke-width="2.2" stroke-dasharray="4 3"/>
+              <path d="M 0 105 C 25 105, 15 70, 40 70" stroke="#A855F7" stroke-width="2.2" stroke-dasharray="4 3"/>
+            </svg>
+          </div>
+
+          <!-- Step 3: Combined Load Test -->
+          <div class="n8n-node-wrapper" id="work-node-3" onclick="selectWorkStep('3')" style="margin-top:35px;">
+            <div class="n8n-node-box test">
+              <div class="n8n-port-in"></div>
+              <div class="n8n-node-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <div class="n8n-port-out"></div>
+              <button type="button" class="n8n-edge-add-btn" onclick="openWorkDiscovery(event, '3')" title="Add Connected Step">+</button>
+            </div>
+            <div class="n8n-label-block"><div class="n8n-label-title">3. Combined Test</div><div class="n8n-label-sub">15m · Cold Delta</div></div>
+          </div>
+
+          <!-- Dynamic Node 4 (Appended on [+]) -->
+          <div id="work-node-4-wrap" style="display:none; align-items:flex-start; margin-top:35px;">
+            <div class="n8n-wire-block">
+              <svg width="40" height="66" viewBox="0 0 40 66" fill="none"><path d="M 0 33 C 20 33, 20 33, 40 33" stroke="#00A699" stroke-width="2.2" stroke-dasharray="4 3"/></svg>
+            </div>
+            <div class="n8n-node-wrapper" id="work-node-4" onclick="selectWorkStep('4')">
+              <div class="n8n-node-box signoff">
+                <div class="n8n-port-in"></div>
+                <div class="n8n-node-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00A699" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="n8n-label-block"><div class="n8n-label-title">4. Citizen Sign-off</div><div class="n8n-label-sub">5m · Signature</div></div>
+            </div>
+          </div>
+        `;
+      } else if (activeWorkTopology === 'branch') {
+        track.innerHTML = `
+          <!-- Step 1: Diagnosis -->
+          <div class="n8n-node-wrapper selected" id="work-node-1" onclick="selectWorkStep('1')" style="margin-top:35px;">
+            <div class="n8n-node-box triage">
+              <div class="n8n-node-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+              <div class="n8n-port-out"></div>
+            </div>
+            <div class="n8n-label-block"><div class="n8n-label-title">1. Pressure Leak Triage</div><div class="n8n-label-sub">15m · Nitrogen</div></div>
+          </div>
+
+          <!-- Branching Out Wires -->
+          <div class="n8n-wire-block" style="height:140px;">
+            <svg width="40" height="140" viewBox="0 0 40 140" fill="none">
+              <path d="M 0 70 C 25 70, 15 35, 40 35" stroke="#F59E0B" stroke-width="2.2" stroke-dasharray="4 3"/>
+              <path d="M 0 70 C 25 70, 15 105, 40 105" stroke="#10B981" stroke-width="2.2" stroke-dasharray="4 3"/>
+            </svg>
+          </div>
+
+          <!-- Conditional Branches -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div class="n8n-node-wrapper" id="work-node-2a" onclick="selectWorkStep('2a')">
+              <div class="n8n-node-box triage">
+                <div class="n8n-port-in"></div>
+                <div class="n8n-node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><path d="M12 2v20M2 12h20"/></svg></div>
+              </div>
+              <div class="n8n-label-block"><div class="n8n-label-title">Braze Pipe Joint</div><div class="n8n-label-sub">Leak Found · 30m</div></div>
+            </div>
+            <div class="n8n-node-wrapper" id="work-node-2b" onclick="selectWorkStep('2b')">
+              <div class="n8n-node-box wash">
+                <div class="n8n-port-in"></div>
+                <div class="n8n-node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2"><circle cx="12" cy="12" r="10"/></svg></div>
+              </div>
+              <div class="n8n-label-block"><div class="n8n-label-title">Standard Wash</div><div class="n8n-label-sub">No Leak · 25m</div></div>
+            </div>
+          </div>
+        `;
+      } else {
+        // Linear
+        track.innerHTML = `
+          <div class="n8n-node-wrapper selected" id="work-node-1" onclick="selectWorkStep('1')">
+            <div class="n8n-node-box triage">
+              <div class="n8n-node-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+              <div class="n8n-port-out"></div>
+            </div>
+            <div class="n8n-label-block"><div class="n8n-label-title">1. Intake Triage</div><div class="n8n-label-sub">15m · Photo</div></div>
+          </div>
+          <div class="n8n-wire-block">
+            <svg width="40" height="66" viewBox="0 0 40 66" fill="none"><path d="M 0 33 C 20 33, 20 33, 40 33" stroke="#38BDF8" stroke-width="2.2" stroke-dasharray="4 3"/></svg>
+          </div>
+          <div class="n8n-node-wrapper" id="work-node-2" onclick="selectWorkStep('2')">
+            <div class="n8n-node-box wash">
+              <div class="n8n-port-in"></div>
+              <div class="n8n-node-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2"><path d="M12 2v20M2 12h20"/></svg></div>
+              <div class="n8n-port-out"></div>
+            </div>
+            <div class="n8n-label-block"><div class="n8n-label-title">2. Coil Wash</div><div class="n8n-label-sub">25m · Photo</div></div>
+          </div>
+          <div class="n8n-wire-block">
+            <svg width="40" height="66" viewBox="0 0 40 66" fill="none"><path d="M 0 33 C 20 33, 20 33, 40 33" stroke="#10B981" stroke-width="2.2" stroke-dasharray="4 3"/></svg>
+          </div>
+          <div class="n8n-node-wrapper" id="work-node-3" onclick="selectWorkStep('3')">
+            <div class="n8n-node-box test">
+              <div class="n8n-port-in"></div>
+              <div class="n8n-node-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div class="n8n-port-out"></div>
+              <button type="button" class="n8n-edge-add-btn" onclick="openWorkDiscovery(event, '3')" title="Add Connected Step">+</button>
+            </div>
+            <div class="n8n-label-block"><div class="n8n-label-title">3. Load Test</div><div class="n8n-label-sub">15m · Meter</div></div>
+          </div>
+        `;
+      }
+    }
+
+    function selectWorkStep(id) {
+      selectedStepId = id;
+      document.querySelectorAll('.n8n-node-wrapper').forEach(w => w.classList.remove('selected'));
+      const wrap = document.getElementById(`work-node-${id}`);
+      if (wrap) wrap.classList.add('selected');
+
+      const step = currentWork.steps.find(s => s.id === id);
+      if (!step) return;
+
+      document.getElementById('work-insp-head').innerText = `Step ${id} Inspector · ${step.title}`;
+      document.getElementById('work-input-title').value = step.title;
+      document.getElementById('work-input-crew').value = step.crew;
+      document.getElementById('work-input-duration').value = step.duration;
+      document.getElementById('work-input-evidence').value = step.evidence;
+      document.getElementById('work-insp-badge').innerText = step.evidence.replace('_', ' ').toUpperCase();
+    }
+
+    function updateWorkStepTitle(val) {
+      const step = currentWork.steps.find(s => s.id === selectedStepId);
+      if (step) step.title = val;
+    }
+    function updateWorkStepCrew(val) {
+      const step = currentWork.steps.find(s => s.id === selectedStepId);
+      if (step) step.crew = val;
+    }
+    function updateWorkStepDuration(val) {
+      const step = currentWork.steps.find(s => s.id === selectedStepId);
+      if (step) step.duration = val;
+    }
+
+    function openWorkDiscovery(e, fromId) {
+      e.stopPropagation();
+      document.getElementById('work-discovery-src').innerText = fromId;
+      document.getElementById('work-discovery-modal').classList.add('open');
+    }
+    function closeWorkDiscovery() {
+      document.getElementById('work-discovery-modal').classList.remove('open');
+    }
+
+    function attachNewWorkStep(type) {
+      closeWorkDiscovery();
+      const wrap4 = document.getElementById('work-node-4-wrap');
+      if (wrap4) {
+        wrap4.style.display = 'flex';
+        currentWork.steps.push({ id: "4", type: "signoff", title: "Citizen Completion Sign-Off", crew: "Kuya Ben", duration: "5m", evidence: "signature", status: "queued", dependsOn: ["3"] });
+        selectWorkStep('4');
+      }
+    }
+
+    function resetWorkDemo() {
+      loadWorkTopology('parallel');
+    }
+
+    // =========================================================================
+    // PROJECTIONS CONVERSION
+    // =========================================================================
+    function switchWorkProjection(mode) {
+      document.querySelectorAll('.proj-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`btn-proj-${mode}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      document.getElementById('view-canvas').style.display = (mode === 'canvas') ? 'flex' : 'none';
+      document.getElementById('view-projection-compact').style.display = (mode === 'compact') ? 'flex' : 'none';
+      document.getElementById('view-projection-detailed').style.display = (mode === 'detailed') ? 'flex' : 'none';
+      document.getElementById('view-projection-execution').style.display = (mode === 'execution') ? 'flex' : 'none';
+
+      if (mode === 'compact') renderWorkRoadmap();
+      if (mode === 'detailed') renderWorkDetailed();
+      if (mode === 'execution') renderWorkExecution();
+    }
+
+    function renderWorkDetailed() {
+      const container = document.getElementById('proj-work-detailed-stack');
+      if (!container) return;
+
+      let html = '';
+      if (activeWorkTopology === 'parallel') {
+        html = `
+          <!-- Step 1 -->
+          <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:11.5px; font-weight:800; color:#0F2F58;">Step 1. Voltage Intake &amp; Triage</div>
+              <div style="font-size:9px; color:#64748B;">Kuya Ben · 15m</div>
+            </div>
+            <span style="font-size:8px; font-weight:800; background:#DCFCE7; color:#166534; padding:2px 6px; border-radius:9999px;">Photo Proof</span>
+          </div>
+
+          <!-- Phase 2: Parallel Streams Spec -->
+          <div style="background:#FFFFFF; border:1.5px solid #0D715F; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+              <span style="font-size:10.5px; font-weight:800; color:#0F2F58; text-transform:uppercase;">Parallel Crew Streams</span>
+              <span style="font-size:11px; font-weight:800; color:#0D715F; font-family:'JetBrains Mono';">45m</span>
+            </div>
+
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:6px 8px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:11px; font-weight:800; color:#0F2F58;">Stream 2A: Indoor Coil Foam Wash</div>
+                <div style="font-size:9px; color:#64748B;">Junior · 25m</div>
+              </div>
+              <span style="font-size:8px; font-weight:800; background:#DCFCE7; color:#166534; padding:1.5px 5px; border-radius:9999px;">Photo Proof</span>
+            </div>
+
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:6px 8px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:11px; font-weight:800; color:#0F2F58;">Stream 2B: Outdoor Condenser &amp; Freon</div>
+                <div style="font-size:9px; color:#64748B;">Kuya Ben · 20m</div>
+              </div>
+              <span style="font-size:8px; font-weight:800; background:#E0F2FE; color:#0369A1; padding:1.5px 5px; border-radius:9999px;">Gauge Photo</span>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:11.5px; font-weight:800; color:#64748B;">Step 3. Combined Compressor Cold Air Test</div>
+              <div style="font-size:9px; color:#94A3B8;">Joint Crew · 15m</div>
+            </div>
+            <span style="font-size:8px; font-weight:800; background:#FEF3C7; color:#92400E; padding:2px 6px; border-radius:9999px;">Delta Test</span>
+          </div>
+
+          <!-- Step 4 -->
+          <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:11.5px; font-weight:800; color:#64748B;">Step 4. Citizen Completion Sign-Off</div>
+              <div style="font-size:9px; color:#94A3B8;">Maria Santos &amp; Kuya Ben · 5m</div>
+            </div>
+            <span style="font-size:8px; font-weight:800; background:#F1F5F9; color:#64748B; padding:2px 6px; border-radius:9999px;">Signature</span>
+          </div>
+        `;
+      } else if (activeWorkTopology === 'branch') {
+        html = `
+          <!-- Step 1: Base Triage -->
+          <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:11.5px; font-weight:800; color:#0F2F58;">Step 1. Pressure Leak Diagnosis</div>
+              <div style="font-size:9px; color:#64748B;">Kuya Ben · 15m</div>
+            </div>
+            <span style="font-size:8px; font-weight:800; background:#DCFCE7; color:#166534; padding:2px 6px; border-radius:9999px;">Pressure Delta</span>
+          </div>
+
+          <!-- Conditional Fork Container -->
+          <div style="background:#FFFDF9; border:1.5px dashed #D97706; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:10px; font-weight:800; color:#B45309; text-transform:uppercase;">Decision Gate: Freon Delta &lt; 40 PSI?</span>
+              <span style="font-size:8.5px; font-weight:800; background:#FEF3C7; color:#B45309; padding:2px 6px; border-radius:9999px;">IF / ELSE</span>
+            </div>
+
+            <!-- Branch A: Leak Found -->
+            <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-left:3.5px solid #D97706; border-radius:8px; padding:6px 8px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:11px; font-weight:800; color:#0F2F58;">Branch A: Braze Joint &amp; Freon Refill</div>
+                <div style="font-size:9px; color:#64748B;">Kuya Ben · 30m · When leak detected</div>
+              </div>
+              <span style="font-size:8px; font-weight:800; background:#FEF3C7; color:#B45309; padding:1.5px 5px; border-radius:9999px;">Solder Photo</span>
+            </div>
+
+            <!-- Branch B: No Leak Detected -->
+            <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-left:3.5px solid #10B981; border-radius:8px; padding:6px 8px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:11px; font-weight:800; color:#0F2F58;">Branch B: Standard Chemical Foam Wash</div>
+                <div style="font-size:9px; color:#64748B;">Kuya Ben · 25m · When pressure nominal</div>
+              </div>
+              <span style="font-size:8px; font-weight:800; background:#DCFCE7; color:#166534; padding:1.5px 5px; border-radius:9999px;">Clean Photo</span>
+            </div>
+          </div>
+
+          <!-- Step 3: Convergence -->
+          <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:11.5px; font-weight:800; color:#64748B;">Step 3. Final Temperature Verification</div>
+              <div style="font-size:9px; color:#94A3B8;">Kuya Ben · 10m · Converged Gate</div>
+            </div>
+            <span style="font-size:8px; font-weight:800; background:#F1F5F9; color:#64748B; padding:2px 6px; border-radius:9999px;">Delta Test</span>
+          </div>
+        `;
+      } else {
+        currentWork.steps.forEach((s, idx) => {
+          html += `
+            <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:11.5px; font-weight:800; color:#0F2F58;">Step ${idx + 1}. ${s.title}</div>
+                <div style="font-size:9px; color:#64748B;">${s.crew} · ${s.duration}</div>
+              </div>
+              <span style="font-size:8px; font-weight:800; background:#EBF2FA; color:#0F2F58; padding:2px 6px; border-radius:9999px;">${s.evidence || 'Evidence'}</span>
+            </div>
+          `;
+        });
+      }
+      container.innerHTML = html;
+    }
+
+    function renderWorkRoadmap() {
+      const container = document.getElementById('proj-roadmap-container');
+      if (!container) return;
+
+      const titleEl = document.getElementById('proj-work-title');
+      const slaEl = document.getElementById('proj-work-sla');
+      if (titleEl) titleEl.innerText = currentWork.title;
+      if (slaEl) slaEl.innerText = `Total SLA: ${currentWork.totalSla}`;
+
+      if (activeWorkTopology === 'parallel') {
+        container.innerHTML = `
+          <div style="display:flex; align-items:center; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:10px; overflow-x:auto; gap:6px;">
+            <!-- Step 1 -->
+            <div class="n8n-capsule-node" style="display:flex; align-items:center; gap:6px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:3px 8px; flex-shrink:0;">
+              <span class="n8n-capsule-role" style="background:#FEF3C7; color:#92400E; font-size:8.5px; font-weight:800; padding:1px 5px; border-radius:9999px;">1</span>
+              <span style="font-size:10px; font-weight:800; color:#0F2F58; white-space:nowrap;">Intake Triage</span>
+              <span style="font-size:9.5px; font-weight:700; color:#0D715F; font-family:'JetBrains Mono';">15m</span>
+            </div>
+
+            <!-- Fork Wire SVG -->
+            <svg width="24" height="66" viewBox="0 0 24 66" fill="none" style="flex-shrink:0;">
+              <path d="M 0 33 C 12 33, 12 16, 24 16" stroke="#10B981" stroke-width="2.2" stroke-dasharray="4 3"/>
+              <path d="M 0 33 C 12 33, 12 50, 24 50" stroke="#10B981" stroke-width="2.2" stroke-dasharray="4 3"/>
+            </svg>
+
+            <!-- Stacked Parallel Streams (2A & 2B clearly visible!) -->
+            <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+              <div class="n8n-capsule-node" style="display:flex; align-items:center; gap:6px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:3px 8px;">
+                <span class="n8n-capsule-role" style="background:#E0F2FE; color:#0369A1; font-size:8.5px; font-weight:800; padding:1px 5px; border-radius:9999px;">2A</span>
+                <span style="font-size:10px; font-weight:800; color:#0F2F58; white-space:nowrap;">Indoor Wash</span>
+                <span style="font-size:9.5px; font-weight:700; color:#0D715F; font-family:'JetBrains Mono';">25m</span>
+              </div>
+              <div class="n8n-capsule-node" style="display:flex; align-items:center; gap:6px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:3px 8px;">
+                <span class="n8n-capsule-role" style="background:#DCFCE7; color:#166534; font-size:8.5px; font-weight:800; padding:1px 5px; border-radius:9999px;">2B</span>
+                <span style="font-size:10px; font-weight:800; color:#0F2F58; white-space:nowrap;">Outdoor Unit</span>
+                <span style="font-size:9.5px; font-weight:700; color:#0D715F; font-family:'JetBrains Mono';">20m</span>
+              </div>
+            </div>
+
+            <!-- Join Wire SVG -->
+            <svg width="24" height="66" viewBox="0 0 24 66" fill="none" style="flex-shrink:0;">
+              <path d="M 0 16 C 12 16, 12 33, 24 33" stroke="#10B981" stroke-width="2.2" stroke-dasharray="4 3"/>
+              <path d="M 0 50 C 12 50, 12 33, 24 33" stroke="#10B981" stroke-width="2.2" stroke-dasharray="4 3"/>
+            </svg>
+
+            <!-- Step 3 -->
+            <div class="n8n-capsule-node" style="display:flex; align-items:center; gap:6px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:4px 8px; flex-shrink:0;">
+              <span class="n8n-capsule-role" style="background:#F3E8FF; color:#7E22CE; font-size:8.5px; font-weight:800; padding:1.5px 5px; border-radius:9999px;">3</span>
+              <span style="font-size:10.5px; font-weight:800; color:#0F2F58; white-space:nowrap;">Load Test</span>
+              <span style="font-size:10px; font-weight:700; color:#0D715F; font-family:'JetBrains Mono';">15m</span>
+            </div>
+          </div>
+        `;
+      } else if (activeWorkTopology === 'branch') {
+        container.innerHTML = `
+          <div style="display:flex; align-items:center; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:10px; overflow-x:auto; gap:6px;">
+            <!-- Step 1 -->
+            <div class="n8n-capsule-node" style="display:flex; align-items:center; gap:6px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:3px 8px; flex-shrink:0;">
+              <span class="n8n-capsule-role" style="background:#FEF3C7; color:#92400E; font-size:8.5px; font-weight:800; padding:1px 5px; border-radius:9999px;">1</span>
+              <span style="font-size:10px; font-weight:800; color:#0F2F58; white-space:nowrap;">Leak Triage</span>
+              <span style="font-size:9.5px; font-weight:700; color:#0D715F; font-family:'JetBrains Mono';">15m</span>
+            </div>
+
+            <!-- Decision Diamond -->
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0; padding:0 2px;">
+              <div style="width:16px; height:16px; background:#FEF3C7; border:1.5px solid #D97706; transform:rotate(45deg); display:flex; align-items:center; justify-content:center;">
+                <span style="transform:rotate(-45deg); font-size:8px; font-weight:800; color:#B45309;">?</span>
+              </div>
+              <span style="font-size:6.5px; font-weight:800; color:#B45309; text-transform:uppercase; margin-top:2px;">Leak?</span>
+            </div>
+
+            <!-- Conditional Fork Wires -->
+            <svg width="24" height="66" viewBox="0 0 24 66" fill="none" style="flex-shrink:0;">
+              <path d="M 0 33 C 12 33, 12 16, 24 16" stroke="#D97706" stroke-width="2.2" stroke-dasharray="4 3"/>
+              <path d="M 0 33 C 12 33, 12 50, 24 50" stroke="#10B981" stroke-width="2.2" stroke-dasharray="4 3"/>
+            </svg>
+
+            <!-- Conditional Branches -->
+            <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+              <div class="n8n-capsule-node" style="display:flex; align-items:center; gap:6px; background:#FFFDF9; border:1.5px dashed #D97706; border-radius:10px; padding:3px 8px;">
+                <span class="n8n-capsule-role" style="background:#FEF3C7; color:#B45309; font-size:7.5px; font-weight:800; padding:1px 4px; border-radius:9999px;">IF</span>
+                <span style="font-size:10px; font-weight:800; color:#B45309; white-space:nowrap;">Braze &amp; Refill</span>
+                <span style="font-size:9.5px; font-weight:700; color:#D97706; font-family:'JetBrains Mono';">30m</span>
+              </div>
+              <div class="n8n-capsule-node" style="display:flex; align-items:center; gap:6px; background:#FFFFFF; border:1.5px solid #10B981; border-radius:10px; padding:3px 8px;">
+                <span class="n8n-capsule-role" style="background:#DCFCE7; color:#166534; font-size:7.5px; font-weight:800; padding:1px 4px; border-radius:9999px;">ELSE</span>
+                <span style="font-size:10px; font-weight:800; color:#166534; white-space:nowrap;">Standard Wash</span>
+                <span style="font-size:9.5px; font-weight:700; color:#0D715F; font-family:'JetBrains Mono';">25m</span>
+              </div>
+            </div>
+
+            <!-- Join Wire SVG -->
+            <svg width="24" height="66" viewBox="0 0 24 66" fill="none" style="flex-shrink:0;">
+              <path d="M 0 16 C 12 16, 12 33, 24 33" stroke="#A855F7" stroke-width="2.2" stroke-dasharray="4 3"/>
+              <path d="M 0 50 C 12 50, 12 33, 24 33" stroke="#A855F7" stroke-width="2.2" stroke-dasharray="4 3"/>
+            </svg>
+
+            <!-- Step 3: Verified -->
+            <div class="n8n-capsule-node" style="display:flex; align-items:center; gap:6px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:4px 8px; flex-shrink:0;">
+              <span class="n8n-capsule-role" style="background:#F3E8FF; color:#7E22CE; font-size:8.5px; font-weight:800; padding:1.5px 5px; border-radius:9999px;">3</span>
+              <span style="font-size:10.5px; font-weight:800; color:#0F2F58; white-space:nowrap;">Temperature Test</span>
+              <span style="font-size:10px; font-weight:700; color:#0D715F; font-family:'JetBrains Mono';">10m</span>
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; font-weight:800; color:#166534;">✓ Step 1. Intake Diagnosis</span>
+            <span style="font-size:9.5px; color:#166534; font-weight:700;">15m · Photo Verified</span>
+          </div>
+          <div style="background:#F0F9FF; border:1.5px solid #0284C7; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; font-weight:800; color:#0369A1;">• Step 2. Coil Wash</span>
+            <span style="font-size:9.5px; color:#0369A1; font-weight:700;">25m · Active on Site</span>
+          </div>
+          <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center; opacity:0.85;">
+            <span style="font-size:11px; font-weight:800; color:#475569;">Step 3. Compressor Load Test</span>
+            <span style="font-size:9.5px; color:#64748B;">15m · Gated by Step 2</span>
+          </div>
+        `;
+      }
+    }
+
+    function renderWorkExecution() {
+      const container = document.getElementById('proj-execution-container');
+      if (!container) return;
+
+      container.innerHTML = `
+        <!-- Step 1: Done -->
+        <article style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:11.5px; font-weight:800; color:#166534;">✓ Step 1. Voltage Intake &amp; Triage</div>
+            <div style="font-size:9.5px; color:#64748B;">Kuya Ben · 15m · Verified</div>
+          </div>
+          <span style="font-size:9px; font-weight:800; color:#166534; background:#DCFCE7; padding:2px 6px; border-radius:9999px;">✓ Settled</span>
+        </article>
+
+        <!-- Unified Concurrent Work Phase Container -->
+        <article style="background:#FFFFFF; border:1.5px solid #0D715F; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; font-weight:800; color:#0F2F58; text-transform:uppercase; letter-spacing:0.4px;">Phase 2: Parallel Crew Execution</span>
+            <span style="font-family:'JetBrains Mono'; font-weight:800; color:#0D715F; font-size:12px;">45m Total</span>
+          </div>
+
+          <!-- Track 2A (Indoor) -->
+          <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:11px; font-weight:800; color:#166534;">Stream 2A (Indoor Unit) · Junior</div>
+              <div style="font-size:9.5px; color:#166534;">Chemical foam wash · Photo attached</div>
+            </div>
+            <span style="font-size:9px; font-weight:800; color:#166534; background:#DCFCE7; padding:2px 6px; border-radius:9999px;">✓ Verified</span>
+          </div>
+
+          <!-- Track 2B (Outdoor) -->
+          <div style="background:#F0F9FF; border:1.5px solid #0284C7; border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-size:11px; font-weight:800; color:#0369A1;">Stream 2B (Outdoor Unit) · Kuya Ben</div>
+              <span style="font-size:9px; font-weight:800; color:#0369A1; background:#E0F2FE; padding:2px 6px; border-radius:9999px;">Active Run</span>
+            </div>
+            <div style="font-size:9.5px; color:#64748B;">Mount capacitor, check Freon manifold pressure</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; border:1px dashed #CBD5E1; border-radius:6px; padding:4px 8px;">
+              <span style="font-size:9.5px; color:#0F2F58; font-weight:700;">Manifold Gauge Reading</span>
+              <button type="button" class="meta-tag-btn" style="color:#0D715F; border-color:#0D715F; padding:1px 6px;" onclick="alert('Photo evidence attached: gauge_reading.jpg')">Attach Photo</button>
+            </div>
+          </div>
+
+          <!-- Fan-In Progress Meter -->
+          <div style="background:#F1F5F9; border-radius:8px; padding:6px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:6px; font-size:9.5px; font-weight:800; color:#0F2F58;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Gate: 1 of 2 Verified</span>
+            </div>
+            <div style="width:64px; height:6px; background:#CBD5E1; border-radius:9999px; overflow:hidden;">
+              <div style="width:50%; height:100%; background:#0D715F; border-radius:9999px;"></div>
+            </div>
+          </div>
+        </article>
+
+        <div style="display:flex; align-items:center; gap:6px; padding:0 12px; margin:-2px 0;">
+          <div style="width:2px; height:14px; background:#CBD5E1; margin-left:12px;"></div>
+        </div>
+
+        <!-- Step 3: Gated with Visual Prerequisite Badges -->
+        <article style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:4px; opacity:0.85;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11.5px; font-weight:800; color:#64748B;">Step 3. Combined Compressor Cold Air Test</span>
+            <span style="font-size:11px; font-weight:700; color:#64748B; font-family:'JetBrains Mono';">15m</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:4px; margin-top:2px;">
+            <span style="font-size:9px; color:#64748B; font-weight:700;">Prerequisites:</span>
+            <span style="font-size:8.5px; font-weight:800; color:#166534; background:#DCFCE7; padding:1px 5px; border-radius:9999px;">✓ 2A Indoor</span>
+            <span style="font-size:8.5px; font-weight:800; color:#92400E; background:#FEF3C7; padding:1px 5px; border-radius:9999px;">⏳ 2B Outdoor</span>
+          </div>
+        </article>
+      `;
+    }
+
+    // Auto-init on load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadWorkTopology('parallel');
+    });
+    function openWorkJsonModal() {
+      const contract = {
+        schema_version: "1.0",
+        contract_type: "work_instance",
+        work_id: currentWork.id,
+        order_id: "ORD-103",
+        title: currentWork.title,
+        topology: activeWorkTopology,
+        total_sla: currentWork.totalSla,
+        lead_provider: {
+          business_name: "Kuya Ben Aircon Services",
+          lead_technician: "Kuya Ben Bataller"
+        },
+        milestones: currentWork.steps.map(s => ({
+          id: s.id,
+          type: s.type,
+          title: s.title,
+          assigned_crew: s.crew,
+          duration: s.duration,
+          status: s.status,
+          evidence_required: s.evidence,
+          depends_on: s.dependsOn || []
+        }))
+      };
+      document.getElementById('json-work-payload-display').innerText = JSON.stringify(contract, null, 2);
+      document.getElementById('json-work-modal').classList.add('open');
+    }
+
+    function closeWorkJsonModal() {
+      document.getElementById('json-work-modal').classList.remove('open');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Review &amp; Reputation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      --brand-navy: #0F2F58;
+      --brand-yellow: #FFC244;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+
+      --canvas: #F4F6F5;
+      --surface: #FFFFFF;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(10, 87, 74, 0.06);
+      --shadow-md: 0 4px 14px rgba(10, 87, 74, 0.08);
+      --shadow-dock: 0 -4px 20px rgba(18, 32, 28, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: #0B132B;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+    }
+
+    .studio-context-banner {
+      width: 100%;
+      max-width: 440px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: #A4B8B0;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .meta-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .meta-row-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; width: 44px; }
+    .meta-tag-btn {
+      padding: 3px 9px; border-radius: var(--radius-pill);
+      font-size: 10px; font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: transparent; color: #A4B8B0;
+      cursor: pointer; transition: all 0.15s ease; white-space: nowrap;
+    }
+    .meta-tag-btn.active {
+      background: #0D715F; color: #FFFFFF;
+      border-color: #0D715F; box-shadow: 0 2px 8px rgba(13, 113, 95, 0.3);
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 480px) {
+      body { padding: 0; background: var(--canvas); }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px; background: #FFFFFF;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; font-size: 13px; font-weight: 700;
+      color: var(--ink); flex-shrink: 0;
+    }
+    .notch-island {
+      width: 110px; height: 24px; background: #000; border-radius: 14px;
+    }
+
+    /* Topbar */
+    .review-topbar {
+      height: 52px; background: #FFFFFF;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; border-bottom: 1px solid var(--line);
+      flex-shrink: 0; z-index: 10;
+    }
+    .circle-nav-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--line); background: #FFFFFF;
+      cursor: pointer; color: var(--ink); transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .topbar-center-box { text-align: center; }
+    .topbar-center-title { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.2; }
+    .topbar-center-sub { font-size: 10px; font-weight: 700; color: var(--forest-600); }
+
+    /* Scroll Body */
+    .review-scroll-body {
+      flex: 1; overflow-y: auto;
+      padding: 14px 16px 110px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    /* Section Card */
+    .review-card {
+      background: #FFFFFF; border: 1.5px solid var(--line);
+      border-radius: var(--radius-md); padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-head-title {
+      font-size: 11px; font-weight: 800; color: var(--forest-900);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+
+    /* Order Reference Context */
+    .order-context-box {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: var(--radius-sm);
+      background: var(--line-subtle);
+    }
+    .order-context-thumb {
+      width: 44px; height: 44px; border-radius: var(--radius-sm);
+      object-fit: cover; flex-shrink: 0;
+    }
+    .order-context-info { flex: 1; min-width: 0; }
+    .order-context-name { font-size: 13px; font-weight: 800; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .order-context-meta { font-size: 10.5px; color: var(--ink-muted); margin-top: 1px; }
+
+    /* Interactive Stars Component */
+    .star-picker-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 6px; padding: 12px 0 6px;
+    }
+    .star-icons-row {
+      display: flex; gap: 8px; cursor: pointer;
+    }
+    .star-btn {
+      background: none; border: none; font-size: 34px; line-height: 1;
+      color: #E2E8F0; cursor: pointer; transition: transform 0.12s, color 0.12s;
+    }
+    .star-btn.filled { color: #F59E0B; }
+    .star-btn:hover { transform: scale(1.15); }
+    .star-score-text {
+      font-size: 12px; font-weight: 800; color: #D97706;
+      height: 18px;
+    }
+
+    /* Attribute Chips Row */
+    .attr-chips-grid {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .attr-chip {
+      padding: 6px 11px; border-radius: var(--radius-pill);
+      font-size: 11px; font-weight: 700; color: var(--ink-soft);
+      background: var(--line-subtle); border: 1px solid var(--line);
+      cursor: pointer; transition: all 0.15s ease;
+    }
+    .attr-chip.selected {
+      background: #EFFCF6; border-color: var(--forest-600);
+      color: var(--forest-700); font-weight: 800;
+    }
+
+    /* AD-21 Cascading Toggle Card */
+    .cascading-toggle-box {
+      background: #FAFCFB; border: 1.5px solid var(--forest-100);
+      border-radius: var(--radius-sm); padding: 10px 12px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .cascading-checkbox-label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 800; color: var(--forest-900);
+      cursor: pointer;
+    }
+    .cascading-checkbox-label input {
+      accent-color: var(--forest-600); width: 16px; height: 16px;
+    }
+    .cascading-desc {
+      font-size: 10.5px; color: var(--ink-muted); margin-left: 24px; line-height: 1.35;
+    }
+
+    /* ═══ Per-Provider Custom Review Card (When uncascaded) ═══ */
+    .provider-review-card {
+      background: #FFFFFF; border: 1.5px solid var(--line);
+      border-radius: var(--radius-md); padding: 12px;
+      display: flex; flex-direction: column; gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .pr-head-row {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .pr-name { font-size: 12.5px; font-weight: 800; color: var(--ink); }
+    .pr-role { font-size: 10px; color: var(--ink-muted); }
+    .pr-stars-row {
+      display: flex; gap: 3px; font-size: 18px; color: #F59E0B; cursor: pointer;
+    }
+    .pr-notes-input {
+      width: 100%; border: 1px solid var(--line);
+      border-radius: var(--radius-sm); padding: 8px 10px;
+      font-family: inherit; font-size: 11.5px; color: var(--ink);
+      resize: none; outline: none; background: #FAFCFB;
+      transition: border-color 0.15s;
+    }
+    .pr-notes-input:focus { border-color: var(--forest-600); background: #FFFFFF; }
+    .pr-photo-strip {
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .pr-btn-add-photo {
+      height: 28px; padding: 0 10px; border-radius: var(--radius-pill);
+      border: 1px dashed var(--line); background: #FFFFFF;
+      font-family: inherit; font-size: 10.5px; font-weight: 700;
+      color: var(--forest-600); display: inline-flex; align-items: center;
+      gap: 4px; cursor: pointer; transition: all 0.15s ease;
+    }
+    .pr-btn-add-photo:active { background: #EFFCF6; border-color: var(--forest-600); }
+
+    /* Textarea */
+    .review-textarea {
+      width: 100%; border: 1px solid var(--line);
+      border-radius: var(--radius-sm); padding: 10px 12px;
+      font-family: inherit; font-size: 12px; color: var(--ink);
+      resize: none; outline: none; transition: border-color 0.15s;
+    }
+    .review-textarea:focus { border-color: var(--forest-600); }
+
+    /* Evidence & Photo Strip */
+    .evidence-attach-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; flex-wrap: wrap; padding: 4px 0;
+    }
+    .evidence-thumb-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 8px; border-radius: var(--radius-sm);
+      background: var(--line-subtle); border: 1px solid var(--line);
+      font-size: 11px; font-weight: 700; color: var(--ink-soft);
+    }
+    .evidence-thumb-chip img {
+      width: 22px; height: 22px; border-radius: 4px; object-fit: cover;
+    }
+    .btn-remove-chip {
+      border: none; background: none; color: #DC2626; cursor: pointer;
+      font-size: 13px; font-weight: 800; padding: 0 2px; line-height: 1;
+    }
+
+    /* Glovo Wave Organic Asymmetrical Bottom Drawer (Exact browse-mobile replica) */
+    .glovo-drawer-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .glovo-drawer-overlay.open,
+    .glovo-drawer-overlay.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .glovo-drawer-sheet {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 85%;
+      background: transparent;
+    }
+    .glovo-drawer-overlay.open .glovo-drawer-sheet,
+    .glovo-drawer-overlay.is-open .glovo-drawer-sheet {
+      transform: translateY(0);
+    }
+    .glovo-wave-cap {
+      width: 100%;
+      height: 34px;
+      margin-bottom: -1px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .drawer-content-box {
+      background: #FFFFFF;
+      padding: 6px 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .drawer-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .drawer-title-txt {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--brand-navy);
+    }
+    .drawer-close-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: #FFFFFF;
+      font-size: 16px;
+      color: var(--ink-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* ═══ Photo Picker Grid & Upload Actions ═══ */
+    .photo-grid-select {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+      margin-top: 4px;
+    }
+    .photo-cell {
+      position: relative; aspect-ratio: 1; border-radius: var(--radius-sm);
+      overflow: hidden; border: 1.5px solid var(--line); cursor: pointer;
+      background: #FFFFFF;
+    }
+    .photo-cell img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .photo-cell.selected {
+      border-color: var(--forest-600);
+      box-shadow: 0 0 0 2px rgba(13, 113, 95, 0.25);
+    }
+    .photo-check-badge {
+      position: absolute; top: 3px; right: 3px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--forest-600); color: #FFF;
+      font-size: 9px; font-weight: 800;
+      display: none; align-items: center; justify-content: center;
+    }
+    .photo-cell.selected .photo-check-badge { display: flex; }
+    .photo-label-sub {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(18, 32, 28, 0.75); color: #FFF;
+      font-size: 8px; font-weight: 700; text-align: center;
+      padding: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .upload-actions-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .upload-tile-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px; border-radius: var(--radius-sm);
+      background: #FFFFFF; border: 1.5px solid var(--line);
+      font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ink);
+      cursor: pointer; transition: all 0.15s ease;
+    }
+    .upload-tile-btn:hover {
+      border-color: var(--forest-600); color: var(--forest-700);
+    }
+    .upload-tile-btn:active {
+      background: #EFFCF6; border-color: var(--forest-600); color: var(--forest-700);
+    }
+    /* Policy / Anti-Sybil Notice */
+    .anti-sybil-banner {
+      background: #EFFCF6; border: 1px solid var(--forest-100);
+      border-radius: var(--radius-sm); padding: 8px 10px;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .anti-sybil-banner svg { flex-shrink: 0; color: var(--forest-600); margin-top: 1px; }
+    .anti-sybil-text { font-size: 10.5px; color: var(--forest-900); line-height: 1.4; }
+
+    /* Fixed Bottom Dock */
+    .fixed-review-bottom-dock {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: #FFFFFF; border-top: 1px solid var(--line);
+      padding: 10px 16px 16px; display: flex; flex-direction: column;
+      gap: 6px; box-shadow: var(--shadow-dock); z-index: 20;
+    }
+    .btn-submit-review {
+      height: 46px; border-radius: var(--radius-pill);
+      background: var(--forest-600); color: #FFFFFF;
+      font-family: inherit; font-size: 13.5px; font-weight: 800;
+      border: none; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 8px; transition: background 0.15s;
+      box-shadow: 0 4px 14px rgba(13, 113, 95, 0.3);
+    }
+    .btn-submit-review:hover { background: var(--forest-700); }
+
+    /* ═══ Celebratory Submitted Peak-End Card ═══ */
+    .peak-end-hero {
+      text-align: center; display: flex; flex-direction: column;
+      align-items: center; gap: 10px; padding: 20px 10px 10px;
+    }
+    .peak-end-circle {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #DCFCE7; color: #166534;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(22, 101, 52, 0.15);
+    }
+    .peak-end-title { font-size: 17px; font-weight: 800; color: var(--ink); }
+    .peak-end-sub { font-size: 11.5px; color: var(--ink-soft); line-height: 1.4; max-width: 280px; }
+
+    /* Rollup Scores Grid */
+    .rollup-scores-card {
+      background: #FFFFFF; border: 1.5px solid var(--line);
+      border-radius: var(--radius-md); padding: 14px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .rollup-item {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--line-subtle);
+    }
+    .rollup-item:last-child { border-bottom: none; }
+    .rollup-name { font-weight: 700; color: var(--ink); }
+    .rollup-star {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      font-weight: 800; color: #D97706; display: inline-flex; align-items: center; gap: 3px;
+    }
+
+    /* ═══ Sealed & Blinded 72h Hold Card ═══ */
+    .sealed-hero {
+      text-align: center; display: flex; flex-direction: column;
+      align-items: center; gap: 8px; padding: 18px 10px 8px;
+    }
+    .sealed-padlock-circle {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #FEF3C7; color: #B45309;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(180, 83, 9, 0.15);
+    }
+    .sealed-title { font-size: 16px; font-weight: 800; color: var(--ink); }
+    .sealed-timer-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: var(--radius-pill);
+      background: #FFFBEB; border: 1px solid #FDE68A;
+      font-size: 11px; font-weight: 800; color: #92400E;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .sealed-info-card {
+      background: #FFFFFF; border: 1.5px solid var(--line);
+      border-radius: var(--radius-md); padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .sealed-summary-preview {
+      background: var(--line-subtle); border-radius: var(--radius-sm);
+      padding: 10px; display: flex; flex-direction: column; gap: 4px;
+      font-size: 11.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Context Banner -->
+  <div class="studio-context-banner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <span style="font-size:13px; font-weight:800; color:#F8FAFC; font-family:Outfit,sans-serif;">Review &amp; Reputation</span>
+      <span style="font-size:10px; color:#64748B; font-weight:600;">AD-21 · UX-016 · Bilateral Tiwala</span>
+    </div>
+
+    <div class="meta-row">
+      <span class="meta-row-label">Actor</span>
+      <button class="meta-tag-btn active" onclick="setActor('buyer')">🧑 Buyer (Maria)</button>
+      <button class="meta-tag-btn" onclick="setActor('provider')">🔧 Provider (Kuya Ben)</button>
+    </div>
+    <div class="meta-row">
+      <span class="meta-row-label">Mode</span>
+      <button class="meta-tag-btn active" onclick="setChainMode('chain')">Multi-Slot Deal Chain (#DC-892)</button>
+      <button class="meta-tag-btn" onclick="setChainMode('solo')">Solo Order (#ORD-619)</button>
+    </div>
+    <div class="meta-row">
+      <span class="meta-row-label">Stage</span>
+      <button class="meta-tag-btn active" onclick="setStage('compose')">Compose</button>
+      <button class="meta-tag-btn" onclick="setStage('sealed')">Sealed (72h Hold)</button>
+      <button class="meta-tag-btn" onclick="setStage('revealed')">Revealed (Published)</button>
+    </div>
+  </div>
+
+  <!-- Mobile Phone Shell -->
+  <div class="phone-shell">
+
+    <!-- Phone Status Bar -->
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div style="font-size: 11px;">5G</div>
+    </div>
+
+    <!-- Topbar -->
+    <header class="review-topbar">
+      <a href="order-detail-mobile.html" class="circle-nav-btn" aria-label="Back to Order">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <div class="topbar-center-box">
+        <div class="topbar-center-title" id="topbar-title">Rate Project</div>
+        <div class="topbar-center-sub" id="topbar-sub">#ORD-7721 · Bilateral Tiwala</div>
+      </div>
+      <button type="button" class="circle-nav-btn" onclick="alert('Review Invariants (AD-21):\n• Cascading review across Deal Chain slots\n• Granular override per provider\n• Dual rollup to listings & catalog recipes\n• Blinded 72-hour anti-retaliation hold\n• Bayesian dampening anti-Sybil protection')" title="Review Policy">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </button>
+    </header>
+
+    <!-- Scroll Body -->
+    <main class="review-scroll-body" id="scroll-body">
+      <!-- Injected by render() -->
+    </main>
+
+    <!-- Bottom Dock -->
+    <footer class="fixed-review-bottom-dock" id="bottom-dock">
+      <!-- Injected by render() -->
+    </footer>
+
+    <!-- Glovo Wave Photo Picker Drawer (Recent Order/Chat Photos + Upload) -->
+    <div class="glovo-drawer-overlay" id="photo-picker-drawer" onclick="closePhotoPickerDrawer()">
+      <div class="glovo-drawer-sheet" onclick="event.stopPropagation()">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+
+        <div class="drawer-content-box">
+          <div class="drawer-header-row">
+            <div>
+              <div class="drawer-title-txt" id="photo-drawer-title">Attach Photo</div>
+              <div style="font-size: 11px; color: var(--ink-muted);">Order &amp; chat evidence from #ORD-7721</div>
+            </div>
+            <button type="button" class="drawer-close-circle" onclick="closePhotoPickerDrawer()" aria-label="Close">&times;</button>
+          </div>
+
+          <!-- Section 1: Recent Order & Chat Photos -->
+          <div style="font-size:11px; font-weight:800; color:var(--ink); margin-top:2px;">Recent Job &amp; Chat Photos</div>
+          <div class="photo-grid-select" id="recent-photos-grid">
+            <div class="photo-cell" onclick="togglePhotoSelect(this, 'ac-clean.jpg', '/photos/ac-clean.jpg')">
+              <img src="/photos/ac-clean.jpg" alt="">
+              <div class="photo-check-badge">✓</div>
+              <div class="photo-label-sub">Coil Wash</div>
+            </div>
+            <div class="photo-cell" onclick="togglePhotoSelect(this, 'ac-capacitor.jpg', '/photos/ac-capacitor.jpg')">
+              <img src="/photos/ac-capacitor.jpg" alt="">
+              <div class="photo-check-badge">✓</div>
+              <div class="photo-label-sub">Capacitor</div>
+            </div>
+            <div class="photo-cell" onclick="togglePhotoSelect(this, 'courier.jpg', '/photos/courier.jpg')">
+              <img src="/photos/courier.jpg" alt="">
+              <div class="photo-check-badge">✓</div>
+              <div class="photo-label-sub">Delivery</div>
+            </div>
+            <div class="photo-cell" onclick="togglePhotoSelect(this, 'req-electrician.jpg', '/photos/req-electrician.jpg')">
+              <img src="/photos/req-electrician.jpg" alt="">
+              <div class="photo-check-badge">✓</div>
+              <div class="photo-label-sub">Diagnostic</div>
+            </div>
+          </div>
+
+          <!-- Section 2: Upload Actions (Same as Chat) -->
+          <div style="font-size:11px; font-weight:800; color:var(--ink); margin-top:6px;">Upload New</div>
+          <div class="upload-actions-grid">
+            <button type="button" class="upload-tile-btn" onclick="triggerDeviceUpload('camera')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span>Camera</span>
+            </button>
+            <button type="button" class="upload-tile-btn" onclick="triggerDeviceUpload('gallery')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              <span>Library</span>
+            </button>
+          </div>
+
+          <button type="button" class="btn-submit-review" style="width:100%; margin-top:6px;" onclick="applyPhotoSelection()">
+            Attach Photo
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentActor = 'buyer';
+    let currentChainMode = 'chain';
+    let currentStage = 'compose';
+
+    // Parse URL params for cross-session deep links
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('actor')) currentActor = urlParams.get('actor');
+    if (urlParams.has('mode')) currentChainMode = urlParams.get('mode');
+    if (urlParams.has('stage')) currentStage = urlParams.get('stage');
+    let currentRating = 5;
+    let isCascading = true;
+
+    let generalReview = {
+      note: 'Super fast coordination! Kuya Danny arrived with the part right as Kuya Ben finished disassembly. Aircon is ice-cold again.',
+      photos: [
+        { name: 'ac-clean.jpg', url: '/photos/ac-clean.jpg' }
+      ]
+    };
+    let providerReviews = {
+      ben: {
+        name: 'Kuya Ben',
+        role: 'Labor',
+        photos: [
+          { name: 'ac-clean.jpg', url: '/photos/ac-clean.jpg' }
+        ]
+      },
+      hardware: {
+        name: 'Tagudin Hardware',
+        role: 'Parts',
+        rating: 5,
+        note: 'Had exact 35uF capacitor in stock at counter lane 2. Official receipt provided.',
+        photos: []
+      },
+      danny: {
+        name: 'Danny Express',
+        role: 'Courier',
+        rating: 4,
+        note: 'Fast motorcycle relay from hardware counter directly to side gate.',
+        photos: []
+      }
+    };
+
+    let activePhotoTarget = 'general';
+    let selectedDrawerPhoto = null;
+
+    const starLabels = [
+      '1.0 · Significant delays',
+      '2.0 · Poor coordination',
+      '3.0 · Average delivery & labor',
+      '4.0 · Good, timely completion',
+      '5.0 · Exceptional Project Execution'
+    ];
+
+    function setActor(a) { currentActor = a; render(); }
+    function setChainMode(m) { currentChainMode = m; render(); }
+    function setStage(s) { currentStage = s; render(); }
+
+    function setRating(val) {
+      currentRating = val;
+      render();
+    }
+
+    function toggleCascading(chk) {
+      isCascading = chk.checked;
+      render();
+    }
+
+    function toggleChip(el) {
+      el.classList.toggle('selected');
+    }
+
+    function setGeneralNote(val) {
+      generalReview.note = val;
+    }
+
+    function setProviderRating(key, stars) {
+      if (providerReviews[key]) {
+        providerReviews[key].rating = stars;
+        render();
+      }
+    }
+
+    function setProviderNote(key, val) {
+      if (providerReviews[key]) {
+        providerReviews[key].note = val;
+      }
+    }
+
+    // ─── Photo Drawer Functions ───
+    function openPhotoPicker(target) {
+      activePhotoTarget = target;
+      selectedDrawerPhoto = null;
+      const drawer = document.getElementById('photo-picker-drawer');
+      const title = document.getElementById('photo-drawer-title');
+      if (title) {
+        if (target === 'general') title.innerText = 'Attach General Photo';
+        else if (target === 'ben') title.innerText = 'Attach Photo · Kuya Ben';
+        else if (target === 'hardware') title.innerText = 'Attach Photo · Hardware';
+        else if (target === 'danny') title.innerText = 'Attach Photo · Danny Express';
+      }
+      document.querySelectorAll('#recent-photos-grid .photo-cell').forEach(c => c.classList.remove('selected'));
+      drawer.classList.add('open');
+      drawer.classList.add('is-open');
+    }
+
+    function closePhotoPickerDrawer() {
+      const drawer = document.getElementById('photo-picker-drawer');
+      drawer.classList.remove('open');
+      drawer.classList.remove('is-open');
+    }
+
+    function togglePhotoSelect(cell, name, url) {
+      document.querySelectorAll('#recent-photos-grid .photo-cell').forEach(c => c.classList.remove('selected'));
+      cell.classList.add('selected');
+      selectedDrawerPhoto = { name, url };
+    }
+
+    function triggerDeviceUpload(type) {
+      const demoUrl = type === 'camera'
+        ? 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=200&auto=format&fit=crop&q=80'
+        : 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=200&auto=format&fit=crop&q=80';
+      const demoName = type === 'camera' ? 'camera_capture.jpg' : 'library_upload.jpg';
+      selectedDrawerPhoto = { name: demoName, url: demoUrl };
+      applyPhotoSelection();
+    }
+
+    function applyPhotoSelection() {
+      if (!selectedDrawerPhoto) {
+        selectedDrawerPhoto = { name: 'ac-clean.jpg', url: '/photos/ac-clean.jpg' };
+      }
+      if (activePhotoTarget === 'general') {
+        generalReview.photos.push(selectedDrawerPhoto);
+      } else if (providerReviews[activePhotoTarget]) {
+        providerReviews[activePhotoTarget].photos.push(selectedDrawerPhoto);
+      }
+      closePhotoPickerDrawer();
+      render();
+    }
+
+    function removePhoto(target, idx) {
+      if (target === 'general') {
+        generalReview.photos.splice(idx, 1);
+      } else if (providerReviews[target]) {
+        providerReviews[target].photos.splice(idx, 1);
+      }
+      render();
+    }
+
+    function renderPhotoChips(target) {
+      const list = target === 'general' ? generalReview.photos : (providerReviews[target]?.photos || []);
+      return list.map((p, idx) => `
+        <div class="evidence-thumb-chip">
+          <img src="${p.url}" alt="">
+          <span>${p.name}</span>
+          <button type="button" class="btn-remove-chip" onclick="removePhoto('${target}', ${idx})">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    function submitReview() {
+      setStage('sealed');
+    }
+
+    function updateMeta() {
+      document.querySelectorAll('.meta-row:nth-child(2) .meta-tag-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(currentActor));
+      });
+      document.querySelectorAll('.meta-row:nth-child(3) .meta-tag-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(currentChainMode === 'chain' ? 'multi-slot' : 'solo'));
+      });
+      document.querySelectorAll('.meta-row:nth-child(4) .meta-tag-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(currentStage));
+      });
+    }
+
+    function render() {
+      updateMeta();
+      const body = document.getElementById('scroll-body');
+      const dock = document.getElementById('bottom-dock');
+      const topTitle = document.getElementById('topbar-title');
+      const topSub = document.getElementById('topbar-sub');
+
+      topTitle.innerText = currentActor === 'buyer' ? 'Rate Service Team' : 'Customer Reliability';
+      topSub.innerText = currentChainMode === 'chain' ? '#DC-892 · Deal Chain' : '#ORD-619 · Solo Order';
+
+      // ─── STAGE 3: REVEALED (PEAK-END) ───
+      if (currentStage === 'revealed') {
+        body.innerHTML = `
+          <div class="peak-end-hero">
+            <div class="peak-end-circle">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="peak-end-title">Reviews Published</div>
+            <div class="peak-end-sub">
+              Ratings unblinded and recorded in Tagudin community reputation scores.
+            </div>
+          </div>
+
+          <section class="rollup-scores-card">
+            <div class="card-head-title">Reputation Updates</div>
+            ${currentChainMode === 'chain' ? `
+              <div class="rollup-item">
+                <span class="rollup-name">Kuya Ben · Labor</span>
+                <span class="rollup-star">★ 4.9 <span style="color:var(--ink-muted); font-size:10px;">(+1)</span></span>
+              </div>
+              <div class="rollup-item">
+                <span class="rollup-name">Tagudin Hardware · Parts</span>
+                <span class="rollup-star">★ 5.0 <span style="color:var(--ink-muted); font-size:10px;">(+1)</span></span>
+              </div>
+              <div class="rollup-item">
+                <span class="rollup-name">Danny Express · Courier</span>
+                <span class="rollup-star">★ 4.8 <span style="color:var(--ink-muted); font-size:10px;">(+1)</span></span>
+              </div>
+              <div class="rollup-item" style="background:#F0FDF4; padding:6px; border-radius:6px; margin-top:4px;">
+                <span class="rollup-name" style="color:#166534;">Recipe #CR-892 Score</span>
+                <span class="rollup-star" style="color:#166534;">★ 4.95</span>
+              </div>
+            ` : `
+              <div class="rollup-item">
+                <span class="rollup-name">Kuya Jun Bataller</span>
+                <span class="rollup-star">★ 4.9 <span style="color:var(--ink-muted); font-size:10px;">(+1)</span></span>
+              </div>
+            `}
+          </section>
+
+          <section class="review-card" style="align-items:center; text-align:center; gap:6px;">
+            <button class="btn-submit-review" style="width:100%; background:#0F2F58;" onclick="alert('Deal Chain combination saved to My Picks!')">
+              🔁 Rebook Team
+            </button>
+          </section>
+        `;
+
+        dock.innerHTML = `
+          <a href="orders-mobile.html" class="btn-submit-review" style="text-decoration:none; background:var(--forest-600);">
+            Done · Back to Orders
+          </a>
+        `;
+        return;
+      }
+
+      // ─── STAGE 2: SEALED (72H BLINDED HOLD) ───
+      if (currentStage === 'sealed') {
+        body.innerHTML = `
+          <div class="sealed-hero">
+            <div class="sealed-padlock-circle">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="sealed-title">Feedback Sealed</div>
+            <div class="sealed-timer-pill">
+              ⏱️ Unlocks in 71h 58m · Sep 20, 2:45 PM
+            </div>
+          </div>
+
+          <section class="sealed-info-card">
+            <div class="card-head-title">Submitted Summary</div>
+            ${currentActor === 'buyer' ? `
+              <div class="sealed-summary-preview">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong>${currentRating}.0 ★ Project Quality</strong>
+                  <span style="font-size:10px; color:var(--forest-600); font-weight:800;">${isCascading ? 'Cascading' : 'Custom Nodes'}</span>
+                </div>
+                <div style="font-size:11px; color:var(--ink-muted); margin-top:2px;">
+                  ${generalReview.photos.length} photos attached
+                </div>
+                <div style="font-size:11px; color:var(--ink-soft); margin-top:4px; font-style:italic;">
+                  “${generalReview.note.substring(0, 75)}...”
+                </div>
+              </div>
+            ` : `
+              <div class="sealed-summary-preview">
+                <strong>Settlement Verified · Maria Santos</strong>
+                <div style="font-size:11px; color:var(--ink-muted); margin-top:2px;">
+                  Cash Ready · Unit Accessible · Respectful
+                </div>
+              </div>
+            `}
+
+            <div style="font-size:10.5px; color:var(--ink-muted); text-align:center; padding-top:4px;">
+              🔒 Sealed until both review or in 72h
+            </div>
+          </section>
+
+          <section class="review-card" style="align-items:center; text-align:center; gap:6px; background:#F8FAFC;">
+            <div style="font-size:11.5px; font-weight:800; color:var(--ink);">Prototype Simulator</div>
+            <button type="button" class="btn-submit-review" style="width:100%; height:38px; font-size:12px; background:#0F2F58;" onclick="setStage('revealed')">
+              Simulate Counterparty Unblind ›
+            </button>
+          </section>
+        `;
+
+        dock.innerHTML = `
+          <a href="orders-mobile.html" class="btn-submit-review" style="text-decoration:none; background:var(--forest-600);">
+            Done · Back to Orders
+          </a>
+        `;
+        return;
+      }
+
+      // ─── STAGE 1: COMPOSE (BUYER) ───
+      if (currentActor === 'buyer') {
+        body.innerHTML = `
+          <section class="order-context-box">
+            <img src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=100&auto=format&fit=crop&q=80" alt="" class="order-context-thumb">
+            <div class="order-context-info">
+              <div class="order-context-name">${currentChainMode === 'chain' ? 'Fiesta AC Overhaul (#DC-892)' : 'Tricycle Poblacion Route (#ORD-619)'}</div>
+              <div class="order-context-meta">Settled ₱${currentChainMode === 'chain' ? '610.00' : '45.00'} · External Cash · Sep 17</div>
+            </div>
+          </section>
+
+          <!-- Star Rating Picker -->
+          <section class="review-card">
+            <div class="card-head-title">Overall Project Quality</div>
+            <div class="star-picker-wrap">
+              <div class="star-icons-row">
+                ${[1, 2, 3, 4, 5].map(star => `
+                  <button type="button" class="star-btn ${star <= currentRating ? 'filled' : ''}" onclick="setRating(${star})">★</button>
+                `).join('')}
+              </div>
+              <div class="star-score-text">${starLabels[currentRating - 1]}</div>
+            </div>
+
+            <div style="font-size:11px; font-weight:700; color:var(--ink); margin-top:2px;">What went well?</div>
+            <div class="attr-chips-grid">
+              <span class="attr-chip selected" onclick="toggleChip(this)">On Time</span>
+              <span class="attr-chip selected" onclick="toggleChip(this)">Clean Workspace</span>
+              <span class="attr-chip selected" onclick="toggleChip(this)">Expert Fix</span>
+              <span class="attr-chip" onclick="toggleChip(this)">Fair Pricing</span>
+              <span class="attr-chip" onclick="toggleChip(this)">Fast Delivery</span>
+              <span class="attr-chip" onclick="toggleChip(this)">Respectful</span>
+            </div>
+          </section>
+
+          ${currentChainMode === 'chain' ? `
+            <!-- Cascading Toggle -->
+            <div class="cascading-toggle-box">
+              <label class="cascading-checkbox-label">
+                <input type="checkbox" id="check-cascading" ${isCascading ? 'checked' : ''} onchange="toggleCascading(this)">
+                <span>Apply rating to all 3 providers</span>
+              </label>
+            </div>
+
+            <!-- Per-Provider Custom Details (Revealed when uncascaded) -->
+            ${!isCascading ? `
+              <div style="font-size:11px; font-weight:800; color:var(--forest-900); text-transform:uppercase; letter-spacing:0.04em; margin-top:2px;">
+                Per-Provider Reviews &amp; Photos
+              </div>
+
+              <!-- 1. Kuya Ben -->
+              <section class="provider-review-card">
+                <div class="pr-head-row">
+                  <div>
+                    <div class="pr-name">Kuya Ben</div>
+                    <div class="pr-role">Slot 1 · AC Labor</div>
+                  </div>
+                  <div class="pr-stars-row">
+                    ${[1, 2, 3, 4, 5].map(s => `<span onclick="setProviderRating('ben', ${s})">${s <= providerReviews.ben.rating ? '★' : '☆'}</span>`).join('')}
+                  </div>
+                </div>
+                <textarea class="pr-notes-input" rows="2" placeholder="Custom note for Kuya Ben..." oninput="setProviderNote('ben', this.value)">${providerReviews.ben.note}</textarea>
+                <div class="pr-photo-strip">
+                  ${renderPhotoChips('ben')}
+                  <button type="button" class="pr-btn-add-photo" onclick="openPhotoPicker('ben')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Photo</span>
+                  </button>
+                </div>
+              </section>
+
+              <!-- 2. Tagudin Hardware -->
+              <section class="provider-review-card">
+                <div class="pr-head-row">
+                  <div>
+                    <div class="pr-name">Tagudin Hardware</div>
+                    <div class="pr-role">Slot 2 · 35uF Capacitor</div>
+                  </div>
+                  <div class="pr-stars-row">
+                    ${[1, 2, 3, 4, 5].map(s => `<span onclick="setProviderRating('hardware', ${s})">${s <= providerReviews.hardware.rating ? '★' : '☆'}</span>`).join('')}
+                  </div>
+                </div>
+                <textarea class="pr-notes-input" rows="2" placeholder="Custom note for Tagudin Hardware..." oninput="setProviderNote('hardware', this.value)">${providerReviews.hardware.note}</textarea>
+                <div class="pr-photo-strip">
+                  ${renderPhotoChips('hardware')}
+                  <button type="button" class="pr-btn-add-photo" onclick="openPhotoPicker('hardware')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Photo</span>
+                  </button>
+                </div>
+              </section>
+
+              <!-- 3. Danny Express -->
+              <section class="provider-review-card">
+                <div class="pr-head-row">
+                  <div>
+                    <div class="pr-name">Danny Express</div>
+                    <div class="pr-role">Slot 3 · Courier</div>
+                  </div>
+                  <div class="pr-stars-row">
+                    ${[1, 2, 3, 4, 5].map(s => `<span onclick="setProviderRating('danny', ${s})">${s <= providerReviews.danny.rating ? '★' : '☆'}</span>`).join('')}
+                  </div>
+                </div>
+                <textarea class="pr-notes-input" rows="2" placeholder="Custom note for Danny Express..." oninput="setProviderNote('danny', this.value)">${providerReviews.danny.note}</textarea>
+                <div class="pr-photo-strip">
+                  ${renderPhotoChips('danny')}
+                  <button type="button" class="pr-btn-add-photo" onclick="openPhotoPicker('danny')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Photo</span>
+                  </button>
+                </div>
+              </section>
+            ` : ''}
+          ` : ''}
+
+          <!-- Written Review Notes (at the bottom) -->
+          <section class="review-card">
+            <div class="card-head-title">Review Note</div>
+            <textarea class="review-textarea" rows="3" placeholder="Tell the Tagudin community about your experience..." oninput="setGeneralNote(this.value)">${generalReview.note}</textarea>
+
+            <div class="evidence-attach-row">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                ${renderPhotoChips('general')}
+                <button type="button" class="pr-btn-add-photo" onclick="openPhotoPicker('general')">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Photo</span>
+                </button>
+              </div>
+            </div>
+          </section>
+        `;
+
+        dock.innerHTML = `
+          <button class="btn-submit-review" onclick="submitReview()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            <span>Submit Verified Review</span>
+          </button>
+          <div style="font-size:10px; color:var(--ink-muted); text-align:center; margin-top:2px;">
+            🔒 Sealed until both review · 72h window
+          </div>
+        `;
+        return;
+      }
+
+      // ─── STAGE 1: COMPOSE (PROVIDER RATING BUYER) ───
+      body.innerHTML = `
+        <section class="order-context-box">
+          <div style="width:44px; height:44px; border-radius:50%; background:#0F2F58; color:#FFF; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; flex-shrink:0;">
+            MS
+          </div>
+          <div class="order-context-info">
+            <div class="order-context-name">Maria Santos</div>
+            <div class="order-context-meta">Customer · Barangay Centro · #ORD-7721</div>
+          </div>
+        </section>
+
+        <!-- Customer Reliability Confirmation -->
+        <section class="review-card">
+          <div class="card-head-title">Customer Interaction</div>
+          <div class="attr-chips-grid" style="margin-top:2px;">
+            <span class="attr-chip selected" onclick="toggleChip(this)">✓ Cash Ready · ₱610</span>
+            <span class="attr-chip selected" onclick="toggleChip(this)">✓ Unit Accessible</span>
+            <span class="attr-chip selected" onclick="toggleChip(this)">✓ Respectful</span>
+            <span class="attr-chip" onclick="toggleChip(this)">Clear Instructions</span>
+          </div>
+        </section>
+
+        <!-- Notes -->
+        <section class="review-card">
+          <div class="card-head-title">Notes (Optional)</div>
+          <textarea class="review-textarea" rows="3" placeholder="Notes for support records...">Maria had exact cash ready on site. Unit was unblocked and ready for cleaning.</textarea>
+        </section>
+      `;
+
+      dock.innerHTML = `
+        <button class="btn-submit-review" onclick="submitReview()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          <span>Confirm Reliability</span>
+        </button>
+        <div style="font-size:10px; color:var(--ink-muted); text-align:center; margin-top:2px;">
+          🔒 Sealed until both review · 72h window
+        </div>
+      `;
+    }
+
+    window.addEventListener('DOMContentLoaded', render);
+  </script>
+</body>
+</html>

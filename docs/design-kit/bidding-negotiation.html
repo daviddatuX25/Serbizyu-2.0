@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · In-Chat Negotiation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-brand-navy: #0F2F58;
+      --color-brand-teal: #0D715F;
+      --color-brand-teal-light: #E8F7F1;
+      --color-brand-yellow: #FFC244;
+      --color-brand-yellow-dark: #D97706;
+      --color-brand-yellow-light: #FEF8E7;
+      --color-ink: #12201C;
+      --color-ink-muted: #64748B;
+      --color-canvas: #F8F9FA;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-border-subtle: #F1F5F9;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+      --shadow-sm: 0 1px 3px rgba(15, 47, 88, 0.06);
+      --shadow-dock: 0 -4px 20px rgba(18, 32, 28, 0.08);
+      --shadow-drawer: 0 -12px 36px rgba(15, 47, 88, 0.22);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: #0B132B;
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .studio-context-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #A4B8B0;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .studio-crumb { display: flex; align-items: center; gap: 6px; }
+    .studio-pill-tag {
+      background: rgba(232, 247, 241, 0.12);
+      border: 1px solid rgba(232, 247, 241, 0.25);
+      color: #A7F3D0;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: #F1F5F9;
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: #F1F5F9; }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-ink);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .notch-island {
+      width: 110px;
+      height: 24px;
+      background: #000000;
+      border-radius: 16px;
+      margin: 0 auto;
+    }
+
+    /* Clean 1:1 In-Chat Header */
+    .chat-header-bar {
+      height: 56px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .chat-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .circle-back-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-ink);
+      cursor: pointer;
+    }
+    .provider-avatar-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--color-brand-navy);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .provider-title-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .provider-name-text {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--color-ink);
+    }
+    .provider-meta-sub {
+      font-size: 10.5px;
+      color: var(--color-ink-muted);
+    }
+    .active-deal-pill {
+      font-size: 11px;
+      font-weight: 800;
+      background: var(--color-brand-teal-light);
+      border: 1px solid rgba(13, 113, 95, 0.25);
+      color: var(--color-brand-teal);
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+
+    /* Chat Messages Scrollable Area */
+    .chat-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 14px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Message Bubbles */
+    .chat-bubble-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      max-width: 86%;
+    }
+    .chat-bubble-row.resident {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    .chat-msg-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--color-brand-navy);
+      color: #FFF;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .chat-bubble-box {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: var(--color-ink);
+      box-shadow: var(--shadow-sm);
+    }
+    .chat-bubble-row.resident .chat-bubble-box {
+      background: var(--color-brand-navy);
+      color: #FFFFFF;
+      border-color: var(--color-brand-navy);
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-timestamp {
+      font-size: 9.5px;
+      color: var(--color-ink-muted);
+      margin-top: 4px;
+      text-align: right;
+    }
+    .chat-bubble-row.resident .chat-timestamp {
+      color: #A4B8D0;
+    }
+
+    /* In-Chat Contractual Proposal Card */
+    .in-chat-proposal-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--color-brand-teal);
+      border-radius: 14px;
+      padding: 12px;
+      margin: 4px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(13, 113, 95, 0.12);
+    }
+    .in-chat-proposal-card.superseded {
+      border-color: var(--color-border);
+      background: #FAFCFB;
+      opacity: 0.78;
+    }
+    .proposal-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .proposal-status-badge {
+      font-size: 9.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      letter-spacing: 0.04em;
+    }
+    .proposal-status-badge.active {
+      background: var(--color-brand-teal-light);
+      color: var(--color-brand-teal);
+      border: 1px solid rgba(13, 113, 95, 0.2);
+    }
+    .proposal-status-badge.superseded {
+      background: #F1F5F9;
+      color: var(--color-ink-muted);
+    }
+    .proposal-title-txt {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--color-ink);
+    }
+    .proposal-breakdown-box {
+      background: var(--color-canvas);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .breakdown-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: #334155;
+    }
+    .breakdown-line.total {
+      border-top: 1px solid var(--color-border);
+      padding-top: 5px;
+      margin-top: 2px;
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--color-ink);
+    }
+    .proposal-actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .btn-counter-drawer {
+      height: 38px;
+      background: #FFFFFF;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-pill);
+      color: var(--color-ink);
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .btn-accept-proposal {
+      height: 38px;
+      background: var(--color-brand-navy);
+      border: none;
+      border-radius: var(--radius-pill);
+      color: #FFFFFF;
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    /* Bottom Chat Input Dock */
+    .chat-bottom-dock {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      padding: 10px 14px 18px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      z-index: 30;
+      box-shadow: var(--shadow-dock);
+    }
+    .chat-input-field {
+      flex: 1;
+      height: 42px;
+      background: var(--color-canvas);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-pill);
+      padding: 0 14px;
+      font-family: inherit;
+      font-size: 12.5px;
+      color: var(--color-ink);
+    }
+    .chat-input-field:focus {
+      outline: none;
+      background: #FFFFFF;
+      border-color: var(--color-brand-navy);
+    }
+    .btn-send-chat {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--color-brand-navy);
+      border: none;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Glovo Wave Asymmetrical Bottom Drawer for Counter Negotiation */
+    .glovo-drawer-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(18, 32, 28, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .glovo-drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .glovo-drawer-sheet {
+      width: 100%;
+      background: #FFFFFF;
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-drawer);
+    }
+    .glovo-drawer-overlay.open .glovo-drawer-sheet {
+      transform: translateY(0);
+    }
+    .glovo-wave-cap {
+      width: 100%;
+      height: 28px;
+      display: block;
+      margin-bottom: -1px;
+    }
+    .drawer-content-box {
+      padding: 4px 18px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .drawer-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+    .drawer-title-txt {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--color-ink);
+    }
+
+    .node-toggle-card {
+      border: 1.5px solid var(--color-border);
+      background: #FAFCFB;
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .node-toggle-card.selected {
+      background: #F0FDF4;
+      border-color: #86EFAC;
+    }
+
+    .stepper-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--color-canvas);
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+    }
+    .stepper-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--color-border);
+      background: #FFF;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .stepper-val-txt {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--color-brand-navy);
+    }
+
+    .btn-send-counter {
+      width: 100%;
+      height: 48px;
+      border-radius: var(--radius-pill);
+      background: var(--color-brand-navy);
+      color: #FFF;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="studio-context-banner">
+    <div class="studio-crumb">
+      <span>1:1 Pre-Order Negotiation</span>
+      <span>&rsaquo;</span>
+      <span style="color:#FFF;" id="crumb-role-label">Buyer View</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <button type="button" id="role-btn-buyer" onclick="setRole('buyer')" style="padding: 3px 9px; border-radius: 9999px; font-size: 10px; font-weight: 700; border: 1px solid rgba(255,255,255,0.3); background: #0D715F; color: #FFF; cursor: pointer;">Buyer View</button>
+      <button type="button" id="role-btn-provider" onclick="setRole('provider')" style="padding: 3px 9px; border-radius: 9999px; font-size: 10px; font-weight: 700; border: 1px solid rgba(255,255,255,0.3); background: transparent; color: #A4B8B0; cursor: pointer;">Bidder View</button>
+    </div>
+  </div>
+
+  <div class="phone-shell">
+
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div>●●●</div>
+    </div>
+
+    <!-- Clean In-Chat Header -->
+    <header class="chat-header-bar">
+      <div class="chat-header-left">
+        <button type="button" class="circle-back-btn" onclick="goBack()" aria-label="Back">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="provider-avatar-circle" id="party-avatar">KB</div>
+        <div class="provider-title-group">
+          <span class="provider-name-text" id="party-name">Kuya Ben Electrical</span>
+          <span class="provider-meta-sub" id="party-sub">★ 4.9 · Tagudin Centro</span>
+        </div>
+      </div>
+      <span class="active-deal-pill" id="deal-pill">₱220.00 Active</span>
+    </header>
+
+    <!-- Chat Messages Stream -->
+    <main class="chat-scroll-area" id="chat-msg-stream">
+
+      <!-- Kuya Ben message 1 -->
+      <div class="chat-bubble-row">
+        <div class="chat-msg-avatar">KB</div>
+        <div>
+          <div class="chat-bubble-box">
+            Magandang umaga po Aling Nena! Nabasa ko po ang request ninyo para sa kitchen sub-breaker. Madalas nga pong mag-trip kapag sabay ang ref at rice cooker kung luma na ang breaker.
+          </div>
+          <div class="chat-timestamp">10:14 AM</div>
+        </div>
+      </div>
+
+      <!-- Kuya Ben message 2 with Proposal 1 -->
+      <div class="chat-bubble-row">
+        <div class="chat-msg-avatar">KB</div>
+        <div>
+          <div class="chat-bubble-box">
+            Nagawa ko na po ang all-in package kasama na ang brand-new DIN-rail breaker galing Tagudin Hardware para hindi na kayo lumabas ng bahay:
+          </div>
+          <div class="chat-timestamp">10:15 AM</div>
+        </div>
+      </div>
+
+      <!-- Contractual Proposal Card #1 (SUPERSEDED) -->
+      <div class="in-chat-proposal-card superseded">
+        <div class="proposal-card-header">
+          <span class="proposal-status-badge superseded">PROPOSAL #1 · SUPERSEDED</span>
+          <span style="font-size: 10.5px; color: var(--color-ink-muted);">Countered</span>
+        </div>
+        <div class="proposal-title-txt">All-In Breaker Sourcing + Labor</div>
+        <div class="proposal-breakdown-box">
+          <div class="breakdown-line">
+            <span>20A Breaker (Tagudin Hardware)</span>
+            <span>₱160.00</span>
+          </div>
+          <div class="breakdown-line">
+            <span>Diagnostic &amp; Mount Labor</span>
+            <span>₱240.00</span>
+          </div>
+          <div class="breakdown-line total">
+            <span>Total Proposal</span>
+            <span style="color:#64748B;">₱400.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aling Nena Response -->
+      <div class="chat-bubble-row resident">
+        <div>
+          <div class="chat-bubble-box">
+            Kuya Ben, may nakatabi pa pala kaming bagong 20A breaker dito sa bahay. Pwede bang labor lang ang kukunin ko sa inyo?
+          </div>
+          <div class="chat-timestamp">10:18 AM</div>
+        </div>
+      </div>
+
+      <!-- Kuya Ben Response -->
+      <div class="chat-bubble-row">
+        <div class="chat-msg-avatar">KB</div>
+        <div>
+          <div class="chat-bubble-box">
+            Ay opo Aling Nena! In-adjust ko po ang quote — tinanggal ko yung hardware part, diagnostic at installation labor na lang po:
+          </div>
+          <div class="chat-timestamp">10:20 AM</div>
+        </div>
+      </div>
+
+      <!-- Contractual Proposal Card #2 (ACTIVE) -->
+      <div class="in-chat-proposal-card" id="active-proposal-card">
+        <div class="proposal-card-header">
+          <span class="proposal-status-badge active" id="prop-badge">PROPOSAL #2 · ACTIVE</span>
+          <span style="font-size: 11px; font-weight: 700; color: var(--color-brand-teal);" id="prop-status-sub">Awaiting Decision</span>
+        </div>
+        <div class="proposal-title-txt" id="prop-title-val">Diagnostic &amp; Labor Only (Homeowner Supplies Breaker)</div>
+        <div class="proposal-breakdown-box">
+          <div class="breakdown-line">
+            <span>Diagnostic, Removal &amp; Mounting Labor</span>
+            <span id="prop-labor-val">₱220.00</span>
+          </div>
+          <div class="breakdown-line total">
+            <span id="prop-total-label">Agreed Proposal</span>
+            <span id="prop-total-val" style="color: var(--color-brand-navy);">₱220.00</span>
+          </div>
+        </div>
+        <div class="proposal-actions-row" id="prop-actions-container">
+          <button type="button" class="btn-counter-drawer" onclick="openCounterDrawer()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <span id="btn-counter-txt">Counter / Edit</span>
+          </button>
+          <button type="button" class="btn-accept-proposal" id="btn-accept-deal" onclick="acceptDeal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span id="btn-accept-txt">Accept &amp; Lock Deal</span>
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Bottom Chat Input Dock -->
+    <footer class="chat-bottom-dock">
+      <input type="text" class="chat-input-field" id="chat-input-text" placeholder="Type a message or note..." onkeydown="if(event.key==='Enter') sendResidentMessage()">
+      <button type="button" class="btn-send-chat" onclick="sendResidentMessage()" aria-label="Send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </footer>
+
+    <!-- Glovo Wave Bottom Drawer for Counter Negotiation -->
+    <div class="glovo-drawer-overlay" id="counter-drawer" onclick="handleDrawerBackdrop(event)">
+      <div class="glovo-drawer-sheet">
+        <!-- Glovo Wave Asymmetrical Top Cap SVG -->
+        <svg class="glovo-wave-cap" viewBox="0 0 390 28" preserveAspectRatio="none">
+          <path d="M 0 14 C 90 2, 140 0, 195 0 C 255 0, 315 6, 390 22 L 390 28 L 0 28 Z" fill="#FFFFFF"></path>
+        </svg>
+
+        <div class="drawer-content-box">
+          <div class="drawer-header-row">
+            <div>
+              <div class="drawer-title-txt">Counter-Offer &amp; Terms</div>
+              <div style="font-size: 11px; color: var(--color-ink-muted);">Customize package nodes or adjust target price</div>
+            </div>
+            <button type="button" class="circle-back-btn" onclick="closeCounterDrawer()" aria-label="Close">&times;</button>
+          </div>
+
+          <!-- Node 1: Sourcing Hardware -->
+          <div class="node-toggle-card" id="drawer-node-hardware" onclick="toggleDrawerHardware()">
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: var(--color-ink);">Include 20A Breaker Hardware</div>
+              <div style="font-size: 10.5px; color: var(--color-ink-muted);">Tagudin Hardware &amp; Supply · ₱160.00</div>
+            </div>
+            <span id="hardware-toggle-chip" style="font-size: 10.5px; font-weight: 800; color: #64748B;">Excluded</span>
+          </div>
+
+          <!-- Price Stepper -->
+          <div class="stepper-row">
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: var(--color-ink);">Labor Target Rate</div>
+              <div style="font-size: 10.5px; color: var(--color-ink-muted);">Diagnostic &amp; replacement labor</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" class="stepper-btn" onclick="adjustLabor(-20)">−</button>
+              <span class="stepper-val-txt" id="drawer-labor-val">₱220</span>
+              <button type="button" class="stepper-btn" onclick="adjustLabor(20)">+</button>
+            </div>
+          </div>
+
+          <button type="button" class="btn-send-counter" onclick="sendCounterOffer()">
+            Send Counter-Offer to Kuya Ben
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Invariant Guard: In-Order fulfillment chat must NOT use bidding negotiation!
+    const queryParams = new URLSearchParams(window.location.search);
+    if (queryParams.get('order')) {
+      const orderId = queryParams.get('order');
+      const chainId = queryParams.get('chain') || 'DC-892';
+      const path = window.location.pathname;
+      const target = (path.includes('/sessions/') || path.includes('/design-sessions/'))
+        ? `order-chat-mobile.html?order=${orderId}&chain=${chainId}`
+        : `order-chat-mobile.html?order=${orderId}&chain=${chainId}`;
+      window.location.replace(target);
+    }
+
+    let currentRole = queryParams.get('role') || 'buyer';
+    let laborAmount = 220;
+    let hardwareIncluded = false;
+
+    function setRole(role) {
+      currentRole = role;
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('role', role);
+      window.history.replaceState({}, '', newUrl.toString());
+      renderRole();
+    }
+
+    function renderRole() {
+      const isProvider = currentRole === 'provider';
+      const buyerBtn = document.getElementById('role-btn-buyer');
+      const providerBtn = document.getElementById('role-btn-provider');
+      const crumbLabel = document.getElementById('crumb-role-label');
+      const partyAvatar = document.getElementById('party-avatar');
+      const partyName = document.getElementById('party-name');
+      const partySub = document.getElementById('party-sub');
+      const dealPill = document.getElementById('deal-pill');
+      const propBadge = document.getElementById('prop-badge');
+      const propStatusSub = document.getElementById('prop-status-sub');
+      const btnCounterTxt = document.getElementById('btn-counter-txt');
+      const btnAcceptTxt = document.getElementById('btn-accept-txt');
+      const chatInput = document.getElementById('chat-input-text');
+
+      if (isProvider) {
+        buyerBtn.style.background = 'transparent';
+        buyerBtn.style.color = '#A4B8B0';
+        providerBtn.style.background = '#0D715F';
+        providerBtn.style.color = '#FFF';
+        crumbLabel.innerText = 'Bidder / Provider View';
+        partyAvatar.innerText = 'AN';
+        partyAvatar.style.background = '#FEF3C7';
+        partyAvatar.style.color = '#92400E';
+        partyName.innerText = 'Aling Nena (Client)';
+        partySub.innerText = 'Request #REQ-104 · Tagudin Centro';
+        dealPill.innerText = '₱220.00 Countered';
+        dealPill.style.background = '#FEF3C7';
+        dealPill.style.color = '#92400E';
+        propBadge.innerText = 'YOUR PROPOSAL #2 · COUNTERED';
+        propStatusSub.innerText = 'Buyer Requested ₱220';
+        btnCounterTxt.innerText = 'Adjust Terms & Price';
+        btnAcceptTxt.innerText = 'Accept ₱220 Counter';
+        chatInput.placeholder = 'Message Aling Nena...';
+      } else {
+        buyerBtn.style.background = '#0D715F';
+        buyerBtn.style.color = '#FFF';
+        providerBtn.style.background = 'transparent';
+        providerBtn.style.color = '#A4B8B0';
+        crumbLabel.innerText = 'Buyer View';
+        partyAvatar.innerText = 'KB';
+        partyAvatar.style.background = '#0D715F';
+        partyAvatar.style.color = '#FFFFFF';
+        partyName.innerText = 'Kuya Ben Electrical';
+        partySub.innerText = '★ 4.9 · Tagudin Centro';
+        dealPill.innerText = '₱220.00 Active';
+        dealPill.style.background = '#E8F7F1';
+        dealPill.style.color = '#0D715F';
+        propBadge.innerText = 'PROPOSAL #2 · ACTIVE';
+        propStatusSub.innerText = 'Awaiting Decision';
+        btnCounterTxt.innerText = 'Counter / Edit';
+        btnAcceptTxt.innerText = 'Accept & Lock Deal';
+        chatInput.placeholder = 'Type a message to Kuya Ben...';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderRole();
+    });
+
+    function goBack() {
+      const path = window.location.pathname;
+      if (path.includes('/sessions/')) {
+        window.location.href = '../browse-mobile.html';
+      } else if (path.includes('/design-sessions/')) {
+        window.location.href = '../browse-mobile.html';
+      } else {
+        window.location.href = 'browse-mobile.html';
+      }
+    }
+
+    function openCounterDrawer() {
+      document.getElementById('counter-drawer').classList.add('open');
+    }
+
+    function closeCounterDrawer() {
+      document.getElementById('counter-drawer').classList.remove('open');
+    }
+
+    function handleDrawerBackdrop(e) {
+      if (e.target.id === 'counter-drawer') {
+        closeCounterDrawer();
+      }
+    }
+
+    function toggleDrawerHardware() {
+      hardwareIncluded = !hardwareIncluded;
+      const card = document.getElementById('drawer-node-hardware');
+      const chip = document.getElementById('hardware-toggle-chip');
+      card.classList.toggle('selected', hardwareIncluded);
+      chip.innerText = hardwareIncluded ? '✓ Included (+₱160)' : 'Excluded';
+      chip.style.color = hardwareIncluded ? '#0D715F' : '#64748B';
+    }
+
+    function adjustLabor(delta) {
+      laborAmount += delta;
+      if (laborAmount < 150) laborAmount = 150;
+      document.getElementById('drawer-labor-val').innerText = '₱' + laborAmount;
+    }
+
+    function sendCounterOffer() {
+      closeCounterDrawer();
+      const total = laborAmount + (hardwareIncluded ? 160 : 0);
+
+      document.getElementById('prop-labor-val').innerText = '₱' + laborAmount.toFixed(2);
+      document.getElementById('prop-total-val').innerText = '₱' + total.toFixed(2);
+      document.getElementById('prop-title-val').innerText = hardwareIncluded
+        ? 'Counter-Offer: All-In Diagnostic + Breaker'
+        : 'Counter-Offer: Diagnostic & Labor Only';
+
+      alert(`Counter-Offer (₱${total.toFixed(2)}) sent to Kuya Ben!\nProposal #2 updated.`);
+    }
+
+    function sendResidentMessage() {
+      const input = document.getElementById('chat-input-text');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const stream = document.getElementById('chat-msg-stream');
+      const row = document.createElement('div');
+      row.className = 'chat-bubble-row resident';
+      row.innerHTML = `
+        <div>
+          <div class="chat-bubble-box">${msg}</div>
+          <div class="chat-timestamp">Just now</div>
+        </div>
+      `;
+      stream.appendChild(row);
+      input.value = '';
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function acceptDeal() {
+      if (currentRole === 'provider') {
+        alert(`Counter-Offer Accepted by Provider!\n\n• Agreed Amount: ₱220.00\n• Client: Aling Nena\n\nConforming to canonical Order formation seam: activates Order in escrow.`);
+      } else {
+        alert(`Deal Accepted & Locked by Buyer!\n\n• Provider: Kuya Ben Electrical\n• Agreed Amount: ₱220.00\n\nConforming to canonical Order formation seam: creates accepted ordinary Order in bilateral escrow.`);
+      }
+      goBack();
+    }
+  </script>
+</body>
+</html>

@@ -50,7 +50,7 @@ services:
       APP_ENV: local
       APP_KEY: ${APP_KEY:?Set APP_KEY in the ignored .env file}
       APP_DEBUG: "false"
-      APP_URL: http://localhost:${APP_PORT:-8080}
+      APP_URL: "${SERBIZYU_PUBLIC_URL:-http://localhost:${APP_PORT:-8080}}"
       LOG_CHANNEL: stderr
       DB_CONNECTION: pgsql
       DB_HOST: db
@@ -72,6 +72,7 @@ services:
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
       SERBIZYU_ENV: local
+      SERBIZYU_BROWSER_OTP_PREVIEW: ${SERBIZYU_BROWSER_OTP_PREVIEW:-false}
       SERBIZYU_VALIDATE_ENV: "true"
       SERBIZYU_EVIDENCE_CLASS: TEAM_TRAINING
       SERBIZYU_PAYMENT_PROVIDER_MODE: disabled
@@ -99,7 +100,7 @@ services:
       dockerfile: Dockerfile
       target: web
     ports:
-      - "127.0.0.1:${APP_PORT:-8080}:80"
+      - "0.0.0.0:${APP_PORT:-8080}:80"
     depends_on:
       app:
         condition: service_healthy

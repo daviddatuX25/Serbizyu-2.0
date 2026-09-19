@@ -11,7 +11,17 @@ import {
 } from 'react';
 import type { SliceSession } from '../types';
 
-export type ProductNavKey = 'home' | 'browse' | 'create' | 'listings';
+export type ProductNavKey =
+    | 'home'
+    | 'browse'
+    | 'create'
+    | 'listings'
+    | 'requests'
+    | 'orders'
+    | 'messages'
+    | 'trust'
+    | 'account'
+    | 'admin';
 
 const CIRCLE_LOGO = '/brand/serbizyu-logo-circle.png';
 const LONG_LOGO = '/brand/serbizyu-logo-long.png';
@@ -22,14 +32,52 @@ type NavItem = {
     label: string;
     shortLabel: string;
     href: string;
+    available: boolean;
 };
 
 const NAV: NavItem[] = [
-    { key: 'home', label: 'Home', shortLabel: 'Home', href: '/' },
-    { key: 'browse', label: 'Browse', shortLabel: 'Browse', href: '/browse' },
-    { key: 'create', label: 'Create', shortLabel: 'Create', href: CREATE_HREF },
-    { key: 'listings', label: 'My Listings', shortLabel: 'Mine', href: '/my-listings' },
+    { key: 'home', label: 'Home', shortLabel: 'Home', href: '/', available: true },
+    { key: 'browse', label: 'Browse marketplace', shortLabel: 'Browse', href: '/browse', available: true },
+    { key: 'create', label: 'Create listing', shortLabel: 'Create', href: CREATE_HREF, available: true },
+    { key: 'listings', label: 'My listings', shortLabel: 'Mine', href: '/my-listings', available: true },
+    { key: 'requests', label: 'Requests', shortLabel: 'Requests', href: '#', available: false },
+    { key: 'orders', label: 'Orders & work', shortLabel: 'Orders', href: '#', available: false },
+    { key: 'messages', label: 'Messages', shortLabel: 'Messages', href: '#', available: false },
+    { key: 'trust', label: 'Trust & safety', shortLabel: 'Trust', href: '#', available: false },
+    { key: 'account', label: 'Account settings', shortLabel: 'Account', href: '#', available: false },
+    { key: 'admin', label: 'Operations', shortLabel: 'Operations', href: '#', available: false },
 ];
+function NavLink({
+    item,
+    active,
+    className,
+    children,
+    onNavigate,
+}: {
+    item: NavItem;
+    active: ProductNavKey;
+    className: string;
+    children: ReactNode;
+    onNavigate?: () => void;
+}) {
+    return (
+        <Link
+            href={item.href}
+            className={`${className}${active === item.key ? ' is-active' : ''}${!item.available ? ' is-disabled' : ''}`}
+            aria-current={active === item.key ? 'page' : undefined}
+            aria-disabled={!item.available || undefined}
+            onClick={(event) => {
+                if (!item.available) {
+                    event.preventDefault();
+                    return;
+                }
+                onNavigate?.();
+            }}
+        >
+            {children}
+        </Link>
+    );
+}
 
 type ShellDrawerContextValue = {
     setDrawerActions: (actions: ReactNode | null) => void;
@@ -183,19 +231,56 @@ function SwitchingDrawer({
                 </button>
                 <nav className="sz-switch-panel sz-switch-panel-nav" aria-label="Mobile navigation" aria-hidden={!navOpen}>
                     {NAV.map((item) => (
-                        <Link
+                        <NavLink
                             key={item.key}
-                            href={item.href}
-                            className={`sz-switch-nav-link${item.key === 'create' ? ' is-create' : ''}${active === item.key ? ' is-active' : ''}`}
-                            aria-current={active === item.key ? 'page' : undefined}
-                            tabIndex={navOpen ? undefined : -1}
+                            item={item}
+                            active={active}
+                            className={`sz-switch-nav-link${item.key === 'create' ? ' is-create' : ''}`}
+                            onNavigate={() => setPanel('actions')}
                         >
                             <NavIcon name={item.key} />
                             <span>{item.shortLabel}</span>
-                        </Link>
+                        </NavLink>
                     ))}
                 </nav>
             </div>
+        </div>
+    );
+}
+function MobileNavigation({ active }: { active: ProductNavKey }) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <div className={`sz-mobile-menu${open ? ' is-open' : ''}`} data-open={open ? 'true' : 'false'}>
+            <button
+                type="button"
+                className="sz-mobile-menu-trigger"
+                aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+                aria-expanded={open}
+                onClick={() => setOpen((current) => !current)}
+            >
+                <span className="sz-mobile-menu-trigger-icon" aria-hidden="true">☰</span>
+                <span>Menu</span>
+            </button>
+            <nav className="sz-mobile-menu-panel" aria-label="Mobile navigation" aria-hidden={!open}>
+                <div className="sz-mobile-menu-heading">
+                    <strong>Serbizyu</strong>
+                    <span>Everything in one place</span>
+                </div>
+                {NAV.map((item) => (
+                    <NavLink
+                        key={item.key}
+                        item={item}
+                        active={active}
+                        className={`sz-mobile-menu-link${item.key === 'create' ? ' is-create' : ''}`}
+                        onNavigate={() => setOpen(false)}
+                    >
+                        <NavIcon name={item.key} />
+                        <span>{item.label}</span>
+                        {!item.available ? <small>Soon</small> : null}
+                    </NavLink>
+                ))}
+            </nav>
         </div>
     );
 }
@@ -283,23 +368,33 @@ export function ProductShell({
                     </Link>
 
                     <nav className="sz-rail-nav" aria-label="Primary navigation">
-                        {NAV.map((item) => (
-                            <Link
+                        <p className="sz-rail-section-label">Workspace</p>
+                        {NAV.slice(0, 4).map((item) => (
+                            <NavLink
                                 key={item.key}
-                                href={item.href}
-                                className={`sz-rail-link${item.key === 'create' ? ' is-create' : ''}${active === item.key ? ' is-active' : ''}`}
-                                title={item.label}
-                                aria-current={active === item.key ? 'page' : undefined}
+                                item={item}
+                                active={active}
+                                className={`sz-rail-link${item.key === 'create' ? ' is-create' : ''}`}
                             >
                                 <NavIcon name={item.key} />
                                 <span className="sz-rail-label">{item.label}</span>
-                            </Link>
+                            </NavLink>
+                        ))}
+                        <p className="sz-rail-section-label">Coming next</p>
+                        {NAV.slice(4).map((item) => (
+                            <NavLink key={item.key} item={item} active={active} className="sz-rail-link">
+                                <NavIcon name={item.key} />
+                                <span className="sz-rail-label">{item.label}</span>
+                                <span className="sz-rail-soon">Soon</span>
+                            </NavLink>
                         ))}
                     </nav>
 
-                    <p className="sz-rail-meta">
-                        {displayName ? `${displayName} · Tagudin pilot` : 'Tagudin pilot'}
-                    </p>
+                    <div className="sz-rail-meta">
+                        <strong>{displayName ?? 'Guest workspace'}</strong>
+                        <span>Tagudin pilot</span>
+                    </div>
+
                 </aside>
 
                 <div className="sz-shell-canvas">
@@ -316,19 +411,7 @@ export function ProductShell({
                     {hasSwitchDrawer ? (
                         <SwitchingDrawer active={active} actions={drawerActions} />
                     ) : (
-                        <nav className="sz-dock" aria-label="Mobile navigation">
-                            {NAV.map((item) => (
-                                <Link
-                                    key={item.key}
-                                    href={item.href}
-                                    className={`sz-dock-link${item.key === 'create' ? ' is-create' : ''}${active === item.key ? ' is-active' : ''}`}
-                                    aria-current={active === item.key ? 'page' : undefined}
-                                >
-                                    <NavIcon name={item.key} />
-                                    <span>{item.shortLabel}</span>
-                                </Link>
-                            ))}
-                        </nav>
+                        <MobileNavigation active={active} />
                     )}
                 </div>
             </div>

@@ -40,7 +40,7 @@ Rule: no permanent T2 feature expansion marked complete until §0 packet readine
 ## 5. Stop/go
 
 - [x] 5.1 Solo GO after Pest green (2026-08-10) — T2GovernedCatalogTest 5 passed; MyListings/kernel/T1A regressions green
-- [ ] 5.2 Open T3 LLD only after T2 GO — do not silently start Order work
+- [x] 5.2 Open T3 LLD only after T2 GO — T3 packet authored and completed with GO recorded (2026-08-10)
 
 ## Explicit blockers (remain unchecked)
 

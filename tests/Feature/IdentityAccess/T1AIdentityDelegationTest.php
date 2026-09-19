@@ -98,6 +98,7 @@ it('lets an agent update a listing draft only with an active consent grant', fun
         'description' => 'Owned by the provider; edited by an agent under consent.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
 
     $grantId = $consents->grant(

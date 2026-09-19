@@ -65,6 +65,7 @@ FirstSliceFeatureTest.php 296L cognitive
             'description' => 'Reliable local help for errands and household tasks.',
             'category_code' => 'home-help',
             'listing_type' => 'service',
+            'work_shape' => 'A1',
         ])->assertCreated()->json('data');
 
         self::assertSame('draft', $created['status']);
@@ -120,6 +121,7 @@ FirstSliceFeatureTest.php 296L cognitive
             'description' => 'A sufficiently descriptive service listing for the fixture.',
             'category_code' => 'home-help',
             'listing_type' => 'service',
+            'work_shape' => 'A1',
         ])->json('data');
 
         $this->patchJson('/listings/'.$created['id'], [
@@ -201,6 +203,7 @@ FirstSliceFeatureTest.php 296L cognitive
             'description' => 'This draft belongs only to the provider fixture owner.',
             'category_code' => 'home-help',
             'listing_type' => 'service',
+            'work_shape' => 'A1',
         ])->json('data');
 
         $this->logoutAuthenticatedUser();
@@ -233,7 +236,7 @@ FirstSliceFeatureTest.php 296L cognitive
             'category_code' => 'Invalid Code',
             'listing_type' => 'unknown',
         ])->assertStatus(422)
-            ->assertJsonValidationErrors(['title', 'description', 'category_code', 'listing_type']);
+            ->assertJsonValidationErrors(['title', 'description', 'category_code', 'listing_type', 'work_shape']);
     }
 7/14 chunks shown (2318 tokens)
 [lean-ctx] full source: read "/home/user/Serbizyu-2.0/tests/Feature/FirstSlice/FirstSliceFeatureTest.php" directly (no MCP)  ·  or ctx_read("/home/user/Serbizyu-2.0/tests/Feature/FirstSlice/FirstSliceFeatureTest.php", mode="full")

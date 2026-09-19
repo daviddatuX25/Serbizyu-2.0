@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use App\Mail\Auth\EmailCredentialsSet;
 use App\Models\User;
+use App\Modules\IdentityAccess\Application\PhoneOtpAuthService;
 use App\Modules\IdentityAccess\Application\StartSignup;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Tests\Support\AuthenticatesWithPhoneOtp;
 
 uses(DatabaseTransactions::class, AuthenticatesWithPhoneOtp::class);
@@ -56,6 +58,85 @@ it('H2-S02 completes signup when signup_verify OTP succeeds once', function (): 
     $this->postJson('/auth/register/verify', ['phone' => $phone, 'code' => $code])
         ->assertStatus(422)
         ->assertJsonPath('code', 'OTP_INVALID');
+});
+it('surfaces the disposable signup OTP on the browser registration page when enabled', function (): void {
+    $phone = '+639173000108';
+
+    config()->set('serbizyu.identity.browser_otp_preview', true);
+
+    $this->post('/auth/register/request', ['phone' => $phone])
+        ->assertRedirect();
+
+    $code = $this->otpDelivery->lastCodeFor($phone, StartSignup::PURPOSE);
+    expect($code)->toBeString();
+
+    $this->withHeaders([
+        'X-Inertia' => 'true',
+        'X-Requested-With' => 'XMLHttpRequest',
+        'X-Inertia-Version' => hash_file('xxh128', public_path('build/manifest.json')),
+    ])
+        ->get('/auth/register')
+        ->assertOk()
+        ->assertJsonPath('component', 'Auth/Register')
+        ->assertJsonPath('props.temporaryOtpPreview.code', $code)
+        ->assertJsonPath('props.temporaryOtpPreview.expires_in_seconds', 600);
+});
+
+it('does not expose the signup OTP on the browser registration page by default', function (): void {
+    $phone = '+639173000109';
+
+    config()->set('serbizyu.identity.browser_otp_preview', false);
+
+    $this->post('/auth/register/request', ['phone' => $phone])
+        ->assertRedirect();
+
+    $this->withHeaders([
+        'X-Inertia' => 'true',
+        'X-Requested-With' => 'XMLHttpRequest',
+        'X-Inertia-Version' => hash_file('xxh128', public_path('build/manifest.json')),
+    ])
+        ->get('/auth/register')
+        ->assertOk()
+        ->assertJsonPath('component', 'Auth/Register')
+        ->assertJsonMissingPath('props.temporaryOtpPreview.code');
+});
+it('surfaces the disposable login OTP on the browser sign-in page when challenge is pending', function (): void {
+    $phone = '+639173'.rand(100000, 999999);
+    $userId = (string) Str::uuid7();
+    $now = now();
+
+    DB::table('users')->insert([
+        'id' => $userId,
+        'phone_e164' => $phone,
+        'status' => 'active',
+        'primary_access_tier' => 'L0',
+        'locale' => 'en',
+        'timezone' => 'Asia/Manila',
+        'version' => 1,
+        'phone_verified_at' => $now,
+        'correlation_id' => $userId,
+        'created_at' => $now,
+        'updated_at' => $now,
+    ]);
+
+    config()->set('serbizyu.identity.browser_otp_preview', true);
+
+    $this->post('/auth/phone/request', ['phone' => $phone])
+        ->assertRedirect();
+
+    $code = $this->otpDelivery->lastCodeFor($phone, PhoneOtpAuthService::PURPOSE);
+    expect($code)->toBeString();
+
+    $this->withHeaders([
+        'X-Inertia' => 'true',
+        'X-Requested-With' => 'XMLHttpRequest',
+        'X-Inertia-Version' => hash_file('xxh128', public_path('build/manifest.json')),
+    ])
+        ->get('/auth/sign-in')
+        ->assertOk()
+        ->assertJsonPath('component', 'Auth/SignIn')
+        ->assertJsonPath('props.temporaryOtpPreview.code', $code)
+        ->assertJsonPath('props.temporaryOtpPreview.expires_in_seconds', 600);
 });
 
 it('H2-O01 blocks onboarding without a password', function (): void {

@@ -214,7 +214,7 @@ The Buyer MAY decline a Quote with explicit fixture behavior. Quote/Request expi
 
 ID: RBQ-REQ-009
 
-Only the Requester/authorized Buyer SHALL accept one current eligible Quote. Acceptance SHALL atomically revalidate Request and Quote versions, create one immutable Order terms snapshot and normal Order, establish parties, create separate Work/Payment records as required, and link Activity/notifications/audit. It SHALL not complete Work or settle Payment.
+Only the Requester/authorized Buyer SHALL accept one current eligible Quote. Acceptance SHALL atomically revalidate Request and Quote versions, create one immutable Order terms snapshot and ordinary Order, establish parties, create its required one-or-more same-Order Work Instances and separate Payment Obligations, and link Activity/notifications/audit. It SHALL not complete Work or settle Payment. Work shape payloads SHALL resolve through the registered `{shape_code, shape_contract_version, payload_schema_version}` contract rather than a generic unvalidated editor.
 
 #### Scenario: Buyer accepts current Quote
 
@@ -290,3 +290,30 @@ Competitive response SHALL enforce an approved fixture policy for responder elig
 - THEN no Quote is pre-awarded solely because it has the lowest amount
 - AND Buyer must deliberately review and accept one eligible current version
 - AND other responses retain explicit post-decision state/history.
+
+### Requirement: Open and sealed Request projections are explicit
+
+ID: RBQ-REQ-012
+
+Request discovery and Bid visibility SHALL be evaluated separately. `open_tender` SHALL mean open eligible participation and public-safe Request discovery; unless a later promoted policy explicitly creates a public Bid-board projection, unrelated viewers SHALL NOT receive exact Bid amount, scope, schedule, provider identity, lineage, ranking, or losing terms. `sealed_tender` SHALL additionally hide Bid content and participation signals before its promoted reveal point. Direct-invite Requests SHALL be non-enumerating to unrelated viewers. Protected data SHALL be omitted from serialized projections and derivative counts, ordering, errors, notifications, caches, history, logs, analytics, and timing behavior.
+
+#### Scenario: Unrelated viewer opens an Open Tender
+
+- GIVEN an unrelated guest or member opens a discoverable `open_tender` Request
+- WHEN its purpose-specific projection is produced
+- THEN public-safe Request facts and only policy-enabled aggregate response count are available
+- AND exact Bid content, provider identity, ranking, losing terms, and acceptance controls are absent.
+
+#### Scenario: Unrelated viewer opens a Sealed Tender before reveal
+
+- GIVEN an unrelated guest or member opens a discoverable `sealed_tender` before the reveal point
+- WHEN its purpose-specific projection is produced
+- THEN only policy-authorized coarse Request facts and a non-leaking sealed-state explanation are available
+- AND Bid existence, count unless explicitly enabled, content, identity, ranking, hints, and side-channel distinctions are absent.
+
+#### Scenario: Product requests a public live Bid board
+
+- GIVEN no promoted policy defines disclosure consent, exposed fields, history/withdrawal behavior, and safety controls for a public Bid board
+- WHEN a scenario attempts to expose live competitor Bid terms to unrelated viewers
+- THEN the capability is `policy_pending`
+- AND the frontend does not infer that `open_tender` means public Bid content.

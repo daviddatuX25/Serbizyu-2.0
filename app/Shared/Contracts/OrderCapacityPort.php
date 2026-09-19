@@ -31,6 +31,22 @@ interface OrderCapacityPort
     public function commit(string $reservationId, string $correlationId): array;
 
     /**
+     * Atomically commits quantity capacity for final Order formation.
+     *
+     * @return array{reservation_id: string, status: string, remaining_quantity: int, replay: bool}|null
+     */
+    public function commitForOrder(
+        string $listingId,
+        string $listingVersionId,
+        string $orderId,
+        int $quantity,
+        string $commandScope,
+        string $idempotencyKey,
+        string $correlationId,
+        ?string $heldReservationId = null,
+    ): ?array;
+
+    /**
      * @return array{reservation_id: string, status: string, remaining_quantity: int}
      */
     public function release(string $reservationId, string $correlationId): array;

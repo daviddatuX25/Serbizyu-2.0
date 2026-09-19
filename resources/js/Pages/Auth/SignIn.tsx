@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { DevOtpReceiver } from '../../components/auth/DevOtpReceiver';
 import { Button, Field, Notice, PasswordInput, TextInput } from '../../components/ui';
 import { cn } from '../../lib/utils';
 import type { HomeProps } from '../../types';
@@ -46,23 +47,12 @@ export default function SignIn(props: SignInProps) {
 
     const [mode, setMode] = useState<SignInMode>('phone');
     const [showOtpChallenge, setShowOtpChallenge] = useState(false);
-    const [phone, setPhone] = useState(props.session?.phone ?? '');
+    const [phone, setPhone] = useState(() => props.session?.phone ?? readRememberedPhone());
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [code, setCode] = useState('');
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (props.session?.phone || phone !== '') {
-            return;
-        }
-
-        const remembered = readRememberedPhone();
-        if (remembered !== '') {
-            setPhone(remembered);
-        }
-    }, [phone, props.session?.phone]);
 
     const errors = (props.errors ?? {}) as Record<string, string | string[]>;
     const formError = typeof errors.form === 'string' ? errors.form : (errors.form?.[0] ?? null);
@@ -184,6 +174,18 @@ export default function SignIn(props: SignInProps) {
                                         expires in 10 minutes.
                                     </p>
                                 </div>
+                                {props.temporaryOtpPreview ? (
+                                    <DevOtpReceiver
+                                        otpPreview={props.temporaryOtpPreview}
+                                        phone={phone || props.session?.phone}
+                                        onFillCode={(receivedCode) => {
+                                            setCode(receivedCode);
+                                        }}
+                                        onResend={() => {
+                                            requestPhoneOtp();
+                                        }}
+                                    />
+                                ) : null}
                                 <form onSubmit={requestPhoneOtp} className="sz-stack">
                                     <Field
                                         label="Mobile number"

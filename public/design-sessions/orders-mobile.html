@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Orders &amp; Deals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Serbizyu Forest Brand Tokens */
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      /* Serbizyu Warm Accents & Ink */
+      --brand-navy: #0F2F58;
+      --brand-yellow: #FFC244;
+      --brand-yellow-light: #FEF8E7;
+      --brand-yellow-dark: #D97706;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+      --ink-subtle: #94a3b8;
+
+      /* Surfaces & Lines */
+      --canvas: #F4F6F5;
+      --surface: #FFFFFF;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      /* Radii */
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 3px rgba(10, 87, 74, 0.06);
+      --shadow-md: 0 4px 14px rgba(10, 87, 74, 0.08);
+      --shadow-dock: 0 -4px 20px rgba(18, 32, 28, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0D1B1E;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .studio-context-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #A4B8B0;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .studio-crumb { display: flex; align-items: center; gap: 6px; }
+    .studio-pill-tag {
+      background: rgba(232, 247, 241, 0.12);
+      border: 1px solid rgba(232, 247, 241, 0.25);
+      color: #A7F3D0;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: var(--canvas); }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+    .notch-island {
+      width: 110px;
+      height: 24px;
+      background: #000;
+      border-radius: 14px;
+    }
+
+    /* Topbar */
+    .orders-topbar {
+      height: 52px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line-subtle);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .circle-nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--ink);
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .circle-nav-btn:hover { background: var(--line-subtle); }
+    .topbar-center-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    /* Glovo Segmented Tab Control (Ongoing vs History) */
+    .orders-segmented-bar {
+      display: flex;
+      background: #FFFFFF;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--line-subtle);
+      flex-shrink: 0;
+    }
+    .orders-segment-wrap {
+      display: flex;
+      width: 100%;
+      background: #F1F5F9;
+      border-radius: var(--radius-pill);
+      padding: 3px;
+      gap: 3px;
+    }
+    .segment-tab-btn {
+      flex: 1;
+      height: 34px;
+      border-radius: var(--radius-pill);
+      border: none;
+      background: transparent;
+      color: var(--ink-soft);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .segment-tab-btn.active {
+      background: #FFFFFF;
+      color: var(--forest-900);
+      font-weight: 800;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+    .segment-count-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: var(--radius-pill);
+      background: var(--forest-50);
+      color: var(--forest-700);
+    }
+
+    /* Scroll Body */
+    .orders-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .orders-scroll-body > * {
+      flex-shrink: 0;
+    }
+
+    /* Glovo Ongoing Order Card */
+    .glovo-order-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 10px rgba(10, 87, 74, 0.06);
+    }
+    .order-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .order-card-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.25;
+    }
+    .order-card-sub {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+    }
+    .order-card-price {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--forest-700);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Live Status Banner */
+    .order-live-banner {
+      background: var(--forest-50);
+      border: 1px solid var(--forest-100);
+      border-radius: 10px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--forest-800);
+    }
+    .live-dot-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulseGreen 1.6s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulseGreen {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Slot Steps Micro Track (No Arrows!) */
+    .order-slots-strip {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #F8FAFC;
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line-subtle);
+    }
+    .slot-strip-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+    }
+    .slot-strip-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .slot-status-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+    }
+    .slot-status-tag.done { background: #DCFCE7; color: #166534; }
+    .slot-status-tag.active { background: #FEF3C7; color: #B45309; }
+    .slot-status-tag.gated { background: #F1F5F9; color: #64748B; }
+
+    /* Action CTA */
+    .btn-track-order {
+      width: 100%;
+      height: 44px;
+      border-radius: var(--radius-pill);
+      background: var(--forest-600);
+      color: #FFFFFF;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(13, 113, 95, 0.25);
+      transition: background 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-track-order:hover { background: var(--forest-700); }
+
+    /* Staged Cart Banner */
+    .cart-shortcut-banner {
+      background: #FEF8E7;
+      border: 1.5px solid #FDE68A;
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* History List Items */
+    .history-order-card {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .history-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .history-order-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .history-order-date {
+      font-size: 11px;
+      color: var(--ink-muted);
+      margin-top: 1px;
+    }
+    .history-order-price {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--ink);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .history-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--line-subtle);
+      padding-top: 8px;
+    }
+    .btn-reorder-quiet {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: var(--radius-pill);
+      background: var(--forest-50);
+      border: 1px solid var(--forest-100);
+      color: var(--forest-700);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    /* Persistent Bottom Bar */
+    .app-bottom-nav {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 62px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 10px 14px;
+      z-index: 50;
+    }
+    .nav-tab-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      color: var(--ink-muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      flex: 1;
+      transition: color 0.15s ease;
+    }
+    .nav-tab-link.active {
+      color: var(--forest-600);
+      font-weight: 800;
+    }
+    .nav-tab-link svg {
+      width: 20px;
+      height: 20px;
+    }
+    .elevated-qr-fab {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--forest-600);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(13, 113, 95, 0.4);
+      cursor: pointer;
+    }
+    .center-spacer {
+      visibility: hidden;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Context Banner (Reviewer Links) -->
+  <div class="studio-context-banner">
+    <div class="studio-crumb">
+      <span>Customer Hub</span>
+      <span>&rsaquo;</span>
+      <span style="color:#FFF;">orders-mobile.html</span>
+    </div>
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <span style="font-size: 10px; color: #94A3B8;">Tab:</span>
+      <button type="button" class="studio-pill-tag" onclick="switchOrdersTab('ongoing')" style="cursor:pointer; background: #0D715F; color: #FFF;">Ongoing (1)</button>
+      <button type="button" class="studio-pill-tag" onclick="switchOrdersTab('history')" style="cursor:pointer;">History (3)</button>
+    </div>
+  </div>
+
+  <!-- Mobile Phone Shell -->
+  <div class="phone-shell">
+
+    <!-- Phone Status Bar -->
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div>●●●</div>
+    </div>
+
+    <!-- Topbar -->
+    <header class="orders-topbar">
+      <a href="browse-mobile.html" class="circle-nav-btn" aria-label="Back to Browse">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <span class="topbar-center-title">Orders &amp; Deals</span>
+      <a href="bookings-checklist.html" class="circle-nav-btn" title="View Staged Picks / Cart">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      </a>
+    </header>
+
+    <!-- Glovo Segmented Tab Bar (Ongoing vs History) -->
+    <div class="orders-segmented-bar">
+      <div class="orders-segment-wrap">
+        <button type="button" class="segment-tab-btn active" id="tab-ongoing" onclick="switchOrdersTab('ongoing')">
+          <span>Ongoing</span>
+          <span class="segment-count-badge">1</span>
+        </button>
+        <button type="button" class="segment-tab-btn" id="tab-history" onclick="switchOrdersTab('history')">
+          <span>History</span>
+          <span class="segment-count-badge" style="background: #F1F5F9; color: #64748B;">3</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable Orders Content -->
+    <main class="orders-scroll-body">
+
+      <!-- PANEL 1: ONGOING ACTIVE ORDERS (Default) -->
+      <div id="panel-ongoing" style="display: flex; flex-direction: column; gap: 12px;">
+
+        <!-- Active Deal Chain Card (DC-892) -->
+        <article class="glovo-order-card">
+          <div class="order-card-head">
+            <div>
+              <h2 class="order-card-title">Fiesta AC Overhaul &amp; Clean</h2>
+              <div class="order-card-sub">Deal Chain #DC-892 · 3 Coordinated Services</div>
+            </div>
+            <span class="order-card-price">₱610.00</span>
+          </div>
+
+          <!-- Live Status Banner with Pulsing Green Dot -->
+          <div class="order-live-banner">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="live-dot-pulse"></span>
+              <span><strong>In Progress</strong> · ETA ~45 mins</span>
+            </div>
+            <span style="font-weight: 700; color: var(--forest-700);">Bilateral Escrow</span>
+          </div>
+
+          <!-- Slots Strip (No arrows, clean progress tags) -->
+          <div class="order-slots-strip">
+            <div class="slot-strip-row">
+              <div class="slot-strip-left">
+                <span>1. Run Capacitor</span>
+                <span style="color: var(--ink-muted); font-size: 10.5px;">Tagudin Hardware</span>
+              </div>
+              <span class="slot-status-tag done">✓ Sourced</span>
+            </div>
+            <div class="slot-strip-row">
+              <div class="slot-strip-left">
+                <span>2. Parts Transit</span>
+                <span style="color: var(--ink-muted); font-size: 10.5px;">Danny Express</span>
+              </div>
+              <span class="slot-status-tag active">In Transit (8m)</span>
+            </div>
+            <div class="slot-strip-row">
+              <div class="slot-strip-left">
+                <span>3. AC Labor</span>
+                <span style="color: var(--ink-muted); font-size: 10.5px;">Kuya Ben</span>
+              </div>
+              <span class="slot-status-tag gated">On-Site Prepping</span>
+            </div>
+          </div>
+
+          <!-- Direct CTA Row to Live Deal Relay + Order Chat -->
+          <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center;">
+            <a href="order-detail-mobile.html?order=ORD-7721&chain=DC-892" class="btn-track-order" style="flex: 1; width: auto;">
+              <span>View Order Details</span>
+            </a>
+            <a href="order-chat-mobile.html?order=ORD-7721&chain=DC-892" style="width: 44px; height: 44px; border-radius: var(--radius-pill); background: #FFFFFF; color: var(--forest-700); border: 1.5px solid var(--forest-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0; text-decoration: none; box-shadow: var(--shadow-sm);" title="Chat with Provider">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- Staged Picks (Cart) Shortcut -->
+        <a href="bookings-checklist.html" class="cart-shortcut-banner">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">🛒</span>
+            <div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #92400E;">Staged Items in Cart (My Picks)</div>
+              <div style="font-size: 11px; color: #B45309;">2 items ready to bundle and confirm checkout</div>
+            </div>
+          </div>
+          <span style="font-size: 11.5px; font-weight: 800; color: #92400E;">View Cart</span>
+        </a>
+
+      </div>
+
+      <!-- PANEL 2: COMPLETED ORDERS HISTORY (Hidden by default) -->
+      <div id="panel-history" style="display: none; flex-direction: column; gap: 10px;">
+
+        <!-- Completed Order 1 -->
+        <article class="history-order-card" style="cursor: pointer;" onclick="window.location.href='order-detail-mobile.html?order=ORD-619'">
+          <div class="history-card-head">
+            <div>
+              <h3 class="history-order-title">Tricycle Poblacion Route</h3>
+              <div class="history-order-date">Sep 14, 2026 · Order #ORD-619</div>
+            </div>
+            <span class="history-order-price">₱45.00</span>
+          </div>
+          <div style="font-size: 11.5px; color: var(--ink-soft);">
+            Provider: Kuya Jun Bataller · Fixed Poblacion transit fare
+          </div>
+          <div class="history-card-bottom">
+            <span class="slot-status-tag done">✓ Completed</span>
+            <button type="button" class="btn-reorder-quiet" onclick="alert('Booking Kuya Jun for return ride...')">Book Return Ride</button>
+          </div>
+        </article>
+
+        <!-- Completed Order 2 -->
+        <article class="history-order-card" style="cursor: pointer;" onclick="window.location.href='order-detail-mobile.html?order=ORD-504'">
+          <div class="history-card-head">
+            <div>
+              <h3 class="history-order-title">Fresh Tagudin Bibingka (2 Packs)</h3>
+              <div class="history-order-date">Sep 11, 2026 · Order #ORD-504</div>
+            </div>
+            <span class="history-order-price">₱160.00</span>
+          </div>
+          <div style="font-size: 11.5px; color: var(--ink-soft);">
+            Merchant: Aling Nena Native Delicacies · Sourced at Market
+          </div>
+          <div class="history-card-bottom">
+            <span class="slot-status-tag done">✓ Delivered</span>
+            <button type="button" class="btn-reorder-quiet" onclick="alert('Added 2 packs of Bibingka to My Picks!')">Order Again</button>
+          </div>
+        </article>
+
+        <!-- Completed Order 3 -->
+        <article class="history-order-card">
+          <div class="history-card-head">
+            <div>
+              <h3 class="history-order-title">Emergency Sub-Breaker Replacement</h3>
+              <div class="history-order-date">Aug 28, 2026 · Order #ORD-412</div>
+            </div>
+            <span class="history-order-price">₱220.00</span>
+          </div>
+          <div style="font-size: 11.5px; color: var(--ink-soft);">
+            Provider: Kuya Ben Electrical · 20A DIN-rail breaker install
+          </div>
+          <div class="history-card-bottom">
+            <span class="slot-status-tag done">✓ 30-Day Warranty Active</span>
+            <button type="button" class="btn-reorder-quiet" onclick="alert('Viewing verified invoice & warranty seal #W-412')">Receipt</button>
+          </div>
+        </article>
+
+      </div>
+
+    </main>
+
+    <!-- Persistent Bottom Navigation Bar (Orders Tab Active!) -->
+    <nav class="app-bottom-nav">
+      <!-- Signature Elevated Center Quick Deal QR FAB -->
+      <div class="elevated-qr-fab" onclick="alert('Quick Deal QR Scanner: Scan provider QR for instant deal confirmation & payment handoff!')" title="Quick Deal QR Scanner">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="5" height="5" x="3" y="3" rx="1"/>
+          <rect width="5" height="5" x="16" y="3" rx="1"/>
+          <rect width="5" height="5" x="3" y="16" rx="1"/>
+          <path d="M21 16h-3a2 2 0 0 0-2 2v3"/>
+          <path d="M21 21v.01"/>
+          <path d="M12 7v3a2 2 0 0 1-2 2H7"/>
+          <path d="M3 12h.01"/>
+          <path d="M12 3h.01"/>
+          <path d="M12 16v.01"/>
+          <path d="M16 12h1"/>
+          <path d="M21 12v.01"/>
+          <path d="M12 21v-1"/>
+        </svg>
+      </div>
+
+      <!-- 1. Explore -->
+      <a href="browse-mobile.html" class="nav-tab-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Explore</span>
+      </a>
+
+      <!-- 2. Post -->
+      <a href="request-service-builder.html" class="nav-tab-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+        <span>Post</span>
+      </a>
+
+      <!-- 3. Center Spacer for Elevated FAB -->
+      <div class="nav-tab-link center-spacer">
+        <div style="height: 22px;"></div>
+        <span>Scan</span>
+      </div>
+
+      <!-- 4. Orders (ACTIVE) -->
+      <a href="orders-mobile.html" class="nav-tab-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg>
+        <span>Orders</span>
+      </a>
+
+      <!-- 5. Profile -->
+      <a href="profile-mobile.html" class="nav-tab-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <script>
+    function switchOrdersTab(tab) {
+      document.querySelectorAll('.segment-tab-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      document.getElementById('panel-ongoing').style.display = (tab === 'ongoing') ? 'flex' : 'none';
+      document.getElementById('panel-history').style.display = (tab === 'history') ? 'flex' : 'none';
+    }
+
+    // Auto-detect tab from query param e.g. ?tab=history
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam === 'history') {
+        switchOrdersTab('history');
+      }
+    });
+  </script>
+</body>
+</html>

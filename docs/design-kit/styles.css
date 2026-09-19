@@ -356,3 +356,70 @@ a.tk-listing:hover {
 @media (max-width: 900px) {
   .tk-desktop-only { display: none !important; }
 }
+
+/* ==========================================================================
+   Serbizyu Themed Scrollbars (Universal Horizontal & Vertical)
+   Prevents bulky OS defaults across div elements, drawers, and carousels.
+   ========================================================================== */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(13, 113, 95, 0.25) transparent;
+}
+
+*:hover {
+  scrollbar-color: rgba(13, 113, 95, 0.45) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(13, 113, 95, 0.22);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.15s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(13, 113, 95, 0.48);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dedicated themed scroll container utilities */
+.tk-scroll-x,
+.sz-scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.tk-scroll-y,
+.sz-scroll-y {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.tk-scroll-x::-webkit-scrollbar,
+.sz-scroll-x::-webkit-scrollbar {
+  height: 5px;
+}
+
+.tk-scroll-y::-webkit-scrollbar,
+.sz-scroll-y::-webkit-scrollbar {
+  width: 6px;
+}

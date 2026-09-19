@@ -38,7 +38,7 @@ This matrix closes the gap between a screen inventory and a usable design brief.
 | ACC-004 | Provider/Owner | Know whether identity evidence is required and why | Current gate; required evidence class; public/private result; manual-review fallback; no live collection notice | Review requirements | If gate is closed, block upload and offer manual/support path |
 | ACC-005 | Provider/Owner | Practice submitting a fictional identity-evidence fixture safely | Fixture-only upload; redaction/scan guidance; accepted formats; access/retention warning | Submit demo evidence | Validation/rejection preserves explanation and safe resubmission; no real document accepted |
 | ACC-006 | User/Admin | Understand identity-review status and next responsibility | Pending/more-info/approved/rejected; reason safe to show; reviewer/next action; evidence-access boundary | Provide requested information | If denied or stale, show support/review route; never equate review with broad public trust |
-| ACC-007 | User | Understand profile, access tier, and what actions are enabled | L0–L4 meaning; active capabilities; conditional/forbidden actions; evidence-based public status | Open an enabled task | Blocked action explains missing permission/gate and offers approval/help |
+| ACC-007 | User | Understand profile, participation mode, and enabled capabilities | Market roles; participation mode (Direct vs Agent-Assisted); trust verification level (Level 1–3); conditional/forbidden actions; channel modality preferences | Open an enabled task | Blocked action explains missing permission/gate and offers verification/help |
 
 ## Discovery and public trust
 

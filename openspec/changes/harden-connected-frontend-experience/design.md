@@ -1,6 +1,6 @@
 # Design: Harden the complete connected frontend system
 
-Status: PROPOSED — implementation-grade design; application code remains unchanged by this planning pass
+Status: PROGRAM REFERENCE DESIGN — path maps and implementation sequencing superseded by the frontend view-projection architecture and child OpenSpec changes
 Change: `harden-connected-frontend-experience`
 
 ## 1. Design objective

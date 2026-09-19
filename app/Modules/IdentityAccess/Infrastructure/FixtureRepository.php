@@ -8,6 +8,7 @@ use App\Modules\IdentityAccess\Application\DemoFixtures;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 final class FixtureRepository
 {
@@ -112,28 +113,146 @@ final class FixtureRepository
             ]], ['id'], ['name', 'status', 'pilot_status', 'metadata', 'updated_at']);
         }
 
+        if (Schema::hasTable('category_versions')) {
+            $existing = DB::table('category_versions')
+                ->where('category_id', self::CATEGORY_ID)
+                ->where('business_version', 1)
+                ->first();
+            if ($existing === null) {
+                DB::table('category_versions')->insert([
+                    'id' => '0198a3b1-7c40-7abc-8def-3234567890ac',
+                    'category_id' => self::CATEGORY_ID,
+                    'business_version' => 1,
+                    'status' => 'published',
+                    'name' => 'Local services',
+                    'description' => null,
+                    'safety_class' => 'standard',
+                    'data_class' => 'public',
+                    'policy_content' => json_encode(new \stdClass, JSON_THROW_ON_ERROR),
+                    'content_schema_version' => 1,
+                    'checksum' => hash('sha256', self::CATEGORY_ID.':Local services:1'),
+                    'effective_at' => $now,
+                    'published_at' => $now,
+                    'paused_at' => null,
+                    'retired_at' => null,
+                    'created_by_user_id' => null,
+                    'correlation_id' => self::CATEGORY_ID,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            } else {
+                DB::table('category_versions')
+                    ->where('id', $existing->id)
+                    ->update([
+                        'status' => 'published',
+                        'name' => 'Local services',
+                        'policy_content' => json_encode(new \stdClass, JSON_THROW_ON_ERROR),
+                        'checksum' => hash('sha256', self::CATEGORY_ID.':Local services:1'),
+                        'updated_at' => $now,
+                    ]);
+            }
+        }
+        $serviceProfileId = self::SERVICE_PROFILE_ID;
         if (Schema::hasTable('capability_profiles')) {
-            DB::table('capability_profiles')->upsert([[
-                'id' => self::SERVICE_PROFILE_ID,
-                'code' => 'service_listing',
-                'profile_family_code' => 'service_listing',
-                'listing_type' => 'service',
-                'mechanism' => 'listing',
-                'work_shape' => 'local_service',
-                'allowed_payment_lanes' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),
-                'allowed_access_tiers' => json_encode(['L1', 'L2', 'L3'], JSON_THROW_ON_ERROR),
-                'safety_class' => 'standard',
-                'data_class' => 'public',
-                'status' => 'active',
-                'activation_record_reference' => 'capstone-fixture',
-                'version' => 1,
-                'business_version' => 1,
-                'content_schema_version' => 1,
-                'row_version' => 1,
-                'correlation_id' => self::SERVICE_PROFILE_ID,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]], ['id'], ['status', 'profile_family_code', 'business_version', 'row_version', 'updated_at']);
+            $serviceProfileId = DB::transaction(function () use ($now): string {
+                if (DB::connection()->getDriverName() === 'pgsql') {
+                    DB::statement('SELECT pg_advisory_xact_lock(hashtext(?))', ['capability_profile_family:service_listing']);
+                }
+
+                $profiles = DB::table('capability_profiles')
+                    ->where('profile_family_code', 'service_listing')
+                    ->orderByDesc('business_version')
+                    ->get();
+                $active = $profiles->first(
+                    static fn (object $profile): bool => (string) $profile->status === 'active',
+                );
+                $latest = $profiles->first();
+                $historical = $profiles->first(
+                    static fn (object $profile): bool => (int) $profile->business_version === 1,
+                );
+
+                if ($historical === null && $latest !== null && (int) $latest->business_version > 1) {
+                    DB::table('capability_profiles')->insert([
+                        'id' => self::SERVICE_PROFILE_ID,
+                        'code' => 'service_listing',
+                        'profile_family_code' => 'service_listing',
+                        'listing_type' => 'service',
+                        'mechanism' => 'listing',
+                        'work_shape' => 'A1',
+                        'allowed_payment_lanes' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),
+                        'allowed_access_tiers' => json_encode(['L1', 'L2', 'L3'], JSON_THROW_ON_ERROR),
+                        'safety_class' => 'standard',
+                        'data_class' => 'public',
+                        'status' => 'retired',
+                        'activation_record_reference' => 'capstone-fixture',
+                        'version' => 1,
+                        'business_version' => 1,
+                        'content_schema_version' => 1,
+                        'row_version' => 1,
+                        'correlation_id' => self::SERVICE_PROFILE_ID,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
+
+                if ($active !== null) {
+                    return (string) $active->id;
+                }
+
+                if ($latest === null) {
+                    $serviceProfileId = self::SERVICE_PROFILE_ID;
+                    DB::table('capability_profiles')->insert([
+                        'id' => $serviceProfileId,
+                        'code' => 'service_listing',
+                        'profile_family_code' => 'service_listing',
+                        'listing_type' => 'service',
+                        'mechanism' => 'listing',
+                        'work_shape' => 'A1',
+                        'allowed_payment_lanes' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),
+                        'allowed_access_tiers' => json_encode(['L1', 'L2', 'L3'], JSON_THROW_ON_ERROR),
+                        'safety_class' => 'standard',
+                        'data_class' => 'public',
+                        'status' => 'active',
+                        'activation_record_reference' => 'capstone-fixture',
+                        'version' => 1,
+                        'business_version' => 1,
+                        'content_schema_version' => 1,
+                        'row_version' => 1,
+                        'correlation_id' => $serviceProfileId,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+
+                    return $serviceProfileId;
+                }
+
+                $serviceProfileId = (string) Str::uuid7();
+                $version = ((int) $latest->version) + 1;
+                $businessVersion = ((int) $latest->business_version) + 1;
+                DB::table('capability_profiles')->insert([
+                    'id' => $serviceProfileId,
+                    'code' => 'service_listing',
+                    'profile_family_code' => 'service_listing',
+                    'listing_type' => 'service',
+                    'mechanism' => 'listing',
+                    'work_shape' => 'A1',
+                    'allowed_payment_lanes' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),
+                    'allowed_access_tiers' => json_encode(['L1', 'L2', 'L3'], JSON_THROW_ON_ERROR),
+                    'safety_class' => 'standard',
+                    'data_class' => 'public',
+                    'status' => 'active',
+                    'activation_record_reference' => 'capstone-fixture',
+                    'version' => $version,
+                    'business_version' => $businessVersion,
+                    'content_schema_version' => 1,
+                    'row_version' => 1,
+                    'correlation_id' => $serviceProfileId,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+
+                return $serviceProfileId;
+            });
         }
 
         if (Schema::hasTable('role_assignments')) {
@@ -191,7 +310,7 @@ final class FixtureRepository
             DB::table('listings')->upsert([[
                 'id' => self::ACTIVE_LISTING_ID,
                 'owner_user_id' => self::ACTIVE_OWNER_ID,
-                'capability_profile_id' => self::SERVICE_PROFILE_ID,
+                'capability_profile_id' => $serviceProfileId,
                 'category_id' => self::CATEGORY_ID,
                 'listing_type' => 'service',
                 'status' => 'active',
@@ -203,14 +322,14 @@ final class FixtureRepository
                 'archived_at' => null,
                 'created_at' => $now,
                 'updated_at' => $now,
-            ]], ['id'], ['status', 'review_status', 'updated_at']);
+            ]], ['id'], ['capability_profile_id', 'status', 'review_status', 'updated_at']);
 
-            DB::table('listing_versions')->upsert([[
+            $versionRow = [
                 'id' => self::ACTIVE_VERSION_ID,
                 'listing_id' => self::ACTIVE_LISTING_ID,
                 'version_number' => 1,
                 'description' => 'Reliable local help with errands and simple household tasks in Tagudin.',
-                'terms' => json_encode(['title' => 'Tagudin local help', 'category_code' => 'local-services', 'scope' => 'Fictional active public fixture', 'fixture_key' => 'active-tagudin-service-01', 'evidence_class' => 'CAPSTONE'], JSON_THROW_ON_ERROR),
+                'terms' => json_encode(['title' => 'Tagudin local help', 'category_code' => 'local-services', 'work_shape' => 'A1', 'scope' => 'Fictional active public fixture', 'fixture_key' => 'active-tagudin-service-01', 'evidence_class' => 'CAPSTONE'], JSON_THROW_ON_ERROR),
                 'price_amount_minor' => null,
                 'currency' => null,
                 'payment_lane_availability' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),
@@ -225,7 +344,26 @@ final class FixtureRepository
                 'published_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
-            ]], ['id'], ['description', 'terms', 'published_at', 'updated_at']);
+            ];
+            $versionUpdate = ['description', 'terms', 'published_at', 'updated_at'];
+
+            if (Schema::hasColumn('listing_versions', 'category_id')) {
+                $versionRow['category_id'] = self::CATEGORY_ID;
+                $versionRow['category_business_version'] = 1;
+                $versionRow['capability_profile_family_code'] = 'service_listing';
+                $versionRow['capability_profile_business_version'] = 1;
+                $versionRow['row_version'] = 1;
+                $versionUpdate = [
+                    ...$versionUpdate,
+                    'category_id',
+                    'category_business_version',
+                    'capability_profile_family_code',
+                    'capability_profile_business_version',
+                    'row_version',
+                ];
+            }
+
+            DB::table('listing_versions')->upsert([$versionRow], ['id'], $versionUpdate);
         }
     }
 

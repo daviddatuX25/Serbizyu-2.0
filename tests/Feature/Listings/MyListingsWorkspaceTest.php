@@ -54,6 +54,7 @@ it('projects owner my listings with review_status on the List Dock route', funct
         'description' => 'Fetch listed items from Tagudin public market.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ])->assertCreated()->json('data');
 
     $page = inertiaGetMyListings('/my-listings')->assertOk();
@@ -95,6 +96,7 @@ it('keeps submitted listings private on my-listings projection and out of browse
         'description' => 'Reliable local help for errands and household tasks.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ])->assertCreated()->json('data');
 
     $this->postJson('/listings/'.$created['id'].'/submit', [

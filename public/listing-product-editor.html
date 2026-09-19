@@ -1,0 +1,2743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Product &amp; Inventory Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Serbizyu Forest Brand Tokens */
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      /* Serbizyu Warm Accents & Ink */
+      --brand-navy: #0F2F58;
+      --brand-yellow: #FFC244;
+      --brand-yellow-light: #FEF8E7;
+      --brand-yellow-dark: #D97706;
+      --brand-teal: #00A699;
+      --brand-teal-light: #E6F7F5;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+      --ink-subtle: #94a3b8;
+
+      /* Surfaces & Lines */
+      --canvas: #F4F6F5;
+      --surface: #FFFFFF;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      /* Radii */
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 3px rgba(10, 87, 74, 0.06);
+      --shadow-md: 0 4px 14px rgba(10, 87, 74, 0.08);
+      --shadow-dock: 0 -4px 20px rgba(18, 32, 28, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0D1B1E;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .studio-context-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: #A4B8B0;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .meta-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .meta-row-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; width: 44px; }
+    .meta-tag-btn {
+      padding: 3px 9px; border-radius: var(--radius-pill);
+      font-size: 10px; font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: transparent; color: #A4B8B0;
+      cursor: pointer; transition: all 0.15s ease; white-space: nowrap;
+    }
+    .meta-tag-btn.active {
+      background: #0D715F; color: #FFFFFF;
+      border-color: #0D715F; box-shadow: 0 2px 8px rgba(13, 113, 95, 0.3);
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: var(--canvas); }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+    .notch-island {
+      width: 110px;
+      height: 24px;
+      background: #000000;
+      border-radius: 16px;
+      margin: 0 auto;
+    }
+
+    .editor-topbar {
+      height: 52px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      flex-shrink: 0;
+    }
+    .circle-nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-pill);
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .topbar-center-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-badge-draft {
+      background: #FEF3C7;
+      color: #92400E;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      text-transform: uppercase;
+    }
+    .btn-save-draft-link {
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--brand-navy);
+      cursor: pointer;
+    }
+
+    .editor-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 170px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .editor-card-section {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .field-input-text {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 0 12px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      outline: none;
+      background: #FFFFFF;
+    }
+    .field-select {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 0 12px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink);
+      background: #FFFFFF;
+      outline: none;
+    }
+    .field-textarea {
+      width: 100%;
+      min-height: 64px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: var(--ink);
+      outline: none;
+      background: #FFFFFF;
+      resize: vertical;
+    }
+    .field-textarea:focus,
+    .field-input-text:focus,
+    .field-select:focus {
+      border-color: var(--forest-600);
+    }
+    .option-pills-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+    .option-pill {
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 700;
+      border: 1.5px solid var(--line);
+      background: #FFFFFF;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      user-select: none;
+    }
+    .option-pill:hover {
+      border-color: var(--forest-600);
+      color: var(--forest-800);
+    }
+    .option-pill.active {
+      background: var(--forest-50);
+      border-color: var(--forest-600);
+      color: var(--forest-800);
+    }
+
+    /* Dynamic Lists & Rows */
+    .inclusions-dynamic-list {
+      display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;
+    }
+    .custom-item-row {
+      display: flex; align-items: center; gap: 8px;
+      background: #FAFCFB; border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm); padding: 2px 4px 2px 10px;
+      transition: border-color 0.15s ease;
+    }
+    .custom-item-row:focus-within {
+      border-color: var(--forest-600); background: #FFFFFF;
+    }
+    .custom-item-bullet {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--forest-600); flex-shrink: 0;
+    }
+    .custom-item-input {
+      flex: 1; height: 36px; border: none; background: transparent;
+      font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink);
+      outline: none;
+    }
+    .btn-item-remove {
+      width: 28px; height: 28px; border-radius: 50%; border: none;
+      background: transparent; color: var(--ink-muted); font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .btn-item-remove:hover {
+      background: #FEE2E2; color: #DC2626;
+    }
+    .btn-add-item-dashed {
+      width: 100%; height: 38px; border-radius: var(--radius-pill);
+      background: #FFFFFF; border: 1.5px dashed var(--forest-600);
+      color: var(--forest-600); font-family: inherit; font-size: 12px;
+      font-weight: 800; display: flex; align-items: center; justify-content: center;
+      gap: 6px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-add-item-dashed:hover {
+      background: #EFFCF6; border-color: var(--forest-700); color: var(--forest-700);
+    }
+    /* Default Badge Button */
+    .btn-default-badge {
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 800;
+      border: 1px solid var(--line);
+      background: #FFFFFF;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .btn-default-badge:hover {
+      border-color: var(--forest-600);
+      color: var(--forest-700);
+    }
+    .btn-default-badge.active {
+      background: var(--forest-50);
+      border-color: var(--forest-600);
+      color: var(--forest-700);
+      box-shadow: 0 1px 4px rgba(13, 113, 95, 0.15);
+    }
+
+    /* Un-cramped Spacious Variant Option Card */
+    .variant-option-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.18s ease;
+      cursor: pointer;
+    }
+    .variant-option-card:hover {
+      border-color: #CBD5E1;
+    }
+    .variant-option-card.active {
+      border-color: var(--forest-600);
+      background: #F8FCFA;
+      box-shadow: 0 2px 8px rgba(13, 113, 95, 0.08);
+    }
+    .variant-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .variant-radio-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+    .variant-radio-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid #CBD5E1;
+      background: #FFFFFF;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .variant-option-card.active .variant-radio-dot {
+      border-color: var(--forest-600);
+      background: var(--forest-600);
+      box-shadow: inset 0 0 0 3px #FFFFFF;
+    }
+    .variant-name-input {
+      flex: 1;
+      height: 28px;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      outline: none;
+      min-width: 0;
+    }
+    .variant-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-left: 24px;
+      font-size: 11px;
+    }
+    .variant-stock-tag {
+      color: var(--ink-muted);
+      font-weight: 600;
+    }
+    .variant-price-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--forest-700);
+    }
+
+    /* Spacious Extension Partner Card */
+    .extension-partner-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.18s ease;
+    }
+    .extension-partner-card.active {
+      border-color: #0F2F58;
+      background: #F8FAFD;
+      box-shadow: 0 4px 14px rgba(15, 47, 88, 0.06);
+    }
+    .extension-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .extension-title-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+    .extension-archetype-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .icon-transit { background: #E0F2FE; color: #0284C7; }
+    .icon-labor { background: #DCFCE7; color: #16A34A; }
+    .icon-pickup { background: #FEF3C7; color: #D97706; }
+    .extension-name-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.25;
+    }
+    .partner-selector-box {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      gap: 8px;
+    }
+    .partner-selector-box:hover {
+      border-color: #0F2F58;
+      background: #F1F5F9;
+    }
+    .partner-current-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .partner-current-name {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .partner-current-meta {
+      font-size: 10px;
+      color: var(--ink-muted);
+    }
+    .btn-change-partner {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #0F2F58;
+      background: #F0F4F8;
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .extension-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      padding-top: 8px;
+      font-size: 10.5px;
+      color: var(--ink-muted);
+    }
+
+    /* ==========================================================================
+       GLOVO ORGANIC ASYMMETRICAL WAVE BOTTOM SHEET (EXACT BROWSE-MOBILE REPLICA)
+       ========================================================================== */
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(11, 19, 43, 0.65);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      backdrop-filter: blur(4px);
+    }
+    .sheet-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .glovo-organic-modal {
+      width: 100%;
+      height: 720px;
+      max-height: 88%;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .sheet-backdrop.open .glovo-organic-modal {
+      transform: translateY(0);
+    }
+    .glovo-wave-cap {
+      width: 100%;
+      height: 34px;
+      margin-bottom: -1px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .glovo-modal-content {
+      background: #FFFFFF;
+      padding: 4px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .glovo-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .glovo-modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .glovo-close-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #F3F4F6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      color: #111827;
+      transition: all 0.15s ease;
+    }
+    .glovo-close-circle:hover {
+      background: #E5E7EB;
+    }
+    /* ==========================================================================
+       BUNDLE & CHAIN SERVICES CATALOG, PATTERN CHIPS & POPUP N8N CARDS
+       ========================================================================== */
+    @keyframes seamlessWireFlow {
+      0% { stroke-dashoffset: 20; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .chain-catalog-search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #F1F5F9;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      padding: 7px 12px;
+      margin: 8px 0 6px;
+    }
+    .chain-category-chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 2px 2px 6px;
+    }
+    .chain-category-chips::-webkit-scrollbar { display: none; }
+    .chain-cat-chip {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+    .chain-cat-chip.active {
+      background: var(--brand-navy);
+      border-color: var(--brand-navy);
+      color: #FFFFFF;
+    }
+    .search-section-header {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 6px 0 4px;
+    }
+    .compact-combo-card {
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .compact-combo-card:hover {
+      border-color: var(--brand-navy);
+    }
+    .compact-combo-card.proven {
+      border-color: rgba(13, 113, 95, 0.35);
+      background: #FAFCFB;
+    }
+    .combo-card-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .combo-title-bold {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.25;
+    }
+    .btn-mini-add-combo {
+      background: var(--forest-50);
+      border: 1px solid var(--forest-600);
+      color: var(--forest-700);
+      border-radius: var(--radius-pill);
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+    .btn-mini-add-combo:hover {
+      background: var(--forest-600);
+      color: #FFFFFF;
+    }
+    .recipe-community-badge {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: var(--forest-700);
+      background: var(--forest-50);
+      padding: 1px 6px;
+      border-radius: var(--radius-pill);
+      align-self: flex-start;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .combo-subtext-muted {
+      font-size: 10px;
+      color: var(--ink-muted);
+      line-height: 1.3;
+    }
+    .popup-n8n-chain-preview {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #F8FAFC;
+      border: 1px solid var(--line-subtle);
+      border-radius: 8px;
+      padding: 4px 6px;
+      margin: 2px 0;
+    }
+    .popup-n8n-node {
+      width: 72px;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      flex-shrink: 0;
+    }
+    .popup-n8n-node img {
+      width: 100%;
+      height: 26px;
+      object-fit: cover;
+      display: block;
+    }
+    .popup-n8n-text {
+      padding: 2px 4px 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .popup-n8n-role {
+      font-size: 7px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 1px 3px;
+      border-radius: 3px;
+      align-self: flex-start;
+    }
+    .popup-n8n-title {
+      font-size: 8px;
+      font-weight: 800;
+      color: var(--brand-navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+    .popup-n8n-price {
+      font-size: 7.5px;
+      font-weight: 800;
+      color: var(--ink-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .popup-n8n-wire {
+      flex: 1;
+      min-width: 12px;
+      max-width: 24px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .popup-wire-line {
+      stroke: var(--brand-navy);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-dasharray: 4 4;
+      animation: seamlessWireFlow 1.2s linear infinite;
+    }
+    #combinations-list-container::-webkit-scrollbar {
+      width: 4px;
+    }
+    #combinations-list-container::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+    .product-photo-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .product-thumb-preview {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1.5px solid var(--line);
+    }
+    .product-thumb-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .btn-change-photo {
+      height: 34px;
+      padding: 0 12px;
+      border-radius: var(--radius-pill);
+      background: #F1F5F9;
+      border: 1px solid var(--line);
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    /* Chaining Box */
+    .chain-compatibility-box {
+      background: #FEF8E7;
+      border: 1.5px solid #FDE68A;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Sticky Bottom Action Dock */
+    .editor-sticky-dock {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: #FFFFFF;
+      border-top: 1px solid var(--line);
+      padding: 10px 18px 18px;
+      box-shadow: var(--shadow-dock);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dock-rate-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--brand-navy);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .dock-meta-txt {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--ink-muted);
+    }
+    .btn-publish-listing {
+      height: 46px;
+      padding: 0 20px;
+      border-radius: var(--radius-pill);
+      background: var(--brand-navy);
+      color: #FFFFFF;
+      border: none;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 3px 12px rgba(15, 47, 88, 0.3);
+    }
+    /* Deal Chain Dedicated Action Button */
+    .btn-deal-chain-action {
+      width: 100%;
+      height: 42px;
+      border-radius: var(--radius-pill);
+      background: #F0F9FF;
+      border: 1.5px solid #BAE6FD;
+      color: #0369A1;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(15, 47, 88, 0.06);
+      transition: all 0.15s ease;
+    }
+    .btn-deal-chain-action:hover {
+      background: #E0F2FE;
+      border-color: #38BDF8;
+      color: #0C4A6E;
+      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.2);
+    }
+
+    /* ==========================================================================
+       ARCHITECTURAL SEPARATION:
+       MODE 1 (DEFAULT): Glovo-Inspired Minimal Full-Bleed Onboarding View
+       MODE 2 (ADVANCED): All-in-One Dense Creator Canvas for Power Users
+       ========================================================================== */
+
+    /* Mode 1: Glovo Minimal Full-Bleed Onboarding View (Default) */
+    .phone-shell.builder-view-guided {
+      background: #FFFFFF;
+    }
+    .builder-view-guided .editor-scroll-body {
+      background: #FFFFFF;
+      padding: 20px 20px 170px;
+    }
+    .builder-view-guided .editor-topbar {
+      background: #FFFFFF;
+      border-bottom: none;
+    }
+    .builder-view-guided .status-badge-draft,
+    .builder-view-guided .btn-save-draft-link {
+      display: none;
+    }
+    .builder-view-guided .topbar-center-title span:first-child {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink-soft);
+    }
+    .builder-view-guided .editor-card-section {
+      display: none;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      gap: 18px;
+    }
+    .builder-view-guided .editor-card-section.step-active {
+      display: flex;
+      flex-direction: column;
+      animation: fadeInGlovo 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fadeInGlovo {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .builder-view-guided .section-header-row {
+      display: none;
+    }
+
+    /* Glovo Friendly Ask Header (Step Header) */
+    .step-friendly-ask {
+      margin-bottom: 6px;
+    }
+    .builder-view-advanced .step-friendly-ask {
+      display: none;
+    }
+    .step-ask-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--forest-900);
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .step-ask-sub {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+
+    /* Glovo Full-Bleed Onboarding Inputs */
+    .builder-view-guided .field-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--forest-900);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .builder-view-guided .field-input-text {
+      height: 48px;
+      padding: 10px 14px;
+      font-size: 14px;
+      border-radius: 14px;
+      border: 1.5px solid var(--line);
+      background: #FFFFFF;
+    }
+
+    /* Bottom Dots Indicator (Glovo Signature Pill Pagination) */
+    .onboarding-bottom-dots {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 4px 0 8px;
+    }
+    .builder-view-advanced .onboarding-bottom-dots {
+      display: none !important;
+    }
+    .progress-pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-pill);
+      background: #E2E8F0;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .progress-pill-dot.active {
+      width: 26px;
+      background: var(--brand-navy);
+    }
+
+    /* Mode Switcher Button */
+    .btn-switch-mode {
+      background: none;
+      border: none;
+      color: var(--ink-muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin: 2px auto 0;
+      transition: all 0.15s ease;
+    }
+    .btn-switch-mode:hover {
+      background: var(--brand-yellow-light);
+      color: var(--brand-navy);
+    }
+
+    /* Mode 2: Advanced Mode Styles (All-in-One Form Canvas) */
+    .phone-shell.builder-view-advanced {
+      background: var(--canvas);
+    }
+    .builder-view-advanced .editor-scroll-body {
+      background: var(--canvas);
+      padding: 14px 14px 170px;
+    }
+    .builder-view-advanced .editor-topbar {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--line);
+    }
+    .builder-view-advanced .editor-card-section {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      padding: 14px 14px;
+      box-shadow: var(--shadow-sm);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Context Banner -->
+  <div class="studio-context-banner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <span style="font-size:13px; font-weight:800; color:#F8FAFC; font-family:Outfit,sans-serif;">Product Editor</span>
+      <span style="font-size:10px; color:#64748B; font-weight:600;">Merchant Workspace · Tagudin</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-row-label">Mode</span>
+      <button class="meta-tag-btn active" id="meta-btn-guided" onclick="setBuilderMode('guided')">Guided (Step-by-Step)</button>
+      <button class="meta-tag-btn" id="meta-btn-advanced" onclick="setBuilderMode('advanced')">Advanced (All-in-One)</button>
+    </div>
+    <div class="meta-row" id="meta-steps-row">
+      <span class="meta-row-label">Step</span>
+      <button class="meta-tag-btn active" id="meta-step-1" onclick="setGuidedStep(1)">1. Product Info</button>
+      <button class="meta-tag-btn" id="meta-step-2" onclick="setGuidedStep(2)">2. Inventory &amp; Price</button>
+      <button class="meta-tag-btn" id="meta-step-3" onclick="setGuidedStep(3)">3. Fulfillment</button>
+    </div>
+  </div>
+
+  <div class="phone-shell builder-view-guided" id="builder-shell">
+
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div>●●●</div>
+    </div>
+
+    <!-- Pinned Acting-on-Behalf Context Bar (Visible when ?owner= is present) -->
+    <div id="acting-on-behalf-bar" style="display: none; background: #06362E; color: #FFFFFF; padding: 6px 14px; font-size: 11px; font-weight: 700; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; position: relative;">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A7F3D0" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        <span>Acting for: <strong id="acting-owner-name">Aling Maria's Store</strong></span>
+      </div>
+      <button type="button" onclick="toggleContextDropdown()" style="font-size: 10px; font-weight: 800; color: #A7F3D0; background: rgba(255,255,255,0.12); border: none; padding: 2px 8px; border-radius: 9999px; cursor: pointer;">Switch ▾</button>
+
+      <!-- Compact Context Switcher Dropdown -->
+      <div id="acting-context-menu" style="display: none; position: absolute; top: 100%; right: 12px; width: 210px; background: #FFFFFF; border: 1.5px solid var(--line); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 60; padding: 6px; flex-direction: column; gap: 2px;">
+        <div style="font-size: 9.5px; font-weight: 800; color: var(--ink-muted); text-transform: uppercase; padding: 4px 8px; letter-spacing: 0.4px;">Select Principal</div>
+        <button type="button" onclick="switchContext('myself')" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 8px; background: none; border: none; font-size: 11px; font-weight: 700; color: var(--brand-navy); cursor: pointer; text-align: left; width: 100%;">
+          <span>Myself</span>
+          <span style="font-size: 9px; color: #059669; font-weight: 800;">Direct</span>
+        </button>
+        <button type="button" onclick="switchContext('aling-maria')" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 8px; background: #FEF3C7; border: 1px solid #FCD34D; font-size: 11px; font-weight: 700; color: #B45309; cursor: pointer; text-align: left; width: 100%;">
+          <span>Aling Maria's Store</span>
+          <span style="font-size: 9px; color: #B45309; font-weight: 800;">Active</span>
+        </button>
+        <button type="button" onclick="switchContext('mang-jose')" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 8px; background: none; border: none; font-size: 11px; font-weight: 700; color: var(--brand-navy); cursor: pointer; text-align: left; width: 100%;">
+          <span>Mang Jose's Tricycle</span>
+          <span style="font-size: 9px; color: var(--ink-muted);">Delegated</span>
+        </button>
+        <button type="button" onclick="switchContext('kuya-bert')" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 8px; background: none; border: none; font-size: 11px; font-weight: 700; color: var(--brand-navy); cursor: pointer; text-align: left; width: 100%;">
+          <span>Kuya Bert's Plumbing</span>
+          <span style="font-size: 9px; color: var(--ink-muted);">Delegated</span>
+        </button>
+        <div style="border-top: 1px solid var(--line-subtle); margin: 4px 0 2px;"></div>
+        <a href="agent-today.html" style="display: block; font-size: 10px; font-weight: 800; color: var(--forest-600); text-decoration: none; padding: 4px 8px;">Open Agent Today</a>
+      </div>
+    </div>
+
+    <!-- Topbar -->
+    <header class="editor-topbar">
+      <button type="button" class="circle-nav-btn" onclick="handleTopbarBack()" aria-label="Back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="topbar-center-title">
+        <span id="builder-topbar-title">Product Listing</span>
+        <span class="status-badge-draft">Draft</span>
+      </div>
+      <button type="button" class="btn-save-draft-link" onclick="saveDraft()">Save</button>
+    </header>
+    <!-- Scrollable Editor Body -->
+    <main class="editor-scroll-body">
+
+      <!-- Section 1: Product Identity (Step 1 in Guided Mode) -->
+      <section class="editor-card-section step-active" id="card-step-1">
+        <div class="step-friendly-ask">
+          <h2 class="step-ask-title">What product are you selling?</h2>
+          <p class="step-ask-sub">Provide your product title, category, and counter photo.</p>
+        </div>
+
+        <div class="section-header-row">
+          <h2 class="section-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><path d="m7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+            <span>Product Identity</span>
+          </h2>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Merchant / Storefront</label>
+          <input type="text" class="field-input-text" value="Tagudin Hardware &amp; Supply · Poblacion East" readonly style="background: #F8FAFC;">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Product Title</label>
+          <input type="text" class="field-input-text" id="product-title" value="35uF Heavy-Duty AC Run Capacitor">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Description</label>
+          <textarea class="field-textarea" id="product-description" rows="3">OEM replacement 35uF ±5% 450VAC dual run capacitor for split & window inverter air conditioning units. Counter-verified and tested.</textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Product Category</label>
+          <select class="field-select" id="product-category" onchange="tuneExtensionsForCategory(this.value)">
+            <option value="parts" selected>Parts &amp; Hardware (HVAC &amp; Electrical)</option>
+            <option value="construction">Construction Materials &amp; Aggregates</option>
+            <option value="plumbing">Pipes, Valves &amp; Plumbing</option>
+            <option value="tools">Hand &amp; Power Tools</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Fulfillment Shape</label>
+          <div class="option-pills-row" id="product-shape-pills">
+            <button type="button" class="option-pill active" onclick="selectSinglePill(this, 'product-shape-pills')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>A4 Counter Handoff</span>
+            </button>
+            <button type="button" class="option-pill" onclick="selectSinglePill(this, 'product-shape-pills')">
+              <span>A9 Digital Deliverable</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Product Photo</label>
+          <div class="product-photo-row">
+            <div class="product-thumb-preview">
+              <img src="/photos/ac-capacitor.jpg" alt="35uF Capacitor">
+            </div>
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: var(--ink);">ac-capacitor.jpg</div>
+              <div style="font-size: 10px; color: var(--ink-muted); margin-bottom: 6px;">Verified counter inventory photo</div>
+              <button type="button" class="btn-change-photo" onclick="alert('Photo upload dialog')">Replace Photo</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Pricing & Counter Stock (Step 2 in Guided Mode) -->
+      <section class="editor-card-section" id="card-step-2">
+        <div class="step-friendly-ask">
+          <h2 class="step-ask-title">Pricing &amp; counter stock</h2>
+          <p class="step-ask-sub">Set unit price and live counter stock for pickup.</p>
+        </div>
+
+        <div class="section-header-row">
+          <h2 class="section-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+            <span>Pricing &amp; Inventory</span>
+          </h2>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="field-group">
+            <label class="field-label">Unit Price (₱)</label>
+            <input type="text" class="field-input-text" id="product-price" value="180.00" style="font-family: 'JetBrains Mono', monospace; font-weight: 700;">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Pricing Unit</label>
+            <select class="field-select">
+              <option selected>Piece / Unit</option>
+              <option>Bag (40kg)</option>
+              <option>Kilogram (kg)</option>
+              <option>Meter / Roll</option>
+              <option>Pack / Set</option>
+              <option>Box</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="field-group">
+            <label class="field-label">Available Counter Stock</label>
+            <input type="number" class="field-input-text" id="product-stock" value="24" style="font-family: 'JetBrains Mono', monospace; font-weight: 700;">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Low Stock Alert</label>
+            <input type="number" class="field-input-text" value="5" style="font-family: 'JetBrains Mono', monospace;">
+          </div>
+        </div>
+
+        <!-- Product Variations & Primary Default -->
+        <div class="field-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="field-label" style="margin: 0;">Product Variations &amp; Primary Default</label>
+            <span style="font-size: 10px; color: var(--ink-muted);">Tap to set primary default</span>
+          </div>
+          <div class="inclusions-dynamic-list" id="product-variants-list">
+            <div class="variant-option-card active" onclick="setDefaultProductVariantCard(this)">
+              <div class="variant-card-header">
+                <div class="variant-radio-title">
+                  <span class="variant-radio-dot"></span>
+                  <input type="text" class="variant-name-input" value="35uF Standard Inverter" placeholder="Variation name...">
+                </div>
+                <span class="btn-default-badge active">★ Primary Default</span>
+              </div>
+              <div class="variant-card-footer">
+                <span class="variant-stock-tag">24 units counter stock</span>
+                <span class="variant-price-tag">₱180.00</span>
+              </div>
+            </div>
+
+            <div class="variant-option-card" onclick="setDefaultProductVariantCard(this)">
+              <div class="variant-card-header">
+                <div class="variant-radio-title">
+                  <span class="variant-radio-dot"></span>
+                  <input type="text" class="variant-name-input" value="45uF Heavy-Duty Dual" placeholder="Variation name...">
+                </div>
+                <button type="button" class="btn-default-badge" onclick="event.stopPropagation(); setDefaultProductVariantCard(this.closest('.variant-option-card'))">Make Default</button>
+              </div>
+              <div class="variant-card-footer">
+                <span class="variant-stock-tag">12 units counter stock</span>
+                <span class="variant-price-tag">₱220.00</span>
+              </div>
+            </div>
+
+            <div class="variant-option-card" onclick="setDefaultProductVariantCard(this)">
+              <div class="variant-card-header">
+                <div class="variant-radio-title">
+                  <span class="variant-radio-dot"></span>
+                  <input type="text" class="variant-name-input" value="50uF Commercial Floor Unit" placeholder="Variation name...">
+                </div>
+                <button type="button" class="btn-default-badge" onclick="event.stopPropagation(); setDefaultProductVariantCard(this.closest('.variant-option-card'))">Make Default</button>
+              </div>
+              <div class="variant-card-footer">
+                <span class="variant-stock-tag">8 units counter stock</span>
+                <span class="variant-price-tag">₱260.00</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-add-item-dashed" onclick="addProductVariantCard()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add Variation (Rating / Size)</span>
+          </button>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Brand Substitution Policy</label>
+          <div class="option-pills-row" id="product-brand-pills">
+            <button type="button" class="option-pill active" onclick="selectSinglePill(this, 'product-brand-pills')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Equivalent Brand OK</span>
+            </button>
+            <button type="button" class="option-pill" onclick="selectSinglePill(this, 'product-brand-pills')">
+              <span>Exact Brand Only</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Accepted Payment Lanes</label>
+          <div class="option-pills-row">
+            <button type="button" class="option-pill active" onclick="toggleOptionPill(this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Cash at Counter</span>
+            </button>
+            <button type="button" class="option-pill active" onclick="toggleOptionPill(this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>GCash / Maya QR</span>
+            </button>
+            <button type="button" class="option-pill active" onclick="toggleOptionPill(this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Tiwala Escrow</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Fulfillment & Coordination (Step 3 in Guided Mode) -->
+      <section class="editor-card-section" id="card-step-3">
+        <div class="step-friendly-ask">
+          <h2 class="step-ask-title">Fulfillment &amp; coordination</h2>
+          <p class="step-ask-sub">Pre-package partner delivery and set your default fulfillment mode.</p>
+        </div>
+
+        <div class="section-header-row">
+          <h2 class="section-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
+            <span>Fulfillment &amp; Partner Extensions (Deal Chain)</span>
+          </h2>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Counter Ready Window</label>
+          <select class="field-select">
+            <option selected>Immediate Counter Ready (Within 15 minutes)</option>
+            <option>Scheduled Warehouse Prep (Within 1 hour)</option>
+            <option>Next-Day Counter Reservation</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Courier Pickup Instructions</label>
+          <input type="text" class="field-input-text" value="Direct counter lane 2 · State Order ID to cashier">
+        </div>
+        <!-- Section Divider: Extend Listing (Partnered Services) -->
+        <div style="border-top: 1.5px solid var(--line); margin: 14px 0 8px; padding-top: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 11.5px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.5px;">Partnered Services</span>
+            <span style="font-size: 9px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 1.5px 6px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">DEAL CHAIN</span>
+          </div>
+        </div>
+        <div id="extend-listing-content-container">
+          <!-- Combination 1: Doorstep Delivery -->
+          <div class="extension-partner-card active" id="combo-card-delivery" style="border-color: #0F2F58; background: #F8FAFD; margin-bottom: 8px;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon icon-transit">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                </div>
+                <div>
+                  <div class="extension-name-title">Doorstep Delivery</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <button type="button" class="btn-default-badge active" onclick="setAsListingDefault(this)">★ Default</button>
+                <button type="button" class="btn-item-remove" onclick="removeCombinationCard('combo-card-delivery')" title="Detach combination">&times;</button>
+              </div>
+            </div>
+
+            <!-- Slot: Courier Partner Selector -->
+            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="delivery-partner-name">Danny Express Motorcycle Pool</div>
+                <div class="partner-current-meta" id="delivery-partner-meta">₱35.00 route fee</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+          </div>
+
+          <!-- Combination 2: Sourced Part & Installation -->
+          <div class="extension-partner-card" id="combo-card-installation" style="border-color: var(--line); background: #FFFFFF; margin-bottom: 8px;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon icon-labor">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                </div>
+                <div>
+                  <div class="extension-name-title">Part &amp; Installation Labor</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <button type="button" class="btn-default-badge" onclick="setAsListingDefault(this)">Make Default</button>
+                <button type="button" class="btn-item-remove" onclick="removeCombinationCard('combo-card-installation')" title="Detach combination">&times;</button>
+              </div>
+            </div>
+
+            <!-- Slot 1: Courier -->
+            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')" style="margin-bottom: 6px;">
+              <div class="partner-current-info">
+                <div class="partner-current-name">Danny Express Motorcycle Pool</div>
+                <div class="partner-current-meta">₱35.00 route fee</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+
+            <!-- Slot 2: Technician -->
+            <div class="partner-selector-box" onclick="openSlotListingPicker('installation')">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="install-partner-name">Kuya Ben Aircon Services</div>
+                <div class="partner-current-meta" id="install-partner-meta">₱250.00 labor</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Open Multi-Node Deal Chain Catalog Button -->
+        <button type="button" class="btn-add-item-dashed" style="margin-top: 8px;" onclick="openBundleCatalog()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <span>Attach More Partner Combinations</span>
+          <span style="font-size: 9.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.2px;">DEAL CHAIN</span>
+        </button>
+
+    </main>
+
+    <!-- Sticky Bottom Dock with Glovo Dots & Mode Switcher -->
+    <footer class="editor-sticky-dock" id="editor-dock" style="flex-direction: column; gap: 6px; padding: 10px 18px 18px;">
+      <!-- Onboarding Progress Dots (Hidden in Advanced Mode) -->
+      <div class="onboarding-bottom-dots" id="onboarding-dots" aria-label="Step progress">
+        <span class="progress-pill-dot active" id="dot-1"></span>
+        <span class="progress-pill-dot" id="dot-2"></span>
+        <span class="progress-pill-dot" id="dot-3"></span>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px;">
+        <div class="dock-base-summary" id="dock-summary">
+          <span class="dock-rate-val">₱180.00</span>
+          <span class="dock-meta-txt">24 Units Counter Stock</span>
+        </div>
+        <button type="button" class="btn-publish-listing" id="primary-action-btn" onclick="handlePrimaryAction()" style="flex: 1; max-width: 200px; justify-content: center;">
+          <span id="primary-action-text">Continue</span>
+          <svg id="primary-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+
+      <!-- Mode Switcher -->
+      <button type="button" class="btn-switch-mode" id="btn-switch-mode" onclick="toggleViewMode()">
+        <span id="switch-mode-icon">⚡</span>
+        <span id="switch-mode-text">Switch to all-in-one form</span>
+      </button>
+    </footer>
+
+    <!-- 1. Single-Slot Listing Selector Modal (for [Change Partner ▾]) -->
+    <div class="sheet-backdrop" id="slot-listing-picker-modal" onclick="closeSlotListingPicker()">
+      <div class="glovo-organic-modal" onclick="event.stopPropagation()">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+        <div class="glovo-modal-content" style="max-height: 80vh; display: flex; flex-direction: column; padding: 4px 18px 16px;">
+          <!-- Pinned Fixed Top Area -->
+          <div class="modal-fixed-top" style="flex-shrink: 0; padding-bottom: 4px;">
+            <div class="sheet-header-row">
+              <div>
+                <h3 class="glovo-modal-title" id="slot-picker-title">Select Partner Listing</h3>
+                <p style="display: none;" id="slot-picker-subtitle"></p>
+              </div>
+              <button type="button" class="glovo-close-circle" onclick="closeSlotListingPicker()" aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="chain-catalog-search-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input type="text" id="slot-search-input" placeholder="Search provider name or vehicle type..." oninput="handleSlotSearch(this.value)">
+            </div>
+
+            <!-- Filter Chips (Favorites, Top Rated, All) -->
+            <div class="chain-category-chips" id="slot-filter-chips">
+              <button type="button" class="chain-cat-chip active" onclick="filterSlotCategory('favorites', this)">⭐ Favorites &amp; Recent</button>
+              <button type="button" class="chain-cat-chip" onclick="filterSlotCategory('top_rated', this)">🏆 Top Rated</button>
+              <button type="button" class="chain-cat-chip" onclick="filterSlotCategory('all', this)">📍 All in Tagudin</button>
+            </div>
+
+            <div class="search-section-header" style="margin-top: 6px;">Select Provider</div>
+          </div>
+
+          <!-- Scrollable Options List for this Slot -->
+          <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-bottom: 40px; min-height: 0;" id="slot-options-container">
+            <!-- Options populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Multi-Node Deal Chain Catalog Modal (for [Attach Partner Listing]) -->
+    <div class="sheet-backdrop" id="bundle-chain-catalog-modal" onclick="closeBundleCatalog()">
+      <div class="glovo-organic-modal" onclick="event.stopPropagation()">
+        <!-- Signature Glovo Organic Asymmetrical Concave/Convex Wave Cap -->
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+        <div class="glovo-modal-content">
+          <!-- Pinned Fixed Header Area (Never Scrolls Off-Screen) -->
+          <div class="modal-fixed-top" style="flex-shrink: 0; padding-bottom: 4px;">
+            <div class="sheet-header-row">
+              <div class="sheet-title-txt">Bundle &amp; Chain Services</div>
+              <button type="button" class="glovo-close-circle" onclick="closeBundleCatalog()" aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <!-- 1. Search Bar -->
+            <div class="chain-catalog-search-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input type="text" id="chain-catalog-search" placeholder="Search services, parts, or chain types..." oninput="handleChainSearch(this.value)">
+            </div>
+
+            <!-- 2. Chain Pattern Category Chips -->
+            <div class="chain-category-chips" id="pattern-chips-row">
+              <button type="button" class="chain-cat-chip active" onclick="selectPatternChip('all', this)">All Patterns</button>
+              <button type="button" class="chain-cat-chip" onclick="selectPatternChip('repair', this)">Parts → Repair</button>
+              <button type="button" class="chain-cat-chip" onclick="selectPatternChip('delivery', this)">Buy → Deliver</button>
+              <button type="button" class="chain-cat-chip" onclick="selectPatternChip('multi', this)">Multi-Stop</button>
+            </div>
+
+            <!-- Search Result Mode: Generic Archetypes -->
+            <div id="search-archetype-section" style="display: none;">
+              <div class="search-section-header">Matching Chain Pattern (Generic Archetype)</div>
+              <div class="compact-combo-card" style="border-style: dashed; background: #F8FAFC;">
+                <div class="combo-card-top-row">
+                  <span class="combo-title-bold">DIAGNOSTIC &rarr; SOURCED PARTS &rarr; TOWING</span>
+                  <button type="button" class="btn-mini-add-combo" onclick="applyChainedNode('incomplete')">Use Flow</button>
+                </div>
+                <div class="combo-subtext-muted">Generic 3-stage vehicle recovery workflow for Tagudin residents</div>
+              </div>
+            </div>
+
+            <!-- 3. Suggested Combinations for this Listing -->
+            <div class="search-section-header" id="combinations-header-label">Available Combinations</div>
+          </div>
+
+          <!-- Scrollable Combinations Area (Only the cards scroll with generous bottom padding) -->
+          <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 80px; min-height: 0;" id="combinations-list-container">
+            <!-- Card 0: Delivery + Installation (Category Default) -->
+            <article class="compact-combo-card proven" id="card-combo-default" onclick="applyChainRecipe('default_delivery_install')">
+              <div class="combo-card-top-row">
+                <span class="combo-title-bold">Delivery + Installation (Category Default)</span>
+                <button type="button" class="btn-mini-add-combo" onclick="event.stopPropagation(); applyChainRecipe('default_delivery_install')">Standard</button>
+              </div>
+              <div class="recipe-community-badge">
+                <span>★ 4.9</span>
+                <span>·</span>
+                <span>112 booked in Tagudin</span>
+              </div>
+              <div class="popup-n8n-chain-preview">
+                <div class="popup-n8n-node">
+                  <img src="/photos/ac-capacitor.jpg" alt="Part">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#FEF3C7; color:#B45309;">Part</span>
+                    <span class="popup-n8n-title">35uF Cap</span>
+                    <span class="popup-n8n-price">₱180</span>
+                  </div>
+                </div>
+                <div class="popup-n8n-wire">
+                  <svg viewBox="0 0 24 14" fill="none" style="width: 100%;"><line x1="0" y1="7" x2="24" y2="7" class="popup-wire-line"></line></svg>
+                </div>
+                <div class="popup-n8n-node">
+                  <img src="/photos/courier.jpg" alt="Rider">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#E0F2FE; color:#0284C7;">Rider</span>
+                    <span class="popup-n8n-title">Danny Exp</span>
+                    <span class="popup-n8n-price">₱35</span>
+                  </div>
+                </div>
+                <div class="popup-n8n-wire">
+                  <svg viewBox="0 0 24 14" fill="none" style="width: 100%;"><line x1="0" y1="7" x2="24" y2="7" class="popup-wire-line"></line></svg>
+                </div>
+                <div class="popup-n8n-node">
+                  <img src="/photos/ac-clean.jpg" alt="Labor">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#ECFDF5; color:#059669;">Labor</span>
+                    <span class="popup-n8n-title">Kuya Ben</span>
+                    <span class="popup-n8n-price">₱250</span>
+                  </div>
+                </div>
+              </div>
+              <div class="combo-subtext-muted">Tagudin hardware category default: courier delivery + technician installation</div>
+            </article>
+
+            <!-- Card 1: Tool Rental Kit + Courier Delivery -->
+            <article class="compact-combo-card" id="card-combo-toolrental" onclick="applyChainRecipe('tool_rental')">
+              <div class="combo-card-top-row">
+                <span class="combo-title-bold">Tool Rental Kit + Courier Delivery</span>
+                <button type="button" class="btn-mini-add-combo" onclick="event.stopPropagation(); applyChainRecipe('tool_rental')">+ ₱120.00</button>
+              </div>
+              <div class="recipe-community-badge">
+                <span>★ 4.9</span>
+                <span>·</span>
+                <span>46 booked in Tagudin</span>
+              </div>
+              <div class="popup-n8n-chain-preview">
+                <div class="popup-n8n-node">
+                  <img src="/photos/ac-capacitor.jpg" alt="Part">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#FEF3C7; color:#B45309;">Part</span>
+                    <span class="popup-n8n-title">35uF Cap</span>
+                    <span class="popup-n8n-price">₱180</span>
+                  </div>
+                </div>
+                <div class="popup-n8n-wire">
+                  <svg viewBox="0 0 24 14" fill="none" style="width: 100%;"><line x1="0" y1="7" x2="24" y2="7" class="popup-wire-line"></line></svg>
+                </div>
+                <div class="popup-n8n-node">
+                  <img src="https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=150&auto=format&fit=crop&q=80" alt="Tool">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#FEF3C7; color:#B45309;">Rental</span>
+                    <span class="popup-n8n-title">Vacuum Kit</span>
+                    <span class="popup-n8n-price">₱85</span>
+                  </div>
+                </div>
+                <div class="popup-n8n-wire">
+                  <svg viewBox="0 0 24 14" fill="none" style="width: 100%;"><line x1="0" y1="7" x2="24" y2="7" class="popup-wire-line"></line></svg>
+                </div>
+                <div class="popup-n8n-node">
+                  <img src="/photos/courier.jpg" alt="Rider">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#E0F2FE; color:#0284C7;">Rider</span>
+                    <span class="popup-n8n-title">Danny Exp</span>
+                    <span class="popup-n8n-price">₱35</span>
+                  </div>
+                </div>
+              </div>
+              <div class="combo-subtext-muted">Tagudin Tool Depot supplies professional vacuum &amp; gauge kit + doorstep courier for DIYers</div>
+            </article>
+
+            <!-- Card 2: Old Unit Hauling & Eco-Recycling -->
+            <article class="compact-combo-card" id="card-combo-hauling" onclick="applyChainRecipe('hauling')">
+              <div class="combo-card-top-row">
+                <span class="combo-title-bold">Old Unit Hauling &amp; Eco-Recycling</span>
+                <button type="button" class="btn-mini-add-combo" onclick="event.stopPropagation(); applyChainRecipe('hauling')">+ ₱80.00</button>
+              </div>
+              <div class="recipe-community-badge" style="background:#E0F2FE; color:#0284C7;">
+                <span>★ 4.9</span>
+                <span>·</span>
+                <span>38 booked</span>
+              </div>
+              <div class="popup-n8n-chain-preview">
+                <div class="popup-n8n-node">
+                  <img src="/photos/ac-capacitor.jpg" alt="Part">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#FEF3C7; color:#B45309;">Part</span>
+                    <span class="popup-n8n-title">New 35uF</span>
+                    <span class="popup-n8n-price">₱180</span>
+                  </div>
+                </div>
+                <div class="popup-n8n-wire">
+                  <svg viewBox="0 0 24 14" fill="none" style="width: 100%;"><line x1="0" y1="7" x2="24" y2="7" class="popup-wire-line"></line></svg>
+                </div>
+                <div class="popup-n8n-node">
+                  <img src="/photos/courier.jpg" alt="Rider">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#E0F2FE; color:#0284C7;">Rider</span>
+                    <span class="popup-n8n-title">Delivery</span>
+                    <span class="popup-n8n-price">₱35</span>
+                  </div>
+                </div>
+                <div class="popup-n8n-wire">
+                  <svg viewBox="0 0 24 14" fill="none" style="width: 100%;"><line x1="0" y1="7" x2="24" y2="7" class="popup-wire-line"></line></svg>
+                </div>
+                <div class="popup-n8n-node">
+                  <img src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=150&auto=format&fit=crop&q=80" alt="Haul">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#FEF3C7; color:#B45309;">Eco-Recycle</span>
+                    <span class="popup-n8n-title">Old Scrap</span>
+                    <span class="popup-n8n-price">₱45</span>
+                  </div>
+                </div>
+              </div>
+              <div class="combo-subtext-muted">Eco-courier delivers new part and hauls away damaged old capacitor for verified town recycling</div>
+            </article>
+
+            <!-- Card 3: Post-Service Safety Inspection -->
+            <article class="compact-combo-card" id="card-combo-inspection" onclick="applyChainRecipe('post_service_inspection')">
+              <div class="combo-card-top-row">
+                <span class="combo-title-bold">Post-Service Electrical Inspection</span>
+                <button type="button" class="btn-mini-add-combo" onclick="event.stopPropagation(); applyChainRecipe('post_service_inspection')">+ ₱150.00</button>
+              </div>
+              <div class="recipe-community-badge">
+                <span>★ 4.9</span>
+                <span>·</span>
+                <span>19 booked</span>
+              </div>
+              <div class="popup-n8n-chain-preview">
+                <div class="popup-n8n-node">
+                  <img src="/photos/ac-clean.jpg" alt="Labor">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#ECFDF5; color:#059669;">Labor</span>
+                    <span class="popup-n8n-title">Kuya Ben</span>
+                    <span class="popup-n8n-price">₱350</span>
+                  </div>
+                </div>
+                <div class="popup-n8n-wire">
+                  <svg viewBox="0 0 24 14" fill="none" style="width: 100%;"><line x1="0" y1="7" x2="24" y2="7" class="popup-wire-line"></line></svg>
+                </div>
+                <div class="popup-n8n-node">
+                  <img src="/photos/req-electrician.jpg" alt="Audit">
+                  <div class="popup-n8n-text">
+                    <span class="popup-n8n-role" style="background:#F5F3FF; color:#6D28D9;">Audit</span>
+                    <span class="popup-n8n-title">Safety Check</span>
+                    <span class="popup-n8n-price">₱150</span>
+                  </div>
+                </div>
+              </div>
+              <div class="combo-subtext-muted">Certified breaker load and wiring checkup after AC install</div>
+            </article>
+
+            <!-- Card 4: Custom Chain / Empty Slot Fallback Card -->
+            <article class="compact-combo-card" style="border: 1.5px dashed #CBD5E1; background: #F8FAFC;" onclick="applyChainRecipe('custom_empty')">
+              <div class="combo-card-top-row">
+                <span class="combo-title-bold" style="color: var(--brand-navy); display: flex; align-items: center; gap: 5px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"></path></svg>
+                  <span>Build Custom Chain with Empty Slot</span>
+                </span>
+                <button type="button" class="btn-mini-add-combo" style="background:#FFFFFF; border-color:var(--brand-navy); color:var(--brand-navy);" onclick="event.stopPropagation(); applyChainRecipe('custom_empty')">+ Empty Slot</button>
+              </div>
+              <div class="combo-subtext-muted">
+                Need a custom team or your preferred courier isn't listed? Stage an open chain container and fill the missing slot later from Browse.
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Guided vs Advanced View State (Default: Minimal Guided Onboarding)
+    let currentViewMode = 'guided'; // 'guided' | 'advanced'
+    let currentStep = 1; // 1 | 2 | 3
+
+    function updateStepUI() {
+      const isGuided = (currentViewMode === 'guided');
+
+      const card1 = document.getElementById('card-step-1');
+      const card2 = document.getElementById('card-step-2');
+      const card3 = document.getElementById('card-step-3');
+
+      if (isGuided) {
+        if (card1) card1.classList.toggle('step-active', currentStep === 1);
+        if (card2) card2.classList.toggle('step-active', currentStep === 2);
+        if (card3) card3.classList.toggle('step-active', currentStep === 3);
+
+        const dot1 = document.getElementById('dot-1');
+        const dot2 = document.getElementById('dot-2');
+        const dot3 = document.getElementById('dot-3');
+        if (dot1) dot1.classList.toggle('active', currentStep === 1);
+        if (dot2) dot2.classList.toggle('active', currentStep === 2);
+        if (dot3) dot3.classList.toggle('active', currentStep === 3);
+
+        const btnText = document.getElementById('primary-action-text');
+        const btnIcon = document.getElementById('primary-action-icon');
+
+        if (currentStep < 3) {
+          if (btnText) btnText.innerText = 'Continue';
+          if (btnIcon) btnIcon.innerHTML = '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>';
+        } else {
+          // ONLY at the end show "Publish Product"
+          if (btnText) btnText.innerText = 'Publish Product';
+          if (btnIcon) btnIcon.innerHTML = '<polyline points="9 18 15 12 9 6"/>';
+        }
+      } else {
+        if (card1) card1.classList.remove('step-active');
+        if (card2) card2.classList.remove('step-active');
+        if (card3) card3.classList.remove('step-active');
+
+        const btnText = document.getElementById('primary-action-text');
+        const btnIcon = document.getElementById('primary-action-icon');
+        if (btnText) btnText.innerText = 'Publish Product';
+        if (btnIcon) btnIcon.innerHTML = '<polyline points="9 18 15 12 9 6"/>';
+      }
+      updateMeta();
+    }
+
+    function setBuilderMode(mode) {
+      if (currentViewMode !== mode) {
+        toggleViewMode();
+      }
+    }
+
+    function setGuidedStep(step) {
+      if (currentViewMode !== 'guided') {
+        setBuilderMode('guided');
+      }
+      currentStep = step;
+      updateStepUI();
+      const scrollArea = document.querySelector('.editor-scroll-body');
+      if (scrollArea) scrollArea.scrollTop = 0;
+    }
+
+    function updateMeta() {
+      const btnGuided = document.getElementById('meta-btn-guided');
+      const btnAdvanced = document.getElementById('meta-btn-advanced');
+      const stepsRow = document.getElementById('meta-steps-row');
+      if (btnGuided) btnGuided.classList.toggle('active', currentViewMode === 'guided');
+      if (btnAdvanced) btnAdvanced.classList.toggle('active', currentViewMode === 'advanced');
+      if (stepsRow) stepsRow.style.display = currentViewMode === 'guided' ? 'flex' : 'none';
+      [1, 2, 3].forEach(s => {
+        const b = document.getElementById('meta-step-' + s);
+        if (b) b.classList.toggle('active', currentStep === s);
+      });
+    }
+
+    function handlePrimaryAction() {
+      if (currentViewMode === 'guided') {
+        if (currentStep < 3) {
+          currentStep++;
+          updateStepUI();
+          const scrollArea = document.querySelector('.editor-scroll-body');
+          if (scrollArea) scrollArea.scrollTop = 0;
+        } else {
+          publishProduct();
+        }
+      } else {
+        publishProduct();
+      }
+    }
+
+    function toggleViewMode() {
+      const shell = document.getElementById('builder-shell');
+      const switchText = document.getElementById('switch-mode-text');
+      const switchIcon = document.getElementById('switch-mode-icon');
+      const titleEl = document.getElementById('builder-topbar-title');
+
+      if (currentViewMode === 'guided') {
+        currentViewMode = 'advanced';
+        if (shell) {
+          shell.classList.remove('builder-view-guided');
+          shell.classList.add('builder-view-advanced');
+        }
+        if (switchText) switchText.innerText = 'Switch to step-by-step guide';
+        if (switchIcon) switchIcon.innerText = '🌱';
+        if (titleEl) titleEl.innerText = 'Product Listing (Advanced)';
+      } else {
+        currentViewMode = 'guided';
+        if (shell) {
+          shell.classList.remove('builder-view-advanced');
+          shell.classList.add('builder-view-guided');
+        }
+        if (switchText) switchText.innerText = 'Switch to all-in-one form';
+        if (switchIcon) switchIcon.innerText = '⚡';
+        if (titleEl) titleEl.innerText = 'Product Listing';
+      }
+      updateStepUI();
+    }
+
+    function handleTopbarBack() {
+      if (currentViewMode === 'guided' && currentStep > 1) {
+        currentStep--;
+        updateStepUI();
+        const scrollArea = document.querySelector('.editor-scroll-body');
+        if (scrollArea) scrollArea.scrollTop = 0;
+      } else {
+        const path = window.location.pathname;
+        if (path.includes('/sessions/') || path.includes('/design-sessions/')) {
+          window.location.href = '../browse-mobile.html';
+        } else {
+          window.location.href = 'browse-mobile.html';
+        }
+      }
+    }
+
+    function goBack() {
+      const path = window.location.pathname;
+      if (path.includes('/sessions/') || path.includes('/design-sessions/')) {
+        window.location.href = '../browse-mobile.html';
+      } else {
+        window.location.href = 'browse-mobile.html';
+      }
+    }
+
+    function saveDraft() {
+      alert('Draft saved!\n\nProduct inventory and counter pickup SLA persisted.');
+    }
+
+    function publishProduct() {
+      const title = document.getElementById('product-title').value;
+      const price = document.getElementById('product-price').value;
+      const stock = document.getElementById('product-stock').value;
+      alert(`Product Published to Tagudin Marketplace!\n\nTitle: ${title}\nPrice: ₱${price}\nStock: ${stock} Units\nCounter SLA: 15 mins\nDeal Chain Auto-Bind: Enabled\n\nThis product is now live for direct order and auto-chaining by technicians!`);
+      window.location.href = 'browse-mobile.html';
+    }
+    function selectSinglePill(btn, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.querySelectorAll('.option-pill').forEach(pill => {
+        pill.classList.remove('active');
+        const svg = pill.querySelector('svg');
+        if (svg) svg.remove();
+      });
+      btn.classList.add('active');
+      btn.insertAdjacentHTML('afterbegin', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>');
+    }
+
+    function toggleOptionPill(btn) {
+      const isActive = btn.classList.contains('active');
+      if (isActive) {
+        btn.classList.remove('active');
+        const svg = btn.querySelector('svg');
+        if (svg) svg.remove();
+      } else {
+        btn.classList.add('active');
+        btn.insertAdjacentHTML('afterbegin', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>');
+      }
+    }
+
+    function setDefaultProductVariant(btn) {
+      const container = document.getElementById('product-variants-list');
+      if (!container) return;
+      container.querySelectorAll('.btn-default-badge').forEach(b => {
+        b.classList.remove('active');
+        b.innerText = 'Make Default';
+      });
+      btn.classList.add('active');
+      btn.innerText = '★ Default';
+    }
+
+    function setDefaultFulfillment(btn) {
+      const container = document.getElementById('fulfillment-presets-list');
+      if (!container) return;
+      container.querySelectorAll('.btn-default-badge').forEach(b => {
+        b.classList.remove('active');
+        b.innerText = 'Make Default';
+      });
+      btn.classList.add('active');
+      btn.innerText = '★ Default';
+    }
+
+    function addProductVariant() {
+      const list = document.getElementById('product-variants-list');
+      if (!list) return;
+      const div = document.createElement('div');
+      div.className = 'custom-item-row';
+      div.style.padding = '6px 10px';
+      div.innerHTML = `
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <input type="text" class="custom-item-input" style="height: 22px; font-weight: 800;" placeholder="Variation name (e.g. 60uF Turbo)..." autofocus>
+          <span style="font-size: 10px; color: var(--ink-muted);">0 units counter stock</span>
+        </div>
+        <input type="text" class="custom-item-input" style="width: 70px; height: 22px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--forest-700);" value="₱ 0.00">
+        <button type="button" class="btn-default-badge" onclick="setDefaultProductVariant(this)">Make Default</button>
+        <button type="button" class="btn-item-remove" onclick="this.closest('.custom-item-row').remove()" aria-label="Remove">&times;</button>
+      `;
+      list.appendChild(div);
+      div.querySelector('input').focus();
+    }
+
+    function addExtensionPreset(name = 'New Partner Service', fee = '+₱50.00 est. fee') {
+      const list = document.getElementById('fulfillment-presets-list');
+      if (!list) return;
+      const div = document.createElement('div');
+      div.className = 'extension-partner-card';
+      div.onclick = function() { setDefaultFulfillmentCard(this); };
+      div.innerHTML = `
+        <div class="extension-card-top">
+          <div class="extension-title-badge-group">
+            <div class="extension-archetype-icon" style="background: #F1F5F9; color: #0F2F58;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <div>
+              <div class="extension-name-title">${name}</div>
+              <div style="font-size: 10px; color: var(--ink-muted);">Attached Deal Chain Partner</div>
+            </div>
+          </div>
+          <button type="button" class="btn-default-badge" onclick="event.stopPropagation(); setDefaultFulfillmentCard(this.closest('.extension-partner-card'))">Make Default</button>
+          <button type="button" class="btn-item-remove" onclick="event.stopPropagation(); this.closest('.extension-partner-card').remove()" aria-label="Remove">&times;</button>
+        </div>
+        <div class="partner-selector-box" onclick="event.stopPropagation(); openPartnerDiscovery('custom')">
+          <div class="partner-current-info">
+            <div class="partner-current-name">${name}</div>
+            <div class="partner-current-meta">${fee} · Verified Tagudin Partner</div>
+          </div>
+          <button type="button" class="btn-change-partner">Change Partner ▾</button>
+        </div>
+        <div class="extension-card-bottom">
+          <span>Handoff: <strong>item_ready_for_pickup</strong></span>
+          <span style="color: var(--forest-700); font-weight: 700;">✓ Buyer can substitute</span>
+        </div>
+      `;
+      list.appendChild(div);
+    }
+
+    function setDefaultProductVariantCard(card) {
+      const container = document.getElementById('product-variants-list');
+      if (!container || !card) return;
+      container.querySelectorAll('.variant-option-card').forEach(c => {
+        c.classList.remove('active');
+        const pill = c.querySelector('.btn-default-badge, .variant-default-pill');
+        if (pill) {
+          pill.className = 'btn-default-badge';
+          pill.innerText = 'Make Default';
+        }
+      });
+      card.classList.add('active');
+      const activePill = card.querySelector('.btn-default-badge, .variant-default-pill');
+      if (activePill) {
+        activePill.className = 'btn-default-badge active';
+        activePill.innerText = '★ Primary Default';
+      }
+    }
+
+    function setDefaultFulfillmentCard(card) {
+      if (!card) return;
+      const container = card.closest('#extend-listing-content-container') || document.getElementById('fulfillment-presets-list') || document.body;
+      container.querySelectorAll('.extension-partner-card').forEach(c => {
+        c.classList.remove('active');
+        const badge = c.querySelector('.btn-default-badge');
+        if (badge) {
+          badge.classList.remove('active');
+          badge.innerText = 'Make Default';
+        }
+      });
+      card.classList.add('active');
+      const activeBadge = card.querySelector('.btn-default-badge');
+      if (activeBadge) {
+        activeBadge.classList.add('active');
+        activeBadge.innerText = '★ Default';
+      }
+    }
+
+    function setDeliveryMode(mode) {
+      const pillsRow = document.getElementById('delivery-mode-pills');
+      if (pillsRow) {
+        pillsRow.querySelectorAll('.option-pill').forEach(btn => {
+          const onclickAttr = btn.getAttribute('onclick') || '';
+          if (onclickAttr.includes(`'${mode}'`)) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+
+      const inHouseWrap = document.getElementById('in-house-delivery-wrap');
+      const partnerWrap = document.getElementById('partner-delivery-card-wrap');
+
+      if (mode === 'in_house') {
+        if (inHouseWrap) inHouseWrap.style.display = 'block';
+        if (partnerWrap) partnerWrap.style.display = 'none';
+      } else if (mode === 'partnered') {
+        if (inHouseWrap) inHouseWrap.style.display = 'none';
+        if (partnerWrap) partnerWrap.style.display = 'block';
+      } else { // 'none'
+        if (inHouseWrap) inHouseWrap.style.display = 'none';
+        if (partnerWrap) partnerWrap.style.display = 'none';
+      }
+    }
+
+    function setInstallMode(mode) {
+      const pillsRow = document.getElementById('install-mode-pills');
+      if (pillsRow) {
+        pillsRow.querySelectorAll('.option-pill').forEach(btn => {
+          const onclickAttr = btn.getAttribute('onclick') || '';
+          if (onclickAttr.includes(`'${mode}'`)) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+
+      const inHouseWrap = document.getElementById('in-house-install-wrap');
+      const partnerWrap = document.getElementById('partner-install-card-wrap');
+
+      if (mode === 'in_house') {
+        if (inHouseWrap) inHouseWrap.style.display = 'block';
+        if (partnerWrap) partnerWrap.style.display = 'none';
+      } else if (mode === 'partnered') {
+        if (inHouseWrap) inHouseWrap.style.display = 'none';
+        if (partnerWrap) partnerWrap.style.display = 'block';
+      } else { // 'none'
+        if (inHouseWrap) inHouseWrap.style.display = 'none';
+        if (partnerWrap) partnerWrap.style.display = 'none';
+      }
+    }
+
+    function addProductVariantCard() {
+      const list = document.getElementById('product-variants-list');
+      if (!list) return;
+      const div = document.createElement('div');
+      div.className = 'variant-option-card';
+      div.onclick = function() { setDefaultProductVariantCard(this); };
+      div.innerHTML = `
+        <div class="variant-card-header">
+          <div class="variant-radio-title">
+            <span class="variant-radio-dot"></span>
+            <input type="text" class="variant-name-input" placeholder="New variation (e.g. 60uF Turbo)..." autofocus>
+          </div>
+          <button type="button" class="btn-default-badge" onclick="event.stopPropagation(); setDefaultProductVariantCard(this.closest('.variant-option-card'))">Make Default</button>
+          <button type="button" class="btn-item-remove" onclick="event.stopPropagation(); this.closest('.variant-option-card').remove()" aria-label="Remove">&times;</button>
+        </div>
+        <div class="variant-card-footer">
+          <span class="variant-stock-tag">0 units in stock</span>
+          <input type="text" class="custom-item-input" style="width: 70px; height: 22px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; color: var(--forest-700); text-align: right;" value="₱ 0.00">
+        </div>
+      `;
+      list.appendChild(div);
+      div.querySelector('input').focus();
+    }
+
+    let currentDiscoveryTarget = 'delivery'; // 'delivery' | 'installation' | 'custom'
+
+    function openPartnerDiscovery(targetType = 'delivery') {
+      currentDiscoveryTarget = targetType;
+      const sheet = document.getElementById('partner-discovery-sheet');
+      if (sheet) sheet.classList.add('open');
+    }
+
+    function closePartnerDiscovery() {
+      const sheet = document.getElementById('partner-discovery-sheet');
+      if (sheet) sheet.classList.remove('open');
+    }
+
+    function handlePartnerBackdrop(e) {
+      if (e.target.id === 'partner-discovery-sheet') closePartnerDiscovery();
+    }
+
+    let activeSlotTarget = 'delivery'; // 'delivery' | 'installation'
+
+    const slotListingData = {
+      delivery: [
+        {
+          name: 'Danny Express Motorcycle Pool',
+          meta: '★ 4.9 · 128 orders · Fast 15-25m · Insulated box',
+          price: '₱35.00',
+          tag: 'Favorite ❤️',
+          cat: 'favorites'
+        },
+        {
+          name: 'Kuya Danny Tricycle Cargo',
+          meta: '★ 4.9 · 84 orders · Heavy sidecar · All barangays',
+          price: '₱60.00',
+          tag: 'Recent 🕒',
+          cat: 'favorites'
+        },
+        {
+          name: 'Barangay Centro Bicycle Runner',
+          meta: '★ 4.8 · 42 orders · Short-distance Centro delivery',
+          price: '₱25.00',
+          tag: 'Eco Courier',
+          cat: 'top_rated'
+        }
+      ],
+      installation: [
+        {
+          name: 'Kuya Ben Aircon Services',
+          meta: '★ 4.9 · 96 installs · Certified AC Technician',
+          price: '+₱250.00',
+          tag: 'Favorite ❤️',
+          cat: 'favorites'
+        },
+        {
+          name: 'Mark Electrical & HVAC Services',
+          meta: '★ 4.8 · 54 installs · Licensed Master Electrician',
+          price: '+₱280.00',
+          tag: 'Recent 🕒',
+          cat: 'favorites'
+        },
+        {
+          name: 'Tagudin Trade Repair Guild',
+          meta: '★ 4.7 · 31 installs · Multi-trade contractor team',
+          price: '+₱220.00',
+          tag: 'Top Rated',
+          cat: 'top_rated'
+        }
+      ],
+      tools: [
+        {
+          name: 'Tagudin Tool Depot (Poblacion East)',
+          meta: '★ 4.9 · Vacuum pump, flaring tool & manifold gauges',
+          price: '+₱85.00',
+          tag: 'Favorite ❤️',
+          cat: 'favorites'
+        },
+        {
+          name: 'Centro HVAC Equipment Rental',
+          meta: '★ 4.8 · Complete gauge set & nitrogen leak test kit',
+          price: '+₱110.00',
+          tag: 'Top Rated',
+          cat: 'top_rated'
+        }
+      ],
+      hauling: [
+        {
+          name: 'Tagudin Eco-Tricycle Hauling Group',
+          meta: '★ 4.9 · Eco-disposal at Tagudin recycling depot',
+          price: '+₱45.00',
+          tag: 'Favorite ❤️',
+          cat: 'favorites'
+        },
+        {
+          name: 'Barangay Bio Scrap Hauler',
+          meta: '★ 4.7 · Metal scrap & broken appliance disposal',
+          price: '+₱40.00',
+          tag: 'Recent 🕒',
+          cat: 'favorites'
+        }
+      ],
+      audit: [
+        {
+          name: 'Safety Check (Master Electrician)',
+          meta: '★ 4.9 · 88 inspections · Licensed master electrician audit',
+          price: '+₱150.00',
+          tag: 'Favorite ❤️',
+          cat: 'favorites'
+        },
+        {
+          name: 'Tagudin Safety & Electrical Audit Guild',
+          meta: '★ 4.8 · 52 inspections · Complete breaker load & wiring verification',
+          price: '+₱160.00',
+          tag: 'Top Rated',
+          cat: 'top_rated'
+        }
+      ]
+    };
+
+    function openSlotListingPicker(slotType) {
+      activeSlotTarget = slotType;
+      const modal = document.getElementById('slot-listing-picker-modal');
+      const title = document.getElementById('slot-picker-title');
+      const subtitle = document.getElementById('slot-picker-subtitle');
+      if (title) {
+        if (slotType === 'delivery') title.innerText = 'Select Delivery Partner';
+        else if (slotType === 'installation') title.innerText = 'Select Installation Partner';
+        else if (slotType === 'tools') title.innerText = 'Select Tool Rental Shop';
+        else if (slotType === 'hauling') title.innerText = 'Select Eco-Recycling Hauler';
+        else if (slotType === 'audit') title.innerText = 'Select Safety Auditor';
+        else title.innerText = 'Select Partner Listing';
+      }
+      if (subtitle) {
+        if (slotType === 'delivery') subtitle.innerText = 'Verified Tagudin transport couriers';
+        else if (slotType === 'installation') subtitle.innerText = 'Verified Tagudin trade technicians';
+        else if (slotType === 'tools') subtitle.innerText = 'Tagudin equipment & DIY tool rental depots';
+        else if (slotType === 'hauling') subtitle.innerText = 'Tagudin licensed scrap & eco-disposal haulers';
+        else if (slotType === 'audit') subtitle.innerText = 'Licensed Tagudin master electricians & safety inspectors';
+        else subtitle.innerText = 'Verified Tagudin community providers';
+      }
+      renderSlotListings('favorites');
+      if (modal) modal.classList.add('open');
+    }
+
+    function closeSlotListingPicker() {
+      const modal = document.getElementById('slot-listing-picker-modal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function filterSlotCategory(category, btn) {
+      document.querySelectorAll('#slot-filter-chips .chain-cat-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      renderSlotListings(category);
+    }
+
+    function renderSlotListings(category = 'favorites', query = '') {
+      const container = document.getElementById('slot-options-container');
+      if (!container) return;
+      const items = slotListingData[activeSlotTarget] || [];
+      const isDeliv = (activeSlotTarget === 'delivery');
+      const isTools = (activeSlotTarget === 'tools');
+      const isHaul = (activeSlotTarget === 'hauling');
+      const isAudit = (activeSlotTarget === 'audit');
+      let openLabel = 'Open Slot';
+      let openMeta = 'Open bidding';
+      let html = `
+        <div class="glovo-option-row" style="background: #FFFDF9; border: 1.5px dashed #D97706; border-radius: 12px; padding: 10px 12px; margin-bottom: 4px;" onclick="chooseSlotListing('${openLabel}', '${openMeta}', true)">
+          <div class="glovo-option-left">
+            <div class="extension-archetype-icon" style="background: #FEF3C7; color: #B45309;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div>
+              <div class="glovo-option-label" style="color: #92400E; font-size: 13px;">Open Slot</div>
+              <div class="glovo-option-meta">Open bidding</div>
+            </div>
+          </div>
+          <span style="font-size: 10.5px; font-weight: 800; color: #B45309; background: #FEF3C7; padding: 2px 7px; border-radius: var(--radius-pill);">★ Default</span>
+        </div>
+      `;
+
+      const filtered = items.filter(it => {
+        if (query && !it.name.toLowerCase().includes(query.toLowerCase())) return false;
+        if (category === 'all') return true;
+        if (category === 'top_rated') return it.meta.includes('4.9') || it.meta.includes('Top Rated');
+        return true;
+      });
+
+      filtered.forEach(it => {
+        const iconClass = (activeSlotTarget === 'delivery') ? 'icon-transit' : ((activeSlotTarget === 'tools' || activeSlotTarget === 'hauling') ? 'icon-pickup' : 'icon-labor');
+        const svgIcon = (activeSlotTarget === 'delivery')
+          ? '<rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle>'
+          : ((activeSlotTarget === 'tools')
+            ? '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>'
+            : ((activeSlotTarget === 'hauling')
+              ? '<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/>'
+              : '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>'));
+        html += `
+          <div class="glovo-option-row" style="background: #FFFFFF; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px;" onclick="chooseSlotListing('${it.name}', '${it.meta}', false)">
+            <div class="glovo-option-left">
+              <div class="extension-archetype-icon ${iconClass}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${svgIcon}</svg>
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span class="glovo-option-label">${it.name}</span>
+                  <span style="font-size: 9.5px; font-weight: 800; background: #F1F5F9; color: #0F2F58; padding: 1px 6px; border-radius: var(--radius-pill);">${it.tag}</span>
+                </div>
+                <div class="glovo-option-meta">${it.meta}</div>
+              </div>
+            </div>
+            <span class="glovo-option-price">${it.price}</span>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function handleSlotSearch(query) {
+      renderSlotListings('all', query);
+    }
+
+    function chooseSlotListing(name, meta, isOpenSlot = false) {
+      if (activeSlotTarget === 'delivery') {
+        const elName = document.getElementById('delivery-partner-name');
+        const elMeta = document.getElementById('delivery-partner-meta');
+        if (elName) elName.innerText = name;
+        if (elMeta) elMeta.innerText = meta;
+        const card = document.querySelector('#partner-delivery-card-wrap .extension-partner-card');
+        if (card) {
+          card.style.borderColor = isOpenSlot ? '#D97706' : '#0F2F58';
+          card.style.background = isOpenSlot ? '#FFFDF9' : '#F8FAFD';
+        }
+      } else if (activeSlotTarget === 'installation') {
+        const elName = document.getElementById('install-partner-name');
+        const elMeta = document.getElementById('install-partner-meta');
+        if (elName) elName.innerText = name;
+        if (elMeta) elMeta.innerText = meta;
+        const card = document.querySelector('#partner-install-card-wrap .extension-partner-card');
+        if (card) {
+          card.style.borderColor = isOpenSlot ? '#D97706' : '#0F2F58';
+          card.style.background = isOpenSlot ? '#FFFDF9' : '#F8FAFD';
+        }
+      } else if (activeSlotTarget === 'tools') {
+        const elName = document.getElementById('tool-partner-name');
+        const elMeta = document.getElementById('tool-partner-meta');
+        if (elName) elName.innerText = name;
+        if (elMeta) elMeta.innerText = meta;
+      } else if (activeSlotTarget === 'hauling') {
+        const elName = document.getElementById('haul-partner-name');
+        const elMeta = document.getElementById('haul-partner-meta');
+        if (elName) elName.innerText = name;
+        if (elMeta) elMeta.innerText = meta;
+      } else if (activeSlotTarget === 'audit') {
+        const elName = document.getElementById('audit-partner-name');
+        const elMeta = document.getElementById('audit-partner-meta');
+        if (elName) elName.innerText = name;
+        if (elMeta) elMeta.innerText = meta;
+      }
+      closeSlotListingPicker();
+    }
+
+    function openBundleCatalog() {
+      const modal = document.getElementById('bundle-chain-catalog-modal');
+      if (modal) modal.classList.add('open');
+    }
+
+    function closeBundleCatalog() {
+      const modal = document.getElementById('bundle-chain-catalog-modal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function selectPatternChip(pattern, btn) {
+      document.querySelectorAll('#pattern-chips-row .chain-cat-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+
+      const turnkey = document.getElementById('card-combo-turnkey');
+      const courier = document.getElementById('card-combo-courier');
+      const inspect = document.getElementById('card-combo-inspection');
+
+      if (pattern === 'repair') {
+        if (turnkey) turnkey.style.display = 'flex';
+        if (courier) courier.style.display = 'none';
+        if (inspect) inspect.style.display = 'flex';
+      } else if (pattern === 'delivery') {
+        if (turnkey) turnkey.style.display = 'none';
+        if (courier) courier.style.display = 'flex';
+        if (inspect) inspect.style.display = 'none';
+      } else {
+        if (turnkey) turnkey.style.display = 'flex';
+        if (courier) courier.style.display = 'flex';
+        if (inspect) inspect.style.display = 'flex';
+      }
+    }
+
+    function handleChainSearch(query) {
+      const q = query.toLowerCase().trim();
+      const archetypeSec = document.getElementById('search-archetype-section');
+      if (q.includes('towing') || q.includes('recovery') || q.includes('diagnostic')) {
+        if (archetypeSec) archetypeSec.style.display = 'block';
+      } else {
+        if (archetypeSec) archetypeSec.style.display = 'none';
+      }
+    }
+
+    function chooseChainPattern(name, meta) {
+      addExtensionPreset(name, meta);
+      closeBundleCatalog();
+    }
+    function setAsListingDefault(btn) {
+      const container = document.getElementById('extend-listing-content-container');
+      if (!container) return;
+      container.querySelectorAll('.extension-partner-card').forEach(card => {
+        card.classList.remove('active');
+        card.style.borderColor = 'var(--line)';
+        card.style.background = '#FFFFFF';
+        const badge = card.querySelector('.btn-default-badge');
+        if (badge) {
+          badge.classList.remove('active');
+          badge.innerText = 'Make Default';
+        }
+      });
+      const currentCard = btn.closest('.extension-partner-card');
+      if (currentCard) {
+        currentCard.classList.add('active');
+        currentCard.style.borderColor = '#0F2F58';
+        currentCard.style.background = '#F8FAFD';
+        btn.classList.add('active');
+        btn.innerText = '★ Default';
+      }
+    }
+
+    function removeCombinationCard(cardId) {
+      const card = document.getElementById(cardId);
+      if (card) card.remove();
+      const container = document.getElementById('extend-listing-content-container');
+      if (container && container.querySelectorAll('.extension-partner-card').length === 0) {
+        container.innerHTML = `
+          <div id="no-combos-empty-notice" style="text-align: center; padding: 18px 14px; background: #F8FAFC; border: 1.5px dashed var(--line); border-radius: 12px; font-size: 11px; color: var(--ink-muted);">
+            No partner combinations attached. This listing will sell as Counter Pickup only.<br>
+            <button type="button" class="btn-change-partner" style="margin-top: 8px;" onclick="openBundleCatalog()">+ Attach a Combination</button>
+          </div>
+        `;
+      }
+    }
+    let defaultDeliveryInstallHTML = '';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('extend-listing-content-container');
+      if (container) {
+        defaultDeliveryInstallHTML = container.innerHTML;
+      }
+      // Detect acting-on-behalf owner from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const ownerParam = urlParams.get('owner');
+      if (ownerParam) {
+        const bar = document.getElementById('acting-on-behalf-bar');
+        const nameEl = document.getElementById('acting-owner-name');
+        if (bar && nameEl) {
+          bar.style.display = 'flex';
+          if (ownerParam.includes('maria')) nameEl.innerText = "Aling Maria's Store";
+          else if (ownerParam.includes('jose')) nameEl.innerText = "Mang Jose's Tricycle";
+          else if (ownerParam.includes('bert')) nameEl.innerText = "Kuya Bert's Plumbing";
+          else nameEl.innerText = ownerParam;
+        }
+      }
+    });
+    function toggleContextDropdown() {
+      const menu = document.getElementById('acting-context-menu');
+      if (menu) {
+        menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+      }
+    }
+
+    function switchContext(target) {
+      const menu = document.getElementById('acting-context-menu');
+      if (menu) menu.style.display = 'none';
+      if (target === 'myself') {
+        document.getElementById('acting-on-behalf-bar').style.display = 'none';
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      } else {
+        window.location.search = `?owner=${target}`;
+      }
+    }
+
+    let currentActiveRecipe = 'default_delivery_install';
+
+    function applyChainRecipe(recipeKey) {
+      currentActiveRecipe = recipeKey;
+      const container = document.getElementById('extend-listing-content-container');
+      if (!container) return;
+      if (!defaultDeliveryInstallHTML && container) {
+        defaultDeliveryInstallHTML = container.innerHTML;
+      }
+
+      if (recipeKey === 'tool_rental') {
+        container.innerHTML = `
+          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Tool Rental Kit + Courier Delivery · +₱120.00</div>
+            <button type="button" class="btn-change-partner" onclick="applyChainRecipe('default_delivery_install')">Reset ↺</button>
+          </div>
+
+          <!-- Slot 1: Tool Rental Depot -->
+          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9; margin-bottom: 8px;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon icon-pickup">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                </div>
+                <div>
+                  <div class="extension-name-title">Tool Rental Depot</div>
+                </div>
+              </div>
+              <span class="btn-default-badge active">★ Open Slot</span>
+            </div>
+            <div class="partner-selector-box" onclick="openSlotListingPicker('tools')">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="tool-partner-name">Open Slot</div>
+                <div class="partner-current-meta" id="tool-partner-meta">₱85.00 rental fee</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+          </div>
+
+          <!-- Slot 2: Courier Transit Runner -->
+          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon icon-transit">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                </div>
+                <div>
+                  <div class="extension-name-title">Courier Transit Runner</div>
+                </div>
+              </div>
+              <span class="btn-default-badge active">★ Open Slot</span>
+            </div>
+            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="delivery-partner-name">Open Slot</div>
+                <div class="partner-current-meta" id="delivery-partner-meta">₱35.00 route fee</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+          </div>
+        `;
+      } else if (recipeKey === 'hauling') {
+        container.innerHTML = `
+          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Old Unit Hauling &amp; Eco-Recycling · +₱80.00</div>
+            <button type="button" class="btn-change-partner" onclick="applyChainRecipe('default_delivery_install')">Reset ↺</button>
+          </div>
+
+          <!-- Slot 1: Doorstep Delivery Courier -->
+          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9; margin-bottom: 8px;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon icon-transit">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                </div>
+                <div>
+                  <div class="extension-name-title">Doorstep Delivery Courier</div>
+                </div>
+              </div>
+              <span class="btn-default-badge active">★ Open Slot</span>
+            </div>
+            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="delivery-partner-name">Open Slot</div>
+                <div class="partner-current-meta" id="delivery-partner-meta">₱35.00 route fee</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+          </div>
+
+          <!-- Slot 2: Eco-Tricycle Hauling -->
+          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon icon-pickup">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
+                </div>
+                <div>
+                  <div class="extension-name-title">Eco-Tricycle Hauler</div>
+                </div>
+              </div>
+              <span class="btn-default-badge active">★ Open Slot</span>
+            </div>
+            <div class="partner-selector-box" onclick="openSlotListingPicker('hauling')">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="haul-partner-name">Open Slot</div>
+                <div class="partner-current-meta" id="haul-partner-meta">₱45.00 hauling fee</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+          </div>
+        `;
+      } else if (recipeKey === 'post_service_inspection') {
+        container.innerHTML = `
+          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Post-Service Electrical Inspection · +₱150.00</div>
+            <button type="button" class="btn-change-partner" onclick="applyChainRecipe('default_delivery_install')">Reset ↺</button>
+          </div>
+
+          <!-- Slot 1: Installation Labor -->
+          <div class="extension-partner-card active" style="border-color: #0F2F58; background: #F8FAFD; margin-bottom: 8px;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon icon-labor">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                </div>
+                <div>
+                  <div class="extension-name-title">Installation Labor</div>
+                </div>
+              </div>
+              <span class="btn-default-badge active">★ Attached</span>
+            </div>
+            <div class="partner-selector-box" onclick="openSlotListingPicker('installation')">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="install-partner-name">Kuya Ben Aircon Services</div>
+                <div class="partner-current-meta" id="install-partner-meta">₱350.00 labor</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+          </div>
+
+          <!-- Slot 2: Post-Service Safety Inspection -->
+          <div class="extension-partner-card active" style="border-color: #7C3AED; background: #F5F3FF;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon" style="background: #EDE9FE; color: #7C3AED;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <div>
+                  <div class="extension-name-title">Safety Inspection</div>
+                </div>
+              </div>
+              <span class="btn-default-badge active" style="background: #7C3AED; color: #fff;">★ Audit Node</span>
+            </div>
+            <div class="partner-selector-box" onclick="openSlotListingPicker('audit')">
+              <div class="partner-current-info">
+                <div class="partner-current-name" id="audit-partner-name">Open Slot</div>
+                <div class="partner-current-meta" id="audit-partner-meta">₱150.00 audit fee</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+          </div>
+        `;
+      } else if (recipeKey === 'custom_empty') {
+        container.innerHTML = `
+          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Custom Open Tender Slot</div>
+            <button type="button" class="btn-change-partner" onclick="applyChainRecipe('default_delivery_install')">Reset ↺</button>
+          </div>
+
+          <!-- Slot 1: Open Sourcing / Tender Slot -->
+          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9;">
+            <div class="extension-card-top">
+              <div class="extension-title-badge-group">
+                <div class="extension-archetype-icon" style="background: #FEF3C7; color: #B45309;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <div>
+                  <div class="extension-name-title">Open Tender Slot</div>
+                </div>
+              </div>
+              <span class="btn-default-badge active">★ Open</span>
+            </div>
+            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
+              <div class="partner-current-info">
+                <div class="partner-current-name">Open Slot</div>
+                <div class="partner-current-meta">Open bidding</div>
+              </div>
+              <button type="button" class="btn-change-partner">Change ▾</button>
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = defaultDeliveryInstallHTML;
+      }
+      closeBundleCatalog();
+    }
+  </script>
+</body>
+</html>

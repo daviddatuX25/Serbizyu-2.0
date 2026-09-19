@@ -26,7 +26,8 @@ namespace App\Shared\Contracts;
  *     category_business_version: int|null,
  *     capability_profile_id: string,
  *     capability_profile_family_code: string|null,
- *     capability_profile_business_version: int|null
+ *     capability_profile_business_version: int|null,
+ *     work_shape: string
  * }
  */
 interface OrderListingSourcePort
@@ -35,4 +36,12 @@ interface OrderListingSourcePort
      * @return ListingOrderSource|null
      */
     public function findActiveApproved(string $listingId): ?array;
+
+    /**
+     * Returns the same source projection while holding the governed listing,
+     * published listing version, and capability profile rows for update.
+     *
+     * @return ListingOrderSource|null
+     */
+    public function lockActiveApproved(string $listingId): ?array;
 }

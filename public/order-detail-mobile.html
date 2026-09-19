@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Order Details</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-brand-navy: #0F2F58;
+      --color-brand-teal: #0D715F;
+      --color-brand-teal-light: #E8F7F1;
+      --color-brand-yellow: #FFC244;
+      --color-ink: #12201C;
+      --color-ink-muted: #64748B;
+      --color-ink-soft: #475569;
+      --color-canvas: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --forest-50: #EFFCF6;
+      --forest-100: #C6F7E2;
+      --forest-600: #0D715F;
+      --forest-700: #0A574A;
+      --forest-900: #042E27;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+      --shadow-sm: 0 1px 3px rgba(15, 47, 88, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: #0B132B;
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+    }
+
+    /* Desktop Meta Banner Outside the Phone Shell */
+    .studio-context-banner {
+      width: 100%;
+      max-width: 440px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: #A4B8B0;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .studio-crumb { display: flex; align-items: center; gap: 6px; }
+    
+    .meta-tag-btn {
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: transparent;
+      color: #A4B8B0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .meta-tag-btn.active {
+      background: #0D715F;
+      color: #FFFFFF;
+      border-color: #0D715F;
+      box-shadow: 0 2px 8px rgba(13, 113, 95, 0.3);
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: #F8FAFC;
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: #F8FAFC; }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-ink);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .notch-island {
+      width: 110px;
+      height: 24px;
+      background: #000000;
+      border-radius: 16px;
+      margin: 0 auto;
+    }
+
+    /* Standard Canonical Header */
+    .order-header-bar {
+      height: 56px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .circle-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--color-border);
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-ink);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .circle-btn:active { background: #F1F5F9; }
+    .header-center-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header-order-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--color-brand-navy);
+    }
+    .header-order-title {
+      font-size: 11px;
+      color: var(--color-ink-muted);
+      font-weight: 600;
+    }
+
+    /* Scrollable Order Details Body */
+    .order-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 14px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Hero Summary Card: Imagery, Time, and Status (NO PRICE) */
+    .hero-summary-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+    }
+    .tri-circle-collage {
+      display: flex;
+      align-items: center;
+    }
+    .collage-circle-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 2px 6px rgba(15, 47, 88, 0.12);
+    }
+
+    /* Impeccable Order Feature Card (Rich Gradient, Media Header, No Price) */
+    .order-feature-card {
+      background: linear-gradient(135deg, #0F2F58 0%, #0A4D41 100%);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      color: #FFFFFF;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(15, 47, 88, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .feature-card-glow {
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(13, 113, 95, 0.5) 0%, rgba(15, 47, 88, 0) 70%);
+      pointer-events: none;
+    }
+    .feature-media-group {
+      display: flex;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+    .feature-meta-col {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 2;
+    }
+    .feature-title-txt {
+      font-size: 16px;
+      font-weight: 800;
+      color: #FFFFFF;
+      line-height: 1.25;
+      margin: 0;
+    }
+    .feature-timing-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #A7F3D0;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    /* Section Card */
+    .detail-section-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-head-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--forest-900);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Execution Flow Elements */
+    .chain-animated-connector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 2px 8px;
+      margin: -2px 0;
+    }
+    .connector-track-box {
+      width: 18px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .flow-dots-v {
+      stroke: var(--forest-600);
+      stroke-width: 3.2;
+      stroke-linecap: round;
+      stroke-dasharray: 5 6;
+      animation: dashMoveV 1.2s linear infinite;
+    }
+    .flow-dots-v-amber {
+      stroke: #D97706;
+      stroke-width: 3.2;
+      stroke-linecap: round;
+      stroke-dasharray: 5 6;
+      animation: dashMoveV 1.2s linear infinite;
+    }
+    @keyframes dashMoveV {
+      0% { stroke-dashoffset: 22; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .connector-badge-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 9px;
+      border-radius: var(--radius-pill);
+      background: var(--forest-50);
+      border: 1px solid rgba(13, 113, 95, 0.2);
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--forest-600);
+    }
+
+    .project-slot-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .project-slot-card.is-active-focus {
+      background: #FFFFFF;
+      border: 2px solid var(--forest-600);
+      box-shadow: 0 4px 16px rgba(13, 113, 95, 0.12);
+    }
+    .project-slot-card.is-live-pulsing {
+      background: #FFFFFF;
+      border: 2px solid var(--forest-600);
+      animation: livePulseBorder 2.2s ease-in-out infinite;
+    }
+    @keyframes livePulseBorder {
+      0% {
+        border-color: var(--forest-600);
+        box-shadow: 0 0 0 0 rgba(13, 113, 95, 0.4), 0 4px 16px rgba(13, 113, 95, 0.08);
+      }
+      50% {
+        border-color: #10B981;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.22), 0 6px 20px rgba(16, 185, 129, 0.15);
+      }
+      100% {
+        border-color: var(--forest-600);
+        box-shadow: 0 0 0 0 rgba(13, 113, 95, 0.4), 0 4px 16px rgba(13, 113, 95, 0.08);
+      }
+    }
+    .project-slot-card.is-settled-muted {
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      box-shadow: none;
+      opacity: 0.72;
+    }
+    .project-slot-card.is-gated-muted {
+      background: #F8FAFC;
+      border: 1px dashed #CBD5E1;
+      box-shadow: none;
+      opacity: 0.72;
+    }
+    .project-slot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .project-slot-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--color-ink);
+    }
+    .project-slot-meta {
+      font-size: 11px;
+      color: var(--color-ink-muted);
+      margin-top: 1px;
+    }
+    .project-slot-action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--color-border);
+      padding-top: 8px;
+      margin-top: 2px;
+    }
+    .slot-status-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .status-settled { background: #DCFCE7; color: #166534; }
+    .status-held { background: #FEF3C7; color: #B45309; }
+
+    .btn-slot-chat {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: var(--radius-pill);
+      background: #FFFFFF;
+      border: 1px solid var(--forest-600);
+      color: var(--forest-700);
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* Sub-process mini track for active node */
+    .steps-mini-track {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--color-border);
+    }
+    .step-chip {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+    .step-chip.done { background: #DCFCE7; color: #166534; }
+    .step-chip.active { background: #FEF3C7; color: #B45309; }
+    .step-chip.queued { background: #F1F5F9; color: var(--color-ink-muted); }
+
+    /* Expand / Collapse Dropdown Action */
+    .btn-expand-flow {
+      width: 100%;
+      height: 36px;
+      border-radius: var(--radius-pill);
+      background: #F1F5F9;
+      border: 1px solid var(--color-border);
+      color: var(--color-brand-navy);
+      font-size: 11.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      margin-top: 4px;
+    }
+    .btn-expand-flow:hover { background: #E2E8F0; }
+    .btn-expand-flow .expand-chevron {
+      transition: transform 0.25s ease;
+    }
+    .btn-expand-flow.expanded .expand-chevron {
+      transform: rotate(180deg);
+    }
+
+    /* Minimalist Graphic Invoice */
+    .graphic-invoice-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .invoice-item-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+    .invoice-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .invoice-icon-box {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #F1F5F9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--color-brand-navy);
+    }
+    .invoice-label-txt {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+    .invoice-amount-txt {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--color-brand-navy);
+    }
+    .invoice-divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: 4px 0;
+    }
+    .invoice-total-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 4px;
+    }
+    .invoice-total-label {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--color-ink);
+    }
+    .invoice-total-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--color-brand-navy);
+    }
+
+    /* Quiet Inline Payment Change Action */
+    .btn-change-quiet {
+      background: transparent;
+      border: none;
+      color: var(--forest-600);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: background 0.15s;
+    }
+    .btn-change-quiet:hover { background: var(--forest-50); }
+
+    /* Worker Dependency Gate Alert Card */
+    .worker-gate-card {
+      background: #FEF8E7;
+      border: 1px solid #FDE68A;
+      border-radius: var(--radius-md);
+      padding: 11px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Location Strip */
+    .location-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+    }
+    .location-icon-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #EFF6FF;
+      color: #2563EB;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Fixed Bottom Dock */
+    .fixed-order-bottom-dock {
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      padding: 10px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      z-index: 20;
+      box-shadow: 0 -4px 20px rgba(15, 47, 88, 0.08);
+    }
+    .btn-dock-primary {
+      height: 44px;
+      border-radius: var(--radius-pill);
+      background: var(--forest-600);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(13, 113, 95, 0.25);
+      transition: background 0.15s;
+    }
+    .btn-dock-primary:hover { background: var(--forest-700); }
+    .btn-dock-settle {
+      height: 44px;
+      border-radius: var(--radius-pill);
+      background: #0F2F58;
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(15, 47, 88, 0.25);
+    }
+    .dock-footnote-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 10.5px;
+      color: var(--color-ink-muted);
+    }
+
+    /* Glovo Wave Organic Asymmetrical Bottom Drawer */
+    /* Glovo Wave Organic Asymmetrical Bottom Drawer (Exact browse-mobile replica) */
+    .glovo-drawer-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .glovo-drawer-overlay.open,
+    .glovo-drawer-overlay.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .glovo-drawer-sheet {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 85%;
+      background: transparent;
+    }
+    .glovo-drawer-overlay.open .glovo-drawer-sheet,
+    .glovo-drawer-overlay.is-open .glovo-drawer-sheet {
+      transform: translateY(0);
+    }
+    .glovo-wave-cap {
+      width: 100%;
+      height: 34px;
+      margin-bottom: -1px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .drawer-content-box {
+      background: #FFFFFF;
+      padding: 6px 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .drawer-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .drawer-title-txt {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--color-brand-navy);
+    }
+    .drawer-close-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      color: #64748B;
+    }
+
+    .payment-option-tile {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: #FFFFFF;
+      cursor: pointer;
+      transition: all 0.15s;
+      width: 100%;
+      text-align: left;
+    }
+    .payment-option-tile.selected {
+      border-color: var(--forest-600);
+      background: #EFFCF6;
+    }
+
+    /* Log Search & Filter Pills */
+    .log-search-input {
+      width: 100%;
+      height: 36px;
+      background: #F8FAFC;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-pill);
+      padding: 0 14px;
+      font-size: 12px;
+      color: var(--color-ink);
+      outline: none;
+    }
+    .log-search-input:focus {
+      border-color: var(--forest-600);
+      background: #FFFFFF;
+    }
+    .log-filter-pill {
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      font-size: 10.5px;
+      font-weight: 700;
+      border: 1px solid var(--color-border);
+      background: #F8FAFC;
+      color: var(--color-ink-muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .log-filter-pill.active {
+      background: var(--color-brand-navy);
+      color: #FFFFFF;
+      border-color: var(--color-brand-navy);
+    }
+    .log-entry-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+    }
+
+    /* Full-Bleed In-Shell Support Chat Modal */
+    .support-modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: #F8FAFC;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .support-modal-overlay.open {
+      transform: translateY(0);
+    }
+    .support-header-bar {
+      height: 56px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .support-chat-stream {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .support-bottom-dock {
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      padding: 10px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .msg-group {
+      display: flex;
+      flex-direction: column;
+      max-width: 84%;
+    }
+    .msg-group.incoming { align-self: flex-start; }
+    .msg-group.outgoing { align-self: flex-end; }
+    .msg-sender-name {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--color-ink-muted);
+      margin-bottom: 3px;
+      margin-left: 6px;
+    }
+    .msg-bubble {
+      padding: 9px 13px;
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .msg-time {
+      font-size: 9.5px;
+      color: var(--color-ink-muted);
+      align-self: flex-end;
+      margin-top: 3px;
+      margin-right: 4px;
+    }
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chat-input-box {
+      flex: 1;
+      height: 40px;
+      background: #F8FAFC;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-pill);
+      padding: 0 16px;
+      font-size: 13px;
+      color: var(--color-ink);
+      outline: none;
+    }
+    .chat-input-box:focus {
+      border-color: #0F2F58;
+      background: #FFFFFF;
+    }
+    .btn-send-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #0F2F58;
+      color: #FFFFFF;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Desktop Meta Context Switcher (Outside Phone Shell) -->
+  <div class="studio-context-banner">
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+      <div class="studio-crumb">
+        <span>Order View</span>
+        <span>›</span>
+        <span style="color:#FFF;" id="studio-crumb-label">Customer View · In Progress</span>
+      </div>
+      <span class="studio-pill-tag" id="studio-perspective-tag">Actor &amp; State Matrix</span>
+    </div>
+
+    <!-- Tier 1: Actor Perspective Buttons -->
+    <div style="display: flex; align-items: center; gap: 5px; overflow-x: auto; width: 100%; padding-bottom: 2px;">
+      <button type="button" id="meta-btn-customer" onclick="setPerspective('customer')" class="meta-tag-btn active">👤 Customer (Maria)</button>
+      <button type="button" id="meta-btn-tech" onclick="setPerspective('tech')" class="meta-tag-btn">🔧 Tech (Kuya Ben · ₱350)</button>
+      <button type="button" id="meta-btn-courier" onclick="setPerspective('courier')" class="meta-tag-btn">🛵 Courier (Danny · ₱80)</button>
+      <button type="button" id="meta-btn-solo" onclick="setPerspective('solo')" class="meta-tag-btn">🛺 Solo Driver (Kuya Jun)</button>
+    </div>
+
+    <!-- Tier 2: Order Lifecycle State Buttons -->
+    <div style="display: flex; align-items: center; gap: 4px; overflow-x: auto; width: 100%; padding-top: 2px;" id="meta-lifecycle-row">
+      <span style="font-size: 10px; color: #94A3B8; font-weight: 700; white-space: nowrap; margin-right: 2px;">Order State:</span>
+      <button type="button" id="meta-btn-inprogress" onclick="setLifecycle('in_progress')" class="meta-tag-btn active">🟢 In Progress</button>
+      <button type="button" id="meta-btn-signoff" onclick="setLifecycle('signoff')" class="meta-tag-btn">⏳ Awaiting Sign-off</button>
+      <button type="button" id="meta-btn-settled" onclick="setLifecycle('settled')" class="meta-tag-btn">✓ Settled &amp; Closed</button>
+    </div>
+  </div>
+
+  <!-- Mobile Screen Container -->
+  <div class="phone-shell">
+    
+    <!-- iOS Status Bar -->
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div style="font-size: 11px;">5G</div>
+    </div>
+
+    <!-- Standard Canonical Header -->
+    <header class="order-header-bar">
+      <button type="button" class="circle-btn" onclick="goBack()" aria-label="Back to Orders Hub" title="Back to Orders Hub">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+
+      <div class="header-center-info">
+        <span class="header-order-id" id="hdr-order-id">#ORD-7721</span>
+        <span class="header-order-title" id="hdr-order-title">Fiesta AC Overhaul</span>
+      </div>
+
+      <!-- Top Right: 3-Dots Order Options Menu -->
+      <button type="button" class="circle-btn" onclick="openOrderOptionsMenu()" aria-label="Order Options" title="Order Options">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/><circle cx="5" cy="12" r="1.2"/></svg>
+      </button>
+    </header>
+
+    <!-- Scrollable Body -->
+    <main class="order-scroll-body">
+
+      <!-- Order Feature Card: Rich Gradient, Media Collage, No Badge -->
+      <section class="order-feature-card">
+        <div class="feature-card-glow"></div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div class="feature-media-group" id="hero-image-slot">
+            <!-- Populated dynamically: Tri-circle collage or single image -->
+          </div>
+          <div class="feature-meta-col">
+            <h2 class="feature-title-txt" id="hero-order-title">Fiesta AC Overhaul</h2>
+            <div class="feature-timing-row" id="hero-timing-text">Started 1:00 PM · ETA ~45 mins</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Execution Section (Live Progress with Default Focus Mode & Accordion) -->
+      <section style="display: flex; flex-direction: column; gap: 8px;" id="execution-section">
+        <div class="section-head-title" style="padding: 0 2px;">
+          <span id="exec-head-title">Live Progress</span>
+          <span id="exec-head-sub" style="font-size:10.5px; color:#0D715F; font-weight:700;">Step 2 of 3</span>
+        </div>
+
+        <div id="exec-content-slot" style="display: flex; flex-direction: column; gap: 4px;">
+          <!-- Populated dynamically by renderPage -->
+        </div>
+      </section>
+
+      <!-- Minimalist Graphic Invoice (Zero Emojis, Zero Fluff) -->
+      <section class="graphic-invoice-card">
+        <div class="section-head-title" style="margin-bottom:2px;">
+          <span id="invoice-card-heading">Invoice &amp; Settlement</span>
+          <span id="invoice-vault-id" style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--color-ink-muted);">VAULT-7721</span>
+        </div>
+
+        <div id="invoice-items-container">
+          <!-- Populated dynamically by renderPage -->
+        </div>
+
+        <div class="invoice-divider"></div>
+
+        <div class="invoice-total-line">
+          <span class="invoice-total-label" id="invoice-total-label">Total Due upon Completion</span>
+          <span class="invoice-total-amount" id="invoice-total-val">₱610.00</span>
+        </div>
+
+        <!-- Quiet Payment Method Row with Non-Dominant Change Link -->
+        <div class="invoice-item-line" style="margin-top: 4px; padding-top: 8px; border-top: 1px dashed var(--color-border);" id="invoice-method-row">
+          <div class="invoice-item-left">
+            <div class="invoice-icon-box" id="method-icon-box" style="width:28px; height:28px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
+            <div>
+              <div style="font-size: 10px; color: var(--color-ink-muted);">Payment Method</div>
+              <div style="font-size: 12px; font-weight: 700; color: var(--color-ink);" id="method-title-txt">Cash on Delivery · Due on Completion</div>
+            </div>
+          </div>
+          <button type="button" class="btn-change-quiet" id="btn-change-method" onclick="openPaymentDrawer()">
+            <span>Change</span>
+            <span>›</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Location Strip -->
+      <div class="location-strip">
+        <div class="location-icon-circle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div>
+          <div style="font-size: 12px; font-weight: 700; color: var(--color-ink);" id="loc-address">Poblacion Centro, Tagudin</div>
+          <div style="font-size: 10.5px; color: var(--color-ink-muted);" id="loc-sub">Near St. Augustine Parish Church · Maria Santos</div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Fixed Bottom Dock (Sticky Base) -->
+    <footer class="fixed-order-bottom-dock" id="order-bottom-dock">
+      <!-- Populated dynamically by renderPage -->
+    </footer>
+
+    <!-- 1. Glovo Wave Asymmetrical Drawer for Order Options (3-Dots Menu) -->
+    <div class="glovo-drawer-overlay" id="order-options-drawer" onclick="handleOptionsDrawerBackdrop(event)">
+      <div class="glovo-drawer-sheet" onclick="event.stopPropagation()">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+
+        <div class="drawer-content-box">
+          <div class="drawer-header-row">
+            <div>
+              <div class="drawer-title-txt">Order Options</div>
+              <div style="font-size: 11px; color: var(--color-ink-muted);">#ORD-7721 · Fiesta AC Overhaul</div>
+            </div>
+            <button type="button" class="drawer-close-circle" onclick="closeOrderOptionsMenu()" aria-label="Close">&times;</button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Option 0: Payment & Settlement Ceremony -->
+            <a href="payment-flow-mobile.html" class="payment-option-tile" style="text-decoration:none; background:#F0FDF4; border-color:#BBF7D0;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="invoice-icon-box" style="background:#DCFCE7; color:#166534; width:34px; height:34px;">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:13px; font-weight:800; color:#166534;">Payment &amp; Sign-off Flow</div>
+                  <div style="font-size:10.5px; color:#15803D;">Open mutual cash acknowledgment ceremony</div>
+                </div>
+              </div>
+              <span style="color:#166534; font-size:15px; font-weight:700;">›</span>
+            </a>
+            <!-- Option 1: Support / Help Chat -->
+            <button type="button" class="payment-option-tile" onclick="closeOrderOptionsMenu(); openSupportChat();">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="invoice-icon-box" style="background:#EFF6FF; color:#2563EB; width:34px; height:34px;">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:13px; font-weight:800; color:var(--color-ink);">Help &amp; Support Desk</div>
+                  <div style="font-size:10.5px; color:var(--color-ink-muted);">Chat with Tagudin Desk regarding this order</div>
+                </div>
+              </div>
+              <span style="color:#94A3B8; font-size:15px;">›</span>
+            </button>
+
+            <!-- Option 2: Order History & Audit Logs -->
+            <button type="button" class="payment-option-tile" onclick="closeOrderOptionsMenu(); openAuditLogs();">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="invoice-icon-box" style="background:#F1F5F9; color:var(--color-brand-navy); width:34px; height:34px;">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:13px; font-weight:800; color:var(--color-ink);">Order History &amp; Audit Logs</div>
+                  <div style="font-size:10.5px; color:var(--color-ink-muted);">View immutable timeline of events and handoffs</div>
+                </div>
+              </div>
+              <span style="color:#94A3B8; font-size:15px;">›</span>
+            </button>
+
+            <!-- Option 3: Cancel Order Request -->
+            <button type="button" class="payment-option-tile" onclick="closeOrderOptionsMenu(); openCancelModal();" style="border-color:#FCA5A5; background:#FFF5F5;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="invoice-icon-box" style="background:#FEE2E2; color:#DC2626; width:34px; height:34px;">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:13px; font-weight:800; color:#DC2626;">Cancel Order / Request Halt</div>
+                  <div style="font-size:10.5px; color:#B91C1C;">Review cancellation policy and stop work</div>
+                </div>
+              </div>
+              <span style="color:#DC2626; font-size:15px;">›</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Glovo Wave Asymmetrical Drawer for Order Audit Trail & History -->
+    <div class="glovo-drawer-overlay" id="order-logs-drawer" onclick="handleLogsDrawerBackdrop(event)">
+      <div class="glovo-drawer-sheet" onclick="event.stopPropagation()" style="max-height:85%;">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+
+        <div class="drawer-content-box" style="gap:8px;">
+          <div class="drawer-header-row">
+            <div>
+              <div class="drawer-title-txt">Order Audit Trail</div>
+              <div style="font-size: 11px; color: var(--color-ink-muted);">#ORD-7721 · Immutable Event Stream</div>
+            </div>
+            <button type="button" class="drawer-close-circle" onclick="closeAuditLogs()" aria-label="Close">&times;</button>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <input type="text" class="log-search-input" id="log-search-field" placeholder="Search events..." oninput="filterLogEvents()">
+            <div style="display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none;">
+              <button type="button" class="log-filter-pill active" onclick="setLogFilter('all', this)">All (7)</button>
+              <button type="button" class="log-filter-pill" onclick="setLogFilter('work', this)">Work Steps (3)</button>
+              <button type="button" class="log-filter-pill" onclick="setLogFilter('handoff', this)">Handoffs (2)</button>
+              <button type="button" class="log-filter-pill" onclick="setLogFilter('payment', this)">Payments (2)</button>
+            </div>
+          </div>
+
+          <!-- Event Stream List -->
+          <div style="display: flex; flex-direction: column; gap: 6px; max-height: 380px; overflow-y: auto; padding-right: 2px;" id="audit-log-items-list">
+            <!-- Rendered by filterLogEvents -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Full-Bleed In-App Support Chat Attached to Order -->
+    <div class="support-modal-overlay" id="order-support-modal">
+      <header class="support-header-bar">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" class="circle-btn" onclick="closeSupportChat()" aria-label="Close Support">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div style="position: relative;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #0F2F58; color: #FFF; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center;">TD</div>
+            <span style="position: absolute; bottom: 0; right: 0; width: 9px; height: 9px; border-radius: 50%; background: #10B981; border: 1.5px solid #FFF;"></span>
+          </div>
+          <div>
+            <div style="font-size: 13.5px; font-weight: 800; color: var(--color-brand-navy);">Tagudin Support Desk</div>
+            <div style="font-size: 10.5px; color: var(--color-ink-muted);">Order #ORD-7721 · Ticket #SUP-4410</div>
+          </div>
+        </div>
+        <button type="button" class="circle-btn" onclick="closeSupportChat()" title="Minimize Chat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+
+      <main class="support-chat-stream" id="support-chat-stream">
+        <div style="align-self: center; font-size: 10.5px; background: #F1F5F9; color: #475569; padding: 4px 12px; border-radius: var(--radius-pill); font-weight: 600; margin: 4px 0;">
+          Support Ticket #SUP-4410 Attached to Order #ORD-7721
+        </div>
+        <div class="msg-group incoming">
+          <span class="msg-sender-name">Paige · Tagudin Support</span>
+          <div class="msg-bubble" style="background:#FFFFFF; border:1px solid var(--color-border); box-shadow:var(--shadow-sm); font-size:13px; line-height:1.45;">
+            Hello Maria! I'm monitoring your Fiesta AC Overhaul relay. If you need any assistance with technician on-site coordination, parts verification, or payment adjustments, let me know here.
+          </div>
+          <span class="msg-time">1:20 PM</span>
+        </div>
+      </main>
+
+      <footer class="support-bottom-dock">
+        <div class="input-row">
+          <input type="text" class="chat-input-box" id="support-input-field" placeholder="Message Tagudin Support..." onkeydown="if(event.key==='Enter') sendSupportMessage()">
+          <button type="button" class="btn-send-circle" style="background:#0F2F58;" onclick="sendSupportMessage()" aria-label="Send Message">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- 4. Glovo Wave Asymmetrical Drawer for Order Cancellation Request -->
+    <div class="glovo-drawer-overlay" id="order-cancel-modal" onclick="handleCancelModalBackdrop(event)">
+      <div class="glovo-drawer-sheet" onclick="event.stopPropagation()">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+
+        <div class="drawer-content-box" style="gap:10px;">
+          <div class="drawer-header-row">
+            <div>
+              <div class="drawer-title-txt" style="color:#DC2626;">Cancel Order Request</div>
+              <div style="font-size: 11px; color: var(--color-ink-muted);">#ORD-7721 · Mid-Flight Impact Assessment</div>
+            </div>
+            <button type="button" class="drawer-close-circle" onclick="closeCancelModal()" aria-label="Close">&times;</button>
+          </div>
+
+          <!-- Cancellation Policy Banner (Doc 24 §4.4) -->
+          <div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:var(--radius-md); padding:10px 12px; display:flex; flex-direction:column; gap:4px;">
+            <div style="font-size:11.5px; font-weight:800; color:#991B1B; display:flex; align-items:center; gap:5px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>Cancellation is not a time machine</span>
+            </div>
+            <div style="font-size:10.5px; color:#B91C1C; line-height:1.4;">
+              Physical work has already started. Sourced materials and dispatched transit cannot be unilaterally cancelled without compensating workers for completed stages.
+            </div>
+          </div>
+
+          <!-- Child Node Settlement Impact -->
+          <div style="background:#F8FAFC; border:1px solid var(--color-border); border-radius:var(--radius-md); padding:10px 12px; display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:10.5px; font-weight:800; color:var(--forest-900); text-transform:uppercase; letter-spacing:0.04em;">
+              Child Node Settlement Impact
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:11.5px;">
+              <span>1. Materials (Tagudin Hardware)</span>
+              <span style="font-weight:700; color:#0F2F58;">₱180 (You retain part)</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:11.5px;">
+              <span>2. Courier Transit (Danny Express)</span>
+              <span style="font-weight:700; color:#0F2F58;">₱80 (Dispatched)</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:11.5px;">
+              <span>3. Labor Install (Kuya Ben)</span>
+              <span style="font-weight:700; color:#10B981;">Eligible for ₱350 Refund</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex; flex-direction:column; gap:6px; margin-top:2px;">
+            <button type="button" onclick="submitCancellationHalt()" style="height:42px; border-radius:var(--radius-pill); background:#DC2626; color:#FFF; font-size:12.5px; font-weight:800; border:none; cursor:pointer;">
+              Stop Work &amp; Cancel Labor (Refund ₱350)
+            </button>
+            <button type="button" onclick="closeCancelModal(); openSupportChat();" style="height:38px; border-radius:var(--radius-pill); background:#FFFFFF; color:#0F2F58; font-size:12px; font-weight:700; border:1px solid var(--color-border); cursor:pointer;">
+              Chat with Support Before Halting
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Glovo Wave Asymmetrical Drawer for Payment Method Switching -->
+    <div class="glovo-drawer-overlay" id="payment-drawer" onclick="handlePaymentDrawerBackdrop(event)">
+      <div class="glovo-drawer-sheet" onclick="event.stopPropagation()">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+
+        <div class="drawer-content-box">
+          <div class="drawer-header-row">
+            <div>
+              <div class="drawer-title-txt">Payment Method</div>
+              <div style="font-size: 11px; color: var(--color-ink-muted);">Order #ORD-7721 · Total ₱610.00</div>
+            </div>
+            <button type="button" class="drawer-close-circle" onclick="closePaymentDrawer()" aria-label="Close">&times;</button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button type="button" class="payment-option-tile selected" id="opt-cash" onclick="selectPaymentMode('cash')">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="invoice-icon-box" style="background:#FEF8E7; color:#92400E; width:30px; height:30px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:12.5px; font-weight:800; color:var(--color-ink);">Cash on Hand / COD</div>
+                  <div style="font-size:10.5px; color:var(--color-ink-muted);">Pay workers directly upon physical completion</div>
+                </div>
+              </div>
+              <span id="check-cash" style="color:var(--forest-600); font-weight:800; font-size:13px;">✓</span>
+            </button>
+
+            <button type="button" class="payment-option-tile" id="opt-escrow" onclick="selectPaymentMode('escrow')">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="invoice-icon-box" style="background:#EFFCF6; color:#0D715F; width:30px; height:30px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:12.5px; font-weight:800; color:var(--color-ink);">GCash / Maya (QR Ph Escrow)</div>
+                  <div style="font-size:10.5px; color:var(--color-ink-muted);">Held in Serbizyu Vault until work sign-off</div>
+                </div>
+              </div>
+              <span id="check-escrow" style="color:var(--forest-600); font-weight:800; font-size:13px; display:none;">✓</span>
+            </button>
+          </div>
+
+          <!-- Dynamic QR Ph display when Escrow is selected -->
+          <div id="qrph-display-card" style="display:none; background:#F8FAFC; border:1px solid var(--color-border); border-radius:var(--radius-md); padding:12px; text-align:center;">
+            <div style="font-size:10.5px; font-weight:800; color:var(--color-brand-navy); margin-bottom:6px; letter-spacing:0.04em;">DYNAMIC BSP QR Ph CODE (₱610.00)</div>
+            <div style="width:130px; height:130px; background:#FFFFFF; border:1.5px solid var(--color-border); border-radius:10px; margin:0 auto 8px; display:flex; align-items:center; justify-content:center;">
+              <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14-2h4v2h-4v-2zm-4 0h2v4h-2v-4zm2 4h4v4h-2v-2h-2v-2zm-4 2h2v2h-2v-2zm4-8h2v2h-2v-2zm-8-4h2v2h-2V6zm2 2h2v2h-2V8zm0 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm8-2h2v2h-2v-2z"/>
+              </svg>
+            </div>
+            <div style="font-size:10.5px; color:#D97706; font-weight:700;">⏱ Expires in 14:59 · Do not hand over cash</div>
+            <button type="button" onclick="simulateWebhookPaid()" style="margin-top:8px; height:34px; padding:0 14px; border-radius:var(--radius-pill); background:#0F2F58; color:#FFF; font-size:11px; font-weight:700; border:none; cursor:pointer;">
+              Simulate GCash Webhook Paid (XND-882190)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentPerspective = urlParams.get('order') === 'ORD-619' ? 'solo' : 'customer';
+    let currentLifecycle = 'in_progress'; // 'in_progress' | 'signoff' | 'settled'
+    let currentPaymentMode = 'cash'; // 'cash' | 'escrow'
+    let activeLogFilter = 'all';
+    let isChainExpanded = false; // Progressive disclosure: default shows active node only
+
+    const ALL_AUDIT_LOGS = [
+      { time: '1:39 PM', code: 'handoff.recorded', category: 'handoff', desc: 'Danny Express handed 35uF capacitor package directly to Kuya Ben at gate.', badge: 'Handoff' },
+      { time: '1:24 PM', code: 'evidence.attached', category: 'work', desc: 'Capacitor diagnostic photo uploaded by Kuya Ben (SHA-256 verified).', badge: 'Evidence' },
+      { time: '1:18 PM', code: 'work.arrived_on_site', category: 'work', desc: 'Kuya Ben arrived on site at Poblacion Centro and disassembled housing.', badge: 'Work' },
+      { time: '1:14 PM', code: 'slot2.dispatched', category: 'handoff', desc: 'Danny Express picked up part at Tagudin Hardware (Motorcycle relay active).', badge: 'Transit' },
+      { time: '1:08 PM', code: 'slot1.sourced', category: 'work', desc: 'Tagudin Hardware counter lane 2 verified 35uF capacitor.', badge: 'Materials' },
+      { time: '1:05 PM', code: 'order.accepted', category: 'payment', desc: 'Proposal #2 finalized into immutable contract v1 by Maria Santos.', badge: 'Contract' },
+      { time: '1:00 PM', code: 'order.created', category: 'payment', desc: 'Order initialized under Bilateral Escrow terms (₱610.00 total).', badge: 'Order' }
+    ];
+
+    function setPerspective(role) {
+      currentPerspective = role;
+      isChainExpanded = false; // reset accordion on switch
+      const lifecycleRow = document.getElementById('meta-lifecycle-row');
+      if (role === 'solo') {
+        lifecycleRow.style.display = 'none';
+      } else {
+        lifecycleRow.style.display = 'flex';
+      }
+      renderPage();
+    }
+
+    function setLifecycle(state) {
+      currentLifecycle = state;
+      isChainExpanded = false;
+      renderPage();
+    }
+
+    function toggleChainExpansion() {
+      isChainExpanded = !isChainExpanded;
+      renderPage();
+    }
+
+    function renderPage() {
+      // 1. Update meta buttons
+      const btnCustomer = document.getElementById('meta-btn-customer');
+      const btnTech = document.getElementById('meta-btn-tech');
+      const btnCourier = document.getElementById('meta-btn-courier');
+      const btnSolo = document.getElementById('meta-btn-solo');
+      const crumbLabel = document.getElementById('studio-crumb-label');
+
+      btnCustomer.classList.remove('active');
+      btnTech.classList.remove('active');
+      btnCourier.classList.remove('active');
+      btnSolo.classList.remove('active');
+
+      const btnInprogress = document.getElementById('meta-btn-inprogress');
+      const btnSignoff = document.getElementById('meta-btn-signoff');
+      const btnSettled = document.getElementById('meta-btn-settled');
+
+      btnInprogress.classList.remove('active');
+      btnSignoff.classList.remove('active');
+      btnSettled.classList.remove('active');
+
+      if (currentLifecycle === 'in_progress') btnInprogress.classList.add('active');
+      else if (currentLifecycle === 'signoff') btnSignoff.classList.add('active');
+      else if (currentLifecycle === 'settled') btnSettled.classList.add('active');
+
+      const hdrOrderId = document.getElementById('hdr-order-id');
+      const hdrOrderTitle = document.getElementById('hdr-order-title');
+      
+      const heroImageSlot = document.getElementById('hero-image-slot');
+      const heroOrderTitle = document.getElementById('hero-order-title');
+      const heroTimingText = document.getElementById('hero-timing-text');
+
+      const execHeadTitle = document.getElementById('exec-head-title');
+      const execHeadSub = document.getElementById('exec-head-sub');
+      const execContent = document.getElementById('exec-content-slot');
+
+      const invoiceCardHeading = document.getElementById('invoice-card-heading');
+      const invoiceVaultId = document.getElementById('invoice-vault-id');
+      const invoiceItems = document.getElementById('invoice-items-container');
+      const invoiceTotalLabel = document.getElementById('invoice-total-label');
+      const invoiceTotalVal = document.getElementById('invoice-total-val');
+
+      const methodTitleTxt = document.getElementById('method-title-txt');
+      const btnChangeMethod = document.getElementById('btn-change-method');
+
+      const locAddress = document.getElementById('loc-address');
+      const locSub = document.getElementById('loc-sub');
+      const bottomDock = document.getElementById('order-bottom-dock');
+
+      if (currentPerspective === 'customer') {
+        // Customer View (Maria Santos)
+        btnCustomer.classList.add('active');
+        hdrOrderId.innerText = '#ORD-7721';
+        hdrOrderTitle.innerText = 'Fiesta AC Overhaul';
+
+        // Tri-circle overlapping collage for Deal Chain
+        heroImageSlot.innerHTML = `
+          <div class="tri-circle-collage">
+            <img src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=160&auto=format&fit=crop&q=80" alt="" class="collage-circle-img" style="z-index:3;">
+            <img src="https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=160&auto=format&fit=crop&q=80" alt="" class="collage-circle-img" style="margin-left:-14px; z-index:2;">
+            <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=160&auto=format&fit=crop&q=80" alt="" class="collage-circle-img" style="margin-left:-14px; z-index:1;">
+          </div>
+        `;
+        heroOrderTitle.innerText = 'Fiesta AC Overhaul';
+        heroTimingText.innerText = 'Started 1:00 PM · ETA ~45 mins';
+
+        invoiceCardHeading.innerText = 'Invoice & Settlement';
+        invoiceVaultId.innerText = currentLifecycle === 'settled' ? 'RECEIPT-7721' : 'VAULT-7721';
+        invoiceItems.innerHTML = renderChainInvoiceItems();
+        invoiceTotalVal.innerText = '₱610.00';
+
+        locAddress.innerText = 'Poblacion Centro, Tagudin';
+        locSub.innerText = 'Near St. Augustine Parish Church · Maria Santos';
+
+        if (currentLifecycle === 'in_progress') {
+          crumbLabel.innerText = 'Customer View · In Progress';
+          execHeadTitle.innerText = 'Live Progress';
+          execHeadSub.innerText = isChainExpanded ? 'Full Relay (3 Steps)' : 'Step 2 of 3 (Active)';
+          execContent.innerHTML = renderProgressiveChainSlots(isChainExpanded, 'in_progress');
+
+          invoiceTotalLabel.innerText = currentPaymentMode === 'cash' ? 'Total Due upon Completion' : 'Total Escrow Secured';
+          methodTitleTxt.innerText = currentPaymentMode === 'cash' ? 'Cash on Delivery · Due on Completion' : 'Paid via GCash (Ref: XND-882190)';
+          btnChangeMethod.style.display = 'inline-flex';
+          btnChangeMethod.innerHTML = currentPaymentMode === 'cash' ? `<span>Change</span><span>›</span>` : `<span style="color:#0D715F; font-size:10.5px; font-weight:700;">Locked ✓</span>`;
+          btnChangeMethod.onclick = currentPaymentMode === 'cash' ? openPaymentDrawer : () => alert('Payment Locked: Funds are secured under digital escrow.');
+
+          bottomDock.innerHTML = `
+            <div style="display: flex; gap: 8px; width: 100%;">
+              <a href="deal-chain-chat-mobile.html?chain=DC-892" class="btn-dock-primary" style="flex: 1; background: #FFFFFF; color: var(--color-brand-navy); border: 1.5px solid var(--color-border); box-shadow: none;" title="Open Team Coordination Room">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Team Chat</span>
+              </a>
+              <button type="button" class="btn-dock-primary" style="flex: 1.6;" onclick="openPaymentDrawer()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <span>${currentPaymentMode === 'cash' ? 'Pay Online &middot; &#8369;610' : 'View Escrow'}</span>
+              </button>
+            </div>
+          `;
+        } else if (currentLifecycle === 'signoff') {
+          crumbLabel.innerText = 'Customer View · Awaiting Sign-off';
+          execHeadTitle.innerText = 'Live Progress';
+          execHeadSub.innerText = 'Work Completed';
+          execContent.innerHTML = renderProgressiveChainSlots(isChainExpanded, 'completed');
+
+          invoiceTotalLabel.innerText = 'Total to Release / Settle';
+          methodTitleTxt.innerText = currentPaymentMode === 'cash' ? 'Cash on Hand / COD' : 'GCash Escrow (Vault Held)';
+          btnChangeMethod.style.display = 'none';
+
+          bottomDock.innerHTML = `
+            <a href="payment-flow-mobile.html" class="btn-dock-settle" style="width: 100%; text-decoration: none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              <span>Review Work &amp; Settle ₱610.00</span>
+            </a>
+            <div class="dock-footnote-row">
+              <span>Releases payout immediately to 3 participating workers</span>
+            </div>
+          `;
+        } else if (currentLifecycle === 'settled') {
+          crumbLabel.innerText = 'Customer View · Settled & Closed';
+          execHeadTitle.innerText = 'Live Progress';
+          execHeadSub.innerText = 'Closed';
+          execContent.innerHTML = renderProgressiveChainSlots(isChainExpanded, 'completed');
+
+          invoiceTotalLabel.innerText = 'Total Settled';
+          methodTitleTxt.innerText = 'Settled via ' + (currentPaymentMode === 'cash' ? 'Cash on Delivery' : 'GCash (Ref: XND-882190)');
+          btnChangeMethod.style.display = 'none';
+
+          bottomDock.innerHTML = `
+            <a href="review-ceremony-mobile.html" class="btn-dock-primary" style="width: 100%; text-decoration: none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>Rate &amp; Review Coordinated Team</span>
+            </a>
+            <div class="dock-footnote-row">
+              <span>Transaction complete · Verified Tagudin Deal Chain run</span>
+            </div>
+          `;
+        }
+      } else if (currentPerspective === 'tech') {
+        // Technician View (Kuya Ben - Slot 3 AC Labor)
+        btnTech.classList.add('active');
+        crumbLabel.innerText = 'Technician View (Kuya Ben · Slot 3)';
+
+        hdrOrderId.innerText = '#ORD-7721';
+        hdrOrderTitle.innerText = 'Slot 3: AC Labor & Install';
+
+        heroImageSlot.innerHTML = `
+          <img src="https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=120&auto=format&fit=crop&q=80" alt="" class="collage-circle-img" style="width:46px; height:46px;">
+        `;
+        heroOrderTitle.innerText = 'AC Deep Clean &amp; Install';
+        heroTimingText.innerText = currentLifecycle === 'settled' ? 'Completed 1:44 PM' : 'On Site · Prepped';
+
+        execHeadTitle.innerText = 'Technician Work Scope';
+        execHeadSub.innerText = 'Slot 3 Execution';
+        execContent.innerHTML = `
+          <div class="worker-gate-card">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:11px; font-weight:800; color:#B45309; display:flex; align-items:center; gap:5px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Transit Relay Gating</span>
+              </span>
+              <span style="font-size:10px; font-weight:700; background:#FEF3C7; color:#92400E; padding:1px 6px; border-radius:4px;">ETA ~8m</span>
+            </div>
+            <div style="font-size:11px; color:#92400E; line-height:1.4;">
+              Danny Express en route with 35uF capacitor from Tagudin Hardware. Meeting at side gate.
+            </div>
+            <div style="display:flex; gap:6px; margin-top:2px;">
+              <a href="tel:09178829912" style="padding:3px 8px; border-radius:var(--radius-pill); background:#FFF; border:1px solid #FCD34D; font-size:10.5px; font-weight:700; color:#92400E; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <span>Call Danny</span>
+              </a>
+              <button type="button" onclick="alert('Bypass confirmed: Technician marked replacement part as already present on-site.')" style="padding:3px 8px; border-radius:var(--radius-pill); background:#FFF; border:1px solid #FCD34D; font-size:10.5px; font-weight:700; color:#92400E; cursor:pointer;">
+                Bypass (Part on Site)
+              </button>
+            </div>
+          </div>
+
+          <div class="project-slot-card">
+            <div style="font-size:11px; font-weight:800; color:var(--forest-900); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">
+              Kuya Ben Execution Tasks (A9)
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="color:#10B981; font-weight:800;">✓</span>
+                <span style="color:var(--color-ink);">Intake electrical triage &amp; Freon check</span>
+                <span style="margin-left:auto; font-size:10px; color:#10B981; font-weight:700;">Completed 1:24 PM</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="color:${currentLifecycle === 'in_progress' ? '#D97706' : '#10B981'}; font-weight:800;">${currentLifecycle === 'in_progress' ? '⏳' : '✓'}</span>
+                <span style="color:var(--color-ink);">Install 35uF capacitor &amp; crimp terminals</span>
+                <span style="margin-left:auto; font-size:10px; color:${currentLifecycle === 'in_progress' ? '#D97706' : '#10B981'}; font-weight:700;">${currentLifecycle === 'in_progress' ? 'Waiting on part' : 'Installed'}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="color:${currentLifecycle === 'settled' ? '#10B981' : '#94A3B8'}; font-weight:800;">${currentLifecycle === 'settled' ? '✓' : '○'}</span>
+                <span style="color:${currentLifecycle === 'settled' ? 'var(--color-ink)' : '#64748B'};">15-minute compressor cold air load test</span>
+                <span style="margin-left:auto; font-size:10px; color:${currentLifecycle === 'settled' ? '#10B981' : '#94A3B8'}; font-weight:700;">${currentLifecycle === 'settled' ? 'Passed' : 'Queued'}</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        invoiceCardHeading.innerText = 'Labor Compensation (Private)';
+        invoiceVaultId.innerText = 'PAYOUT-7721-L3';
+        invoiceItems.innerHTML = `
+          <div class="invoice-item-line">
+            <div class="invoice-item-left">
+              <div class="invoice-icon-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              </div>
+              <span class="invoice-label-txt">Contracted Labor Fee (Kuya Ben)</span>
+            </div>
+            <span class="invoice-amount-txt">₱350.00</span>
+          </div>
+          <div class="invoice-item-line">
+            <div class="invoice-item-left">
+              <div class="invoice-icon-box">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <span class="invoice-label-txt">Serbizyu Platform Fee (Tagudin Pilot)</span>
+            </div>
+            <span class="invoice-amount-txt" style="color:#10B981;">₱0.00</span>
+          </div>
+        `;
+        invoiceTotalLabel.innerText = 'Net Labor Payout upon Sign-off';
+        invoiceTotalVal.innerText = '₱350.00';
+
+        methodTitleTxt.innerText = 'Direct Payout to GCash (0917-555-0192)';
+        btnChangeMethod.style.display = 'inline-flex';
+        btnChangeMethod.innerHTML = `<span style="color:#0D715F; font-size:10.5px; font-weight:700;">Verified ✓</span>`;
+        btnChangeMethod.onclick = () => alert('Provider Account: Kuya Ben AC Services is verified for direct GCash payout.');
+
+        locAddress.innerText = 'Maria Santos (Customer)';
+        locSub.innerText = 'Poblacion Centro · 0918-555-0211 (Side yard compressor)';
+
+        bottomDock.innerHTML = `
+          <button type="button" class="btn-dock-settle" onclick="alert('Part received recorded! Starting 15-minute compressor load test.')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            <span>Confirm Part Received &amp; Start Load Test</span>
+          </button>
+          <div class="dock-footnote-row">
+            <span>₱350.00 releases to your wallet immediately after load test sign-off</span>
+          </div>
+        `;
+      } else if (currentPerspective === 'courier') {
+        // Courier View (Danny Express - Slot 2 Transit Relay)
+        btnCourier.classList.add('active');
+        crumbLabel.innerText = 'Courier View (Danny Express · Slot 2)';
+
+        hdrOrderId.innerText = '#ORD-7722';
+        hdrOrderTitle.innerText = 'Slot 2: Express Transit Relay';
+
+        heroImageSlot.innerHTML = `
+          <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=120&auto=format&fit=crop&q=80" alt="" class="collage-circle-img" style="width:46px; height:46px;">
+        `;
+        heroOrderTitle.innerText = 'Transit: Hardware ➔ Jobsite';
+        heroTimingText.innerText = currentLifecycle === 'settled' ? 'Delivered 1:39 PM' : 'In Transit (ETA ~8m)';
+
+        execHeadTitle.innerText = 'Relay Route & Delivery';
+        execHeadSub.innerText = 'Counter to Site';
+        execContent.innerHTML = `
+          <div class="project-slot-card">
+            <div style="font-size:11px; font-weight:800; color:var(--forest-900); text-transform:uppercase; letter-spacing:0.04em;">
+              Motorcycle Relay (Honda XRM 125)
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:2px;">
+              <div style="display:flex; align-items:flex-start; gap:8px;">
+                <span style="color:#10B981; font-weight:800; font-size:13px;">✓</span>
+                <div>
+                  <div style="font-size:12px; font-weight:700; color:var(--color-ink);">Pick-up: Tagudin Hardware</div>
+                  <div style="font-size:10.5px; color:var(--color-ink-muted);">Counter Lane 2 · 35uF Capacitor Verified (1:14 PM)</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:flex-start; gap:8px;">
+                <span style="color:#D97706; font-weight:800; font-size:13px;">🟢</span>
+                <div>
+                  <div style="font-size:12px; font-weight:700; color:#D97706;">In Transit: Poblacion Route</div>
+                  <div style="font-size:10.5px; color:var(--color-ink-muted);">Heading west along National Highway (ETA ~8 mins)</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:flex-start; gap:8px;">
+                <span style="color:#94A3B8; font-size:13px;">○</span>
+                <div>
+                  <div style="font-size:12px; font-weight:700; color:#64748B;">Drop-off: Maria Santos Residence</div>
+                  <div style="font-size:10.5px; color:var(--color-ink-muted);">Hand directly to Kuya Ben (Side yard compressor)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        invoiceCardHeading.innerText = 'Transit Delivery Compensation';
+        invoiceVaultId.innerText = 'PAYOUT-7722-L2';
+        invoiceItems.innerHTML = `
+          <div class="invoice-item-line">
+            <div class="invoice-item-left">
+              <div class="invoice-icon-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              </div>
+              <span class="invoice-label-txt">Transit Relay Delivery Fee</span>
+            </div>
+            <span class="invoice-amount-txt">₱80.00</span>
+          </div>
+          <div class="invoice-item-line">
+            <div class="invoice-item-left">
+              <div class="invoice-icon-box">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <span class="invoice-label-txt">Serbizyu Platform Fee (Tagudin Pilot)</span>
+            </div>
+            <span class="invoice-amount-txt" style="color:#10B981;">₱0.00</span>
+          </div>
+        `;
+        invoiceTotalLabel.innerText = 'Net Transit Payout upon Dropoff';
+        invoiceTotalVal.innerText = '₱80.00';
+
+        methodTitleTxt.innerText = 'Direct Payout to GCash (0917-882-9912)';
+        btnChangeMethod.style.display = 'inline-flex';
+        btnChangeMethod.innerHTML = `<span style="color:#0D715F; font-size:10.5px; font-weight:700;">Verified ✓</span>`;
+        btnChangeMethod.onclick = () => alert('Provider Account: Danny Express is verified for direct GCash payout.');
+
+        locAddress.innerText = 'Maria Santos (Destination)';
+        locSub.innerText = 'Poblacion Centro · Recipient: Kuya Ben (On site)';
+
+        bottomDock.innerHTML = `
+          <button type="button" class="btn-dock-primary" onclick="alert('Hand-off recorded: Danny Express verified physical transfer of 35uF capacitor to Kuya Ben!')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
+            <span>Confirm Hand-off at Gate to Kuya Ben</span>
+          </button>
+          <div class="dock-footnote-row">
+            <span>₱80.00 releases to your wallet immediately upon handoff</span>
+          </div>
+        `;
+      } else {
+        // Solo Driver View (Kuya Jun #ORD-619 - Cash Only)
+        btnSolo.classList.add('active');
+        crumbLabel.innerText = 'Solo Driver View (Kuya Jun · #ORD-619)';
+
+        hdrOrderId.innerText = '#ORD-619';
+        hdrOrderTitle.innerText = 'Tricycle Poblacion Route';
+
+        heroImageSlot.innerHTML = `
+          <div style="width:46px; height:46px; border-radius:50%; background:#0D715F; color:#FFF; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px;">KJ</div>
+        `;
+        heroOrderTitle.innerText = 'Tricycle Poblacion Route';
+        heroTimingText.innerText = 'Completed Sep 14, 2026';
+
+        execHeadTitle.innerText = 'Driver Trip Summary';
+        execHeadSub.innerText = 'Tagudin TODA #14';
+        execContent.innerHTML = `
+          <div class="project-slot-card">
+            <div style="font-size:11px; font-weight:800; color:var(--forest-900); text-transform:uppercase; letter-spacing:0.04em;">
+              Completed Passenger Trip
+            </div>
+            <div style="font-size:12.5px; font-weight:700; color:var(--color-ink); margin-top:2px;">
+              Tagudin Public Market ➔ Centro Drop-off
+            </div>
+            <div style="font-size:11px; color:var(--color-ink-muted);">
+              Passenger: Maria Santos · Completed 11:28 AM
+            </div>
+            <div class="project-slot-action-row">
+              <span class="slot-status-pill status-settled">Cash Received in Person</span>
+              <span style="font-size: 10.5px; color: var(--color-ink-muted); font-weight: 600;">Trip Closed</span>
+            </div>
+          </div>
+        `;
+
+        invoiceCardHeading.innerText = 'Trip Receipt & Earnings';
+        invoiceVaultId.innerText = 'RECEIPT-619';
+        invoiceItems.innerHTML = `
+          <div class="invoice-item-line">
+            <div class="invoice-item-left">
+              <div class="invoice-icon-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 10.7 2 11.1 2 11.5V16c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+              </div>
+              <span class="invoice-label-txt">Standard Poblacion Transit Fare</span>
+            </div>
+            <span class="invoice-amount-txt">₱45.00</span>
+          </div>
+          <div class="invoice-item-line">
+            <div class="invoice-item-left">
+              <div class="invoice-icon-box">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <span class="invoice-label-txt">Serbizyu Platform Fee (Tagudin Pilot)</span>
+            </div>
+            <span class="invoice-amount-txt" style="color:#10B981;">₱0.00</span>
+          </div>
+        `;
+        invoiceTotalLabel.innerText = 'Net Cash Earnings Retained';
+        invoiceTotalVal.innerText = '₱45.00';
+
+        methodTitleTxt.innerText = 'Cash on Hand / In-Person Payment';
+        btnChangeMethod.style.display = 'inline-flex';
+        btnChangeMethod.innerHTML = `<span style="color:#94A3B8; font-size:10.5px;">Cash only</span>`;
+        btnChangeMethod.onclick = () => alert('Provider Notice: Kuya Jun accepts physical cash only. No commission is deducted.');
+
+        locAddress.innerText = 'Tagudin Public Market → Centro';
+        locSub.innerText = 'Completed drop-off · Trip ID #TRP-619';
+
+        bottomDock.innerHTML = `
+          <button type="button" class="btn-dock-primary" style="background:#0F2F58;" onclick="alert('Trip #TRP-619 is already finalized and settled.')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
+            <span>Trip Finalized (₱45.00 Cash Settled)</span>
+          </button>
+          <div class="dock-footnote-row">
+            <span>Rated 5 stars · Tagudin TODA #14</span>
+          </div>
+        `;
+      }
+    }
+
+    // Render progressive disclosure slots (default: active node only, expanded: full 3 slots + sub-process track)
+    function renderProgressiveChainSlots(expanded, lifecycle) {
+      const isCompleted = lifecycle === 'completed' || lifecycle === 'signoff';
+
+      if (!expanded) {
+        // Default: Show ONLY the current ongoing node (Slot 2)
+        return `
+          <!-- Focused Current Active Node (Pulsing Border = Live) -->
+          <section class="project-slot-card is-live-pulsing">
+            <div class="project-slot-header">
+              <div>
+                <div class="project-slot-title" style="font-size:14px;">Transit Relay · Danny Express</div>
+                <div class="project-slot-meta">Motorcycle Courier · Counter to Jobsite Gate</div>
+              </div>
+            </div>
+            <div class="project-slot-action-row">
+              <span class="slot-status-pill status-held">${isCompleted ? 'Delivered to Site' : 'In Transit (ETA ~8m)'}</span>
+              <a href="order-chat-mobile.html?order=ORD-7722&chain=DC-892&provider=danny" class="btn-slot-chat" title="Chat with Danny">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>Chat Danny</span>
+              </a>
+            </div>
+          </section>
+
+          <!-- Accordion Toggle Button to Expand Full 3-Step Chain -->
+          <button type="button" class="btn-expand-flow" onclick="toggleChainExpansion()">
+            <span>View all 3 project steps</span>
+            <svg class="expand-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        `;
+      }
+
+      // Expanded: Show full 3-slot relay with animated connectors and sub-process track for active node
+      return `
+        <!-- Slot 1: Hardware (Settled / Muted) -->
+        <section class="project-slot-card is-settled-muted">
+          <div class="project-slot-header">
+            <div>
+              <div class="project-slot-title">1. Materials · Tagudin Hardware</div>
+              <div class="project-slot-meta">35uF Run Capacitor · Counter Lane 2</div>
+            </div>
+          </div>
+          <div class="project-slot-action-row">
+            <span class="slot-status-pill status-settled">Sourced at Counter</span>
+            <span style="font-size: 10.5px; color: var(--color-ink-muted); font-weight: 600;">Slot 1 Complete</span>
+          </div>
+        </section>
+
+        <!-- Live Animated Connector: Slot 1 to Slot 2 -->
+        <div class="chain-animated-connector">
+          <div class="connector-track-box">
+            <svg width="18" height="28" viewBox="0 0 18 28" fill="none">
+              <line x1="9" y1="2" x2="9" y2="26" class="flow-dots-v"></line>
+            </svg>
+          </div>
+          <span class="connector-badge-text">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: #0D715F;"></span>
+            <span>Part Dispatched to Courier</span>
+          </span>
+        </div>
+
+        <!-- Slot 2: Transit (Active Focus with Sub-Process Track) -->
+        <section class="project-slot-card ${isCompleted ? 'is-settled-muted' : 'is-active-focus'}">
+          <div class="project-slot-header">
+            <div>
+              <div class="project-slot-title">2. Transit · Danny Express</div>
+              <div class="project-slot-meta">Motorcycle Relay · Counter to Jobsite</div>
+            </div>
+          </div>
+          <!-- Sub-process track for ongoing node -->
+          <div class="steps-mini-track">
+            <span class="step-chip done">✓ Picked Up</span>
+            <span class="step-chip active">🟢 En Route (8m)</span>
+            <span class="step-chip queued">○ Jobsite Dropoff</span>
+          </div>
+          <div class="project-slot-action-row">
+            <span class="slot-status-pill ${isCompleted ? 'status-settled' : 'status-held'}">${isCompleted ? 'Delivered to Site' : 'In Transit (ETA ~8m)'}</span>
+            <a href="order-chat-mobile.html?order=ORD-7722&chain=DC-892&provider=danny" class="btn-slot-chat" title="Chat with Danny">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>Chat Danny</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Live Animated Connector: Slot 2 to Slot 3 (Amber: Gating Dependency) -->
+        <div class="chain-animated-connector">
+          <div class="connector-track-box">
+            <svg width="18" height="28" viewBox="0 0 18 28" fill="none">
+              <line x1="9" y1="2" x2="9" y2="26" class="${isCompleted ? 'flow-dots-v' : 'flow-dots-v-amber'}"></line>
+            </svg>
+          </div>
+          <span class="connector-badge-text" style="${isCompleted ? '' : 'background: #FEF3C7; border-color: #FDE68A; color: #92400E;'}">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: ${isCompleted ? '#0D715F' : '#D97706'};"></span>
+            <span>${isCompleted ? 'Part Handed Off to Technician' : 'Transit Gating On-Site Labor'}</span>
+          </span>
+        </div>
+
+        <!-- Slot 3: Labor -->
+        <section class="project-slot-card ${isCompleted ? 'is-active-focus' : 'is-gated-muted'}">
+          <div class="project-slot-header">
+            <div>
+              <div class="project-slot-title">3. Labor · Kuya Ben AC Services</div>
+              <div class="project-slot-meta">Deep Clean &amp; Part Install · On-Site</div>
+            </div>
+          </div>
+          <div class="project-slot-action-row">
+            <span class="slot-status-pill ${isCompleted ? 'status-held' : ''}" style="${isCompleted ? '' : 'font-size: 10.5px; color: var(--color-ink-muted); font-weight: 600;'}">
+              ${isCompleted ? 'Awaiting Load Test Sign-off' : 'Waiting on Slot 2 delivery'}
+            </span>
+            <a href="order-chat-mobile.html?order=ORD-7721&chain=DC-892&provider=kuyaben" class="btn-slot-chat" title="Chat with Kuya Ben">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>Chat Kuya Ben</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Accordion Toggle Button to Collapse -->
+        <button type="button" class="btn-expand-flow expanded" onclick="toggleChainExpansion()">
+          <span>Show active step only</span>
+          <svg class="expand-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+      `;
+    }
+
+    function renderChainInvoiceItems() {
+      return `
+        <div class="invoice-item-line">
+          <div class="invoice-item-left">
+            <div class="invoice-icon-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
+            <span class="invoice-label-txt">Diagnostics &amp; Mount Labor</span>
+          </div>
+          <span class="invoice-amount-txt">₱350.00</span>
+        </div>
+        <div class="invoice-item-line">
+          <div class="invoice-item-left">
+            <div class="invoice-icon-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <span class="invoice-label-txt">35uF Run Capacitor Hardware</span>
+          </div>
+          <span class="invoice-amount-txt">₱180.00</span>
+        </div>
+        <div class="invoice-item-line">
+          <div class="invoice-item-left">
+            <div class="invoice-icon-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            </div>
+            <span class="invoice-label-txt">Express Parts Transit Relay</span>
+          </div>
+          <span class="invoice-amount-txt">₱80.00</span>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // DRAWER CONTROLS: OPTIONS, LOGS, SUPPORT, CANCEL, PAYMENT
+    // ==========================================
+
+    // 1. Order Options Drawer (3-Dots Menu)
+    function openOrderOptionsMenu() {
+      document.getElementById('order-options-drawer').classList.add('open');
+    }
+    function closeOrderOptionsMenu() {
+      document.getElementById('order-options-drawer').classList.remove('open');
+    }
+    function handleOptionsDrawerBackdrop(e) {
+      if (e.target.id === 'order-options-drawer') closeOrderOptionsMenu();
+    }
+
+    // 2. Audit Trail Drawer
+    function openAuditLogs() {
+      document.getElementById('order-logs-drawer').classList.add('open');
+      filterLogEvents();
+    }
+    function closeAuditLogs() {
+      document.getElementById('order-logs-drawer').classList.remove('open');
+    }
+    function handleLogsDrawerBackdrop(e) {
+      if (e.target.id === 'order-logs-drawer') closeAuditLogs();
+    }
+    function setLogFilter(cat, btn) {
+      activeLogFilter = cat;
+      document.querySelectorAll('.log-filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterLogEvents();
+    }
+    function filterLogEvents() {
+      const q = (document.getElementById('log-search-field').value || '').toLowerCase();
+      const list = document.getElementById('audit-log-items-list');
+      const filtered = ALL_AUDIT_LOGS.filter(item => {
+        const matchesCategory = activeLogFilter === 'all' || item.category === activeLogFilter;
+        const matchesQuery = item.desc.toLowerCase().includes(q) || item.code.toLowerCase().includes(q);
+        return matchesCategory && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:20px; font-size:11px; color:#94A3B8;">No audit events match your filter.</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(item => `
+        <div class="log-entry-item">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:#0F2F58; white-space:nowrap; padding-top:1px;">
+            ${item.time}
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; color:var(--forest-900);">${item.code}</span>
+              <span style="font-size:9px; background:#E2E8F0; color:#475569; padding:1px 5px; border-radius:3px; font-weight:700;">${item.badge}</span>
+            </div>
+            <div style="font-size:11px; color:var(--color-ink); margin-top:2px; line-height:1.35;">${item.desc}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 3. Support Chat Modal (Full Bleed)
+    function openSupportChat() {
+      document.getElementById('order-support-modal').classList.add('open');
+    }
+    function closeSupportChat() {
+      document.getElementById('order-support-modal').classList.remove('open');
+    }
+    function sendSupportMessage() {
+      const input = document.getElementById('support-input-field');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const stream = document.getElementById('support-chat-stream');
+      const msg = document.createElement('div');
+      msg.className = 'msg-group outgoing';
+      msg.innerHTML = `
+        <div class="msg-bubble" style="background:var(--forest-600); color:#FFF; font-size:13px; line-height:1.45;">
+          ${escapeHtml(text)}
+        </div>
+        <span class="msg-time">Just now ✓</span>
+      `;
+      stream.appendChild(msg);
+      input.value = '';
+      stream.scrollTop = stream.scrollHeight;
+
+      setTimeout(() => {
+        const reply = document.createElement('div');
+        reply.className = 'msg-group incoming';
+        reply.innerHTML = `
+          <span class="msg-sender-name">Paige · Tagudin Support</span>
+          <div class="msg-bubble" style="background:#FFFFFF; border:1px solid var(--color-border); box-shadow:var(--shadow-sm); font-size:13px; line-height:1.45;">
+            Thank you for messaging support regarding Order #ORD-7721. Our Tagudin station agent has noted your request and will assist within ~2 minutes.
+          </div>
+          <span class="msg-time">Just now</span>
+        `;
+        stream.appendChild(reply);
+        stream.scrollTop = stream.scrollHeight;
+      }, 1000);
+    }
+
+    // 4. Cancellation Modal
+    function openCancelModal() {
+      document.getElementById('order-cancel-modal').classList.add('open');
+    }
+    function closeCancelModal() {
+      document.getElementById('order-cancel-modal').classList.remove('open');
+    }
+    function handleCancelModalBackdrop(e) {
+      if (e.target.id === 'order-cancel-modal') closeCancelModal();
+    }
+    function submitCancellationHalt() {
+      closeCancelModal();
+      alert('Cancellation Request Submitted:\n\n• Kuya Ben & Danny Express have been alerted to halt.\n• Escrow release is placed on Administrative Hold.\n• ₱350 labor fee will be refunded to your account upon mutual confirmation.');
+    }
+
+    // 5. Payment Drawer
+    function openPaymentDrawer() {
+      document.getElementById('payment-drawer').classList.add('open');
+    }
+    function closePaymentDrawer() {
+      document.getElementById('payment-drawer').classList.remove('open');
+    }
+    function handlePaymentDrawerBackdrop(e) {
+      if (e.target.id === 'payment-drawer') closePaymentDrawer();
+    }
+    function selectPaymentMode(mode) {
+      currentPaymentMode = mode;
+      const optCash = document.getElementById('opt-cash');
+      const optEscrow = document.getElementById('opt-escrow');
+      const checkCash = document.getElementById('check-cash');
+      const checkEscrow = document.getElementById('check-escrow');
+      const qrCard = document.getElementById('qrph-display-card');
+
+      if (mode === 'cash') {
+        optCash.classList.add('selected');
+        optEscrow.classList.remove('selected');
+        checkCash.style.display = 'inline';
+        checkEscrow.style.display = 'none';
+        qrCard.style.display = 'none';
+        renderPage();
+      } else {
+        optCash.classList.remove('selected');
+        optEscrow.classList.add('selected');
+        checkCash.style.display = 'none';
+        checkEscrow.style.display = 'inline';
+        qrCard.style.display = 'block';
+      }
+    }
+    function simulateWebhookPaid() {
+      closePaymentDrawer();
+      currentPaymentMode = 'escrow';
+      renderPage();
+
+      alert('Simulated Gateway Webhook (200 OK):\n\n• Event: payment.capture\n• Ref: XND-882190\n• Amount: ₱610.00\n• State: tiwala_protected_digital (HELD)\n\nOrder updated seamlessly!');
+    }
+
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function goBack() {
+      window.location.href = 'orders-mobile.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setPerspective(currentPerspective);
+    });
+  </script>
+</body>
+</html>

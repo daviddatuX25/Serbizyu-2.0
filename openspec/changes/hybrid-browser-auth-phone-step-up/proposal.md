@@ -1,6 +1,6 @@
 # Multi-method sign-in + strict mobile signup
 
-Status: **ACCEPTED 2026-08-10** — authority amended; implementation not authorized until §1 implementation OpenSpec + Pest GO  
+Status: **ACCEPTED 2026-08-10** — authority amended; P0–P1/P0c foundation slices delivered (phone OTP signup, password auth, role assignment, fake delivery); P2 Google OAuth and P3 live SMS/phone providers remain deferred behind ports.
 Change ID: `hybrid-browser-auth-phone-step-up`  
 Plane: `C`, `T`, `S`  
 Date: 2026-08-10 (intent clarified same day)  

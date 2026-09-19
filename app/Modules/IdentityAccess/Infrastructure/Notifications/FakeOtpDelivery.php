@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\IdentityAccess\Infrastructure\Notifications;
 
 use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryChannel;
+use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryInspector;
 use App\Modules\IdentityAccess\Application\DeliveryResult;
 use App\Modules\IdentityAccess\Application\OtpDelivery;
 use Illuminate\Support\Facades\Cache;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Cache;
  * Deterministic OTP delivery for local/test/capstone.
  * Exposes inspection only through this test seam / artisan peek — never via product UI.
  */
-final class FakeOtpDelivery implements OtpDeliveryChannel
+final class FakeOtpDelivery implements OtpDeliveryChannel, OtpDeliveryInspector
 {
     /** @var list<array{phone_e164: string, purpose: string, code: string, correlation_id: string, expires_in_seconds: int, delivered_at: string}> */
     private array $deliveries = [];

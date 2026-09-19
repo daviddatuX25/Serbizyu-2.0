@@ -11,6 +11,7 @@ use App\Http\Controllers\MyListingsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Middleware\EnsureAuthenticated;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('/auth/sign-in', [AuthController::class, 'showSignIn'])->name('auth.sign-in');
@@ -19,6 +20,7 @@ Route::post('/auth/email/login', [AuthController::class, 'loginWithEmail'])->mid
 Route::get('/auth/register', [AuthController::class, 'showRegister'])->name('auth.register');
 Route::post('/auth/register/request', [AuthController::class, 'registerRequest'])->middleware('throttle:auth-otp-request')->name('auth.register.request');
 Route::post('/auth/register/verify', [AuthController::class, 'registerVerify'])->middleware('throttle:auth-otp-verify')->name('auth.register.verify');
+Route::post('/auth/register/reset', [AuthController::class, 'registerReset'])->name('auth.register.reset');
 Route::post('/auth/email/link', [AuthController::class, 'linkEmail'])
     ->middleware([EnsureAuthenticated::class, 'throttle:auth-email-link'])
     ->name('auth.email.link');
@@ -68,3 +70,33 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
         ->middleware('throttle:30,1')
         ->name('orders.finalize');
 });
+
+Route::get('/admin', fn () => Inertia::render('Admin/Triage'))->name('admin.triage');
+Route::get('/admin/triage', fn () => Inertia::render('Admin/Triage'))->name('admin.triage.index');
+Route::get('/admin/inspect', function () {
+    return Inertia::render('Admin/Inspector/Show', [
+        'orderRef' => request()->query('ref', request()->query('order', 'ORD-2026-09')),
+    ]);
+})->name('admin.inspect');
+Route::get('/admin/inspector', function () {
+    return Inertia::render('Admin/Inspector/Show', [
+        'orderRef' => request()->query('ref', request()->query('order', 'ORD-2026-09')),
+    ]);
+})->name('admin.inspector');
+Route::get('/admin/orders', fn () => Inertia::render('Admin/Orders/Index'))->name('admin.orders.index');
+Route::get('/admin/listings', fn () => Inertia::render('Admin/Listings/Index'))->name('admin.listings.index');
+Route::get('/admin/tenders', fn () => Inertia::render('Admin/Tenders/Index'))->name('admin.tenders.index');
+Route::get('/admin/requests', fn () => Inertia::render('Admin/Tenders/Index'))->name('admin.requests.index');
+Route::get('/admin/users', fn () => Inertia::render('Admin/Users/Index'))->name('admin.users.index');
+Route::get('/admin/identity-review', fn () => Inertia::render('Admin/IdentityReviews/Index'))->name('admin.identity-review');
+Route::get('/admin/catalogs/work', fn () => Inertia::render('Admin/Catalogs/WorkCatalog'))->name('admin.catalogs.work');
+Route::get('/admin/catalogs/deal-chains', fn () => Inertia::render('Admin/Catalogs/DealChainStudio'))->name('admin.catalogs.deal-chains');
+Route::get('/admin/catalogs/taxonomy', fn () => Inertia::render('Admin/Catalogs/TaxonomyStudio'))->name('admin.catalogs.taxonomy');
+Route::get('/admin/financials', fn () => Inertia::render('Admin/Financials/Index'))->name('admin.financials.index');
+Route::get('/admin/disputes', fn () => Inertia::render('Admin/Disputes/Index'))->name('admin.disputes.index');
+Route::get('/admin/telemetry', fn () => Inertia::render('Admin/System/TelemetryIndex'))->name('admin.telemetry.index');
+Route::get('/admin/system-health', fn () => Inertia::render('Admin/System/TelemetryIndex'))->name('admin.system-health');
+Route::get('/admin/outbox', fn () => Inertia::render('Admin/System/TelemetryIndex'))->name('admin.outbox');
+Route::get('/admin/audit', fn () => Inertia::render('Admin/System/TelemetryIndex'))->name('admin.audit');
+Route::get('/admin/holds', fn () => Inertia::render('Admin/Disputes/Index'))->name('admin.holds');
+Route::get('/admin/capabilities', fn () => Inertia::render('Admin/Users/Index'))->name('admin.capabilities');

@@ -9,7 +9,6 @@ use App\Shared\Application\AuditRecorder;
 use App\Shared\Application\IdempotencyGuard;
 use App\Shared\Application\KernelException;
 use App\Shared\Application\OutboxWriter;
-use App\Shared\Contracts\OrderCapacityPort;
 use App\Shared\Contracts\OrderListingSourcePort;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -19,7 +18,6 @@ final class SubmitOrderProposal
 {
     public function __construct(
         private readonly OrderListingSourcePort $listings,
-        private readonly OrderCapacityPort $capacity,
         private readonly IdempotencyGuard $idempotency,
         private readonly AuditRecorder $audits,
         private readonly OutboxWriter $outbox,
@@ -113,29 +111,6 @@ final class SubmitOrderProposal
                 return is_array($reservation->replayPayload) ? $reservation->replayPayload : [];
             }
 
-            $capacityReservationId = null;
-            $bucket = $this->capacity->findOpenQuantityBucket($listingId, $source['listing_version_id']);
-            if ($bucket !== null) {
-                try {
-                    $held = $this->capacity->hold(
-                        listingCapacityId: $bucket['id'],
-                        quantity: $quantity,
-                        commandScope: 'order.propose.capacity:'.$buyerUserId.':'.$listingId,
-                        idempotencyKey: $idempotencyKey,
-                        correlationId: $correlationId,
-                    );
-                    $capacityReservationId = $held['reservation_id'];
-                } catch (KernelException $error) {
-                    throw new OrderError(
-                        $error->envelope->code,
-                        $error->getMessage(),
-                        $correlationId,
-                        status: $error->status,
-                        retryable: $error->envelope->retryable,
-                    );
-                }
-            }
-
             $now = now();
             $orderId = (string) Str::uuid7();
 
@@ -164,7 +139,6 @@ final class SubmitOrderProposal
                 'quantity' => $quantity,
                 'listing_version_id' => $source['listing_version_id'],
                 'listing_version_number' => $source['listing_version_number'],
-                'capacity_reservation_id' => $capacityReservationId,
             ];
 
             $this->insertParty(
@@ -190,7 +164,6 @@ final class SubmitOrderProposal
                 'amount_minor' => $resolvedAmount,
                 'currency' => $resolvedCurrency,
                 'quantity' => $quantity,
-                'capacity_reservation_id' => $capacityReservationId,
             ];
             ksort($response);
 

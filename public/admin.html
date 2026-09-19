@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serbizyu Operations — Executive Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Forest Brand Tokens */
+      --forest-950: #04241e;
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-400: #22a085;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      /* Dark Slate Operating Surfaces (shadcn / Linear aesthetic) */
+      --background: #090d16;
+      --sidebar-bg: #0b111c;
+      --card-bg: #111827;
+      --card-subtle: #0d131f;
+      --card-hover: #162032;
+      --card-elevated: #1a263c;
+
+      /* Borders */
+      --border: rgba(255, 255, 255, 0.08);
+      --border-specular: rgba(255, 255, 255, 0.16);
+      --border-focus: #17866f;
+
+      /* Text */
+      --text-pure: #ffffff;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --text-subtle: #475569;
+
+      /* State Semantic Tokens */
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.1);
+      --amber-border: rgba(245, 158, 11, 0.25);
+
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.1);
+      --red-border: rgba(239, 68, 68, 0.25);
+
+      --green: #10b981;
+      --green-bg: rgba(16, 185, 129, 0.1);
+      --green-border: rgba(16, 185, 129, 0.25);
+
+      --blue: #38bdf8;
+      --blue-bg: rgba(56, 189, 248, 0.1);
+      --blue-border: rgba(56, 189, 248, 0.25);
+
+      --purple: #a855f7;
+      --purple-bg: rgba(168, 85, 247, 0.1);
+      --purple-border: rgba(168, 85, 247, 0.25);
+
+      /* Radii */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-pill: 9999px;
+
+      /* Motion */
+      --spring: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration: 0.18s;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--background);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    code, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ==========================================================================
+       DESKTOP LAYOUT (Sidebar + Main Operating Surface)
+       ========================================================================== */
+
+    .app-layout {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* Left Sidebar */
+    .app-sidebar {
+      width: 250px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      padding: 16px 12px;
+      z-index: 30;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px 18px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .brand-icon-box {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(180deg, var(--forest-600) 0%, var(--forest-800) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+
+    .brand-titles {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-pure);
+      letter-spacing: -0.01em;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .nav-group {
+      margin-bottom: 20px;
+    }
+
+    .nav-group-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0 10px 6px;
+    }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 12.5px;
+      transition: all var(--duration) var(--spring);
+      cursor: pointer;
+      border: 1px solid transparent;
+      margin-bottom: 2px;
+    }
+
+    .sidebar-nav-item:hover {
+      background: var(--card-bg);
+      color: var(--text-pure);
+      border-color: var(--border);
+    }
+
+    .sidebar-nav-item.active {
+      background: rgba(13, 113, 95, 0.15);
+      color: var(--forest-100);
+      border-color: rgba(23, 134, 111, 0.3);
+    }
+
+    .sidebar-nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .count-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: var(--radius-pill);
+      background: var(--card-elevated);
+      color: var(--text-secondary);
+    }
+
+    .sidebar-nav-item.active .count-pill {
+      background: var(--forest-800);
+      color: var(--forest-100);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .operator-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .operator-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .operator-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-pure);
+    }
+
+    .operator-role {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    .btn-snd-switch {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      width: 100%;
+      justify-content: center;
+      transition: all var(--duration) var(--spring);
+    }
+
+    .btn-snd-switch:hover {
+      background: var(--card-bg);
+      color: var(--text-pure);
+    }
+
+    .btn-snd-switch.sound-on {
+      border-color: var(--forest-600);
+      color: var(--forest-100);
+      background: rgba(13, 113, 95, 0.1);
+    }
+
+    /* Main Surface */
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow-y: auto;
+    }
+
+    /* Header Bar */
+    .top-header {
+      height: 56px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(11, 17, 28, 0.85);
+      backdrop-filter: blur(12px);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .header-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .header-breadcrumb .title {
+      font-weight: 700;
+      color: var(--text-pure);
+    }
+
+    /* Cohort Segmented Control */
+    .cohort-group {
+      display: flex;
+      align-items: center;
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .cohort-btn {
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--duration) var(--spring);
+    }
+
+    .cohort-btn:hover {
+      color: var(--text-pure);
+    }
+
+    .cohort-btn.active {
+      background: var(--card-bg);
+      color: var(--text-pure);
+      border: 1px solid var(--border-specular);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .cohort-btn .status-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--forest-400);
+    }
+
+    /* Operating Content Viewport */
+    .viewport-content {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 1280px;
+    }
+
+    /* ==========================================================================
+       BUTTONS & SHADERS (cta.gallery Tactile Specification)
+       ========================================================================== */
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid transparent;
+      outline: none;
+      transition: transform var(--duration) var(--spring),
+                  box-shadow var(--duration) var(--spring),
+                  background var(--duration) var(--spring);
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #16937c 0%, #0d715f 100%);
+      color: #ffffff;
+      border-color: #1a9e86;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
+                  0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(180deg, #1aa48b 0%, #0f7d6a 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
+                  0 2px 5px rgba(10, 87, 74, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-amber {
+      background: linear-gradient(180deg, #d97706 0%, #b45309 100%);
+      color: #ffffff;
+      border-color: #f59e0b;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
+                  0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-amber:active {
+      transform: translateY(1px);
+    }
+
+    .btn-secondary {
+      background: var(--card-bg);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--card-hover);
+      color: var(--text-pure);
+      border-color: var(--border-specular);
+    }
+
+    .btn-secondary:active {
+      transform: translateY(1px);
+    }
+
+    /* ==========================================================================
+       METRIC SUMMARY TILES
+       ========================================================================== */
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .kpi-value {
+      font-size: 22px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-pure);
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .badge-amber { background: var(--amber-bg); color: #fbbf24; border: 1px solid var(--amber-border); }
+    .badge-red { background: var(--red-bg); color: #f87171; border: 1px solid var(--red-border); }
+    .badge-green { background: var(--green-bg); color: #34d399; border: 1px solid var(--green-border); }
+    .badge-blue { background: var(--blue-bg); color: #38bdf8; border: 1px solid var(--blue-border); }
+    .badge-purple { background: var(--purple-bg); color: #c084fc; border: 1px solid var(--purple-border); }
+    .badge-neutral { background: rgba(255,255,255,0.06); color: var(--text-secondary); border: 1px solid var(--border); }
+
+    /* Operational Banner */
+    .audit-notice {
+      background: rgba(13, 113, 95, 0.08);
+      border: 1px solid rgba(23, 134, 111, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .audit-notice-text {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    .audit-notice-text strong {
+      color: var(--forest-100);
+    }
+
+    /* ==========================================================================
+       DATA TABLE (High Density Operations Grid)
+       ========================================================================== */
+
+    .table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .table-header-bar {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .table-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-pure);
+    }
+
+    .ops-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .ops-table th {
+      padding: 10px 18px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--card-subtle);
+    }
+
+    .ops-table td {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12.5px;
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+
+    .ops-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .ops-table tr:hover td {
+      background: var(--card-hover);
+    }
+
+    /* Multi-Aggregate Split Columns (OPS-003) */
+    .aggregate-columns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .agg-column {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .agg-column.is-held {
+      border-color: var(--amber-border);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.04) 0%, var(--card-bg) 100%);
+    }
+
+    .agg-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      color: var(--text-pure);
+    }
+
+    .agg-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      gap: 8px;
+    }
+
+    .agg-row .k { color: var(--text-muted); }
+    .agg-row .v { color: var(--text-primary); font-weight: 600; text-align: right; }
+
+    /* Audit Timeline */
+    .audit-feed {
+      list-style: none;
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .audit-feed::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      bottom: 6px;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .audit-feed-item {
+      position: relative;
+      padding-bottom: 16px;
+      font-size: 12px;
+    }
+
+    .audit-feed-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .audit-feed-dot {
+      position: absolute;
+      left: -20px;
+      top: 4px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 2px solid var(--forest-500);
+    }
+
+    .audit-feed-dot.dot-amber { border-color: var(--amber); }
+    .audit-feed-dot.dot-red { border-color: var(--red); }
+
+    /* Hold Drawer (Slide-Over Sheet) */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 9, 16, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .sheet-backdrop.open {
+      display: flex;
+    }
+
+    .sheet-panel {
+      width: 460px;
+      height: 100%;
+      background: var(--sidebar-bg);
+      border-left: 1px solid var(--border-specular);
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+      animation: sheetSlide 0.22s var(--spring);
+    }
+
+    @keyframes sheetSlide {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .sheet-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-pure);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 12.5px;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(23, 134, 111, 0.25);
+    }
+
+    textarea.form-control {
+      min-height: 80px;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- =========================================================================
+       SIDEBAR: EXECUTIVE BACKOFFICE NAVIGATION
+       ========================================================================= -->
+  <aside class="app-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div class="brand-titles">
+        <span class="brand-name">Serbizyu Ops</span>
+        <span class="brand-sub">Executive Console</span>
+      </div>
+    </div>
+
+    <!-- Operations Core -->
+    <div class="nav-group">
+      <div class="nav-group-label">Operations</div>
+      
+      <a class="sidebar-nav-item active" id="nav-triage" onclick="switchView('triage')">
+        <div class="sidebar-nav-left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Triage Queue</span>
+        </div>
+        <span class="count-pill" id="side-triage-pill">4</span>
+      </a>
+
+      <a class="sidebar-nav-item" id="nav-inspector" onclick="switchView('inspector')">
+        <div class="sidebar-nav-left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+          <span>Order Inspector</span>
+        </div>
+        <span class="count-pill">OPS-003</span>
+      </a>
+
+      <a class="sidebar-nav-item" id="nav-holds" onclick="openHoldDrawer()">
+        <div class="sidebar-nav-left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>
+          <span>Targeted Holds</span>
+        </div>
+        <span class="count-pill" style="color: #fbbf24;">2</span>
+      </a>
+
+      <a class="sidebar-nav-item" id="nav-outbox" onclick="alert('Outbox Queue: 1 dead-letter event ready for idempotent replay.')">
+        <div class="sidebar-nav-left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+          <span>Failed Events</span>
+        </div>
+        <span class="count-pill">1</span>
+      </a>
+    </div>
+
+    <!-- Governance -->
+    <div class="nav-group">
+      <div class="nav-group-label">Governance</div>
+
+      <a class="sidebar-nav-item" onclick="alert('OPS-002: Capability Profile Review Queue')">
+        <div class="sidebar-nav-left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+          <span>Capability Gates</span>
+        </div>
+        <span class="count-pill">4</span>
+      </a>
+
+      <a class="sidebar-nav-item" onclick="alert('Audit Events Ledger: All transactions committed to append-only log.')">
+        <div class="sidebar-nav-left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Audit Log</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <div class="operator-card">
+        <div class="operator-info">
+          <span class="operator-name">admin.ops@serbizyu.ph</span>
+          <span class="operator-role">Access Tier L4 (SuperAdmin)</span>
+        </div>
+        <span class="badge badge-green" style="font-size: 9.5px;">Active</span>
+      </div>
+
+      <button type="button" class="btn-snd-switch sound-on" id="snd-btn" onclick="toggleAudio()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        <span id="snd-label">Audio: Enabled</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       MAIN DESKTOP OPERATING CANVAS
+       ========================================================================= -->
+  <main class="app-main">
+
+    <!-- Top Operating Header -->
+    <header class="top-header">
+      <div class="header-breadcrumb">
+        <span style="color: var(--text-muted);">Operations</span>
+        <span style="color: var(--border);">/</span>
+        <span class="title" id="top-title">Triage Queue</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <!-- Cohort Glider -->
+        <div class="cohort-group" id="cohort-switcher">
+          <button type="button" class="cohort-btn active" onclick="setCohort(this, 'genuine')">
+            <span class="status-indicator"></span>
+            <span>Tagudin Genuine</span>
+          </button>
+          <button type="button" class="cohort-btn" onclick="setCohort(this, 'sandbox')">
+            <span>Sandbox</span>
+          </button>
+          <button type="button" class="cohort-btn" onclick="setCohort(this, 'training')">
+            <span>Team Training</span>
+          </button>
+        </div>
+
+        <button type="button" class="btn btn-secondary" onclick="refreshTable()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable Workspace Viewport -->
+    <div class="viewport-content">
+
+      <!-- =====================================================================
+           VIEW 1: TRIAGE QUEUE (OPS-001)
+           ===================================================================== -->
+      <div id="view-triage" style="display: flex; flex-direction: column; gap: 20px;">
+
+        <!-- PRD-059 Revenue Integrity Guarantee -->
+        <div class="audit-notice">
+          <div class="audit-notice-text">
+            PRD-059 Integrity Policy: External Cash transactions carry zero platform commission. Declared peer-to-peer volume is <strong>₱14,250.00</strong>; platform custody is strictly <strong>₱0.00</strong>.
+          </div>
+          <span class="badge badge-green">Reconciled</span>
+        </div>
+
+        <!-- Metric KPI Tiles -->
+        <div class="kpi-row">
+          <div class="kpi-card" style="border-top: 2px solid var(--amber);">
+            <div class="kpi-header">
+              <span>Targeted Holds</span>
+              <span class="badge badge-amber">2 Active</span>
+            </div>
+            <div class="kpi-value" id="kpi-holds" style="color: #fbbf24;">02</div>
+            <div class="kpi-sub">1 Payment · 1 Work Instance</div>
+          </div>
+
+          <div class="kpi-card" style="border-top: 2px solid var(--red);">
+            <div class="kpi-header">
+              <span>Dispute Cases</span>
+              <span class="badge badge-red">3 Open</span>
+            </div>
+            <div class="kpi-value" id="kpi-disputes" style="color: #f87171;">03</div>
+            <div class="kpi-sub">2 Cash Mismatches · 1 Scope</div>
+          </div>
+
+          <div class="kpi-card" style="border-top: 2px solid var(--purple);">
+            <div class="kpi-header">
+              <span>Failed Events</span>
+              <span class="badge badge-purple">1 Dead-Letter</span>
+            </div>
+            <div class="kpi-value" id="kpi-failed" style="color: #c084fc;">01</div>
+            <div class="kpi-sub">SMS Gateway 504 Timeout</div>
+          </div>
+
+          <div class="kpi-card" style="border-top: 2px solid var(--forest-500);">
+            <div class="kpi-header">
+              <span>Capability Gates</span>
+              <span class="badge badge-green">4 Pending</span>
+            </div>
+            <div class="kpi-value" id="kpi-review" style="color: var(--forest-100);">04</div>
+            <div class="kpi-sub">Least-Privilege Verifications</div>
+          </div>
+        </div>
+
+        <!-- High-Density Operations Table -->
+        <div class="table-container">
+          <div class="table-header-bar">
+            <div class="table-title">Priority Incident Queue</div>
+            <div style="font-size: 12px; color: var(--text-muted);">
+              Showing <span id="table-count" style="font-weight: 700; color: var(--text-pure);">4</span> items requiring action
+            </div>
+          </div>
+
+          <table class="ops-table">
+            <thead>
+              <tr>
+                <th style="width: 100px;">Priority</th>
+                <th style="width: 130px;">Reference</th>
+                <th style="width: 130px;">Target</th>
+                <th>Parties</th>
+                <th>Issue Context</th>
+                <th style="text-align: right; width: 220px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <tr>
+                <td><span class="badge badge-amber">P1 High</span></td>
+                <td><span class="font-mono font-bold">#ORD-2026-09</span></td>
+                <td><span class="badge badge-amber">Payment Obligation</span></td>
+                <td>Maria Santos &amp; Arman Tech</td>
+                <td>Buyer declared ₱90 cash paid; provider reports zero received.</td>
+                <td style="text-align: right;">
+                  <button type="button" class="btn btn-primary" onclick="inspectOrder('#ORD-2026-09')">Inspect Order</button>
+                  <button type="button" class="btn btn-amber" onclick="openHoldDrawer()">Resolve Hold</button>
+                </td>
+              </tr>
+
+              <tr>
+                <td><span class="badge badge-red">P2 Medium</span></td>
+                <td><span class="font-mono font-bold">#ORD-2026-04</span></td>
+                <td><span class="badge badge-red">Work Delivery</span></td>
+                <td>Elena Cruz &amp; Tagudin Bakery</td>
+                <td>Quantity variance: 18 pieces received versus 24 ordered.</td>
+                <td style="text-align: right;">
+                  <button type="button" class="btn btn-secondary" onclick="inspectOrder('#ORD-2026-04')">Inspect Case</button>
+                </td>
+              </tr>
+
+              <tr>
+                <td><span class="badge badge-purple">P2 Medium</span></td>
+                <td><span class="font-mono font-bold">#EVT-0198-a1</span></td>
+                <td><span class="badge badge-purple">Outbox Message</span></td>
+                <td>System to +639178123456</td>
+                <td>SMS notification failed after 3 attempts (504 timeout).</td>
+                <td style="text-align: right;">
+                  <button type="button" class="btn btn-secondary" onclick="replayOutbox(this)">Replay Event</button>
+                </td>
+              </tr>
+
+              <tr>
+                <td><span class="badge badge-green">P3 Low</span></td>
+                <td><span class="font-mono font-bold">#USR-0042-id</span></td>
+                <td><span class="badge badge-green">Capability Gate</span></td>
+                <td>Juan Carpentry Works</td>
+                <td>Barangay clearance uploaded for A1 Linear Project profile.</td>
+                <td style="text-align: right;">
+                  <button type="button" class="btn btn-secondary" onclick="alert('Opening OPS-002 Identity Review')">Review Evidence</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- =====================================================================
+           VIEW 2: MULTI-AGGREGATE INSPECTOR (OPS-003)
+           ===================================================================== -->
+      <div id="view-inspector" style="display: none; flex-direction: column; gap: 20px;">
+
+        <!-- Active Hold Notification Bar -->
+        <div style="background: var(--amber-bg); border: 1px solid var(--amber-border); border-radius: var(--radius-sm); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>
+              <strong style="color: #fbbf24;">Targeted Administrative Hold Active on Payment Obligation (#OBL-881)</strong>
+              <div style="color: var(--text-secondary); font-size: 12px;">Work execution and Order contract agreement remain operational and unblocked.</div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-amber" onclick="openHoldDrawer()">Manage Hold</button>
+        </div>
+
+        <!-- 3 Decoupled Aggregates Side-by-Side (Desktop Grid) -->
+        <div class="aggregate-columns">
+
+          <!-- Aggregate 1 -->
+          <div class="agg-column">
+            <div class="agg-header">
+              <span>1. Order Contract</span>
+              <span class="badge badge-green">Accepted v1</span>
+            </div>
+            <div class="agg-row"><span class="k">Order Reference</span><span class="v font-mono">#ORD-2026-09</span></div>
+            <div class="agg-row"><span class="k">Contract Terms</span><span class="v">Snapshot v1 (Locked)</span></div>
+            <div class="agg-row"><span class="k">Agreed Fee</span><span class="v">₱90.00</span></div>
+            <div class="agg-row"><span class="k">Buyer</span><span class="v">Maria Santos</span></div>
+            <div class="agg-row"><span class="k">Provider</span><span class="v">Arman Electric</span></div>
+            <div class="agg-row"><span class="k">Sealed At</span><span class="v font-mono">14:10:02 PHT</span></div>
+            <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted);">
+              Immutable agreement. Dispute does not rewrite pricing terms.
+            </div>
+          </div>
+
+          <!-- Aggregate 2 -->
+          <div class="agg-column">
+            <div class="agg-header">
+              <span>2. Work Execution</span>
+              <span class="badge badge-blue">In Progress</span>
+            </div>
+            <div class="agg-row"><span class="k">Work Shape</span><span class="v">A1 Linear Project</span></div>
+            <div class="agg-row"><span class="k">Instance Ref</span><span class="v font-mono">#WRK-401</span></div>
+            <div class="agg-row"><span class="k">Current Step</span><span class="v">Step 2 of 3 (Replace)</span></div>
+            <div class="agg-row"><span class="k">Step 1 Evidence</span><span class="v">Disassembly photo verified</span></div>
+            <div class="agg-row"><span class="k">Sign-off State</span><span class="v">Not Proposed</span></div>
+            <div class="agg-row"><span class="k">Hold Impact</span><span class="v" style="color: #34d399;">Unaffected by Hold</span></div>
+            <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11px; color: #34d399;">
+              Technician continues progress logging normally.
+            </div>
+          </div>
+
+          <!-- Aggregate 3 -->
+          <div class="agg-column is-held">
+            <div class="agg-header">
+              <span>3. Payment Obligation</span>
+              <span class="badge badge-amber">On Hold</span>
+            </div>
+            <div class="agg-row"><span class="k">Payment Lane</span><span class="v">External Cash</span></div>
+            <div class="agg-row"><span class="k">Obligation Ref</span><span class="v font-mono">#OBL-881</span></div>
+            <div class="agg-row"><span class="k">Agreed Due</span><span class="v">₱90.00</span></div>
+            <div class="agg-row"><span class="k">Buyer Report</span><span class="v" style="color: #38bdf8;">Paid ₱90.00 (14:22)</span></div>
+            <div class="agg-row"><span class="k">Provider Report</span><span class="v" style="color: #f87171;">Not Received (14:25)</span></div>
+            <div class="agg-row"><span class="k">Platform Custody</span><span class="v font-mono">₱0.00 (Non-custodial)</span></div>
+            <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11px; color: #fbbf24;">
+              Declaration frozen pending manual attestation review.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Chronological Audit Timeline -->
+        <div class="table-container" style="padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div class="table-title">Audit Timeline (audit_events)</div>
+            <span class="badge badge-neutral">5 Immutable Records</span>
+          </div>
+
+          <ul class="audit-feed">
+            <li class="audit-feed-item">
+              <div class="audit-feed-dot"></div>
+              <div><strong>Order terms accepted</strong> (Snapshot v1 sealed, ₱90.00)</div>
+              <div style="color: var(--text-muted); font-size: 11px;">14:10:02 PHT · Buyer Maria Santos &amp; Provider Arman Tech</div>
+            </li>
+
+            <li class="audit-feed-item">
+              <div class="audit-feed-dot"></div>
+              <div><strong>Work Step 1 started</strong> (Disassembly evidence photo uploaded)</div>
+              <div style="color: var(--text-muted); font-size: 11px;">14:15:20 PHT · Provider Arman Tech</div>
+            </li>
+
+            <li class="audit-feed-item">
+              <div class="audit-feed-dot"></div>
+              <div><strong>Buyer reported cash paid</strong> (Declared ₱90.00 handed over)</div>
+              <div style="color: var(--text-muted); font-size: 11px;">14:22:11 PHT · Buyer Maria Santos</div>
+            </li>
+
+            <li class="audit-feed-item">
+              <div class="audit-feed-dot dot-red"></div>
+              <div><strong>Dispute opened</strong> (Provider reported zero cash received at site)</div>
+              <div style="color: var(--text-muted); font-size: 11px;">14:25:00 PHT · Provider Arman Tech</div>
+            </li>
+
+            <li class="audit-feed-item">
+              <div class="audit-feed-dot dot-amber"></div>
+              <div><strong>Administrative hold placed on Payment Obligation #OBL-881</strong></div>
+              <div style="color: var(--text-muted); font-size: 11px;">14:30:15 PHT · Operator ADMIN-01 (Reason: evidence mismatch)</div>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       HOLD & RESOLUTION SLIDE-OVER SHEET (OPS-005)
+       ========================================================================= -->
+  <div class="sheet-backdrop" id="hold-sheet" onclick="closeHoldDrawer(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-header">
+        <div>
+          <div class="sheet-title">Resolve Administrative Hold</div>
+          <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Target: Order #ORD-2026-09</div>
+        </div>
+        <button type="button" class="btn btn-secondary" style="padding: 4px 8px;" onclick="closeHoldDrawer()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form onsubmit="handleResolveSubmit(event)" style="display: flex; flex-direction: column; gap: 14px; flex: 1;">
+        <!-- Surgical Target Verification -->
+        <div class="form-group">
+          <label class="form-label">Surgical Hold Scope</label>
+          <div style="padding: 10px; border-radius: var(--radius-sm); background: var(--card-bg); border: 1px solid var(--amber-border);">
+            <div style="font-weight: 700; color: #fbbf24;">Payment Obligation #OBL-881 Only</div>
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Work execution and order contract remain unaffected.</div>
+          </div>
+        </div>
+
+        <!-- Resolution Outcome Selection -->
+        <div class="form-group">
+          <label class="form-label">Resolution Outcome</label>
+          <select class="form-control" id="resolve-outcome">
+            <option value="reconciled" selected>Resolved: Cash Handover Reconciled with Both Parties</option>
+            <option value="dismissed">Dismissed: False Report Flagged</option>
+            <option value="restricted">Converted to Account Restriction</option>
+          </select>
+        </div>
+
+        <!-- Mandatory Operator Justification -->
+        <div class="form-group" style="flex: 1;">
+          <label class="form-label">Mandatory Operational Justification</label>
+          <textarea class="form-control" style="height: 120px;" required>Contacted both parties by phone. Buyer Maria sent cash through her son who arrived at the job location at 14:40 PHT. Provider Arman verified receipt of ₱90 cash. Both parties confirmed settlement.</textarea>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Appended permanently to audit_events. History is never erased.</div>
+        </div>
+
+        <!-- Action Bar -->
+        <div style="display: flex; justify-content: flex-end; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border);">
+          <button type="button" class="btn btn-secondary" onclick="closeHoldDrawer()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Confirm Release</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<!-- Mathematical Web Audio Sound Synthesis -->
+<script>
+  var audioEnabled = true;
+  var audioCtx = null;
+
+  function getAudioContext() {
+    if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
+      var Cls = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new Cls();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  function playTone(type) {
+    if (!audioEnabled) return;
+    try {
+      var ctx = getAudioContext();
+      if (!ctx) return;
+      var now = ctx.currentTime;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+
+      if (type === 'tap') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(920, now + 0.02);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(now); osc.stop(now + 0.025);
+      } else if (type === 'switch') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(620, now);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(now); osc.stop(now + 0.02);
+      } else if (type === 'confirm') {
+        [523.25, 659.25, 783.99].forEach(function(f, i) {
+          var o = ctx.createOscillator();
+          var g = ctx.createGain();
+          var t = now + i * 0.035;
+          o.type = 'sine';
+          o.frequency.setValueAtTime(f, t);
+          g.gain.setValueAtTime(0.06, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(t); o.stop(t + 0.1);
+        });
+      }
+    } catch (e) {}
+  }
+
+  function toggleAudio() {
+    audioEnabled = !audioEnabled;
+    var btn = document.getElementById('snd-btn');
+    var label = document.getElementById('snd-label');
+    if (audioEnabled) {
+      btn.classList.add('sound-on');
+      label.textContent = 'Audio: Enabled';
+      playTone('tap');
+    } else {
+      btn.classList.remove('sound-on');
+      label.textContent = 'Audio: Muted';
+    }
+  }
+
+  function switchView(view) {
+    playTone('switch');
+    document.getElementById('nav-triage').classList.toggle('active', view === 'triage');
+    document.getElementById('nav-inspector').classList.toggle('active', view === 'inspector');
+    document.getElementById('view-triage').style.display = (view === 'triage') ? 'flex' : 'none';
+    document.getElementById('view-inspector').style.display = (view === 'inspector') ? 'flex' : 'none';
+    document.getElementById('top-title').textContent = (view === 'triage') ? 'Triage Queue' : 'Order Inspector (#ORD-2026-09)';
+  }
+
+  function inspectOrder(ref) {
+    switchView('inspector');
+  }
+
+  function openHoldDrawer() {
+    playTone('tap');
+    document.getElementById('hold-sheet').classList.add('open');
+  }
+
+  function closeHoldDrawer() {
+    playTone('tap');
+    document.getElementById('hold-sheet').classList.remove('open');
+  }
+
+  function handleResolveSubmit(e) {
+    e.preventDefault();
+    playTone('confirm');
+    alert('Hold #OBL-881 released. Audit record appended to audit_events.');
+    closeHoldDrawer();
+  }
+
+  function setCohort(btn, cohort) {
+    playTone('switch');
+    document.querySelectorAll('#cohort-switcher .cohort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (cohort === 'sandbox') {
+      document.getElementById('kpi-holds').textContent = '00';
+      document.getElementById('kpi-disputes').textContent = '01';
+      document.getElementById('kpi-failed').textContent = '00';
+      document.getElementById('kpi-review').textContent = '01';
+      document.getElementById('table-count').textContent = '2';
+    } else if (cohort === 'training') {
+      document.getElementById('kpi-holds').textContent = '01';
+      document.getElementById('kpi-disputes').textContent = '00';
+      document.getElementById('kpi-failed').textContent = '00';
+      document.getElementById('kpi-review').textContent = '00';
+      document.getElementById('table-count').textContent = '1';
+    } else {
+      document.getElementById('kpi-holds').textContent = '02';
+      document.getElementById('kpi-disputes').textContent = '03';
+      document.getElementById('kpi-failed').textContent = '01';
+      document.getElementById('kpi-review').textContent = '04';
+      document.getElementById('table-count').textContent = '4';
+    }
+  }
+
+  function replayOutbox(btn) {
+    playTone('confirm');
+    btn.disabled = true;
+    btn.textContent = 'Replaying...';
+    setTimeout(function() {
+      btn.textContent = 'Replayed';
+      btn.style.color = '#34d399';
+    }, 500);
+  }
+
+  function refreshTable() {
+    playTone('tap');
+    var container = document.querySelector('.table-container');
+    container.style.opacity = '0.5';
+    setTimeout(function() {
+      container.style.opacity = '1';
+    }, 200);
+  }
+</script>
+</body>
+</html>

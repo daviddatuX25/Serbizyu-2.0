@@ -33,6 +33,9 @@ stories:
   T3-orders:
     status: completed
     notes: GO 2026-08-10 — thin propose/finalize Direct Booking via Shared ports; OpenSpec t3-ordinary-order-formation
+  T4-readiness:
+    status: completed
+    notes: GO 2026-09-04 — T4.0 readiness hardening (0.3.1–0.3.3) verified with strict canonical lock hierarchy, singular proposal purity, pure Work registry, PaymentObligations port, and guarded legacy migration.
   E1-phone-otp:
     status: in_progress
     owner: technical-lead

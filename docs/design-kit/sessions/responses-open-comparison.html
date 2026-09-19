@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Proposal Comparison · #REQ-104</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Serbizyu Forest Brand Tokens */
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      /* Serbizyu Accents & Ink */
+      --brand-navy: #0F2F58;
+      --brand-navy-light: #EBF2FA;
+      --brand-yellow: #FFC244;
+      --brand-yellow-light: #FEF8E7;
+      --brand-yellow-dark: #D97706;
+      --brand-teal: #00A699;
+      --brand-teal-light: #E6F7F5;
+      --brand-teal-dark: #00877C;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+      --ink-subtle: #94a3b8;
+
+      /* Surfaces & Lines */
+      --surface: #FFFFFF;
+      --surface-subtle: #F8FAFC;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-card: 0 4px 16px rgba(15, 47, 88, 0.06);
+      --shadow-float: 0 12px 32px rgba(15, 47, 88, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0B132B;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+      overflow-x: hidden;
+    }
+
+    .studio-context-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #94A3B8;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .studio-crumb { display: flex; align-items: center; gap: 6px; }
+    .studio-pill-tag {
+      background: rgba(0, 166, 153, 0.2);
+      border: 1px solid rgba(0, 166, 153, 0.4);
+      color: #2DD4BF;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: #F8FAFC;
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.75);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: #F8FAFC; }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      flex-shrink: 0;
+      z-index: 30;
+    }
+    .notch-island {
+      width: 110px;
+      height: 24px;
+      background: #000000;
+      border-radius: 16px;
+      margin: 0 auto;
+    }
+
+    /* Comparison Header */
+    .compare-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 16px 12px;
+      flex-shrink: 0;
+      z-index: 25;
+    }
+    .compare-nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .circle-nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-pill);
+      background: #F1F5F9;
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .circle-nav-btn:hover { background: #E2E8F0; }
+    .header-req-id-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--brand-navy);
+      background: var(--brand-navy-light);
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+    }
+    .header-matrix-btn {
+      height: 32px;
+      padding: 0 10px;
+      border-radius: var(--radius-pill);
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--brand-navy);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .header-matrix-btn:hover {
+      border-color: var(--brand-navy);
+      background: var(--brand-navy-light);
+    }
+
+    .compare-title-block h1 {
+      font-size: 16.5px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.25;
+      margin-bottom: 2px;
+    }
+    .compare-subtitle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+    .proposal-count-highlight {
+      color: var(--brand-teal);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Filter & Sort Chips */
+    .compare-filter-rail {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 8px 16px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--line);
+      scrollbar-width: none;
+      flex-shrink: 0;
+    }
+    .compare-filter-rail::-webkit-scrollbar { display: none; }
+    .compare-chip {
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+      background: #F1F5F9;
+      color: var(--ink-soft);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .compare-chip.active {
+      background: var(--brand-navy);
+      color: #FFFFFF;
+      border-color: var(--brand-navy);
+    }
+
+    /* Main Scrollable Content */
+    .compare-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Proposal Big Card */
+    .proposal-big-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--line);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s ease;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .proposal-terms-strip {
+      padding: 6px 14px;
+      font-size: 10.5px;
+      color: var(--ink-muted);
+      display: flex;
+      justify-content: space-between;
+      background: #FAFCFB;
+      border-bottom: 1px solid var(--line-subtle);
+    }
+    .proposal-big-card.recommended {
+      border-color: var(--brand-teal);
+      box-shadow: 0 6px 24px rgba(0, 166, 153, 0.14);
+    }
+
+    /* Recommended Badge Banner */
+    .card-recommend-banner {
+      background: linear-gradient(90deg, #0A574A, #00A699);
+      color: #FFFFFF;
+      padding: 5px 12px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Card Cover & Visual Row */
+    .proposal-card-visual-row {
+      padding: 12px 14px 10px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      border-bottom: 1px solid var(--line-subtle);
+    }
+    .proposal-thumb-frame {
+      width: 76px;
+      height: 76px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+      background: #09132C;
+    }
+    .proposal-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .proposal-head-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .proposal-tag-pill {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: var(--radius-pill);
+      align-self: flex-start;
+      margin-bottom: 2px;
+    }
+    .tag-turnkey { background: var(--brand-teal-light); color: var(--brand-teal-dark); }
+    .tag-labor { background: #F1F5F9; color: #475569; }
+    .tag-hourly { background: #FEF3C7; color: #B45309; }
+
+    .proposal-provider-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.25;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .verified-check {
+      color: var(--brand-teal);
+      font-weight: 800;
+      font-size: 11px;
+    }
+    .proposal-meta-line {
+      font-size: 11px;
+      color: var(--ink-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rating-gold-text {
+      color: #D97706;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    /* Price Big Highlight Block */
+    .proposal-price-box {
+      padding: 10px 14px;
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--line-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .price-main-figure {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--brand-navy);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .price-out-of-pocket-lbl {
+      font-size: 10px;
+      color: var(--ink-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .price-allin-assurance {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--brand-teal);
+      background: var(--brand-teal-light);
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+    }
+
+    /* Cost Breakdown Chips */
+    .cost-breakdown-row {
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-bottom: 1px solid var(--line-subtle);
+    }
+    .breakdown-row-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+    }
+    .breakdown-item-name {
+      color: var(--ink-soft);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .breakdown-item-cost {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* Deal Chain Mini Visual Relay */
+    .deal-chain-mini-strip {
+      background: #F1F5F9;
+      border-radius: var(--radius-sm);
+      padding: 7px 10px;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--brand-navy);
+    }
+    .chain-arrow-icon { color: var(--ink-subtle); }
+
+    /* Key Terms Grid */
+    .proposal-terms-grid {
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      border-bottom: 1px solid var(--line-subtle);
+      background: #FFFFFF;
+    }
+    .term-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .term-lbl {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .term-val {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+
+    /* Actions Footer inside Card */
+    .proposal-card-actions-row {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #FFFFFF;
+    }
+    .btn-card-chat {
+      height: 42px;
+      padding: 0 12px;
+      border-radius: var(--radius-pill);
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-card-chat:hover {
+      border-color: var(--brand-navy);
+      background: var(--brand-navy-light);
+    }
+    .btn-card-accept {
+      flex: 1;
+      height: 42px;
+      border-radius: var(--radius-pill);
+      background: var(--brand-navy);
+      color: #FFFFFF;
+      border: none;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 2px 8px rgba(15, 47, 88, 0.2);
+    }
+    .btn-card-accept.teal {
+      background: var(--brand-teal);
+      box-shadow: 0 2px 8px rgba(0, 166, 153, 0.25);
+    }
+    #matrix-sheet .btn-card-accept {
+      flex: none;
+      flex-shrink: 0;
+      height: 46px;
+      min-height: 46px;
+      width: 100%;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      font-size: 13.5px;
+      border-radius: var(--radius-pill);
+    }
+    .btn-card-accept:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+    }
+    /* Glovo Wave Comparison Matrix Bottom Sheet */
+    .glovo-sheet-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(11, 19, 43, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .glovo-sheet-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .glovo-sheet-drawer {
+      width: 100%;
+      background: transparent;
+      border-radius: 0;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      filter: drop-shadow(0 -12px 28px rgba(0, 0, 0, 0.5));
+      max-height: 88%;
+    }
+    .glovo-sheet-overlay.open .glovo-sheet-drawer {
+      transform: translateY(0);
+    }
+    .glovo-wave-cap {
+      width: 100%;
+      height: 34px;
+      display: block;
+      margin-bottom: -1px;
+      flex-shrink: 0;
+    }
+    .glovo-sheet-content {
+      background: #FFFFFF;
+      padding: 6px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sheet-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+    .sheet-title-txt {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .glovo-close-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #F1F5F9;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    /* Comparison Table Styling */
+    .compare-matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .compare-matrix-table th {
+      background: #F8FAFC;
+      padding: 8px 6px;
+      text-align: left;
+      font-weight: 800;
+      color: var(--ink);
+      border-bottom: 2px solid var(--line);
+    }
+    .compare-matrix-table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      color: var(--ink-soft);
+      line-height: 1.3;
+    }
+    .col-feature {
+      width: 28%;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .compare-matrix-table th.col-provider {
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+      text-align: center;
+      user-select: none;
+    }
+    .compare-matrix-table th.col-provider:hover {
+      background: #EFFCF6;
+      color: var(--forest-700);
+    }
+    .compare-matrix-table th.col-provider.selected {
+      background: #F0FDF4;
+      color: var(--forest-800);
+      border-bottom: 2px solid var(--forest-600);
+    }
+    .compare-matrix-table td.col-cell {
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .compare-matrix-table td.col-cell:hover {
+      background: #F8FAFC;
+    }
+    .compare-matrix-table td.col-cell.selected {
+      background: #F0FDF4;
+      font-weight: 700;
+      color: var(--forest-800);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="studio-context-banner">
+    <div class="studio-crumb">
+      <span>Citizen Workspace</span>
+      <span>&rsaquo;</span>
+      <span style="color:#FFF;">responses-open-comparison.html</span>
+    </div>
+    <span class="studio-pill-tag">Bidding Comparison Carousel</span>
+  </div>
+
+  <div class="phone-shell">
+
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div>●●●</div>
+    </div>
+
+    <!-- Sticky Comparison Header -->
+    <header class="compare-header">
+      <div class="compare-nav-row">
+        <button type="button" class="circle-nav-btn" onclick="goBack()" aria-label="Back">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="header-req-id-pill">#REQ-104</span>
+        <button type="button" class="header-matrix-btn" onclick="openMatrixModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          <span>Matrix</span>
+        </button>
+      </div>
+
+      <div class="compare-title-block">
+        <h1>Review Proposals &amp; Bids</h1>
+        <div class="compare-subtitle-row">
+          <span>Inverter Split AC Deep Clean &amp; Repair</span>
+          <span class="proposal-count-highlight">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>3 Offers Received</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Filter & Sort Rails -->
+    <div class="compare-filter-rail">
+      <button type="button" class="compare-chip active" onclick="applyFilter('all', this)">All Offers · 3</button>
+      <button type="button" class="compare-chip" onclick="applyFilter('turnkey', this)">All-In Packages · 1</button>
+      <button type="button" class="compare-chip" onclick="applyFilter('labor', this)">Labor Only · 1</button>
+      <button type="button" class="compare-chip" onclick="applyFilter('lowest', this)">Lowest Price</button>
+      <button type="button" class="compare-chip" onclick="applyFilter('rating', this)">Top Rated</button>
+    </div>
+
+    <!-- Main Scrollable Proposals Feed -->
+    <main class="compare-scroll-body" id="proposals-feed">
+
+      <!-- PROPOSAL 1: Kuya Ben (All-In Package) - RECOMMENDED -->
+      <article class="proposal-big-card recommended" data-type="turnkey" data-price="610" data-rating="4.9">
+        <div class="card-recommend-banner">
+          <span>Recommended · All-In Package</span>
+          <span style="opacity: 0.85;">Zero Hassle</span>
+        </div>
+
+        <!-- Spacious Header: Full width for Provider & Reviews (No squishing!) -->
+        <div style="padding: 12px 14px 10px; display: flex; gap: 12px; align-items: center;">
+          <img src="/photos/ac-clean.jpg" alt="" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.2;">Kuya Ben Refrigeration</div>
+            <div style="font-size: 11px; color: var(--ink-muted); display: flex; align-items: center; gap: 6px; margin-top: 3px;">
+              <span style="color: #D97706; font-weight: 800; display: inline-flex; align-items: center; gap: 3px;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="#D97706" stroke="#D97706"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.9
+              </span>
+              <span>· 128 reviews</span>
+              <span>· Centro · 1.2 km</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown Table with Single Price Display -->
+        <div style="padding: 10px 14px; background: #FAFCFB; border-top: 1px solid #F1F5F9; border-bottom: 1px solid #F1F5F9; display: flex; flex-direction: column; gap: 5px; font-size: 11.5px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; color: var(--ink-soft);">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D715F" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              AC Labor &amp; Diagnostic
+            </span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--ink);">₱350.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; color: var(--ink-soft);">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D715F" stroke-width="2"><path d="m7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+              35uF Capacitor · Hardware
+            </span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--ink);">₱180.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; color: var(--ink-soft);">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D715F" stroke-width="2"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
+              Courier Transit · Danny Express
+            </span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--ink);">₱80.00</span>
+          </div>
+          <div style="height: 1px; background: #E2E8F0; margin: 3px 0;"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; font-weight: 800; color: var(--ink);">
+            <span>Total All-In</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 17px; color: var(--brand-navy);">₱610.00</span>
+          </div>
+        </div>
+
+        <!-- Clean Vector SVG Icon Terms -->
+        <div style="padding: 7px 14px; font-size: 10.5px; color: var(--ink-muted); display: flex; justify-content: space-between; align-items: center;">
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            2h ETA Today
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            30-Day Warranty
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+            Cash on Delivery
+          </span>
+        </div>
+
+        <!-- Actions -->
+        <div style="padding: 6px 14px 12px; display: flex; gap: 8px;">
+          <button type="button" class="btn-card-chat" style="height: 40px; padding: 0 14px;" onclick="openNegotiation('kuya-ben')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Chat</span>
+          </button>
+          <button type="button" class="btn-card-accept teal" style="height: 40px;" onclick="acceptProposal('prop-ben', 'Kuya Ben Refrigeration', 610)">
+            <span>Accept Offer</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- PROPOSAL 2: Mang Cardo Aircon (Labor Only) -->
+      <article class="proposal-big-card" data-type="labor" data-price="300" data-rating="4.6">
+        <div style="background: #F1F5F9; color: #475569; padding: 4px 12px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; display: flex; justify-content: space-between;">
+          <span>Labor Only Quote</span>
+          <span style="color: #B45309;">Citizen Sourced Parts</span>
+        </div>
+
+        <!-- Spacious Header: Full width for Provider & Reviews -->
+        <div style="padding: 12px 14px 10px; display: flex; gap: 12px; align-items: center;">
+          <img src="/photos/req-electrician.jpg" alt="" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.2;">Mang Cardo Aircon Services</div>
+            <div style="font-size: 11px; color: var(--ink-muted); display: flex; align-items: center; gap: 6px; margin-top: 3px;">
+              <span style="color: #D97706; font-weight: 800; display: inline-flex; align-items: center; gap: 3px;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="#D97706" stroke="#D97706"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.6
+              </span>
+              <span>· 45 reviews</span>
+              <span>· Rizal · 2.5 km</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown Table with Single Price Display -->
+        <div style="padding: 10px 14px; background: #FAFCFB; border-top: 1px solid #F1F5F9; border-bottom: 1px solid #F1F5F9; display: flex; flex-direction: column; gap: 5px; font-size: 11.5px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; color: var(--ink-soft);">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              Technician On-Site Labor
+            </span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--ink);">₱300.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; color: var(--ink-muted);">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m3 9 18 0"/></svg>
+              35uF Capacitor &amp; Transit
+            </span>
+            <span style="font-size: 10.5px; color: #B45309; font-weight: 700;">Citizen Sourced</span>
+          </div>
+          <div style="height: 1px; background: #E2E8F0; margin: 3px 0;"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; font-weight: 800; color: var(--ink);">
+            <span>Labor Total</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 17px; color: var(--brand-navy);">₱300.00</span>
+          </div>
+        </div>
+
+        <!-- Terms Strip with SVG Icons -->
+        <div style="padding: 7px 14px; font-size: 10.5px; color: var(--ink-muted); display: flex; justify-content: space-between; align-items: center;">
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Tomorrow 10:00 AM
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Labor Warranty Only
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+            Cash on Delivery
+          </span>
+        </div>
+
+        <!-- Actions -->
+        <div style="padding: 6px 14px 12px; display: flex; gap: 8px;">
+          <button type="button" class="btn-card-chat" style="height: 40px; padding: 0 14px;" onclick="openNegotiation('mang-cardo')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Chat</span>
+          </button>
+          <button type="button" class="btn-card-accept" style="height: 40px;" onclick="acceptProposal('prop-cardo', 'Mang Cardo Aircon', 300)">
+            <span>Accept Offer</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- PROPOSAL 3: CoolAir Tagudin (Hourly Estimate) -->
+      <article class="proposal-big-card" data-type="hourly" data-price="500" data-rating="4.4">
+        <div style="background: #F1F5F9; color: #475569; padding: 4px 12px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; display: flex; justify-content: space-between;">
+          <span>Hourly Rate Quote</span>
+          <span style="color: #64748B;">Est. 2 Hours</span>
+        </div>
+
+        <!-- Spacious Header: Full width for Provider & Reviews -->
+        <div style="padding: 12px 14px 10px; display: flex; gap: 12px; align-items: center;">
+          <img src="/photos/courier.jpg" alt="" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.2;">CoolAir Tagudin Services</div>
+            <div style="font-size: 11px; color: var(--ink-muted); display: flex; align-items: center; gap: 6px; margin-top: 3px;">
+              <span style="color: #D97706; font-weight: 800; display: inline-flex; align-items: center; gap: 3px;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="#D97706" stroke="#D97706"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.4
+              </span>
+              <span>· 19 reviews</span>
+              <span>· Bio · 3.8 km</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown Table with Single Price Display -->
+        <div style="padding: 10px 14px; background: #FAFCFB; border-top: 1px solid #F1F5F9; border-bottom: 1px solid #F1F5F9; display: flex; flex-direction: column; gap: 5px; font-size: 11.5px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; color: var(--ink-soft);">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Hourly Service Rate
+            </span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--ink);">₱250.00 / hr</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; color: var(--ink-muted);">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Diagnostic Minimum
+            </span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--ink-soft);">₱150.00</span>
+          </div>
+          <div style="height: 1px; background: #E2E8F0; margin: 3px 0;"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; font-weight: 800; color: var(--ink);">
+            <span>Estimated Total · 2h</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 17px; color: var(--brand-navy);">~₱500.00</span>
+          </div>
+        </div>
+
+        <!-- Terms Strip with SVG Icons -->
+        <div style="padding: 7px 14px; font-size: 10.5px; color: var(--ink-muted); display: flex; justify-content: space-between; align-items: center;">
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Today 4:00 PM
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            14-Day Warranty
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+            Cash on Delivery
+          </span>
+        </div>
+
+        <!-- Actions -->
+        <div style="padding: 6px 14px 12px; display: flex; gap: 8px;">
+          <button type="button" class="btn-card-chat" style="height: 40px; padding: 0 14px;" onclick="openNegotiation('coolair')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Chat</span>
+          </button>
+          <button type="button" class="btn-card-accept" style="height: 40px;" onclick="acceptProposal('prop-coolair', 'CoolAir Tagudin', 500)">
+            <span>Accept Offer</span>
+          </button>
+        </div>
+      </article>
+
+    </main>
+
+    <!-- Side-by-Side Matrix Bottom Sheet Modal -->
+    <div class="glovo-sheet-overlay" id="matrix-sheet" onclick="handleMatrixBackdrop(event)">
+      <div class="glovo-sheet-drawer">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+
+        <div class="glovo-sheet-content">
+          <div class="sheet-header-row">
+            <div>
+              <div class="sheet-title-txt">Proposals Comparison Matrix</div>
+              <div style="font-size: 10.5px; color: var(--ink-muted);">Direct side-by-side analysis of #REQ-104 bids</div>
+            </div>
+            <button type="button" class="glovo-close-circle" onclick="closeMatrixModal()" aria-label="Close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <table class="compare-matrix-table">
+            <thead>
+              <tr>
+                <th class="col-feature">Feature</th>
+                <th class="col-provider selected" onclick="selectMatrixColumn('ben')">Kuya Ben</th>
+                <th class="col-provider" onclick="selectMatrixColumn('cardo')">Mang Cardo</th>
+                <th class="col-provider" onclick="selectMatrixColumn('coolair')">CoolAir</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-feature">Cost</td>
+                <td class="col-cell col-ben selected" onclick="selectMatrixColumn('ben')">₱610.00</td>
+                <td class="col-cell col-cardo" onclick="selectMatrixColumn('cardo')">₱300.00</td>
+                <td class="col-cell col-coolair" onclick="selectMatrixColumn('coolair')">₱250 / hr</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Parts</td>
+                <td class="col-cell col-ben selected" onclick="selectMatrixColumn('ben')">Included</td>
+                <td class="col-cell col-cardo" onclick="selectMatrixColumn('cardo')">Excluded</td>
+                <td class="col-cell col-coolair" onclick="selectMatrixColumn('coolair')">Extra cost</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Courier</td>
+                <td class="col-cell col-ben selected" onclick="selectMatrixColumn('ben')">Included</td>
+                <td class="col-cell col-cardo" onclick="selectMatrixColumn('cardo')">None</td>
+                <td class="col-cell col-coolair" onclick="selectMatrixColumn('coolair')">None</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Warranty</td>
+                <td class="col-cell col-ben selected" onclick="selectMatrixColumn('ben')">30-Day</td>
+                <td class="col-cell col-cardo" onclick="selectMatrixColumn('cardo')">Labor only</td>
+                <td class="col-cell col-coolair" onclick="selectMatrixColumn('coolair')">7-Day</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Fulfillment</td>
+                <td class="col-cell col-ben selected" onclick="selectMatrixColumn('ben')">Turnkey</td>
+                <td class="col-cell col-cardo" onclick="selectMatrixColumn('cardo')">Self-sourced</td>
+                <td class="col-cell col-coolair" onclick="selectMatrixColumn('coolair')">Diagnostic</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Rating</td>
+                <td class="col-cell col-ben selected" onclick="selectMatrixColumn('ben')">4.9 · 128</td>
+                <td class="col-cell col-cardo" onclick="selectMatrixColumn('cardo')">4.6 · 45</td>
+                <td class="col-cell col-coolair" onclick="selectMatrixColumn('coolair')">4.4 · 19</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <button type="button" class="btn-card-accept teal" id="matrix-cta-btn" onclick="acceptSelectedMatrixOffer()">
+            <span id="matrix-cta-text">Accept Kuya Ben's Offer</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function goBack() {
+      const path = window.location.pathname;
+      if (path.includes('/sessions/')) {
+        window.location.href = 'request-open-public-view.html';
+      } else if (path.includes('/design-sessions/')) {
+        window.location.href = 'request-open-public-view.html';
+      } else {
+        window.location.href = 'request-open-public-view.html';
+      }
+    }
+
+    function applyFilter(filterKey, btn) {
+      document.querySelectorAll('.compare-chip').forEach(c => c.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const cards = Array.from(document.querySelectorAll('.proposal-big-card'));
+      const feed = document.getElementById('proposals-feed');
+
+      if (filterKey === 'all') {
+        cards.forEach(c => c.style.display = 'flex');
+      } else if (filterKey === 'turnkey') {
+        cards.forEach(c => c.style.display = c.dataset.type === 'turnkey' ? 'flex' : 'none');
+      } else if (filterKey === 'labor') {
+        cards.forEach(c => c.style.display = c.dataset.type === 'labor' ? 'flex' : 'none');
+      } else if (filterKey === 'lowest') {
+        cards.forEach(c => c.style.display = 'flex');
+        cards.sort((a, b) => parseFloat(a.dataset.price) - parseFloat(b.dataset.price));
+        cards.forEach(c => feed.appendChild(c));
+      } else if (filterKey === 'rating') {
+        cards.forEach(c => c.style.display = 'flex');
+        cards.sort((a, b) => parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating));
+        cards.forEach(c => feed.appendChild(c));
+      }
+    }
+
+    function openMatrixModal() {
+      document.getElementById('matrix-sheet').classList.add('open');
+    }
+
+    function closeMatrixModal() {
+      document.getElementById('matrix-sheet').classList.remove('open');
+    }
+
+    function handleMatrixBackdrop(e) {
+      if (e.target.id === 'matrix-sheet') closeMatrixModal();
+    }
+
+    let selectedMatrixKey = 'ben';
+    const matrixOfferMap = {
+      ben: { name: 'Kuya Ben Refrigeration', label: "Accept Kuya Ben's Offer", propId: 'prop-ben', amount: 610 },
+      cardo: { name: 'Mang Cardo Aircon Services', label: "Accept Mang Cardo's Offer", propId: 'prop-cardo', amount: 300 },
+      coolair: { name: 'CoolAir Tagudin Services', label: "Accept CoolAir's Offer", propId: 'prop-coolair', amount: 500 }
+    };
+
+    function selectMatrixColumn(key) {
+      selectedMatrixKey = key;
+      const offer = matrixOfferMap[key];
+      if (!offer) return;
+
+      // Update header highlighting
+      document.querySelectorAll('.compare-matrix-table th.col-provider').forEach(th => th.classList.remove('selected'));
+      const thIdx = key === 'ben' ? 2 : (key === 'cardo' ? 3 : 4);
+      const th = document.querySelector(`.compare-matrix-table th:nth-child(${thIdx})`);
+      if (th) th.classList.add('selected');
+
+      // Update cells highlighting
+      document.querySelectorAll('.compare-matrix-table td.col-cell').forEach(td => td.classList.remove('selected'));
+      document.querySelectorAll(`.compare-matrix-table td.col-${key}`).forEach(td => td.classList.add('selected'));
+
+      // Update button text and style
+      const ctaText = document.getElementById('matrix-cta-text');
+      const ctaBtn = document.getElementById('matrix-cta-btn');
+      if (ctaText) ctaText.innerText = offer.label;
+      if (ctaBtn) {
+        ctaBtn.classList.toggle('teal', key === 'ben');
+      }
+    }
+
+    function acceptSelectedMatrixOffer() {
+      const offer = matrixOfferMap[selectedMatrixKey] || matrixOfferMap['ben'];
+      acceptProposal(offer.propId, offer.name, offer.amount);
+    }
+
+    function openNegotiation(providerId) {
+      window.location.href = `bidding-negotiation.html?provider=${providerId}&request=req-104`;
+    }
+
+    function acceptProposal(propId, providerName, totalAmount) {
+      alert(`Proposal Accepted!\n\n• Selected Provider: ${providerName}\n• Total Amount: ₱${totalAmount.toFixed(2)}\n• Moving Line & Child Escrows Formed\n\nRedirecting to Picks Staging Cart...`);
+      window.location.href = `bookings-checklist.html?proposal=${propId}&amount=${totalAmount}`;
+    }
+  </script>
+</body>
+</html>

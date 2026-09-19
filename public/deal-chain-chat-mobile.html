@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Deal Chain Coordination Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-brand-navy: #0F2F58;
+      --color-brand-teal: #0D715F;
+      --color-brand-teal-light: #E8F7F1;
+      --color-brand-yellow: #FFC244;
+      --color-ink: #12201C;
+      --color-ink-muted: #64748B;
+      --color-ink-soft: #475569;
+      --color-canvas: #F8F9FA;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --forest-50: #EFFCF6;
+      --forest-100: #C6F7E2;
+      --forest-600: #0D715F;
+      --forest-700: #0A574A;
+      --forest-900: #042E27;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+      --shadow-sm: 0 1px 3px rgba(15, 47, 88, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: #0B132B;
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .studio-context-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #A4B8B0;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .studio-crumb { display: flex; align-items: center; gap: 6px; }
+    .studio-pill-tag {
+      background: rgba(37, 99, 235, 0.2);
+      border: 1px solid rgba(37, 99, 235, 0.4);
+      color: #93C5FD;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: #F8FAFC;
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: #F8FAFC; }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-ink);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .notch-island {
+      width: 110px;
+      height: 24px;
+      background: #000000;
+      border-radius: 16px;
+      margin: 0 auto;
+    }
+
+    /* Multi-Party Team Header */
+    .team-header-bar {
+      height: 62px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .team-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .circle-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid var(--color-border);
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-ink);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .circle-btn:active { background: #F1F5F9; }
+
+    .avatar-stack-group {
+      display: flex;
+      align-items: center;
+    }
+    .avatar-mini {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+    }
+
+    .team-meta {
+      display: flex;
+      flex-direction: column;
+    }
+    .team-meta-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--color-brand-navy);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .team-meta-sub {
+      font-size: 10.5px;
+      color: var(--color-ink-muted);
+    }
+
+    /* Signature Glovo Wave Organic Asymmetrical Bottom Drawer */
+    .glovo-drawer-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(18, 32, 28, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .glovo-drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .glovo-drawer-sheet {
+      width: 100%;
+      background: #FFFFFF;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -12px 36px rgba(15, 47, 88, 0.22);
+    }
+    .glovo-drawer-overlay.open .glovo-drawer-sheet {
+      transform: translateY(0);
+    }
+    .glovo-wave-cap {
+      width: 100%;
+      height: 34px;
+      margin-bottom: -1px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .drawer-content-box {
+      padding: 6px 18px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .drawer-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .drawer-title-txt {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--color-brand-navy);
+    }
+    .drawer-close-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #F1F5F9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: #64748B;
+    }
+    .handoff-relation-card {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .btn-dm-primary {
+      height: 42px;
+      border-radius: var(--radius-pill);
+      background: var(--forest-600);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(13, 113, 95, 0.25);
+      transition: background 0.15s;
+    }
+    .btn-dm-primary:hover { background: var(--forest-700); }
+    .btn-call-quiet {
+      height: 40px;
+      border-radius: var(--radius-pill);
+      background: #F8FAFC;
+      color: var(--color-brand-navy);
+      border: 1.5px solid var(--color-border);
+      font-size: 12.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    /* Impeccable Centered Milestone Pill */
+    .relay-milestone-banner {
+      align-self: center;
+      background: #F1F5F9;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: var(--radius-pill);
+      padding: 5px 14px;
+      font-size: 11px;
+      color: #475569;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0 8px;
+      text-align: center;
+      max-width: 92%;
+    }
+    /* Message Stream */
+    .chat-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .date-separator {
+      align-self: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--color-ink-muted);
+      background: #E2E8F0;
+      padding: 2px 10px;
+      border-radius: var(--radius-pill);
+      margin: 4px 0;
+    }
+
+    /* Multi-Actor Chat Rows */
+    .actor-msg-row {
+      display: flex;
+      gap: 8px;
+      max-width: 86%;
+    }
+    .actor-msg-row.me {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    .actor-avatar-col {
+      flex-shrink: 0;
+    }
+    .actor-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .actor-content-col {
+      display: flex;
+      flex-direction: column;
+    }
+    .actor-meta-row {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--color-ink-muted);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .actor-msg-bubble {
+      padding: 9px 12px;
+      border-radius: 14px;
+      font-size: 12.5px;
+      line-height: 1.4;
+      background: #FFFFFF;
+      color: var(--color-ink);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
+    }
+    .actor-msg-row.me .actor-msg-bubble {
+      background: var(--forest-600);
+      color: #FFFFFF;
+      border: none;
+    }
+    .actor-msg-row.me .actor-meta-row {
+      justify-content: flex-end;
+    }
+
+    /* Handoff Confirmation Box */
+    .handoff-confirm-box {
+      margin-top: 6px;
+      background: #EFFCF6;
+      border: 1px solid #BBF7D0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #166534;
+      font-weight: 700;
+    }
+
+    /* Bottom Dock */
+    .team-bottom-dock {
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      padding: 8px 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .team-chips-strip {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .team-chips-strip::-webkit-scrollbar { display: none; }
+    .team-chip {
+      background: #F1F5F9;
+      border: 1px solid #E2E8F0;
+      border-radius: var(--radius-pill);
+      padding: 4px 9px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--color-brand-navy);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .team-input-field {
+      flex: 1;
+      height: 40px;
+      background: #F8FAFC;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-pill);
+      padding: 0 16px;
+      font-size: 13px;
+      color: var(--color-ink);
+      outline: none;
+    }
+    .team-input-field:focus {
+      border-color: #0F2F58;
+      background: #FFFFFF;
+    }
+    .btn-send-navy {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #0F2F58;
+      color: #FFFFFF;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="studio-context-banner">
+    <div class="studio-crumb">
+      <span>Deal Chain #DC-892</span>
+      <span>›</span>
+      <span style="color:#FFF;">Relay Coordination Room</span>
+    </div>
+    <span class="studio-pill-tag">Shared Logistics</span>
+  </div>
+
+  <div class="phone-shell">
+    
+    <!-- iOS Status Bar -->
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div style="font-size: 11px;">5G</div>
+    </div>
+
+    <!-- Team Room Header -->
+    <header class="team-header-bar">
+      <div class="team-header-left">
+        <a href="order-detail-mobile.html?order=ORD-7721&chain=DC-892" class="circle-btn" aria-label="Back to Order Details">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </a>
+        
+        <!-- Multi-Avatar Stack -->
+        <div class="avatar-stack-group" onclick="openParticipantSheet('team')" style="cursor:pointer;" title="Tap to view relay roster">
+          <span class="avatar-mini" style="background:#0D715F; z-index:4;" title="Kuya Ben (AC Labor)">KB</span>
+          <span class="avatar-mini" style="background:#2563EB; margin-left:-10px; z-index:3;" title="Danny Express (Transit)">DE</span>
+          <span class="avatar-mini" style="background:#D97706; margin-left:-10px; z-index:2;" title="Tagudin Hardware (Materials)">TH</span>
+        </div>
+
+        <div class="team-meta">
+          <div class="team-meta-title">
+            <span>DC-892 Relay Room</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#10B981"><circle cx="12" cy="12" r="10"/></svg>
+          </div>
+          <div class="team-meta-sub">Maria · Kuya Ben · Danny · Hardware</div>
+        </div>
+      </div>
+
+      <a href="order-detail-mobile.html?order=ORD-7721&chain=DC-892" class="circle-btn" title="View Order #ORD-7721 Details">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </a>
+    </header>
+
+    <!-- Message Stream -->
+    <main class="chat-scroll-area" id="team-chat-stream">
+      <div class="date-separator">Today · September 17, 2026</div>
+
+      <!-- Milestone 1 (Impeccable System Milestone Pill) -->
+      <div class="relay-milestone-banner">
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: #10B981; flex-shrink: 0;"></span>
+        <span><strong>Deal Chain #DC-892 Relay:</strong> Materials → Transit → AC Labor</span>
+      </div>
+      <!-- Hardware message -->
+      <div class="actor-msg-row">
+        <div class="actor-avatar-col">
+          <div class="actor-avatar" style="background:#D97706; cursor:pointer;" onclick="openParticipantSheet('hardware')" title="Tagudin Hardware Details">TH</div>
+        </div>
+        <div class="actor-content-col">
+          <div class="actor-meta-row">
+            <span>Tagudin Hardware</span>
+            <span>·</span>
+            <span>1:08 PM</span>
+          </div>
+          <div class="actor-msg-bubble">
+            35uF Run Capacitor packaged and ready at counter lane 2. Order #ORD-7720 verified.
+          </div>
+        </div>
+      </div>
+
+      <!-- Courier message -->
+      <div class="actor-msg-row">
+        <div class="actor-avatar-col">
+          <div class="actor-avatar" style="background:#2563EB; cursor:pointer;" onclick="openParticipantSheet('danny')" title="Danny Express Details">DE</div>
+        </div>
+        <div class="actor-content-col">
+          <div class="actor-meta-row">
+            <span>Danny Express (Transit)</span>
+            <span>·</span>
+            <span>1:14 PM</span>
+          </div>
+          <div class="actor-msg-bubble">
+            Capacitor picked up at Tagudin Hardware! On motorcycle heading towards Maria's address in Centro. ETA ~15 mins.
+          </div>
+        </div>
+      </div>
+
+      <!-- Technician message -->
+      <div class="actor-msg-row">
+        <div class="actor-avatar-col">
+          <div class="actor-avatar" style="background:#0D715F; cursor:pointer;" onclick="openParticipantSheet('kuyaben')" title="Kuya Ben Details">KB</div>
+        </div>
+        <div class="actor-content-col">
+          <div class="actor-meta-row">
+            <span>Kuya Ben (AC Labor)</span>
+            <span>·</span>
+            <span>1:18 PM</span>
+          </div>
+          <div class="actor-msg-bubble">
+            Copy Danny. I'm already on-site at Maria's place. Exterior housing disassembled; waiting for the part to mount.
+          </div>
+        </div>
+      </div>
+
+      <!-- Maria (Buyer) -->
+      <div class="actor-msg-row me">
+        <div class="actor-avatar-col">
+          <div class="actor-avatar" style="background:#0F2F58;">MS</div>
+        </div>
+        <div class="actor-content-col">
+          <div class="actor-meta-row">
+            <span>1:37 PM</span>
+            <span>·</span>
+            <span>You (Maria)</span>
+          </div>
+          <div class="actor-msg-bubble">
+            Gate is unlocked, Kuya Danny! Kuya Ben is at the side yard by the compressor.
+          </div>
+        </div>
+      </div>
+
+      <!-- Courier arrival -->
+      <div class="actor-msg-row">
+        <div class="actor-avatar-col">
+          <div class="actor-avatar" style="background:#2563EB; cursor:pointer;" onclick="openParticipantSheet('danny')" title="Danny Express Details">DE</div>
+        </div>
+        <div class="actor-content-col">
+          <div class="actor-meta-row">
+            <span>Danny Express (Transit)</span>
+            <span>·</span>
+            <span>1:39 PM</span>
+          </div>
+          <div class="actor-msg-bubble">
+            At the gate now! Handing package directly to Kuya Ben.
+            <div class="handoff-confirm-box">
+              <span>✓ Physical Hand-off Recorded</span>
+              <span>Slot 2 Complete</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Technician receive -->
+      <div class="actor-msg-row">
+        <div class="actor-avatar-col">
+          <div class="actor-avatar" style="background:#0D715F; cursor:pointer;" onclick="openParticipantSheet('kuyaben')" title="Kuya Ben Details">KB</div>
+        </div>
+        <div class="actor-content-col">
+          <div class="actor-meta-row">
+            <span>Kuya Ben (AC Labor)</span>
+            <span>·</span>
+            <span>1:40 PM</span>
+          </div>
+          <div class="actor-msg-bubble">
+            Received 35uF part from Danny. Terminal test confirmed good. Slot 3 installation underway now.
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Clean Minimalist Team Dock -->
+    <footer class="team-bottom-dock">
+      <div class="input-row">
+        <input type="text" class="team-input-field" id="team-input-text" placeholder="Post logistics update to team..." onkeydown="if(event.key==='Enter') sendTeamMessage()">
+        <button type="button" class="btn-send-navy" onclick="sendTeamMessage()" aria-label="Send update">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div style="text-align: center; font-size: 10px; color: #94A3B8; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 2px;">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Logistics relay · Sibling pricing remains confidential</span>
+      </div>
+    </footer>
+    <!-- Glovo Wave Asymmetrical Drawer for Participant Profile & Direct Messaging -->
+    <div class="glovo-drawer-overlay" id="participant-drawer" onclick="handleDrawerBackdrop(event)">
+      <div class="glovo-drawer-sheet" onclick="event.stopPropagation()">
+        <!-- Signature Glovo Organic Asymmetrical Concave/Convex Wave Cap -->
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+
+        <div class="drawer-content-box">
+          <div class="drawer-header-row">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="avatar-mini" id="sheet-avatar" style="width: 40px; height: 40px; font-size: 13px; font-weight: 800; background:#0D715F;">KB</div>
+              <div>
+                <div class="drawer-title-txt" id="sheet-name">Kuya Ben</div>
+                <div style="font-size: 11px; color: var(--color-ink-muted);" id="sheet-role">AC Labor &amp; Installation · Kuya Ben AC Services</div>
+              </div>
+            </div>
+            <button type="button" class="drawer-close-circle" onclick="closeParticipantSheet()" aria-label="Close">&times;</button>
+          </div>
+
+          <!-- Chain Handoff Relation Context -->
+          <div class="handoff-relation-card" id="sheet-relation-card">
+            <div style="font-size: 11px; font-weight: 800; color: #065F46; display: flex; align-items: center; gap: 5px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span id="sheet-relation-title">Handoff Partner (Slot 3)</span>
+            </div>
+            <div style="font-size: 10.5px; color: #047857; line-height: 1.4;" id="sheet-relation-desc">
+              Receives 35uF run capacitor from Danny Express; conducts live discharge test and customer sign-off.
+            </div>
+          </div>
+
+          <!-- Actions: Direct Message (1:1) & Call -->
+          <div style="display: flex; flex-direction: column; gap: 8px;" id="sheet-actions-stack">
+            <a href="order-chat-mobile.html?order=ORD-7721&chain=DC-892&provider=kuyaben" class="btn-dm-primary" id="sheet-dm-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span id="sheet-dm-text">Open 1:1 Direct Message</span>
+            </a>
+            <a href="tel:09175550192" class="btn-call-quiet" id="sheet-call-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span id="sheet-call-text">Call Kuya Ben</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function quickSend(text) {
+      document.getElementById('team-input-text').value = text;
+      sendTeamMessage();
+    }
+
+    function sendTeamMessage() {
+      const input = document.getElementById('team-input-text');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const stream = document.getElementById('team-chat-stream');
+      const row = document.createElement('div');
+      row.className = 'actor-msg-row me';
+      row.innerHTML = `
+        <div class="actor-avatar-col">
+          <div class="actor-avatar" style="background:#0F2F58;">MS</div>
+        </div>
+        <div class="actor-content-col">
+          <div class="actor-meta-row">
+            <span>Just now</span>
+            <span>·</span>
+            <span>You (Maria)</span>
+          </div>
+          <div class="actor-msg-bubble">
+            ${escapeHtml(text)}
+          </div>
+        </div>
+      `;
+      stream.appendChild(row);
+      input.value = '';
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function openParticipantSheet(actorId) {
+      const drawer = document.getElementById('participant-drawer');
+      const avatar = document.getElementById('sheet-avatar');
+      const name = document.getElementById('sheet-name');
+      const role = document.getElementById('sheet-role');
+      const relationTitle = document.getElementById('sheet-relation-title');
+      const relationDesc = document.getElementById('sheet-relation-desc');
+      const dmBtn = document.getElementById('sheet-dm-btn');
+      const dmText = document.getElementById('sheet-dm-text');
+      const callBtn = document.getElementById('sheet-call-btn');
+      const callText = document.getElementById('sheet-call-text');
+
+      if (actorId === 'kuyaben') {
+        avatar.innerText = 'KB';
+        avatar.style.background = '#0D715F';
+        name.innerText = 'Kuya Ben';
+        role.innerText = 'AC Labor & Installation · Kuya Ben AC Services';
+        relationTitle.innerText = 'Handoff Partner (Slot 3 · AC Labor)';
+        relationDesc.innerText = 'Receives 35uF capacitor from Danny Express; coordinates installation & testing on-site.';
+        dmBtn.style.display = 'flex';
+        dmBtn.href = 'order-chat-mobile.html?order=ORD-7721&chain=DC-892&provider=kuyaben';
+        dmText.innerText = 'Open 1:1 Direct Message with Kuya Ben';
+        callBtn.href = 'tel:09175550192';
+        callText.innerText = 'Call Kuya Ben (0917-555-0192)';
+      } else if (actorId === 'danny') {
+        avatar.innerText = 'DE';
+        avatar.style.background = '#2563EB';
+        name.innerText = 'Danny Express';
+        role.innerText = 'Motorcycle Courier · Honda XRM 125 Poblacion';
+        relationTitle.innerText = 'Handoff Partner (Slot 2 · Transit Relay)';
+        relationDesc.innerText = 'Picks up hardware from Tagudin Hardware and hands off directly to Kuya Ben at site gate.';
+        dmBtn.style.display = 'flex';
+        dmBtn.href = 'order-chat-mobile.html?order=ORD-7722&chain=DC-892&provider=danny';
+        dmText.innerText = 'Open 1:1 Direct Message with Danny';
+        callBtn.href = 'tel:09178829912';
+        callText.innerText = 'Call Danny (0917-882-9912)';
+      } else if (actorId === 'hardware') {
+        avatar.innerText = 'TH';
+        avatar.style.background = '#D97706';
+        name.innerText = 'Tagudin Hardware & Supply';
+        role.innerText = 'Materials Supplier · Lane 2 Counter Relay';
+        relationTitle.innerText = 'Handoff Source (Slot 1 · Materials)';
+        relationDesc.innerText = 'Packaged capacitor for courier pickup. (Direct messaging restricted to order issues).';
+        dmBtn.style.display = 'none';
+        callBtn.href = 'tel:0775550100';
+        callText.innerText = 'Call Store Counter (077-555-0100)';
+      } else {
+        // Team overview
+        avatar.innerText = 'DC';
+        avatar.style.background = '#0F2F58';
+        name.innerText = 'DC-892 Coordination Team';
+        role.innerText = 'Maria (Buyer) · Kuya Ben (Labor) · Danny (Transit) · Tagudin Hardware';
+        relationTitle.innerText = 'Active Deal Chain Topology';
+        relationDesc.innerText = 'Bilateral escrow funded. Direct 1:1 messaging enabled between handoff partners.';
+        dmBtn.style.display = 'none';
+        callBtn.href = 'orders-mobile.html';
+        callText.innerText = 'View All Order Contracts';
+      }
+
+      drawer.classList.add('open');
+    }
+
+    function closeParticipantSheet() {
+      document.getElementById('participant-drawer').classList.remove('open');
+    }
+
+    function handleDrawerBackdrop(e) {
+      if (e.target.id === 'participant-drawer') {
+        closeParticipantSheet();
+      }
+    }
+  </script>
+</body>
+</html>

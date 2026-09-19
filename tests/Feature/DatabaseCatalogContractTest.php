@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 final class DatabaseCatalogContractTest extends TestCase
 {
-    public function test_postgresql_catalog_contains_the_canonical_58_application_tables_and_e0s2_objects(): void
+    public function test_postgresql_catalog_contains_the_canonical_application_tables_and_e0s2_objects(): void
     {
         if (DB::connection()->getDriverName() !== 'pgsql') {
             self::markTestSkipped('The E0-S2 catalog contract is PostgreSQL-only.');
@@ -149,6 +149,7 @@ final class DatabaseCatalogContractTest extends TestCase
             'role_assignments',
             'safety_incidents',
             'support_cases',
+            't4_work_migration_audits',
             'user_profiles',
             'users',
             'work_events',

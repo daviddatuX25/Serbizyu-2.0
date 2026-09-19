@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Admin UI Kit & Design System Specimen</title>
+  <link rel="stylesheet" href="admin-kit.css">
+</head>
+<body>
+
+<div class="admin-workspace">
+  <!-- Top Navigation & Context Bar -->
+  <header class="admin-top-bar">
+    <div class="brand-badge">
+      <span class="dot"></span>
+      <span>Serbizyu Ops</span>
+      <span style="color: var(--text-muted); font-weight: 500; font-size: 11px;">/ UI Kit Specimen</span>
+    </div>
+
+    <nav class="admin-nav-links">
+      <a href="admin-ui-kit.html" class="admin-nav-item active" data-snd="tap">UI Kit</a>
+      <a href="admin-triage.html" class="admin-nav-item" data-snd="tap">Triage Queue (OPS-001)</a>
+      <a href="admin-inspector.html" class="admin-nav-item" data-snd="tap">Inspector (OPS-003)</a>
+      <a href="admin-hold-console.html" class="admin-nav-item" data-snd="tap">Hold Console (OPS-005)</a>
+    </nav>
+
+    <div class="top-controls">
+      <button type="button" class="btn-snd-toggle sound-on">
+        <span>🔊</span> Sound: ON
+      </button>
+    </div>
+  </header>
+
+  <!-- Title & Philosophy Banner -->
+  <div class="admin-card admin-card-elevated" style="border-left: 4px solid var(--forest-500);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-pure); letter-spacing: -0.02em;">
+          Admin System UI Kit & Specimen
+        </h1>
+        <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px; max-width: 680px;">
+          High-craft operational components built on <strong>cta.gallery</strong> tactile shaders, 
+          <strong>60fps.design</strong> spring transitions, <strong>motion.dev</strong> reveals, and 
+          <strong>snd.dev</strong> mathematical Web Audio sine micro-interactions.
+        </p>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <span class="badge badge-success">60 FPS Ready</span>
+        <span class="badge badge-info">Web Audio SND01</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: CTA.GALLERY TACTILE BUTTON SHADERS -->
+  <section class="admin-card">
+    <div style="margin-bottom: 16px;">
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--text-pure);">
+        1. Tactile Button Shaders (cta.gallery)
+      </h2>
+      <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+        Multi-stop gradients, top specular sheen highlights, bottom drop bevels, and active physical sink dynamics.
+      </p>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+      <!-- Primary Forest -->
+      <button type="button" class="btn btn-primary" data-snd="confirm">
+        <span>✓</span> Approve & Record Action
+      </button>
+
+      <!-- Amber Hold -->
+      <button type="button" class="btn btn-amber" data-snd="warn">
+        <span>⏸</span> Place Scoped Hold
+      </button>
+
+      <!-- Danger Reversal -->
+      <button type="button" class="btn btn-danger" data-snd="warn">
+        <span>⛔</span> Terminate & Restrict
+      </button>
+
+      <!-- Secondary Neutral Glass -->
+      <button type="button" class="btn btn-secondary" data-snd="tap">
+        <span>🔄</span> Refresh State
+      </button>
+
+      <!-- Ghost Action -->
+      <button type="button" class="btn btn-ghost" data-snd="tap">
+        View Raw Outbox Event
+      </button>
+    </div>
+  </section>
+
+  <!-- SECTION 2: SND01 MATHEMATICAL SOUND PALETTE -->
+  <section class="admin-card">
+    <div style="margin-bottom: 16px;">
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--text-pure);">
+        2. SND01 Mathematical Sine Audio Palette (snd.dev)
+      </h2>
+      <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+        Zero mp3/wav files. Synthesized in real-time via Web Audio API oscillators with exponential gain decay.
+      </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+      <div style="background: var(--card-inset); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--line-subtle);">
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-pure);">Tap Sine Blip</div>
+        <div style="font-size: 11px; font-mono; color: var(--forest-400); margin: 4px 0 10px;">520Hz → 940Hz (25ms)</div>
+        <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 12px; padding: 7px 12px;" data-snd="tap">
+          Play Tap Blip
+        </button>
+      </div>
+
+      <div style="background: var(--card-inset); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--line-subtle);">
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-pure);">Cohort Switch Pop</div>
+        <div style="font-size: 11px; font-mono; color: var(--info-blue); margin: 4px 0 10px;">Twin 620Hz + 920Hz (45ms)</div>
+        <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 12px; padding: 7px 12px;" data-snd="switch">
+          Play Switch Pop
+        </button>
+      </div>
+
+      <div style="background: var(--card-inset); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--line-subtle);">
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-pure);">Confirm Triad</div>
+        <div style="font-size: 11px; font-mono; color: var(--success-green); margin: 4px 0 10px;">C5 + E5 + G5 (120ms)</div>
+        <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 12px; padding: 7px 12px;" data-snd="confirm">
+          Play Triad Chirp
+        </button>
+      </div>
+
+      <div style="background: var(--card-inset); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--line-subtle);">
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-pure);">Hold Warning Sine</div>
+        <div style="font-size: 11px; font-mono; color: var(--hold-amber); margin: 4px 0 10px;">360Hz → 220Hz (95ms)</div>
+        <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 12px; padding: 7px 12px;" data-snd="warn">
+          Play Warning Tone
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: STATUS & HOLD BADGES -->
+  <section class="admin-card">
+    <div style="margin-bottom: 16px;">
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--text-pure);">
+        3. Operational Badges & Cohort Glider (60fps.design)
+      </h2>
+      <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+        High-contrast labels with translucent backdrops and spring-animated segmented switchers.
+      </p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+        <span class="badge badge-hold">⏸ Active Hold</span>
+        <span class="badge badge-danger">⚠️ Dispute Mismatch</span>
+        <span class="badge badge-success">✓ Verified Provider</span>
+        <span class="badge badge-info">ℹ In Progress</span>
+        <span class="badge badge-purple">🛡 Audit Event</span>
+        <span class="badge badge-neutral">L4 Admin Scope</span>
+      </div>
+
+      <!-- Cohort Switcher Playground -->
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">Interactive Switcher:</span>
+        <div class="cohort-switcher" id="demo-cohort-switcher">
+          <button type="button" class="cohort-chip active" data-snd="switch" data-cohort="genuine">
+            <span>●</span> Genuine Tagudin
+          </button>
+          <button type="button" class="cohort-chip" data-snd="switch" data-cohort="sandbox">
+            <span>🧪</span> Sandbox
+          </button>
+          <button type="button" class="cohort-chip" data-snd="switch" data-cohort="training">
+            <span>🎓</span> Team Training
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: OPERATIONAL HOLD BANNER SPECIMEN -->
+  <section class="admin-card">
+    <div style="margin-bottom: 16px;">
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--text-pure);">
+        4. Targeted Hold Warning Banner Specimen (OPS-003 / OPS-005)
+      </h2>
+      <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+        Surgical hold disclosure: clearly explains what is blocked and proves what remains operational.
+      </p>
+    </div>
+
+    <div class="hold-banner">
+      <div class="hold-banner-icon">⏸</div>
+      <div class="hold-banner-body">
+        <div class="hold-banner-title">
+          Administrative Hold Active — Payment Obligation Only (#OBL-881)
+        </div>
+        <div class="hold-banner-text">
+          Reason: <strong>Evidence mismatch under human review</strong>. 
+          Buyer reported ₱90 cash paid; provider reported ₱0 received. 
+          <span style="color: var(--text-pure);">Order contract terms and Work fulfillment remain active and unblocked.</span>
+        </div>
+      </div>
+      <div>
+        <a href="admin-hold-console.html" class="btn btn-amber" style="font-size: 11px; padding: 6px 12px;" data-snd="tap">
+          Resolve Hold →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom Navigation Link Bar -->
+  <div class="action-dock">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Ready to explore live views?</span>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <a href="admin-triage.html" class="btn btn-primary" data-snd="tap">
+        Open Triage Queue (OPS-001) →
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="admin-snd.js"></script>
+<script>
+  // Demo cohort switcher tab interaction
+  document.querySelectorAll('#demo-cohort-switcher .cohort-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('#demo-cohort-switcher .cohort-chip').forEach(function(c) {
+        c.classList.remove('active');
+      });
+      chip.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

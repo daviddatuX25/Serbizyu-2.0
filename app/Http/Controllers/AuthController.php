@@ -13,6 +13,7 @@ use App\Http\Requests\RegisterPhoneRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\ResetPasswordSmsRequest;
 use App\Modules\IdentityAccess\Application\CompleteSignupPhoneOtp;
+use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryInspector;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
 use App\Modules\IdentityAccess\Application\LinkEmail;
 use App\Modules\IdentityAccess\Application\LoginWithEmailPassword;
@@ -35,6 +36,7 @@ final class AuthController
     public function __construct(
         private readonly PhoneOtpAuthService $phoneAuth,
         private readonly StartSignup $startSignup,
+        private readonly OtpDeliveryInspector $otpDeliveryInspector,
         private readonly CompleteSignupPhoneOtp $completeSignup,
         private readonly LoginWithEmailPassword $emailLogin,
         private readonly LoginWithPhonePassword $phonePasswordLogin,
@@ -51,16 +53,32 @@ final class AuthController
             return redirect()->route('home');
         }
 
-        return Inertia::render('Auth/SignIn', [
+        if ($request->has('reset')) {
+            $request->session()->forget('auth_phone_pending');
+        }
+
+        $pendingPhone = $request->session()->get('auth_phone_pending');
+        $pendingPhone = is_string($pendingPhone) ? $pendingPhone : null;
+        $temporaryOtpPreview = $this->temporaryOtp($pendingPhone, PhoneOtpAuthService::PURPOSE);
+
+        $props = [
             'session' => [
                 'status' => $request->session()->has('auth_phone_pending') ? 'challenge_pending' : 'method_picker',
-                'phone' => $request->session()->get('auth_phone_pending'),
+                'phone' => $pendingPhone,
             ],
             'methods' => [
                 'phone_password' => true,
                 'email' => true,
             ],
-        ]);
+            'devMode' => in_array((string) config('serbizyu.environment', config('app.env')), ['local', 'testing', 'test', 'capstone'], true)
+                && (bool) config('serbizyu.identity.browser_otp_preview', false),
+        ];
+
+        if ($temporaryOtpPreview !== null) {
+            $props['temporaryOtpPreview'] = $temporaryOtpPreview;
+        }
+
+        return Inertia::render('Auth/SignIn', $props);
     }
 
     public function showRegister(Request $request): InertiaResponse|RedirectResponse
@@ -69,12 +87,23 @@ final class AuthController
             return redirect()->route('home');
         }
 
-        return Inertia::render('Auth/Register', [
+        $pendingPhone = $request->session()->get('signup_phone_pending');
+        $pendingPhone = is_string($pendingPhone) ? $pendingPhone : null;
+        $temporaryOtpPreview = $this->temporaryOtp($pendingPhone, StartSignup::PURPOSE);
+        $props = [
             'session' => [
                 'status' => $request->session()->has('signup_phone_pending') ? 'challenge_pending' : 'phone_required',
-                'phone' => $request->session()->get('signup_phone_pending'),
+                'phone' => $pendingPhone,
             ],
-        ]);
+            'devMode' => in_array((string) config('serbizyu.environment', config('app.env')), ['local', 'testing', 'test', 'capstone'], true)
+                && (bool) config('serbizyu.identity.browser_otp_preview', false),
+        ];
+
+        if ($temporaryOtpPreview !== null) {
+            $props['temporaryOtpPreview'] = $temporaryOtpPreview;
+        }
+
+        return Inertia::render('Auth/Register', $props);
     }
 
     public function registerRequest(RegisterPhoneRequest $request): mixed
@@ -107,7 +136,6 @@ final class AuthController
                 $correlationId,
             );
             $request->session()->forget('signup_phone_pending');
-
             if ($request->expectsJson() || $request->wantsJson()) {
                 return $this->success($request, [
                     'status' => 'authenticated',
@@ -127,6 +155,13 @@ final class AuthController
         } catch (RuntimeException $error) {
             return $this->failure($request, 'PHONE_INVALID', $error->getMessage(), $correlationId);
         }
+    }
+
+    public function registerReset(Request $request): RedirectResponse
+    {
+        $request->session()->forget('signup_phone_pending');
+
+        return redirect()->route('auth.register');
     }
 
     public function loginWithPhonePassword(LoginWithPhonePasswordRequest $request): mixed
@@ -408,6 +443,30 @@ final class AuthController
         return Auth::check()
             ? redirect()->route('home')
             : redirect()->route('auth.sign-in');
+    }
+
+    /** @return array{code: string, expires_in_seconds: int, delivered_at?: string}|null */
+    private function temporaryOtp(?string $phone, string $purpose): ?array
+    {
+        if ($phone === null || ! (bool) config('serbizyu.identity.browser_otp_preview', false)) {
+            return null;
+        }
+
+        $environment = (string) config('serbizyu.environment', config('app.env', 'production'));
+        if (! in_array($environment, ['local', 'testing', 'test', 'capstone'], true)) {
+            return null;
+        }
+
+        $delivery = $this->otpDeliveryInspector->peekMirrored($phone, $purpose);
+        if ($delivery === null) {
+            return null;
+        }
+
+        return [
+            'code' => (string) $delivery['code'],
+            'expires_in_seconds' => (int) $delivery['expires_in_seconds'],
+            'delivered_at' => (string) ($delivery['delivered_at'] ?? now()->toIso8601String()),
+        ];
     }
 
     /** @param array<string, mixed> $data */

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Modules\IdentityAccess\Application\ConsentActingForAuthorizer;
 use App\Modules\IdentityAccess\Application\Contracts\NotificationChannel;
 use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryChannel;
+use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryInspector;
 use App\Modules\IdentityAccess\Application\DemoFixtureService;
 use App\Modules\IdentityAccess\Infrastructure\Auth\DisabledOAuthLoginPort;
 use App\Modules\IdentityAccess\Infrastructure\Notifications\FakeOtpDelivery;
@@ -15,11 +16,15 @@ use App\Modules\Listings\Application\Contracts\PublicListingReader;
 use App\Modules\Listings\Application\OrderCapacityAdapter;
 use App\Modules\Listings\Application\OrderListingSourceAdapter;
 use App\Modules\Listings\Infrastructure\ListingRepository;
+use App\Modules\OrdersWork\Application\DefaultWorkContractRegistry;
+use App\Modules\OrdersWork\Application\WorkContractRegistry;
+use App\Modules\PaymentObligations\Application\OrderPaymentObligationAdapter;
 use App\Shared\Contracts\ActingForAuthorizer;
 use App\Shared\Contracts\FixtureManager;
 use App\Shared\Contracts\OAuthLoginPort;
 use App\Shared\Contracts\OrderCapacityPort;
 use App\Shared\Contracts\OrderListingSourcePort;
+use App\Shared\Contracts\OrderPaymentObligationPort;
 use App\Shared\Contracts\OwnerListingReader;
 use App\Shared\Support\EnvironmentValidator;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -39,15 +44,18 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(EnvironmentValidator::class);
         $this->app->singleton(FakeOtpDelivery::class);
+        $this->app->singleton(OtpDeliveryInspector::class, FakeOtpDelivery::class);
         $this->app->bind(ListingCommandStore::class, ListingRepository::class);
         $this->app->bind(OwnerListingReader::class, ListingRepository::class);
         $this->app->bind(PublicListingReader::class, ListingRepository::class);
         $this->app->bind(OrderListingSourcePort::class, OrderListingSourceAdapter::class);
         $this->app->bind(OrderCapacityPort::class, OrderCapacityAdapter::class);
+        $this->app->bind(OrderPaymentObligationPort::class, OrderPaymentObligationAdapter::class);
         $this->app->bind(NotificationChannel::class, MailpitNotificationChannel::class);
         $this->app->bind(FixtureManager::class, DemoFixtureService::class);
         $this->app->bind(ActingForAuthorizer::class, ConsentActingForAuthorizer::class);
         $this->app->bind(OAuthLoginPort::class, DisabledOAuthLoginPort::class);
+        $this->app->singleton(WorkContractRegistry::class, DefaultWorkContractRegistry::class);
 
         $this->app->bind(OtpDeliveryChannel::class, function ($app): OtpDeliveryChannel {
             $mode = (string) config('serbizyu.providers.notifications.mode', 'disabled');

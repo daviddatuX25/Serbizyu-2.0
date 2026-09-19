@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serbizyu 2.0 · Agent Today</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      --brand-navy: #0F2F58;
+      --brand-yellow: #FFC244;
+      --brand-yellow-light: #FEF8E7;
+      --brand-yellow-dark: #D97706;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+      --ink-subtle: #94a3b8;
+
+      --canvas: #F8FAFC;
+      --surface: #FFFFFF;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(10, 87, 74, 0.05);
+      --shadow-md: 0 4px 14px rgba(10, 87, 74, 0.08);
+      --shadow-dock: 0 -4px 20px rgba(18, 32, 28, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0D1B1E;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    /* Desktop Context Strip */
+    .studio-context-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: #A4B8B0;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .meta-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .meta-row-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; width: 50px; }
+    .meta-tag-btn {
+      padding: 3px 9px; border-radius: var(--radius-pill);
+      font-size: 10px; font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: transparent; color: #A4B8B0;
+      cursor: pointer; transition: all 0.15s ease; white-space: nowrap;
+    }
+    .meta-tag-btn.active {
+      background: #0D715F; color: #FFFFFF;
+      border-color: #0D715F; box-shadow: 0 2px 8px rgba(13, 113, 95, 0.3);
+    }
+
+    /* Phone Shell */
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: var(--canvas); }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    /* Status Bar */
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+    .notch-island {
+      width: 110px;
+      height: 25px;
+      background: #000000;
+      border-radius: var(--radius-pill);
+    }
+
+    /* Topbar */
+    .agent-topbar {
+      height: 52px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .circle-nav-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .topbar-center-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--brand-navy);
+    }
+    .tagudin-badge {
+      font-size: 9.5px;
+      font-weight: 800;
+      background: #EBF2FA;
+      color: #0F2F58;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+    }
+
+    /* Scroll Body */
+    .agent-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .agent-scroll-body::-webkit-scrollbar { display: none; }
+
+    /* Hero Summary Card */
+    .agent-hero-card {
+      background: #06362E;
+      color: #FFFFFF;
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .agent-hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .agent-hero-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .agent-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: #0D715F;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .agent-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #FFFFFF;
+      line-height: 1.2;
+    }
+    .agent-sub {
+      font-size: 10.5px;
+      color: #A4B8B0;
+      margin-top: 1px;
+    }
+    .agent-badge-pill {
+      font-size: 9.5px;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+    }
+
+    /* Metrics Grid */
+    .agent-metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 12.5px;
+      color: #FFFFFF;
+    }
+    .metric-lbl {
+      font-size: 8.5px;
+      color: #94A3B8;
+      margin-top: 2px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+    }
+
+    /* Section Headers */
+    .section-head-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .section-title {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--brand-navy);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn-sub-link {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--forest-600);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Managed Businesses Strip */
+    .owners-h-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin: 0 -16px;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    .owners-h-strip::-webkit-scrollbar { display: none; }
+
+    .owner-select-card {
+      flex: 0 0 155px;
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .owner-select-card.active {
+      border-color: var(--forest-600);
+      background: #F0FDF4;
+      box-shadow: 0 2px 10px rgba(13, 113, 95, 0.08);
+    }
+    .owner-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .owner-icon-box {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .owner-card-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .owner-card-trade {
+      font-size: 9.5px;
+      color: var(--ink-muted);
+    }
+    .owner-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+      padding-top: 4px;
+      border-top: 1px solid var(--line-subtle);
+      font-size: 9.5px;
+      font-weight: 700;
+    }
+
+    /* Active Principal Context Panel */
+    .active-context-panel {
+      background: #FFFFFF;
+      border: 1.5px solid var(--forest-600);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .context-panel-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .context-panel-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .context-panel-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: #E8F7F1;
+      color: #0A574A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .context-panel-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--brand-navy);
+    }
+    .context-panel-phone {
+      font-size: 10px;
+      color: var(--ink-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .context-panel-tag {
+      font-size: 9.5px;
+      font-weight: 800;
+      background: #D1FAE5;
+      color: #065F46;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+    }
+
+    .context-scopes-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin: 8px 0;
+    }
+    .context-scope-tag {
+      font-size: 9px;
+      font-weight: 700;
+      background: #F1F5F9;
+      color: #334155;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+    }
+
+    .context-split-bar {
+      background: #F8FAFC;
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 9.5px;
+      color: var(--ink-soft);
+      margin-bottom: 10px;
+    }
+
+    /* Launchers Grid */
+    .launchers-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .launcher-item-btn {
+      background: #F8FAFC;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 4px;
+      text-align: center;
+      text-decoration: none;
+      color: var(--brand-navy);
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .launcher-item-btn:hover {
+      background: #F0FDF4;
+      border-color: #86EFAC;
+      color: #065F46;
+    }
+
+    /* Task Action Cards */
+    .task-entry-card {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .task-entry-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .task-entry-owner {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--forest-700);
+    }
+    .task-entry-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1.5px 6px;
+      border-radius: var(--radius-pill);
+    }
+    .task-entry-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--brand-navy);
+      line-height: 1.3;
+    }
+    .task-entry-meta {
+      font-size: 10px;
+      color: var(--ink-muted);
+    }
+    .task-entry-action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px solid var(--line-subtle);
+    }
+    .task-btn {
+      font-size: 10px;
+      font-weight: 800;
+      color: #FFFFFF;
+      background: var(--forest-600);
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Bottom Nav Bar */
+    .agent-bottom-bar {
+      height: 54px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+      padding: 0 8px;
+      flex-shrink: 0;
+    }
+    .bottom-bar-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .bottom-bar-item.active {
+      color: var(--forest-600);
+    }
+
+    /* Modal */
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 50;
+      display: none;
+      align-items: flex-end;
+    }
+    .sheet-backdrop.open { display: flex; }
+    .clean-modal-sheet {
+      width: 100%;
+      background: #FFFFFF;
+      border-radius: 24px 24px 0 0;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 18px 24px;
+      animation: slideUp 0.18s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .modal-head-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--brand-navy);
+    }
+    .modal-close-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #F1F5F9;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .input-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 3px;
+      display: block;
+    }
+    .text-field {
+      width: 100%;
+      height: 38px;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-family: inherit;
+      margin-bottom: 10px;
+    }
+    .text-field:focus {
+      outline: none;
+      border-color: var(--forest-600);
+    }
+    .pin-box {
+      background: #FFFDF9;
+      border: 1.5px dashed #D97706;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      margin: 4px 0 12px;
+    }
+    .pin-digits {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 5px;
+      color: #B45309;
+    }
+    .btn-submit-modal {
+      width: 100%;
+      height: 40px;
+      background: var(--forest-600);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Context Banner -->
+  <div class="studio-context-banner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <span style="font-size:13px; font-weight:800; color:#F8FAFC;">Agent Workspace</span>
+      <span style="font-size:10px; color:#64748B; font-weight:600;">Tagudin Central</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-row-label">Owner</span>
+      <button class="meta-tag-btn active" id="meta-owner-jose" onclick="selectOwnerContext('jose')">Mang Jose</button>
+      <button class="meta-tag-btn" id="meta-owner-maria" onclick="selectOwnerContext('maria')">Aling Maria</button>
+      <button class="meta-tag-btn" id="meta-owner-bert" onclick="selectOwnerContext('bert')">Kuya Bert</button>
+      <button class="meta-tag-btn" onclick="openConnectModal()" style="border-color:#D97706; color:#D97706;">+ Pair</button>
+    </div>
+  </div>
+
+  <div class="phone-shell" id="agent-shell">
+
+    <!-- Status Bar -->
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div>5G</div>
+    </div>
+
+    <!-- Topbar -->
+    <header class="agent-topbar">
+      <a href="listing-detail.html" class="circle-nav-btn" aria-label="Back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <div class="topbar-center-title">
+        <span>Agent Today</span>
+        <span class="tagudin-badge">Tagudin</span>
+      </div>
+      <button type="button" class="circle-nav-btn" onclick="openConnectModal()" title="Pair Owner">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </header>
+
+    <!-- Scrollable Body -->
+    <main class="agent-scroll-body">
+
+      <!-- Hero Card: Rosa Navarro -->
+      <section class="agent-hero-card">
+        <div class="agent-hero-top">
+          <div class="agent-hero-profile">
+            <div class="agent-avatar">RN</div>
+            <div>
+              <div class="agent-name">Rosa Navarro</div>
+              <div class="agent-sub">Community Field Agent</div>
+            </div>
+          </div>
+          <span class="agent-badge-pill">Silver Partner</span>
+        </div>
+
+        <div class="agent-metrics-row">
+          <div>
+            <div class="metric-val">₱3,240</div>
+            <div class="metric-lbl">Earnings</div>
+          </div>
+          <div>
+            <div class="metric-val">4</div>
+            <div class="metric-lbl">Owners</div>
+          </div>
+          <div>
+            <div class="metric-val">4.9</div>
+            <div class="metric-lbl">Rating</div>
+          </div>
+          <div>
+            <div class="metric-val">48</div>
+            <div class="metric-lbl">Orders</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Managed Owners Strip -->
+      <section>
+        <div class="section-head-bar">
+          <span class="section-title">Managed Owners</span>
+          <button type="button" class="btn-sub-link" onclick="openConnectModal()">+ Connect</button>
+        </div>
+
+        <div class="owners-h-strip">
+          <!-- Owner 1: Mang Jose (Active) -->
+          <div class="owner-select-card active" id="card-owner-jose" onclick="selectOwnerContext('jose')">
+            <div class="owner-card-top">
+              <div class="owner-icon-box" style="background:#EBF2FA; color:#0F2F58;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+              </div>
+              <span style="font-size:9px; font-weight:800; color:#059669; background:#ECFDF5; padding:1px 5px; border-radius:var(--radius-pill);">Active</span>
+            </div>
+            <div class="owner-card-title">Mang Jose</div>
+            <div class="owner-card-trade">Tricycle Transport</div>
+            <div class="owner-card-footer">
+              <span style="color:#0F2F58;">2 listings</span>
+              <span style="color:#059669; font-family:'JetBrains Mono';">₱920/mo</span>
+            </div>
+          </div>
+
+          <!-- Owner 2: Aling Maria -->
+          <div class="owner-select-card" id="card-owner-maria" onclick="selectOwnerContext('maria')">
+            <div class="owner-card-top">
+              <div class="owner-icon-box" style="background:#FEF3C7; color:#B45309;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg>
+              </div>
+              <span style="font-size:9px; font-weight:800; color:#D97706; background:#FEF3C7; padding:1px 5px; border-radius:var(--radius-pill);">Graduating</span>
+            </div>
+            <div class="owner-card-title">Aling Maria</div>
+            <div class="owner-card-trade">Sari-Sari Store</div>
+            <div class="owner-card-footer">
+              <span style="color:#0F2F58;">12 items</span>
+              <span style="color:#059669; font-family:'JetBrains Mono';">₱1,400/mo</span>
+            </div>
+          </div>
+
+          <!-- Owner 3: Kuya Bert -->
+          <div class="owner-select-card" id="card-owner-bert" onclick="selectOwnerContext('bert')">
+            <div class="owner-card-top">
+              <div class="owner-icon-box" style="background:#E0F2FE; color:#0369A1;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              </div>
+              <span style="font-size:9px; font-weight:800; color:#0284C7; background:#E0F2FE; padding:1px 5px; border-radius:var(--radius-pill);">Active</span>
+            </div>
+            <div class="owner-card-title">Kuya Bert</div>
+            <div class="owner-card-trade">Plumbing Labor</div>
+            <div class="owner-card-footer">
+              <span style="color:#0F2F58;">1 listing</span>
+              <span style="color:#059669; font-family:'JetBrains Mono';">₱350/mo</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Active Principal Context Panel -->
+      <section class="active-context-panel">
+        <div class="context-panel-top">
+          <div class="context-panel-left">
+            <div class="context-panel-icon" id="current-principal-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+            </div>
+            <div>
+              <div class="context-panel-title" id="current-principal-name">Mang Jose's Tricycle Services</div>
+              <div class="context-panel-phone" id="current-principal-phone">0917-555-1234 · Poblacion East</div>
+            </div>
+          </div>
+          <span class="context-panel-tag">Active Grant</span>
+        </div>
+
+        <div class="context-scopes-row" id="current-principal-scopes">
+          <span class="context-scope-tag">Create Listings</span>
+          <span class="context-scope-tag">Coordinate Deals</span>
+          <span class="context-scope-tag">Verify Handoffs</span>
+        </div>
+
+        <div class="context-split-bar">
+          <span>Split: <strong>75% Owner</strong> · 10% Agent · 15% Platform</span>
+          <span style="font-weight:700; color:#0D715F;">Exp: Oct 26</span>
+        </div>
+
+        <!-- Launchers Grid -->
+        <div class="launchers-grid">
+          <a href="listing-service-editor.html?owner=mang-jose" id="launcher-service-link" class="launcher-item-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            <span>+ Service</span>
+          </a>
+          <a href="listing-product-editor.html?owner=mang-jose" id="launcher-product-link" class="launcher-item-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+            <span>+ Product</span>
+          </a>
+          <a href="request-service-builder.html?owner=mang-jose" id="launcher-request-link" class="launcher-item-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>+ Request</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Action Queue Tasks -->
+      <section>
+        <div class="section-head-bar">
+          <span class="section-title">Action Queue</span>
+          <span style="font-size:10px; font-weight:700; color:#64748B;">3 Pending</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <!-- Task 1: Draft Needs Photo -->
+          <article class="task-entry-card">
+            <div class="task-entry-top">
+              <span class="task-entry-owner">Mang Jose's Tricycle</span>
+              <span class="task-entry-badge" style="background:#FEF3C7; color:#92400E;">Photo Needed</span>
+            </div>
+            <div class="task-entry-title">Tricycle Route · Tagudin to Bangar</div>
+            <div class="task-entry-meta">Vehicle franchise photo needed before publishing</div>
+            <div class="task-entry-action-row">
+              <span style="font-size:10px; color:#64748B;">Active scope</span>
+              <a href="listing-service-editor.html?owner=mang-jose&step=1" class="task-btn">Finish Draft</a>
+            </div>
+          </article>
+
+          <!-- Task 2: Dual-Confirmation -->
+          <article class="task-entry-card">
+            <div class="task-entry-top">
+              <span class="task-entry-owner">Kuya Bert's Plumbing</span>
+              <span class="task-entry-badge" style="background:#E0F2FE; color:#0369A1;">Handoff Sign-off</span>
+            </div>
+            <div class="task-entry-title">Order #204 · Drain Declogging</div>
+            <div class="task-entry-meta">Cash handoff completed on site · ₱350.00</div>
+            <div class="task-entry-action-row">
+              <span style="font-size:10px; color:#059669; font-weight:700;">Direct payout</span>
+              <a href="listing-detail.html" class="task-btn" style="background:#0284C7;">Verify Sign-Off</a>
+            </div>
+          </article>
+
+          <!-- Task 3: Grant Renewal -->
+          <article class="task-entry-card">
+            <div class="task-entry-top">
+              <span class="task-entry-owner">Aling Maria's Sari-Sari</span>
+              <span class="task-entry-badge" style="background:#F3E8FF; color:#6B21A8;">Renewal</span>
+            </div>
+            <div class="task-entry-title">Delegation Grant Renewal</div>
+            <div class="task-entry-meta">90-day grant renewal · Graduation bonus eligible</div>
+            <div class="task-entry-action-row">
+              <span style="font-size:10px; color:#6B21A8; font-weight:700;">Bonus: ₱2,760</span>
+              <button type="button" onclick="openConnectModal()" class="task-btn" style="background:#7C3AED;">Pair PIN</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Nav Bar -->
+    <nav class="agent-bottom-bar">
+      <div class="bottom-bar-item active">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Today</span>
+      </div>
+      <div class="bottom-bar-item" onclick="openConnectModal()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Owners</span>
+      </div>
+      <a href="listing-detail.html" class="bottom-bar-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Market</span>
+      </a>
+    </nav>
+
+    <!-- Slide-Up Modal: Connect Owner -->
+    <div class="sheet-backdrop" id="connect-owner-modal" onclick="closeConnectModal()">
+      <div class="clean-modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-head">
+          <div class="modal-head-title">Pair New Business Owner</div>
+          <button type="button" class="modal-close-icon" onclick="closeConnectModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+          </button>
+        </div>
+
+        <label class="input-label">Owner Name</label>
+        <input type="text" class="text-field" id="new-owner-name" placeholder="e.g. Mang Carding">
+
+        <label class="input-label">Mobile Number</label>
+        <input type="text" class="text-field" id="new-owner-phone" placeholder="09XX-XXX-XXXX">
+
+        <label class="input-label">Business Name &amp; Trade</label>
+        <input type="text" class="text-field" id="new-owner-biz" placeholder="e.g. Carding Welding">
+
+        <label class="input-label">Face-to-Face Pairing PIN</label>
+        <div class="pin-box">
+          <div style="font-size:10px; color:#92400E; font-weight:700; margin-bottom:2px;">Confirm 4-digit code with owner:</div>
+          <div class="pin-digits">4 8 2 1</div>
+        </div>
+
+        <div style="font-size:10px; color:#64748B; margin-bottom:12px; text-align:center;">
+          Standard Split: <strong>75% Owner</strong> · <strong>10% Agent</strong> · 15% Platform
+        </div>
+
+        <button type="button" class="btn-submit-modal" onclick="confirmNewOwner()">Pair Owner</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const ownerData = {
+      jose: {
+        name: "Mang Jose's Tricycle Services",
+        phone: "0917-555-1234 · Poblacion East",
+        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
+        param: "mang-jose",
+        scopes: ["Create Listings", "Coordinate Deals", "Verify Handoffs"]
+      },
+      maria: {
+        name: "Aling Maria's Sari-Sari Store",
+        phone: "0920-555-5678 · Barangay Libtong",
+        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg>',
+        param: "aling-maria",
+        scopes: ["Create Products", "Update Inventory", "Bundle Deals"]
+      },
+      bert: {
+        name: "Kuya Bert's Plumbing & Repair",
+        phone: "0935-555-9012 · Barangay Bitalag",
+        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+        param: "kuya-bert",
+        scopes: ["Create Services", "Quote Jobs", "Verify Handoffs"]
+      }
+    };
+
+    let activeOwnerKey = 'jose';
+
+    function selectOwnerContext(key) {
+      activeOwnerKey = key;
+      const data = ownerData[key];
+      if (!data) return;
+
+      document.querySelectorAll('.owner-select-card').forEach(el => el.classList.remove('active'));
+      const activeCard = document.getElementById('card-owner-' + key);
+      if (activeCard) activeCard.classList.add('active');
+
+      document.querySelectorAll('.meta-tag-btn').forEach(el => el.classList.remove('active'));
+      const metaBtn = document.getElementById('meta-owner-' + key);
+      if (metaBtn) metaBtn.classList.add('active');
+
+      document.getElementById('current-principal-name').innerText = data.name;
+      document.getElementById('current-principal-phone').innerText = data.phone;
+      document.getElementById('current-principal-icon').innerHTML = data.icon;
+
+      const scopesContainer = document.getElementById('current-principal-scopes');
+      scopesContainer.innerHTML = data.scopes.map(s => `<span class="context-scope-tag">${s}</span>`).join('');
+
+      document.getElementById('launcher-service-link').href = `listing-service-editor.html?owner=${data.param}`;
+      document.getElementById('launcher-product-link').href = `listing-product-editor.html?owner=${data.param}`;
+      document.getElementById('launcher-request-link').href = `request-service-builder.html?owner=${data.param}`;
+    }
+
+    function openConnectModal() {
+      document.getElementById('connect-owner-modal').classList.add('open');
+    }
+
+    function closeConnectModal() {
+      document.getElementById('connect-owner-modal').classList.remove('open');
+    }
+
+    function confirmNewOwner() {
+      const name = document.getElementById('new-owner-name').value || "Mang Carding";
+      alert(`Owner "${name}" paired successfully!`);
+      closeConnectModal();
+    }
+  </script>
+</body>
+</html>

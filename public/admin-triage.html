@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>OPS-001 · Operations Triage Queue | Serbizyu 2.0</title>
+  <link rel="stylesheet" href="admin-kit.css">
+</head>
+<body>
+
+<div class="admin-workspace">
+  <!-- Top Navigation & Context Bar -->
+  <header class="admin-top-bar">
+    <div class="brand-badge">
+      <span class="dot"></span>
+      <span>Serbizyu Ops</span>
+      <span style="color: var(--text-muted); font-weight: 500; font-size: 11px;">/ Triage Hub (OPS-001)</span>
+    </div>
+
+    <nav class="admin-nav-links">
+      <a href="admin-ui-kit.html" class="admin-nav-item" data-snd="tap">UI Kit</a>
+      <a href="admin-triage.html" class="admin-nav-item active" data-snd="tap">Triage Queue (OPS-001)</a>
+      <a href="admin-inspector.html" class="admin-nav-item" data-snd="tap">Inspector (OPS-003)</a>
+      <a href="admin-hold-console.html" class="admin-nav-item" data-snd="tap">Hold Console (OPS-005)</a>
+    </nav>
+
+    <div class="top-controls">
+      <button type="button" class="btn-snd-toggle sound-on">
+        <span>🔊</span> Sound: ON
+      </button>
+    </div>
+  </header>
+
+  <!-- Cohort Selector & Workspace Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+        <span class="badge badge-neutral">Screen: OPS-001</span>
+        <span class="badge badge-purple">Actor: Admin / Operator</span>
+      </div>
+      <h1 style="font-size: 24px; font-weight: 800; color: var(--text-pure); letter-spacing: -0.02em;">
+        Operations Triage Queue
+      </h1>
+      <p style="font-size: 13px; color: var(--text-secondary);">
+        Triage operational work with strict cohort isolation. Demo and genuine Tagudin data are never commingled.
+      </p>
+    </div>
+
+    <!-- Cohort Filter (60fps.design glider) -->
+    <div class="cohort-switcher" id="triage-cohort-switcher">
+      <button type="button" class="cohort-chip active" data-snd="switch" data-cohort="genuine">
+        <span>●</span> Genuine Tagudin
+      </button>
+      <button type="button" class="cohort-chip" data-snd="switch" data-cohort="sandbox">
+        <span>🧪</span> Sandbox / Test
+      </button>
+      <button type="button" class="cohort-chip" data-snd="switch" data-cohort="training">
+        <span>🎓</span> Team Training
+      </button>
+    </div>
+  </div>
+
+  <!-- METRIC STAT TILES (Glovo Clarity) -->
+  <div class="metrics-grid">
+    <!-- Active Holds Tile -->
+    <div class="metric-tile" style="border-top: 3px solid var(--hold-amber);">
+      <div class="metric-tile-header">
+        <span class="metric-label">Targeted Holds</span>
+        <span class="badge badge-hold">2 Active</span>
+      </div>
+      <div class="metric-value" id="stat-holds" style="color: var(--hold-amber-light);">02</div>
+      <div class="metric-sub">
+        <span>⏸ 1 Payment · 1 Work Step</span>
+      </div>
+    </div>
+
+    <!-- Open Disputes Tile -->
+    <div class="metric-tile" style="border-top: 3px solid var(--danger-red);">
+      <div class="metric-tile-header">
+        <span class="metric-label">Open Disputes</span>
+        <span class="badge badge-danger">3 Unresolved</span>
+      </div>
+      <div class="metric-value" id="stat-disputes" style="color: var(--danger-red-light);">03</div>
+      <div class="metric-sub">
+        <span>⚖️ 2 Cash Mismatch · 1 Scope</span>
+      </div>
+    </div>
+
+    <!-- Failed Events / Outbox Tile -->
+    <div class="metric-tile" style="border-top: 3px solid var(--purple-brand);">
+      <div class="metric-tile-header">
+        <span class="metric-label">Failed Events</span>
+        <span class="badge badge-purple">1 Dead-Letter</span>
+      </div>
+      <div class="metric-value" id="stat-failed" style="color: #c084fc;">01</div>
+      <div class="metric-sub">
+        <span>⚠️ Outbox retry exhausted</span>
+      </div>
+    </div>
+
+    <!-- Pending ID Verification Tile -->
+    <div class="metric-tile" style="border-top: 3px solid var(--forest-500);">
+      <div class="metric-tile-header">
+        <span class="metric-label">Capability Gates</span>
+        <span class="badge badge-success">4 Pending</span>
+      </div>
+      <div class="metric-value" id="stat-review" style="color: var(--forest-100);">04</div>
+      <div class="metric-sub">
+        <span>🛡 Least-privilege review</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRD-059 TRUTH NOTICE (Zero False Revenue) -->
+  <div class="admin-card" style="background: rgba(10, 87, 74, 0.15); border-color: var(--forest-600); padding: 14px 18px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 20px;">🛡</span>
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: var(--forest-100);">
+            PRD-059 Revenue Integrity Guarantee Active
+          </div>
+          <div style="font-size: 12px; color: var(--text-secondary);">
+            External Cash transactions carry 0% platform commission. 
+            Declared Peer-to-Peer volume is <strong style="color: var(--text-pure);">₱14,250.00</strong>; 
+            Platform Cash Custody is strictly <strong style="color: var(--forest-100);">₱0.00</strong>.
+          </div>
+        </div>
+      </div>
+      <span class="badge badge-success">Audited & Reconciled</span>
+    </div>
+  </div>
+
+  <!-- PRIORITY WORK QUEUE (Interactive List) -->
+  <section class="admin-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+      <div>
+        <h2 style="font-size: 16px; font-weight: 700; color: var(--text-pure);">
+          Priority Operations Queue (<span id="queue-count">4</span> items requiring action)
+        </h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+          Ordered by urgency. Each item deep-links to its isolated aggregate inspector.
+        </p>
+      </div>
+      <button type="button" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;" data-snd="tap" onclick="refreshQueue()">
+        <span>↺</span> Refresh Queue
+      </button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;" id="queue-container">
+      <!-- Item 1: Payment Hold (External Cash Mismatch) -->
+      <div class="admin-card" style="background: var(--card-inset); border-left: 4px solid var(--hold-amber); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge badge-hold">P1 HIGH</span>
+            <span class="font-mono" style="font-size: 12px; font-weight: 700; color: var(--text-pure);">#ORD-2026-09</span>
+            <span style="font-size: 11px; color: var(--text-muted);">· A1 Linear Project (Ceiling Fan)</span>
+          </div>
+          <div style="font-size: 13px; color: var(--text-primary);">
+            <strong>Payment Mismatch Under Hold:</strong> Buyer (@nena_m) reported ₱90 External Cash paid; Provider (@arman_tech) reports ₱0 received.
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted);">
+            Affected Scope: <strong>Payment Obligation #OBL-881 only</strong> · Work progress continues unblocked.
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <a href="admin-inspector.html" class="btn btn-primary" style="font-size: 12px; padding: 7px 14px;" data-snd="tap">
+            Inspect Aggregates →
+          </a>
+          <a href="admin-hold-console.html" class="btn btn-amber" style="font-size: 12px; padding: 7px 12px;" data-snd="warn">
+            Resolve Hold
+          </a>
+        </div>
+      </div>
+
+      <!-- Item 2: Scope Mismatch Dispute -->
+      <div class="admin-card" style="background: var(--card-inset); border-left: 4px solid var(--danger-red); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge badge-danger">P2 MED</span>
+            <span class="font-mono" style="font-size: 12px; font-weight: 700; color: var(--text-pure);">#ORD-2026-04</span>
+            <span style="font-size: 11px; color: var(--text-muted);">· A4 Handoff (Bibingka Order)</span>
+          </div>
+          <div style="font-size: 13px; color: var(--text-primary);">
+            <strong>Handoff Quantity Dispute:</strong> Buyer claimed 18 pieces received vs 24 ordered. Photo evidence uploaded by provider.
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted);">
+            Evidence class: <strong>External Digital Proof</strong> · Awaiting operator mediation.
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <a href="admin-inspector.html" class="btn btn-secondary" style="font-size: 12px; padding: 7px 14px;" data-snd="tap">
+            Inspect Case →
+          </a>
+        </div>
+      </div>
+
+      <!-- Item 3: Failed Outbox Message (Dead-Letter) -->
+      <div class="admin-card" style="background: var(--card-inset); border-left: 4px solid var(--purple-brand); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge badge-purple">P2 MED</span>
+            <span class="font-mono" style="font-size: 12px; font-weight: 700; color: var(--text-pure);">#EVT-0198-a1</span>
+            <span style="font-size: 11px; color: var(--text-muted);">· Outbox SMS Notification</span>
+          </div>
+          <div style="font-size: 13px; color: var(--text-primary);">
+            <strong>Gateway Timeout (504 Gateway Unavailable):</strong> Target: +639178123456. Exhausted 3 attempts.
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted);">
+            Idempotency Key: <span class="font-mono">outbox:sms:order_accepted:0198a1</span> · Safe to retry without duplicate.
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-secondary" style="font-size: 12px; padding: 7px 14px;" data-snd="confirm" onclick="retryEvent(this)">
+            <span>↻</span> Replay Event
+          </button>
+        </div>
+      </div>
+
+      <!-- Item 4: Capability Gate Review -->
+      <div class="admin-card" style="background: var(--card-inset); border-left: 4px solid var(--forest-500); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge badge-success">P3 LOW</span>
+            <span class="font-mono" style="font-size: 12px; font-weight: 700; color: var(--text-pure);">#USR-0042-id</span>
+            <span style="font-size: 11px; color: var(--text-muted);">· Juan Carpentry Works</span>
+          </div>
+          <div style="font-size: 13px; color: var(--text-primary);">
+            <strong>Barangay Endorsement Uploaded:</strong> Requesting A1 Linear Project Capability Profile.
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted);">
+            Privileged ID review · Redacted preview available · Requires attributable reason.
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-secondary" style="font-size: 12px; padding: 7px 14px;" data-snd="tap" onclick="alert('Navigating to OPS-002 Identity Review')">
+            Review Credentials
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sticky Quick Action Dock -->
+  <div class="action-dock">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span class="badge badge-neutral">Status: Live Polling</span>
+      <span style="font-size: 12px; color: var(--text-muted);">4 active cases in Tagudin production lane.</span>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <a href="admin-inspector.html" class="btn btn-primary" data-snd="tap">
+        Open Order Inspector (#ORD-2026-09) →
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="admin-snd.js"></script>
+<script>
+  // Interactive Cohort Switcher with reactive mock stats
+  document.querySelectorAll('#triage-cohort-switcher .cohort-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('#triage-cohort-switcher .cohort-chip').forEach(function(c) {
+        c.classList.remove('active');
+      });
+      chip.classList.add('active');
+
+      var cohort = chip.getAttribute('data-cohort');
+      if (cohort === 'sandbox') {
+        document.getElementById('stat-holds').textContent = '00';
+        document.getElementById('stat-disputes').textContent = '01';
+        document.getElementById('stat-failed').textContent = '00';
+        document.getElementById('stat-review').textContent = '01';
+        document.getElementById('queue-count').textContent = '2';
+      } else if (cohort === 'training') {
+        document.getElementById('stat-holds').textContent = '01';
+        document.getElementById('stat-disputes').textContent = '00';
+        document.getElementById('stat-failed').textContent = '00';
+        document.getElementById('stat-review').textContent = '00';
+        document.getElementById('queue-count').textContent = '1';
+      } else {
+        document.getElementById('stat-holds').textContent = '02';
+        document.getElementById('stat-disputes').textContent = '03';
+        document.getElementById('stat-failed').textContent = '01';
+        document.getElementById('stat-review').textContent = '04';
+        document.getElementById('queue-count').textContent = '4';
+      }
+    });
+  });
+
+  function retryEvent(btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Replaying...';
+    setTimeout(function() {
+      btn.innerHTML = '<span>✓</span> Replayed';
+      btn.style.color = 'var(--success-green-light)';
+    }, 600);
+  }
+
+  function refreshQueue() {
+    var container = document.getElementById('queue-container');
+    container.style.opacity = '0.5';
+    setTimeout(function() {
+      container.style.opacity = '1';
+    }, 250);
+  }
+</script>
+</body>
+</html>

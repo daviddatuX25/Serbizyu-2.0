@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Order Fulfillment Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-brand-navy: #0F2F58;
+      --color-brand-teal: #0D715F;
+      --color-brand-teal-light: #E8F7F1;
+      --color-brand-yellow: #FFC244;
+      --color-ink: #12201C;
+      --color-ink-muted: #64748B;
+      --color-ink-soft: #475569;
+      --color-canvas: #F8F9FA;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-border-subtle: #F1F5F9;
+      --forest-50: #EFFCF6;
+      --forest-100: #C6F7E2;
+      --forest-600: #0D715F;
+      --forest-700: #0A574A;
+      --forest-900: #042E27;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+      --shadow-sm: 0 1px 3px rgba(15, 47, 88, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: #0B132B;
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .studio-context-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #A4B8B0;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .studio-crumb { display: flex; align-items: center; gap: 6px; }
+    .studio-pill-tag {
+      background: rgba(13, 113, 95, 0.2);
+      border: 1px solid rgba(13, 113, 95, 0.4);
+      color: #34D399;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: #F8FAFC;
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: #F8FAFC; }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-ink);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .notch-island {
+      width: 110px;
+      height: 24px;
+      background: #000000;
+      border-radius: 16px;
+      margin: 0 auto;
+    }
+
+    /* Minimal Native Messenger Header */
+    .chat-header-bar {
+      height: 62px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .chat-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .circle-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--color-border);
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-ink);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .circle-btn:active { background: #F1F5F9; }
+    
+    .header-avatar-wrap {
+      position: relative;
+    }
+    .provider-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid var(--color-brand-teal);
+    }
+    .live-status-dot {
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10B981;
+      border: 2px solid #FFFFFF;
+    }
+    .header-meta {
+      display: flex;
+      flex-direction: column;
+    }
+    .header-meta-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--color-brand-navy);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .header-meta-sub {
+      font-size: 11px;
+      color: var(--color-ink-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .header-meta-sub .status-txt {
+      color: #10B981;
+      font-weight: 600;
+    }
+
+    .order-subtle-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--forest-700);
+      background: var(--forest-50);
+      border: 1px solid var(--forest-100);
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s;
+    }
+    .order-subtle-pill:hover { background: var(--forest-100); }
+
+    /* Signature Glovo Wave Organic Asymmetrical Bottom Drawer */
+    .glovo-drawer-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(18, 32, 28, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .glovo-drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .glovo-drawer-sheet {
+      width: 100%;
+      background: #FFFFFF;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -12px 36px rgba(15, 47, 88, 0.22);
+    }
+    .glovo-drawer-overlay.open .glovo-drawer-sheet {
+      transform: translateY(0);
+    }
+    .glovo-wave-cap {
+      width: 100%;
+      height: 34px;
+      margin-bottom: -1px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .drawer-content-box {
+      padding: 6px 18px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .drawer-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .drawer-title-txt {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--color-brand-navy);
+    }
+    .drawer-close-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #F1F5F9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: #64748B;
+    }
+    .drawer-options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .drawer-option-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      width: 100%;
+    }
+    .drawer-option-card:active {
+      background: #EFFCF6;
+      border-color: var(--forest-600);
+    }
+    .option-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .option-text-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .option-title-txt {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--color-ink);
+    }
+    .option-desc-txt {
+      font-size: 10.5px;
+      color: var(--color-ink-muted);
+    }
+    /* Scrollable Chat Message Area */
+    .chat-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 14px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .date-separator {
+      align-self: center;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--color-ink-muted);
+      background: #E2E8F0;
+      padding: 2px 10px;
+      border-radius: var(--radius-pill);
+      margin: 2px 0 6px;
+    }
+
+    /* Impeccable Centered System Badge */
+    .chat-system-pill {
+      align-self: center;
+      background: #F1F5F9;
+      color: #475569;
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin: 4px 0;
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    /* Message Bubbles */
+    .msg-group {
+      display: flex;
+      flex-direction: column;
+      max-width: 82%;
+    }
+    .msg-group.incoming { align-self: flex-start; }
+    .msg-group.outgoing { align-self: flex-end; }
+
+    .msg-bubble {
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 13.5px;
+      line-height: 1.45;
+      position: relative;
+      word-break: break-word;
+    }
+    .incoming .msg-bubble {
+      background: #FFFFFF;
+      color: var(--color-ink);
+      border: 1px solid var(--color-border);
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+    .outgoing .msg-bubble {
+      background: var(--forest-600);
+      color: #FFFFFF;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-time {
+      font-size: 9.5px;
+      color: var(--color-ink-muted);
+      align-self: flex-end;
+      margin-top: 3px;
+      margin-right: 4px;
+    }
+    .outgoing .msg-time {
+      color: rgba(255, 255, 255, 0.75);
+      float: right;
+      margin-top: 4px;
+      margin-left: 8px;
+    }
+
+    /* Photo Evidence Card */
+    .evidence-attachment-card {
+      margin-top: 6px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #E2E8F0;
+      background: #000000;
+    }
+    .evidence-img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      display: block;
+    }
+    .evidence-footer {
+      background: #1E293B;
+      color: #FFFFFF;
+      padding: 6px 10px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .evidence-badge {
+      background: #059669;
+      color: #FFFFFF;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 9px;
+    }
+
+    /* Minimalist Messenger Bottom Dock */
+    .chat-bottom-bar {
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      padding: 10px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-attach {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #F1F5F9;
+      border: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      color: #64748B;
+      transition: background 0.15s;
+    }
+    .btn-attach:active { background: #E2E8F0; }
+    .chat-input-box {
+      flex: 1;
+      height: 40px;
+      background: #F8FAFC;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-pill);
+      padding: 0 16px;
+      font-size: 13px;
+      color: var(--color-ink);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .chat-input-box:focus {
+      border-color: var(--forest-600);
+      background: #FFFFFF;
+    }
+    .btn-send-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--forest-600);
+      color: #FFFFFF;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(13, 113, 95, 0.25);
+    }
+    .btn-send-circle:active { transform: scale(0.96); }
+
+    .escrow-audit-note {
+      text-align: center;
+      font-size: 10px;
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Context Header -->
+  <div class="studio-context-banner">
+    <div class="studio-crumb">
+      <span>Serbizyu Design Kit</span>
+      <span>›</span>
+      <span style="color:#FFF;">Order Fulfillment Chat</span>
+    </div>
+    <span class="studio-pill-tag">1:1 Worker</span>
+  </div>
+
+  <!-- Mobile Screen Container -->
+  <div class="phone-shell">
+    
+    <!-- iOS Dynamic Island Status Bar -->
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div style="font-size: 11px;">5G</div>
+    </div>
+
+    <!-- Active In-Order Top Header (Clean Messenger Style) -->
+    <header class="chat-header-bar">
+      <div class="chat-header-left">
+        <button type="button" class="circle-btn" onclick="goBack()" aria-label="Back to Order" title="Back to Order Details">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="header-avatar-wrap">
+          <img src="https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=120&auto=format&fit=crop&q=80" alt="Kuya Ben" class="provider-avatar">
+          <span class="live-status-dot" title="Technician Online"></span>
+        </div>
+        <div class="header-meta">
+          <div class="header-meta-name">
+            <span>Kuya Ben</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#0D715F"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          </div>
+          <div class="header-meta-sub">
+            <span class="status-txt">Active now</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Header Actions: Call & Order Details -->
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <a href="tel:09175550192" class="circle-btn" style="color: var(--forest-600);" title="Call Kuya Ben">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </a>
+        <a href="order-detail-mobile.html?order=ORD-7721&chain=DC-892" class="circle-btn" title="View Order #ORD-7721 Details">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- Scrollable Messages Area -->
+    <main class="chat-scroll-area" id="chat-scroll">
+      
+      <div class="date-separator">Today · September 17, 2026</div>
+
+      <!-- Bilateral Escrow Minimal Pill -->
+      <div class="chat-system-pill">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Bilateral Escrow Active · ₱350.00 Protected</span>
+      </div>
+
+      <!-- Message 1 (Kuya Ben) -->
+      <div class="msg-group incoming">
+        <div class="msg-bubble">
+          Good afternoon Ma'am Maria! I have arrived at your residence in Tagudin Centro and I'm inspecting the exterior AC compressor unit now.
+        </div>
+        <span class="msg-time">1:15 PM</span>
+      </div>
+
+      <!-- Message 2 (Maria - Buyer) -->
+      <div class="msg-group outgoing">
+        <div class="msg-bubble">
+          Salamat Kuya Ben! Gate is open, please let me know what the diagnostics say.
+          <span class="msg-time">1:17 PM ✓✓</span>
+        </div>
+      </div>
+
+      <!-- Message 3 (Kuya Ben with Evidence) -->
+      <div class="msg-group incoming">
+        <div class="msg-bubble">
+          Found the issue: the run capacitor is bulged at the top terminal and reading 0uF. Needs a fresh 35uF capacitor replacement. Danny Express is sourcing it from Tagudin Hardware now.
+          
+          <div class="evidence-attachment-card">
+            <img src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&auto=format&fit=crop&q=80" alt="Capacitor Diagnostic Photo" class="evidence-img">
+            <div class="evidence-footer">
+              <span>📷 capacitor_diagnostic.jpg</span>
+              <span class="evidence-badge">Verified Evidence</span>
+            </div>
+          </div>
+        </div>
+        <span class="msg-time">1:24 PM</span>
+      </div>
+
+      <!-- Minimal Relay Milestone Pill -->
+      <div class="chat-system-pill">
+        <span>Danny Express en route with part · ETA ~8 mins</span>
+      </div>
+
+      <!-- Message 4 (Maria) -->
+      <div class="msg-group outgoing">
+        <div class="msg-bubble">
+          Kuya Danny just pulled up at the gate with the hardware package!
+          <span class="msg-time">1:38 PM ✓✓</span>
+        </div>
+      </div>
+
+      <!-- Message 5 (Kuya Ben) -->
+      <div class="msg-group incoming">
+        <div class="msg-bubble">
+          Got it! Sourcing part from Danny now. I'll proceed with installation and live discharge test right away.
+        </div>
+        <span class="msg-time">1:39 PM</span>
+      </div>
+
+    </main>
+
+    <!-- Persistent Bottom Bar (Clean Minimalist Dock) -->
+    <footer class="chat-bottom-bar">
+      <div class="input-row">
+        <button type="button" class="btn-attach" onclick="openAttachmentDrawer()" aria-label="Add attachment" title="Share photo, location, or work proof">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <input type="text" class="chat-input-box" id="chat-msg-input" placeholder="Message Kuya Ben..." onkeydown="if(event.key==='Enter') sendMessage()">
+        <button type="button" class="btn-send-circle" onclick="sendMessage()" aria-label="Send Message">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+
+      <div class="escrow-audit-note">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Bilateral escrow secured · Cryptographic audit trail</span>
+      </div>
+    </footer>
+    <!-- Glovo Wave Asymmetrical Drawer for Rich Chat Attachments -->
+    <div class="glovo-drawer-overlay" id="attachment-drawer" onclick="handleDrawerBackdrop(event)">
+      <div class="glovo-drawer-sheet" onclick="event.stopPropagation()">
+        <!-- Signature Glovo Organic Asymmetrical Concave/Convex Wave Cap -->
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+
+        <div class="drawer-content-box">
+          <div class="drawer-header-row">
+            <div>
+              <div class="drawer-title-txt">Share with Kuya Ben</div>
+              <div style="font-size: 11px; color: var(--color-ink-muted);">Order #ORD-7721 · Bilateral Escrow Protected</div>
+            </div>
+            <button type="button" class="drawer-close-circle" onclick="closeAttachmentDrawer()" aria-label="Close">&times;</button>
+          </div>
+
+          <div class="drawer-options-list">
+            <!-- 1. Photo / Video Evidence -->
+            <button type="button" class="drawer-option-card" onclick="attachPhoto()">
+              <div class="option-icon-box" style="background:#EFFCF6; color:#0D715F;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+              <div class="option-text-group">
+                <span class="option-title-txt">Photo / Video Evidence</span>
+                <span class="option-desc-txt">Upload diagnostic, parts or jobsite proof</span>
+              </div>
+              <span style="color:#94A3B8; font-size:16px;">›</span>
+            </button>
+
+            <!-- 2. Location Pin -->
+            <button type="button" class="drawer-option-card" onclick="attachLocation()">
+              <div class="option-icon-box" style="background:#EFF6FF; color:#2563EB;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <div class="option-text-group">
+                <span class="option-title-txt">Share Job Site Gate Pin</span>
+                <span class="option-desc-txt">Pin exact house gate or landmark in Tagudin</span>
+              </div>
+              <span style="color:#94A3B8; font-size:16px;">›</span>
+            </button>
+
+            <!-- 3. Work Contract Checklist -->
+            <button type="button" class="drawer-option-card" onclick="viewCheckpoints()">
+              <div class="option-icon-box" style="background:#FEF3C7; color:#D97706;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div class="option-text-group">
+                <span class="option-title-txt">View Work Checkpoints</span>
+                <span class="option-desc-txt">4-stage contract: Triage → Parts → Install → Test</span>
+              </div>
+              <span style="color:#94A3B8; font-size:16px;">›</span>
+            </button>
+
+            <!-- 4. Raise Hold / Support -->
+            <button type="button" class="drawer-option-card" onclick="raiseIssue()">
+              <div class="option-icon-box" style="background:#FEE2E2; color:#DC2626;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="option-text-group">
+                <span class="option-title-txt">Administrative Hold / Support</span>
+                <span class="option-desc-txt">Hold escrow payout pending dispute review</span>
+              </div>
+              <span style="color:#94A3B8; font-size:16px;">›</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function goBack() {
+      const params = new URLSearchParams(window.location.search);
+      const chain = params.get('chain') || 'DC-892';
+      const order = params.get('order') || 'ORD-7721';
+      window.location.href = `order-detail-mobile.html?order=${order}&chain=${chain}`;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chat-msg-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const container = document.getElementById('chat-scroll');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg-group outgoing';
+      msgDiv.innerHTML = `
+        <div class="msg-bubble">
+          ${escapeHtml(text)}
+          <span class="msg-time">Just now ✓</span>
+        </div>
+      `;
+      container.appendChild(msgDiv);
+      input.value = '';
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function openAttachmentDrawer() {
+      document.getElementById('attachment-drawer').classList.add('open');
+    }
+
+    function closeAttachmentDrawer() {
+      document.getElementById('attachment-drawer').classList.remove('open');
+    }
+
+    function handleDrawerBackdrop(e) {
+      if (e.target.id === 'attachment-drawer') {
+        closeAttachmentDrawer();
+      }
+    }
+
+    function attachPhoto() {
+      closeAttachmentDrawer();
+      const container = document.getElementById('chat-scroll');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg-group outgoing';
+      msgDiv.innerHTML = `
+        <div class="msg-bubble">
+          Shared photo from jobsite:
+          <div class="evidence-attachment-card" style="margin-top:6px;">
+            <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80" alt="Jobsite Photo" class="evidence-img">
+            <div class="evidence-footer">
+              <span>📷 compressor_intake_clear.jpg</span>
+              <span class="evidence-badge">Work Evidence</span>
+            </div>
+          </div>
+          <span class="msg-time">Just now ✓</span>
+        </div>
+      `;
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function attachLocation() {
+      closeAttachmentDrawer();
+      const container = document.getElementById('chat-scroll');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg-group outgoing';
+      msgDiv.innerHTML = `
+        <div class="msg-bubble">
+          <div style="display:flex; align-items:center; gap:6px; font-weight:700; margin-bottom:2px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Tagudin Job Site Pin</span>
+          </div>
+          <div style="font-size:12px; opacity:0.9;">Poblacion Centro · Near St. Augustine Parish (Blue Gate)</div>
+          <span class="msg-time">Just now ✓</span>
+        </div>
+      `;
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function viewCheckpoints() {
+      closeAttachmentDrawer();
+      window.location.href = 'order-detail-mobile.html?order=ORD-7721&chain=DC-892';
+    }
+
+    function raiseIssue() {
+      closeAttachmentDrawer();
+      alert('Support & Escrow Protection:\n\nOrder #ORD-7721 is held in bilateral escrow. You may pause payout or contact the local Tagudin admin support desk.');
+    }
+  </script>
+</body>
+</html>

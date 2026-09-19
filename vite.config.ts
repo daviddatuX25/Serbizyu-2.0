@@ -16,6 +16,10 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    server: {
+        host: '0.0.0.0',
+        allowedHosts: ['.ngrok-free.app'],
+    },
     resolve: {
         alias: {
             '@': path.resolve(root, 'resources/js'),

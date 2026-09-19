@@ -34,6 +34,7 @@ function t2CapacityListingFixture(): array
         'description' => 'Used for T2 capacity reservation edge cases.',
         'category_code' => 'food',
         'listing_type' => 'product',
+        'work_shape' => 'A4',
     ], $correlationId);
 
     $version = DB::table('listing_versions')->where('listing_id', $created['id'])->first();

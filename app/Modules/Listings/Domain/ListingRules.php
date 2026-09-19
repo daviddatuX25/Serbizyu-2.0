@@ -31,6 +31,19 @@ final class ListingRules
             $errors['listing_type'] = ['Listing type must be service or product.'];
         }
 
+        if (! array_key_exists('work_shape', $payload) || $payload['work_shape'] === null || trim((string) $payload['work_shape']) === '') {
+            $errors['work_shape'] = ['Choose a canonical work shape (A1, A3, A4, or A9).'];
+        } else {
+            $workShape = trim((string) $payload['work_shape']);
+            if (! in_array($workShape, ['A1', 'A3', 'A4', 'A9'], true)) {
+                $errors['work_shape'] = ['Choose a canonical work shape (A1, A3, A4, or A9).'];
+            } elseif ($listingType === 'service' && ! in_array($workShape, ['A1', 'A3', 'A9'], true)) {
+                $errors['work_shape'] = ['Service listings support only A1, A3, or A9 work shapes.'];
+            } elseif ($listingType === 'product' && ! in_array($workShape, ['A4', 'A9'], true)) {
+                $errors['work_shape'] = ['Product listings support only A4 or A9 work shapes.'];
+            }
+        }
+
         return $errors;
     }
 

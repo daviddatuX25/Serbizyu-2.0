@@ -84,6 +84,8 @@ A pabili or purchase-on-behalf example does not create a new payment lane. Its i
 - The checkout states who receives the money, whether Serbizyu holds it, what fees apply, what evidence is required, and what remedies exist.
 - Selection is recorded with the configuration version and consent timestamp.
 - A lane cannot silently change after confirmation.
+- **Provider Capability & Unbanked Worker Guard:** The available lanes for an order are strictly bounded by the intersection of listing availability, provider payout capabilities, and cohort pilot gates. A buyer can NEVER unilaterally select or switch to a digital escrow lane if the provider has not activated a digital payout rail or is an unbanked cash-only worker.
+- **Human Agent Network Delegation:** An unbanked owner (L0 feature-phone user) may only receive digital payouts via a local Barangay Agent if an audited `delegated_payout_consent` is explicitly on record. Otherwise, the order must remain `external_cash`.
 
 ### 5.2 Payment and fulfillment are separate
 
@@ -103,6 +105,7 @@ The payment state and work/fulfillment state advance independently and are joine
 - Before a payment is reported or initiated, the parties may cancel the obligation and create a replacement obligation using another lane.
 - After payment evidence or a gateway event exists, the original obligation remains immutable. Any change uses a superseding, cancellation, refund, or correction event.
 - No uploaded screenshot or manual edit may convert External Digital Proof into Direct Digital or Tiwala.
+- **Doorstep Mid-Flight Switching:** When switching from Cash to Digital Escrow before payment is reported, the system transitions the predecessor obligation to `superseded` and creates a successor obligation under `tiwala_protected_digital`. The physical cash collection action is temporarily locked on the worker's device while the digital checkout is active. If digital captures, cash is permanently disabled; if cash was already mutually confirmed, late digital captures are placed on operational hold for automated refund.
 
 ### 5.5 Receipts and records
 

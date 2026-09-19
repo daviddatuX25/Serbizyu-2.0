@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Payment Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+    :root {
+      --forest-50: #E8F7F1; --forest-100: #C6EBD9; --forest-600: #0D715F;
+      --forest-700: #0A574A; --forest-900: #06362F;
+      --color-brand-navy: #0F2F58; --color-ink: #1E293B; --color-ink-muted: #64748B;
+      --color-border: #E2E8F0; --color-surface: #FFFFFF;
+      --radius-sm: 8px; --radius-md: 14px; --radius-lg: 18px; --radius-pill: 999px;
+      --shadow-sm: 0 2px 8px rgba(15, 47, 88, 0.06);
+      --shadow-md: 0 4px 16px rgba(15, 47, 88, 0.1);
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0C1B2E; color: #CBD5E1;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh; padding: 10px 12px 20px;
+    }
+
+    /* ═══ Meta Control Bar ═══ */
+    .studio-context-banner {
+      width: 100%; max-width: 780px; display: flex; flex-direction: column;
+      gap: 6px; padding: 10px 14px 12px; margin-bottom: 10px;
+      background: rgba(15, 47, 88, 0.35); border: 1px solid rgba(100, 116, 139, 0.2);
+      border-radius: 12px; backdrop-filter: blur(8px);
+    }
+    .meta-row-label {
+      font-size: 10px; font-weight: 700; color: #94A3B8;
+      white-space: nowrap; margin-right: 6px; min-width: 70px;
+    }
+    .meta-row { display: flex; align-items: center; gap: 4px; overflow-x: auto; padding-bottom: 2px; }
+    .meta-tag-btn {
+      height: 26px; padding: 0 10px; border-radius: var(--radius-pill);
+      border: 1px solid rgba(100, 116, 139, 0.25); background: rgba(15, 47, 88, 0.4);
+      color: #94A3B8; font-size: 11px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .meta-tag-btn:hover { background: rgba(13, 113, 95, 0.15); color: #CBD5E1; }
+    .meta-tag-btn.active {
+      background: var(--forest-600); color: #FFFFFF;
+      border-color: var(--forest-600); box-shadow: 0 2px 8px rgba(13, 113, 95, 0.35);
+    }
+
+    /* ═══ Phone Shell ═══ */
+    .phone-shell {
+      width: 390px; max-width: 100%; min-height: 760px;
+      background: #F8FAFC; border-radius: 42px; overflow: hidden;
+      border: 3px solid #1E293B; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+      display: flex; flex-direction: column; position: relative;
+    }
+    .phone-status-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 28px 4px; background: #FFFFFF;
+      font-size: 13px; font-weight: 700; color: var(--color-ink);
+    }
+    .notch-island {
+      width: 120px; height: 28px; background: #1E293B;
+      border-radius: 20px; margin: 0 auto;
+    }
+
+    /* Header */
+    .order-header-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 14px 8px; background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .circle-btn {
+      width: 34px; height: 34px; border-radius: 50%; border: none;
+      background: #F1F5F9; display: flex; align-items: center;
+      justify-content: center; cursor: pointer; color: var(--color-ink);
+    }
+    .header-center-info { text-align: center; flex: 1; }
+    .header-order-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--color-brand-navy); display: block; }
+    .header-order-title { font-size: 10.5px; color: var(--color-ink-muted); font-weight: 600; }
+
+    /* Scrollable Body */
+    .order-scroll-body {
+      flex: 1; overflow-y: auto; padding: 10px 14px 90px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    /* ═══ Feature Card ═══ */
+    .order-feature-card {
+      background: linear-gradient(135deg, #0F2F58 0%, #0A4D41 100%);
+      border-radius: var(--radius-lg); padding: 14px 16px;
+      color: #FFFFFF; position: relative; overflow: hidden;
+      box-shadow: 0 6px 20px rgba(15, 47, 88, 0.16);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .order-feature-card.is-settled {
+      background: linear-gradient(135deg, #065F46 0%, #047857 100%);
+    }
+    .order-feature-card.is-mismatch {
+      background: linear-gradient(135deg, #92400E 0%, #B45309 100%);
+    }
+    .feature-card-glow {
+      position: absolute; top: -30px; right: -30px;
+      width: 140px; height: 140px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.45) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .feature-title-txt { font-size: 16px; font-weight: 800; color: #FFFFFF; line-height: 1.25; margin: 0; }
+    .feature-timing-row {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; color: #A7F3D0; font-weight: 600; margin-top: 2px;
+    }
+    .collage-circle-img {
+      width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+      border: 2px solid #FFFFFF; box-shadow: 0 2px 6px rgba(15, 47, 88, 0.12);
+    }
+    .tri-circle-collage { display: flex; align-items: center; }
+
+    /* ═══ Section Cards ═══ */
+    .detail-section-card {
+      background: #FFFFFF; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-head-title {
+      font-size: 11px; font-weight: 800; color: var(--forest-900);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* ═══ Cash Settlement Ceremony ═══ */
+    .settlement-parties {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; padding: 8px 0 4px;
+    }
+    .party-node {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .party-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #FFFFFF;
+    }
+    .party-avatar.buyer { background: var(--color-brand-navy); }
+    .party-avatar.provider { background: var(--forest-600); }
+    .party-name { font-size: 11px; font-weight: 700; color: var(--color-ink); }
+    .party-role { font-size: 10px; color: var(--color-ink-muted); }
+    .party-status-chip {
+      font-size: 9.5px; font-weight: 800; padding: 2px 7px;
+      border-radius: var(--radius-pill); margin-top: 2px;
+    }
+    .party-status-chip.confirmed { background: #DCFCE7; color: #166534; }
+    .party-status-chip.waiting { background: #FEF3C7; color: #92400E; }
+    .party-status-chip.mismatch { background: #FEE2E2; color: #991B1B; }
+
+    .flow-arrow {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .flow-arrow svg { color: var(--color-ink-muted); }
+    .flow-arrow-label { font-size: 9px; color: var(--color-ink-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+
+    .settlement-amount-block {
+      text-align: center; padding: 6px 0;
+    }
+    .settlement-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 32px; font-weight: 700; color: var(--color-brand-navy);
+      letter-spacing: -0.02em;
+    }
+    .settlement-amount-label {
+      font-size: 11px; color: var(--color-ink-muted); font-weight: 600; margin-top: 2px;
+    }
+
+    .settlement-disclaimer {
+      font-size: 10.5px; color: var(--color-ink-muted); line-height: 1.45;
+      text-align: center; padding: 4px 8px;
+    }
+
+    /* Waiting Dots Animation */
+    .waiting-indicator {
+      display: flex; align-items: center; justify-content: center;
+      gap: 5px; padding: 8px 0;
+    }
+    .waiting-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--forest-600);
+      animation: waitPulse 1.4s ease-in-out infinite;
+    }
+    .waiting-dot:nth-child(2) { animation-delay: 0.2s; }
+    .waiting-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes waitPulse {
+      0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1.1); }
+    }
+    .waiting-text { font-size: 11.5px; font-weight: 600; color: var(--forest-600); }
+
+    /* ═══ Completion Summary ═══ */
+    .completion-note {
+      font-size: 12.5px; color: var(--color-ink); line-height: 1.55;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      background: #F8FAFC; border: 1px solid var(--color-border);
+    }
+    .completion-note strong {
+      display: block; font-size: 11px; font-weight: 800;
+      color: var(--forest-600); margin-bottom: 3px;
+    }
+    .attachment-strip {
+      display: flex; gap: 6px; overflow-x: auto;
+      padding-bottom: 2px; scrollbar-width: none;
+    }
+    .attachment-strip::-webkit-scrollbar { display: none; }
+    .attachment-chip {
+      flex-shrink: 0; height: 60px; width: 60px;
+      border-radius: var(--radius-sm); object-fit: cover;
+      border: 1px solid var(--color-border);
+    }
+    .attachment-chip.is-file {
+      width: auto; padding: 0 12px;
+      background: #F1F5F9; display: flex; align-items: center;
+      gap: 5px; font-size: 10.5px; font-weight: 700;
+      color: var(--color-ink-muted); cursor: pointer;
+    }
+    .attachment-chip-pill {
+      height: 32px; padding: 0 10px; border-radius: var(--radius-sm);
+      background: #F1F5F9; border: 1px solid var(--color-border);
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 700; color: var(--color-ink-muted);
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .completion-timeline {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: var(--color-ink-muted); font-weight: 600;
+    }
+    .completion-timeline .ct-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #10B981; flex-shrink: 0;
+    }
+
+    /* ═══ GCash Proof Upload ═══ */
+    .proof-upload-zone {
+      border: 2px dashed var(--color-border); border-radius: var(--radius-md);
+      padding: 20px; text-align: center; cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .proof-upload-zone:hover { border-color: var(--forest-600); }
+    .proof-upload-icon { color: var(--color-ink-muted); margin-bottom: 6px; }
+    .proof-upload-text { font-size: 12px; font-weight: 700; color: var(--color-ink); }
+    .proof-upload-hint { font-size: 10.5px; color: var(--color-ink-muted); margin-top: 2px; }
+
+    .proof-field {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .proof-field label {
+      font-size: 10.5px; font-weight: 700; color: var(--color-ink-muted);
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .proof-field input {
+      height: 38px; border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm); padding: 0 12px;
+      font-size: 13px; font-family: 'JetBrains Mono', monospace;
+      font-weight: 600; color: var(--color-ink);
+      outline: none; transition: border-color 0.15s;
+    }
+    .proof-field input:focus { border-color: var(--forest-600); }
+
+    .not-tiwala-banner {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      background: #FFF7ED; border: 1px solid #FED7AA;
+    }
+    .not-tiwala-banner svg { flex-shrink: 0; color: #D97706; margin-top: 1px; }
+    .not-tiwala-banner .ntb-text { font-size: 10.5px; color: #92400E; line-height: 1.4; }
+    .not-tiwala-banner .ntb-title { font-weight: 800; display: block; margin-bottom: 1px; }
+
+    /* ═══ Receipt Summary ═══ */
+    .receipt-line {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; padding: 4px 0;
+    }
+    .receipt-line .rl-label { color: var(--color-ink-muted); font-weight: 600; }
+    .receipt-line .rl-value { color: var(--color-ink); font-weight: 700; }
+    .receipt-divider { height: 1px; background: var(--color-border); margin: 4px 0; }
+    .receipt-total {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 14px; font-weight: 800; padding: 4px 0;
+    }
+    .receipt-total .rl-label { color: var(--color-ink); }
+    .receipt-total .rl-value { color: var(--forest-600); font-family: 'JetBrains Mono', monospace; }
+
+    .confirmed-stamp {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 14px; border-radius: var(--radius-sm);
+      background: #F0FDF4; border: 1px solid #BBF7D0;
+      font-size: 11.5px; font-weight: 800; color: #166534;
+    }
+
+    /* ═══ Mismatch Card ═══ */
+    .mismatch-card {
+      background: #FEF2F2; border: 1px solid #FECACA;
+      border-radius: var(--radius-md); padding: 14px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .mismatch-amounts {
+      display: flex; justify-content: space-around; text-align: center;
+    }
+    .mismatch-side { display: flex; flex-direction: column; gap: 2px; }
+    .mismatch-side .ms-name { font-size: 10.5px; font-weight: 700; color: #991B1B; }
+    .mismatch-side .ms-amount { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: #B91C1C; }
+    .mismatch-diff {
+      text-align: center; font-size: 11px; font-weight: 800; color: #DC2626;
+      padding: 4px 0;
+    }
+
+    /* ═══ Dispute & Administrative Hold ═══ */
+    .dispute-banner-card {
+      background: #FFF1F2; border: 1.5px solid #FECDD3;
+      border-radius: var(--radius-md); padding: 14px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .dispute-badge-row {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .dispute-status-pill {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.04em; padding: 2px 8px; border-radius: var(--radius-pill);
+      background: #FFE4E6; color: #BE123C;
+    }
+    .dispute-case-id {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      font-weight: 700; color: #9F1239;
+    }
+    .dispute-main-title {
+      font-size: 14px; font-weight: 800; color: #881337; margin-top: 2px;
+    }
+    .dispute-meta-text {
+      font-size: 11px; color: #9F1239; line-height: 1.45;
+    }
+
+    /* ═══ Chip Selector & Drawer Form ═══ */
+    .chip-selector-row {
+      display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 6px;
+    }
+    .drawer-chip {
+      padding: 5px 10px; border-radius: var(--radius-pill);
+      font-size: 11px; font-weight: 700; color: var(--color-ink-muted);
+      background: #F1F5F9; border: 1px solid var(--color-border);
+      cursor: pointer; transition: all 0.15s ease;
+    }
+    .drawer-chip.selected {
+      background: #EFFCF6; border-color: var(--forest-600);
+      color: var(--forest-700); font-weight: 800;
+    }
+    .drawer-textarea {
+      width: 100%; border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm); padding: 8px 10px;
+      font-family: inherit; font-size: 12px; color: var(--color-ink);
+      resize: none; outline: none; transition: border-color 0.15s;
+    }
+    .drawer-textarea:focus { border-color: var(--forest-600); }
+    .drawer-checkbox-row {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 11px; color: var(--color-ink-soft); cursor: pointer;
+      line-height: 1.35; padding: 4px 0;
+    }
+    .drawer-checkbox-row input { margin-top: 2px; }
+    /* ═══ Action Buttons ═══ */
+    .btn-primary-action {
+      width: 100%; height: 46px; border-radius: var(--radius-pill);
+      border: none; font-size: 13.5px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 8px; transition: all 0.15s;
+    }
+    .btn-primary-action.green {
+      background: var(--forest-600); color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(13, 113, 95, 0.3);
+    }
+    .btn-primary-action.green:hover { background: var(--forest-700); }
+    .btn-primary-action.navy {
+      background: var(--color-brand-navy); color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(15, 47, 88, 0.25);
+    }
+    .btn-primary-action.outline {
+      background: #FFFFFF; color: var(--color-brand-navy);
+      border: 1.5px solid var(--color-border);
+      box-shadow: none;
+    }
+    .btn-primary-action.danger {
+      background: #FEF2F2; color: #DC2626;
+      border: 1px solid #FECACA; box-shadow: none;
+    }
+    .btn-text-action {
+      background: none; border: none; font-size: 12px;
+      font-weight: 700; color: var(--color-ink-muted);
+      cursor: pointer; padding: 8px 0; text-align: center;
+      width: 100%; display: flex; align-items: center;
+      justify-content: center; gap: 4px;
+    }
+    .btn-text-action:hover { color: var(--color-ink); }
+
+    /* ═══ Bottom Dock ═══ */
+    .fixed-order-bottom-dock {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: #FFFFFF; border-top: 1px solid var(--color-border);
+      padding: 10px 16px 14px; display: flex; flex-direction: column;
+      gap: 6px; z-index: 10;
+    }
+    .dock-btn-row { display: flex; gap: 8px; width: 100%; }
+    .btn-dock-primary {
+      height: 44px; border-radius: var(--radius-pill);
+      border: none; font-size: 13px; font-weight: 800;
+      cursor: pointer; display: inline-flex; align-items: center;
+      justify-content: center; gap: 7px; transition: all 0.15s;
+      background: var(--forest-600); color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(13, 113, 95, 0.25);
+    }
+    .btn-dock-primary:hover { background: var(--forest-700); }
+    .btn-dock-secondary {
+      height: 44px; border-radius: var(--radius-pill);
+      border: 1.5px solid var(--color-border); background: #FFFFFF;
+      font-size: 12.5px; font-weight: 700; color: var(--color-brand-navy);
+      cursor: pointer; display: inline-flex; align-items: center;
+      justify-content: center; gap: 6px;
+    }
+    .dock-footnote {
+      font-size: 10px; color: var(--color-ink-muted);
+      text-align: center; font-weight: 600;
+    }
+
+    /* ═══ Branded Glovo Wave Organic Bottom Drawer ═══ */
+    .glovo-drawer-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 47, 88, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .glovo-drawer-overlay.open,
+    .glovo-drawer-overlay.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .glovo-drawer-sheet {
+      width: 100%;
+      background: transparent;
+      overflow: visible;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      max-height: 82%;
+    }
+    .glovo-drawer-overlay.open .glovo-drawer-sheet,
+    .glovo-drawer-overlay.is-open .glovo-drawer-sheet {
+      transform: translateY(0);
+    }
+    .glovo-wave-cap {
+      width: 100%;
+      height: 34px;
+      margin-bottom: -1px;
+      display: block;
+      flex-shrink: 0;
+      filter: drop-shadow(0 -6px 14px rgba(15, 47, 88, 0.16));
+    }
+    .drawer-content-box {
+      background: #FFFFFF;
+      padding: 4px 18px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .drawer-header-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .drawer-title-txt { font-size: 16px; font-weight: 800; color: var(--color-ink); }
+    .drawer-close-circle {
+      width: 30px; height: 30px; border-radius: 50%; border: none;
+      background: #F1F5F9; font-size: 16px; color: var(--color-ink-muted);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ═══ Keyframes ═══ */
+    @keyframes livePulseBorder {
+      0% { border-color: var(--forest-600); box-shadow: 0 0 0 0 rgba(13,113,95,0.4); }
+      50% { border-color: #10B981; box-shadow: 0 0 0 4px rgba(16,185,129,0.22); }
+      100% { border-color: var(--forest-600); box-shadow: 0 0 0 0 rgba(13,113,95,0.4); }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ META CONTROL BAR ═══ -->
+  <div class="studio-context-banner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <span style="font-size:13px; font-weight:800; color:#F8FAFC; font-family:Outfit,sans-serif;">Payment Flow</span>
+      <span style="font-size:10px; color:#64748B; font-weight:600;">UX-012 · UX-013 · UX-016</span>
+    </div>
+
+    <div class="meta-row">
+      <span class="meta-row-label">Actor</span>
+      <button class="meta-tag-btn active" onclick="setActor('buyer')">🧑 Buyer (Maria)</button>
+      <button class="meta-tag-btn" onclick="setActor('provider')">🔧 Provider (Kuya Ben)</button>
+    </div>
+    <div class="meta-row">
+      <span class="meta-row-label">Stage</span>
+      <button class="meta-tag-btn active" onclick="setStage('signoff')">Sign-off</button>
+      <button class="meta-tag-btn" onclick="setStage('cash_report')">Cash Report</button>
+      <button class="meta-tag-btn" onclick="setStage('waiting')">Waiting</button>
+      <button class="meta-tag-btn" onclick="setStage('mutual_ack')">Mutual Ack</button>
+      <button class="meta-tag-btn" onclick="setStage('mismatch')">Mismatch</button>
+      <button class="meta-tag-btn" onclick="setStage('gcash_upload')">GCash Proof</button>
+      <button class="meta-tag-btn" onclick="setStage('settled')">Settled</button>
+      <button class="meta-tag-btn" onclick="setStage('disputed')">Dispute (Hold)</button>
+    </div>
+    <div class="meta-row">
+      <span class="meta-row-label">Lane</span>
+      <button class="meta-tag-btn active" onclick="setLane('cash')">💵 External Cash</button>
+      <button class="meta-tag-btn" onclick="setLane('gcash')">📱 GCash P2P</button>
+    </div>
+  </div>
+
+  <!-- ═══ PHONE SHELL ═══ -->
+  <div class="phone-shell">
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div style="font-size: 11px;">5G</div>
+    </div>
+
+    <header class="order-header-bar">
+      <button type="button" class="circle-btn" onclick="window.location.href='order-detail-mobile.html'" aria-label="Back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="header-center-info">
+        <span class="header-order-id">#ORD-7721</span>
+        <span class="header-order-title">Fiesta AC Overhaul</span>
+      </div>
+      <button type="button" class="circle-btn" aria-label="Options">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/><circle cx="5" cy="12" r="1.2"/></svg>
+      </button>
+    </header>
+
+    <main class="order-scroll-body" id="scroll-body">
+      <!-- Populated by renderPage() -->
+    </main>
+
+    <footer class="fixed-order-bottom-dock" id="bottom-dock">
+      <!-- Populated by renderPage() -->
+    </footer>
+
+    <!-- GCash Proof Drawer -->
+    <div class="glovo-drawer-overlay" id="gcash-drawer" onclick="closeGcashDrawer()">
+      <div class="glovo-drawer-sheet" onclick="event.stopPropagation()">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+        <div class="drawer-content-box">
+          <div class="drawer-header-row">
+            <div>
+              <div class="drawer-title-txt">GCash Payment Proof</div>
+              <div style="font-size:11px; color:var(--color-ink-muted);">#ORD-7721 · ₱610</div>
+            </div>
+            <button class="drawer-close-circle" onclick="closeGcashDrawer()">&times;</button>
+          </div>
+
+          <div class="not-tiwala-banner">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div class="ntb-text">
+              <span class="ntb-title">Not protected by Tiwala</span>
+              This is a person-to-person GCash transfer. Serbizyu did not control or verify this payment.
+            </div>
+          </div>
+
+          <div class="proof-field">
+            <label>GCash Reference Number</label>
+            <input type="text" placeholder="e.g. 7821 4490 1123" maxlength="20">
+          </div>
+
+          <div class="proof-field">
+            <label>Amount Sent</label>
+            <input type="text" value="₱610.00" readonly style="background:#F8FAFC; color:var(--forest-600);">
+          </div>
+
+          <div class="proof-upload-zone" onclick="alert('Camera / gallery picker opens here')">
+            <div class="proof-upload-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="proof-upload-text">Upload Screenshot</div>
+            <div class="proof-upload-hint">Tap to select from camera or gallery</div>
+            <div class="proof-upload-hint" style="color:#D97706; font-weight:700; margin-top:4px;">Hide your GCash balance before screenshotting</div>
+          </div>
+
+          <button class="btn-primary-action navy" onclick="closeGcashDrawer(); setStage('waiting');">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            Submit Payment Evidence
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dispute Intake Drawer (UX-018) -->
+    <div class="glovo-drawer-overlay" id="dispute-drawer" onclick="closeDisputeDrawer()">
+      <div class="glovo-drawer-sheet" onclick="event.stopPropagation()">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+
+        <div class="drawer-content-box">
+          <div class="drawer-header-row">
+            <div>
+              <div class="drawer-title-txt" style="color:#DC2626;">File Payment Dispute</div>
+              <div style="font-size: 11px; color: var(--color-ink-muted);">#ORD-7721 · Obligation #OBL-881</div>
+            </div>
+            <button type="button" class="drawer-close-circle" onclick="closeDisputeDrawer()" aria-label="Close">&times;</button>
+          </div>
+
+          <div style="font-size:11px; font-weight:700; color:var(--color-ink);">What happened?</div>
+          <div class="chip-selector-row" id="issue-chips">
+            <span class="drawer-chip selected" onclick="selectChip(this)">Cash amount mismatch</span>
+            <span class="drawer-chip" onclick="selectChip(this)">Payment not received</span>
+            <span class="drawer-chip" onclick="selectChip(this)">Wrong price charged</span>
+            <span class="drawer-chip" onclick="selectChip(this)">Work incomplete</span>
+          </div>
+
+          <div style="font-size:11px; font-weight:700; color:var(--color-ink);">Brief statement</div>
+          <textarea class="drawer-textarea" rows="2" placeholder="Explain the difference...">Buyer stated ₱110 was deducted for unused capacitor; provider claims full ₱610 agreed.</textarea>
+          <div style="font-size:11px; font-weight:700; color:var(--color-ink);">Evidence (optional)</div>
+          <div class="attachment-strip" style="align-items:center;">
+            <div class="attachment-chip-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> receipt.jpg</div>
+            <div class="attachment-chip-pill" style="border-style:dashed; color:var(--forest-600); cursor:pointer;" onclick="alert('Attach additional photo or chat screenshot')">+ Add Evidence</div>
+          </div>
+
+          <label class="drawer-checkbox-row">
+            <input type="checkbox" id="safety-flag" />
+            <span>Involves physical safety, threat, or harassment (priority SLA)</span>
+          </label>
+
+          <div style="font-size:11px; font-weight:700; color:var(--color-ink);">Requested remedy</div>
+          <div class="chip-selector-row" id="remedy-chips">
+            <span class="drawer-chip selected" onclick="selectChip(this)">Mutual Recount</span>
+            <span class="drawer-chip" onclick="selectChip(this)">Adjust Amount</span>
+            <span class="drawer-chip" onclick="selectChip(this)">Admin Mediation</span>
+          </div>
+
+          <button class="btn-primary-action danger" onclick="submitDispute()">
+            Submit Dispute &amp; Place Hold
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentActor = 'buyer';
+    let currentStage = 'signoff';
+    let currentLane = 'cash';
+
+    // Parse URL params for cross-session deep links
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('stage')) currentStage = urlParams.get('stage');
+    if (urlParams.has('actor')) currentActor = urlParams.get('actor');
+    if (urlParams.has('lane')) currentLane = urlParams.get('lane');
+
+    function setActor(a) { currentActor = a; renderPage(); }
+    function setStage(s) {
+      currentStage = s;
+      if (s === 'gcash_upload') currentLane = 'gcash';
+      renderPage();
+    }
+    function setLane(l) { currentLane = l; renderPage(); }
+
+    function openGcashDrawer() { document.getElementById('gcash-drawer').classList.add('is-open'); }
+    function closeGcashDrawer() { document.getElementById('gcash-drawer').classList.remove('is-open'); }
+
+    function updateMetaButtons() {
+      document.querySelectorAll('.meta-row').forEach(row => {
+        row.querySelectorAll('.meta-tag-btn').forEach(btn => btn.classList.remove('active'));
+      });
+      // Actor
+      const actorBtns = document.querySelectorAll('.meta-row')[0].querySelectorAll('.meta-tag-btn');
+      if (currentActor === 'buyer') actorBtns[0].classList.add('active');
+      else actorBtns[1].classList.add('active');
+      // Stage
+      const stageBtns = document.querySelectorAll('.meta-row')[1].querySelectorAll('.meta-tag-btn');
+      const stageMap = { signoff:0, cash_report:1, waiting:2, mutual_ack:3, mismatch:4, gcash_upload:5, settled:6, disputed:7 };
+      stageBtns[stageMap[currentStage]]?.classList.add('active');
+      // Lane
+      const laneBtns = document.querySelectorAll('.meta-row')[2].querySelectorAll('.meta-tag-btn');
+      if (currentLane === 'cash') laneBtns[0].classList.add('active');
+      else laneBtns[1].classList.add('active');
+    }
+
+    // ─── Feature Card ───
+    function renderFeatureCard() {
+      let extraClass = '';
+      let title = 'Fiesta AC Overhaul';
+      let timing = '';
+      let glowColor = 'rgba(16,185,129,0.45)';
+
+      if (currentStage === 'signoff') {
+        timing = 'Work complete · Review required';
+      } else if (currentStage === 'cash_report') {
+        timing = currentActor === 'buyer' ? 'Confirm cash handover' : 'Confirm cash received';
+      } else if (currentStage === 'waiting') {
+        timing = currentActor === 'buyer' ? 'Waiting for Kuya Ben' : 'Waiting for Maria';
+      } else if (currentStage === 'mutual_ack') {
+        extraClass = ' is-settled';
+        timing = 'Cash confirmed by both parties';
+      } else if (currentStage === 'mismatch') {
+        extraClass = ' is-mismatch';
+        timing = 'Amount mismatch · Action needed';
+        glowColor = 'rgba(251,191,36,0.4)';
+      } else if (currentStage === 'gcash_upload') {
+        timing = currentActor === 'buyer' ? 'Upload GCash proof' : 'Waiting for buyer proof';
+      } else if (currentStage === 'settled') {
+        extraClass = ' is-settled';
+        timing = 'Settled · Sep 17, 2026';
+      }
+
+      return `
+        <section class="order-feature-card${extraClass}">
+          <div class="feature-card-glow" style="background:radial-gradient(circle,${glowColor} 0%,transparent 70%);"></div>
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div class="tri-circle-collage" style="position:relative; z-index:2;">
+              <img src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=160&auto=format&fit=crop&q=80" alt="" class="collage-circle-img" style="z-index:3;">
+              <img src="https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=160&auto=format&fit=crop&q=80" alt="" class="collage-circle-img" style="margin-left:-14px; z-index:2;">
+              <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=160&auto=format&fit=crop&q=80" alt="" class="collage-circle-img" style="margin-left:-14px; z-index:1;">
+            </div>
+            <div style="position:relative; z-index:2;">
+              <h2 class="feature-title-txt">${title}</h2>
+              <div class="feature-timing-row">${timing}</div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    // ─── Settlement Parties ───
+    function renderParties(buyerStatus, providerStatus) {
+      const chipClass = (s) => s === 'confirmed' ? 'confirmed' : s === 'mismatch' ? 'mismatch' : 'waiting';
+      const chipText = (s) => s === 'confirmed' ? '✓ Confirmed' : s === 'mismatch' ? '₱ Mismatch' : 'Pending';
+      return `
+        <div class="settlement-parties">
+          <div class="party-node">
+            <div class="party-avatar buyer">MS</div>
+            <div class="party-name">Maria</div>
+            <div class="party-role">Buyer</div>
+            ${buyerStatus ? `<span class="party-status-chip ${chipClass(buyerStatus)}">${chipText(buyerStatus)}</span>` : ''}
+          </div>
+          <div class="flow-arrow">
+            <svg width="28" height="16" viewBox="0 0 28 16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 8h20M18 3l5 5-5 5"/>
+            </svg>
+            <span class="flow-arrow-label">${currentLane === 'cash' ? 'Cash' : 'GCash'}</span>
+          </div>
+          <div class="party-node">
+            <div class="party-avatar provider">KB</div>
+            <div class="party-name">Kuya Ben</div>
+            <div class="party-role">Provider</div>
+            ${providerStatus ? `<span class="party-status-chip ${chipClass(providerStatus)}">${chipText(providerStatus)}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // ─── Sign-off Section ───
+    function renderSignoff() {
+      if (currentActor === 'buyer') {
+        return `
+          <section class="detail-section-card">
+            <div class="section-head-title">
+              <span>Work Summary</span>
+              <span style="font-size:10px; color:var(--forest-600); font-weight:700;">Kuya Ben</span>
+            </div>
+            <div class="completion-note">
+              <strong>Provider note</strong>
+              AC unit cleaned, 35uF capacitor replaced, load tested at 220V for 15 minutes. Cooling confirmed.
+            </div>
+            <div class="attachment-strip">
+              <img src="https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=200&auto=format&fit=crop&q=80" alt="" class="attachment-chip">
+              <img src="https://images.unsplash.com/photo-1631545806609-e5e3e1127763?w=200&auto=format&fit=crop&q=80" alt="" class="attachment-chip">
+              <div class="attachment-chip is-file">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                receipt.jpg
+              </div>
+            </div>
+            <div class="completion-timeline">
+              <span class="ct-dot"></span>
+              Completed Sep 17, 2:38 PM
+            </div>
+          </section>
+          <section class="detail-section-card">
+            <div class="section-head-title"><span>Invoice</span></div>
+            <div class="receipt-line"><span class="rl-label">Labor · Deep Clean & Install</span><span class="rl-value">₱350</span></div>
+            <div class="receipt-line"><span class="rl-label">Hardware · 35uF Capacitor</span><span class="rl-value">₱180</span></div>
+            <div class="receipt-line"><span class="rl-label">Courier Transit</span><span class="rl-value">₱80</span></div>
+            <div class="receipt-divider"></div>
+            <div class="receipt-total"><span class="rl-label">Total</span><span class="rl-value">₱610</span></div>
+          </section>
+        `;
+      }
+      // Provider view
+      return `
+        <section class="detail-section-card">
+          <div class="section-head-title"><span>Your Completion Proposal</span></div>
+          <div class="completion-note">
+            <strong>Your note</strong>
+            AC unit cleaned, 35uF capacitor replaced, load tested at 220V for 15 minutes. Cooling confirmed.
+          </div>
+          <div class="attachment-strip">
+            <img src="https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=200&auto=format&fit=crop&q=80" alt="" class="attachment-chip">
+            <img src="https://images.unsplash.com/photo-1631545806609-e5e3e1127763?w=200&auto=format&fit=crop&q=80" alt="" class="attachment-chip">
+            <div class="attachment-chip is-file">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              receipt.jpg
+            </div>
+          </div>
+          <div style="text-align:center; padding:6px 0;">
+            <div style="font-size:12px; font-weight:700; color:var(--forest-600); display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Waiting for Maria to review
+            </div>
+          </div>
+        </section>
+        <section class="detail-section-card">
+          <div class="section-head-title"><span>Your Earnings</span></div>
+          <div class="receipt-line"><span class="rl-label">Labor · Deep Clean & Install</span><span class="rl-value">₱350</span></div>
+          <div class="receipt-divider"></div>
+          <div class="receipt-total"><span class="rl-label">Your payout</span><span class="rl-value">₱350</span></div>
+          <div style="font-size:10.5px; color:var(--color-ink-muted);">Hardware (₱180) and Courier (₱80) settle independently with their providers.</div>
+        </section>
+      `;
+    }
+
+    // ─── Cash Report ───
+    function renderCashReport() {
+      const isBuyer = currentActor === 'buyer';
+      return `
+        <section class="detail-section-card">
+          <div class="section-head-title"><span>Cash Settlement</span></div>
+          ${renderParties(null, null)}
+          <div class="settlement-amount-block">
+            <div class="settlement-amount">&#8369;610</div>
+            <div class="settlement-amount-label">Cash · In Person</div>
+          </div>
+          <button class="btn-primary-action green" onclick="setStage('waiting')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            ${isBuyer ? 'I Handed ₱610 Cash' : 'I Received ₱610 Cash'}
+          </button>
+          <div class="settlement-disclaimer">
+            ${isBuyer
+              ? 'Direct exchange between you and Kuya Ben. Serbizyu does not hold this cash.'
+              : 'Confirm only after you physically received the full amount from Maria.'}
+          </div>
+        </section>
+      `;
+    }
+
+    // ─── Waiting ───
+    function renderWaiting() {
+      const isBuyer = currentActor === 'buyer';
+      const buyerStatus = isBuyer ? 'confirmed' : null;
+      const providerStatus = !isBuyer ? 'confirmed' : null;
+      const otherName = isBuyer ? 'Kuya Ben' : 'Maria';
+
+      return `
+        <section class="detail-section-card">
+          <div class="section-head-title"><span>Cash Settlement</span></div>
+          ${renderParties(buyerStatus || 'waiting', providerStatus || 'waiting')}
+          <div class="settlement-amount-block">
+            <div class="settlement-amount">&#8369;610</div>
+            <div class="settlement-amount-label">${isBuyer ? 'You reported: Handed' : 'You reported: Received'}</div>
+          </div>
+          <div class="waiting-indicator">
+            <span class="waiting-text">Waiting for ${otherName}</span>
+            <span class="waiting-dot"></span>
+            <span class="waiting-dot"></span>
+            <span class="waiting-dot"></span>
+          </div>
+          <div class="settlement-disclaimer">
+            ${otherName} will confirm on their device. You'll be notified when they do.
+          </div>
+        </section>
+      `;
+    }
+
+    // ─── Mutual Ack ───
+    function renderMutualAck() {
+      return `
+        <section class="detail-section-card">
+          <div class="section-head-title"><span>Cash Settlement</span></div>
+          ${renderParties('confirmed', 'confirmed')}
+          <div class="settlement-amount-block">
+            <div class="settlement-amount" style="color:#065F46;">&#8369;610</div>
+            <div class="settlement-amount-label" style="color:#065F46;">Mutually Acknowledged</div>
+          </div>
+          <div class="confirmed-stamp">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            Both parties confirmed · Sep 17, 2:45 PM
+          </div>
+        </section>
+        <section class="detail-section-card">
+          <div class="section-head-title"><span>Settlement Receipt</span></div>
+          <div class="receipt-line"><span class="rl-label">Order</span><span class="rl-value">#ORD-7721</span></div>
+          <div class="receipt-line"><span class="rl-label">Amount</span><span class="rl-value">₱610</span></div>
+          <div class="receipt-line"><span class="rl-label">Lane</span><span class="rl-value">External Cash</span></div>
+          <div class="receipt-line"><span class="rl-label">Buyer declared</span><span class="rl-value">Sep 17, 2:42 PM</span></div>
+          <div class="receipt-line"><span class="rl-label">Provider confirmed</span><span class="rl-value">Sep 17, 2:45 PM</span></div>
+          <div class="receipt-divider"></div>
+          <div class="receipt-line"><span class="rl-label">Platform fee</span><span class="rl-value" style="color:#065F46;">₱0 (Tagudin pilot)</span></div>
+        </section>
+      `;
+    }
+
+    // ─── Mismatch ───
+    function renderMismatch() {
+      return `
+        <section class="mismatch-card">
+          <div style="font-size:12px; font-weight:800; color:#991B1B; display:flex; align-items:center; gap:5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Amount Mismatch
+          </div>
+          <div class="mismatch-amounts">
+            <div class="mismatch-side">
+              <div class="ms-name">Maria says</div>
+              <div class="ms-amount">&#8369;610</div>
+            </div>
+            <div style="display:flex; align-items:center; color:#DC2626; font-size:18px; font-weight:800;">≠</div>
+            <div class="mismatch-side">
+              <div class="ms-name">Kuya Ben says</div>
+              <div class="ms-amount">&#8369;500</div>
+            </div>
+          </div>
+          <div class="mismatch-diff">Difference: ₱110</div>
+        </section>
+        <section class="detail-section-card" style="gap:8px;">
+          <button class="btn-primary-action outline" onclick="setStage('cash_report')">
+            Correct My Amount
+          </button>
+          <button class="btn-primary-action danger" onclick="openDisputeDrawer()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Open Support Case
+          </button>
+          <div class="settlement-disclaimer">
+            A support agent will help resolve the discrepancy. No amount is finalized until both parties agree.
+          </div>
+        </section>
+      `;
+    }
+
+    // ─── Disputed / Administrative Hold (UX-018) ───
+    function renderDisputed() {
+      return `
+        <section class="dispute-banner-card">
+          <div class="dispute-badge-row">
+            <span class="dispute-status-pill">⚠️ Administrative Hold</span>
+            <span class="dispute-case-id">Case #DSP-0047</span>
+          </div>
+          <div class="dispute-main-title">Payment on Hold · Cash Mismatch</div>
+          <div class="dispute-meta-text">A Barangay mediator has been assigned. Mediator response SLA is under 12 hours.</div>
+        </section>
+
+        <section class="detail-section-card">
+          <div class="section-head-title"><span>Obligation Details</span><span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--color-ink-muted);">#OBL-881</span></div>
+          <div class="mismatch-amounts" style="background:#FFF1F2; border:1px solid #FECDD3; border-radius:var(--radius-sm); padding:10px;">
+            <div class="mismatch-side">
+              <div class="ms-name" style="color:#BE123C;">Maria reported</div>
+              <div class="ms-amount" style="color:#BE123C; font-size:17px;">₱610</div>
+            </div>
+            <div style="display:flex; align-items:center; color:#BE123C; font-size:16px; font-weight:800;">≠</div>
+            <div class="mismatch-side">
+              <div class="ms-name" style="color:#BE123C;">Kuya Ben reported</div>
+              <div class="ms-amount" style="color:#BE123C; font-size:17px;">₱500</div>
+            </div>
+          </div>
+          <div class="receipt-line" style="margin-top:6px;"><span class="rl-label">Disputed amount</span><span class="rl-value" style="color:#DC2626;">₱110 difference</span></div>
+          <div class="receipt-line"><span class="rl-label">Remedy requested</span><span class="rl-value">Mutual Recount</span></div>
+          <div class="receipt-line"><span class="rl-label">Assigned mediator</span><span class="rl-value">Kagawad R. Ramos</span></div>
+          <div class="receipt-divider"></div>
+          <div class="settlement-disclaimer" style="margin-top:0;">
+            🛡️ <strong>Safety Guard:</strong> Neither party is penalized while the hold is active. No funds or completion sign-offs are finalized until mediation concludes.
+          </div>
+        </section>
+
+        <section class="detail-section-card" style="gap:8px;">
+          <button class="btn-primary-action outline" onclick="alert('Calling Tagudin Desk: (077) 674-1234')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Call Barangay Mediator
+          </button>
+          <button class="btn-primary-action green" onclick="setStage('mutual_ack')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+            We Agreed · Settle at ₱610
+          </button>
+        </section>
+      `;
+    }
+
+    // ─── GCash Upload ───
+    function renderGcashUpload() {
+      if (currentActor === 'buyer') {
+        return `
+          <section class="detail-section-card">
+            <div class="section-head-title"><span>GCash Payment</span></div>
+            ${renderParties(null, null)}
+            <div class="settlement-amount-block">
+              <div class="settlement-amount">&#8369;610</div>
+              <div class="settlement-amount-label">Send to Kuya Ben's GCash</div>
+            </div>
+            <button class="btn-primary-action navy" onclick="openGcashDrawer()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload GCash Proof
+            </button>
+            <div class="not-tiwala-banner">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div class="ntb-text">
+                <span class="ntb-title">Not protected by Tiwala</span>
+                This is a person-to-person transfer. Serbizyu does not control or verify this payment.
+              </div>
+            </div>
+          </section>
+        `;
+      }
+      // Provider waiting for buyer to upload
+      return `
+        <section class="detail-section-card">
+          <div class="section-head-title"><span>GCash Payment</span></div>
+          ${renderParties('waiting', null)}
+          <div class="settlement-amount-block">
+            <div class="settlement-amount">&#8369;610</div>
+            <div class="settlement-amount-label">Awaiting Maria's GCash proof</div>
+          </div>
+          <div class="waiting-indicator">
+            <span class="waiting-text">Waiting for Maria to upload proof</span>
+            <span class="waiting-dot"></span>
+            <span class="waiting-dot"></span>
+            <span class="waiting-dot"></span>
+          </div>
+          <div class="settlement-disclaimer">
+            You'll be notified when Maria submits GCash evidence for you to acknowledge.
+          </div>
+        </section>
+      `;
+    }
+
+    // ─── Settled ───
+    function renderSettled() {
+      const isBuyer = currentActor === 'buyer';
+      const laneLabel = currentLane === 'cash' ? 'External Cash' : 'GCash P2P';
+      return `
+        <section class="detail-section-card">
+          <div class="confirmed-stamp" style="margin-bottom:4px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Order Settled
+          </div>
+          <div class="section-head-title"><span>Receipt</span><span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--color-ink-muted);">RECEIPT-7721</span></div>
+          <div class="receipt-line"><span class="rl-label">Labor · Kuya Ben</span><span class="rl-value">₱350</span></div>
+          <div class="receipt-line"><span class="rl-label">Hardware · Tagudin Hardware</span><span class="rl-value">₱180</span></div>
+          <div class="receipt-line"><span class="rl-label">Courier · Danny Express</span><span class="rl-value">₱80</span></div>
+          <div class="receipt-divider"></div>
+          <div class="receipt-total"><span class="rl-label">Total Paid</span><span class="rl-value">₱610</span></div>
+          <div class="receipt-line"><span class="rl-label">Payment lane</span><span class="rl-value">${laneLabel}</span></div>
+          <div class="receipt-line"><span class="rl-label">Platform fee</span><span class="rl-value" style="color:#065F46;">₱0 (Tagudin pilot)</span></div>
+          <div class="receipt-line"><span class="rl-label">Settled</span><span class="rl-value">Sep 17, 2:45 PM</span></div>
+        </section>
+        ${isBuyer ? `
+        <section class="detail-section-card" style="gap:8px;">
+          <div class="section-head-title"><span>Rate Your Experience</span></div>
+          <div style="display:flex; gap:6px; justify-content:center; padding:4px 0;">
+            <span style="font-size:28px; cursor:pointer; opacity:0.3;">★</span>
+            <span style="font-size:28px; cursor:pointer; opacity:0.3;">★</span>
+            <span style="font-size:28px; cursor:pointer; opacity:0.3;">★</span>
+            <span style="font-size:28px; cursor:pointer; opacity:0.3;">★</span>
+            <span style="font-size:28px; cursor:pointer; opacity:0.3;">★</span>
+          </div>
+        </section>
+        ` : `
+        <section class="detail-section-card">
+          <div class="section-head-title"><span>Your Earnings</span></div>
+          <div class="receipt-total"><span class="rl-label">Received</span><span class="rl-value">₱350</span></div>
+          <div class="receipt-line"><span class="rl-label">Method</span><span class="rl-value">${laneLabel}</span></div>
+          <div class="receipt-line"><span class="rl-label">Commission</span><span class="rl-value" style="color:#065F46;">₱0 (pilot)</span></div>
+        </section>
+        `}
+      `;
+    }
+
+    // ─── Bottom Dock ───
+    function renderDock() {
+      if (currentStage === 'signoff') {
+        if (currentActor === 'buyer') {
+          return `
+            <div class="dock-btn-row">
+              <button class="btn-dock-secondary" style="flex:1;" onclick="alert('Request changes')">Request Changes</button>
+              <button class="btn-dock-primary" style="flex:1.6;" onclick="setStage('cash_report')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+                Accept Work
+              </button>
+            </div>
+            <div class="dock-footnote">Accepting confirms the work meets your requirements</div>
+          `;
+        }
+        return `
+          <div class="dock-btn-row">
+            <button class="btn-dock-primary" style="flex:1; background:var(--color-brand-navy);" onclick="alert('Opens chat with Maria')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Message Maria
+            </button>
+          </div>
+          <div class="dock-footnote">Waiting for buyer to review your completion proposal</div>
+        `;
+      }
+
+      if (currentStage === 'cash_report') {
+        return `
+          <div class="dock-btn-row">
+            <button class="btn-dock-primary" style="flex:1;" onclick="setStage('waiting')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              ${currentActor === 'buyer' ? 'I Handed ₱610' : 'I Received ₱610'}
+            </button>
+          </div>
+        `;
+      }
+
+      if (currentStage === 'waiting') {
+        return `
+          <div class="dock-btn-row">
+            <button class="btn-dock-secondary" style="flex:1;" onclick="alert('Opens chat')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Message ${currentActor === 'buyer' ? 'Kuya Ben' : 'Maria'}
+            </button>
+          </div>
+          <div class="dock-footnote">Waiting for counterparty confirmation</div>
+        `;
+      }
+
+      if (currentStage === 'mutual_ack') {
+        return `
+          <div class="dock-btn-row">
+            <button class="btn-dock-primary" style="flex:1;" onclick="setStage('settled')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+              Continue
+            </button>
+          </div>
+        `;
+      }
+
+      if (currentStage === 'mismatch') {
+        return `
+          <div class="dock-btn-row">
+            <button class="btn-dock-secondary" style="flex:1;" onclick="setStage('cash_report')">Correct Amount</button>
+            <button class="btn-dock-primary" style="flex:1; background:#DC2626;" onclick="openDisputeDrawer()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Support
+            </button>
+          </div>
+        `;
+      }
+
+      if (currentStage === 'gcash_upload') {
+        if (currentActor === 'buyer') {
+          return `
+            <div class="dock-btn-row">
+              <button class="btn-dock-primary" style="flex:1; background:var(--color-brand-navy);" onclick="openGcashDrawer()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload GCash Proof
+              </button>
+            </div>
+          `;
+        }
+        return `
+          <div class="dock-btn-row">
+            <button class="btn-dock-secondary" style="flex:1;" onclick="alert('Opens chat')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Message Maria
+            </button>
+          </div>
+        `;
+      }
+
+      if (currentStage === 'settled') {
+        return `
+          <div class="dock-btn-row">
+            ${currentActor === 'buyer' ? `
+              <a href="review-ceremony-mobile.html" class="btn-dock-primary" style="flex:1; text-decoration:none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Leave Review
+              </a>
+            ` : `
+              <a href="review-ceremony-mobile.html" class="btn-dock-primary" style="flex:1; text-decoration:none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Rate Customer Maria
+              </a>
+            `}
+          </div>
+        `;
+      }
+      if (currentStage === 'disputed') {
+        return `
+          <div class="dock-btn-row">
+            <button class="btn-dock-secondary" style="flex:1;" onclick="alert('Calling Mediator: (077) 674-1234')">Call Mediator</button>
+            <button class="btn-dock-primary" style="flex:1; background:var(--forest-600);" onclick="setStage('mutual_ack')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+              Agree &amp; Settle
+            </button>
+          </div>
+          <div class="dock-footnote" style="color:#BE123C;">Administrative Hold active · No funds released</div>
+        `;
+      }
+
+      return '';
+    }
+
+    // ─── Master Render ───
+    function renderPage() {
+      updateMetaButtons();
+      const body = document.getElementById('scroll-body');
+      const dock = document.getElementById('bottom-dock');
+
+      let sections = renderFeatureCard();
+
+      if (currentStage === 'signoff') sections += renderSignoff();
+      else if (currentStage === 'cash_report') sections += renderCashReport();
+      else if (currentStage === 'waiting') sections += renderWaiting();
+      else if (currentStage === 'mutual_ack') sections += renderMutualAck();
+      else if (currentStage === 'mismatch') sections += renderMismatch();
+      else if (currentStage === 'gcash_upload') sections += renderGcashUpload();
+      else if (currentStage === 'settled') sections += renderSettled();
+      else if (currentStage === 'disputed') sections += renderDisputed();
+
+      body.innerHTML = sections;
+      dock.innerHTML = renderDock();
+    }
+
+    window.addEventListener('DOMContentLoaded', renderPage);
+    // ─── Dispute Drawer Controls ───
+    function openDisputeDrawer() {
+      document.getElementById('dispute-drawer').classList.add('is-open');
+    }
+    function closeDisputeDrawer() {
+      document.getElementById('dispute-drawer').classList.remove('is-open');
+    }
+    function submitDispute() {
+      closeDisputeDrawer();
+      setStage('disputed');
+    }
+    function selectChip(el) {
+      const parent = el.parentElement;
+      parent.querySelectorAll('.drawer-chip').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+  </script>
+</body>
+</html>

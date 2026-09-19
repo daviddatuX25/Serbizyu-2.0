@@ -104,6 +104,14 @@ body.sz-body {
     flex-direction: column;
     gap: 0.35rem;
 }
+.sz-rail-section-label {
+    margin: 0.7rem 0.55rem 0.1rem;
+    color: var(--sz-ink-muted);
+    font-size: 0.64rem;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
 
 .sz-rail-link {
     display: flex;
@@ -116,6 +124,26 @@ body.sz-body {
     font-size: 0.92rem;
     font-weight: 700;
     text-decoration: none;
+}
+
+.sz-rail-link.is-disabled {
+    color: var(--sz-ink-muted);
+    cursor: not-allowed;
+    opacity: 0.72;
+}
+
+.sz-rail-link.is-disabled:hover {
+    background: transparent;
+    color: var(--sz-ink-muted);
+}
+
+.sz-rail-soon {
+    margin-left: auto;
+    color: var(--sz-ink-muted);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .sz-rail-link:hover {
@@ -153,12 +181,20 @@ body.sz-body {
 }
 
 .sz-rail-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
     margin: auto 0 0;
     padding: 0.65rem 0.55rem 0;
     border-top: 1px solid var(--sz-border);
     color: var(--sz-ink-muted);
     font-size: 0.72rem;
     line-height: 1.4;
+}
+
+.sz-rail-meta strong {
+    color: var(--sz-ink-soft);
+    font-size: 0.76rem;
 }
 
 .sz-shell-canvas {
@@ -258,6 +294,18 @@ body.sz-body {
     background: var(--sz-forest-50);
 }
 
+.sz-dock-link.is-disabled {
+    color: var(--sz-ink-muted);
+    cursor: not-allowed;
+    opacity: 0.62;
+}
+
+@media (max-width: 899px) {
+    .sz-dock {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
 .sz-dock-link.is-create {
     border-radius: 14px;
     background: var(--sz-forest-600);
@@ -267,6 +315,101 @@ body.sz-body {
 .sz-dock-link.is-create.is-active,
 .sz-dock-link.is-create:hover {
     background: var(--sz-forest-700);
+    color: #fff;
+}
+.sz-mobile-menu {
+    position: fixed;
+    right: 0.65rem;
+    bottom: 0.65rem;
+    z-index: 45;
+}
+
+.sz-mobile-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 3.15rem;
+    min-width: 5.4rem;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--sz-border);
+    border-radius: 999px;
+    background: rgba(255, 252, 246, 0.97);
+    box-shadow: 0 18px 40px -22px rgba(18, 32, 28, 0.5);
+    color: var(--sz-ink);
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.sz-mobile-menu-trigger-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.sz-mobile-menu-panel {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 0.6rem);
+    display: none;
+    width: min(22rem, calc(100vw - 1.3rem));
+    padding: 0.6rem;
+    border: 1px solid var(--sz-border);
+    border-radius: 20px;
+    background: rgba(255, 252, 246, 0.98);
+    box-shadow: 0 24px 60px -28px rgba(18, 32, 28, 0.6);
+    backdrop-filter: blur(14px);
+}
+
+.sz-mobile-menu.is-open .sz-mobile-menu-panel {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.sz-mobile-menu-heading {
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.7rem 0.75rem 0.55rem;
+    border-bottom: 1px solid var(--sz-border);
+}
+
+.sz-mobile-menu-heading span {
+    color: var(--sz-ink-muted);
+    font-size: 0.72rem;
+}
+
+.sz-mobile-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 2.7rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 12px;
+    color: var(--sz-ink-soft);
+    font-size: 0.86rem;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.sz-mobile-menu-link.is-active {
+    background: var(--sz-forest-50);
+    color: var(--sz-forest-700);
+}
+
+.sz-mobile-menu-link.is-disabled {
+    color: var(--sz-ink-muted);
+    cursor: not-allowed;
+}
+
+.sz-mobile-menu-link small {
+    margin-left: auto;
+    color: var(--sz-ink-muted);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+}
+
+.sz-mobile-menu-link.is-create {
+    background: var(--sz-forest-600);
     color: #fff;
 }
 
@@ -532,7 +675,8 @@ body.sz-body {
         padding-left: var(--sz-rail-icon);
     }
 
-    .sz-dock {
+    .sz-dock,
+    .sz-mobile-menu {
         display: none;
     }
 
@@ -543,6 +687,11 @@ body.sz-body {
         bottom: 1rem;
         width: min(28rem, calc(100vw - var(--sz-rail-icon) - 1.7rem));
         height: 3.35rem;
+    }
+
+    .sz-rail-section-label,
+    .sz-rail-soon {
+        display: none;
     }
 
     .sz-switch-card[data-side='nav'] {
@@ -626,8 +775,12 @@ body.sz-body {
         white-space: nowrap;
     }
 
-    .sz-rail-meta {
+    .sz-rail-section-label {
         display: block;
+    }
+
+    .sz-rail-meta {
+        display: flex;
     }
 
     .sz-shell-canvas {
@@ -1268,6 +1421,29 @@ a.sz-listing-card:focus-visible {
     width: 100%;
     gap: 1.15rem;
 }
+@media (max-width: 900px) {
+    .sz-auth-dev-helper {
+        border-color: rgba(251, 191, 36, 0.7);
+        background: rgba(245, 158, 11, 0.12);
+    }
+
+    .sz-auth-dev-helper > div:first-child {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .sz-auth-dev-helper-title {
+        color: #fef3c7 !important;
+    }
+
+    .sz-auth-dev-helper-description {
+        color: #d7efe6 !important;
+    }
+
+    .sz-auth-dev-helper-button {
+        width: 100%;
+    }
+}
 
 .sz-auth-methods {
     width: 100%;
@@ -1571,4 +1747,73 @@ a.sz-listing-card:focus-visible {
     position: sticky;
     bottom: 0;
     background: transparent;
+}
+
+/* ==========================================================================
+   Serbizyu Themed Scrollbars (Universal Horizontal & Vertical)
+   Replaces bulky OS defaults with sleek, brand-tinted indicators.
+   ========================================================================== */
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(13, 113, 95, 0.25) transparent;
+}
+
+*:hover {
+    scrollbar-color: rgba(13, 113, 95, 0.45) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(13, 113, 95, 0.22);
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 0.15s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(13, 113, 95, 0.48);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Dedicated utility classes for scrollable div containers */
+.sz-scroll-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.sz-scroll-y {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.sz-scroll-both {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.sz-scroll-x::-webkit-scrollbar {
+    height: 5px;
+}
+
+.sz-scroll-y::-webkit-scrollbar {
+    width: 6px;
 }

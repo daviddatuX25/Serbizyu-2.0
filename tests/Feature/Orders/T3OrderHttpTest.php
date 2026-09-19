@@ -46,6 +46,7 @@ function t3HttpActiveListingFor(User $provider): array
         'description' => 'Listing used to confirm throwaway Book → finalize HTTP path.',
         'category_code' => 'home-help',
         'listing_type' => 'service',
+        'work_shape' => 'A1',
     ], $correlationId);
 
     DB::table('listings')->where('id', $listing['id'])->update([

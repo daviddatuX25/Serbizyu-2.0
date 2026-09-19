@@ -43,9 +43,11 @@ final class SeedTagudinBrowseCatalog
         $keys = [];
 
         foreach (TagudinBrowseCatalog::listings() as $row) {
+            $workShape = (string) $row['work_shape'];
             $capability = $this->capabilities->ensure(
                 $row['category_code'],
                 $row['listing_type'],
+                $workShape,
                 $correlation,
             );
 
@@ -84,6 +86,7 @@ final class SeedTagudinBrowseCatalog
                 'terms' => json_encode([
                     'title' => $row['title'],
                     'category_code' => $row['category_code'],
+                    'work_shape' => $row['work_shape'],
                     'scope' => $row['scope'],
                     'fixture_key' => $row['fixture_key'],
                     'evidence_class' => 'CAPSTONE',

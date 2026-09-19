@@ -1,6 +1,6 @@
 # Harden the complete connected frontend system
 
-Status: PROPOSED — detailed founder-directed revision; implementation remains blocked until approval gates in `tasks.md` pass
+Status: PROGRAM REQUIREMENT INVENTORY — implementation execution superseded by child OpenSpec changes beginning with `establish-frontend-view-projection-kernel`
 Date: 2026-08-01
 Change ID: `harden-connected-frontend-experience`
 Implementation plane: deterministic React frontend reference with fictional data; no backend authority

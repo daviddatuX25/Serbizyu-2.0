@@ -19,6 +19,7 @@ type ListingFields = {
     description: string;
     category_code: string;
     listing_type: string;
+    work_shape: string;
 };
 
 type ErrorBag = Record<string, unknown>;
@@ -542,6 +543,7 @@ function ListingForm({
         description: draft?.description ?? '',
         category_code: categoryCode(draft),
         listing_type: listingType(draft),
+        work_shape: draft?.workShape ?? draft?.work_shape ?? 'A9',
     };
     const [fields, setFields] = useState<ListingFields>(() => initialFields);
 
@@ -628,6 +630,26 @@ function ListingForm({
                             <option value="service">Service</option>
                             <option value="product">Product</option>
                         </select>
+                    </div>
+                    <div>
+                        <label className="field-label" htmlFor="work-shape">
+                            Work shape
+                        </label>
+                        <select
+                            id="work-shape"
+                            className={`text-input ${fieldValue(errors, 'work_shape') ? 'input-error' : ''}`}
+                            value={fields.work_shape}
+                            onChange={(event) => update('work_shape', event.target.value)}
+                            disabled={reviewLocked}
+                        >
+                            <option value="A1">A1 · Linear project</option>
+                            <option value="A3">A3 · Appointment</option>
+                            <option value="A4">A4 · Handoff</option>
+                            <option value="A9">A9 · Request-based</option>
+                        </select>
+                        {fieldValue(errors, 'work_shape') ? (
+                            <p className="field-error">{fieldValue(errors, 'work_shape')}</p>
+                        ) : null}
                     </div>
                     <div>
                         <label className="field-label" htmlFor="category-code">

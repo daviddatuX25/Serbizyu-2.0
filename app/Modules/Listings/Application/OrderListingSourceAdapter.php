@@ -12,16 +12,33 @@ final class OrderListingSourceAdapter implements OrderListingSourcePort
 {
     public function findActiveApproved(string $listingId): ?array
     {
+        return $this->find($listingId, false);
+    }
+
+    public function lockActiveApproved(string $listingId): ?array
+    {
+        return $this->find($listingId, true);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function find(string $listingId, bool $lock): ?array
+    {
         if (! Schema::hasTable('listings') || ! Schema::hasTable('listing_versions')) {
             return null;
         }
 
-        $row = DB::table('listings')
+        $query = DB::table('listings')
             ->join('listing_versions', function ($join): void {
                 $join->on('listing_versions.listing_id', '=', 'listings.id')
                     ->on('listing_versions.version_number', '=', 'listings.current_version');
             })
             ->join('categories', 'categories.id', '=', 'listings.category_id')
+            ->join('capability_profiles', function ($join): void {
+                $join->on('capability_profiles.profile_family_code', '=', 'listing_versions.capability_profile_family_code')
+                    ->on('capability_profiles.business_version', '=', 'listing_versions.capability_profile_business_version');
+            })
             ->where('listings.id', $listingId)
             ->where('listings.status', 'active')
             ->where('listings.review_status', 'approved')
@@ -32,7 +49,7 @@ final class OrderListingSourceAdapter implements OrderListingSourcePort
                 'listings.status',
                 'listings.review_status',
                 'listings.version as listing_row_version',
-                'listings.capability_profile_id',
+                'capability_profiles.id as capability_profile_id',
                 'listings.geography',
                 'listing_versions.id as listing_version_id',
                 'listing_versions.version_number as listing_version_number',
@@ -45,9 +62,14 @@ final class OrderListingSourceAdapter implements OrderListingSourcePort
                 'listing_versions.capability_profile_family_code',
                 'listing_versions.capability_profile_business_version',
                 'categories.code as category_code',
-            )
-            ->first();
+                'capability_profiles.work_shape',
+            );
 
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        $row = $query->first();
         if ($row === null) {
             return null;
         }
@@ -75,6 +97,7 @@ final class OrderListingSourceAdapter implements OrderListingSourcePort
             'capability_profile_id' => $row->capability_profile_id !== null ? (string) $row->capability_profile_id : '',
             'capability_profile_family_code' => $row->capability_profile_family_code !== null ? (string) $row->capability_profile_family_code : null,
             'capability_profile_business_version' => $row->capability_profile_business_version !== null ? (int) $row->capability_profile_business_version : null,
+            'work_shape' => (string) $row->work_shape,
         ];
     }
 }

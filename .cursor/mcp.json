@@ -5,10 +5,7 @@
             "args": [
                 "artisan",
                 "boost:mcp"
-            ],
-            "env": {
-                "COMPOSE_FILE": "compose.sail.yaml"
-            }
+            ]
         }
     }
 }

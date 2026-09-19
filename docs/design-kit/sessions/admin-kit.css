@@ -1,0 +1,839 @@
+/**
+ * Serbizyu 2.0 — Admin UI Kit & Design System Stylesheet
+ * Integrates:
+ * 1. cta.gallery tactile button shaders & specular highlights
+ * 2. 60fps.design fluid micro-interactions & spring transitions
+ * 3. motion.dev physics-based entrance reveals
+ * 4. Serbizyu Forest brand tokens & Glovo clarity
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
+
+:root {
+  /* Serbizyu Forest Brand Tokens */
+  --forest-950: #03201a;
+  --forest-900: #06362e;
+  --forest-800: #0a4d41;
+  --forest-700: #0a574a;
+  --forest-600: #0d715f;
+  --forest-500: #17866f;
+  --forest-400: #22a085;
+  --forest-100: #c6eadc;
+  --forest-50:  #e8f7f1;
+
+  /* Workspace Surfaces & Inks (Clean Dark Executive Theme) */
+  --canvas-bg: #090e17;
+  --workspace-bg: #0d1522;
+  --card-bg: #131f31;
+  --card-hover: #18273d;
+  --card-elevated: #1e304b;
+  --card-inset: #0a111c;
+
+  /* Specular Borders & Lines */
+  --line-subtle: rgba(255, 255, 255, 0.08);
+  --line-specular: rgba(255, 255, 255, 0.16);
+  --line-focus: rgba(34, 160, 133, 0.45);
+
+  /* Typography Colors */
+  --text-pure: #ffffff;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-subtle: #475569;
+
+  /* Status Tokens */
+  --hold-amber: #f59e0b;
+  --hold-amber-light: #fbbf24;
+  --hold-bg: rgba(245, 158, 11, 0.12);
+  --hold-border: rgba(245, 158, 11, 0.32);
+
+  --danger-red: #ef4444;
+  --danger-red-light: #f87171;
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --danger-border: rgba(239, 68, 68, 0.3);
+
+  --success-green: #10b981;
+  --success-green-light: #34d399;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --success-border: rgba(16, 185, 129, 0.3);
+
+  --info-blue: #38bdf8;
+  --info-blue-light: #7dd3fc;
+  --info-bg: rgba(56, 189, 248, 0.12);
+  --info-border: rgba(56, 189, 248, 0.3);
+
+  --purple-brand: #a855f7;
+  --purple-bg: rgba(168, 85, 247, 0.12);
+  --purple-border: rgba(168, 85, 247, 0.3);
+
+  /* Radii */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 9999px;
+
+  /* Shadows (Depth + Specular) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 20px rgba(34, 160, 133, 0.25);
+
+  /* Springs (60fps.design) */
+  --spring-quick: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-quick: 0.18s;
+  --duration-normal: 0.28s;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--canvas-bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 64px;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Master Admin Layout Container */
+.admin-workspace {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: workspaceEntrance 0.35s var(--spring-quick);
+}
+
+@keyframes workspaceEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Top Studio Breadcrumb / Context Bar */
+.admin-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(13, 21, 34, 0.85);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-pure);
+  letter-spacing: -0.01em;
+}
+
+.brand-badge .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--forest-400);
+  box-shadow: 0 0 8px var(--forest-400);
+  animation: pulseDot 2.4s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.admin-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all var(--duration-quick) var(--spring-quick);
+}
+
+.admin-nav-item:hover {
+  color: var(--text-pure);
+  background: var(--card-bg);
+  border-color: var(--line-subtle);
+}
+
+.admin-nav-item.active {
+  color: var(--forest-100);
+  background: var(--forest-900);
+  border-color: var(--forest-600);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Sound Switcher & Status Controls */
+.top-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-snd-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--card-bg);
+  border: 1px solid var(--line-subtle);
+  cursor: pointer;
+  transition: all var(--duration-quick) var(--spring-quick);
+}
+
+.btn-snd-toggle:hover {
+  color: var(--text-pure);
+  border-color: var(--line-specular);
+}
+
+.btn-snd-toggle.sound-on {
+  color: var(--forest-100);
+  border-color: var(--forest-600);
+  background: rgba(10, 87, 74, 0.35);
+}
+
+/* ==========================================================================
+   CTA.GALLERY TACTILE BUTTON SHADERS & SPECULAR HIGHLIGHTS
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  transition: transform var(--duration-quick) var(--spring-quick),
+              box-shadow var(--duration-quick) var(--spring-quick),
+              background var(--duration-quick) var(--spring-quick),
+              border-color var(--duration-quick) var(--spring-quick);
+}
+
+/* Primary Forest Button (Specular Highlight + Tactile Depth) */
+.btn-primary {
+  background: linear-gradient(180deg, #12836d 0%, #0a574a 100%);
+  color: #ffffff;
+  border-color: #17866f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+              0 2px 4px rgba(0, 0, 0, 0.25),
+              0 6px 16px -2px rgba(10, 87, 74, 0.4);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, #17937b 0%, #0d695a 100%);
+  border-color: #22a085;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+              0 4px 10px rgba(0, 0, 0, 0.3),
+              0 10px 24px -3px rgba(10, 87, 74, 0.55);
+  transform: translateY(-1.5px);
+}
+
+.btn-primary:active {
+  transform: translateY(1.5px) scale(0.985);
+  background: linear-gradient(180deg, #094e43 0%, #0a574a 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45),
+              0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Warning / Hold Button (Amber Tactile Shader) */
+.btn-amber {
+  background: linear-gradient(180deg, #d97706 0%, #b45309 100%);
+  color: #ffffff;
+  border-color: #f59e0b;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+              0 2px 4px rgba(0, 0, 0, 0.25),
+              0 6px 16px -2px rgba(217, 119, 6, 0.4);
+}
+
+.btn-amber:hover {
+  background: linear-gradient(180deg, #e68512 0%, #c45d0c 100%);
+  transform: translateY(-1.5px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45),
+              0 4px 10px rgba(0, 0, 0, 0.3),
+              0 10px 24px -3px rgba(217, 119, 6, 0.55);
+}
+
+.btn-amber:active {
+  transform: translateY(1.5px) scale(0.985);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* Danger Button (Red Tactile Shader) */
+.btn-danger {
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  border-color: #ef4444;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+              0 2px 4px rgba(0, 0, 0, 0.25),
+              0 6px 16px -2px rgba(220, 38, 38, 0.4);
+}
+
+.btn-danger:hover {
+  background: linear-gradient(180deg, #ea3333 0%, #c82323 100%);
+  transform: translateY(-1.5px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4),
+              0 4px 10px rgba(0, 0, 0, 0.3),
+              0 10px 24px -3px rgba(220, 38, 38, 0.55);
+}
+
+.btn-danger:active {
+  transform: translateY(1.5px) scale(0.985);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* Secondary Neutral / Glass Button */
+.btn-secondary {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border-color: var(--line-specular);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08),
+              0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.btn-secondary:hover {
+  background: var(--card-hover);
+  color: var(--text-pure);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: translateY(1px) scale(0.99);
+  background: var(--card-inset);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Ghost Button */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-pure);
+}
+
+/* ==========================================================================
+   CARDS & CONTAINERS
+   ========================================================================== */
+
+.admin-card {
+  background: var(--card-bg);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--duration-quick) var(--spring-quick),
+              box-shadow var(--duration-quick) var(--spring-quick);
+}
+
+.admin-card:hover {
+  border-color: var(--line-specular);
+}
+
+.admin-card-elevated {
+  background: var(--card-elevated);
+  border: 1px solid var(--line-specular);
+  box-shadow: var(--shadow-md);
+}
+
+/* Operational Hold Banner (Prominent Warning Indicator) */
+.hold-banner {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border: 1px solid var(--hold-border);
+  border-left: 4px solid var(--hold-amber);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.hold-banner-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.hold-banner-body {
+  flex: 1;
+}
+
+.hold-banner-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--hold-amber-light);
+  margin-bottom: 2px;
+}
+
+.hold-banner-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   BADGES & CHIPS
+   ========================================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-hold {
+  background: var(--hold-bg);
+  color: var(--hold-amber-light);
+  border: 1px solid var(--hold-border);
+}
+
+.badge-danger {
+  background: var(--danger-bg);
+  color: var(--danger-red-light);
+  border: 1px solid var(--danger-border);
+}
+
+.badge-success {
+  background: var(--success-bg);
+  color: var(--success-green-light);
+  border: 1px solid var(--success-border);
+}
+
+.badge-info {
+  background: var(--info-bg);
+  color: var(--info-blue-light);
+  border: 1px solid var(--info-border);
+}
+
+.badge-purple {
+  background: var(--purple-bg);
+  color: #c084fc;
+  border: 1px solid var(--purple-border);
+}
+
+.badge-neutral {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  border: 1px solid var(--line-subtle);
+}
+
+/* Cohort Filter Segmented Switcher (60fps Spring Glider) */
+.cohort-switcher {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  background: var(--card-inset);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-pill);
+  position: relative;
+  gap: 2px;
+}
+
+.cohort-chip {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-radius: var(--radius-pill);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--duration-quick) var(--spring-quick);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cohort-chip:hover {
+  color: var(--text-pure);
+}
+
+.cohort-chip.active {
+  background: var(--forest-700);
+  color: var(--text-pure);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
+              0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================================================
+   METRIC STAT TILES (Glovo Clean Density)
+   ========================================================================== */
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.metric-tile {
+  background: var(--card-bg);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  transition: all var(--duration-normal) var(--spring-quick);
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-tile:hover {
+  border-color: var(--line-specular);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.metric-tile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.metric-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-pure);
+  letter-spacing: -0.02em;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.metric-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ==========================================================================
+   MULTI-AGGREGATE SPLIT CARDS (OPS-003)
+   ========================================================================== */
+
+.aggregate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.aggregate-card {
+  background: var(--card-bg);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aggregate-card.is-held {
+  border-color: var(--hold-border);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.06) 0%, var(--card-bg) 60%);
+}
+
+.aggregate-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-pure);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.kv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 12px;
+  gap: 12px;
+}
+
+.kv-key {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.kv-val {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: right;
+}
+
+/* ==========================================================================
+   AUDIT TIMELINE RAIL (Chronological Proof)
+   ========================================================================== */
+
+.timeline-rail {
+  list-style: none;
+  position: relative;
+  padding-left: 24px;
+}
+
+.timeline-rail::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--line-subtle);
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-node {
+  position: absolute;
+  left: -24px;
+  top: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  border: 2px solid var(--forest-500);
+  box-shadow: 0 0 0 3px var(--canvas-bg);
+}
+
+.timeline-node.node-hold {
+  border-color: var(--hold-amber);
+  background: var(--hold-bg);
+}
+
+.timeline-node.node-danger {
+  border-color: var(--danger-red);
+  background: var(--danger-bg);
+}
+
+.timeline-content {
+  background: var(--card-inset);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.timeline-actor {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-pure);
+}
+
+.timeline-time {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+}
+
+.timeline-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   INTERACTIVE DRAWER / MODAL (OPS-005 Hold Console)
+   ========================================================================== */
+
+.modal-veil {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 10, 18, 0.75);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-veil.open {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-dialog {
+  background: var(--workspace-bg);
+  border: 1px solid var(--line-specular);
+  border-radius: var(--radius-lg);
+  max-width: 540px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.28s var(--spring-quick);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-pure);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.form-select, .form-textarea, .form-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--card-inset);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  transition: all var(--duration-quick) var(--spring-quick);
+}
+
+.form-select:focus, .form-textarea:focus, .form-input:focus {
+  outline: none;
+  border-color: var(--forest-500);
+  box-shadow: 0 0 0 3px rgba(34, 160, 133, 0.2);
+}
+
+.form-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Sticky Action Dock */
+.action-dock {
+  position: sticky;
+  bottom: 16px;
+  background: rgba(13, 21, 34, 0.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--line-specular);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-lg);
+  margin-top: 24px;
+  z-index: 100;
+}

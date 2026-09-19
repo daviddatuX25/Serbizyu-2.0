@@ -47,9 +47,11 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             $this->assertActingForIfNeeded($actor, $correlationId, 'listing.create');
             $ownerId = $actor->resourceOwnerId;
             $now = now();
+            $workShape = trim((string) $input['work_shape']);
             $pins = $this->catalog->ensurePublished(
                 (string) $input['category_code'],
                 (string) $input['listing_type'],
+                $workShape,
                 $correlationId,
             );
             $listingId = (string) Str::uuid7();
@@ -71,7 +73,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'updated_at' => $now,
             ]);
 
-            $this->insertVersion($listingId, 1, $actor->actorUserId, $input, $correlationId, $now, $pins);
+            $this->insertVersion($listingId, 1, $actor->actorUserId, array_merge($input, ['work_shape' => $workShape]), $correlationId, $now, $pins);
 
             return $this->ownerProjection($listingId, $ownerId, $correlationId);
         });
@@ -113,17 +115,20 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'description' => (string) $current->description,
                 'category_code' => (string) ($terms['category_code'] ?? ''),
                 'listing_type' => (string) $listing->listing_type,
+                'work_shape' => (string) ($terms['work_shape'] ?? ''),
             ], $input);
             $this->validate($payload, $correlationId);
 
             $now = now();
             $nextVersion = ((int) $listing->version) + 1;
+            $workShape = trim((string) $payload['work_shape']);
             $pins = $this->catalog->ensurePublished(
                 (string) $payload['category_code'],
                 (string) $payload['listing_type'],
+                $workShape,
                 $correlationId,
             );
-            $this->insertVersion($listingId, $nextVersion, $actor->actorUserId, $payload, $correlationId, $now, $pins);
+            $this->insertVersion($listingId, $nextVersion, $actor->actorUserId, array_merge($payload, ['work_shape' => $workShape]), $correlationId, $now, $pins);
 
             Listing::query()->where('id', $listingId)->update([
                 'category_id' => $pins['category_id'],
@@ -211,13 +216,21 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             if ($current === null) {
                 throw new ListingError('LISTING_NOT_FOUND', 'The listing could not be found.', $correlationId, status: 404);
             }
-
             $terms = json_decode((string) $current->terms, true) ?: [];
+            $this->validate([
+                'title' => (string) ($terms['title'] ?? ''),
+                'description' => (string) $current->description,
+                'category_code' => (string) ($terms['category_code'] ?? ''),
+                'listing_type' => (string) $listing->listing_type,
+                'work_shape' => $terms['work_shape'] ?? null,
+            ], $correlationId);
             $nextVersion = ((int) $listing->version) + 1;
             $now = now();
+            $workShape = trim((string) $terms['work_shape']);
             $pins = $this->catalog->ensurePublished(
                 (string) ($terms['category_code'] ?? ''),
                 (string) $listing->listing_type,
+                $workShape,
                 $correlationId,
             );
             $this->insertVersion($listingId, $nextVersion, $actor->actorUserId, [
@@ -225,6 +238,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'description' => (string) $current->description,
                 'category_code' => (string) ($terms['category_code'] ?? ''),
                 'listing_type' => (string) $listing->listing_type,
+                'work_shape' => $workShape,
             ], $correlationId, $now, $pins);
 
             Listing::query()->where('id', $listingId)->update([
@@ -515,11 +529,14 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             'listing_id' => $listingId,
             'version_number' => $version,
             'description' => trim((string) $input['description']),
-            'terms' => json_encode([
+            'terms' => json_encode(array_filter([
                 'title' => trim((string) $input['title']),
                 'category_code' => trim((string) $input['category_code']),
-                'scope' => 'Fictional local listing scope',
-            ], JSON_THROW_ON_ERROR),
+                'work_shape' => isset($input['work_shape']) && is_string($input['work_shape']) && trim($input['work_shape']) !== '' ? trim($input['work_shape']) : null,
+                'scope' => (string) ($input['scope'] ?? 'Fictional local listing scope'),
+                'fixture_key' => isset($input['fixture_key']) && is_string($input['fixture_key']) && $input['fixture_key'] !== '' ? $input['fixture_key'] : null,
+                'evidence_class' => isset($input['evidence_class']) && is_string($input['evidence_class']) && $input['evidence_class'] !== '' ? $input['evidence_class'] : null,
+            ], static fn ($value): bool => $value !== null), JSON_THROW_ON_ERROR),
             'price_amount_minor' => null,
             'currency' => null,
             'payment_lane_availability' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),
@@ -615,6 +632,9 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             'area' => $geography['area_code'] ?? ($row->owner_area ?? 'Tagudin'),
             'public' => $public,
         ];
+        if (isset($terms['work_shape']) && is_string($terms['work_shape']) && $terms['work_shape'] !== '') {
+            $projection['work_shape'] = $terms['work_shape'];
+        }
 
         if (isset($terms['fixture_key']) && is_string($terms['fixture_key']) && $terms['fixture_key'] !== '') {
             $projection['fixture_key'] = $terms['fixture_key'];

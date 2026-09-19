@@ -81,6 +81,39 @@ final class OrderCapacityAdapter implements OrderCapacityPort
         }
     }
 
+    public function commitForOrder(
+        string $listingId,
+        string $listingVersionId,
+        string $orderId,
+        int $quantity,
+        string $commandScope,
+        string $idempotencyKey,
+        string $correlationId,
+        ?string $heldReservationId = null,
+    ): ?array {
+        try {
+            return $this->capacity->commitForOrder(
+                listingId: $listingId,
+                listingVersionId: $listingVersionId,
+                orderId: $orderId,
+                quantity: $quantity,
+                commandScope: $commandScope,
+                idempotencyKey: $idempotencyKey,
+                correlationId: $correlationId,
+                heldReservationId: $heldReservationId,
+            );
+        } catch (ListingError $error) {
+            throw new KernelException(
+                code: $error->envelope->code,
+                message: $error->getMessage(),
+                correlationId: $correlationId,
+                status: $error->status,
+                fieldErrors: $error->envelope->fieldErrors,
+                retryable: $error->envelope->retryable,
+            );
+        }
+    }
+
     public function release(string $reservationId, string $correlationId): array
     {
         try {

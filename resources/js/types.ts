@@ -66,6 +66,8 @@ export type ListingRecord = {
     category_code?: string | null;
     listingType?: string | null;
     listing_type?: string | null;
+    workShape?: string | null;
+    work_shape?: string | null;
     state?: ListingLifecycle | null;
     status?: ListingLifecycle | null;
     review_status?: string | null;
@@ -116,6 +118,12 @@ export type HomeProps = PageProps & {
         schemaMigrations: boolean;
     };
     session?: SliceSession | null;
+    temporaryOtpPreview?: {
+        code: string;
+        expires_in_seconds: number;
+        delivered_at?: string;
+    };
+    devMode?: boolean;
     demoNotice?: string | null;
     readiness?: ReadinessState | null;
     draft?: ListingDraft | null;

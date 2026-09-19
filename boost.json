@@ -1,7 +1,9 @@
 {
     "agents": [
         "codex",
-        "cursor"
+        "cursor",
+        "antigravity",
+        "pi"
     ],
     "cloud": false,
     "guidelines": true,
@@ -11,7 +13,7 @@
     "skills": [
         "infer-conventions",
         "laravel-best-practices",
-        "pest-testing",
+        "testing-best-practices",
         "inertia-react-development",
         "tailwindcss-development"
     ]

@@ -1,8 +1,8 @@
 # Tasks: Harden the complete connected frontend system
 
-Status: PROPOSED — every implementation task intentionally unchecked
+Status: PROGRAM BACKLOG REFERENCE — do not execute as one change; child OpenSpec packets own implementation tasks
 Change: `harden-connected-frontend-experience`
-Execution owner: future subagents under lead-architect orchestration and two-stage review
+Execution owner: child OpenSpec changes under the frontend view-projection architecture
 
 ## Execution rules
 

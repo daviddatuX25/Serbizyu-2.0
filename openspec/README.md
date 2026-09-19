@@ -29,21 +29,29 @@ openspec/
         └── specs/<capability>/spec.md
 ```
 
-## Accepted auth authority (implementation packet next)
+## Accepted auth authority (P0–P1/P0c delivered; P2/P3 deferred)
 
-`changes/hybrid-browser-auth-phone-step-up/` — **Accepted 2026-08-10.** Signup: strict mobile OTP. Sign-in: email/password, SMS OTP, Google OAuth (live SMS/Google still gated).
+`changes/hybrid-browser-auth-phone-step-up/` — **Accepted 2026-08-10.** Signup: strict mobile OTP. Sign-in: email/password, phone/password, SMS OTP (fallback), Google OAuth (deferred behind port).
 
-ADR-R-030, foundation plan, `.ai/rules/http-and-auth`, PRD-001, UX-025, and PROGRAM identity row amended. **Code flip still requires §1 implementation OpenSpec + Pest** — do not merge auth routes without that packet.
+P0–P1/P0c slices delivered (phone OTP signup, password setup/auth, session, fake/mailpit delivery, role assignment). P2 Google OAuth and P3 live SMS/phone providers remain deferred and gated.
 
 ## Next packet (not started)
 
-**T2** Governed catalog / capacity / **server** discovery (Tagudin search/filter) — author OpenSpec before implementation.
+**T4** Work fulfillment & extension engine (`changes/t4-work-fulfillment/`) — common Work kernel + A1 Linear Project first implementation slice. Sequenced A3/A4/A9 and closure; no live payments, no connected money.
+
+## Completed T3 packet
+
+`changes/t3-ordinary-order-formation/` — Direct Booking proposal + sole atomic finalize agreement seam (`SubmitOrderProposal`, `FinalizeOrderAgreement`, immutable terms snapshot v1, stub work `not_started`, obligation `created`/`external_cash`, capacity commit). GO recorded 2026-08-10.
+
+## Completed T2 packet
+
+`changes/t2-governed-catalog-listings-capacity/` — Governed category versioning, capability profiles, listing version pins, capacity reservation hold/commit/release/oversell rejection, Tagudin area/category discovery. GO recorded 2026-08-10.
 
 ## Completed T1A packet
 
-`changes/t1a-identity-onboarding-delegation/` — additive roles, consent acting-for on listing writes, live gov-ID fail-closed, UserFactory. GO 2026-08-10.
+`changes/t1a-identity-onboarding-delegation/` — additive roles, consent acting-for on listing writes, live gov-ID fail-closed, UserFactory. GO recorded 2026-08-10.
 
-Reviews remain **T6**; nearby/server search remains **T2**.
+Reviews remain **T6**; nearby/server search adopted in **T2**.
 
 ## Completed T1 packet
 
@@ -53,13 +61,12 @@ Reviews remain **T6**; nearby/server search remains **T2**.
 
 `changes/e0-s2-canonical-schema-migration-baseline/` — canonical 58-table migration baseline. GO recorded 2026-08-10.
 
-Neither T0 nor T1 authorizes production migrate, live providers, or T1A/T2 feature work without their own packets.
-
-A proposed implementation-grade change for the complete connected frontend system is present at:
+Neither T0, T1, T1A, T2, nor T3 authorizes production migrate, live providers, connected money, or downstream feature work without their own packets.
+A program-level connected frontend requirement inventory is retained at:
 
 `changes/harden-connected-frontend-experience/`
 
-It combines the independently corroborated UX-closure audit with the founder-directed mock authentication, progressive onboarding/formalization, complete listing management, shared Agent/Owner context, request bidding, standalone Quick Deal, connected Order/Work/Payment, and scoped Admin/Operations contracts. It requires founder approval before application-code changes and treats prior checked frontend tasks as completed foundation slices rather than proof of connected journey closure.
+It is not executed as one change. The founder-directed frontend-first architecture splits it into reviewable vertical child packets using the current React/Inertia `resources/js` application. The first packet is `changes/establish-frontend-view-projection-kernel/`; it establishes typed projections, resolved actions, deterministic JSON behavior, and a reviewer-only Scenario Lab without replacing real Laravel authentication or existing backend slices.
 
 The UX/UI reference dossier remains available at:
 

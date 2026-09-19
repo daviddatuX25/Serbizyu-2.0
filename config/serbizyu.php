@@ -22,6 +22,10 @@ return [
         ],
     ],
     'identity' => [
+        'browser_otp_preview' => filter_var(
+            env('SERBIZYU_BROWSER_OTP_PREVIEW', in_array((string) env('APP_ENV', 'local'), ['local', 'testing', 'test', 'capstone'], true)),
+            FILTER_VALIDATE_BOOL
+        ),
         'live_government_id_collection' => filter_var(
             env('SERBIZYU_LIVE_GOVERNMENT_ID_COLLECTION', false),
             FILTER_VALIDATE_BOOL

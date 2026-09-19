@@ -25,16 +25,16 @@ final class GovernedCatalogService
     /**
      * @return CatalogPins
      */
-    public function ensurePublished(string $categoryCode, string $listingType, string $correlationId): array
+    public function ensurePublished(string $categoryCode, string $listingType, string $workShape, string $correlationId): array
     {
         $now = now();
         $categoryCode = trim($categoryCode);
         $listingType = trim($listingType);
 
-        return DB::transaction(function () use ($categoryCode, $listingType, $correlationId, $now): array {
+        return DB::transaction(function () use ($categoryCode, $listingType, $workShape, $correlationId, $now): array {
             $categoryId = $this->ensureCategory($categoryCode, $correlationId, $now);
             $categoryBusinessVersion = $this->ensurePublishedCategoryVersion($categoryId, $categoryCode, $correlationId, $now);
-            $profile = $this->ensureActiveCapabilityProfile($categoryCode, $listingType, $correlationId, $now);
+            $profile = $this->ensureActiveCapabilityProfile($listingType, $workShape, $correlationId, $now);
 
             return [
                 'category_id' => $categoryId,
@@ -82,22 +82,14 @@ final class GovernedCatalogService
             );
         }
 
-        $family = $listingType === 'service' ? 'service_listing' : 'product_listing';
+        $family = $this->profileFamilyForListingType($listingType);
         $profile = DB::table('capability_profiles')
             ->where('profile_family_code', $family)
             ->where('status', 'active')
             ->orderByDesc('business_version')
             ->first();
 
-        if ($profile === null) {
-            $profile = DB::table('capability_profiles')
-                ->where('listing_type', $listingType)
-                ->where('status', 'active')
-                ->orderByDesc('business_version')
-                ->first();
-        }
-
-        if ($profile === null) {
+        if ($profile === null || ! in_array((string) $profile->work_shape, ['A1', 'A3', 'A4', 'A9'], true)) {
             throw new ListingError(
                 'CATEGORY_NOT_PUBLISHED',
                 'That listing type is not available yet.',
@@ -119,6 +111,10 @@ final class GovernedCatalogService
 
     private function ensureCategory(string $code, string $correlationId, mixed $now): string
     {
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement('SELECT pg_advisory_xact_lock(hashtext(?))', ['category_code:'.$code]);
+        }
+
         $category = DB::table('categories')->where('code', $code)->first();
         if ($category !== null) {
             if ((string) $category->status !== 'active') {
@@ -155,6 +151,10 @@ final class GovernedCatalogService
 
     private function ensurePublishedCategoryVersion(string $categoryId, string $code, string $correlationId, mixed $now): int
     {
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement('SELECT pg_advisory_xact_lock(hashtext(?))', ['category_version:'.$categoryId]);
+        }
+
         if (! Schema::hasTable('category_versions')) {
             return 1;
         }
@@ -201,10 +201,16 @@ final class GovernedCatalogService
     /**
      * @return array{id: string, family: string, business_version: int, code: string}
      */
-    private function ensureActiveCapabilityProfile(string $categoryCode, string $listingType, string $correlationId, mixed $now): array
+    private function ensureActiveCapabilityProfile(string $listingType, string $workShape, string $correlationId, mixed $now): array
     {
-        $family = $listingType === 'service' ? 'service_listing' : 'product_listing';
-        $code = $family;
+        $family = $this->profileFamilyForListingType($listingType);
+        if (! in_array($workShape, ['A1', 'A3', 'A4', 'A9'], true)) {
+            throw new \InvalidArgumentException('Unsupported Work shape for a governed capability profile.');
+        }
+
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement('SELECT pg_advisory_xact_lock(hashtext(?))', ['capability_profile_family:'.$family]);
+        }
 
         $profile = DB::table('capability_profiles')
             ->where('profile_family_code', $family)
@@ -212,7 +218,7 @@ final class GovernedCatalogService
             ->orderByDesc('business_version')
             ->first();
 
-        if ($profile !== null) {
+        if ($profile !== null && (string) $profile->work_shape === $workShape) {
             return [
                 'id' => (string) $profile->id,
                 'family' => (string) $profile->profile_family_code,
@@ -221,21 +227,21 @@ final class GovernedCatalogService
             ];
         }
 
-        // Prefer existing code-unique rows from older seed paths.
-        $legacy = DB::table('capability_profiles')
-            ->where('code', $code)
+        DB::table('capability_profiles')
+            ->where('profile_family_code', $family)
             ->where('status', 'active')
+            ->update([
+                'status' => 'retired',
+                'updated_at' => $now,
+            ]);
+
+        $latest = DB::table('capability_profiles')
+            ->where('profile_family_code', $family)
+            ->orderByDesc('business_version')
             ->first();
-
-        if ($legacy !== null) {
-            return [
-                'id' => (string) $legacy->id,
-                'family' => (string) ($legacy->profile_family_code ?? $code),
-                'business_version' => (int) ($legacy->business_version ?? $legacy->version ?? 1),
-                'code' => (string) $legacy->code,
-            ];
-        }
-
+        $businessVersion = $latest === null ? 1 : ((int) $latest->business_version) + 1;
+        $version = $latest === null ? 1 : ((int) $latest->version) + 1;
+        $code = $family;
         $id = (string) Str::uuid7();
         DB::table('capability_profiles')->insert([
             'id' => $id,
@@ -243,15 +249,15 @@ final class GovernedCatalogService
             'profile_family_code' => $family,
             'listing_type' => $listingType,
             'mechanism' => 'listing',
-            'work_shape' => $listingType === 'service' ? 'local_service' : 'product_handoff',
+            'work_shape' => $workShape,
             'allowed_payment_lanes' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),
             'allowed_access_tiers' => json_encode(['L1', 'L2', 'L3'], JSON_THROW_ON_ERROR),
             'safety_class' => 'standard',
             'data_class' => 'public',
             'status' => 'active',
             'activation_record_reference' => 't2-governed-catalog',
-            'version' => 1,
-            'business_version' => 1,
+            'version' => $version,
+            'business_version' => $businessVersion,
             'content_schema_version' => 1,
             'row_version' => 1,
             'correlation_id' => $correlationId,
@@ -262,8 +268,17 @@ final class GovernedCatalogService
         return [
             'id' => $id,
             'family' => $family,
-            'business_version' => 1,
+            'business_version' => $businessVersion,
             'code' => $code,
         ];
+    }
+
+    private function profileFamilyForListingType(string $listingType): string
+    {
+        return match ($listingType) {
+            'service' => 'service_listing',
+            'product' => 'product_listing',
+            default => throw new \InvalidArgumentException('Unsupported listing type for a governed capability profile.'),
+        };
     }
 }

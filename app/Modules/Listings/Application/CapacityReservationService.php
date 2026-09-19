@@ -198,6 +198,285 @@ final class CapacityReservationService
     }
 
     /**
+     * @return array{reservation_id: string, status: string, remaining_quantity: int, replay: bool}|null
+     */
+    public function commitForOrder(
+        string $listingId,
+        string $listingVersionId,
+        string $orderId,
+        int $quantity,
+        string $commandScope,
+        string $idempotencyKey,
+        string $correlationId,
+        ?string $heldReservationId = null,
+    ): ?array {
+        if ($quantity < 1) {
+            throw new ListingError(
+                'VALIDATION_FAILED',
+                'Committed capacity quantity must be positive.',
+                $correlationId,
+                fieldErrors: ['quantity' => ['Enter a quantity of at least 1.']],
+            );
+        }
+
+        $heldReservationId = is_string($heldReservationId) && trim($heldReservationId) !== ''
+            ? trim($heldReservationId)
+            : null;
+
+        return DB::transaction(function () use (
+            $listingId,
+            $listingVersionId,
+            $orderId,
+            $quantity,
+            $commandScope,
+            $idempotencyKey,
+            $correlationId,
+            $heldReservationId,
+        ): ?array {
+            $existing = DB::table('listing_capacity_reservations')
+                ->where('command_scope', $commandScope)
+                ->where('idempotency_key', $idempotencyKey)
+                ->lockForUpdate()
+                ->first();
+
+            if ($existing !== null) {
+                if ($heldReservationId !== null && (string) $existing->id !== $heldReservationId) {
+                    throw new ListingError(
+                        'IDEMPOTENCY_CONFLICT',
+                        'That capacity command was already used with a different reservation.',
+                        $correlationId,
+                        status: 409,
+                    );
+                }
+
+                if (
+                    (string) $existing->order_id !== $orderId
+                    || (int) $existing->quantity !== $quantity
+                    || (string) $existing->listing_version_id !== $listingVersionId
+                ) {
+                    throw new ListingError(
+                        'IDEMPOTENCY_CONFLICT',
+                        'That capacity command was already used with different input.',
+                        $correlationId,
+                        status: 409,
+                    );
+                }
+
+                if ((string) $existing->status !== 'committed') {
+                    throw new ListingError(
+                        'INVALID_STATE',
+                        'Replayed capacity reservation was not committed.',
+                        $correlationId,
+                        status: 409,
+                    );
+                }
+
+                $bucket = DB::table('listing_capacity')
+                    ->where('id', $existing->listing_capacity_id)
+                    ->first();
+
+                if (
+                    $bucket === null
+                    || (string) $bucket->listing_id !== $listingId
+                    || (string) $bucket->listing_version_id !== $listingVersionId
+                ) {
+                    throw new ListingError(
+                        'IDEMPOTENCY_CONFLICT',
+                        'Replayed capacity reservation does not match this listing.',
+                        $correlationId,
+                        status: 409,
+                    );
+                }
+
+                return [
+                    'reservation_id' => (string) $existing->id,
+                    'status' => (string) $existing->status,
+                    'remaining_quantity' => (int) ($bucket->remaining_quantity ?? 0),
+                    'replay' => true,
+                ];
+            }
+            $held = null;
+            if ($heldReservationId !== null) {
+                $held = DB::table('listing_capacity_reservations')
+                    ->where('id', $heldReservationId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($held === null) {
+                    throw new ListingError('LISTING_NOT_FOUND', 'Held capacity reservation was not found.', $correlationId, status: 404);
+                }
+
+                $heldOrderId = $held->order_id !== null ? (string) $held->order_id : null;
+                if ($heldOrderId !== null && $heldOrderId !== $orderId) {
+                    throw new ListingError(
+                        'INVALID_STATE',
+                        'Held capacity reservation belongs to a different order.',
+                        $correlationId,
+                        status: 409,
+                    );
+                }
+
+                if ((int) $held->quantity !== $quantity) {
+                    throw new ListingError('INVALID_STATE', 'Held capacity reservation quantity does not match order quantity.', $correlationId, status: 409);
+                }
+            }
+
+            $buckets = DB::table('listing_capacity')
+                ->where('listing_id', $listingId)
+                ->where('listing_version_id', $listingVersionId)
+                ->lockForUpdate()
+                ->get();
+
+            if ($buckets->isEmpty()) {
+                if ($heldReservationId !== null) {
+                    throw new ListingError(
+                        'INVALID_STATE',
+                        'A capacity reservation cannot be used without a capacity bucket.',
+                        $correlationId,
+                        status: 409,
+                    );
+                }
+
+                return null;
+            }
+
+            foreach ($buckets as $b) {
+                if ((string) $b->capacity_type !== 'quantity') {
+                    throw new ListingError(
+                        'UNSUPPORTED_CAPACITY_TYPE',
+                        'Only quantity capacity is supported for direct order formation.',
+                        $correlationId,
+                        status: 422,
+                    );
+                }
+            }
+
+            if ($buckets->count() > 1) {
+                throw new ListingError(
+                    'AMBIGUOUS_CAPACITY_BUCKET',
+                    'Multiple capacity buckets found for this listing version.',
+                    $correlationId,
+                    status: 409,
+                );
+            }
+
+            $bucket = $buckets->first();
+            if ((string) ($bucket->resource_key ?? '') !== '') {
+                throw new ListingError(
+                    'AMBIGUOUS_CAPACITY_BUCKET',
+                    'Capacity bucket with non-empty resource key cannot be finalized directly.',
+                    $correlationId,
+                    status: 409,
+                );
+            }
+
+            if ($held !== null) {
+                if (
+                    (string) $held->listing_capacity_id !== (string) $bucket->id
+                    || (string) $held->listing_version_id !== $listingVersionId
+                ) {
+                    throw new ListingError('INVALID_STATE', 'Held capacity reservation does not match listing version.', $correlationId, status: 409);
+                }
+
+                if ((string) $held->status === 'committed') {
+                    if ($heldOrderId !== $orderId) {
+                        throw new ListingError(
+                            'INVALID_STATE',
+                            'Committed capacity reservation belongs to a different order.',
+                            $correlationId,
+                            status: 409,
+                        );
+                    }
+
+                    return [
+                        'reservation_id' => (string) $held->id,
+                        'status' => 'committed',
+                        'remaining_quantity' => (int) $bucket->remaining_quantity,
+                        'replay' => true,
+                    ];
+                }
+
+                if ((string) $held->status !== 'held') {
+                    throw new ListingError('INVALID_STATE', 'Only a held reservation can be committed.', $correlationId, status: 409);
+                }
+
+                $now = now();
+                DB::table('listing_capacity_reservations')->where('id', $heldReservationId)->update([
+                    'order_id' => $orderId,
+                    'status' => 'committed',
+                    'command_scope' => $commandScope,
+                    'idempotency_key' => $idempotencyKey,
+                    'committed_at' => $now,
+                    'row_version' => ((int) $held->row_version) + 1,
+                    'correlation_id' => $correlationId,
+                    'updated_at' => $now,
+                ]);
+
+                return [
+                    'reservation_id' => $heldReservationId,
+                    'status' => 'committed',
+                    'remaining_quantity' => (int) $bucket->remaining_quantity,
+                    'replay' => false,
+                ];
+
+            }
+
+            $remaining = (int) $bucket->remaining_quantity;
+            if ($quantity > $remaining) {
+                throw new ListingError(
+                    'CAPACITY_OVERSELL',
+                    'Not enough capacity remains to finalize this order.',
+                    $correlationId,
+                    status: 409,
+                    retryable: true,
+                );
+            }
+
+            $id = (string) Str::uuid7();
+            $now = now();
+            $newRemaining = $remaining - $quantity;
+
+            DB::table('listing_capacity_reservations')->insert([
+                'id' => $id,
+                'listing_capacity_id' => $bucket->id,
+                'listing_version_id' => $listingVersionId,
+                'order_id' => $orderId,
+                'source_mechanism' => 'direct',
+                'source_reference_id' => null,
+                'quantity' => $quantity,
+                'slot_start' => null,
+                'slot_end' => null,
+                'status' => 'committed',
+                'command_scope' => $commandScope,
+                'idempotency_key' => $idempotencyKey,
+                'row_version' => 1,
+                'expires_at' => null,
+                'committed_at' => $now,
+                'released_at' => null,
+                'correlation_id' => $correlationId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            DB::table('listing_capacity')->where('id', $bucket->id)->update([
+                'remaining_quantity' => $newRemaining,
+                'reservation_status' => $newRemaining === 0 ? 'held' : 'open',
+                'row_version' => ((int) $bucket->row_version) + 1,
+                'version' => ((int) $bucket->version) + 1,
+                'correlation_id' => $correlationId,
+                'updated_at' => $now,
+            ]);
+
+            return [
+                'reservation_id' => $id,
+                'status' => 'committed',
+                'remaining_quantity' => $newRemaining,
+                'replay' => false,
+            ];
+        });
+    }
+
+    /**
      * @return array{reservation_id: string, status: string, remaining_quantity: int}
      */
     public function release(string $reservationId, string $correlationId): array

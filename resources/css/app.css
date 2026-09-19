@@ -81,6 +81,132 @@
   --sz-target: 2.75rem;
 }
 
+.dark {
+  --background: #090d16;
+  --foreground: #f1f5f9;
+  --card: #0f172a;
+  --card-foreground: #f1f5f9;
+  --popover: #0f172a;
+  --popover-foreground: #f1f5f9;
+  --primary: #10b981;
+  --primary-foreground: #022c22;
+  --secondary: #1e293b;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #162032;
+  --accent-foreground: #f1f5f9;
+  --destructive: #ef4444;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #10b981;
+
+  --sidebar: #0b111c;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #10b981;
+  --sidebar-primary-foreground: #022c22;
+  --sidebar-accent: #162032;
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #10b981;
+}
+
+.light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #0d715f;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #e8f7f1;
+  --accent-foreground: #0a574a;
+  --destructive: #ef4444;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #0d715f;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0d715f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #0d715f;
+}
+
+.dark body, body.dark {
+  background: #090d16 !important;
+  color: #f1f5f9 !important;
+}
+
+body.light {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Scoped Admin Typography to neutralize global connectedSlice clamp */
+.admin-shell h1 {
+  font-size: 1.25rem !important;
+  line-height: 1.75rem !important;
+  margin-bottom: 0 !important;
+  max-width: none !important;
+}
+
+.admin-shell h2 {
+  font-size: 1rem !important;
+  line-height: 1.5rem !important;
+  margin-bottom: 0 !important;
+}
+
+.admin-shell p {
+  margin-bottom: 0 !important;
+}
+
+/* Scoped Sheet & Dialog Typography to neutralize global connectedSlice clamp */
+[data-slot="sheet-content"] h1,
+[data-slot="sheet-content"] h2,
+[data-slot="sheet-content"] h3,
+[data-slot="sheet-title"],
+[data-slot="dialog-content"] h1,
+[data-slot="dialog-content"] h2,
+[data-slot="dialog-content"] h3,
+[data-slot="dialog-title"] {
+  font-size: 1.125rem !important;
+  line-height: 1.5rem !important;
+  margin: 0 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  max-width: none !important;
+  color: var(--foreground) !important;
+}
+
+[data-slot="sheet-description"],
+[data-slot="dialog-description"] {
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem !important;
+  margin: 0 !important;
+  color: var(--muted-foreground) !important;
+}
+
+[data-slot="sheet-content"] p,
+[data-slot="dialog-content"] p {
+  margin: 0 !important;
+  color: inherit !important;
+}
+
+[data-slot="sheet-content"],
+[data-slot="dialog-content"] {
+  font-family: var(--font-heading), 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  color: var(--card-foreground) !important;
+}
+
 @theme inline {
   --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
   --font-heading: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
@@ -171,4 +297,107 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* ===================================================================
+   THEMED SCROLLBARS (ESPECIALLY FOR DARK MODE & HORIZONTAL TABLES)
+   =================================================================== */
+
+/* Standard modern scrollbar-width & color (Serbizyu Brand Tinted) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(13, 113, 95, 0.25) transparent;
+}
+
+*:hover {
+  scrollbar-color: rgba(13, 113, 95, 0.45) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(52, 211, 153, 0.3) transparent;
+}
+
+.dark *:hover {
+  scrollbar-color: rgba(52, 211, 153, 0.55) transparent;
+}
+
+/* WebKit & Chromium custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(13, 113, 95, 0.22);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.15s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(13, 113, 95, 0.48);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(52, 211, 153, 0.28);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.55);
+}
+
+/* Table Horizontal Scrollbar Custom Theming */
+[data-slot="table-container"],
+.overflow-x-auto {
+  scrollbar-width: thin;
+}
+
+[data-slot="table-container"]::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+
+[data-slot="table-container"]::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 9999px;
+  margin: 0 4px;
+}
+
+.dark [data-slot="table-container"]::-webkit-scrollbar-track,
+.dark .overflow-x-auto::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 9999px;
+  margin: 0 4px;
+}
+
+[data-slot="table-container"]::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
+  border-radius: 9999px;
+}
+
+[data-slot="table-container"]::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.dark [data-slot="table-container"]::-webkit-scrollbar-thumb,
+.dark .overflow-x-auto::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+}
+
+.dark [data-slot="table-container"]::-webkit-scrollbar-thumb:hover,
+.dark .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.38);
 }

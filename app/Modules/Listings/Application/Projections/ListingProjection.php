@@ -56,6 +56,9 @@ final readonly class ListingProjection
             'area' => (string) $attributes['area'],
             'public' => $public,
         ];
+        if (array_key_exists('work_shape', $attributes)) {
+            $projection['work_shape'] = (string) $attributes['work_shape'];
+        }
 
         if (array_key_exists('fixture_key', $attributes)) {
             $projection['fixture_key'] = (string) $attributes['fixture_key'];

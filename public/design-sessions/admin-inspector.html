@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>OPS-003 · Multi-Aggregate Inspector | Serbizyu 2.0</title>
+  <link rel="stylesheet" href="admin-kit.css">
+</head>
+<body>
+
+<div class="admin-workspace">
+  <!-- Top Navigation & Context Bar -->
+  <header class="admin-top-bar">
+    <div class="brand-badge">
+      <span class="dot"></span>
+      <span>Serbizyu Ops</span>
+      <span style="color: var(--text-muted); font-weight: 500; font-size: 11px;">/ Order & Work Inspector (OPS-003)</span>
+    </div>
+
+    <nav class="admin-nav-links">
+      <a href="admin-ui-kit.html" class="admin-nav-item" data-snd="tap">UI Kit</a>
+      <a href="admin-triage.html" class="admin-nav-item" data-snd="tap">Triage Queue (OPS-001)</a>
+      <a href="admin-inspector.html" class="admin-nav-item active" data-snd="tap">Inspector (OPS-003)</a>
+      <a href="admin-hold-console.html" class="admin-nav-item" data-snd="tap">Hold Console (OPS-005)</a>
+    </nav>
+
+    <div class="top-controls">
+      <button type="button" class="btn-snd-toggle sound-on">
+        <span>🔊</span> Sound: ON
+      </button>
+    </div>
+  </header>
+
+  <!-- Inspector Header & Correlation Information -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+        <a href="admin-triage.html" class="badge badge-neutral" style="text-decoration: none;" data-snd="tap">
+          ← Back to Triage
+        </a>
+        <span class="badge badge-success">● Genuine Tagudin Cohort</span>
+        <span class="badge badge-purple font-mono">Correlation: 0198a3-c481</span>
+      </div>
+      <h1 style="font-size: 22px; font-weight: 800; color: var(--text-pure); letter-spacing: -0.02em;">
+        Order & Work Inspector: <span class="font-mono" style="color: var(--forest-100);">#ORD-2026-09</span>
+      </h1>
+      <p style="font-size: 13px; color: var(--text-secondary);">
+        Three parallel aggregates inspected simultaneously. Order contract, Work fulfillment, and Payment lane remain decoupled.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      <a href="admin-hold-console.html" class="btn btn-amber" data-snd="warn">
+        <span>⏸</span> Manage Scoped Hold
+      </a>
+      <button type="button" class="btn btn-secondary" data-snd="tap" onclick="location.reload()">
+        <span>↺</span> Refresh State
+      </button>
+    </div>
+  </div>
+
+  <!-- TARGETED ADMINISTRATIVE HOLD BANNER -->
+  <div class="hold-banner">
+    <div class="hold-banner-icon">⏸</div>
+    <div class="hold-banner-body">
+      <div class="hold-banner-title">
+        Targeted Administrative Hold Placed on Payment Obligation #OBL-881
+      </div>
+      <div class="hold-banner-text">
+        Scope: <strong>Payment Obligation Only (₱90 External Cash attestation)</strong>. 
+        Reason: <strong>Evidence mismatch under human review</strong> (Buyer reported cash paid; provider reports zero received).
+        <div style="margin-top: 6px; font-size: 12px; color: var(--forest-100);">
+          ✓ Order Agreement Snapshot and Work Execution continue normally and remain unblocked.
+        </div>
+      </div>
+    </div>
+    <a href="admin-hold-console.html" class="btn btn-amber" style="font-size: 11px; padding: 6px 12px;" data-snd="tap">
+      Action Hold →
+    </a>
+  </div>
+
+  <!-- PARALLEL MULTI-AGGREGATE SPLIT CARDS (OPS-003) -->
+  <div class="aggregate-grid">
+    <!-- AGGREGATE 1: ORDER AGREEMENT -->
+    <div class="aggregate-card">
+      <div class="aggregate-card-title">
+        <span>1. Order Agreement</span>
+        <span class="badge badge-success">Accepted v1</span>
+      </div>
+      <div class="kv-list">
+        <div class="kv-row">
+          <span class="kv-key">Order Reference</span>
+          <span class="kv-val font-mono">#ORD-2026-09</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Contract Terms</span>
+          <span class="kv-val">Snapshot v1 (Locked)</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Base Agreement</span>
+          <span class="kv-val">₱90.00</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Listing Source</span>
+          <span class="kv-val">#LST-FAN-01 (Capacitor)</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Buyer</span>
+          <span class="kv-val">Maria Santos (@nena_m)</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Provider</span>
+          <span class="kv-val">Arman Electric (@arman)</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Creation Date</span>
+          <span class="kv-val font-mono">2026-09-17 14:10</span>
+        </div>
+      </div>
+      <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line-subtle); font-size: 11px; color: var(--text-muted);">
+        Terms are immutable. Dispute does not alter agreed pricing.
+      </div>
+    </div>
+
+    <!-- AGGREGATE 2: WORK EXECUTION -->
+    <div class="aggregate-card">
+      <div class="aggregate-card-title">
+        <span>2. Work Execution</span>
+        <span class="badge badge-info">In Progress</span>
+      </div>
+      <div class="kv-list">
+        <div class="kv-row">
+          <span class="kv-key">Work Shape</span>
+          <span class="kv-val">A1 Linear Project</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Work Instance</span>
+          <span class="kv-val font-mono">#WRK-401</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Current Step</span>
+          <span class="kv-val">Step 2 of 3 (Replace)</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Step 1 Evidence</span>
+          <span class="kv-val">Disassembly photo ✓</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Completion Status</span>
+          <span class="kv-val">NOT proposed yet</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Hold Status</span>
+          <span class="kv-val" style="color: var(--success-green-light);">Unaffected by hold</span>
+        </div>
+      </div>
+      <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line-subtle); font-size: 11px; color: var(--success-green-light);">
+        Technician can submit progress evidence unhindered.
+      </div>
+    </div>
+
+    <!-- AGGREGATE 3: PAYMENT LANE -->
+    <div class="aggregate-card is-held">
+      <div class="aggregate-card-title">
+        <span>3. Payment Obligation</span>
+        <span class="badge badge-hold">On Hold</span>
+      </div>
+      <div class="kv-list">
+        <div class="kv-row">
+          <span class="kv-key">Payment Lane</span>
+          <span class="kv-val">External Cash</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Obligation Ref</span>
+          <span class="kv-val font-mono">#OBL-881</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Declared Due</span>
+          <span class="kv-val">₱90.00</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Buyer Report</span>
+          <span class="kv-val" style="color: var(--info-blue-light);">Paid ₱90 (14:22 PHT)</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Provider Report</span>
+          <span class="kv-val" style="color: var(--danger-red-light);">Not Received (₱0)</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">Platform Custody</span>
+          <span class="kv-val font-mono">₱0.00 (Zero escrow)</span>
+        </div>
+      </div>
+      <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line-subtle); font-size: 11px; color: var(--hold-amber-light);">
+        Attestation frozen pending counterparty clarification.
+      </div>
+    </div>
+  </div>
+
+  <!-- CHRONOLOGICAL MULTI-AGGREGATE AUDIT TIMELINE -->
+  <section class="admin-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div>
+        <h2 style="font-size: 16px; font-weight: 700; color: var(--text-pure);">
+          Multi-Aggregate Audit Timeline (Source of Truth)
+        </h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+          Persisted events from <code class="font-mono">audit_events</code>. History is immutable; corrections append new rows.
+        </p>
+      </div>
+      <span class="badge badge-purple">5 Recorded Events</span>
+    </div>
+
+    <ul class="timeline-rail">
+      <!-- Event 1: Order Agreement -->
+      <li class="timeline-item">
+        <div class="timeline-node"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <span class="timeline-actor">
+              <span class="badge badge-success">Order</span> Maria Santos & Arman Electric
+            </span>
+            <span class="timeline-time">14:10:02 PHT</span>
+          </div>
+          <div class="timeline-desc">
+            Terms accepted for Ceiling Fan Capacitor Replacement. Order snapshot v1 sealed at ₱90.00 with External Cash payment terms.
+          </div>
+        </div>
+      </li>
+
+      <!-- Event 2: Work Started -->
+      <li class="timeline-item">
+        <div class="timeline-node"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <span class="timeline-actor">
+              <span class="badge badge-info">Work</span> Arman Electric (Provider)
+            </span>
+            <span class="timeline-time">14:15:20 PHT</span>
+          </div>
+          <div class="timeline-desc">
+            Work Step 1: Disassembly initiated. Photo evidence uploaded (<span class="font-mono">evidence_fan_disassembly.jpg</span>).
+          </div>
+        </div>
+      </li>
+
+      <!-- Event 3: Cash Declared by Buyer -->
+      <li class="timeline-item">
+        <div class="timeline-node"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <span class="timeline-actor">
+              <span class="badge badge-info">Payment</span> Maria Santos (Buyer)
+            </span>
+            <span class="timeline-time">14:22:11 PHT</span>
+          </div>
+          <div class="timeline-desc">
+            Buyer submitted declaration: "External Cash Paid: ₱90.00 in person". Awaiting provider counter-confirmation.
+          </div>
+        </div>
+      </li>
+
+      <!-- Event 4: Provider Reports Mismatch -->
+      <li class="timeline-item">
+        <div class="timeline-node node-danger"></div>
+        <div class="timeline-content" style="border-color: var(--danger-border);">
+          <div class="timeline-header">
+            <span class="timeline-actor">
+              <span class="badge badge-danger">Dispute</span> Arman Electric (Provider)
+            </span>
+            <span class="timeline-time">14:25:00 PHT</span>
+          </div>
+          <div class="timeline-desc">
+            Provider flagged cash mismatch: "No cash handed over during disassembly; buyer stated payment was made via family member".
+          </div>
+        </div>
+      </li>
+
+      <!-- Event 5: Administrative Hold Placed -->
+      <li class="timeline-item">
+        <div class="timeline-node node-hold"></div>
+        <div class="timeline-content" style="border-color: var(--hold-border); background: rgba(245, 158, 11, 0.05);">
+          <div class="timeline-header">
+            <span class="timeline-actor">
+              <span class="badge badge-hold">Hold</span> Operator ADMIN-01
+            </span>
+            <span class="timeline-time">14:30:15 PHT</span>
+          </div>
+          <div class="timeline-desc">
+            Placed scoped administrative hold on Payment Obligation #OBL-881. Reason class: <code class="font-mono">dispute</code>. Work instance remains unblocked.
+          </div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Sticky Action Dock -->
+  <div class="action-dock">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="badge badge-hold">1 Active Hold</span>
+      <span style="font-size: 12px; color: var(--text-secondary);">Target: Payment Obligation #OBL-881</span>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <a href="admin-hold-console.html" class="btn btn-amber" data-snd="warn">
+        <span>⏸</span> Open Scoped Hold Console →
+      </a>
+      <button type="button" class="btn btn-secondary" data-snd="tap" onclick="alert('Audit note appended.')">
+        <span>📝</span> Log Internal Note
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="admin-snd.js"></script>
+</body>
+</html>

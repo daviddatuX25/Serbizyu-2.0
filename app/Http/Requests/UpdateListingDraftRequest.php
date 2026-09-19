@@ -22,6 +22,7 @@ final class UpdateListingDraftRequest extends FormRequest
             'description' => ['sometimes', 'string', 'min:10', 'max:4000'],
             'category_code' => ['sometimes', 'string', 'regex:/^[a-z0-9][a-z0-9_-]{1,63}$/'],
             'listing_type' => ['sometimes', 'string', 'in:service,product'],
+            'work_shape' => ['sometimes', 'string', 'in:A1,A3,A4,A9'],
         ];
     }
 }

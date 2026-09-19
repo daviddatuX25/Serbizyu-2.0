@@ -72,6 +72,11 @@
 | Modal / toast / sticky action bar | Gap | §8 | Later |
 | Card left-accent status stripe | **Banned** | founder | Never promote |
 
+
+### Badge UI Design Rules (Setproduct Standard)
+- **Pure Count Badges:** Display only the numeric value (e.g. `1`, `2`, `99+`). Never append redundant nouns (`2` instead of `2 Listings`, `1` instead of `1 Active`).
+- **Anatomy:** 20–22px height pill/circular badge, shaded surface (`var(--forest-50)`), 1px border stroke (`var(--forest-200)`), subtle 1px elevation shadow, and bold monospace numerals (`JetBrains Mono`).
+- **Accessibility:** Deliver semantic meaning via `aria-label="2 active listings"` without polluting the visual layout.
 ## 2 · Banners
 
 | Element | Status | Priority |
@@ -86,20 +91,27 @@
 | Loading + empty | Present | — |
 | Full 15-variant grid | Gap | Later |
 
-## 4 · Payment elements
+## 4 · Payment & Order elements
 
 | Element | Status | Priority |
 |---|---|---|
-| Order/Work/Payment separation | Gap | Later |
-| Two-sided External Cash | Gap | Later |
+| Unified Order Detail (`order-detail-mobile.html`) | Present / Accepted | — |
+| Minimalist Graphic Invoice (monochrome SVGs, amounts, zero words) | Present / Accepted | — |
+| Order/Work/Payment separation | Present / Accepted | — |
+| Two-sided External Cash | Present (Solo order specimen) | — |
+| Digital Escrow (Lane 2 GCash / Maya) | Present (Deal chain specimen) | — |
 | Lane cards / Tiwala guards | Gap | Later |
 
-## 5 · Evidence & trust
+## 5 · Evidence & Communication
 
 | Element | Status | Priority |
 |---|---|---|
-| Evidence lifecycle / consent / dispute / timeline | Gap | Later |
-
+| 1:1 In-Order Fulfillment Chat (`order-chat-mobile.html`) | Present / Accepted | — |
+| Multi-Party Relay Room (`deal-chain-chat-mobile.html`) | Present / Accepted | — |
+| 1:1 Pre-Order Negotiation (`bidding-negotiation.html`) | Present / Accepted | — |
+| Glovo Wave Organic Asymmetrical Attachment Drawer | Present / Accepted | — |
+| Contextual Participant Handoff Sheet | Present / Accepted | — |
+| Evidence lifecycle / consent / dispute / timeline | Partial (photo evidence & hold actions) | Next |
 ## 6 · Edge / unique features
 
 | Element | Status | Priority |
@@ -129,10 +141,12 @@
 | Archetype | Status | Priority |
 |---|---|---|
 | Discovery & comparison (Browse) | Present | — |
-| Guided form & review (Auth / setup / listing) | Present | — |
-| Shared transaction workspace | Gap | Later |
+| Guided form & review (Auth / setup / listing / requests) | Present (`request-service-builder.html`, `listing-service-editor.html`, `listing-product-editor.html`) | — |
+| Tender & Quote Workspace | Present (`responses-open-comparison.html`, `quote-composer.html`, `quote-own-submitted.html`, `request-open-public-view.html`) | — |
+| Shared transaction workspace | Present (`payment-flow-mobile.html`, `settlements-mobile.html`, `order-detail-mobile.html`) | — |
 | Appointment/handoff / Digital delivery | Gap | Later |
-| Evidence/concern/support | Gap | Later |
+| Evidence/concern/support | Present (`payment-flow-mobile.html` dispute drawer + hold stage, `admin-triage.html`) | — |
+| Completion & Review Ceremony | Present (`review-ceremony-mobile.html`, `payment-flow-mobile.html`) | — |
 | Agent-assisted / Admin | Gap | Later |
 
 ## 10 · Shell & navigation
@@ -197,16 +211,37 @@
 - Later: muted video / Reels lane can reuse the same media stage + dwell contract.
 - Do not claim stock/preview frames as listing-owned media until projected from backend.
 
+
+### Signature Glovo Organic Asymmetrical Wave Bottom Sheet (Locked Pattern)
+
+**Canonical source:** `docs/design-kit/browse-mobile.html` (`#glovo-filter-modal`), replicated on `order-detail-mobile.html` and `review-ceremony-mobile.html`.
+
+- **Structural Contract:**
+  1. `.sheet-backdrop` / `.glovo-drawer-overlay`: `background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; flex-direction: column; justify-content: flex-end; align-items: center;`
+  2. `.glovo-organic-modal` / `.glovo-drawer-sheet`: `width: 100%; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); max-height: 85%; background: transparent;`
+  3. `<svg class="glovo-wave-cap">`: `width: 100%; height: 34px; margin-bottom: -1px; display: block; flex-shrink: 0;` with path `M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z` and `fill="#FFFFFF"`.
+  4. `.glovo-modal-content` / `.drawer-content-box`: `background: #FFFFFF; padding: 6px 20px 28px; display: flex; flex-direction: column; gap: 12px;`
+- **Invariants:**
+  - Wrapper MUST have `background: transparent;`. Setting white on the wrapper paints over the wave cutout and turns it into a flat rectangle.
+  - Content box below MUST have `background: #FFFFFF;` and `-1px` top margin so the white SVG wave seamlessly fuses into the white body.
+  - All option tiles inside MUST be clean white cards with subtle borders. No grey (`#F8FAFC`, `#F1F5F9`) fills.
 ---
 
-## Open choices
+## Prior foundation choices
 
-1. Lock Provider/Buyer nav IA in EXPERIENCE.md now, or keep temporary simple shell (Home / Browse / My Listings only — no Activity) until more surfaces exist?
-2. During foundation pass: map kit tokens → Tailwind/shadcn theme variables 1:1 (preferred), vs redesign while keeping EXPERIENCE behavior?
+Provider/Buyer navigation IA and one-to-one kit-token mapping remain separate future decisions. They do not block fixed-perspective static session mocks and must not trigger a shared role-aware static shell.
 
-## Immediate next (accepted flow)
+## Immediate next — static session discovery program
 
-1. Install Tailwind + owned shadcn-style primitives themed to kit.
-2. Foundation UI pass on live Auth → Onboarding → My Listings → Browse → Detail.
-3. Shell cleanup (drop Activity until real); remove pollution copy.
-4. New features thereafter use WORKFLOW.md kit-first phase.
+The prior foundation pass is retained as completed/history. Current next work is the 37-session static mobile backlog in `../../_bmad-output/planning-artifacts/architecture/frontend-view-projection-architecture-2026-09-08/FRONTEND-FIRST-SOLUTION-DESIGN.md` §8.3, executed through `WORKFLOW.md`.
+
+Start with Wave A, one fixed-perspective URL at a time:
+
+1. `request-service-builder.html`
+2. `request-open-public-view.html`
+3. `request-sealed-public-view.html`
+4. `request-eligible-provider-view.html`
+5. `quote-composer.html`
+6. `responses-sealed-after-close.html`
+
+This inventory tracks visual/component gaps only. Behavior, authorization, schema, and lifecycle discoveries must be promoted through the projection matrix, architecture, and OpenSpec before permanent React/Laravel integration.

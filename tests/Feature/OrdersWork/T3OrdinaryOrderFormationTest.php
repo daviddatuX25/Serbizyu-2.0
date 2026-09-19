@@ -51,6 +51,7 @@ function t3ActiveListingFixture(string $listingType = 'service'): array
         'description' => 'Active approved listing used for T3 order formation.',
         'category_code' => $listingType === 'product' ? 'food' : 'home-help',
         'listing_type' => $listingType,
+        'work_shape' => $listingType === 'product' ? 'A4' : 'A1',
     ], $correlationId);
 
     DB::table('listings')->where('id', $listing['id'])->update([
@@ -97,6 +98,35 @@ it('proposes a pending order without work or obligation children', function (): 
         ->and(DB::table('work_instances')->where('order_id', $proposed['order_id'])->count())->toBe(0)
         ->and(DB::table('payment_obligations')->where('order_id', $proposed['order_id'])->count())->toBe(0)
         ->and(DB::table('order_terms_snapshots')->where('order_id', $proposed['order_id'])->count())->toBe(0);
+});
+it('keeps a capacity-backed proposal free of resource side effects', function (): void {
+    t3PgsqlOrSkip();
+
+    $fx = t3ActiveListingFixture('product');
+    $versionId = (string) DB::table('listing_versions')
+        ->where('listing_id', $fx['listing']['id'])
+        ->where('version_number', (int) $fx['listing']['expected_version'])
+        ->value('id');
+    $bucket = app(CapacityReservationService::class)->ensureBucket(
+        listingId: $fx['listing']['id'],
+        listingVersionId: $versionId,
+        capacityType: 'quantity',
+        quantity: 2,
+        correlationId: $fx['correlation_id'],
+    );
+
+    $proposed = app(SubmitOrderProposal::class)->handle(
+        buyerUserId: $fx['buyer']->id,
+        listingId: $fx['listing']['id'],
+        expectedListingVersion: (int) $fx['listing']['expected_version'],
+        idempotencyKey: 'propose-pure-0001',
+        correlationId: $fx['correlation_id'],
+        input: ['amount_minor' => 25000, 'currency' => 'PHP', 'quantity' => 2],
+    );
+
+    expect($proposed)->not->toHaveKey('capacity_reservation_id')
+        ->and(DB::table('listing_capacity_reservations')->where('listing_capacity_id', $bucket['id'])->count())->toBe(0)
+        ->and(DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(2);
 });
 
 it('finalizes with standing acceptance creating terms work and external cash obligation', function (): void {
@@ -232,7 +262,7 @@ it('replays identical finalize without duplicating children', function (): void 
         ->and(DB::table('payment_obligations')->where('order_id', $proposed['order_id'])->count())->toBe(1);
 });
 
-it('blocks propose when capacity would oversell', function (): void {
+it('defers capacity oversell rejection until finalization', function (): void {
     t3PgsqlOrSkip();
 
     $fx = t3ActiveListingFixture('product');
@@ -257,19 +287,30 @@ it('blocks propose when capacity would oversell', function (): void {
         correlationId: $fx['correlation_id'],
     );
 
+    $proposed = app(SubmitOrderProposal::class)->handle(
+        buyerUserId: $fx['buyer']->id,
+        listingId: $fx['listing']['id'],
+        expectedListingVersion: (int) $fx['listing']['expected_version'],
+        idempotencyKey: 'propose-oversell-1',
+        correlationId: $fx['correlation_id'],
+        input: ['amount_minor' => 10000, 'currency' => 'PHP', 'quantity' => 1],
+    );
+
     t3ExpectOrderError(
-        fn () => app(SubmitOrderProposal::class)->handle(
-            buyerUserId: $fx['buyer']->id,
-            listingId: $fx['listing']['id'],
-            expectedListingVersion: (int) $fx['listing']['expected_version'],
-            idempotencyKey: 'propose-oversell-1',
+        fn () => app(FinalizeOrderAgreement::class)->handle(
+            actorUserId: $fx['buyer']->id,
+            orderId: $proposed['order_id'],
+            expectedOrderVersion: (int) $proposed['version'],
+            idempotencyKey: 'finalize-oversell-1',
             correlationId: $fx['correlation_id'],
-            input: ['amount_minor' => 10000, 'currency' => 'PHP', 'quantity' => 1],
         ),
         'CAPACITY_OVERSELL',
     );
 
-    expect(DB::table('orders')->where('buyer_user_id', $fx['buyer']->id)->where('listing_id', $fx['listing']['id'])->count())->toBe(0);
+    expect(DB::table('orders')->where('id', $proposed['order_id'])->value('status'))->toBe('pending_acceptance')
+        ->and(DB::table('listing_capacity_reservations')->where('listing_capacity_id', $bucket['id'])->count())->toBe(1)
+        ->and(DB::table('work_instances')->where('order_id', $proposed['order_id'])->count())->toBe(0)
+        ->and(DB::table('payment_obligations')->where('order_id', $proposed['order_id'])->count())->toBe(0);
 });
 
 it('rejects self-booking and unauthorized finalize', function (): void {
@@ -309,4 +350,163 @@ it('rejects self-booking and unauthorized finalize', function (): void {
         ),
         'AUTHORIZATION_DENIED',
     );
+});
+
+it('rejects unauthorized replay by a non-party even with an identical key', function (): void {
+    t3PgsqlOrSkip();
+
+    $fx = t3ActiveListingFixture();
+    $proposed = app(SubmitOrderProposal::class)->handle(
+        buyerUserId: $fx['buyer']->id,
+        listingId: $fx['listing']['id'],
+        expectedListingVersion: (int) $fx['listing']['expected_version'],
+        idempotencyKey: 'propose-unauth-replay-1',
+        correlationId: $fx['correlation_id'],
+        input: ['amount_minor' => 25000, 'currency' => 'PHP'],
+    );
+
+    $finalized = app(FinalizeOrderAgreement::class)->handle(
+        actorUserId: $fx['buyer']->id,
+        orderId: $proposed['order_id'],
+        expectedOrderVersion: (int) $proposed['version'],
+        idempotencyKey: 'finalize-unauth-replay-1',
+        correlationId: $fx['correlation_id'],
+    );
+
+    expect($finalized['status'])->toBe('accepted');
+
+    $stranger = User::factory()->create();
+    $error = t3ExpectOrderError(
+        fn () => app(FinalizeOrderAgreement::class)->handle(
+            actorUserId: $stranger->id,
+            orderId: $proposed['order_id'],
+            expectedOrderVersion: (int) $proposed['version'],
+            idempotencyKey: 'finalize-unauth-replay-1',
+            correlationId: $fx['correlation_id'],
+        ),
+        'AUTHORIZATION_DENIED',
+    );
+    expect($error->status)->toBe(403);
+});
+
+it('rejects unsupported contract shape with zero state mutation and 422 order error', function (): void {
+    t3PgsqlOrSkip();
+
+    $fx = t3ActiveListingFixture();
+    $proposed = app(SubmitOrderProposal::class)->handle(
+        buyerUserId: $fx['buyer']->id,
+        listingId: $fx['listing']['id'],
+        expectedListingVersion: (int) $fx['listing']['expected_version'],
+        idempotencyKey: 'propose-unsupported-shape-1',
+        correlationId: $fx['correlation_id'],
+        input: ['amount_minor' => 25000, 'currency' => 'PHP'],
+    );
+
+    // Point listing to an unsupported profile shape
+    $profileId = DB::table('listings')->where('id', $fx['listing']['id'])->value('capability_profile_id');
+    DB::table('capability_profiles')->where('id', $profileId)->update([
+        'work_shape' => 'INVALID_SHAPE',
+        'updated_at' => now(),
+    ]);
+
+    $error = t3ExpectOrderError(
+        fn () => app(FinalizeOrderAgreement::class)->handle(
+            actorUserId: $fx['buyer']->id,
+            orderId: $proposed['order_id'],
+            expectedOrderVersion: (int) $proposed['version'],
+            idempotencyKey: 'finalize-unsupported-shape-1',
+            correlationId: $fx['correlation_id'],
+        ),
+        'WORK_CONTRACT_VERSION_UNSUPPORTED',
+    );
+
+    expect($error->status)->toBe(422)
+        ->and(DB::table('orders')->where('id', $proposed['order_id'])->value('status'))->toBe('pending_acceptance')
+        ->and(DB::table('order_terms_snapshots')->where('order_id', $proposed['order_id'])->count())->toBe(0)
+        ->and(DB::table('work_instances')->where('order_id', $proposed['order_id'])->count())->toBe(0)
+        ->and(DB::table('payment_obligations')->where('order_id', $proposed['order_id'])->count())->toBe(0);
+});
+
+it('rejects missing or malformed buyer proposal with 422 order error', function (): void {
+    t3PgsqlOrSkip();
+
+    $fx = t3ActiveListingFixture();
+    $proposed = app(SubmitOrderProposal::class)->handle(
+        buyerUserId: $fx['buyer']->id,
+        listingId: $fx['listing']['id'],
+        expectedListingVersion: (int) $fx['listing']['expected_version'],
+        idempotencyKey: 'propose-malformed-1',
+        correlationId: $fx['correlation_id'],
+        input: ['amount_minor' => 25000, 'currency' => 'PHP'],
+    );
+
+    // Corrupt the proposal payload to have negative amount
+    DB::table('order_parties')
+        ->where('order_id', $proposed['order_id'])
+        ->where('party_type', 'buyer')
+        ->update([
+            'scope' => json_encode([
+                'proposal' => [
+                    'amount_minor' => -50,
+                    'currency' => 'PHP',
+                    'quantity' => 1,
+                    'listing_version_id' => (string) Str::uuid7(),
+                    'listing_version_number' => 1,
+                ],
+            ]),
+        ]);
+
+    $error = t3ExpectOrderError(
+        fn () => app(FinalizeOrderAgreement::class)->handle(
+            actorUserId: $fx['buyer']->id,
+            orderId: $proposed['order_id'],
+            expectedOrderVersion: (int) $proposed['version'],
+            idempotencyKey: 'finalize-malformed-1',
+            correlationId: $fx['correlation_id'],
+        ),
+        'INVALID_PROPOSAL',
+    );
+    expect($error->status)->toBe(422);
+});
+
+it('rejects finalize when listing version id in proposal does not match locked source', function (): void {
+    t3PgsqlOrSkip();
+
+    $fx = t3ActiveListingFixture();
+    $proposed = app(SubmitOrderProposal::class)->handle(
+        buyerUserId: $fx['buyer']->id,
+        listingId: $fx['listing']['id'],
+        expectedListingVersion: (int) $fx['listing']['expected_version'],
+        idempotencyKey: 'propose-ver-mismatch-1',
+        correlationId: $fx['correlation_id'],
+        input: ['amount_minor' => 25000, 'currency' => 'PHP'],
+    );
+
+    // Change the proposal listing_version_id to a different UUID
+    DB::table('order_parties')
+        ->where('order_id', $proposed['order_id'])
+        ->where('party_type', 'buyer')
+        ->update([
+            'scope' => json_encode([
+                'proposal' => [
+                    'amount_minor' => 25000,
+                    'currency' => 'PHP',
+                    'quantity' => 1,
+                    'listing_version_id' => (string) Str::uuid7(),
+                    'listing_version_number' => (int) $fx['listing']['expected_version'],
+                ],
+            ]),
+        ]);
+
+    $error = t3ExpectOrderError(
+        fn () => app(FinalizeOrderAgreement::class)->handle(
+            actorUserId: $fx['buyer']->id,
+            orderId: $proposed['order_id'],
+            expectedOrderVersion: (int) $proposed['version'],
+            idempotencyKey: 'finalize-ver-mismatch-1',
+            correlationId: $fx['correlation_id'],
+        ),
+        'VERSION_CONFLICT',
+    );
+    expect($error->status)->toBe(409);
 });

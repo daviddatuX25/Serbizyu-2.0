@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Account &amp; Security Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      --brand-navy: #0F2F58;
+      --brand-yellow: #FFC244;
+      --brand-yellow-light: #FEF8E7;
+      --brand-yellow-dark: #D97706;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+      --ink-subtle: #94a3b8;
+
+      --canvas: #F4F6F5;
+      --surface: #FFFFFF;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(10, 87, 74, 0.06);
+      --shadow-md: 0 4px 14px rgba(10, 87, 74, 0.08);
+      --shadow-dock: 0 -4px 20px rgba(18, 32, 28, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0D1B1E;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .studio-context-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #A4B8B0;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .studio-crumb { display: flex; align-items: center; gap: 6px; }
+    .studio-pill-tag {
+      background: rgba(232, 247, 241, 0.12);
+      border: 1px solid rgba(232, 247, 241, 0.25);
+      color: #A7F3D0;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: var(--canvas); }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+    .notch-island {
+      width: 110px;
+      height: 24px;
+      background: #000;
+      border-radius: 14px;
+    }
+
+    /* Topbar */
+    .settings-topbar {
+      height: 52px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line-subtle);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .circle-nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--ink);
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .circle-nav-btn:hover { background: var(--line-subtle); }
+    .topbar-center-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    /* Scroll Body */
+    .settings-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 16px 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .settings-scroll-body > * {
+      flex-shrink: 0;
+    }
+
+    /* Card Group */
+    .settings-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(10, 87, 74, 0.05);
+    }
+    .settings-card-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--forest-900);
+      border-bottom: 1px solid var(--line-subtle);
+      padding-bottom: 8px;
+    }
+    .settings-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .settings-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .settings-input {
+      width: 100%;
+      height: 44px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1.5px solid var(--line);
+      background: #FAFCFB;
+      font-family: inherit;
+      font-size: 13.5px;
+      color: var(--ink);
+      transition: all 0.15s ease;
+    }
+    .settings-input:focus {
+      outline: none;
+      background: #FFFFFF;
+      border-color: var(--forest-600);
+      box-shadow: 0 0 0 3px rgba(13, 113, 95, 0.12);
+    }
+    .settings-hint {
+      font-size: 11px;
+      color: var(--ink-muted);
+      line-height: 1.4;
+    }
+
+    .btn-settings-action {
+      width: 100%;
+      height: 44px;
+      border-radius: var(--radius-pill);
+      background: var(--forest-600);
+      color: #FFFFFF;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(13, 113, 95, 0.25);
+      transition: background 0.15s ease;
+      margin-top: 4px;
+    }
+    .btn-settings-action:hover {
+      background: var(--forest-700);
+    }
+
+    /* Persistent Bottom Bar */
+    .app-bottom-nav {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 62px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 10px 14px;
+      z-index: 50;
+    }
+    .nav-tab-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      color: var(--ink-muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      flex: 1;
+      transition: color 0.15s ease;
+    }
+    .nav-tab-link.active {
+      color: var(--forest-600);
+      font-weight: 800;
+    }
+    .nav-tab-link svg {
+      width: 20px;
+      height: 20px;
+    }
+    .elevated-qr-fab {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--forest-600);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(13, 113, 95, 0.4);
+      cursor: pointer;
+    }
+    .center-spacer {
+      visibility: hidden;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Context Banner -->
+  <div class="studio-context-banner">
+    <div class="studio-crumb">
+      <a href="profile-mobile.html" style="color: inherit; text-decoration: none;">My Profile</a>
+      <span>&rsaquo;</span>
+      <span style="color:#FFF;">account-settings-mobile.html</span>
+    </div>
+    <span class="studio-pill-tag">Security &amp; Auth</span>
+  </div>
+
+  <!-- Mobile Phone Shell -->
+  <div class="phone-shell">
+
+    <!-- Status Bar -->
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div>●●●</div>
+    </div>
+
+    <!-- Topbar -->
+    <header class="settings-topbar">
+      <a href="profile-mobile.html" class="circle-nav-btn" aria-label="Back to Profile">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <span class="topbar-center-title">Account &amp; Security</span>
+      <div style="width: 36px;"></div>
+    </header>
+
+    <!-- Scrollable Settings Body -->
+    <main class="settings-scroll-body">
+
+      <!-- Section 1: Change Password (Real system: /auth/password/reset) -->
+      <section class="settings-card" id="card-password">
+        <div class="settings-card-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Change Password</span>
+        </div>
+
+        <div class="settings-field-group">
+          <label class="settings-label" for="current-password">Current Password</label>
+          <input type="password" id="current-password" class="settings-input" placeholder="••••••••">
+        </div>
+
+        <div class="settings-field-group">
+          <label class="settings-label" for="new-password">New Password</label>
+          <input type="password" id="new-password" class="settings-input" placeholder="At least 8 characters">
+          <span class="settings-hint">Choose a strong password with letters and numbers.</span>
+        </div>
+
+        <div class="settings-field-group">
+          <label class="settings-label" for="confirm-password">Confirm New Password</label>
+          <input type="password" id="confirm-password" class="settings-input" placeholder="Repeat new password">
+        </div>
+
+        <button type="button" class="btn-settings-action" onclick="handlePasswordUpdate()">
+          <span>Update Password</span>
+        </button>
+      </section>
+
+      <!-- Section 2: Link Email (Real system: /auth/email/link) -->
+      <section class="settings-card" id="card-email">
+        <div class="settings-card-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          <span>Link Email Address</span>
+        </div>
+
+        <div class="settings-field-group">
+          <label class="settings-label" for="account-email">Email for Return Sign-In</label>
+          <input type="email" id="account-email" class="settings-input" placeholder="e.g. nena.santos@gmail.com" value="">
+          <span class="settings-hint">
+            Optional for return sign-in &amp; account recovery. Your phone number already covers phone return visits.
+          </span>
+        </div>
+
+        <button type="button" class="btn-settings-action" style="background: var(--brand-navy);" onclick="handleEmailLink()">
+          <span>Save &amp; Link Email</span>
+        </button>
+      </section>
+
+      <!-- Section 3: Phone Security (Real system: Phone OTP) -->
+      <section class="settings-card" id="card-phone">
+        <div class="settings-card-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>Registered Phone Number</span>
+        </div>
+
+        <div class="settings-field-group">
+          <label class="settings-label">Phone SMS OTP Identity</label>
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #F8FAFC; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 14px;">
+            <div>
+              <div style="font-size: 13.5px; font-weight: 800; color: var(--ink);">0917-882-9912</div>
+              <div style="font-size: 10.5px; color: var(--forest-700); font-weight: 700;">✓ Active Tagudin OTP Identity</div>
+            </div>
+            <button type="button" class="btn-slot-call" onclick="alert('Phone number change requires recent SMS OTP step-up verification.')" style="height: 28px; font-size: 11px; padding: 0 10px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #FFF; cursor: pointer;">
+              Change
+            </button>
+          </div>
+          <span class="settings-hint">Primary login credential for SMS OTP and dispute notifications.</span>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Persistent Bottom Navigation Bar (Profile Tab Active!) -->
+    <nav class="app-bottom-nav">
+      <div class="elevated-qr-fab" onclick="alert('Quick Deal QR Scanner: Scan provider QR for instant deal confirmation & payment handoff!')" title="Quick Deal QR Scanner">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="5" height="5" x="3" y="3" rx="1"/>
+          <rect width="5" height="5" x="16" y="3" rx="1"/>
+          <rect width="5" height="5" x="3" y="16" rx="1"/>
+          <path d="M21 16h-3a2 2 0 0 0-2 2v3"/>
+          <path d="M21 21v.01"/>
+          <path d="M12 7v3a2 2 0 0 1-2 2H7"/>
+          <path d="M3 12h.01"/>
+          <path d="M12 3h.01"/>
+          <path d="M12 16v.01"/>
+          <path d="M16 12h1"/>
+          <path d="M21 12v.01"/>
+          <path d="M12 21v-1"/>
+        </svg>
+      </div>
+
+      <!-- 1. Explore -->
+      <a href="browse-mobile.html" class="nav-tab-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Explore</span>
+      </a>
+
+      <!-- 2. Post -->
+      <a href="request-service-builder.html" class="nav-tab-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+        <span>Post</span>
+      </a>
+
+      <!-- 3. Center Spacer -->
+      <div class="nav-tab-link center-spacer">
+        <div style="height: 22px;"></div>
+        <span>Scan</span>
+      </div>
+
+      <!-- 4. Orders -->
+      <a href="orders-mobile.html" class="nav-tab-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg>
+        <span>Orders</span>
+      </a>
+
+      <!-- 5. Profile (ACTIVE) -->
+      <a href="profile-mobile.html" class="nav-tab-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <script>
+    function handlePasswordUpdate() {
+      const cur = document.getElementById('current-password').value;
+      const nw = document.getElementById('new-password').value;
+      const cf = document.getElementById('confirm-password').value;
+
+      if (!cur || !nw || !cf) {
+        alert('Please fill in all password fields.');
+        return;
+      }
+      if (nw !== cf) {
+        alert('New passwords do not match.');
+        return;
+      }
+      if (nw.length < 8) {
+        alert('Password must be at least 8 characters.');
+        return;
+      }
+      alert('Password updated successfully!\n\nYour new password is active for your return sign-in.');
+      window.location.href = 'profile-mobile.html';
+    }
+
+    function handleEmailLink() {
+      const email = document.getElementById('account-email').value.trim();
+      if (!email || !email.includes('@')) {
+        alert('Please enter a valid email address.');
+        return;
+      }
+      alert(`Email linked: ${email}\n\nVerification link dispatched. Email is now linked for return sign-in recovery.`);
+      window.location.href = 'profile-mobile.html';
+    }
+
+    // Auto-scroll to email section if ?tab=email
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'email') {
+        const el = document.getElementById('card-email');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  </script>
+</body>
+</html>

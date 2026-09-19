@@ -1,0 +1,97 @@
+{
+  "$schema": "https://serbizyu.ph/schemas/deal-chain-contract.v1.json",
+  "schema_version": "1.0",
+  "contract_type": "deal_chain",
+  "chain_id": "DC-893",
+  "title": "Multi-Source Materials + Installation",
+  "category_code": "home-appliances",
+  "municipality": "Tagudin, Ilocos Sur",
+  "topology": "parallel",
+  "pricing": {
+    "total_amount_minor": 80000,
+    "currency": "PHP",
+    "staggered_escrow": true
+  },
+  "nodes": [
+    {
+      "id": "node_1a",
+      "slot_type": "product",
+      "role": "Part A",
+      "title": "35uF Run Capacitor",
+      "provider_binding": {
+        "mode": "bound_partner",
+        "provider_id": "usr_tagudin_hw",
+        "provider_name": "Tagudin Hardware & Supply",
+        "location": "Counter Lane 2, Centro"
+      },
+      "pricing_minor": 18000,
+      "sla_duration": "15m",
+      "status": "settled",
+      "handoff": {
+        "trigger": "item_ready_at_counter",
+        "evidence_required": "photo_proof"
+      },
+      "depends_on": []
+    },
+    {
+      "id": "node_1b",
+      "slot_type": "product",
+      "role": "Part B",
+      "title": "Copper Tubing · 3m",
+      "provider_binding": {
+        "mode": "bound_partner",
+        "provider_id": "usr_centro_supply",
+        "provider_name": "Centro Supply Depot",
+        "location": "Insulated Coil Bay"
+      },
+      "pricing_minor": 22000,
+      "sla_duration": "20m",
+      "status": "in_progress",
+      "handoff": {
+        "trigger": "tubing_cut_and_sealed",
+        "evidence_required": "photo_proof"
+      },
+      "depends_on": []
+    },
+    {
+      "id": "node_2",
+      "slot_type": "transit",
+      "role": "Courier",
+      "title": "Dual-Item Delivery",
+      "provider_binding": {
+        "mode": "bound_partner",
+        "provider_id": "usr_danny_express",
+        "provider_name": "Danny Express Motorcycle",
+        "location": "Tagudin Fleet Pool"
+      },
+      "pricing_minor": 5000,
+      "sla_duration": "15m",
+      "status": "gated",
+      "handoff": {
+        "trigger": "delivered_on_site",
+        "evidence_required": "gps_arrival"
+      },
+      "depends_on": ["node_1a", "node_1b"]
+    },
+    {
+      "id": "node_3",
+      "slot_type": "labor",
+      "role": "Labor",
+      "title": "Full System Installation",
+      "provider_binding": {
+        "mode": "bound_partner",
+        "provider_id": "usr_kuya_ben",
+        "provider_name": "Kuya Ben Aircon Services",
+        "location": "Customer Jobsite"
+      },
+      "pricing_minor": 35000,
+      "sla_duration": "45m",
+      "status": "gated",
+      "handoff": {
+        "trigger": "installation_verified",
+        "evidence_required": "dual_signoff"
+      },
+      "depends_on": ["node_2"]
+    }
+  ]
+}

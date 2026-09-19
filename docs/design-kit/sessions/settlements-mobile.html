@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Settlements &amp; Earnings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      --brand-navy: #0F2F58;
+      --brand-yellow: #FFC244;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+
+      --canvas: #F4F6F5;
+      --surface: #FFFFFF;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(10, 87, 74, 0.06);
+      --shadow-md: 0 4px 14px rgba(10, 87, 74, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: #0B132B;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+    }
+
+    .studio-context-banner {
+      width: 100%;
+      max-width: 440px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: #A4B8B0;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .meta-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .meta-row-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; width: 44px; }
+    .meta-tag-btn {
+      padding: 3px 9px; border-radius: var(--radius-pill);
+      font-size: 10px; font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: transparent; color: #A4B8B0;
+      cursor: pointer; transition: all 0.15s ease; white-space: nowrap;
+    }
+    .meta-tag-btn.active {
+      background: #0D715F; color: #FFFFFF;
+      border-color: #0D715F; box-shadow: 0 2px 8px rgba(13, 113, 95, 0.3);
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 480px) {
+      body { padding: 0; background: var(--canvas); }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px; background: #FFFFFF;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; font-size: 13px; font-weight: 700;
+      color: var(--ink); flex-shrink: 0;
+    }
+    .notch-island {
+      width: 110px; height: 24px; background: #000; border-radius: 14px;
+    }
+
+    /* Topbar */
+    .settle-topbar {
+      height: 52px; background: #FFFFFF;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; border-bottom: 1px solid var(--line);
+      flex-shrink: 0; z-index: 10;
+    }
+    .circle-nav-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--line); background: #FFFFFF;
+      cursor: pointer; color: var(--ink); transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .topbar-center-box { text-align: center; }
+    .topbar-center-title { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.2; }
+    .topbar-center-sub { font-size: 10px; font-weight: 700; color: var(--forest-600); }
+
+    /* Scroll Body */
+    .settle-scroll-body {
+      flex: 1; overflow-y: auto;
+      padding: 14px 16px 90px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    /* Balance Hero Card */
+    .balance-hero-card {
+      background: linear-gradient(135deg, var(--forest-900), #0F2F58);
+      border-radius: var(--radius-lg);
+      padding: 18px 16px;
+      color: #FFFFFF;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: var(--shadow-md);
+    }
+    .balance-card-head {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .balance-period-label {
+      font-size: 11px; font-weight: 700; color: #A7F3D0;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .balance-currency-tag {
+      font-size: 10px; font-weight: 800; padding: 2px 7px;
+      border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.15);
+    }
+    .balance-big-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 30px; font-weight: 800; letter-spacing: -0.02em;
+      color: #FFFFFF; line-height: 1;
+    }
+    .balance-split-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 6px; padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .balance-split-item { display: flex; flex-direction: column; gap: 2px; }
+    .balance-split-lbl { font-size: 9.5px; color: #94A3B8; font-weight: 600; }
+    .balance-split-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px; font-weight: 700; color: #F8FAFC;
+    }
+
+    /* Pilot Policy Banner */
+    .pilot-policy-pill {
+      background: #FFFFFF; border: 1.5px solid var(--forest-100);
+      border-radius: var(--radius-md); padding: 10px 12px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .pilot-policy-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--forest-50); color: var(--forest-600);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .pilot-policy-text { flex: 1; font-size: 11px; color: var(--ink-soft); line-height: 1.35; }
+    .pilot-policy-text strong { display: block; font-size: 11.5px; color: var(--forest-900); font-weight: 800; }
+
+    /* Deal Chain Multi-Slot Card */
+    .deal-chain-card {
+      background: #FFFFFF; border: 1.5px solid var(--line);
+      border-radius: var(--radius-md); padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .dc-head-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .dc-title { font-size: 13px; font-weight: 800; color: var(--ink); }
+    .dc-chain-id {
+      font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+      font-weight: 700; color: var(--forest-600);
+    }
+    .dc-slots-list { display: flex; flex-direction: column; gap: 6px; }
+    .dc-slot-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 8px; border-radius: var(--radius-sm);
+      background: var(--line-subtle); font-size: 11.5px;
+    }
+    .dc-slot-left { display: flex; align-items: center; gap: 7px; }
+    .dc-dot { width: 7px; height: 7px; border-radius: 50%; background: #10B981; flex-shrink: 0; }
+    .dc-slot-name { font-weight: 700; color: var(--ink); }
+    .dc-slot-role { font-size: 10px; color: var(--ink-muted); }
+    .dc-slot-amount {
+      font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--forest-700);
+    }
+    .dc-invariant-note {
+      font-size: 10.5px; color: var(--ink-muted); line-height: 1.4;
+      padding-top: 4px; border-top: 1px solid var(--line-subtle);
+    }
+
+    /* Filter Chips Bar */
+    .filter-pills-bar {
+      display: flex; gap: 6px; overflow-x: auto;
+      padding-bottom: 2px; scrollbar-width: none;
+    }
+    .filter-pills-bar::-webkit-scrollbar { display: none; }
+    .filter-pill-btn {
+      padding: 5px 11px; border-radius: var(--radius-pill);
+      font-family: inherit; font-size: 11px; font-weight: 700;
+      border: 1px solid var(--line); background: #FFFFFF;
+      color: var(--ink-soft); cursor: pointer; white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .filter-pill-btn.active {
+      background: var(--forest-600); color: #FFFFFF;
+      border-color: var(--forest-600); font-weight: 800;
+      box-shadow: 0 2px 6px rgba(13, 113, 95, 0.25);
+    }
+
+    /* Ledger List */
+    .ledger-list-box { display: flex; flex-direction: column; gap: 8px; }
+    .ledger-card {
+      background: #FFFFFF; border: 1.5px solid var(--line);
+      border-radius: var(--radius-md); padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 6px;
+      cursor: pointer; transition: transform 0.1s, border-color 0.15s;
+    }
+    .ledger-card:hover { border-color: var(--forest-600); }
+    .ledger-card-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .ledger-party-title { font-size: 13px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+    .ledger-order-sub { font-size: 10.5px; color: var(--ink-muted); margin-top: 1px; }
+    .ledger-amount {
+      font-family: 'JetBrains Mono', monospace; font-size: 14px;
+      font-weight: 800; color: var(--forest-700); text-align: right;
+    }
+    .ledger-card-bottom {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 5px; border-top: 1px solid var(--line-subtle);
+    }
+    .ledger-lane-tag {
+      font-size: 10px; font-weight: 700; color: var(--ink-soft);
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .ledger-status-pill {
+      font-size: 9.5px; font-weight: 800; padding: 2px 7px;
+      border-radius: var(--radius-pill); text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .ledger-status-pill.confirmed { background: #DCFCE7; color: #166534; }
+    .ledger-status-pill.pending { background: #FEF3C7; color: #92400E; }
+    .ledger-status-pill.held { background: #FEE2E2; color: #991B1B; }
+
+    /* Bottom Nav Bar */
+    .app-bottom-nav {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 62px; background: #FFFFFF;
+      border-top: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-around;
+      padding: 0 10px 14px; z-index: 30;
+    }
+    .nav-tab-link {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 2px; color: var(--ink-muted);
+      text-decoration: none; font-size: 10px; font-weight: 700;
+      cursor: pointer; flex: 1; transition: color 0.15s ease;
+    }
+    .nav-tab-link.active { color: var(--forest-600); font-weight: 800; }
+    .nav-tab-link svg { width: 20px; height: 20px; }
+    .elevated-qr-fab {
+      position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--forest-600); color: #FFFFFF;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(13, 113, 95, 0.4); cursor: pointer;
+    }
+    .center-spacer { visibility: hidden; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Context Banner -->
+  <div class="studio-context-banner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <span style="font-size:13px; font-weight:800; color:#F8FAFC; font-family:Outfit,sans-serif;">Settlements &amp; Earnings</span>
+      <span style="font-size:10px; color:#64748B; font-weight:600;">UX-012 · ADR-R-007 · 0% Pilot</span>
+    </div>
+
+    <div class="meta-row">
+      <span class="meta-row-label">Role</span>
+      <button class="meta-tag-btn active" onclick="setRole('provider')">🔧 Provider (Kuya Ben)</button>
+      <button class="meta-tag-btn" onclick="setRole('buyer')">🧑 Buyer (Maria)</button>
+    </div>
+    <div class="meta-row">
+      <span class="meta-row-label">Filter</span>
+      <button class="meta-tag-btn active" onclick="setFilter('all')">All</button>
+      <button class="meta-tag-btn" onclick="setFilter('cash')">Cash</button>
+      <button class="meta-tag-btn" onclick="setFilter('gcash')">GCash</button>
+      <button class="meta-tag-btn" onclick="setFilter('pending')">Pending</button>
+      <button class="meta-tag-btn" onclick="setFilter('held')">On Hold</button>
+    </div>
+  </div>
+
+  <!-- Mobile Phone Shell -->
+  <div class="phone-shell">
+
+    <!-- Phone Status Bar -->
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div style="font-size: 11px;">5G</div>
+    </div>
+
+    <!-- Topbar -->
+    <header class="settle-topbar">
+      <a href="profile-mobile.html" class="circle-nav-btn" aria-label="Back to Profile">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <div class="topbar-center-box">
+        <div class="topbar-center-title">Settlements &amp; Earnings</div>
+        <div class="topbar-center-sub">Tagudin Pilot · 0% Fee</div>
+      </div>
+      <button type="button" class="circle-nav-btn" onclick="alert('Tagudin Pilot Rules:\n• 0% Platform Commission\n• Direct Hand-to-Hand & P2P\n• Independent Deal Chain Slots\n• No Pooled Escrow Custody')" title="Payment Rules">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </button>
+    </header>
+
+    <!-- Scroll Body -->
+    <main class="settle-scroll-body" id="scroll-body">
+      <!-- Dynamic Content -->
+    </main>
+
+    <!-- Bottom Navigation Bar (Profile active) -->
+    <nav class="app-bottom-nav">
+      <div class="elevated-qr-fab" onclick="alert('Quick Deal QR Scanner')" title="Quick Deal QR Scanner">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/>
+          <path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>
+        </svg>
+      </div>
+
+      <a href="browse-mobile.html" class="nav-tab-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Explore</span>
+      </a>
+      <a href="request-service-builder.html" class="nav-tab-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+        <span>Post</span>
+      </a>
+      <div class="nav-tab-link center-spacer">
+        <div style="height: 22px;"></div>
+        <span>Scan</span>
+      </div>
+      <a href="orders-mobile.html" class="nav-tab-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg>
+        <span>Orders</span>
+      </a>
+      <a href="profile-mobile.html" class="nav-tab-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <script>
+    let currentRole = 'provider';
+    let currentFilter = 'all';
+
+    // Parse URL params for cross-session deep links
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('role')) currentRole = urlParams.get('role');
+    if (urlParams.has('filter')) currentFilter = urlParams.get('filter');
+
+    const ledgerData = [
+      { id: 'OBL-881', orderId: 'ORD-7721', party: 'Maria Santos', desc: 'Fiesta AC Overhaul (Slot 1)', amount: 350, lane: 'cash', laneLabel: 'External Cash', status: 'confirmed', statusLabel: 'Confirmed', date: 'Sep 17, 2:45 PM', role: 'provider' },
+      { id: 'OBL-872', orderId: 'ORD-7690', party: 'Juan Dela Cruz', desc: 'Tricycle Engine Tune-up', amount: 840, lane: 'gcash', laneLabel: 'GCash P2P', status: 'confirmed', statusLabel: 'Confirmed', date: 'Sep 15, 4:10 PM', role: 'provider' },
+      { id: 'OBL-860', orderId: 'ORD-7644', party: 'Aling Tess', desc: 'Electric Fan Motor Rewind', amount: 1500, lane: 'cash', laneLabel: 'External Cash', status: 'confirmed', statusLabel: 'Confirmed', date: 'Sep 12, 11:30 AM', role: 'provider' },
+      { id: 'OBL-895', orderId: 'ORD-7740', party: 'Pedro Reyes', desc: 'Roof Leak Inspection', amount: 200, lane: 'cash', laneLabel: 'External Cash', status: 'pending', statusLabel: 'Awaiting Ack', date: 'Sep 17, 1:15 PM', role: 'provider' },
+      { id: 'OBL-902', orderId: 'ORD-7735', party: 'Carlo Tan', desc: 'Wiring Diagnostics (Disputed)', amount: 110, lane: 'cash', laneLabel: 'External Cash', status: 'held', statusLabel: 'On Hold ⚠️', date: 'Sep 17, 3:00 PM', role: 'provider' },
+
+      // Buyer perspective items
+      { id: 'OBL-881-b', orderId: 'ORD-7721', party: 'Kuya Ben (AC Tech)', desc: 'Fiesta AC Overhaul', amount: 610, lane: 'cash', laneLabel: 'External Cash', status: 'confirmed', statusLabel: 'Confirmed', date: 'Sep 17, 2:45 PM', role: 'buyer' },
+      { id: 'OBL-875-b', orderId: 'ORD-7695', party: 'Danny Express', desc: 'Package Delivery to Centro', amount: 80, lane: 'gcash', laneLabel: 'GCash P2P', status: 'confirmed', statusLabel: 'Confirmed', date: 'Sep 16, 9:20 AM', role: 'buyer' },
+      { id: 'OBL-850-b', orderId: 'ORD-7630', party: 'Aling Nena Store', desc: 'Dry Goods Supply', amount: 1450, lane: 'cash', laneLabel: 'External Cash', status: 'confirmed', statusLabel: 'Confirmed', date: 'Sep 11, 2:00 PM', role: 'buyer' },
+    ];
+
+    function setRole(r) { currentRole = r; render(); }
+    function setFilter(f) { currentFilter = f; render(); }
+
+    function updateMeta() {
+      document.querySelectorAll('.meta-row:nth-child(2) .meta-tag-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(currentRole));
+      });
+      document.querySelectorAll('.meta-row:nth-child(3) .meta-tag-btn').forEach(btn => {
+        const isMatch = currentFilter === 'held'
+          ? btn.textContent.toLowerCase().includes('hold')
+          : btn.textContent.toLowerCase().includes(currentFilter);
+        btn.classList.toggle('active', isMatch);
+      });
+    }
+
+    function render() {
+      updateMeta();
+      const body = document.getElementById('scroll-body');
+      const isProv = currentRole === 'provider';
+
+      // Filtered items
+      const items = ledgerData.filter(d => {
+        if (d.role !== currentRole) return false;
+        if (currentFilter === 'all') return true;
+        if (currentFilter === 'cash') return d.lane === 'cash';
+        if (currentFilter === 'gcash') return d.lane === 'gcash';
+        if (currentFilter === 'pending') return d.status === 'pending';
+        if (currentFilter === 'held') return d.status === 'held';
+        return true;
+      });
+
+      body.innerHTML = `
+        <!-- Balance Hero Card -->
+        <section class="balance-hero-card">
+          <div class="balance-card-head">
+            <span class="balance-period-label">${isProv ? 'Confirmed Earnings · Sep 2026' : 'Total Settled Payments · Sep 2026'}</span>
+            <span class="balance-currency-tag">PHP</span>
+          </div>
+          <div class="balance-big-amount">${isProv ? '₱4,820.00' : '₱2,140.00'}</div>
+          <div class="balance-split-row">
+            <div class="balance-split-item">
+              <span class="balance-split-lbl">💵 Cash in Hand</span>
+              <span class="balance-split-val">${isProv ? '₱3,980' : '₱1,840'}</span>
+            </div>
+            <div class="balance-split-item">
+              <span class="balance-split-lbl">📱 GCash P2P</span>
+              <span class="balance-split-val">${isProv ? '₱840' : '₱300'}</span>
+            </div>
+            <div class="balance-split-item">
+              <span class="balance-split-lbl">${isProv ? '⏳ Pending Ack' : '🛡️ Platform Fee'}</span>
+              <span class="balance-split-val" style="color:${isProv ? '#FDE047' : '#A7F3D0'};">${isProv ? '₱200' : '₱0 (0%)'}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Pilot Policy Banner -->
+        <section class="pilot-policy-pill">
+          <div class="pilot-policy-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          </div>
+          <div class="pilot-policy-text">
+            <strong>Tagudin Pilot · 0% Platform Commission</strong>
+            Direct hand-to-hand &amp; wallet settlement. No receivables or platform custody.
+          </div>
+        </section>
+
+        <!-- Deal Chain Staggered Settlement Card -->
+        <section class="deal-chain-card">
+          <div class="dc-head-row">
+            <span class="dc-title">Deal Chain Settlement</span>
+            <span class="dc-chain-id">#DC-892</span>
+          </div>
+          <div style="font-size:11px; color:var(--ink-muted); margin-top:-4px;">Fiesta AC Overhaul · Multi-Slot Isolation</div>
+          <div class="dc-slots-list">
+            <div class="dc-slot-item">
+              <div class="dc-slot-left">
+                <span class="dc-dot"></span>
+                <div>
+                  <div class="dc-slot-name">Slot 1 · AC Labor (You)</div>
+                  <div class="dc-slot-role">Mutual Cash Acknowledgment</div>
+                </div>
+              </div>
+              <span class="dc-slot-amount">₱350.00</span>
+            </div>
+            <div class="dc-slot-item">
+              <div class="dc-slot-left">
+                <span class="dc-dot" style="background:#94A3B8;"></span>
+                <div>
+                  <div class="dc-slot-name">Slot 2 · Hardware (Store)</div>
+                  <div class="dc-slot-role">Tagudin Hardware Counter</div>
+                </div>
+              </div>
+              <span class="dc-slot-amount" style="color:var(--ink-muted);">₱180.00</span>
+            </div>
+            <div class="dc-slot-item">
+              <div class="dc-slot-left">
+                <span class="dc-dot" style="background:#94A3B8;"></span>
+                <div>
+                  <div class="dc-slot-name">Slot 3 · Courier (Danny)</div>
+                  <div class="dc-slot-role">Motorcycle Relay Handoff</div>
+                </div>
+              </div>
+              <span class="dc-slot-amount" style="color:var(--ink-muted);">₱80.00</span>
+            </div>
+          </div>
+          <div class="dc-invariant-note">
+            💡 <strong>Isolation Invariant:</strong> No pooled wallet. Each slot settles independently. Sibling delays never freeze your earned labor payout.
+          </div>
+        </section>
+
+        <!-- Filter Pills -->
+        <div class="filter-pills-bar">
+          <button class="filter-pill-btn ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All (${ledgerData.filter(d => d.role === currentRole).length})</button>
+          <button class="filter-pill-btn ${currentFilter === 'cash' ? 'active' : ''}" onclick="setFilter('cash')">💵 Cash</button>
+          <button class="filter-pill-btn ${currentFilter === 'gcash' ? 'active' : ''}" onclick="setFilter('gcash')">📱 GCash</button>
+          <button class="filter-pill-btn ${currentFilter === 'pending' ? 'active' : ''}" onclick="setFilter('pending')">⏳ Pending</button>
+          <button class="filter-pill-btn ${currentFilter === 'held' ? 'active' : ''}" onclick="setFilter('held')">⚠️ On Hold</button>
+        </div>
+
+        <!-- Ledger List -->
+        <section class="ledger-list-box">
+          ${items.length === 0 ? `
+            <div style="text-align:center; padding:30px 10px; color:var(--ink-muted); font-size:12px;">
+              No settlement transactions in this view.
+            </div>
+          ` : items.map(item => `
+            <div class="ledger-card" onclick="window.location.href='payment-flow-mobile.html?stage=${item.status === 'held' ? 'disputed' : 'settled'}'">
+              <div class="ledger-card-top">
+                <div>
+                  <div class="ledger-party-title">${item.party}</div>
+                  <div class="ledger-order-sub">${item.desc} · #${item.orderId}</div>
+                </div>
+                <div class="ledger-amount">${isProv ? '+' : '-'}₱${item.amount.toFixed(2)}</div>
+              </div>
+              <div class="ledger-card-bottom">
+                <span class="ledger-lane-tag">
+                  ${item.lane === 'cash' ? '💵 Cash' : '📱 GCash'} · ${item.date}
+                </span>
+                <span class="ledger-status-pill ${item.status}">${item.statusLabel}</span>
+              </div>
+            </div>
+          `).join('')}
+        </section>
+      `;
+    }
+
+    window.addEventListener('DOMContentLoaded', render);
+  </script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · My Submitted Quote</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-900: #06362e;
+      --forest-800: #0a4d41;
+      --forest-700: #0a574a;
+      --forest-600: #0d715f;
+      --forest-500: #17866f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      --brand-navy: #0F2F58;
+      --brand-yellow: #FFC244;
+      --ink: #12201c;
+      --ink-soft: #4d655a;
+      --ink-muted: #64748b;
+
+      --canvas: #F4F6F5;
+      --surface: #FFFFFF;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(10, 87, 74, 0.06);
+      --shadow-md: 0 4px 14px rgba(10, 87, 74, 0.08);
+      --shadow-dock: 0 -4px 20px rgba(18, 32, 28, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: #0B132B;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+    }
+
+    /* Studio Context Banner */
+    .studio-context-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: #A4B8B0;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .meta-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .meta-row-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; width: 44px; }
+    .meta-tag-btn {
+      padding: 3px 9px; border-radius: var(--radius-pill);
+      font-size: 10px; font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: transparent; color: #A4B8B0;
+      cursor: pointer; transition: all 0.15s ease; white-space: nowrap;
+    }
+    .meta-tag-btn.active {
+      background: #0D715F; color: #FFFFFF;
+      border-color: #0D715F; box-shadow: 0 2px 8px rgba(13, 113, 95, 0.3);
+    }
+
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      border-radius: 46px;
+      border: 10px solid #1E293B;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 480px) {
+      body { padding: 0; background: var(--canvas); }
+      .studio-context-banner { display: none; }
+      .phone-shell { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+    }
+
+    .phone-status-bar {
+      height: 44px; background: #FFFFFF;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; font-size: 13px; font-weight: 700;
+      color: var(--ink); flex-shrink: 0;
+    }
+    .notch-island {
+      width: 110px; height: 24px; background: #000; border-radius: 14px;
+    }
+
+    /* Topbar */
+    .quote-topbar {
+      height: 52px; background: #FFFFFF;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; border-bottom: 1px solid var(--line);
+      flex-shrink: 0; z-index: 10;
+    }
+    .circle-nav-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--line); background: #FFFFFF;
+      cursor: pointer; color: var(--ink); transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .topbar-center-box { text-align: center; }
+    .topbar-center-title { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.2; }
+    .topbar-center-sub { font-size: 10px; font-weight: 700; color: var(--forest-600); }
+
+    /* Scroll Body */
+    .quote-scroll-body {
+      flex: 1; overflow-y: auto;
+      padding: 14px 16px 100px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    /* Status Header Banner */
+    .quote-status-card {
+      background: #FFFFFF; border: 1.5px solid var(--line);
+      border-radius: var(--radius-md); padding: 14px;
+      display: flex; flex-direction: column; gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .qs-head-row {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .qs-status-pill {
+      font-size: 10.5px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.04em; padding: 3px 9px; border-radius: var(--radius-pill);
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .qs-status-pill.active { background: #DCFCE7; color: #166534; }
+    .qs-status-pill.shortlisted { background: #EFF6FF; color: #1D4ED8; }
+    .qs-status-pill.superseded { background: #FEF3C7; color: #92400E; }
+    .qs-status-pill.withdrawn { background: #FEE2E2; color: #991B1B; }
+    .qs-version-tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      font-weight: 700; color: var(--ink-muted);
+    }
+    .qs-title { font-size: 15px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+    .qs-timer-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--ink-muted); font-weight: 600;
+    }
+
+    /* Breakdown Section Card */
+    .section-card {
+      background: #FFFFFF; border: 1.5px solid var(--line);
+      border-radius: var(--radius-md); padding: 14px;
+      display: flex; flex-direction: column; gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-head-title {
+      font-size: 11px; font-weight: 800; color: var(--forest-900);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .breakdown-table {
+      display: flex; flex-direction: column; gap: 5px; font-size: 11.5px;
+    }
+    .breakdown-row {
+      display: flex; justify-content: space-between; align-items: center;
+      color: var(--ink-soft);
+    }
+    .breakdown-row-item {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .breakdown-row-price {
+      font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--ink);
+    }
+    .breakdown-divider {
+      height: 1px; background: var(--line-subtle); margin: 3px 0;
+    }
+    .breakdown-total-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; font-weight: 800; color: var(--ink);
+    }
+    .breakdown-total-price {
+      font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--brand-navy);
+    }
+
+    /* Terms Strip */
+    .terms-strip {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; font-size: 10.5px; color: var(--ink-muted);
+      border-top: 1px solid var(--line-subtle);
+    }
+    .term-pill-item {
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+
+    /* Fixed Bottom Dock */
+    .quote-bottom-dock {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: #FFFFFF; border-top: 1px solid var(--line);
+      padding: 10px 16px 14px; display: flex; flex-direction: column;
+      gap: 6px; box-shadow: var(--shadow-dock); z-index: 20;
+    }
+    .dock-btn-row { display: flex; gap: 8px; width: 100%; }
+    .btn-dock-primary {
+      height: 44px; border-radius: var(--radius-pill);
+      background: var(--brand-navy); color: #FFFFFF;
+      font-family: inherit; font-size: 13px; font-weight: 800;
+      border: none; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 6px; transition: background 0.15s;
+      flex: 1; text-decoration: none;
+    }
+    .btn-dock-primary:hover { background: #0A1E38; }
+    .btn-dock-secondary {
+      height: 44px; border-radius: var(--radius-pill);
+      background: #FFFFFF; color: var(--ink);
+      font-family: inherit; font-size: 13px; font-weight: 800;
+      border: 1.5px solid var(--line); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; transition: all 0.15s; flex: 1; text-decoration: none;
+    }
+    .btn-dock-secondary:hover { border-color: var(--brand-navy); background: #F8FAFC; }
+    .btn-dock-danger {
+      height: 44px; padding: 0 16px; border-radius: var(--radius-pill);
+      background: #FFF5F5; color: #DC2626; border: 1px solid #FECACA;
+      font-family: inherit; font-size: 12.5px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Context Banner -->
+  <div class="studio-context-banner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <span style="font-size:13px; font-weight:800; color:#F8FAFC; font-family:Outfit,sans-serif;">Submitted Quote</span>
+      <span style="font-size:10px; color:#64748B; font-weight:600;">Bidder Workspace · #QTE-104</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-row-label">Status</span>
+      <button class="meta-tag-btn active" onclick="setStatus('submitted')">Active (Submitted)</button>
+      <button class="meta-tag-btn" onclick="setStatus('shortlisted')">Shortlisted</button>
+      <button class="meta-tag-btn" onclick="setStatus('superseded')">Superseded (v2)</button>
+      <button class="meta-tag-btn" onclick="setStatus('withdrawn')">Withdrawn</button>
+    </div>
+  </div>
+
+  <!-- Mobile Phone Shell -->
+  <div class="phone-shell">
+
+    <!-- Status Bar -->
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="notch-island"></div>
+      <div style="font-size: 11px;">5G</div>
+    </div>
+
+    <!-- Topbar -->
+    <header class="quote-topbar">
+      <a href="browse-mobile.html" class="circle-nav-btn" aria-label="Back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <div class="topbar-center-box">
+        <div class="topbar-center-title">Quote #QTE-104-B1</div>
+        <div class="topbar-center-sub">Kuya Ben Refrigeration</div>
+      </div>
+      <a href="bidding-negotiation.html?request=req-104&provider=kuya-ben" class="circle-nav-btn" title="Clarification Chat">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </a>
+    </header>
+
+    <!-- Scroll Body -->
+    <main class="quote-scroll-body" id="scroll-body">
+      <!-- Injected by render() -->
+    </main>
+
+    <!-- Bottom Dock -->
+    <footer class="quote-bottom-dock" id="bottom-dock">
+      <!-- Injected by render() -->
+    </footer>
+
+  </div>
+
+  <script>
+    let currentStatus = 'submitted'; // 'submitted' | 'shortlisted' | 'superseded' | 'withdrawn'
+
+    function setStatus(st) {
+      currentStatus = st;
+      render();
+    }
+
+    function updateMeta() {
+      document.querySelectorAll('.meta-row .meta-tag-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(currentStatus));
+      });
+    }
+
+    function render() {
+      updateMeta();
+      const body = document.getElementById('scroll-body');
+      const dock = document.getElementById('bottom-dock');
+
+      let pillClass = 'active';
+      let pillText = 'Active · Submitted';
+      let timerText = 'Tender closes in 3h 15m · Today 5:00 PM';
+      let isEditable = true;
+
+      if (currentStatus === 'shortlisted') {
+        pillClass = 'shortlisted';
+        pillText = 'Shortlisted by Requester';
+        timerText = 'Requester reviewing your proposal';
+        isEditable = true;
+      } else if (currentStatus === 'superseded') {
+        pillClass = 'superseded';
+        pillText = 'Superseded by v2';
+        timerText = 'Historical version · Replaced by Quote #QTE-104-B2';
+        isEditable = false;
+      } else if (currentStatus === 'withdrawn') {
+        pillClass = 'withdrawn';
+        pillText = 'Withdrawn by Provider';
+        timerText = 'Bid retracted · Not visible to requester';
+        isEditable = false;
+      }
+
+      body.innerHTML = `
+        <!-- Status Card -->
+        <section class="quote-status-card">
+          <div class="qs-head-row">
+            <span class="qs-status-pill ${pillClass}">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+              <span>${pillText}</span>
+            </span>
+            <span class="qs-version-tag">Version 1.0</span>
+          </div>
+          <h1 class="qs-title">All-In AC Repair &amp; Breaker Diagnostic</h1>
+          <div class="qs-timer-row">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>${timerText}</span>
+          </div>
+        </section>
+
+        <!-- Request Target Context Box -->
+        <section class="section-card">
+          <div class="section-head-title">Target Tender Request</div>
+          <div style="font-size:13px; font-weight:800; color:var(--ink);">#REQ-104 · Electrician &amp; Breaker Diagnostic</div>
+          <div style="font-size:11px; color:var(--ink-muted); margin-top:2px;">
+            Requester: Aling Nena · Barangay Centro, Tagudin
+          </div>
+        </section>
+
+        <!-- Quoted Scope & Line Items Breakdown -->
+        <section class="section-card">
+          <div class="section-head-title">Quoted Breakdown</div>
+          <div class="breakdown-table">
+            <div class="breakdown-row">
+              <span class="breakdown-row-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D715F" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                <span>AC Diagnostic &amp; Mount (Labor)</span>
+              </span>
+              <span class="breakdown-row-price">₱350.00</span>
+            </div>
+            <div class="breakdown-row">
+              <span class="breakdown-row-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D715F" stroke-width="2"><path d="m7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+                <span>35uF Capacitor (Tagudin Hardware)</span>
+              </span>
+              <span class="breakdown-row-price">₱180.00</span>
+            </div>
+            <div class="breakdown-row">
+              <span class="breakdown-row-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D715F" stroke-width="2"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
+                <span>Parts Relay Transit (Danny Express)</span>
+              </span>
+              <span class="breakdown-row-price">₱80.00</span>
+            </div>
+            <div class="breakdown-divider"></div>
+            <div class="breakdown-total-row">
+              <span>Total Quoted</span>
+              <span class="breakdown-total-price">₱610.00</span>
+            </div>
+          </div>
+
+          <div class="terms-strip">
+            <span class="term-pill-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>2h ETA</span>
+            </span>
+            <span class="term-pill-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>30-Day Warranty</span>
+            </span>
+            <span class="term-pill-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+              <span>Cash on Delivery</span>
+            </span>
+          </div>
+        </section>
+
+        <!-- Note to Requester -->
+        <section class="section-card">
+          <div class="section-head-title">Attached Note</div>
+          <div style="font-size:12px; color:var(--ink-soft); line-height:1.45;">
+            “I have partnered with Danny Express to pick up the 35uF capacitor directly from Tagudin Hardware counter lane 2. I will arrive with tools to conduct load testing before sign-off.”
+          </div>
+        </section>
+      `;
+
+      if (isEditable) {
+        dock.innerHTML = `
+          <div class="dock-btn-row">
+            <a href="quote-composer.html?edit=true" class="btn-dock-secondary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <span>Revise Terms</span>
+            </a>
+            <a href="bidding-negotiation.html?request=req-104&provider=kuya-ben" class="btn-dock-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>Clarify</span>
+            </a>
+            <button type="button" class="btn-dock-danger" onclick="confirmWithdraw()">
+              <span>Withdraw</span>
+            </button>
+          </div>
+        `;
+      } else {
+        dock.innerHTML = `
+          <a href="browse-mobile.html" class="btn-dock-primary" style="text-decoration:none;">
+            <span>Back to Browse</span>
+          </a>
+        `;
+      }
+    }
+
+    function confirmWithdraw() {
+      if (confirm('Withdraw Quote #QTE-104-B1?\n\nThis bid will be removed from Aling Nena\'s comparison workspace.')) {
+        setStatus('withdrawn');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', render);
+  </script>
+</body>
+</html>

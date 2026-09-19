@@ -44,6 +44,15 @@ final class IdempotencyGuard
                 );
             }
 
+            if ($actorUserId !== null && $existing->actor_user_id !== null && (string) $existing->actor_user_id !== (string) $actorUserId) {
+                throw new KernelException(
+                    'AUTHORIZATION_DENIED',
+                    'You are not authorized to access this idempotency reservation.',
+                    $correlationId,
+                    status: 403,
+                );
+            }
+
             if ((string) $existing->status === 'succeeded' && $existing->response_payload !== null) {
                 $replayed = json_decode((string) $existing->response_payload, true);
                 if (is_array($replayed)) {
@@ -79,6 +88,65 @@ final class IdempotencyGuard
         $row = DB::table('idempotency_keys')->where('id', $id)->lockForUpdate()->first();
 
         return new IdempotencyReservation($row, isReplay: false);
+    }
+
+    /**
+     * Secure actor-bound non-locking succeeded-replay lookup.
+     *
+     * @param  array<string, mixed>  $fingerprint
+     *
+     * @throws KernelException
+     * @throws JsonException
+     */
+    public function findSucceededReplay(
+        string $scope,
+        string $key,
+        array $fingerprint,
+        ?string $actorUserId = null,
+        string $correlationId = '',
+    ): ?IdempotencyReservation {
+        $existing = DB::table('idempotency_keys')
+            ->where('scope', $scope)
+            ->where('key', $key)
+            ->first();
+
+        if ($existing === null) {
+            return null;
+        }
+
+        $requestHash = hash('sha256', json_encode($fingerprint, JSON_THROW_ON_ERROR));
+        if ((string) $existing->request_hash !== $requestHash) {
+            throw new KernelException(
+                'IDEMPOTENCY_KEY_REUSED',
+                'That idempotency key was already used for a different request.',
+                $correlationId,
+                status: 409,
+            );
+        }
+
+        if ($actorUserId !== null && $existing->actor_user_id !== null && (string) $existing->actor_user_id !== (string) $actorUserId) {
+            throw new KernelException(
+                'AUTHORIZATION_DENIED',
+                'You are not authorized to access this idempotency reservation.',
+                $correlationId,
+                status: 403,
+            );
+        }
+
+        if ((string) $existing->status !== 'succeeded') {
+            return null;
+        }
+
+        if ($existing->response_payload !== null) {
+            $replayed = json_decode((string) $existing->response_payload, true);
+            if (is_array($replayed)) {
+                ksort($replayed);
+
+                return new IdempotencyReservation($existing, isReplay: true, replayPayload: $replayed);
+            }
+        }
+
+        return new IdempotencyReservation($existing, isReplay: true, replayPayload: null);
     }
 
     /**
