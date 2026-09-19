@@ -1616,6 +1616,33 @@
           <label class="field-label">Description</label>
           <textarea class="field-textarea" id="listing-description" rows="3">Complete indoor evaporator coil deep chemical wash and outdoor condensing unit pressure inspection for inverter split and window AC units in Tagudin.</textarea>
         </div>
+        <div class="field-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="field-label" style="margin: 0;">What's Included</label>
+            <span style="font-size: 10px; color: var(--forest-700); font-weight: 700;">Base Deliverables</span>
+          </div>
+          <div class="inclusions-dynamic-list" id="inclusions-list" style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+              <input type="text" class="custom-item-input" value="Evaporator coil chemical foam wash &amp; disinfection" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Deliverable description...">
+              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+            </div>
+            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+              <input type="text" class="custom-item-input" value="Blower fan wheel disassembly &amp; grease flush" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Deliverable description...">
+              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+            </div>
+            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+              <input type="text" class="custom-item-input" value="Drain line high-pressure unclogging" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Deliverable description...">
+              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+            </div>
+          </div>
+          <button type="button" class="btn-add-item-dashed" onclick="addInclusionItem()" style="width: 100%; height: 34px; font-size: 11px; font-weight: 700; margin-top: 6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add Included Task</span>
+          </button>
+        </div>
 
         <div class="field-group">
           <label class="field-label">Category</label>
@@ -1638,236 +1665,12 @@
         </div>
       </section>
 
-      <!-- Section 2: Flow of Work (Advanced Only) -->
-      <section class="editor-card-section advanced-only-section">
-        <div class="section-header-row">
-          <h2 class="section-title">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
-            <span>Flow of Work</span>
-          </h2>
-        </div>
-        <!-- 3-Way Flow Mode Switcher -->
-        <div class="flow-layout-switcher">
-          <button type="button" class="flow-switch-btn active" id="btn-work-canvas" onclick="switchWorkFlowMode('canvas', this)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-            <span>Bounded Canvas (n8n)</span>
-          </button>
-          <button type="button" class="flow-switch-btn" id="btn-work-moving" onclick="switchWorkFlowMode('moving', this)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="22"/><polyline points="19 15 12 22 5 15"/></svg>
-            <span>Moving Lines</span>
-          </button>
-          <button type="button" class="flow-switch-btn" id="btn-work-arrows" onclick="switchWorkFlowMode('arrows', this)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            <span>Pure Arrows</span>
-          </button>
-        </div>
-
-        <!-- PANEL 1: BOUNDED N8N WORK CANVAS (Default) -->
-        <div id="panel-work-canvas" class="work-flow-panel">
-          <div class="bounded-canvas-viewport" id="work-bounded-canvas">
-            <div class="bounded-canvas-track" id="work-bounded-track">
-              <!-- Step 1 Node -->
-              <div class="canvas-work-node" title="Step 1: Intake Diagnostic">
-                <div class="canvas-work-node-header" style="background: #E8F7F1; color: #0D715F;">
-                  <span>1 &bull; 15m</span>
-                  <span>&check;</span>
-                </div>
-                <div class="canvas-work-node-body">
-                  <div class="canvas-work-node-title">Intake Triage</div>
-                  <div class="canvas-work-node-sub">Voltage &amp; Freon</div>
-                </div>
-              </div>
-
-              <!-- Wire 1 -> 2 -->
-              <div class="canvas-work-wire">
-                <svg viewBox="0 0 24 16" fill="none">
-                  <line x1="1" y1="8" x2="23" y2="8" class="canvas-work-wire-line"></line>
-                </svg>
-              </div>
-
-              <!-- Step 2 Node -->
-              <div class="canvas-work-node" title="Step 2: Coil Chemical Wash">
-                <div class="canvas-work-node-header" style="background: #CCFBF1; color: #0F766E;">
-                  <span>2 &bull; 20m</span>
-                  <span>⚡</span>
-                </div>
-                <div class="canvas-work-node-body">
-                  <div class="canvas-work-node-title">Coil Wash</div>
-                  <div class="canvas-work-node-sub">Alkaline Clean</div>
-                </div>
-              </div>
-
-              <!-- Wire 2 -> 3 -->
-              <div class="canvas-work-wire">
-                <svg viewBox="0 0 24 16" fill="none">
-                  <line x1="1" y1="8" x2="23" y2="8" class="canvas-work-wire-line" style="stroke: #D97706;"></line>
-                </svg>
-              </div>
-
-              <!-- Step 3 Node -->
-              <div class="canvas-work-node" title="Step 3: Cold Run Amperage Check">
-                <div class="canvas-work-node-header" style="background: #FEF3C7; color: #B45309;">
-                  <span>3 &bull; 15m</span>
-                  <span>⏳</span>
-                </div>
-                <div class="canvas-work-node-body">
-                  <div class="canvas-work-node-title">Cold Run</div>
-                  <div class="canvas-work-node-sub">Amperage Delta</div>
-                </div>
-              </div>
-
-              <!-- Wire 3 -> 4 -->
-              <div class="canvas-work-wire">
-                <svg viewBox="0 0 24 16" fill="none">
-                  <line x1="1" y1="8" x2="23" y2="8" class="canvas-work-wire-line"></line>
-                </svg>
-              </div>
-
-              <!-- Step 4 Node -->
-              <div class="canvas-work-node" title="Step 4: Digital Sign-off">
-                <div class="canvas-work-node-header" style="background: #EBF2FA; color: #0F2F58;">
-                  <span>4 &bull; Sign</span>
-                  <span>🛡️</span>
-                </div>
-                <div class="canvas-work-node-body">
-                  <div class="canvas-work-node-title">30-Day Seal</div>
-                  <div class="canvas-work-node-sub">Certificate Log</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Bounded HUD (Full View Indication + Theme Toggle) -->
-            <div class="bounded-canvas-hud">
-              <span class="hud-chip-hint">
-                <span style="width: 5px; height: 5px; border-radius: 50%; background: #0D715F;"></span>
-                <span>Full Pipeline &bull; 4 Steps Visible</span>
-              </span>
-              <button type="button" class="hud-theme-toggle" onclick="toggleCanvasTheme('work-bounded-canvas')">☼ Light / ☾ Dark</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- PANEL 2: MOVING LINES (Vertical Picks Style) -->
-        <div id="panel-work-moving" class="work-flow-panel" style="display: none;">
-          <div class="pipeline-builder-container">
-            <!-- Step 1 -->
-            <div class="pipeline-step-item">
-              <div class="pipeline-step-num">1</div>
-              <div class="pipeline-step-content">
-                <div class="pipeline-step-title">Multimeter &amp; Freon Pressure Intake Check</div>
-                <div class="pipeline-step-desc">Test electrical terminal voltage, amp draw, and refrigerant pressure.</div>
-              </div>
-            </div>
-
-            <div class="chain-animated-connector">
-              <div class="connector-track-box">
-                <svg width="18" height="32" viewBox="0 0 18 32" fill="none">
-                  <line x1="9" y1="2" x2="9" y2="30" class="flow-dots-v"></line>
-                </svg>
-              </div>
-              <span class="connector-badge-text">
-                <span class="pulse-dot-forest"></span>
-                <span>Diagnosis Cleared &rarr; Coil Unmounted</span>
-              </span>
-            </div>
-
-            <!-- Step 2 -->
-            <div class="pipeline-step-item">
-              <div class="pipeline-step-num">2</div>
-              <div class="pipeline-step-content">
-                <div class="pipeline-step-title">Coil Chemical Wash &amp; Blower Wheel Clean</div>
-                <div class="pipeline-step-desc">Alkaline foam cleaning of indoor evaporator coil, wheel removal, and drain flush.</div>
-              </div>
-            </div>
-
-            <div class="chain-animated-connector">
-              <div class="connector-track-box">
-                <svg width="18" height="32" viewBox="0 0 18 32" fill="none">
-                  <line x1="9" y1="2" x2="9" y2="30" class="flow-dots-v"></line>
-                </svg>
-              </div>
-              <span class="connector-badge-text">
-                <span class="pulse-dot-forest"></span>
-                <span>Reassembly &rarr; Electrical Load Verification</span>
-              </span>
-            </div>
-
-            <!-- Step 3 -->
-            <div class="pipeline-step-item">
-              <div class="pipeline-step-num">3</div>
-              <div class="pipeline-step-content">
-                <div class="pipeline-step-title">15-Minute Full Cold Air Amperage Run</div>
-                <div class="pipeline-step-desc">Verify cooling delta and confirm outdoor compressor runs without tripping.</div>
-              </div>
-            </div>
-
-            <div class="chain-animated-connector">
-              <div class="connector-track-box">
-                <svg width="18" height="32" viewBox="0 0 18 32" fill="none">
-                  <line x1="9" y1="2" x2="9" y2="30" class="flow-dots-v"></line>
-                </svg>
-              </div>
-              <span class="connector-badge-text">
-                <span class="pulse-dot-forest"></span>
-                <span>Citizen Inspection &rarr; Work Completion</span>
-              </span>
-            </div>
-
-            <!-- Step 4 -->
-            <div class="pipeline-step-item">
-              <div class="pipeline-step-num">4</div>
-              <div class="pipeline-step-content">
-                <div class="pipeline-step-title">Digital Sign-Off &amp; 30-Day Labor Warranty</div>
-                <div class="pipeline-step-desc">Work certificate logged with warranty against coil freezing.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PANEL 3: PURE ARROW ELEMENTS -->
-        <div id="panel-work-arrows" class="work-flow-panel" style="display: none;">
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div style="background: #F8FAFC; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px;">
-              <div style="font-size: 12px; font-weight: 800; color: var(--ink);">Step 1: Voltage &amp; Freon Baseline Diagnostic</div>
-              <div style="font-size: 10.5px; color: var(--ink-muted);">15 mins &bull; Multimeter confirmed</div>
-            </div>
-            <div style="padding: 0 12px; font-size: 10px; font-weight: 800; color: var(--forest-600); display: flex; align-items: center; gap: 4px;">
-              <span>&rarr; Diagnosis Cleared &bull; Disassembly SLA</span>
-            </div>
-            <div style="background: #F8FAFC; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px;">
-              <div style="font-size: 12px; font-weight: 800; color: var(--ink);">Step 2: Coil Chemical Wash &amp; Blower Wheel Flush</div>
-              <div style="font-size: 10.5px; color: var(--ink-muted);">20 mins &bull; Alkaline foam</div>
-            </div>
-            <div style="padding: 0 12px; font-size: 10px; font-weight: 800; color: var(--forest-600); display: flex; align-items: center; gap: 4px;">
-              <span>&rarr; Reassembly &bull; Load Test SLA</span>
-            </div>
-            <div style="background: #F8FAFC; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px;">
-              <div style="font-size: 12px; font-weight: 800; color: var(--ink);">Step 3: 15-Minute Full Cold Air Amperage Run</div>
-              <div style="font-size: 10.5px; color: var(--ink-muted);">15 mins &bull; Amperage delta check</div>
-            </div>
-            <div style="padding: 0 12px; font-size: 10px; font-weight: 800; color: var(--forest-600); display: flex; align-items: center; gap: 4px;">
-              <span>&rarr; Sign-Off &bull; Warranty Card Handover</span>
-            </div>
-            <div style="background: #F8FAFC; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px;">
-              <div style="font-size: 12px; font-weight: 800; color: var(--forest-700);">Step 4: Digital Sign-Off &amp; 30-Day Warranty</div>
-              <div style="font-size: 10.5px; color: var(--ink-muted);">Work certificate logged with warranty seal</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 8px; margin-top: 10px;">
-          <button type="button" class="btn-add-pipeline-step" onclick="window.location.href='work-spec-a1-builder.html'" style="flex: 1; background: #0F2F58; border: none; color: #FFFFFF; font-weight: 800; height: 40px; box-shadow: 0 2px 8px rgba(15,47,88,0.2);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            <span>Open Full Canvas Builder &rarr;</span>
-          </button>
-        </div>
-      </section>
 
       <!-- Section 3: Base Labor & Inclusions (Step 2 in Guided Mode) -->
       <section class="editor-card-section" id="card-step-2">
         <div class="step-friendly-ask">
-          <h2 class="step-ask-title">Rates &amp; Inclusions</h2>
-          <p class="step-ask-sub">Set standard base pricing and included tasks.</p>
+          <h2 class="step-ask-title">Rates &amp; Options</h2>
+          <p class="step-ask-sub">Set standard base pricing and optional customer add-ons.</p>
         </div>
 
         <div class="section-header-row">
@@ -1993,34 +1796,6 @@
           </div>
         </div>
 
-        <!-- Group A: Standard Inclusions (Base Scope Specifications) -->
-        <div class="field-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="field-label" style="margin: 0;">Standard Inclusions</label>
-            <span style="font-size: 10px; color: var(--forest-700); font-weight: 700;">Guaranteed Base Deliverables</span>
-          </div>
-          <div class="inclusions-dynamic-list" id="inclusions-list" style="display: flex; flex-direction: column; gap: 6px;">
-            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
-              <input type="text" class="custom-item-input" value="Evaporator coil chemical foam wash &amp; disinfection" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Deliverable description...">
-              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
-            </div>
-            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
-              <input type="text" class="custom-item-input" value="Blower fan wheel disassembly &amp; grease flush" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Deliverable description...">
-              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
-            </div>
-            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
-              <input type="text" class="custom-item-input" value="Drain line high-pressure unclogging" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Deliverable description...">
-              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
-            </div>
-          </div>
-          <button type="button" class="btn-add-item-dashed" onclick="addInclusionItem()" style="width: 100%; height: 34px; font-size: 11px; font-weight: 700; margin-top: 6px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add Guaranteed Inclusion</span>
-          </button>
-        </div>
 
         <!-- Group B: Service Add-ons & Upgrades (with Custom Pricing & Default Selection) -->
         <div class="field-group">
@@ -2134,155 +1909,111 @@
           </div>
         </div>
 
-        <div class="field-group">
-          <label class="field-label">Safety Precaution</label>
-          <input type="text" class="field-input-text" id="service-safety" value="Customer must isolate main aircon breaker before technician panel access.">
-        </div>
       </section>
 
-      <!-- Section 4: Pre-configured Variances (Advanced Only) -->
-      <section class="editor-card-section advanced-only-section">
+      <!-- Section 3: Work Pipeline & Sourcing (Step 3 in Guided Mode) -->
+      <section class="editor-card-section" id="card-step-3">
+        <div class="step-friendly-ask">
+          <h2 class="step-ask-title">Work Pipeline &amp; Sourcing</h2>
+          <p class="step-ask-sub">Define operational milestone stages and optional partner slots.</p>
+        </div>
+
         <div class="section-header-row">
           <h2 class="section-title">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
-            <span>Pre-Configured Variances</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+            <span>Flow of Work (Milestones)</span>
           </h2>
         </div>
 
-        <div class="inclusions-dynamic-list" id="variances-list">
-          <div class="variant-option-card active" onclick="setDefaultVarianceCard(this)">
-            <div class="variant-card-header">
-              <div class="variant-radio-title">
-                <span class="variant-radio-dot"></span>
-                <input type="text" class="variant-name-input" value="Replacement AC Run Capacitor (35uF)" placeholder="Variance name...">
-              </div>
-              <span class="btn-default-badge active">★ Primary Default</span>
-            </div>
-            <div class="variant-card-footer">
-              <span class="variant-stock-tag">Part replacement when breaker trips</span>
-              <span class="variant-price-tag">+ ₱180.00</span>
-            </div>
-          </div>
-
-          <div class="variant-option-card" onclick="setDefaultVarianceCard(this)">
-            <div class="variant-card-header">
-              <div class="variant-radio-title">
-                <span class="variant-radio-dot"></span>
-                <input type="text" class="variant-name-input" value="High-Ceiling / Ladder Setup (> 10 ft)" placeholder="Variance name...">
-              </div>
-              <button type="button" class="btn-default-badge" onclick="event.stopPropagation(); setDefaultVarianceCard(this.closest('.variant-option-card'))">Make Default</button>
-            </div>
-            <div class="variant-card-footer">
-              <span class="variant-stock-tag">Requires heavy-duty A-frame extension</span>
-              <span class="variant-price-tag">+ ₱100.00</span>
-            </div>
-          </div>
-
-          <div class="variant-option-card" onclick="setDefaultVarianceCard(this)">
-            <div class="variant-card-header">
-              <div class="variant-radio-title">
-                <span class="variant-radio-dot"></span>
-                <input type="text" class="variant-name-input" value="Dual Split Unit Bundle (2nd Unit)" placeholder="Variance name...">
-              </div>
-              <button type="button" class="btn-default-badge" onclick="event.stopPropagation(); setDefaultVarianceCard(this.closest('.variant-option-card'))">Make Default</button>
-            </div>
-            <div class="variant-card-footer">
-              <span class="variant-stock-tag">Same-day second unit bundle discount</span>
-              <span class="variant-price-tag">+ ₱350.00</span>
-            </div>
-          </div>
-        </div>
-        <button type="button" class="btn-add-item-dashed" onclick="addVarianceItem()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span>Add Custom Variance / Add-on</span>
-        </button>
-      </section>
-
-      <!-- Section 5: Coordination & Publishing (Step 3 in Guided Mode) -->
-      <section class="editor-card-section" id="card-step-3">
-        <div class="step-friendly-ask">
-          <h2 class="step-ask-title">Coordination &amp; Publishing</h2>
-          <p class="step-ask-sub">Optionally attach partner slots and publish to Tagudin.</p>
-        </div>
-
-        <div style="border-top: 1.5px solid var(--line); margin: 14px 0 8px; padding-top: 12px;">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <span style="font-size: 11.5px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.5px;">Partnered Services</span>
-            <span style="font-size: 9px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 1.5px 6px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">DEAL CHAIN</span>
-          </div>
-        </div>
-
-        <div id="extend-service-content-container">
-          <!-- Combination 1: Turnkey Sourced Parts -->
-          <div class="extension-partner-card active" id="service-combo-parts" style="border-color: #0F2F58; background: #F8FAFD; margin-bottom: 8px;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-pickup">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+        <!-- Bounded N8N Work Canvas -->
+        <div class="work-flow-panel" style="display: block;">
+          <div class="bounded-canvas-viewport" id="work-bounded-canvas">
+            <div class="bounded-canvas-track" id="work-bounded-track">
+              <!-- Step 1 Node -->
+              <div class="canvas-work-node" title="Step 1: Intake Diagnostic">
+                <div class="canvas-work-node-header" style="background: #E8F7F1; color: #0D715F;">
+                  <span>1 &bull; 15m</span>
+                  <span>&check;</span>
                 </div>
-                <div>
-                  <div class="extension-name-title">Turnkey Sourced Parts</div>
+                <div class="canvas-work-node-body">
+                  <div class="canvas-work-node-title">Intake Triage</div>
+                  <div class="canvas-work-node-sub">Voltage &amp; Freon</div>
                 </div>
               </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <button type="button" class="btn-default-badge active" onclick="setAsServiceListingDefault(this)">★ Default</button>
-                <button type="button" class="btn-item-remove" onclick="removeServiceCombinationCard('service-combo-parts')" title="Detach combination">&times;</button>
-              </div>
-            </div>
 
-            <!-- Slot 1: Hardware Store Depot -->
-            <div class="partner-selector-box" onclick="openSlotListingPicker('store')" style="margin-bottom: 6px;">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="store-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="store-partner-meta">₱180.00 parts budget</div>
+              <!-- Wire 1 -> 2 -->
+              <div class="canvas-work-wire">
+                <svg viewBox="0 0 24 16" fill="none">
+                  <line x1="1" y1="8" x2="23" y2="8" class="canvas-work-wire-line"></line>
+                </svg>
               </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
 
-            <!-- Slot 2: Parts Courier Runner -->
-            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="delivery-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="delivery-partner-meta">₱80.00 route fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-
-          <!-- Combination 2: Post-Service Safety Inspection -->
-          <div class="extension-partner-card" id="service-combo-audit" style="border-color: var(--line); background: #FFFFFF; margin-bottom: 8px;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-labor" style="background:#EDE9FE; color:#7C3AED;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              <!-- Step 2 Node -->
+              <div class="canvas-work-node" title="Step 2: Coil Chemical Wash">
+                <div class="canvas-work-node-header" style="background: #CCFBF1; color: #0F766E;">
+                  <span>2 &bull; 20m</span>
+                  <span>⚡</span>
                 </div>
-                <div>
-                  <div class="extension-name-title">Post-Service Safety Audit</div>
+                <div class="canvas-work-node-body">
+                  <div class="canvas-work-node-title">Coil Wash</div>
+                  <div class="canvas-work-node-sub">Alkaline Clean</div>
                 </div>
               </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <button type="button" class="btn-default-badge" onclick="setAsServiceListingDefault(this)">Make Default</button>
-                <button type="button" class="btn-item-remove" onclick="removeServiceCombinationCard('service-combo-audit')" title="Detach combination">&times;</button>
-              </div>
-            </div>
 
-            <!-- Slot: Safety Auditor -->
-            <div class="partner-selector-box" onclick="openSlotListingPicker('audit')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="audit-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="audit-partner-meta">₱150.00 audit fee</div>
+              <!-- Wire 2 -> 3 -->
+              <div class="canvas-work-wire">
+                <svg viewBox="0 0 24 16" fill="none">
+                  <line x1="1" y1="8" x2="23" y2="8" class="canvas-work-wire-line" style="stroke: #D97706;"></line>
+                </svg>
               </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
+
+              <!-- Step 3 Node -->
+              <div class="canvas-work-node" title="Step 3: Cold Run Amperage Check">
+                <div class="canvas-work-node-header" style="background: #FEF3C7; color: #B45309;">
+                  <span>3 &bull; 15m</span>
+                  <span>⏳</span>
+                </div>
+                <div class="canvas-work-node-body">
+                  <div class="canvas-work-node-title">Cold Run</div>
+                  <div class="canvas-work-node-sub">Amperage Delta</div>
+                </div>
+              </div>
+
+              <!-- Wire 3 -> 4 -->
+              <div class="canvas-work-wire">
+                <svg viewBox="0 0 24 16" fill="none">
+                  <line x1="1" y1="8" x2="23" y2="8" class="canvas-work-wire-line"></line>
+                </svg>
+              </div>
+
+              <!-- Step 4 Node -->
+              <div class="canvas-work-node" title="Step 4: Final Sign-off & Delta Test">
+                <div class="canvas-work-node-header" style="background: #F1F5F9; color: #475569;">
+                  <span>4 &bull; 15m</span>
+                  <span>🔒</span>
+                </div>
+                <div class="canvas-work-node-body">
+                  <div class="canvas-work-node-title">Delta Test</div>
+                  <div class="canvas-work-node-sub">Dual Sign-off</div>
+                </div>
+              </div>
             </div>
           </div>
+          <button type="button" class="btn-add-item-dashed" onclick="addWorkStageNode()" style="margin-top: 8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add Work Stage</span>
+          </button>
         </div>
 
-        <!-- Deal Chain Dedicated Action Button -->
-        <div style="margin-top: 10px;">
-          <button type="button" class="btn-add-item-dashed" onclick="openBundleCatalog()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            <span>Attach Partner Listing</span>
-            <span style="font-size: 9.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.2px;">DEAL CHAIN</span>
+        <!-- Section Divider: Partnered Services (Deal Chain) -->
+        <div style="border-top: 1px solid var(--line); margin: 14px 0 10px; padding-top: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <label class="field-label" style="margin: 0;">Multi-Provider Coordination</label>
+            <span style="font-size: 8.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 1.5px 6px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">DEAL CHAIN</span>
+          </div>
+          <button type="button" class="btn-add-item-dashed" onclick="openBundleCatalog()" style="height: 42px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed #0F2F58; background: #F8FAFD; border-radius: var(--radius-md); font-size: 11.5px; font-weight: 700; color: #0F2F58; cursor: pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span>Attach Partner Listing (Store / Courier)</span>
           </button>
         </div>
       </section>
