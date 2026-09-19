@@ -1212,27 +1212,29 @@
       background: var(--forest-600);
     }
 
-    /* Mode Switcher Button */
+    /* Mode Switcher Button (Prominent Pill Affordance) */
     .btn-switch-mode {
-      background: none;
-      border: none;
-      color: var(--ink-muted);
+      background: #F1F5F9;
+      border: 1px solid var(--line);
+      color: var(--forest-800);
       font-family: inherit;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
-      padding: 6px 14px;
+      padding: 5px 14px;
       border-radius: var(--radius-pill);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      margin: 2px auto 0;
+      gap: 6px;
+      margin: 4px auto 0;
       transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
     .btn-switch-mode:hover {
       background: var(--forest-50);
-      color: var(--forest-800);
+      border-color: var(--forest-600);
+      color: var(--forest-900);
     }
 
     /* Mode 2: Advanced Mode Styles (All-in-One Form Canvas) */
@@ -2292,18 +2294,16 @@
 
     <main class="builder-scroll-area">
 
-      <!-- Hero Greeting -->
-      <div class="hero-greeting">
-        <div class="hero-eyebrow">Tagudin Sourcing · Citizen Need</div>
-        <h1 class="hero-heading">Ano ang kailangan mo?</h1>
-        <p class="hero-subtext">Post your need to receive verified local proposals from skilled workers and providers in Tagudin.</p>
+      <!-- Minimal Header in Advanced Mode -->
+      <div class="hero-greeting" style="margin-bottom: 8px;">
+        <h1 class="hero-heading" style="font-size: 16px; font-weight: 800;">Request a Service</h1>
       </div>
 
       <!-- Card 1: Problem Scope & Category (Step 1 in Guided Mode) -->
       <section class="form-card step-active" id="card-step-1">
         <div class="step-friendly-ask">
-          <h2 class="step-ask-title">Ano ang kailangan mo?</h2>
-          <p class="step-ask-sub">Describe what you need help with in Tagudin.</p>
+          <h2 class="step-ask-title">What do you need?</h2>
+          <p class="step-ask-sub">Describe the service or repair requirement.</p>
         </div>
 
         <div class="card-section-header">
@@ -2313,7 +2313,7 @@
         </div>
 
         <div class="field-block">
-          <label class="field-label" for="req-title">I need someone to...</label>
+          <label class="field-label" for="req-title">Request Title</label>
           <textarea id="req-title" class="field-textarea" placeholder="Describe what needs repair, installation, or transport..." oninput="markDraftChanged()">Repair water line in kitchen and replace gate valve before weekend</textarea>
           <div class="field-hint-row">
             <span></span>
@@ -2390,8 +2390,8 @@
       <!-- Card 2: Timing & Location (Step 2 in Guided Mode) -->
       <section class="form-card" id="card-step-2">
         <div class="step-friendly-ask">
-          <h2 class="step-ask-title">Saan at kailan mo kailangan?</h2>
-          <p class="step-ask-sub">Select your barangay and preferred schedule in Tagudin.</p>
+          <h2 class="step-ask-title">Location &amp; Schedule</h2>
+          <p class="step-ask-sub">Select your barangay and preferred timing in Tagudin.</p>
         </div>
 
         <div class="card-section-header">
@@ -2426,8 +2426,8 @@
       <!-- Card 3: Budget & Tender Mode (Step 3 in Guided Mode) -->
       <section class="form-card" id="card-step-3">
         <div class="step-friendly-ask">
-          <h2 class="step-ask-title">Magkano ang budget mo?</h2>
-          <p class="step-ask-sub">Set your target budget and how providers will bid.</p>
+          <h2 class="step-ask-title">Budget &amp; Terms</h2>
+          <p class="step-ask-sub">Set your target budget and proposal collection method.</p>
         </div>
 
         <div class="card-section-header">
@@ -2487,93 +2487,18 @@
           </div>
         </div>
 
-        <!-- Section Divider: Extend Request (Deal Chain Sourcing) -->
-        <!-- Section Divider: Partnered Sourcing -->
-        <div style="border-top: 1.5px solid var(--line); margin: 14px 0 8px; padding-top: 12px;">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <span style="font-size: 11.5px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.5px;">Partnered Sourcing</span>
-            <span style="font-size: 9px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 1.5px 6px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">DEAL CHAIN</span>
+        <!-- Deal Chain Sourcing Action (Clean Single-Button Affordance) -->
+        <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <label class="field-label" style="margin: 0;">Multi-Provider Sourcing</label>
+            <span style="font-size: 8.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 1.5px 6px; border-radius: var(--radius-pill);">DEAL CHAIN</span>
           </div>
+          <button type="button" class="btn-add-item-dashed" onclick="openBundleCatalog()" style="width: 100%; height: 42px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed #0F2F58; background: #F8FAFD; border-radius: var(--radius-md); font-size: 11.5px; font-weight: 700; color: #0F2F58; cursor: pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span>+ Connect Deal Chain (Parts + Courier)</span>
+          </button>
         </div>
-
-        <div id="extend-request-content-container">
-          <!-- Sourcing Mode Selector -->
-          <div class="field-block">
-            <label class="field-label">Sourcing Mode</label>
-            <div class="option-pills-row" id="sourcing-mode-pills">
-              <button type="button" class="option-pill active" onclick="setSourcingMode('single')">
-                <span>Single Trade Labor Only</span>
-              </button>
-              <button type="button" class="option-pill" onclick="setSourcingMode('turnkey')">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                <span>Turnkey Sourced Chain</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Turnkey Sourced Slots (Shown when turnkey mode is active) -->
-          <div id="turnkey-slots-wrap" style="display: none; flex-direction: column; gap: 8px; margin-top: 4px;">
-            <!-- Slot 1: Hardware Parts Sourcing -->
-            <div class="extension-partner-card" style="border-color: #D97706; background: #FFFDF9;">
-              <div class="extension-card-top">
-                <div class="extension-title-badge-group">
-                  <div class="extension-archetype-icon icon-pickup">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                  </div>
-                  <div>
-                    <div class="extension-name-title">Hardware Parts Sourcing</div>
-                  </div>
-                </div>
-                <span class="btn-default-badge active">★ Open Slot</span>
-              </div>
-              <div class="partner-selector-box" onclick="openSlotListingPicker('parts')">
-                <div class="partner-current-info">
-                  <div class="partner-current-name" id="parts-partner-name">Open Slot</div>
-                  <div class="partner-current-meta" id="parts-partner-meta">Local hardware store</div>
-                </div>
-                <button type="button" class="btn-change-partner">Change ▾</button>
-              </div>
-              <div class="extension-card-bottom">
-                <span>Handoff: <strong>parts_procured_and_tagged</strong></span>
-                <span style="color: var(--forest-700); font-weight: 700;">Blocks courier dispatch</span>
-              </div>
-            </div>
-
-            <!-- Slot 2: Courier Runner -->
-            <div class="extension-partner-card" style="border-color: #D97706; background: #FFFDF9;">
-              <div class="extension-card-top">
-                <div class="extension-title-badge-group">
-                  <div class="extension-archetype-icon icon-transit">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                  </div>
-                  <div>
-                    <div class="extension-name-title">Courier Transit Runner</div>
-                  </div>
-                </div>
-                <span class="btn-default-badge active">★ Open Slot</span>
-              </div>
-              <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
-                <div class="partner-current-info">
-                  <div class="partner-current-name" id="delivery-partner-name">Open Slot</div>
-                  <div class="partner-current-meta" id="delivery-partner-meta">₱35.00 route fee</div>
-                </div>
-                <button type="button" class="btn-change-partner">Change ▾</button>
-              </div>
-              <div class="extension-card-bottom">
-                <span>Handoff: <strong>item_ready_for_pickup</strong></span>
-                <span style="color: var(--forest-700); font-weight: 700;">Delivers on-site before labor starts</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Open Deal Chain Combination Catalog Button -->
-        <button type="button" class="btn-add-item-dashed" style="margin-top: 8px;" onclick="openBundleCatalog()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          <span>Attach Sourcing / Errand Step</span>
-          <span style="font-size: 9.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.2px;">DEAL CHAIN</span>
-        </button>
       </section>
-
       <!-- Card 4: Flow of Work (Advanced View Only) -->
       <section class="form-card advanced-only-card" id="card-step-4">
         <div class="card-section-header">
