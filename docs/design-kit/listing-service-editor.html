@@ -1692,13 +1692,21 @@
             </div>
           </div>
 
-          <!-- Action Row: Shape info + Link to Full Work Studio -->
+          <!-- Action Row: Detailed Stage Breakdown toggle + Link to Full Work Studio -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-            <span style="font-size: 10px; color: var(--ink-muted);" id="work-shape-badge">Shape: A1 Linear Staged Execution</span>
+            <button type="button" id="btn-toggle-work-details" onclick="toggleWorkStageDetails()" style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--forest-700); background: none; border: none; cursor: pointer; padding: 0;">
+              <span id="work-details-toggle-icon" style="font-size: 10px; display: inline-block; transition: transform 0.2s;">▸</span>
+              <span id="work-details-toggle-text">Detailed Stage &amp; Evidence Breakdown</span>
+            </button>
             <a href="work-workspace.html" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; color: var(--forest-700); text-decoration: none; background: var(--forest-50); border: 1px solid var(--forest-100); padding: 3px 8px; border-radius: var(--radius-pill);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
               <span>Customize in Work Studio ↗</span>
             </a>
+          </div>
+
+          <!-- Collapsible Detailed View Container -->
+          <div id="work-stage-details-container" style="display: none; margin-top: 8px; background: #FAFCFB; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;">
+            <!-- Rendered dynamically by renderWorkDetails() -->
           </div>
         </div>
       </section>
@@ -2754,36 +2762,80 @@
     // WORK PIPELINE PRESETS & CATALOG EMBED
     // =========================================================================
     let selectedWorkPreset = 'standard';
+    let isWorkDetailsOpen = false;
 
-    const workPresetData = {
-      standard: {
-        shape: 'A1 Linear Staged Execution',
-        nodes: [
-          { num: '1', title: 'Intake Triage', dur: '15m', color: '#0D715F', bg: '#E8F7F1' },
-          { num: '2', title: 'Coil Wash', dur: '20m', color: '#0F766E', bg: '#CCFBF1' },
-          { num: '3', title: 'Cold Run', dur: '15m', color: '#B45309', bg: '#FEF3C7' },
-          { num: '4', title: 'Delta Test', dur: '15m', color: '#475569', bg: '#F1F5F9' }
-        ]
-      },
-      parallel: {
-        shape: 'A9 Parallel Streams',
-        nodes: [
-          { num: '1', title: 'Intake Triage', dur: '15m', color: '#0D715F', bg: '#E8F7F1' },
-          { num: '2A', title: 'Indoor Coil', dur: '25m', color: '#0284C7', bg: '#E0F2FE' },
-          { num: '2B', title: 'Outdoor Unit', dur: '20m', color: '#166534', bg: '#DCFCE7' },
-          { num: '3', title: 'Joint Test', dur: '15m', color: '#7E22CE', bg: '#F3E8FF' }
-        ]
-      },
-      branch: {
-        shape: 'A1 Conditional Branch',
-        nodes: [
-          { num: '1', title: 'Pressure Triage', dur: '15m', color: '#0D715F', bg: '#E8F7F1' },
-          { num: '?', title: 'Leak Gate?', dur: 'PSI', color: '#B45309', bg: '#FEF3C7' },
-          { num: '2A', title: 'Braze Joint', dur: '30m', color: '#B45309', bg: '#FFFBEB' },
-          { num: '3', title: 'Temp Test', dur: '10m', color: '#0D715F', bg: '#E8F7F1' }
-        ]
-      }
+    const workDetailsData = {
+      standard: [
+        { stage: 'Stage 1: Intake Triage', time: '15 mins SLA', desc: 'Isolate main breaker, inspect coil status, customer intake interview.', evidence: 'Breaker lock-out photo' },
+        { stage: 'Stage 2: Coil Wash', time: '20 mins SLA', desc: 'Apply specialized chemical foam on evaporator fins and pressure flush.', evidence: 'Chemical foam coverage photo' },
+        { stage: 'Stage 3: Cold Run', time: '15 mins SLA', desc: 'Restore power and verify compressor startup, amp draw, and fan cycle.', evidence: 'Amperage reading photo' },
+        { stage: 'Stage 4: Delta Test', time: '15 mins SLA', desc: 'Verify temperature drop (ΔT ≥ 12°C) with dual digital thermometer probes.', evidence: 'Dual-probe delta photo + Customer OTP sign-off' }
+      ],
+      parallel: [
+        { stage: 'Stage 1: Intake Triage', time: '15 mins SLA', desc: 'Breaker safety isolation & dual-technician work assignment.', evidence: 'Service unit arrival photo' },
+        { stage: 'Stage 2A: Indoor Coil (Parallel Lane)', time: '25 mins SLA', desc: 'Technician A disassembles blower wheel & flushes evaporator indoor.', evidence: 'Disassembled blower photo' },
+        { stage: 'Stage 2B: Outdoor Unit (Parallel Lane)', time: '20 mins SLA', desc: 'Technician B combs condenser fins & cleans outdoor unit simultaneously.', evidence: 'Condenser pressure photo' },
+        { stage: 'Stage 3: Joint Test', time: '15 mins SLA', desc: 'Both technicians converge to verify joint cooling and delta temperature.', evidence: 'Delta test photo + Customer OTP sign-off' }
+      ],
+      branch: [
+        { stage: 'Stage 1: Pressure Triage', time: '15 mins SLA', desc: 'Connect nitrogen manifold to check system line pressure.', evidence: 'Nitrogen manifold gauge photo' },
+        { stage: 'Decision Gate: Leak > 0 PSI?', time: 'Branch Gate', desc: 'System checks for pressure drop. If leak: fork to brazing; else: flush.', evidence: 'Pressure drop telemetry' },
+        { stage: 'Stage 2A / 2B: Braze or Flush', time: '15m - 30m', desc: 'Braze leaking copper joint or perform standard chemical foam wash.', evidence: 'Braze joint photo or foam photo' },
+        { stage: 'Stage 3: Temp Test', time: '10 mins SLA', desc: 'Final cooling efficiency and customer delivery sign-off.', evidence: 'Customer OTP sign-off' }
+      ]
     };
+
+    function toggleWorkStageDetails() {
+      isWorkDetailsOpen = !isWorkDetailsOpen;
+      const container = document.getElementById('work-stage-details-container');
+      const icon = document.getElementById('work-details-toggle-icon');
+      const text = document.getElementById('work-details-toggle-text');
+      if (!container) return;
+
+      if (isWorkDetailsOpen) {
+        container.style.display = 'block';
+        if (icon) icon.style.transform = 'rotate(90deg)';
+        if (text) text.innerText = 'Hide Stage & Evidence Breakdown';
+        renderWorkDetails();
+      } else {
+        container.style.display = 'none';
+        if (icon) icon.style.transform = 'rotate(0deg)';
+        if (text) text.innerText = 'Detailed Stage & Evidence Breakdown';
+      }
+    }
+
+    function renderWorkDetails() {
+      const container = document.getElementById('work-stage-details-container');
+      if (!container) return;
+      const items = workDetailsData[selectedWorkPreset] || [];
+
+      let html = `
+        <div style="font-size: 10px; font-weight: 800; color: #0F2F58; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px; display: flex; justify-content: space-between; align-items: center;">
+          <span>Operational Milestones &amp; Evidence</span>
+          <span style="font-size: 9px; color: var(--forest-700); font-weight: 700;">${items.length} Tracked Gates</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+      `;
+
+      items.forEach(it => {
+        html += `
+          <div style="background: #FFFFFF; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 10.5px; font-weight: 800; color: #0F2F58;">${it.stage}</span>
+              <span style="font-size: 9.5px; font-weight: 700; color: var(--forest-700); font-family: 'JetBrains Mono', monospace;">${it.time}</span>
+            </div>
+            <div style="font-size: 9.5px; color: var(--ink-muted); line-height: 1.35;">${it.desc}</div>
+            <div style="font-size: 9px; font-weight: 700; color: #0284C7; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
+              <span>Mandatory Evidence:</span>
+              <span style="color: var(--ink); font-weight: 600;">${it.evidence}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
 
     function selectWorkPreset(presetKey, btn) {
       selectedWorkPreset = presetKey;
@@ -2798,39 +2850,166 @@
       }
 
       renderWorkPreviewPipeline();
+      if (isWorkDetailsOpen) {
+        renderWorkDetails();
+      }
     }
 
     function renderWorkPreviewPipeline() {
       const track = document.getElementById('work-preview-pipeline-track');
-      const badge = document.getElementById('work-shape-badge');
-      const preset = workPresetData[selectedWorkPreset];
-      if (!track || !preset) return;
+      if (!track) return;
 
-      if (badge) badge.innerText = `Shape: ${preset.shape}`;
-
-      let html = '';
-      preset.nodes.forEach((n, idx) => {
-        html += `
-          <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:4px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; min-width:74px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
-              <span style="font-size:7.5px; font-weight:800; background:${n.bg}; color:${n.color}; padding:1px 4px; border-radius:4px;">${n.num}</span>
-              <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${n.dur}</span>
+      if (selectedWorkPreset === 'parallel') {
+        // Render TRUE Parallel DAG (Fork -> Vertical Lanes -> Join)
+        track.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 4px; min-width: 380px;">
+            <!-- Stage 1 -->
+            <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">1</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">15m</span>
+              </div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Intake Triage</div>
             </div>
-            <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
+
+            <!-- Fork SVG Wire -->
+            <svg width="26" height="70" viewBox="0 0 26 70" fill="none" style="flex-shrink:0;">
+              <path d="M0 35 H8 C14 35 14 17 26 17" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
+              <path d="M0 35 H8 C14 35 14 53 26 53" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
+            </svg>
+
+            <!-- Parallel Lanes (Stacked vertically) -->
+            <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+              <!-- Lane 2A -->
+              <div style="background:#FFFFFF; border:1.5px solid #0284C7; border-radius:8px; padding:4px 8px; display:flex; flex-direction:column; gap:2px; width:98px; box-shadow:0 2px 6px rgba(2,132,199,0.12);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:7.5px; font-weight:800; background:#E0F2FE; color:#0284C7; padding:1px 4px; border-radius:4px;">2A · PARALLEL</span>
+                  <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">25m</span>
+                </div>
+                <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Indoor Coil</div>
+              </div>
+              <!-- Lane 2B -->
+              <div style="background:#FFFFFF; border:1.5px solid #166534; border-radius:8px; padding:4px 8px; display:flex; flex-direction:column; gap:2px; width:98px; box-shadow:0 2px 6px rgba(22,101,52,0.12);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:7.5px; font-weight:800; background:#DCFCE7; color:#166534; padding:1px 4px; border-radius:4px;">2B · PARALLEL</span>
+                  <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">20m</span>
+                </div>
+                <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Outdoor Unit</div>
+              </div>
+            </div>
+
+            <!-- Join SVG Wire -->
+            <svg width="26" height="70" viewBox="0 0 26 70" fill="none" style="flex-shrink:0;">
+              <path d="M0 17 C12 17 12 35 18 35 H26" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
+              <path d="M0 53 C12 53 12 35 18 35 H26" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
+            </svg>
+
+            <!-- Stage 3 (Rejoined) -->
+            <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:7.5px; font-weight:800; background:#F3E8FF; color:#7E22CE; padding:1px 4px; border-radius:4px;">3</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">15m</span>
+              </div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Joint Test</div>
+            </div>
           </div>
         `;
-        if (idx < preset.nodes.length - 1) {
-          html += `
-            <svg width="18" height="10" viewBox="0 0 18 10" fill="none" style="flex-shrink:0;">
-              <line x1="0" y1="5" x2="18" y2="5" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2"/>
+      } else if (selectedWorkPreset === 'branch') {
+        // Render Decision Branch Fork (Gate -> Yes/No Lanes -> Join)
+        track.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 4px; min-width: 380px;">
+            <!-- Stage 1 -->
+            <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">1</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">15m</span>
+              </div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Pressure Triage</div>
+            </div>
+
+            <!-- Wire to Gate -->
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none" style="flex-shrink:0;">
+              <line x1="0" y1="5" x2="14" y2="5" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2"/>
             </svg>
+
+            <!-- Decision Gate -->
+            <div style="background:#FFFBEB; border:1.5px solid #D97706; border-radius:8px; padding:4px 6px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; width:58px;">
+              <span style="font-size:7.5px; font-weight:800; color:#B45309;">GATE</span>
+              <span style="font-size:8.5px; font-weight:800; color:#92400E;">Leak &gt; 0?</span>
+            </div>
+
+            <!-- Fork SVG Wire -->
+            <svg width="22" height="70" viewBox="0 0 22 70" fill="none" style="flex-shrink:0;">
+              <path d="M0 35 H6 C12 35 12 17 22 17" stroke="#D97706" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
+              <path d="M0 35 H6 C12 35 12 53 22 53" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
+            </svg>
+
+            <!-- Conditional Branches -->
+            <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+              <!-- Yes: Braze -->
+              <div style="background:#FFFFFF; border:1.5px solid #D97706; border-radius:8px; padding:4px 8px; display:flex; flex-direction:column; gap:2px; width:98px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:7.5px; font-weight:800; background:#FEF3C7; color:#B45309; padding:1px 4px; border-radius:4px;">YES · BRAZE</span>
+                  <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">30m</span>
+                </div>
+                <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Braze Joint</div>
+              </div>
+              <!-- No: Pass -->
+              <div style="background:#FFFFFF; border:1.5px solid #10B981; border-radius:8px; padding:4px 8px; display:flex; flex-direction:column; gap:2px; width:98px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">NO · PASS</span>
+                  <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">15m</span>
+                </div>
+                <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Standard Wash</div>
+              </div>
+            </div>
+
+            <!-- Join SVG Wire -->
+            <svg width="22" height="70" viewBox="0 0 22 70" fill="none" style="flex-shrink:0;">
+              <path d="M0 17 C10 17 10 35 16 35 H22" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
+              <path d="M0 53 C10 53 10 35 16 35 H22" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
+            </svg>
+
+            <!-- Stage 3 (Rejoined) -->
+            <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">3</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">10m</span>
+              </div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Temp Test</div>
+            </div>
+          </div>
+        `;
+      } else {
+        // Render Standard Sequential 4-Stage DAG
+        const nodes = [
+          { num: '1', title: 'Intake Triage', dur: '15m', color: '#0D715F', bg: '#E8F7F1' },
+          { num: '2', title: 'Coil Wash', dur: '20m', color: '#0F766E', bg: '#CCFBF1' },
+          { num: '3', title: 'Cold Run', dur: '15m', color: '#B45309', bg: '#FEF3C7' },
+          { num: '4', title: 'Delta Test', dur: '15m', color: '#475569', bg: '#F1F5F9' }
+        ];
+        let html = '';
+        nodes.forEach((n, idx) => {
+          html += `
+            <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:4px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; min-width:74px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
+                <span style="font-size:7.5px; font-weight:800; background:${n.bg}; color:${n.color}; padding:1px 4px; border-radius:4px;">${n.num}</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${n.dur}</span>
+              </div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
+            </div>
           `;
-        }
-      });
-
-      track.innerHTML = html;
+          if (idx < nodes.length - 1) {
+            html += `
+              <svg width="18" height="10" viewBox="0 0 18 10" fill="none" style="flex-shrink:0;">
+                <line x1="0" y1="5" x2="18" y2="5" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2"/>
+              </svg>
+            `;
+          }
+        });
+        track.innerHTML = html;
+      }
     }
-
     window.addEventListener('DOMContentLoaded', () => {
       updateStepUI();
       renderWorkPreviewPipeline();
