@@ -265,6 +265,7 @@ export default function WorkPipelineCanvas({ stages, flowType = 'linear', onStag
                 borderRadius: 12,
                 padding: '10px 12px',
                 overflowX: 'auto',
+                touchAction: 'pan-x pinch-zoom',
                 /* thin scrollbar */
                 scrollbarWidth: 'thin',
                 scrollbarColor: 'rgba(13, 113, 95, 0.25) transparent',

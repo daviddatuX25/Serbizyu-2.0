@@ -276,45 +276,6 @@ export default function DealChainCarousel({
 }: DealChainCarouselProps) {
     const deckRef = useRef<HTMLDivElement>(null);
 
-    /* ── Touch axis locking ── */
-    const touchState = useRef<{
-        startX: number;
-        startY: number;
-        locked: 'h' | 'v' | null;
-    } | null>(null);
-
-    const handleTouchStart = useCallback((e: React.TouchEvent) => {
-        const t = e.touches[0];
-        touchState.current = { startX: t.clientX, startY: t.clientY, locked: null };
-    }, []);
-
-    const handleTouchMove = useCallback((e: React.TouchEvent) => {
-        const state = touchState.current;
-        if (!state) return;
-        const t = e.touches[0];
-        const dx = t.clientX - state.startX;
-        const dy = t.clientY - state.startY;
-
-        if (state.locked === null) {
-            // Calculate gesture angle; lock if within ±20° of horizontal
-            const angle = Math.atan2(Math.abs(dy), Math.abs(dx)) * (180 / Math.PI);
-            if (angle <= 20) {
-                state.locked = 'h';
-            } else {
-                state.locked = 'v';
-            }
-        }
-
-        if (state.locked === 'h') {
-            // Prevent vertical page scroll when swiping horizontally
-            e.preventDefault();
-        }
-    }, []);
-
-    const handleTouchEnd = useCallback(() => {
-        touchState.current = null;
-    }, []);
-
     /* ── Scroll-snap detection (sync activeIndex from manual swipe) ── */
     useEffect(() => {
         const deck = deckRef.current;
@@ -370,15 +331,13 @@ export default function DealChainCarousel({
             ) : (
                 <div
                     ref={deckRef}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
                     className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-0.5"
                     style={{
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',
                         scrollBehavior: 'smooth',
                         WebkitOverflowScrolling: 'touch',
+                        touchAction: 'pan-x pinch-zoom',
                     }}
                 >
                     {combinations.map((combo) => (

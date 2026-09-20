@@ -102,6 +102,26 @@ export default function MobileKernelShowcase() {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Handlers
+    const scrollToTop = () => {
+        const main = document.querySelector('main');
+        if (main) main.scrollTop = 0;
+    };
+
+    const handleStepChange = (step: number) => {
+        setCurrentStep(step);
+        scrollToTop();
+    };
+
+    const handlePrimaryClick = () => {
+        if (currentStep >= 3) {
+            alert('Listing published successfully to Tagudin marketplace!');
+            setCurrentStep(1);
+        } else {
+            setCurrentStep((s) => s + 1);
+        }
+        scrollToTop();
+    };
+
     const handleStageChange = (idx: number, updated: Partial<WorkStage>) => {
         setStages((prev) => {
             const next = [...prev];
@@ -156,6 +176,8 @@ export default function MobileKernelShowcase() {
         setCombinations((prev) => prev.filter((c) => c.id !== comboId));
     };
 
+    const isStepVisible = (step: number) => viewMode === 'advanced' || currentStep === step;
+
     return (
         <AppLayout
             actingContext={{
@@ -167,179 +189,271 @@ export default function MobileKernelShowcase() {
             }}
             header={
                 <StepWizardHeader
-                    title="Mobile UI Kernel Showcase"
+                    title={viewMode === 'advanced' ? 'All-in-One Editor' : `Step ${currentStep} of 3`}
                     draftVersion="v1"
-                    onBack={() => alert('Back pressed')}
-                    onSaveDraft={() => alert('Draft saved')}
-                    steps={{
-                        total: 3,
-                        activeIndex: currentStep - 1,
-                        onDotClick: (i) => setCurrentStep(i + 1),
+                    onBack={() => {
+                        if (currentStep > 1 && viewMode === 'guided') {
+                            handleStepChange(currentStep - 1);
+                        } else {
+                            alert('Back pressed');
+                        }
                     }}
+                    onSaveDraft={() => alert('Draft saved')}
                 />
             }
             dock={
                 <StickyDock
                     primaryAction={
                         <span>
-                            {currentStep === 3 ? 'Publish Listing ✓' : `Step ${currentStep} · Continue →`}
+                            {currentStep === 3 || viewMode === 'advanced'
+                                ? 'Publish Listing ✓'
+                                : `Continue to Step ${currentStep + 1} →`}
                         </span>
                     }
-                    onPrimaryAction={() => setCurrentStep((s) => (s >= 3 ? 1 : s + 1))}
-                    steps={{
-                        total: 3,
-                        activeIndex: currentStep - 1,
-                        onDotClick: (i) => setCurrentStep(i + 1),
-                    }}
+                    onPrimaryAction={handlePrimaryClick}
+                    steps={
+                        viewMode === 'guided'
+                            ? {
+                                  total: 3,
+                                  activeIndex: currentStep - 1,
+                                  onDotClick: (i) => handleStepChange(i + 1),
+                              }
+                            : undefined
+                    }
                     modeSwitcher={{
                         isAdvanced: viewMode === 'advanced',
-                        onToggle: () =>
-                            setViewMode((m) => (m === 'guided' ? 'advanced' : 'guided')),
+                        onToggle: () => {
+                            setViewMode((m) => (m === 'guided' ? 'advanced' : 'guided'));
+                            scrollToTop();
+                        },
                     }}
                 />
             }
         >
-            <div className="flex flex-col gap-5">
-                {/* 1. Context Switcher Demo */}
+            <div className="flex flex-col gap-4">
+                {/* 1. Context Switcher Demo Card */}
                 <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                         <div>
                             <div className="text-xs font-bold text-[#0F2F58]">
                                 Acting-for Context (OBAC Banner)
                             </div>
                             <div className="text-[10px] text-slate-500">
-                                Toggle to preview the Rosa / Mang Jose delegation bar
+                                Toggle to test the field-agent delegation state
                             </div>
                         </div>
                         <button
                             type="button"
                             onClick={() => setIsActing((a) => !a)}
-                            className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-bold text-[#0F2F58]"
+                            className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-bold text-[#0F2F58] hover:bg-slate-100"
                         >
                             {isActing ? 'Turn Off Acting' : 'Turn On Acting'}
                         </button>
                     </div>
                 </div>
 
-                {/* 2. Work Execution Pipeline Section */}
-                <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-                    <div className="mb-2 flex items-center justify-between">
-                        <div>
-                            <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
-                                Work Execution Pipeline
+                {/* STEP 1: Service Identity & Work Execution Pipeline */}
+                {isStepVisible(1) && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                        <div className="mb-2 flex items-center justify-between">
+                            <div>
+                                <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                    Step 1 · Scope & Work Pipeline
+                                </div>
+                                <div className="text-[10px] text-slate-500">
+                                    Define deliverables, milestones, and evidence gates
+                                </div>
                             </div>
-                            <div className="text-[10px] text-slate-500">
-                                Bounded light-mode DAG canvas with SVG wires
-                            </div>
-                        </div>
-                        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[8.5px] font-bold text-emerald-800">
-                            DAG CANVAS
-                        </span>
-                    </div>
-
-                    {/* Flow Type Switcher */}
-                    <div className="mb-2.5 flex items-center gap-1.5">
-                        {(['linear', 'parallel', 'branch'] as const).map((t) => (
-                            <button
-                                key={t}
-                                type="button"
-                                onClick={() => setFlowType(t)}
-                                className={`rounded-full border px-2.5 py-1 text-[10.5px] font-bold capitalize transition-all ${
-                                    flowType === t
-                                        ? 'border-transparent bg-[#0F2F58] text-white'
-                                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                                }`}
-                            >
-                                {t} flow
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Compact Canvas */}
-                    <WorkPipelineCanvas
-                        stages={stages}
-                        flowType={flowType}
-                        onStageClick={(s) => alert(`Clicked stage: ${s.title}`)}
-                    />
-
-                    {/* Editable Stages List */}
-                    <div className="mt-3.5">
-                        <div className="mb-1.5 flex items-center justify-between">
-                            <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#0F2F58]">
-                                Live Editable Stages & Evidence
-                            </span>
-                            <span className="text-[9px] font-bold text-emerald-700">
-                                {stages.length} Tracked Gates
+                            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[8.5px] font-bold text-emerald-800">
+                                STEP 1
                             </span>
                         </div>
-                        <div className="flex flex-col gap-2">
-                            {stages.map((st, i) => (
-                                <EditableStageRow
-                                    key={st.id}
-                                    stage={st}
-                                    index={i}
-                                    onChange={handleStageChange}
-                                    onRemove={handleStageRemove}
+
+                        {/* Title & Description Preview */}
+                        <div className="mb-3 flex flex-col gap-2 border-b border-slate-100 pb-3">
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                    Service Title
+                                </label>
+                                <input
+                                    type="text"
+                                    defaultValue="Inverter Split AC Deep Clean & Checkup"
+                                    className="mt-1 h-9 w-full rounded-lg border border-slate-300 bg-[#FAFCFB] px-2.5 text-xs font-bold text-[#0F2F58] outline-none focus:border-emerald-600 focus:bg-white"
                                 />
-                            ))}
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handleAddStage}
-                            className="mt-2 flex h-8 w-full cursor-pointer items-center justify-center gap-1 rounded-lg border border-dashed border-emerald-600 bg-emerald-50/50 text-[11px] font-bold text-emerald-800 transition-colors hover:bg-emerald-50"
-                        >
-                            <span>＋ Add Milestone Stage</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* 3. Deal Chain Carousel Section */}
-                <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-                    <div className="mb-2 flex items-center justify-between">
-                        <div>
-                            <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
-                                Deal Chain Carousel Deck
                             </div>
-                            <div className="text-[10px] text-slate-500">
-                                Horizontal swipe deck with scroll-snap & touch locking
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                    Description
+                                </label>
+                                <textarea
+                                    rows={2}
+                                    defaultValue="Complete indoor evaporator coil deep chemical wash and outdoor condensing unit pressure inspection."
+                                    className="mt-1 w-full rounded-lg border border-slate-300 bg-[#FAFCFB] p-2 text-xs text-slate-700 outline-none focus:border-emerald-600 focus:bg-white"
+                                />
                             </div>
                         </div>
-                        <span className="rounded-full border border-navy-200 bg-[#0F2F58] px-2 py-0.5 text-[8.5px] font-bold text-white">
-                            DEAL CHAIN
-                        </span>
-                    </div>
 
-                    <DealChainCarousel
-                        combinations={combinations}
-                        activeIndex={activeComboIndex}
-                        onIndexChange={setActiveComboIndex}
-                        onSlotChangeClick={handleSlotClick}
-                        onToggleDefault={handleToggleDefault}
-                        onRemoveCombo={handleRemoveCombo}
-                        onAddComboClick={() => setIsModalOpen(true)}
-                    />
-                </div>
-
-                {/* 4. Glovo Wave Modal Demo */}
-                <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <div className="text-xs font-bold text-[#0F2F58]">
-                                Glovo Organic Wave Modal
-                            </div>
-                            <div className="text-[10px] text-slate-500">
-                                Asymmetrical wave cap with pinned search and bottom action
+                        {/* Flow Type Switcher */}
+                        <div className="mb-2 flex items-center justify-between">
+                            <span className="text-[10.5px] font-bold text-[#0F2F58]">DAG Topology</span>
+                            <div className="flex items-center gap-1">
+                                {(['linear', 'parallel', 'branch'] as const).map((t) => (
+                                    <button
+                                        key={t}
+                                        type="button"
+                                        onClick={() => setFlowType(t)}
+                                        className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold capitalize transition-all ${
+                                            flowType === t
+                                                ? 'border-transparent bg-[#0F2F58] text-white'
+                                                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        {t}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => setIsModalOpen(true)}
-                            className="rounded-full bg-[#0F2F58] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#153e74]"
-                        >
-                            Open Modal ↗
-                        </button>
+
+                        {/* Compact Bounded Canvas */}
+                        <WorkPipelineCanvas
+                            stages={stages}
+                            flowType={flowType}
+                            onStageClick={(s) => alert(`Stage clicked: ${s.title}`)}
+                        />
+
+                        {/* Editable Stages List */}
+                        <div className="mt-3.5">
+                            <div className="mb-1.5 flex items-center justify-between">
+                                <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                    Live Editable Stages & Evidence
+                                </span>
+                                <span className="text-[9px] font-bold text-emerald-700">
+                                    {stages.length} Tracked Gates
+                                </span>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                {stages.map((st, i) => (
+                                    <EditableStageRow
+                                        key={st.id}
+                                        stage={st}
+                                        index={i}
+                                        onChange={handleStageChange}
+                                        onRemove={handleStageRemove}
+                                    />
+                                ))}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAddStage}
+                                className="mt-2 flex h-8 w-full cursor-pointer items-center justify-center gap-1 rounded-lg border border-dashed border-emerald-600 bg-emerald-50/50 text-[11px] font-bold text-emerald-800 transition-colors hover:bg-emerald-50"
+                            >
+                                <span>＋ Add Milestone Stage</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
+
+                {/* STEP 2: Rates & Options */}
+                {isStepVisible(2) && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                        <div className="mb-2 flex items-center justify-between">
+                            <div>
+                                <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                    Step 2 · Rates & Options
+                                </div>
+                                <div className="text-[10px] text-slate-500">
+                                    Commercial base pricing, add-ons, and payment rails
+                                </div>
+                            </div>
+                            <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[8.5px] font-bold text-blue-800">
+                                STEP 2
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex-1">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                        Base Labor (₱)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        defaultValue="450.00"
+                                        className="mt-1 h-9 w-full rounded-lg border border-slate-300 bg-[#FAFCFB] px-2.5 font-mono text-sm font-bold text-[#0F2F58] outline-none focus:border-emerald-600"
+                                    />
+                                </div>
+                                <div className="w-36">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                        Pricing Model
+                                    </label>
+                                    <select className="mt-1 h-9 w-full rounded-lg border border-slate-300 bg-[#FAFCFB] px-2 text-xs font-bold text-slate-800 outline-none">
+                                        <option>Fixed Rate</option>
+                                        <option>Price Range</option>
+                                        <option>Package Tiers</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
+                                <div className="text-xs font-bold text-[#0F2F58]">Accepted Payment Rails</div>
+                                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                    <span className="rounded-full border border-emerald-300 bg-white px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                                        ✓ Cash on Completion
+                                    </span>
+                                    <span className="rounded-full border border-emerald-300 bg-white px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                                        ✓ GCash P2P
+                                    </span>
+                                    <span className="rounded-full border border-emerald-300 bg-white px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                                        ✓ Tiwala Escrow
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* STEP 3: Partnered Services / Deal Chain */}
+                {isStepVisible(3) && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                        <div className="mb-2 flex items-center justify-between">
+                            <div>
+                                <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                    Step 3 · Partnered Services
+                                </div>
+                                <div className="text-[10px] text-slate-500">
+                                    Customer-selectable Deal Chain partner combinations
+                                </div>
+                            </div>
+                            <span className="rounded-full border border-navy-200 bg-[#0F2F58] px-2 py-0.5 text-[8.5px] font-bold text-white">
+                                DEAL CHAIN
+                            </span>
+                        </div>
+
+                        <DealChainCarousel
+                            combinations={combinations}
+                            activeIndex={activeComboIndex}
+                            onIndexChange={setActiveComboIndex}
+                            onSlotChangeClick={handleSlotClick}
+                            onToggleDefault={handleToggleDefault}
+                            onRemoveCombo={handleRemoveCombo}
+                            onAddComboClick={() => setIsModalOpen(true)}
+                        />
+
+                        {/* Modal Trigger Demo */}
+                        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                            <span className="text-[10.5px] font-bold text-slate-600">
+                                Browse Available Combinations
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setIsModalOpen(true)}
+                                className="rounded-full bg-[#0F2F58] px-3 py-1 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#153e74]"
+                            >
+                                Open Catalog ↗
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Live Wave Modal Component */}

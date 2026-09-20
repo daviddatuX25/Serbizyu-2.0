@@ -34,13 +34,13 @@ export function AppLayout({
     return (
         <div
             className={cn(
-                'relative flex min-h-[100dvh] w-full flex-col bg-[#F4F6F5] sm:mx-auto sm:max-w-xl',
+                'relative flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden bg-[#F4F6F5] sm:mx-auto sm:max-w-xl sm:border sm:border-slate-200 sm:shadow-xl',
                 className,
             )}
         >
             {/* Acting-on-behalf banner */}
             {showBanner && (
-                <div className="flex-shrink-0 border-b border-[var(--sz-border)] bg-[#FEF3C7] px-4 py-2">
+                <div className="flex-shrink-0 border-b border-amber-200 bg-[#FEF3C7] px-4 py-2">
                     <p className="text-center font-[var(--sz-font-display)] text-xs font-bold text-[#92400E]">
                         👤 Acting on behalf of: {actingContext.ownerName}
                     </p>
@@ -48,15 +48,15 @@ export function AppLayout({
             )}
 
             {/* Header slot */}
-            {header && <div className="flex-shrink-0">{header}</div>}
+            {header && <div className="flex-shrink-0 z-30">{header}</div>}
 
             {/* Scrollable content area */}
-            <main className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4 pb-44 [-webkit-overflow-scrolling:touch]">
+            <main className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4 pb-48 [-webkit-overflow-scrolling:touch]">
                 {children}
             </main>
 
             {/* Bottom dock slot */}
-            {dock}
+            {dock && <div className="absolute bottom-0 left-0 right-0 z-40">{dock}</div>}
         </div>
     );
 }

@@ -119,13 +119,18 @@ export function StickyDock({
         if (!vv) return;
 
         function handleResize() {
-            // When the virtual keyboard opens, visualViewport.height shrinks
-            // while window.innerHeight stays the same. The difference is the
-            // keyboard height — we push the dock up by that amount.
+            const isInputFocused =
+                document.activeElement instanceof HTMLInputElement ||
+                document.activeElement instanceof HTMLTextAreaElement;
+
+            if (!isInputFocused) {
+                setBottomOffset(0);
+                return;
+            }
+
             const keyboardHeight = window.innerHeight - (vv?.height ?? window.innerHeight);
             setBottomOffset(Math.max(0, keyboardHeight));
         }
-
         vv.addEventListener('resize', handleResize);
         vv.addEventListener('scroll', handleResize);
         return () => {
@@ -137,7 +142,7 @@ export function StickyDock({
     return (
         <footer
             className={cn(
-                'sticky z-40 flex flex-col gap-1.5 border-t border-[var(--sz-border)] px-[18px] pb-[18px] pt-2.5',
+                'flex w-full flex-col gap-1.5 border-t border-slate-200 px-[18px] pb-[18px] pt-2.5',
                 className,
             )}
             style={{
