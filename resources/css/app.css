@@ -12,40 +12,39 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #f3efe4;
-  --foreground: #12201c;
-  --card: #fffcf6;
-  --card-foreground: #12201c;
-  --popover: #fffcf6;
-  --popover-foreground: #12201c;
-  --primary: #0d715f;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #0f2f58;
   --primary-foreground: #ffffff;
-  --secondary: #f7f2e8;
-  --secondary-foreground: #12201c;
-  --muted: #f7f2e8;
-  --muted-foreground: #7a8f84;
-  --accent: #e8f7f1;
-  --accent-foreground: #0a574a;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f2f58;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #ebf2fa;
+  --accent-foreground: #0f2f58;
   --destructive: #c24732;
-  --border: #d5e0d9;
-  --input: #b7c9bf;
-  --ring: #17866f;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #0f2f58;
 
-  --chart-1: #0d715f;
-  --chart-2: #17866f;
+  --chart-1: #0f2f58;
+  --chart-2: #0d715f;
   --chart-3: #f0b429;
   --chart-4: #4d655a;
   --chart-5: #c24732;
 
-  --sidebar: #fffcf6;
-  --sidebar-foreground: #12201c;
-  --sidebar-primary: #0d715f;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0f2f58;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e8f7f1;
-  --sidebar-accent-foreground: #0a574a;
-  --sidebar-border: #d5e0d9;
-  --sidebar-ring: #17866f;
-
+  --sidebar-accent: #ebf2fa;
+  --sidebar-accent-foreground: #0f2f58;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #0f2f58;
   /* Bridge for existing sz-* shell/layout during foundation migration */
   --sz-canvas: #f3efe4;
   --sz-surface: #fffcf6;
@@ -270,10 +269,7 @@ body.light {
     min-height: 100vh;
     margin: 0;
     font-family: var(--sz-font-body);
-    background:
-      radial-gradient(circle at 88% 0%, rgba(47, 159, 132, 0.14), transparent 34rem),
-      radial-gradient(circle at 8% 90%, rgba(240, 180, 41, 0.1), transparent 28rem),
-      linear-gradient(180deg, #f3efe4, #e8e1d2);
+    background-color: var(--background);
   }
 
   button,
