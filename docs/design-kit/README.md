@@ -40,10 +40,10 @@ Extend this kit when unique features land. Do not revive a separate colorful “
 |---|---|
 | `index.html` | Canonical kit page |
 | `styles.css` | Kit tokens and specimens (`tk-` prefixed) |
+| `NON-ADMIN-SPECIFICATION.md` | **Canonical implementation authority for all non-admin mocks & screens** |
 | `WORKFLOW.md` | Dual-track kit-first process (required for new UI) |
 | `ELEMENT-INVENTORY.md` | UX/PRD coverage checklist + gaps |
 | `README.md` | This authority note |
-
 ## Hard rules
 
 1. **One kit.** `docs/design-kit/` is the only UI kit authority.
