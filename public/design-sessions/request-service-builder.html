@@ -2216,6 +2216,52 @@
       background: #CBD5E1;
       border-radius: 4px;
     }
+    /* Themed thin scrollbar for work canvas */
+    .work-canvas-light-box {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(13, 113, 95, 0.25) transparent;
+    }
+    .work-canvas-light-box::-webkit-scrollbar {
+      height: 3px;
+    }
+    .work-canvas-light-box::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .work-canvas-light-box::-webkit-scrollbar-thumb {
+      background: rgba(13, 113, 95, 0.25);
+      border-radius: var(--radius-pill);
+    }
+
+    /* Number input spinner cleanup */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    /* Partner Combos Carousel Deck */
+    .partner-combos-deck {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      gap: 10px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      scroll-behavior: smooth;
+      padding-bottom: 2px;
+    }
+    .partner-combos-deck::-webkit-scrollbar {
+      display: none;
+    }
+    .partner-combo-slide {
+      flex: 0 0 100%;
+      min-width: 100%;
+      scroll-snap-align: start;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
@@ -2357,33 +2403,53 @@
           </div>
         </div>
 
-        <!-- Customizable Tasks / Deliverables List -->
-        <div class="field-block">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="field-label" style="margin: 0;">Specific Requirements</label>
-            <span style="font-size: 10px; color: var(--ink-muted);">Custom Tasks</span>
+        <!-- Work Execution Pipeline (From Work Catalog) -->
+        <div class="field-block" style="margin-top: 14px; padding-top: 12px; border-top: 1.5px solid var(--line);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div>
+              <label class="field-label" style="margin: 0; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #0F2F58; font-weight: 800;">Target Work Pipeline</label>
+              <div style="font-size: 9.5px; color: var(--ink-muted); margin-top: 1px;">Standard operational stages &amp; milestone SLA</div>
+            </div>
+            <span style="font-size: 8.5px; font-weight: 800; background: var(--forest-50); color: var(--forest-700); border: 1px solid var(--forest-200); padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">WORK CATALOG</span>
           </div>
-          <div class="inclusions-dynamic-list" id="request-tasks-list">
-            <div class="custom-item-row">
-              <span class="custom-item-bullet"></span>
-              <input type="text" class="custom-item-input" value="Inspect kitchen water line under sink" placeholder="Describe requirement...">
-              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
+
+          <!-- Active Work Catalog Item Card -->
+          <div style="background: #FAFCFB; border: 1.5px solid var(--forest-200); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--forest-50); border: 1px solid var(--forest-200); display: flex; align-items: center; justify-content: center; color: var(--forest-700); flex-shrink: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div>
+                <div style="font-size: 12px; font-weight: 800; color: #0F2F58;" id="active-work-title">Plumbing Leak &amp; Valve Triage</div>
+                <div style="font-size: 10px; color: var(--ink-muted); font-family: 'JetBrains Mono', monospace;" id="active-work-meta">A1 Linear · 3 Stages · 45m SLA</div>
+              </div>
             </div>
-            <div class="custom-item-row">
-              <span class="custom-item-bullet"></span>
-              <input type="text" class="custom-item-input" value="Replace main gate shutoff valve" placeholder="Describe requirement...">
-              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
-            </div>
-            <div class="custom-item-row">
-              <span class="custom-item-bullet"></span>
-              <input type="text" class="custom-item-input" value="Pressure test with faucets open" placeholder="Describe requirement...">
-              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove">&times;</button>
+            <button type="button" onclick="openWorkCatalogModal()" style="font-size: 11px; font-weight: 800; color: var(--forest-700); background: #FFFFFF; border: 1px solid var(--forest-300); border-radius: var(--radius-pill); padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <span>Change ▾</span>
+            </button>
+          </div>
+
+          <!-- Compact Visual Work Pipeline Preview (Horizontal Bounded Canvas - Light Mode) -->
+          <div class="work-canvas-light-box" id="work-preview-canvas-box" style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 10px 12px; overflow-x: auto;">
+            <div id="work-preview-pipeline-track" style="display: flex; align-items: center; gap: 6px; min-width: 320px;">
+              <!-- Rendered dynamically by JS -->
             </div>
           </div>
-          <button type="button" class="btn-add-item-dashed" onclick="addRequestTask()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add Requirement / Task</span>
-          </button>
+
+          <!-- Editable Milestone Requirements & Evidence List -->
+          <div style="margin-top: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 10.5px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.3px;">Milestone Requirements &amp; Evidence</span>
+              <span style="font-size: 9px; color: var(--forest-700); font-weight: 700;" id="work-stages-count-badge">3 Tracked Gates</span>
+            </div>
+            <div id="work-stages-editable-list" style="display: flex; flex-direction: column; gap: 6px;">
+              <!-- Rendered dynamically as editable requirement cards -->
+            </div>
+            <button type="button" class="btn-add-item-dashed" onclick="addWorkStageNode()" style="width: 100%; height: 32px; font-size: 11px; font-weight: 700; margin-top: 6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add Requirement Node</span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -2486,112 +2552,48 @@
             </button>
           </div>
         </div>
-
-        <!-- Deal Chain Sourcing Action (Clean Single-Button Affordance) -->
-        <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line);">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <label class="field-label" style="margin: 0;">Multi-Provider Sourcing</label>
-            <span style="font-size: 8.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 1.5px 6px; border-radius: var(--radius-pill);">DEAL CHAIN</span>
+        <!-- Deal Chain Sourcing Options (Horizontal Paginated Carousel Deck) -->
+        <div style="margin-top: 14px; padding-top: 10px; border-top: 1.5px solid var(--line);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <div>
+              <span style="font-size: 11px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.4px;">Partnered Sourcing Options</span>
+              <div style="font-size: 9.5px; color: var(--ink-muted); margin-top: 1px;">Pre-bundled parts &amp; delivery attached to this request</div>
+            </div>
+            <span style="font-size: 8.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">DEAL CHAIN</span>
           </div>
-          <button type="button" class="btn-add-item-dashed" onclick="openBundleCatalog()" style="width: 100%; height: 42px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed #0F2F58; background: #F8FAFD; border-radius: var(--radius-md); font-size: 11.5px; font-weight: 700; color: #0F2F58; cursor: pointer;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            <span>Connect Deal Chain (Parts + Courier)</span>
+        </div>
+
+        <!-- Horizontal Paginated Carousel Deck -->
+        <div id="partner-combos-carousel-wrapper" style="position: relative; margin-top: 6px;">
+          <div class="partner-combos-deck" id="partner-combos-deck">
+            <!-- Rendered dynamically by renderPartnerCombosDeck() -->
+          </div>
+
+          <!-- Carousel Pagination & Navigation Controls -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding: 2px;">
+            <button type="button" id="btn-combo-prev" onclick="navComboCarousel(-1)" style="font-size: 11px; font-weight: 700; color: #0F2F58; background: #FFFFFF; border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 3px 10px; cursor: pointer; display: flex; align-items: center; gap: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+              <span>‹ Prev</span>
+            </button>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div id="combo-carousel-dots" style="display: flex; align-items: center; gap: 4px;">
+                <!-- Dots generated dynamically: ● ○ -->
+              </div>
+              <span id="combo-carousel-counter" style="font-size: 10px; font-weight: 700; color: var(--ink-muted); font-family: 'JetBrains Mono', monospace;">Option 1 of 2</span>
+            </div>
+            <button type="button" id="btn-combo-next" onclick="navComboCarousel(1)" style="font-size: 11px; font-weight: 700; color: #0F2F58; background: #FFFFFF; border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 3px 10px; cursor: pointer; display: flex; align-items: center; gap: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+              <span>Next ›</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Deal Chain Dedicated Action Button -->
+        <div style="margin-top: 10px;">
+          <button type="button" class="btn-add-item-dashed" onclick="openBundleCatalog()" style="width: 100%; height: 38px; font-size: 11.5px; font-weight: 700;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span>Attach Sourcing Combination</span>
+            <span style="font-size: 9.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.2px;">DEAL CHAIN</span>
           </button>
         </div>
-      </section>
-      <!-- Card 4: Flow of Work (Advanced View Only) -->
-      <section class="form-card advanced-only-card" id="card-step-4">
-        <div class="card-section-header">
-          <div class="card-section-title">
-            <span>Flow of Work</span>
-          </div>
-        </div>
-
-        <!-- Unified Seamless Flow Canvas (Spacious Nodes, Moving Lines) -->
-        <div style="padding: 4px 0;">
-          <div class="canvas-frame-box" id="req-canvas-frame">
-            <button type="button" class="canvas-topright-icon" onclick="openMobileFlowOverlay()" title="Expand Canvas" aria-label="Expand">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-            </button>
-            <div class="bounded-canvas-viewport" id="req-bounded-canvas">
-              <div class="bounded-canvas-track" id="req-bounded-track">
-              <!-- Step 1 Node -->
-              <div class="canvas-req-node" onclick="openMobileFlowOverlay(1)" title="Step 1: Leak Diagnosis (Tap to Expand)">
-                <div class="canvas-req-node-header" style="background: #E8F7F1; color: #0D715F;">
-                  <span>Step 1</span>
-                  <span>&check;</span>
-                </div>
-                <div class="canvas-req-node-body">
-                  <div class="canvas-req-node-title">Leak Diagnosis</div>
-                  <div class="canvas-req-node-sub">Inspect Joint</div>
-                  <div style="font-size: 7.5px; color: var(--forest-600); font-weight: 700; margin-top: auto;">15 mins</div>
-                </div>
-              </div>
-
-              <!-- Wire 1 -> 2 -->
-              <div class="canvas-req-wire">
-                <svg viewBox="0 0 32 18" fill="none">
-                  <line x1="2" y1="9" x2="30" y2="9" class="canvas-req-wire-line"></line>
-                </svg>
-              </div>
-
-              <!-- Step 2 Node -->
-              <div class="canvas-req-node" onclick="openMobileFlowOverlay(2)" title="Step 2: Pipe Repair (Tap to Expand)">
-                <div class="canvas-req-node-header" style="background: #CCFBF1; color: #0F766E;">
-                  <span>Step 2</span>
-                  <span>⚡</span>
-                </div>
-                <div class="canvas-req-node-body">
-                  <div class="canvas-req-node-title">Joint Repair</div>
-                  <div class="canvas-req-node-sub">PVC &amp; Seal</div>
-                  <div style="font-size: 7.5px; color: #0F766E; font-weight: 700; margin-top: auto;">20 mins</div>
-                </div>
-              </div>
-
-              <!-- Wire 2 -> 3 -->
-              <div class="canvas-req-wire">
-                <svg viewBox="0 0 32 18" fill="none">
-                  <line x1="2" y1="9" x2="30" y2="9" class="canvas-req-wire-line"></line>
-                </svg>
-              </div>
-
-              <!-- Step 3 Node -->
-              <div class="canvas-req-node" style="border-color: #0F2F58; background: #F8FAFD;" id="canvas-node-step3">
-                <div class="canvas-req-node-header" style="background: #EBF2FA; color: #0F2F58;">
-                  <span>Step 3</span>
-                  <span>🛡️</span>
-                </div>
-                <div class="canvas-req-node-body">
-                  <div class="canvas-req-node-title">Pressure Test</div>
-                  <div class="canvas-req-node-sub">15m Water Delta</div>
-                  <div style="font-size: 7.5px; color: #0F2F58; font-weight: 700; margin-top: auto;">Sign-off</div>
-                </div>
-              </div>
-              <div class="canvas-req-wire" id="canvas-wire-step4" style="display: none;">
-                <svg viewBox="0 0 32 18" fill="none">
-                  <line x1="2" y1="9" x2="30" y2="9" class="canvas-req-wire-line" style="stroke: #D97706;"></line>
-                </svg>
-              </div>
-              <div class="canvas-req-node free-slot" id="canvas-node-step4" style="display: none;" onclick="openMobileFlowOverlay(4)" title="Step 4: Custom Citizen Step (Tap to Expand)">
-                <div class="canvas-req-node-header" style="background: #FEF3C7; color: #B45309;">
-                  <span>Step 4</span>
-                  <span>+</span>
-                </div>
-                <div class="canvas-req-node-body">
-                  <div class="canvas-req-node-title" style="color: #92400E;">Valve Check</div>
-                  <div class="canvas-req-node-sub" style="color: #B45309;">Main Shutoff</div>
-                  <div style="font-size: 7.5px; color: #D97706; font-weight: 700; margin-top: auto;">Custom Step</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-        <button type="button" style="width: 100%; height: 38px; border-radius: var(--radius-pill); background: #FFFFFF; border: 1.5px dashed var(--forest-600); color: var(--forest-600); font-family: inherit; font-size: 11.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer; margin-top: 10px;" onclick="toggleCitizenCustomStep()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-          <span id="btn-custom-step-text">+ Add Custom Step to Flow</span>
-        </button>
       </section>
     </main>
 
@@ -2617,6 +2619,61 @@
       </button>
     </footer>
     <!-- 1. Single-Slot Listing Selector Modal (for [Change Source / Courier ▾]) -->
+    <!-- 0. Work Execution Catalog Modal (for [Change ▾] on Request Target Workflow) -->
+    <div class="sheet-backdrop" id="work-catalog-modal" onclick="closeWorkCatalogModal()">
+      <div class="glovo-organic-modal" onclick="event.stopPropagation()">
+        <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
+          <path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path>
+        </svg>
+        <div class="glovo-modal-content" style="max-height: 84vh; display: flex; flex-direction: column; padding: 4px 18px 16px;">
+          <div class="modal-fixed-top" style="flex-shrink: 0; padding-bottom: 6px;">
+            <div class="sheet-header-row">
+              <div>
+                <h3 class="glovo-modal-title">Work Execution Catalog</h3>
+                <p style="font-size: 10px; color: var(--ink-muted); margin: 2px 0 0;">
+                  Standard operational templates for request scope &amp; bidding
+                </p>
+              </div>
+              <button type="button" class="glovo-close-circle" onclick="closeWorkCatalogModal()" aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <!-- Search Bar in Modal -->
+            <div class="chain-catalog-search-box" style="margin: 8px 0 6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input type="text" id="work-catalog-search-input" placeholder="Search workflows, stages, or shapes..." oninput="handleWorkCatalogSearch(this.value)">
+            </div>
+
+            <!-- Category Filter Chips in Modal -->
+            <div class="chain-category-chips" id="work-catalog-filter-chips" style="margin-bottom: 8px;">
+              <button type="button" class="chain-cat-chip active" onclick="filterWorkCatalogCategory('all', this)">All Workflows</button>
+              <button type="button" class="chain-cat-chip" onclick="filterWorkCatalogCategory('plumbing', this)">Plumbing</button>
+              <button type="button" class="chain-cat-chip" onclick="filterWorkCatalogCategory('electrical', this)">Electrical</button>
+              <button type="button" class="chain-cat-chip" onclick="filterWorkCatalogCategory('appliance', this)">Appliance</button>
+            </div>
+            <div class="search-section-header" style="margin-top: 2px;">Available Request Templates</div>
+          </div>
+
+          <!-- Scrollable Catalog Items List -->
+          <div class="modal-scroll-list" id="work-catalog-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px 10px;">
+            <!-- Rendered dynamically by renderWorkCatalogItems() -->
+          </div>
+
+          <!-- Bottom Action: Custom Workflow in Work Studio (Dedicated Affordance) -->
+          <div style="flex-shrink: 0; padding-top: 10px; border-top: 1.5px solid var(--line); background: #FFFFFF;">
+            <a href="work-workspace.html" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 38px; background: #0F2F58; color: #FFFFFF; border-radius: var(--radius-pill); text-decoration: none; font-size: 12px; font-weight: 800; letter-spacing: 0.2px; box-shadow: 0 4px 12px rgba(15,47,88,0.2);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Build Custom Workflow in Work Studio ↗</span>
+            </a>
+            <div style="text-align: center; font-size: 9.5px; color: var(--ink-muted); margin-top: 4px;">
+              Specify custom milestones, inspection gates, or parallel execution tasks
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="sheet-backdrop" id="slot-listing-picker-modal" onclick="closeSlotListingPicker()">
       <div class="glovo-organic-modal" onclick="event.stopPropagation()">
         <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none">
@@ -2705,7 +2762,6 @@
                   </div>
                 </div>
               </div>
-              <div class="combo-subtext-muted">Standard trade labor proposal with no external parts or transit dependencies</div>
             </article>
 
             <!-- Card 1: Turnkey Hardware Sourcing + Courier + Labor -->
@@ -2751,7 +2807,6 @@
                   </div>
                 </div>
               </div>
-              <div class="combo-subtext-muted">Parts sourced at hardware + courier transit + plumbing labor</div>
             </article>
 
             <!-- Card 2: Diagnostic Triage + Sourced Parts + Repair -->
@@ -2797,7 +2852,6 @@
                   </div>
                 </div>
               </div>
-              <div class="combo-subtext-muted">Master plumber diagnoses on-site, stages required parts, and completes install</div>
             </article>
 
             <!-- Card 3: Trade Labor + Heavy Scrap Hauling & Disposal -->
@@ -2832,22 +2886,16 @@
                   </div>
                 </div>
               </div>
-              <div class="combo-subtext-muted">Plumbing repair with broken galvanized pipes and debris hauled to town depot</div>
             </article>
+          </div>
 
-            <!-- Card 4: Custom Chain with Empty Slot -->
-            <article class="compact-combo-card" style="border: 1.5px dashed #CBD5E1; background: #F8FAFC;" onclick="applyRequestChainRecipe('custom_empty')">
-              <div class="combo-card-top-row">
-                <span class="combo-title-bold" style="color: var(--brand-navy); display: flex; align-items: center; gap: 5px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"></path></svg>
-                  <span>Build Custom Chain with Empty Slot</span>
-                </span>
-                <button type="button" class="btn-mini-add-combo" style="background:#FFFFFF; border-color:var(--brand-navy); color:var(--brand-navy);" onclick="event.stopPropagation(); applyRequestChainRecipe('custom_empty')">+ Empty Slot</button>
-              </div>
-              <div class="combo-subtext-muted">
-                Need a custom team or specialized transport? Stage an open chain slot and let nearby Tagudin providers bid upon order.
-              </div>
-            </article>
+          <!-- Bottom Action: Build Custom Chain in Deal Studio (Dedicated Affordance) -->
+          <div style="flex-shrink: 0; padding-top: 10px; border-top: 1.5px solid var(--line); background: #FFFFFF;">
+            <a href="deal-chain-builder.html" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 38px; background: #0F2F58; color: #FFFFFF; border-radius: var(--radius-pill); text-decoration: none; font-size: 12px; font-weight: 800; letter-spacing: 0.2px; box-shadow: 0 4px 12px rgba(15,47,88,0.2);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Build Custom Chain in Deal Studio ↗</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -3824,37 +3872,305 @@
     }
 
     function chooseSlotListing(name, meta, isOpenSlot = false) {
-      if (activeSlotTarget === 'parts') {
-        const elName = document.getElementById('parts-partner-name');
-        const elMeta = document.getElementById('parts-partner-meta');
-        if (elName) elName.innerText = name;
-        if (elMeta) elMeta.innerText = meta;
-      } else if (activeSlotTarget === 'delivery') {
-        const elName = document.getElementById('delivery-partner-name');
-        const elMeta = document.getElementById('delivery-partner-meta');
-        if (elName) elName.innerText = name;
-        if (elMeta) elMeta.innerText = meta;
-      } else if (activeSlotTarget === 'diagnostic') {
-        const elName = document.getElementById('diag-partner-name');
-        const elMeta = document.getElementById('diag-partner-meta');
-        if (elName) elName.innerText = name;
-        if (elMeta) elMeta.innerText = meta;
-      } else if (activeSlotTarget === 'hauling') {
-        const elName = document.getElementById('haul-partner-name');
-        const elMeta = document.getElementById('haul-partner-meta');
-        if (elName) elName.innerText = name;
-        if (elMeta) elMeta.innerText = meta;
+      if (attachedCombos[currentComboIdx]) {
+        const combo = attachedCombos[currentComboIdx];
+        const slot = combo.slots.find(s => s.type === activeSlotTarget);
+        if (slot) {
+          slot.name = name;
+          slot.meta = meta;
+        }
+        const node = combo.nodes.find(n => n.type === activeSlotTarget);
+        if (node) {
+          node.title = name;
+          node.sub = meta.split(' ')[0] || meta;
+        }
+        renderPartnerCombosDeck();
       }
       closeSlotListingPicker();
+    }
+
+    // =========================================================================
+    // WORK PIPELINE: WORK CATALOG & EDITABLE REQUIREMENTS
+    // =========================================================================
+    const workCatalogTemplates = {
+      'plumbing_leak': {
+        id: 'plumbing_leak',
+        category: 'plumbing',
+        title: 'Plumbing Leak & Valve Triage',
+        shape: 'A1 Linear',
+        sla: '45m',
+        flowType: 'linear',
+        description: 'Standard residential plumbing diagnostic, main gate valve replacement, and water pressure load test.',
+        stages: [
+          { id: 'r1', num: '1', title: 'Diagnostic Leak Triage', dur: '15m', desc: 'Inspect kitchen water line and under-sink fittings for weeping joints.', evidence: 'Photo of weeping pipe joint', color: '#0D715F', bg: '#E8F7F1' },
+          { id: 'r2', num: '2', title: 'Replace Gate Valve', dur: '20m', desc: 'Shut off water riser, unscrew corroded brass valve, seal threaded union.', evidence: 'Installed valve photo', color: '#0F766E', bg: '#CCFBF1' },
+          { id: 'r3', num: '3', title: 'Pressure Test Under Load', dur: '10m', desc: 'Repressurize lines and verify dry joint with faucets open.', evidence: 'Dry joint photo & customer sign-off', color: '#475569', bg: '#F1F5F9' }
+        ]
+      },
+      'electrical_rewire': {
+        id: 'electrical_rewire',
+        category: 'electrical',
+        title: 'Circuit Breaker & Outlet Rewire',
+        shape: 'A1 Linear',
+        sla: '60m',
+        flowType: 'linear',
+        description: 'Breaker box circuit isolation, stranded wire conduit pull, and receptacle polarity validation.',
+        stages: [
+          { id: 'r1', num: '1', title: 'Breaker Box Isolation', dur: '15m', desc: 'Lock out main panel and test zero potential across busbars.', evidence: 'Breaker lock-out photo', color: '#0D715F', bg: '#E8F7F1' },
+          { id: 'r2', num: '2', title: 'Conduit Wire Pull', dur: '30m', desc: 'Feed THHN wire gauge through flexible conduit to branch junction.', evidence: 'Conduit junction photo', color: '#0284C7', bg: '#E0F2FE' },
+          { id: 'r3', num: '3', title: 'Multimeter Voltage Test', dur: '15m', desc: 'Verify 220V single-phase balance and ground path resistance.', evidence: 'Digital multimeter reading photo', color: '#7E22CE', bg: '#F3E8FF' }
+        ]
+      },
+      'ac_cleaning': {
+        id: 'ac_cleaning',
+        category: 'appliance',
+        title: 'Inverter Split AC Deep Clean',
+        shape: 'A1 Linear',
+        sla: '75m',
+        flowType: 'linear',
+        description: 'Complete indoor evaporator coil chemical foam wash and outdoor condensing unit pressure inspection.',
+        stages: [
+          { id: 'r1', num: '1', title: 'Intake Inspection', dur: '15m', desc: 'Initial temperature delta reading and panel lock-out.', evidence: 'Pre-service unit photo', color: '#0D715F', bg: '#E8F7F1' },
+          { id: 'r2', num: '2', title: 'Coil Chemical Wash', dur: '20m', desc: 'Apply specialized foaming alkaline coil cleaner.', evidence: 'Foam wash photo', color: '#0F766E', bg: '#CCFBF1' },
+          { id: 'r3', num: '3', title: 'Compressor Cold Run', dur: '15m', desc: 'Test compressor cycling and operating amperage draw.', evidence: 'Amp clamp meter photo', color: '#B45309', bg: '#FEF3C7' },
+          { id: 'r4', num: '4', title: 'Delta Temperature Test', dur: '15m', desc: 'Measure supply vs return air temperature drop.', evidence: 'Dual-probe thermometer photo', color: '#475569', bg: '#F1F5F9' }
+        ]
+      },
+      'carpentry_frame': {
+        id: 'carpentry_frame',
+        category: 'carpentry',
+        title: 'Door & Cabinet Frame Realignment',
+        shape: 'A1 Express',
+        sla: '40m',
+        flowType: 'linear',
+        description: 'Hinge realignment, jamb planer trimming, and latch strike plate repositioning.',
+        stages: [
+          { id: 'r1', num: '1', title: 'Plumb & Clearance Audit', dur: '15m', desc: 'Inspect door jamb clearance gaps with spirit level.', evidence: 'Spirit level alignment photo', color: '#0D715F', bg: '#E8F7F1' },
+          { id: 'r2', num: '2', title: 'Shim Anchor & Plane', dur: '25m', desc: 'Shim hinge mortises and plane dragging bottom edge.', evidence: 'Clean swing clearance photo', color: '#0284C7', bg: '#E0F2FE' }
+        ]
+      }
+    };
+
+    let currentWorkWorkflowId = 'plumbing_leak';
+    let currentWorkStages = JSON.parse(JSON.stringify(workCatalogTemplates['plumbing_leak'].stages));
+    let currentCatalogCategoryFilter = 'all';
+    let currentCatalogSearchQuery = '';
+
+    function openWorkCatalogModal() {
+      const modal = document.getElementById('work-catalog-modal');
+      if (modal) {
+        modal.classList.add('open');
+        renderWorkCatalogItems();
+      }
+    }
+
+    function closeWorkCatalogModal() {
+      const modal = document.getElementById('work-catalog-modal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function filterWorkCatalogCategory(category, btn) {
+      currentCatalogCategoryFilter = category;
+      document.querySelectorAll('#work-catalog-filter-chips .chain-cat-chip').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderWorkCatalogItems();
+    }
+
+    function handleWorkCatalogSearch(val) {
+      currentCatalogSearchQuery = (val || '').toLowerCase();
+      renderWorkCatalogItems();
+    }
+
+    function renderWorkCatalogItems() {
+      const list = document.getElementById('work-catalog-list');
+      if (!list) return;
+
+      const keys = Object.keys(workCatalogTemplates);
+      const filtered = keys.filter(k => {
+        const item = workCatalogTemplates[k];
+        const matchesCategory = currentCatalogCategoryFilter === 'all' || item.category === currentCatalogCategoryFilter;
+        const matchesQuery = !currentCatalogSearchQuery ||
+                             item.title.toLowerCase().includes(currentCatalogSearchQuery) ||
+                             item.shape.toLowerCase().includes(currentCatalogSearchQuery) ||
+                             item.description.toLowerCase().includes(currentCatalogSearchQuery);
+        return matchesCategory && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:20px; font-size:11px; color:var(--ink-muted);">No matching request templates found in catalog.</div>`;
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(k => {
+        const item = workCatalogTemplates[k];
+        const isActive = k === currentWorkWorkflowId;
+        html += `
+          <div onclick="selectWorkCatalogWorkflow('${k}')" style="background:${isActive ? '#F0FDF4' : '#FAFCFB'}; border:${isActive ? '1.5px solid var(--forest-600)' : '1px solid var(--line)'}; border-radius:10px; padding:10px 12px; cursor:pointer; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; transition:all 0.15s ease;">
+            <div style="flex:1;">
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+                <span style="font-size:12px; font-weight:800; color:#0F2F58;">${item.title}</span>
+                ${isActive ? '<span style="font-size:8px; font-weight:800; background:var(--forest-600); color:#FFFFFF; padding:1px 5px; border-radius:4px;">ACTIVE</span>' : ''}
+              </div>
+              <div style="font-size:10px; color:var(--ink-muted); margin-bottom:4px; line-height:1.35;">${item.description}</div>
+              <div style="display:flex; align-items:center; gap:8px; font-size:9.5px; font-family:'JetBrains Mono',monospace;">
+                <span style="color:var(--forest-700); font-weight:700;">${item.shape}</span>
+                <span style="color:var(--ink-muted);">·</span>
+                <span style="color:#0284C7; font-weight:700;">${item.stages.length} Stages</span>
+                <span style="color:var(--ink-muted);">·</span>
+                <span style="color:#D97706; font-weight:700;">${item.sla} SLA</span>
+              </div>
+            </div>
+            <button type="button" style="font-size:10.5px; font-weight:700; color:${isActive ? 'var(--forest-700)' : 'var(--ink)'}; background:${isActive ? '#FFFFFF' : '#F1F5F9'}; border:1px solid ${isActive ? 'var(--forest-300)' : 'var(--line)'}; border-radius:var(--radius-pill); padding:3px 8px; cursor:pointer; flex-shrink:0;">
+              ${isActive ? 'Selected' : 'Use Template'}
+            </button>
+          </div>
+        `;
+      });
+
+      list.innerHTML = html;
+    }
+
+    function selectWorkCatalogWorkflow(k) {
+      const template = workCatalogTemplates[k];
+      if (!template) return;
+      currentWorkWorkflowId = k;
+      currentWorkStages = JSON.parse(JSON.stringify(template.stages));
+
+      const titleEl = document.getElementById('active-work-title');
+      const metaEl = document.getElementById('active-work-meta');
+      if (titleEl) titleEl.innerText = template.title;
+      if (metaEl) metaEl.innerText = `${template.shape} · ${currentWorkStages.length} Stages · ${template.sla} SLA`;
+
+      closeWorkCatalogModal();
+      renderWorkPreviewCanvas();
+      renderEditableStagesList();
+    }
+
+    function renderWorkPreviewCanvas() {
+      const track = document.getElementById('work-preview-pipeline-track');
+      if (!track) return;
+
+      let html = '<div style="display:flex; align-items:center; gap:6px; min-width:300px;">';
+      currentWorkStages.forEach((s, idx) => {
+        html += `
+          <div style="background:#FFFFFF; border:1px solid #CBD5E1; box-shadow:0 1px 3px rgba(0,0,0,0.03); border-radius:8px; padding:4px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; min-width:76px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
+              <span style="font-size:7.5px; font-weight:800; background:${s.bg || '#E8F7F1'}; color:${s.color || '#0D715F'}; padding:1px 4px; border-radius:4px;">${s.num || (idx + 1)}</span>
+              <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s.dur}</span>
+            </div>
+            <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.title}</div>
+          </div>
+        `;
+        if (idx < currentWorkStages.length - 1) {
+          html += `
+            <svg width="18" height="10" viewBox="0 0 18 10" fill="none" style="flex-shrink:0;">
+              <line x1="0" y1="5" x2="18" y2="5" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2"/>
+            </svg>
+          `;
+        }
+      });
+      html += '</div>';
+      track.innerHTML = html;
+    }
+
+    function renderEditableStagesList() {
+      const list = document.getElementById('work-stages-editable-list');
+      const badge = document.getElementById('work-stages-count-badge');
+      if (!list) return;
+      if (badge) badge.innerText = `${currentWorkStages.length} Tracked Gates`;
+
+      let html = '';
+      currentWorkStages.forEach((stage, idx) => {
+        html += `
+          <div class="work-stage-edit-row" data-stage-idx="${idx}" style="background:#FFFFFF; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+              <div style="display:flex; align-items:center; gap:6px; flex:1;">
+                <span style="font-size:8px; font-weight:800; background:${stage.bg || '#E8F7F1'}; color:${stage.color || '#0D715F'}; padding:2px 5px; border-radius:4px; flex-shrink:0;">${stage.num || (idx + 1)}</span>
+                <input type="text" class="stage-title-input" value="${stage.title}" oninput="updateStageProperty(${idx}, 'title', this.value)" style="font-size:11.5px; font-weight:700; color:#0F2F58; border:1px solid #D1D5DB; background:#FAFCFB; border-radius:6px; padding:3px 8px; outline:none; flex:1; height:26px; box-sizing:border-box;" placeholder="Requirement title...">
+              </div>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <div style="display:flex; align-items:center; gap:3px; background:#FAFCFB; border:1px solid #D1D5DB; border-radius:6px; padding:0 6px; height:26px; box-sizing:border-box; flex-shrink:0;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--forest-700)" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <input type="number" min="1" max="480" step="5" class="stage-dur-input" value="${parseInt(stage.dur) || 15}" oninput="updateStageProperty(${idx}, 'dur', (this.value || 1) + 'm')" style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); width:28px; border:none; background:transparent; outline:none; text-align:right; padding:0; -moz-appearance:textfield;">
+                  <span style="font-size:9.5px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700);">m</span>
+                </div>
+                <button type="button" class="btn-item-remove" onclick="removeWorkStageNode(${idx})" aria-label="Remove requirement" style="width:24px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--ink-muted); background:none; border:none; cursor:pointer; flex-shrink:0; padding:0;">&times;</button>
+              </div>
+            </div>
+            <input type="text" class="stage-desc-input" value="${stage.desc || ''}" oninput="updateStageProperty(${idx}, 'desc', this.value)" style="font-size:10px; color:var(--ink); border:1px solid #E2E8F0; background:#FAFCFB; border-radius:6px; padding:3px 8px; outline:none; width:100%; height:26px; box-sizing:border-box;" placeholder="Detailed scope / work specification...">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; border-top:1px dashed var(--line); padding-top:4px; margin-top:2px;">
+              <span style="font-size:9px; font-weight:700; color:#0284C7; display:flex; align-items:center; gap:3px; flex-shrink:0;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Evidence:</span>
+              </span>
+              <input type="text" class="stage-evidence-input" value="${stage.evidence || ''}" oninput="updateStageProperty(${idx}, 'evidence', this.value)" style="font-size:9.5px; font-weight:600; color:var(--ink); border:1px solid #E2E8F0; background:#FAFCFB; border-radius:6px; padding:2px 8px; height:24px; box-sizing:border-box; outline:none; flex:1;" placeholder="Evidence required from servicer (photo, test, sign-off)...">
+            </div>
+          </div>
+        `;
+      });
+
+      list.innerHTML = html;
+    }
+
+    function updateStageProperty(idx, prop, val) {
+      if (currentWorkStages[idx]) {
+        currentWorkStages[idx][prop] = val;
+        if (prop === 'title' || prop === 'dur') {
+          renderWorkPreviewCanvas();
+          recalculateTotalSLA();
+        }
+      }
+    }
+
+    function addWorkStageNode() {
+      const nextNum = currentWorkStages.length + 1;
+      currentWorkStages.push({
+        id: `custom-${Date.now()}`,
+        num: String(nextNum),
+        title: `Requirement Task ${nextNum}`,
+        dur: '15m',
+        desc: 'Buyer-specified requirement to be fulfilled by bidding servicer.',
+        evidence: 'Inspection photo required',
+        color: '#0D715F',
+        bg: '#E8F7F1'
+      });
+      renderWorkPreviewCanvas();
+      renderEditableStagesList();
+      recalculateTotalSLA();
+    }
+
+    function removeWorkStageNode(idx) {
+      if (currentWorkStages.length <= 1) {
+        alert('Request must have at least 1 milestone requirement task.');
+        return;
+      }
+      currentWorkStages.splice(idx, 1);
+      renderWorkPreviewCanvas();
+      renderEditableStagesList();
+      recalculateTotalSLA();
+    }
+
+    function recalculateTotalSLA() {
+      let totalMins = 0;
+      currentWorkStages.forEach(s => {
+        const m = parseInt(s.dur) || 0;
+        totalMins += m;
+      });
+      const metaEl = document.getElementById('active-work-meta');
+      const template = workCatalogTemplates[currentWorkWorkflowId] || { shape: 'Custom Workflow' };
+      if (metaEl) {
+        metaEl.innerText = `${template.shape} · ${currentWorkStages.length} Stages · ${totalMins}m SLA`;
+      }
     }
 
     let defaultRequestSourcingHTML = '';
 
     window.addEventListener('DOMContentLoaded', () => {
-      const container = document.getElementById('extend-request-content-container');
-      if (container) {
-        defaultRequestSourcingHTML = container.innerHTML;
-      }
+      renderWorkPreviewCanvas();
+      renderEditableStagesList();
+      renderPartnerCombosDeck();
+
       // Detect acting-on-behalf owner from URL
       const urlParams = new URLSearchParams(window.location.search);
       const ownerParam = urlParams.get('owner');
@@ -3889,176 +4205,258 @@
       }
     }
 
+    // =========================================================================
+    // PARTNER COMBOS (DEAL CHAIN SOURCING) DECK & CAROUSEL
+    // =========================================================================
+    let attachedCombos = [
+      {
+        id: 'combo-hardware',
+        title: 'Hardware Sourcing + Courier + Trade Labor',
+        icon: '📦',
+        isDefault: true,
+        nodes: [
+          { role: 'STORE', title: 'Open Slot', sub: '₱180', type: 'parts', bg: '#FEF3C7', color: '#B45309' },
+          { role: 'COURIER', title: 'Open Slot', sub: '₱80', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
+          { role: 'LABOR', title: 'Trade Labor', sub: '₱850', type: 'labor', bg: '#E8F7F1', color: '#0D715F' }
+        ],
+        slots: [
+          { type: 'parts', role: 'Hardware Store Depot', name: 'Open Slot', meta: '₱180.00 parts budget' },
+          { type: 'delivery', role: 'Parts Courier Runner', name: 'Open Slot', meta: '₱80.00 route fee' }
+        ]
+      },
+      {
+        id: 'combo-audit',
+        title: 'Post-Service Safety Inspection Audit',
+        icon: '🛡️',
+        isDefault: false,
+        nodes: [
+          { role: 'LABOR', title: 'Trade Labor', sub: '₱850', type: 'labor', bg: '#E8F7F1', color: '#0D715F' },
+          { role: 'AUDIT', title: 'Open Slot', sub: '₱150', type: 'audit', bg: '#EDE9FE', color: '#7C3AED' }
+        ],
+        slots: [
+          { type: 'audit', role: 'Safety Auditor Slot', name: 'Open Slot', meta: '₱150.00 audit fee' }
+        ]
+      }
+    ];
+
+    let currentComboIdx = 0;
+
+    function renderPartnerCombosDeck() {
+      const deck = document.getElementById('partner-combos-deck');
+      const dotsTrack = document.getElementById('combo-carousel-dots');
+      const counterText = document.getElementById('combo-carousel-counter');
+      const prevBtn = document.getElementById('btn-combo-prev');
+      const nextBtn = document.getElementById('btn-combo-next');
+      if (!deck) return;
+
+      if (attachedCombos.length === 0) {
+        deck.innerHTML = `
+          <div style="background:#FAFCFB; border:1.5px dashed var(--line); border-radius:12px; padding:16px; text-align:center; width:100%;">
+            <div style="font-size:12px; font-weight:800; color:#0F2F58; margin-bottom:2px;">No Sourcing Combinations Attached</div>
+            <div style="font-size:10px; color:var(--ink-muted); margin-bottom:6px;">Servicers will bid on single trade labor only.</div>
+          </div>
+        `;
+        if (dotsTrack) dotsTrack.innerHTML = '';
+        if (counterText) counterText.innerText = '0 Options';
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        return;
+      }
+
+      if (currentComboIdx >= attachedCombos.length) {
+        currentComboIdx = attachedCombos.length - 1;
+      }
+      if (currentComboIdx < 0) {
+        currentComboIdx = 0;
+      }
+
+      let slidesHtml = '';
+      attachedCombos.forEach((combo, cIdx) => {
+        let dagNodesHtml = '';
+        combo.nodes.forEach((n, nIdx) => {
+          dagNodesHtml += `
+            <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:8px; padding:4px 7px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; min-width:82px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
+                <span style="font-size:7px; font-weight:800; background:${n.bg}; color:${n.color}; padding:1px 4px; border-radius:4px;">${n.role}</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${n.sub}</span>
+              </div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
+            </div>
+          `;
+          if (nIdx < combo.nodes.length - 1) {
+            dagNodesHtml += `
+              <svg width="16" height="10" viewBox="0 0 16 10" fill="none" style="flex-shrink:0;">
+                <line x1="0" y1="5" x2="16" y2="5" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2"/>
+              </svg>
+            `;
+          }
+        });
+
+        let slotsHtml = '';
+        if (combo.slots.length === 0) {
+          slotsHtml = `<div style="font-size:10px; color:var(--ink-muted); font-style:italic; padding:4px 0;">No external partner dependencies. Single servicer bidding.</div>`;
+        } else {
+          combo.slots.forEach((s) => {
+            slotsHtml += `
+              <div class="partner-selector-box" onclick="openSlotListingPicker('${s.type}')" style="background:#FFFFFF; border:1px solid var(--line); border-radius:8px; padding:5px 8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+                <div>
+                  <div style="font-size:8.5px; font-weight:700; color:var(--ink-muted); text-transform:uppercase;">${s.role}</div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:11px; font-weight:800; color:#0F2F58;">${s.name}</span>
+                    <span style="font-size:9.5px; color:var(--forest-700); font-family:'JetBrains Mono',monospace; font-weight:700;">${s.meta}</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-change-partner" style="font-size:10px; padding:2px 7px;">Change ▾</button>
+              </div>
+            `;
+          });
+        }
+
+        slidesHtml += `
+          <div class="partner-combo-slide" style="flex:0 0 100%; min-width:100%; scroll-snap-align:start; box-sizing:border-box;">
+            <div style="background:#FAFCFB; border:1.5px solid ${combo.isDefault ? '#0F2F58' : 'var(--line)'}; border-radius:12px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+              <!-- Top Header -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="font-size:13px;">${combo.icon || '📦'}</span>
+                  <span style="font-size:12px; font-weight:800; color:#0F2F58;">${combo.title}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button type="button" class="btn-default-badge ${combo.isDefault ? 'active' : ''}" onclick="toggleComboDefault(${cIdx})" style="font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:var(--radius-pill); cursor:pointer;">
+                    ${combo.isDefault ? '★ Default' : 'Make Default'}
+                  </button>
+                  <button type="button" class="btn-item-remove" onclick="removePartnerCombo(${cIdx})" aria-label="Remove option" style="font-size:15px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+                </div>
+              </div>
+
+              <!-- Compact DAG Canvas View -->
+              <div class="work-canvas-light-box" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:7px 10px; overflow-x:auto; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:6px; min-width:260px;">
+                  ${dagNodesHtml}
+                </div>
+              </div>
+
+              <!-- Slot Binding Selectors -->
+              <div style="display:flex; flex-direction:column; gap:5px;">
+                ${slotsHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      deck.innerHTML = slidesHtml;
+
+      // Update Dots & Counter
+      if (dotsTrack) {
+        let dotsHtml = '';
+        attachedCombos.forEach((_, dIdx) => {
+          dotsHtml += `<span onclick="goToComboSlide(${dIdx})" style="width:${dIdx === currentComboIdx ? '14px' : '5px'}; height:5px; border-radius:9999px; background:${dIdx === currentComboIdx ? '#0F2F58' : '#CBD5E1'}; cursor:pointer; transition:all 0.2s;"></span>`;
+        });
+        dotsTrack.innerHTML = dotsHtml;
+      }
+      if (counterText) {
+        counterText.innerText = `Option ${currentComboIdx + 1} of ${attachedCombos.length}`;
+      }
+      if (prevBtn) prevBtn.disabled = currentComboIdx === 0;
+      if (nextBtn) nextBtn.disabled = currentComboIdx === attachedCombos.length - 1;
+
+      // Scroll deck to current slide
+      const slideEls = deck.querySelectorAll('.partner-combo-slide');
+      if (slideEls[currentComboIdx]) {
+        slideEls[currentComboIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+      }
+    }
+
+    function navComboCarousel(dir) {
+      currentComboIdx = Math.max(0, Math.min(attachedCombos.length - 1, currentComboIdx + dir));
+      renderPartnerCombosDeck();
+    }
+
+    function goToComboSlide(idx) {
+      currentComboIdx = Math.max(0, Math.min(attachedCombos.length - 1, idx));
+      renderPartnerCombosDeck();
+    }
+
+    function toggleComboDefault(idx) {
+      attachedCombos.forEach((c, i) => {
+        c.isDefault = (i === idx);
+      });
+      renderPartnerCombosDeck();
+    }
+
+    function removePartnerCombo(idx) {
+      if (attachedCombos.length <= 1) {
+        if (!confirm('Remove this partnered option? This request will be tendered as Direct Labor only.')) return;
+      }
+      attachedCombos.splice(idx, 1);
+      if (currentComboIdx >= attachedCombos.length) {
+        currentComboIdx = Math.max(0, attachedCombos.length - 1);
+      }
+      renderPartnerCombosDeck();
+    }
+
     function applyRequestChainRecipe(recipeKey) {
-      const container = document.getElementById('extend-request-content-container');
-      if (!container) return;
-      if (!defaultRequestSourcingHTML) {
-        defaultRequestSourcingHTML = container.innerHTML;
-      }
-
       if (recipeKey === 'hardware_courier_labor') {
-        container.innerHTML = `
-          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Hardware Sourcing + Courier + Trade Labor · +₱485.00</div>
-            <button type="button" class="btn-change-partner" onclick="applyRequestChainRecipe('default_single')">Reset ↺</button>
-          </div>
-
-          <!-- Slot 1: Hardware Parts Sourcing -->
-          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9; margin-bottom: 8px;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-pickup">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Hardware Parts Sourcing</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open Slot</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('parts')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="parts-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="parts-partner-meta">Local hardware store</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-
-          <!-- Slot 2: Courier Runner -->
-          <div class="extension-partner-card active" style="border-color: #0284C7; background: #F0F9FF;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-transit">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Courier Transit Runner</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open Slot</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="delivery-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="delivery-partner-meta">₱35.00 route fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-        `;
+        attachedCombos.push({
+          id: `combo-${Date.now()}`,
+          title: 'Hardware Sourcing + Courier + Trade Labor',
+          icon: '📦',
+          isDefault: attachedCombos.length === 0,
+          nodes: [
+            { role: 'STORE', title: 'Open Slot', sub: '₱180', type: 'parts', bg: '#FEF3C7', color: '#B45309' },
+            { role: 'COURIER', title: 'Open Slot', sub: '₱80', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
+            { role: 'LABOR', title: 'Trade Labor', sub: '₱850', type: 'labor', bg: '#E8F7F1', color: '#0D715F' }
+          ],
+          slots: [
+            { type: 'parts', role: 'Hardware Store Depot', name: 'Open Slot', meta: '₱180.00 parts budget' },
+            { type: 'delivery', role: 'Parts Courier Runner', name: 'Open Slot', meta: '₱80.00 route fee' }
+          ]
+        });
       } else if (recipeKey === 'diagnostic_parts_repair') {
-        container.innerHTML = `
-          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Diagnostic Visit + Sourced Parts + Repair · +₱650.00</div>
-            <button type="button" class="btn-change-partner" onclick="applyRequestChainRecipe('default_single')">Reset ↺</button>
-          </div>
-
-          <!-- Slot 1: Diagnostic Triage -->
-          <div class="extension-partner-card active" style="border-color: #0F2F58; background: #F8FAFD; margin-bottom: 8px;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon" style="background:#EBF2FA; color:#0F2F58;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Diagnostic Triage</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open Slot</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('diagnostic')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="diag-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="diag-partner-meta">₱200.00 inspection fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-
-          <!-- Slot 2: Parts Sourcing -->
-          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-pickup">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Hardware Parts Sourcing</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open Slot</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('parts')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="parts-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="parts-partner-meta">₱180.00 parts budget</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-        `;
+        attachedCombos.push({
+          id: `combo-${Date.now()}`,
+          title: 'Diagnostic Visit + Sourced Parts + Repair',
+          icon: '🔍',
+          isDefault: attachedCombos.length === 0,
+          nodes: [
+            { role: 'DIAG', title: 'Open Slot', sub: '₱200', type: 'diagnostic', bg: '#EBF2FA', color: '#0F2F58' },
+            { role: 'STORE', title: 'Open Slot', sub: '₱180', type: 'parts', bg: '#FEF3C7', color: '#B45309' },
+            { role: 'LABOR', title: 'Trade Labor', sub: '₱850', type: 'labor', bg: '#E8F7F1', color: '#0D715F' }
+          ],
+          slots: [
+            { type: 'diagnostic', role: 'Diagnostic Triage', name: 'Open Slot', meta: '₱200.00 inspection fee' },
+            { type: 'parts', role: 'Hardware Parts Sourcing', name: 'Open Slot', meta: '₱180.00 parts budget' }
+          ]
+        });
       } else if (recipeKey === 'labor_hauling') {
-        container.innerHTML = `
-          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Trade Labor + Heavy Scrap Hauling · +₱100.00</div>
-            <button type="button" class="btn-change-partner" onclick="applyRequestChainRecipe('default_single')">Reset ↺</button>
-          </div>
-
-          <!-- Slot 1: Eco-Tricycle Hauler Slot -->
-          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-pickup">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Heavy Scrap Hauling</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open Slot</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('hauling')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="haul-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="haul-partner-meta">₱100.00 hauling fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-        `;
-      } else if (recipeKey === 'custom_empty') {
-        container.innerHTML = `
-          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Custom Open Tender Slot</div>
-            <button type="button" class="btn-change-partner" onclick="applyRequestChainRecipe('default_single')">Reset ↺</button>
-          </div>
-
-          <!-- Slot 1: Open Sourcing / Tender Slot -->
-          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon" style="background: #FEF3C7; color: #B45309;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Open Tender Slot</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
-              <div class="partner-current-info">
-                <div class="partner-current-name">Open Slot</div>
-                <div class="partner-current-meta">Open bidding</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-        `;
-      } else {
-        container.innerHTML = defaultRequestSourcingHTML;
+        attachedCombos.push({
+          id: `combo-${Date.now()}`,
+          title: 'Trade Labor + Heavy Scrap Hauling',
+          icon: '♻️',
+          isDefault: attachedCombos.length === 0,
+          nodes: [
+            { role: 'LABOR', title: 'Trade Labor', sub: '₱850', type: 'labor', bg: '#E8F7F1', color: '#0D715F' },
+            { role: 'HAUL', title: 'Eco-Trike', sub: '₱100', type: 'hauling', bg: '#FEF3C7', color: '#B45309' }
+          ],
+          slots: [
+            { type: 'hauling', role: 'Heavy Scrap Hauling', name: 'Open Slot', meta: '₱100.00 hauling fee' }
+          ]
+        });
+      } else if (recipeKey === 'default_single') {
+        attachedCombos.push({
+          id: `combo-${Date.now()}`,
+          title: 'Direct Trade Labor Only',
+          icon: '⚡',
+          isDefault: attachedCombos.length === 0,
+          nodes: [
+            { role: 'LABOR', title: 'Trade Labor', sub: '₱850', type: 'labor', bg: '#ECFDF5', color: '#059669' }
+          ],
+          slots: []
+        });
       }
+      currentComboIdx = attachedCombos.length - 1;
+      renderPartnerCombosDeck();
       closeBundleCatalog();
     }
 
