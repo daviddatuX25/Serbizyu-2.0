@@ -100,5 +100,6 @@ Route::get('/admin/outbox', fn () => Inertia::render('Admin/System/TelemetryInde
 Route::get('/admin/audit', fn () => Inertia::render('Admin/System/TelemetryIndex'))->name('admin.audit');
 Route::get('/admin/holds', fn () => Inertia::render('Admin/Disputes/Index'))->name('admin.holds');
 Route::get('/admin/capabilities', fn () => Inertia::render('Admin/Users/Index'))->name('admin.capabilities');
+Route::get('/picks', fn () => Inertia::render('Picks'))->name('picks');
 Route::get('/dev/mobile-kernel', fn () => Inertia::render('Dev/MobileKernelShowcase'))->name('dev.mobile-kernel');
 Route::get('/dev/true-ui-kit', fn () => Inertia::render('Dev/TrueUIKitShowcase'))->name('dev.true-ui-kit');

@@ -74,12 +74,12 @@ describe('PicksDrawer', () => {
         expect(screen.getByText('Weekend bibingka tray')).toBeTruthy();
 
         // Check prices: 450 + (180 * 2) = 450 + 360 = 810
-        expect(screen.getByText('₱450.00')).toBeTruthy();
-        expect(screen.getByText('₱180.00')).toBeTruthy();
+        expect(screen.getAllByText('₱450.00').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('₱180.00').length).toBeGreaterThanOrEqual(1);
         expect(screen.getAllByText('₱810.00').length).toBeGreaterThanOrEqual(1);
 
-        // Check escrow badge
-        expect(screen.getByText(/Tiwala Escrow Protection/i)).toBeTruthy();
+        // Check protection banner
+        expect(screen.getByText(/Non-Cascading Settlement Protection/i)).toBeTruthy();
     });
 
     it('handles quantity increment, decrement, and removal triggers', () => {
@@ -129,7 +129,7 @@ describe('PicksDrawer', () => {
         fireEvent.click(closeBtn);
         expect(onClose).toHaveBeenCalled();
 
-        const checkoutBtn = screen.getByRole('button', { name: /Proceed to Escrow Booking/i });
+        const checkoutBtn = screen.getByRole('button', { name: /Authorize Deal Chain & Escrow/i });
         fireEvent.click(checkoutBtn);
         expect(onCheckout).toHaveBeenCalled();
     });

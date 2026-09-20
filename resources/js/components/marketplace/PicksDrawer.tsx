@@ -1,4 +1,18 @@
-import { ShoppingBag, X, Plus, Minus, Trash2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import {
+    ShoppingBag,
+    X,
+    Plus,
+    Minus,
+    Trash2,
+    ShieldCheck,
+    ArrowRight,
+    ArrowLeft,
+    Check,
+    Package,
+    Truck,
+    Wrench,
+} from 'lucide-react';
 import type { BasketItem } from '@/marketplace/types';
 
 interface PicksDrawerProps {
@@ -18,6 +32,8 @@ export function PicksDrawer({
     onRemoveItem,
     onCheckout,
 }: PicksDrawerProps) {
+    const [selectedPayment, setSelectedPayment] = useState<'cash' | 'gcash' | 'escrow'>('cash');
+
     if (!open) return null;
 
     const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -25,46 +41,56 @@ export function PicksDrawer({
 
     return (
         <div className="fixed inset-0 z-50 overflow-hidden">
-            {/* Backdrop */}
+            {/* Backdrop (visible on desktop) */}
             <div
-                className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
+                className="hidden lg:block fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
-            {/* Slide-over panel container */}
-            <div className="fixed inset-y-0 right-0 flex max-w-full pl-10">
-                <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
-                    {/* Drawer Header */}
-                    <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+            {/* Container: 100% Full-screen on mobile, slide-over drawer on desktop */}
+            <div className="fixed inset-0 lg:inset-y-0 lg:left-auto lg:right-0 flex w-full lg:max-w-lg z-50">
+                <div className="w-full h-full bg-white shadow-2xl flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif]">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3.5 sm:px-6">
                         <div className="flex items-center gap-2.5">
+                            {/* Mobile Back Arrow */}
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="flex size-8 lg:hidden items-center justify-center rounded-full text-slate-700 hover:bg-slate-100"
+                                aria-label="Back to marketplace"
+                            >
+                                <ArrowLeft className="size-5" />
+                            </button>
                             <div className="flex size-9 items-center justify-center rounded-xl bg-[#EBF2FA] text-[#0F2F58]">
                                 <ShoppingBag className="size-5" />
                             </div>
                             <div>
-                                <h2 className="text-base font-extrabold text-[#0F2F58]">
+                                <h2 className="text-sm sm:text-base font-extrabold text-[#0F2F58]">
                                     Citizen Picks
                                 </h2>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-[11px] text-slate-500">
                                     {totalCount} {totalCount === 1 ? 'item' : 'items'} ready for escrow
                                 </p>
                             </div>
                         </div>
 
+                        {/* Desktop Close Button */}
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex size-8 cursor-pointer items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                            className="hidden lg:flex size-8 cursor-pointer items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
                             aria-label="Close drawer"
                         >
                             <X className="size-5" />
                         </button>
                     </div>
 
-                    {/* Drawer Body */}
-                    <div className="flex-1 overflow-y-auto px-6 py-5">
+                    {/* Scrollable Body */}
+                    <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 space-y-5">
                         {items.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="flex flex-col items-center justify-center py-20 text-center">
                                 <div className="flex size-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                                     <ShoppingBag className="size-7" />
                                 </div>
@@ -72,7 +98,7 @@ export function PicksDrawer({
                                     Your Picks tray is empty
                                 </h3>
                                 <p className="mt-1 max-w-xs text-xs text-slate-500">
-                                    Browse the Tagudin marketplace and tap "+ Book" or add items to stage services and goods.
+                                    Browse verified Tagudin offerings and tap "+ Book" or add items to stage services and goods.
                                 </p>
                                 <button
                                     type="button"
@@ -83,83 +109,195 @@ export function PicksDrawer({
                                 </button>
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-3">
-                                {items.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 shadow-xs"
-                                    >
-                                        <div className="flex-1">
-                                            <h4 className="text-xs font-extrabold text-slate-900 line-clamp-1">
-                                                {item.title}
-                                            </h4>
-                                            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-                                                <span>Verified Tagudin provider</span>
-                                            </div>
-                                            <div className="mt-1 font-mono text-xs font-extrabold text-[#0F2F58]">
-                                                ₱{item.price.toFixed(2)}
-                                            </div>
-                                        </div>
-
-                                        {/* Quantity & Remove controls */}
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex items-center rounded-lg border border-slate-200 bg-white p-0.5">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => onUpdateQuantity(item.id, -1)}
-                                                    className="flex size-6 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
-                                                    aria-label="Decrease quantity"
-                                                >
-                                                    <Minus className="size-3" />
-                                                </button>
-                                                <span className="w-6 text-center text-xs font-bold text-slate-800">
-                                                    {item.quantity}
-                                                </span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => onUpdateQuantity(item.id, 1)}
-                                                    className="flex size-6 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
-                                                    aria-label="Increase quantity"
-                                                >
-                                                    <Plus className="size-3" />
-                                                </button>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => onRemoveItem(item.id)}
-                                                className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                                                aria-label="Remove item"
-                                            >
-                                                <Trash2 className="size-3.5" />
-                                            </button>
-                                        </div>
+                            <>
+                                {/* Staged Picks Items List */}
+                                <div className="flex flex-col gap-3">
+                                    <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                                        Staged Services &amp; Products
                                     </div>
-                                ))}
-                            </div>
+                                    {items.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-[#FAFCFB] p-3.5 shadow-xs"
+                                        >
+                                            <div className="flex-1">
+                                                <h4 className="text-xs font-extrabold text-slate-900 line-clamp-1">
+                                                    {item.title}
+                                                </h4>
+                                                <div className="mt-0.5 flex items-center gap-1.5 text-[10.5px] text-slate-500 font-medium">
+                                                    <span>Verified Tagudin offering</span>
+                                                </div>
+                                                <div className="mt-1 font-mono text-xs font-extrabold text-[#0F2F58]">
+                                                    ₱{item.price.toFixed(2)}
+                                                </div>
+                                            </div>
+
+                                            {/* Quantity & Remove controls */}
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex items-center rounded-lg border border-slate-200 bg-white p-0.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => onUpdateQuantity(item.id, -1)}
+                                                        className="flex size-6 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
+                                                        aria-label="Decrease quantity"
+                                                    >
+                                                        <Minus className="size-3" />
+                                                    </button>
+                                                    <span className="w-6 text-center text-xs font-bold text-slate-800">
+                                                        {item.quantity}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => onUpdateQuantity(item.id, 1)}
+                                                        className="flex size-6 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
+                                                        aria-label="Increase quantity"
+                                                    >
+                                                        <Plus className="size-3" />
+                                                    </button>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onRemoveItem(item.id)}
+                                                    className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                                    aria-label="Remove item"
+                                                >
+                                                    <Trash2 className="size-3.5" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Itemized Deal Chain Child Orders Breakdown (Doc 18 Deal Chain Authorization) */}
+                                <div className="flex flex-col gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                            Itemized Deal Chain Child Orders
+                                        </div>
+                                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9.5px] font-extrabold text-amber-800 uppercase">
+                                            Non-Cascading
+                                        </span>
+                                    </div>
+
+                                    {/* Child Order 1 */}
+                                    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex size-6 items-center justify-center rounded-md bg-amber-50 text-amber-700">
+                                                <Package className="size-3.5" />
+                                            </div>
+                                            <div>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Order #ORD-101</span>
+                                                <div className="font-extrabold text-slate-900">Tagudin Hardware Parts</div>
+                                                <div className="text-[10px] text-slate-500">Inventory isolation · Counter lane 2</div>
+                                            </div>
+                                        </div>
+                                        <span className="font-mono font-bold text-slate-900">₱180.00</span>
+                                    </div>
+
+                                    {/* Child Order 2 */}
+                                    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex size-6 items-center justify-center rounded-md bg-sky-50 text-sky-700">
+                                                <Truck className="size-3.5" />
+                                            </div>
+                                            <div>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Order #ORD-102</span>
+                                                <div className="font-extrabold text-slate-900">Danny Express Motorcycle</div>
+                                                <div className="text-[10px] text-slate-500">Doorstep transit · Gated on part ready</div>
+                                            </div>
+                                        </div>
+                                        <span className="font-mono font-bold text-slate-900">₱35.00</span>
+                                    </div>
+
+                                    {/* Child Order 3 */}
+                                    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex size-6 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
+                                                <Wrench className="size-3.5" />
+                                            </div>
+                                            <div>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Order #ORD-103</span>
+                                                <div className="font-extrabold text-slate-900">Kuya Ben Aircon Services</div>
+                                                <div className="text-[10px] text-slate-500">Service labor · Gated on delivery sign-off</div>
+                                            </div>
+                                        </div>
+                                        <span className="font-mono font-bold text-slate-900">₱450.00</span>
+                                    </div>
+                                </div>
+
+                                {/* Soundness Shield Box (Doc 17/18) */}
+                                <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-[11px] text-blue-950">
+                                    <ShieldCheck className="size-4 shrink-0 text-[#0F2F58] mt-0.5" />
+                                    <div>
+                                        <strong>Non-Cascading Settlement Protection:</strong> Each child order is held in its own independent escrow line. If courier transit encounters delays, the store's inventory is financially isolated and protected.
+                                    </div>
+                                </div>
+
+                                {/* Payment Method Selection */}
+                                <div>
+                                    <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                                        Payment Method
+                                    </label>
+                                    <div className="mt-2 grid grid-cols-3 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedPayment('cash')}
+                                            className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs font-bold transition-all ${
+                                                selectedPayment === 'cash'
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58] shadow-xs'
+                                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            {selectedPayment === 'cash' && <Check className="size-3.5 text-[#0F2F58]" />}
+                                            <span>Cash on Delivery</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedPayment('gcash')}
+                                            className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs font-bold transition-all ${
+                                                selectedPayment === 'gcash'
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58] shadow-xs'
+                                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            {selectedPayment === 'gcash' && <Check className="size-3.5 text-[#0F2F58]" />}
+                                            <span>GCash QR</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedPayment('escrow')}
+                                            className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs font-bold transition-all ${
+                                                selectedPayment === 'escrow'
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58] shadow-xs'
+                                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            {selectedPayment === 'escrow' && <Check className="size-3.5 text-[#0F2F58]" />}
+                                            <span>Tiwala Escrow</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
                         )}
                     </div>
 
-                    {/* Drawer Footer: Subtotal & Escrow CTA */}
+                    {/* Footer: Subtotal & Escrow CTA */}
                     {items.length > 0 && (
-                        <div className="border-t border-slate-200 bg-white p-6">
-                            {/* Protection Banner */}
-                            <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/50 p-2.5 text-[11px] font-semibold text-emerald-800">
-                                <ShieldCheck className="size-4 shrink-0 text-emerald-600" />
-                                <span>Tiwala Escrow Protection: Funds release only after milestone photo verification.</span>
-                            </div>
-
+                        <div className="border-t border-slate-200 bg-white p-4 sm:p-6 space-y-3">
                             <div className="space-y-1.5 text-xs">
                                 <div className="flex justify-between text-slate-600 font-medium">
-                                    <span>Picks subtotal</span>
+                                    <span>Picks subtotal ({totalCount} units):</span>
                                     <span className="font-mono font-bold text-slate-800">₱{subtotal.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-slate-600 font-medium">
-                                    <span>Community escrow fee</span>
+                                    <span>Tiwala Community Assurance fee:</span>
                                     <span className="font-mono font-bold text-emerald-700">₱0.00 (Launch Promo)</span>
                                 </div>
                                 <div className="flex justify-between border-t border-slate-100 pt-2 text-sm font-extrabold text-[#0F2F58]">
-                                    <span>Total Escrow Authorization</span>
+                                    <span>Total Escrow Authorization:</span>
                                     <span className="font-mono text-base">₱{subtotal.toFixed(2)}</span>
                                 </div>
                             </div>
@@ -167,9 +305,9 @@ export function PicksDrawer({
                             <button
                                 type="button"
                                 onClick={onCheckout}
-                                className="mt-5 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold tracking-wide text-white shadow-md transition-all hover:bg-[#153e74] active:scale-98"
+                                className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold tracking-wide text-white shadow-md transition-all hover:bg-[#153e74] active:scale-98"
                             >
-                                <span>Proceed to Escrow Booking</span>
+                                <span>Authorize Deal Chain &amp; Escrow (₱{subtotal.toFixed(2)})</span>
                                 <ArrowRight className="size-4" />
                             </button>
                         </div>

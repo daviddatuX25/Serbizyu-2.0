@@ -15,7 +15,7 @@ final class CapabilityCatalog
     public function ensure(string $categoryCode, string $listingType, string $workShape, CorrelationId $correlationId): array
     {
         $code = $listingType.':'.$categoryCode;
-        if (! in_array($workShape, ['A1', 'A3', 'A4', 'A9'], true)) {
+        if (! in_array($workShape, ['A1', 'A2', 'A3', 'A4', 'A9'], true)) {
             throw new \InvalidArgumentException('Unsupported Work shape for a capability profile.');
         }
 

@@ -193,6 +193,6 @@ describe('Browse Page', () => {
         expect(screen.getByText('Citizen Picks')).toBeTruthy();
         expect(screen.getByText('1 item ready for escrow')).toBeTruthy();
         expect(screen.getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThanOrEqual(1);
-        expect(screen.getByText('Total Escrow Authorization')).toBeTruthy();
+        expect(screen.getByText(/Total Escrow Authorization/i)).toBeTruthy();
     });
 });
