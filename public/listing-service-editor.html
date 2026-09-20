@@ -228,6 +228,22 @@
       -moz-appearance: textfield;
     }
 
+    /* Themed thin scrollbar for work canvas */
+    .work-canvas-light-box {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(13, 113, 95, 0.25) transparent;
+    }
+    .work-canvas-light-box::-webkit-scrollbar {
+      height: 3px;
+    }
+    .work-canvas-light-box::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .work-canvas-light-box::-webkit-scrollbar-thumb {
+      background: rgba(13, 113, 95, 0.25);
+      border-radius: var(--radius-pill);
+    }
+
     /* Inputs */
     .field-group {
       display: flex;
@@ -1700,8 +1716,8 @@
             </button>
           </div>
 
-          <!-- Compact Visual Work Pipeline Preview (Horizontal Bounded Canvas) -->
-          <div style="background: #060A17; border: 1px solid #1E293B; border-radius: 12px; padding: 12px 14px; overflow-x: auto; scrollbar-width: thin;" id="work-preview-canvas-box">
+          <!-- Compact Visual Work Pipeline Preview (Horizontal Bounded Canvas - Light Mode) -->
+          <div class="work-canvas-light-box" id="work-preview-canvas-box" style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 10px 12px; overflow-x: auto;">
             <div id="work-preview-pipeline-track" style="display: flex; align-items: center; gap: 6px; min-width: 360px;">
               <!-- Rendered dynamically by JS -->
             </div>
@@ -2343,16 +2359,6 @@
               </div>
             </article>
 
-            <!-- Card 4: Build Custom Chain with Open Slot -->
-            <article class="compact-combo-card" style="border: 1.5px dashed #0F2F58; background: #F8FAFD; padding: 10px 12px; cursor: pointer;" onclick="window.open('deal-chain-builder.html', '_blank')">
-              <div class="combo-card-top-row" style="margin: 0;">
-                <span class="combo-title-bold" style="color: #0F2F58; display: flex; align-items: center; gap: 6px; font-size: 12px;">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                  <span>Build Custom Chain with Open Slot</span>
-                </span>
-                <span style="font-size: 10.5px; font-weight: 800; color: #0F2F58; background: #FFFFFF; border: 1px solid #CBD5E1; padding: 2px 8px; border-radius: var(--radius-pill);">Open Studio ↗</span>
-              </div>
-            </article>
           </div>
 
           <!-- Bottom Action: Build Custom Chain in Deal Studio (Dedicated Affordance) -->
@@ -3015,7 +3021,7 @@
 
         track.innerHTML = `
           <div style="display: flex; align-items: center; gap: 4px; min-width: 380px;">
-            <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
+            <div style="background:#FFFFFF; border:1px solid #CBD5E1; box-shadow:0 1px 3px rgba(0,0,0,0.03); border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">${s1.num || '1'}</span>
                 <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s1.dur}</span>
@@ -3050,7 +3056,7 @@
               <path d="M0 53 C12 53 12 35 18 35 H26" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
             </svg>
 
-            <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
+            <div style="background:#FFFFFF; border:1px solid #CBD5E1; box-shadow:0 1px 3px rgba(0,0,0,0.03); border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:7.5px; font-weight:800; background:#F3E8FF; color:#7E22CE; padding:1px 4px; border-radius:4px;">${s3.num || '3'}</span>
                 <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s3.dur}</span>
@@ -3067,8 +3073,7 @@
 
         track.innerHTML = `
           <div style="display: flex; align-items: center; gap: 4px; min-width: 380px;">
-            <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="background:#FFFFFF; border:1px solid #CBD5E1; box-shadow:0 1px 3px rgba(0,0,0,0.03); border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
                 <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">${s1.num || '1'}</span>
                 <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s1.dur}</span>
               </div>
@@ -3111,7 +3116,7 @@
               <path d="M0 53 C10 53 10 35 16 35 H22" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2" fill="none"/>
             </svg>
 
-            <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
+            <div style="background:#FFFFFF; border:1px solid #CBD5E1; box-shadow:0 1px 3px rgba(0,0,0,0.03); border-radius:8px; padding:6px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; width:82px;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:7.5px; font-weight:800; background:#E8F7F1; color:#0D715F; padding:1px 4px; border-radius:4px;">${s3.num || '3'}</span>
                 <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s3.dur}</span>
@@ -3124,7 +3129,7 @@
         let html = '<div style="display:flex; align-items:center; gap:6px; min-width:340px;">';
         currentWorkStages.forEach((s, idx) => {
           html += `
-            <div style="background:#FFFFFF; border:1px solid #334155; border-radius:8px; padding:4px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; min-width:74px;">
+            <div style="background:#FFFFFF; border:1px solid #CBD5E1; box-shadow:0 1px 3px rgba(0,0,0,0.03); border-radius:8px; padding:4px 8px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; min-width:74px;">
               <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
                 <span style="font-size:7.5px; font-weight:800; background:${s.bg || '#E8F7F1'}; color:${s.color || '#0D715F'}; padding:1px 4px; border-radius:4px;">${s.num || (idx + 1)}</span>
                 <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${s.dur}</span>
