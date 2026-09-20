@@ -73,6 +73,8 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::post('/deal-chains/authorize', [DealChainController::class, 'authorize'])
         ->middleware('throttle:30,1')
         ->name('deal-chains.authorize');
+    Route::get('/deal-chains/{dealChain}', [DealChainController::class, 'show'])
+        ->name('deal-chains.show');
 });
 
 Route::get('/admin', fn () => Inertia::render('Admin/Triage'))->name('admin.triage');
