@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     Star,
@@ -504,9 +504,8 @@ export default function ListingDetail(props: HomeProps) {
             alert(`Staged into Deal Chain Slot [${chainSlotContext}] for ₱${calculatedTotal.toFixed(2)}`);
             return;
         }
-        alert(
-            `Proceeding directly to Tiwala Escrow Booking for ${activePackage.title} (${quantity} unit) totaling ₱${calculatedTotal.toFixed(2)}`,
-        );
+        const startUrl = props.booking?.start_url || (listing ? `/listings/${listing.id}/book` : '/browse');
+        router.visit(startUrl);
     };
 
     // Secondary Add to Picks action (mutates local storage and opens drawer)

@@ -295,6 +295,25 @@ final class CapacityReservationService
                     'replay' => true,
                 ];
             }
+            $buckets = DB::table('listing_capacity')
+                ->where('listing_id', $listingId)
+                ->where('listing_version_id', $listingVersionId)
+                ->lockForUpdate()
+                ->get();
+
+            if ($buckets->isEmpty()) {
+                if ($heldReservationId !== null) {
+                    throw new ListingError(
+                        'INVALID_STATE',
+                        'A capacity reservation cannot be used without a capacity bucket.',
+                        $correlationId,
+                        status: 409,
+                    );
+                }
+
+                return null;
+            }
+
             $held = null;
             if ($heldReservationId !== null) {
                 $held = DB::table('listing_capacity_reservations')
@@ -319,25 +338,6 @@ final class CapacityReservationService
                 if ((int) $held->quantity !== $quantity) {
                     throw new ListingError('INVALID_STATE', 'Held capacity reservation quantity does not match order quantity.', $correlationId, status: 409);
                 }
-            }
-
-            $buckets = DB::table('listing_capacity')
-                ->where('listing_id', $listingId)
-                ->where('listing_version_id', $listingVersionId)
-                ->lockForUpdate()
-                ->get();
-
-            if ($buckets->isEmpty()) {
-                if ($heldReservationId !== null) {
-                    throw new ListingError(
-                        'INVALID_STATE',
-                        'A capacity reservation cannot be used without a capacity bucket.',
-                        $correlationId,
-                        status: 409,
-                    );
-                }
-
-                return null;
             }
 
             foreach ($buckets as $b) {
