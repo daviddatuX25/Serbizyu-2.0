@@ -1,0 +1,307 @@
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+
+import { AppLayout } from '../AppLayout';
+import { StickyDock } from '../StickyDock';
+import { StepWizardHeader } from '../StepWizardHeader';
+import WorkPipelineCanvas from '../WorkPipelineCanvas';
+import EditableStageRow from '../EditableStageRow';
+import DealChainCarousel from '../DealChainCarousel';
+import GlovoWaveModal from '../GlovoWaveModal';
+import type { WorkStage, DealChainCombination, ActingContextData } from '../types';
+
+describe('Mobile UI Kernel — Foundation Primitives', () => {
+    describe('AppLayout', () => {
+        it('renders header, content, and dock slots in responsive container', () => {
+            render(
+                <AppLayout
+                    header={<div data-testid="test-header">Header Content</div>}
+                    dock={<div data-testid="test-dock">Dock Content</div>}
+                >
+                    <div data-testid="test-body">Body Content</div>
+                </AppLayout>,
+            );
+
+            expect(screen.getByTestId('test-header')).toBeDefined();
+            expect(screen.getByTestId('test-body')).toBeDefined();
+            expect(screen.getByTestId('test-dock')).toBeDefined();
+        });
+
+        it('displays acting-for banner when acting context indicates delegated session', () => {
+            const actingContext: ActingContextData = {
+                actorUserId: 'usr_rosa_1',
+                ownerUserId: 'usr_mang_jose_2',
+                ownerName: "Mang Jose's Vulcanizing",
+                consentGrantId: 'grant_123',
+                isActingOnBehalf: true,
+            };
+
+            render(
+                <AppLayout actingContext={actingContext}>
+                    <div>Content</div>
+                </AppLayout>,
+            );
+
+            expect(screen.getByText(/Acting on behalf of:/i)).toBeDefined();
+            expect(screen.getByText(/Mang Jose's Vulcanizing/i)).toBeDefined();
+        });
+    });
+
+    describe('StickyDock', () => {
+        it('renders primary button, Glovo progress dots, and mode switcher', () => {
+            const onPrimary = vi.fn();
+            const onToggleMode = vi.fn();
+
+            render(
+                <StickyDock
+                    primaryAction={<span>Continue →</span>}
+                    onPrimaryAction={onPrimary}
+                    steps={{
+                        total: 3,
+                        activeIndex: 0,
+                    }}
+                    modeSwitcher={{
+                        isAdvanced: false,
+                        onToggle: onToggleMode,
+                    }}
+                />,
+            );
+
+            const primaryBtn = screen.getByRole('button', { name: /Continue →/i });
+            expect(primaryBtn).toBeDefined();
+            fireEvent.click(primaryBtn);
+            expect(onPrimary).toHaveBeenCalledTimes(1);
+
+            const modeBtn = screen.getByRole('button', { name: /all-in-one/i });
+            expect(modeBtn).toBeDefined();
+            fireEvent.click(modeBtn);
+            expect(onToggleMode).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('StepWizardHeader', () => {
+        it('renders title, draft status pill, and circular back button', () => {
+            const onBack = vi.fn();
+            const onSave = vi.fn();
+
+            render(
+                <StepWizardHeader
+                    title="Service Listing"
+                    draftVersion="v1"
+                    onBack={onBack}
+                    onSaveDraft={onSave}
+                />,
+            );
+
+            expect(screen.getByText('Service Listing')).toBeDefined();
+            expect(screen.getByText('Draft · v1')).toBeDefined();
+
+            const backBtn = screen.getByRole('button', { name: /back/i });
+            fireEvent.click(backBtn);
+            expect(onBack).toHaveBeenCalledTimes(1);
+
+            const saveBtn = screen.getByRole('button', { name: /save/i });
+            fireEvent.click(saveBtn);
+            expect(onSave).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('WorkPipelineCanvas', () => {
+        const linearStages: WorkStage[] = [
+            { id: '1', num: '1', title: 'Intake Triage', dur: '15m', desc: 'Breaker off', evidence: 'Photo', color: '#0D715F', bg: '#E8F7F1' },
+            { id: '2', num: '2', title: 'Coil Wash', dur: '20m', desc: 'Chemical foam', evidence: 'Photo', color: '#0F766E', bg: '#CCFBF1' },
+            { id: '3', num: '3', title: 'Delta Test', dur: '15m', desc: 'Temp drop', evidence: 'OTP', color: '#475569', bg: '#F1F5F9' },
+        ];
+
+        it('renders linear stages with title, number badge, and durations', () => {
+            const onStageClick = vi.fn();
+            render(
+                <WorkPipelineCanvas
+                    stages={linearStages}
+                    flowType="linear"
+                    onStageClick={onStageClick}
+                />,
+            );
+
+            expect(screen.getByText('Intake Triage')).toBeDefined();
+            expect(screen.getByText('Coil Wash')).toBeDefined();
+            expect(screen.getByText('Delta Test')).toBeDefined();
+            expect(screen.getAllByText('15m').length).toBe(2);
+            expect(screen.getByText('20m')).toBeDefined();
+
+            fireEvent.click(screen.getByText('Intake Triage'));
+            expect(onStageClick).toHaveBeenCalledWith(linearStages[0]);
+        });
+
+        it('renders parallel stream layout with 2A and 2B concurrent lanes', () => {
+            const parallelStages: WorkStage[] = [
+                { id: '1', num: '1', title: 'Intake', dur: '15m', desc: 'Triage', evidence: 'Photo', color: '#0D715F', bg: '#E8F7F1' },
+                { id: '2a', num: '2A', lane: 'top', title: 'Indoor Coil', dur: '25m', desc: 'Evaporator', evidence: 'Photo', color: '#0284C7', bg: '#E0F2FE' },
+                { id: '2b', num: '2B', lane: 'btm', title: 'Outdoor Unit', dur: '20m', desc: 'Condenser', evidence: 'Photo', color: '#166534', bg: '#DCFCE7' },
+                { id: '3', num: '3', title: 'Joint Test', dur: '15m', desc: 'Delta test', evidence: 'OTP', color: '#7E22CE', bg: '#F3E8FF' },
+            ];
+
+            render(
+                <WorkPipelineCanvas
+                    stages={parallelStages}
+                    flowType="parallel"
+                />,
+            );
+
+            expect(screen.getByText('Indoor Coil')).toBeDefined();
+            expect(screen.getByText('Outdoor Unit')).toBeDefined();
+            expect(screen.getByText('2A · PARALLEL')).toBeDefined();
+            expect(screen.getByText('2B · PARALLEL')).toBeDefined();
+        });
+    });
+
+    describe('EditableStageRow', () => {
+        it('renders visible inputs with clock icon duration and camera evidence tag', () => {
+            const stage: WorkStage = {
+                id: 's1',
+                num: '1',
+                title: 'Coil Wash',
+                dur: '20m',
+                desc: 'Apply specialized chemical foam',
+                evidence: 'Chemical foam coverage photo',
+                color: '#0D715F',
+                bg: '#E8F7F1',
+            };
+
+            const onChange = vi.fn();
+            const onRemove = vi.fn();
+
+            render(
+                <EditableStageRow
+                    stage={stage}
+                    index={0}
+                    onChange={onChange}
+                    onRemove={onRemove}
+                />,
+            );
+
+            expect(screen.getByDisplayValue('Coil Wash')).toBeDefined();
+            expect(screen.getByDisplayValue('20')).toBeDefined();
+            expect(screen.getByDisplayValue('Apply specialized chemical foam')).toBeDefined();
+            expect(screen.getByDisplayValue('Chemical foam coverage photo')).toBeDefined();
+
+            // Test title edit
+            const titleInput = screen.getByDisplayValue('Coil Wash');
+            fireEvent.change(titleInput, { target: { value: 'Deep Coil Foam Wash' } });
+            expect(onChange).toHaveBeenCalledWith(0, { title: 'Deep Coil Foam Wash' });
+
+            // Test remove click
+            const removeBtn = screen.getByRole('button', { name: /remove stage/i });
+            fireEvent.click(removeBtn);
+            expect(onRemove).toHaveBeenCalledWith(0);
+        });
+    });
+
+    describe('DealChainCarousel', () => {
+        const combinations: DealChainCombination[] = [
+            {
+                id: 'c1',
+                title: 'Turnkey Sourced Parts',
+                icon: '📦',
+                isDefault: true,
+                nodes: [
+                    { role: 'STORE', title: 'Open Slot', sub: '₱180', type: 'store', bg: '#FEF3C7', color: '#B45309' },
+                    { role: 'COURIER', title: 'Open Slot', sub: '₱80', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
+                    { role: 'YOU', title: 'Your Labor', sub: '₱450', type: 'labor', bg: '#E8F7F1', color: '#0D715F' },
+                ],
+                slots: [
+                    { type: 'store', role: 'Hardware Store Depot', name: 'Tagudin Hardware', meta: '₱180.00 parts budget' },
+                    { type: 'delivery', role: 'Parts Courier Runner', name: 'Danny Express', meta: '₱80.00 route fee' },
+                ],
+            },
+            {
+                id: 'c2',
+                title: 'Post-Service Safety Audit',
+                icon: '🛡️',
+                isDefault: false,
+                nodes: [
+                    { role: 'YOU', title: 'Your Labor', sub: '₱450', type: 'labor', bg: '#E8F7F1', color: '#0D715F' },
+                    { role: 'AUDIT', title: 'Open Slot', sub: '₱150', type: 'audit', bg: '#EDE9FE', color: '#7C3AED' },
+                ],
+                slots: [
+                    { type: 'audit', role: 'Safety Auditor Slot', name: 'Open Slot', meta: '₱150.00 audit fee' },
+                ],
+            },
+        ];
+
+        it('renders combination cards with compact DAG, slot binders, and pagination', () => {
+            const onIndexChange = vi.fn();
+            const onSlotChange = vi.fn();
+            const onToggleDefault = vi.fn();
+
+            render(
+                <DealChainCarousel
+                    combinations={combinations}
+                    activeIndex={0}
+                    onIndexChange={onIndexChange}
+                    onSlotChangeClick={onSlotChange}
+                    onToggleDefault={onToggleDefault}
+                />,
+            );
+
+            expect(screen.getByText('Turnkey Sourced Parts')).toBeDefined();
+            expect(screen.getByText('★ Default')).toBeDefined();
+            expect(screen.getByText('Tagudin Hardware')).toBeDefined();
+            expect(screen.getByText('₱180.00 parts budget')).toBeDefined();
+
+            // Next button navigation
+            const nextBtn = screen.getByRole('button', { name: /next/i });
+            fireEvent.click(nextBtn);
+            expect(onIndexChange).toHaveBeenCalledWith(1);
+
+            // Slot change button
+            const changeButtons = screen.getAllByRole('button', { name: /change ▾/i });
+            fireEvent.click(changeButtons[0]);
+            expect(onSlotChange).toHaveBeenCalledWith('c1', 'store');
+        });
+    });
+
+    describe('GlovoWaveModal', () => {
+        it('renders wave cap SVG, header title, search slot, and close button when open', () => {
+            const onClose = vi.fn();
+
+            render(
+                <GlovoWaveModal
+                    isOpen={true}
+                    onClose={onClose}
+                    title="Work Execution Catalog"
+                    subtitle="Pick a standardized workflow template"
+                    headerSlot={<input placeholder="Search workflows..." />}
+                    bottomSlot={<button>Build Custom Workflow in Work Studio ↗</button>}
+                >
+                    <div>Modal Content</div>
+                </GlovoWaveModal>,
+            );
+
+            expect(screen.getByText('Work Execution Catalog')).toBeDefined();
+            expect(screen.getByText('Pick a standardized workflow template')).toBeDefined();
+            expect(screen.getByPlaceholderText('Search workflows...')).toBeDefined();
+            expect(screen.getByText('Modal Content')).toBeDefined();
+            expect(screen.getByText('Build Custom Workflow in Work Studio ↗')).toBeDefined();
+
+            const closeBtn = screen.getByRole('button', { name: /close/i });
+            fireEvent.click(closeBtn);
+            expect(onClose).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not render when isOpen is false', () => {
+            render(
+                <GlovoWaveModal
+                    isOpen={false}
+                    onClose={vi.fn()}
+                    title="Closed Modal"
+                >
+                    <div>Hidden Content</div>
+                </GlovoWaveModal>,
+            );
+
+            expect(screen.queryByText('Closed Modal')).toBeNull();
+            expect(screen.queryByText('Hidden Content')).toBeNull();
+        });
+    });
+});
