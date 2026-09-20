@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
     ShoppingBag,
     X,
@@ -8,10 +8,10 @@ import {
     ShieldCheck,
     ArrowRight,
     ArrowLeft,
-    Check,
     Package,
     Truck,
     Wrench,
+    Link as LinkIcon,
 } from 'lucide-react';
 import type { BasketItem } from '@/marketplace/types';
 
@@ -22,6 +22,10 @@ interface PicksDrawerProps {
     onUpdateQuantity: (id: string, delta: number) => void;
     onRemoveItem: (id: string) => void;
     onCheckout: () => void;
+    onAttachDealChain?: (
+        itemId: string,
+        recipeId: 'turnkey_parts' | 'courier_delivery' | 'safety_audit' | null,
+    ) => void;
 }
 
 export function PicksDrawer({
@@ -31,9 +35,8 @@ export function PicksDrawer({
     onUpdateQuantity,
     onRemoveItem,
     onCheckout,
+    onAttachDealChain,
 }: PicksDrawerProps) {
-    const [selectedPayment, setSelectedPayment] = useState<'cash' | 'gcash' | 'escrow'>('cash');
-
     // Body scroll lock to eliminate double scrollbars and background scrolling
     useEffect(() => {
         if (!open) return;
@@ -90,6 +93,7 @@ export function PicksDrawer({
                             >
                                 <ArrowLeft className="size-5" />
                             </button>
+
                             <div className="flex size-9 items-center justify-center rounded-xl bg-[#EBF2FA] text-[#0F2F58]">
                                 <ShoppingBag className="size-5" />
                             </div>
@@ -98,7 +102,7 @@ export function PicksDrawer({
                                     Citizen Picks
                                 </h2>
                                 <p className="text-[11px] text-slate-500">
-                                    {totalCount} {totalCount === 1 ? 'item' : 'items'} ready for escrow
+                                    {totalCount} {totalCount === 1 ? 'item' : 'items'} staged for escrow
                                 </p>
                             </div>
                         </div>
@@ -145,58 +149,105 @@ export function PicksDrawer({
                                     {items.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-[#FAFCFB] p-3.5 shadow-xs"
+                                            className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-[#FAFCFB] p-3.5 shadow-xs"
                                         >
-                                            <div className="flex-1">
-                                                <h4 className="text-xs font-extrabold text-slate-900 line-clamp-1">
-                                                    {item.title}
-                                                </h4>
-                                                <div className="mt-0.5 flex items-center gap-1.5 text-[10.5px] text-slate-500 font-medium">
-                                                    <span>Verified Tagudin offering</span>
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="flex-1">
+                                                    <h4 className="text-xs font-extrabold text-slate-900 line-clamp-1">
+                                                        {item.title}
+                                                    </h4>
+                                                    <div className="mt-0.5 flex items-center gap-1.5 text-[10.5px] text-slate-500 font-medium">
+                                                        <span>Verified Tagudin offering</span>
+                                                    </div>
+                                                    <div className="mt-1 font-mono text-xs font-extrabold text-[#0F2F58]">
+                                                        ₱{item.price.toFixed(2)}
+                                                    </div>
                                                 </div>
-                                                <div className="mt-1 font-mono text-xs font-extrabold text-[#0F2F58]">
-                                                    ₱{item.price.toFixed(2)}
+
+                                                {/* Quantity & Remove controls */}
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex items-center rounded-lg border border-slate-200 bg-white p-0.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => onUpdateQuantity(item.id, -1)}
+                                                            className="flex size-6 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
+                                                            aria-label="Decrease quantity"
+                                                        >
+                                                            <Minus className="size-3" />
+                                                        </button>
+                                                        <span className="w-6 text-center text-xs font-bold text-slate-800">
+                                                            {item.quantity}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => onUpdateQuantity(item.id, 1)}
+                                                            className="flex size-6 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
+                                                            aria-label="Increase quantity"
+                                                        >
+                                                            <Plus className="size-3" />
+                                                        </button>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => onRemoveItem(item.id)}
+                                                        className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                                        aria-label="Remove item"
+                                                    >
+                                                        <Trash2 className="size-3.5" />
+                                                    </button>
                                                 </div>
                                             </div>
 
-                                            {/* Quantity & Remove controls */}
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex items-center rounded-lg border border-slate-200 bg-white p-0.5">
+                                            {/* Deal Chain Button & Attached Node Pipeline */}
+                                            {item.dealChain ? (
+                                                <div className="mt-1 flex flex-col gap-1 rounded-lg border border-[#0F2F58]/20 bg-[#F0F4F8] p-2">
+                                                    <div className="flex items-center justify-between text-[10.5px]">
+                                                        <span className="font-extrabold text-[#0F2F58] flex items-center gap-1">
+                                                            <LinkIcon className="size-3" />
+                                                            <span>
+                                                                {item.dealChain.title} (+₱{item.dealChain.extraFee.toFixed(2)})
+                                                            </span>
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => onAttachDealChain?.(item.id, null)}
+                                                            className="text-slate-400 hover:text-red-600 font-bold cursor-pointer text-[10px]"
+                                                        >
+                                                            Detach
+                                                        </button>
+                                                    </div>
+                                                    {/* Connected Nodes */}
+                                                    <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+                                                        {item.dealChain.nodes.map((node, nIdx) => (
+                                                            <div key={nIdx} className="flex items-center gap-1 shrink-0">
+                                                                <span className="rounded bg-white px-1.5 py-0.5 text-[8.5px] font-extrabold text-slate-800 border border-slate-200">
+                                                                    {node.role}: {node.title}
+                                                                </span>
+                                                                {nIdx < item.dealChain!.nodes.length - 1 && (
+                                                                    <span className="text-slate-400 text-[10px]">→</span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="mt-1 flex items-center justify-between">
                                                     <button
                                                         type="button"
-                                                        onClick={() => onUpdateQuantity(item.id, -1)}
-                                                        className="flex size-6 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
-                                                        aria-label="Decrease quantity"
+                                                        onClick={() => onAttachDealChain?.(item.id, 'turnkey_parts')}
+                                                        className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-[#0F2F58] bg-[#F0F4F8] px-2.5 py-1 text-[10.5px] font-bold text-[#0F2F58] transition-colors hover:bg-[#E2E8F0]"
                                                     >
-                                                        <Minus className="size-3" />
-                                                    </button>
-                                                    <span className="w-6 text-center text-xs font-bold text-slate-800">
-                                                        {item.quantity}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => onUpdateQuantity(item.id, 1)}
-                                                        className="flex size-6 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
-                                                        aria-label="Increase quantity"
-                                                    >
-                                                        <Plus className="size-3" />
+                                                        <LinkIcon className="size-3" />
+                                                        <span>+ Attach Deal Chain (Parts / Courier)...</span>
                                                     </button>
                                                 </div>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => onRemoveItem(item.id)}
-                                                    className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                                                    aria-label="Remove item"
-                                                >
-                                                    <Trash2 className="size-3.5" />
-                                                </button>
-                                            </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Itemized Deal Chain Child Orders Breakdown (Doc 18 Deal Chain Authorization) */}
+                                {/* Itemized Deal Chain Child Orders Breakdown */}
                                 <div className="flex flex-col gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-4">
                                     <div className="flex items-center justify-between">
                                         <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
@@ -253,58 +304,11 @@ export function PicksDrawer({
                                     </div>
                                 </div>
 
-                                {/* Soundness Shield Box (Doc 17/18) */}
-                                <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-[11px] text-blue-950">
-                                    <ShieldCheck className="size-4 shrink-0 text-[#0F2F58] mt-0.5" />
+                                {/* Soundness Shield Box */}
+                                <div className="flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-[11px] text-blue-950">
+                                    <ShieldCheck className="size-4.5 shrink-0 text-[#0F2F58] mt-0.5" />
                                     <div>
                                         <strong>Non-Cascading Settlement Protection:</strong> Each child order is held in its own independent escrow line. If courier transit encounters delays, the store's inventory is financially isolated and protected.
-                                    </div>
-                                </div>
-
-                                {/* Payment Method Selection */}
-                                <div>
-                                    <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                                        Payment Method
-                                    </label>
-                                    <div className="mt-2 grid grid-cols-3 gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedPayment('cash')}
-                                            className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs font-bold transition-all ${
-                                                selectedPayment === 'cash'
-                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58] shadow-xs'
-                                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                            }`}
-                                        >
-                                            {selectedPayment === 'cash' && <Check className="size-3.5 text-[#0F2F58]" />}
-                                            <span>Cash on Delivery</span>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedPayment('gcash')}
-                                            className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs font-bold transition-all ${
-                                                selectedPayment === 'gcash'
-                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58] shadow-xs'
-                                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                            }`}
-                                        >
-                                            {selectedPayment === 'gcash' && <Check className="size-3.5 text-[#0F2F58]" />}
-                                            <span>GCash QR</span>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedPayment('escrow')}
-                                            className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs font-bold transition-all ${
-                                                selectedPayment === 'escrow'
-                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58] shadow-xs'
-                                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                            }`}
-                                        >
-                                            {selectedPayment === 'escrow' && <Check className="size-3.5 text-[#0F2F58]" />}
-                                            <span>Tiwala Escrow</span>
-                                        </button>
                                     </div>
                                 </div>
                             </>
@@ -334,7 +338,7 @@ export function PicksDrawer({
                                 onClick={onCheckout}
                                 className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold tracking-wide text-white shadow-md transition-all hover:bg-[#153e74] active:scale-98"
                             >
-                                <span>Authorize Deal Chain &amp; Escrow (₱{subtotal.toFixed(2)})</span>
+                                <span>Proceed to Escrow Checkout · ₱{subtotal.toFixed(2)}</span>
                                 <ArrowRight className="size-4" />
                             </button>
                         </div>

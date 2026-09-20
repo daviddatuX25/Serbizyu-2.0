@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrowseController;
+use App\Http\Controllers\DealChainController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ListingController;
@@ -69,6 +70,9 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::post('/orders/{order}/finalize', [OrderController::class, 'finalize'])
         ->middleware('throttle:30,1')
         ->name('orders.finalize');
+    Route::post('/deal-chains/authorize', [DealChainController::class, 'authorize'])
+        ->middleware('throttle:30,1')
+        ->name('deal-chains.authorize');
 });
 
 Route::get('/admin', fn () => Inertia::render('Admin/Triage'))->name('admin.triage');

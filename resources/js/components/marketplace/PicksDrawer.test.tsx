@@ -67,7 +67,7 @@ describe('PicksDrawer', () => {
         );
 
         // Check header count: 1 + 2 = 3 items
-        expect(screen.getByText('3 items ready for escrow')).toBeTruthy();
+        expect(screen.getByText(/3 items staged for escrow/i)).toBeTruthy();
 
         // Check item titles
         expect(screen.getByText('Inverter Split AC Deep Clean')).toBeTruthy();
@@ -129,7 +129,7 @@ describe('PicksDrawer', () => {
         fireEvent.click(closeBtn);
         expect(onClose).toHaveBeenCalled();
 
-        const checkoutBtn = screen.getByRole('button', { name: /Authorize Deal Chain & Escrow/i });
+        const checkoutBtn = screen.getByRole('button', { name: /Proceed to Escrow Checkout/i });
         fireEvent.click(checkoutBtn);
         expect(onCheckout).toHaveBeenCalled();
     });

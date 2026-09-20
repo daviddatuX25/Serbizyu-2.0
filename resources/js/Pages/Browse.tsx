@@ -26,6 +26,8 @@ import { StickyBasketBar } from '../marketplace/components/StickyBasketBar';
 import { BottomNavBar, type NavTabId } from '../marketplace/components/BottomNavBar';
 import type { BasketItem, MarketplaceCategory } from '../marketplace/types';
 import { PicksDrawer } from '../components/marketplace/PicksDrawer';
+import { DealChainCheckoutModal } from '../components/marketplace/DealChainCheckoutModal';
+import { DEAL_CHAIN_RECIPES } from '../marketplace/dealChainRecipes';
 import GlovoWaveModal from '../components/mobile/GlovoWaveModal';
 
 // Curated Category Definitions
@@ -98,6 +100,7 @@ export default function Browse(props: HomeProps) {
     // Mobile quick filter chips state
     const [mobileFilterIds, setMobileFilterIds] = useState<string[]>(['top_rated']);
     const [picksOpen, setPicksOpen] = useState(false);
+    const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
     const [mobileCategoryModal, setMobileCategoryModal] = useState<{
         open: boolean;
         category: MarketplaceCategory | null;
@@ -107,17 +110,30 @@ export default function Browse(props: HomeProps) {
     const [pinnedIds, setPinnedIds] = useState<string[]>([]);
     const [mobileActiveTab, setMobileActiveTab] = useState<NavTabId>('explore');
 
-    // Load pins from localStorage on mount
+    // Load pins and picks from localStorage on mount
     useEffect(() => {
         try {
             const stored = localStorage.getItem('serbizyu.browse.pins');
             if (stored) {
                 setPinnedIds(JSON.parse(stored));
             }
+            const storedPicks = localStorage.getItem('serbizyu.picks');
+            if (storedPicks) {
+                setBasket(JSON.parse(storedPicks));
+            }
         } catch {
             // ignore
         }
     }, []);
+
+    const saveBasket = (newBasket: BasketItem[]) => {
+        setBasket(newBasket);
+        try {
+            localStorage.setItem('serbizyu.picks', JSON.stringify(newBasket));
+        } catch {
+            // ignore
+        }
+    };
 
     const togglePin = (id: string) => {
         setPinnedIds((prev) => {
@@ -133,19 +149,65 @@ export default function Browse(props: HomeProps) {
 
     const handleAddToCart = (item: ListingRecord) => {
         const price = getPriceRaw(item);
-        setBasket((prev) => {
-            const existing = prev.find((b) => b.id === item.id);
-            if (existing) {
-                return prev.map((b) => (b.id === item.id ? { ...b, quantity: b.quantity + 1 } : b));
-            }
-            return [...prev, { id: item.id, title: item.title, price, quantity: 1 }];
-        });
+        const existing = basket.find((b) => b.id === item.id);
+        let updated: BasketItem[];
+        if (existing) {
+            updated = basket.map((b) => (b.id === item.id ? { ...b, quantity: b.quantity + 1 } : b));
+        } else {
+            updated = [...basket, { id: item.id, title: item.title, price, quantity: 1 }];
+        }
+        saveBasket(updated);
     };
-
     const basketTotal = useMemo(() => {
         return basket.reduce((sum, item) => sum + item.price * item.quantity, 0);
     }, [basket]);
 
+    const handleAttachDealChain = (
+        itemId: string,
+        recipeId: 'turnkey_parts' | 'courier_delivery' | 'safety_audit' | null,
+    ) => {
+        const recipe = recipeId ? DEAL_CHAIN_RECIPES[recipeId] : null;
+        const updated = basket.map((item) => {
+            if (item.id !== itemId) return item;
+            const currentAddon = item.dealChain?.extraFee || 0;
+            const newAddon = recipe?.extraFee || 0;
+            const newPrice = item.price - currentAddon + newAddon;
+            return {
+                ...item,
+                price: newPrice,
+                dealChain: recipe || undefined,
+            };
+        });
+        saveBasket(updated);
+    };
+
+    const handleAuthorizeDealChain = (paymentMethod: 'cash' | 'gcash' | 'escrow') => {
+        setCheckoutModalOpen(false);
+        router.post(
+            '/deal-chains/authorize',
+            {
+                payment_method: paymentMethod,
+                items: basket.map((b) => ({
+                    id: b.id,
+                    title: b.title,
+                    price: b.price,
+                    quantity: b.quantity,
+                    deal_chain: b.dealChain?.recipeId || null,
+                })),
+                total_amount: basketTotal,
+            },
+            {
+                onError: () => {
+                    if (basket.length > 0) {
+                        router.visit(`/listings/${basket[0].id}/book`);
+                    }
+                },
+                onSuccess: () => {
+                    saveBasket([]);
+                },
+            },
+        );
+    };
     const handleToggleMobileFilter = (filterId: string) => {
         setMobileFilterIds((prev) =>
             prev.includes(filterId) ? prev.filter((id) => id !== filterId) : [...prev, filterId],
@@ -976,8 +1038,19 @@ export default function Browse(props: HomeProps) {
                     setBasket((prev) => prev.filter((item) => item.id !== id));
                 }}
                 onCheckout={() => {
-                    alert(`Proceeding to Escrow Authorization for ${basket.length} picks totaling ₱${basketTotal.toFixed(2)}`);
+                    setPicksOpen(false);
+                    setCheckoutModalOpen(true);
                 }}
+                onAttachDealChain={handleAttachDealChain}
+            />
+
+            {/* Dedicated Deal Chain Checkout Modal (Zero Dummy Alerts) */}
+            <DealChainCheckoutModal
+                open={checkoutModalOpen}
+                onClose={() => setCheckoutModalOpen(false)}
+                items={basket}
+                totalAmount={basketTotal}
+                onAuthorize={handleAuthorizeDealChain}
             />
         </div>
     );

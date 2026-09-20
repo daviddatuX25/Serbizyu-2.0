@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     ShoppingBag,
     ArrowLeft,
@@ -11,15 +11,17 @@ import {
     Package,
     Truck,
     Wrench,
-    Check,
+    Link as LinkIcon,
 } from 'lucide-react';
 import type { HomeProps } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
+import { DealChainCheckoutModal } from '../components/marketplace/DealChainCheckoutModal';
+import { DEAL_CHAIN_RECIPES } from '../marketplace/dealChainRecipes';
 import type { BasketItem } from '../marketplace/types';
 
 export default function Picks(props: HomeProps) {
     const [basket, setBasket] = useState<BasketItem[]>([]);
-    const [selectedPayment, setSelectedPayment] = useState<'cash' | 'gcash' | 'escrow'>('cash');
+    const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
 
     useEffect(() => {
         try {
@@ -53,15 +55,52 @@ export default function Picks(props: HomeProps) {
         saveBasket(next);
     };
 
+    const handleAttachDealChain = (
+        itemId: string,
+        recipeId: 'turnkey_parts' | 'courier_delivery' | 'safety_audit' | null,
+    ) => {
+        const recipe = recipeId ? DEAL_CHAIN_RECIPES[recipeId] : null;
+        const next = basket.map((item) => {
+            if (item.id !== itemId) return item;
+            const currentAddon = item.dealChain?.extraFee || 0;
+            const newAddon = recipe?.extraFee || 0;
+            const newPrice = item.price - currentAddon + newAddon;
+            return {
+                ...item,
+                price: newPrice,
+                dealChain: recipe || undefined,
+            };
+        });
+        saveBasket(next);
+    };
+
     const totalCount = basket.reduce((sum, item) => sum + item.quantity, 0);
     const subtotal = basket.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    const handleAuthorize = () => {
-        alert(
-            `Deal Chain Escrow authorized for ${totalCount} picks totaling ₱${subtotal.toFixed(2)} via ${
-                selectedPayment === 'cash' ? 'Cash on Delivery' : selectedPayment === 'gcash' ? 'GCash QR' : 'Tiwala Escrow'
-            }`,
-        );
+    const handleAuthorizeDealChain = (paymentMethod: 'cash' | 'gcash' | 'escrow') => {
+        setCheckoutModalOpen(false);
+        // Post to backend order formation / deal chain checkout endpoint
+        router.post('/deal-chains/authorize', {
+            payment_method: paymentMethod,
+            items: basket.map((b) => ({
+                id: b.id,
+                title: b.title,
+                price: b.price,
+                quantity: b.quantity,
+                deal_chain: b.dealChain?.recipeId || null,
+            })),
+            total_amount: subtotal,
+        }, {
+            onError: () => {
+                // Fallback to order tracking or first item booking
+                if (basket.length > 0) {
+                    router.visit(`/listings/${basket[0].id}/book`);
+                }
+            },
+            onSuccess: () => {
+                saveBasket([]);
+            },
+        });
     };
 
     return (
@@ -94,7 +133,7 @@ export default function Picks(props: HomeProps) {
                 <button
                     type="button"
                     onClick={() => saveBasket([])}
-                    className="text-xs font-bold text-slate-500 hover:text-red-600"
+                    className="text-xs font-bold text-slate-500 hover:text-red-600 cursor-pointer"
                 >
                     Clear
                 </button>
@@ -108,7 +147,7 @@ export default function Picks(props: HomeProps) {
                         <span>Back to active listings</span>
                     </Link>
                     <span>/</span>
-                    <span className="text-slate-900 font-bold">Citizen Picks &amp; Deal Chain Authorization</span>
+                    <span className="text-slate-900 font-bold">Citizen Picks &amp; Deal Chain Tray</span>
                 </div>
 
                 {basket.length === 0 ? (
@@ -118,7 +157,7 @@ export default function Picks(props: HomeProps) {
                         </div>
                         <h2 className="mt-4 text-base font-extrabold text-[#0F2F58]">Your Picks Tray is Empty</h2>
                         <p className="mt-1 max-w-sm text-xs text-slate-500">
-                            Explore verified Tagudin marketplace listings, select service tiers, and add items to your picks tray.
+                            Explore verified Tagudin marketplace listings, attach partner deal chains, and stage items in your tray.
                         </p>
                         <Link
                             href="/browse"
@@ -129,7 +168,7 @@ export default function Picks(props: HomeProps) {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                        {/* LEFT COLUMN (60%): Staged Items, Itemized Child Orders, Non-Cascading Settlement */}
+                        {/* LEFT COLUMN (60%): Staged Items with Deal Chain Buttons & Breakdown */}
                         <div className="flex flex-col gap-6 lg:col-span-7">
                             {/* Staged Items Card */}
                             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
@@ -146,52 +185,99 @@ export default function Picks(props: HomeProps) {
                                     </button>
                                 </div>
 
-                                <div className="flex flex-col gap-3">
+                                <div className="flex flex-col gap-3.5">
                                     {basket.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-[#FAFCFB] p-4 shadow-xs"
+                                            className="flex flex-col gap-2.5 rounded-xl border border-slate-200 bg-[#FAFCFB] p-4 shadow-xs"
                                         >
-                                            <div className="flex-1">
-                                                <h3 className="text-sm font-extrabold text-slate-900">{item.title}</h3>
-                                                <div className="text-xs text-slate-500 mt-0.5">Verified Tagudin offering</div>
-                                                <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
-                                                    ₱{item.price.toFixed(2)}
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="flex-1">
+                                                    <h3 className="text-sm font-extrabold text-slate-900">{item.title}</h3>
+                                                    <div className="text-xs text-slate-500 mt-0.5">Verified Tagudin offering</div>
+                                                    <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
+                                                        ₱{item.price.toFixed(2)}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex items-center rounded-lg border border-slate-200 bg-white p-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateQuantity(item.id, -1)}
+                                                            className="flex size-7 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
+                                                            aria-label="Decrease quantity"
+                                                        >
+                                                            <Minus className="size-3.5" />
+                                                        </button>
+                                                        <span className="w-7 text-center text-xs font-bold text-slate-800">
+                                                            {item.quantity}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateQuantity(item.id, 1)}
+                                                            className="flex size-7 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
+                                                            aria-label="Increase quantity"
+                                                        >
+                                                            <Plus className="size-3.5" />
+                                                        </button>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeItem(item.id)}
+                                                        className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
+                                                        aria-label="Remove item"
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </button>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center rounded-lg border border-slate-200 bg-white p-1">
+                                            {/* Deal Chain Button & Visual Pipeline */}
+                                            {item.dealChain ? (
+                                                <div className="mt-1 flex flex-col gap-1.5 rounded-lg border border-[#0F2F58]/20 bg-[#F0F4F8] p-2.5">
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <span className="font-extrabold text-[#0F2F58] flex items-center gap-1.5">
+                                                            <LinkIcon className="size-3.5" />
+                                                            <span>
+                                                                {item.dealChain.title} (+₱{item.dealChain.extraFee.toFixed(2)})
+                                                            </span>
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleAttachDealChain(item.id, null)}
+                                                            className="text-slate-400 hover:text-red-600 font-bold cursor-pointer text-xs"
+                                                        >
+                                                            Detach
+                                                        </button>
+                                                    </div>
+                                                    {/* Connected Nodes */}
+                                                    <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+                                                        {item.dealChain.nodes.map((node, nIdx) => (
+                                                            <div key={nIdx} className="flex items-center gap-1.5 shrink-0">
+                                                                <span className="rounded-md bg-white px-2 py-0.5 text-[10px] font-extrabold text-slate-800 border border-slate-200 shadow-xs">
+                                                                    {node.role}: {node.title}
+                                                                </span>
+                                                                {nIdx < item.dealChain!.nodes.length - 1 && (
+                                                                    <span className="text-slate-400 text-xs">→</span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="mt-1 flex items-center justify-between">
                                                     <button
                                                         type="button"
-                                                        onClick={() => updateQuantity(item.id, -1)}
-                                                        className="flex size-7 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
-                                                        aria-label="Decrease quantity"
+                                                        onClick={() => handleAttachDealChain(item.id, 'turnkey_parts')}
+                                                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-dashed border-[#0F2F58] bg-[#F0F4F8] px-3 py-1.5 text-xs font-bold text-[#0F2F58] transition-colors hover:bg-[#E2E8F0]"
                                                     >
-                                                        <Minus className="size-3.5" />
-                                                    </button>
-                                                    <span className="w-7 text-center text-xs font-bold text-slate-800">
-                                                        {item.quantity}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => updateQuantity(item.id, 1)}
-                                                        className="flex size-7 cursor-pointer items-center justify-center text-slate-600 hover:text-slate-900"
-                                                        aria-label="Increase quantity"
-                                                    >
-                                                        <Plus className="size-3.5" />
+                                                        <LinkIcon className="size-3.5" />
+                                                        <span>+ Attach Deal Chain Partner (Parts / Courier)...</span>
                                                     </button>
                                                 </div>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeItem(item.id)}
-                                                    className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
-                                                    aria-label="Remove item"
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                </button>
-                                            </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -274,59 +360,12 @@ export default function Picks(props: HomeProps) {
                             <div className="flex items-start gap-2.5 rounded-2xl border border-blue-200 bg-blue-50/60 p-4 text-xs text-blue-950">
                                 <ShieldCheck className="size-5 shrink-0 text-[#0F2F58] mt-0.5" />
                                 <div>
-                                    <strong>Non-Cascading Settlement Protection:</strong> Each child order is held in its own independent escrow line. If courier transit encounters delays, the store's inventory is financially isolated and protected.
-                                </div>
-                            </div>
-
-                            {/* Payment Method Selector */}
-                            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                                <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">
-                                    Payment Method
-                                </h2>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedPayment('cash')}
-                                        className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border p-3 text-xs font-bold transition-all ${
-                                            selectedPayment === 'cash'
-                                                ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58] shadow-xs'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                        }`}
-                                    >
-                                        {selectedPayment === 'cash' && <Check className="size-3.5 text-[#0F2F58]" />}
-                                        <span>Cash on Delivery</span>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedPayment('gcash')}
-                                        className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border p-3 text-xs font-bold transition-all ${
-                                            selectedPayment === 'gcash'
-                                                ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58] shadow-xs'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                        }`}
-                                    >
-                                        {selectedPayment === 'gcash' && <Check className="size-3.5 text-[#0F2F58]" />}
-                                        <span>GCash QR</span>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedPayment('escrow')}
-                                        className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border p-3 text-xs font-bold transition-all ${
-                                            selectedPayment === 'escrow'
-                                                ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58] shadow-xs'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                        }`}
-                                    >
-                                        {selectedPayment === 'escrow' && <Check className="size-3.5 text-[#0F2F58]" />}
-                                        <span>Tiwala Escrow</span>
-                                    </button>
+                                    <strong>Non-Cascading Settlement Protection:</strong> Each child order is held in its own independent escrow line. If courier transit encounters delays, the store's inventory and technician labor remain financially isolated and protected.
                                 </div>
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN (40%): Sticky Authorization Card */}
+                        {/* RIGHT COLUMN (40%): Sticky Checkout Card */}
                         <div className="lg:col-span-5 sticky top-24">
                             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md flex flex-col gap-5">
                                 <div className="border-b border-slate-100 pb-4">
@@ -355,10 +394,10 @@ export default function Picks(props: HomeProps) {
 
                                 <button
                                     type="button"
-                                    onClick={handleAuthorize}
+                                    onClick={() => setCheckoutModalOpen(true)}
                                     className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold tracking-wide text-white shadow-md transition-all hover:bg-[#153e74] active:scale-98"
                                 >
-                                    <span>Authorize Deal Chain &amp; Escrow</span>
+                                    <span>Proceed to Escrow Checkout</span>
                                     <ArrowRight className="size-4" />
                                 </button>
 
@@ -373,6 +412,15 @@ export default function Picks(props: HomeProps) {
                     </div>
                 )}
             </main>
+
+            {/* Dedicated Deal Chain Checkout Modal (Payment Selection & Authorization) */}
+            <DealChainCheckoutModal
+                open={checkoutModalOpen}
+                onClose={() => setCheckoutModalOpen(false)}
+                items={basket}
+                totalAmount={subtotal}
+                onAuthorize={handleAuthorizeDealChain}
+            />
         </div>
     );
 }

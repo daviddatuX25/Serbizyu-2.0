@@ -136,7 +136,7 @@ describe('ListingDetail Page', () => {
 
         // Picks drawer opens with item
         expect(screen.getByText('Citizen Picks')).toBeTruthy();
-        expect(screen.getByText('1 item ready for escrow')).toBeTruthy();
+        expect(screen.getByText(/1 item staged for escrow/i)).toBeTruthy();
         expect(screen.getAllByText(/Inverter Split AC Deep Clean/).length).toBeGreaterThan(0);
     });
 

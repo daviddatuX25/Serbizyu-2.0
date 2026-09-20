@@ -72,15 +72,17 @@ describe('Picks Page', () => {
         // Non-cascading settlement banner
         expect(screen.getByText(/Non-Cascading Settlement Protection/i)).toBeTruthy();
 
-        // Payment method selection
+        // Click Proceed to Escrow Checkout
+        const checkoutBtn = screen.getByRole('button', { name: /Proceed to Escrow Checkout/i });
+        fireEvent.click(checkoutBtn);
+
+        // Checkout Modal opens with payment selection
+        expect(screen.getByText('Authorize Deal Chain')).toBeTruthy();
         expect(screen.getByRole('button', { name: /Cash on Delivery/i })).toBeTruthy();
         expect(screen.getByRole('button', { name: /GCash QR/i })).toBeTruthy();
         expect(screen.getByRole('button', { name: /Tiwala Escrow/i })).toBeTruthy();
-
-        // Authorize CTA
         expect(screen.getByRole('button', { name: /Authorize Deal Chain & Escrow/i })).toBeTruthy();
     });
-
     it('updates quantity and recalculates escrow total', () => {
         const mockPicks = [
             {
@@ -123,5 +125,28 @@ describe('Picks Page', () => {
 
         // Now empty
         expect(screen.getByText('Your Picks Tray is Empty')).toBeTruthy();
+    });
+    it('attaches Deal Chain recipe to staged item and displays connected pipeline', () => {
+        const mockPicks = [
+            {
+                id: 'listing-1',
+                title: 'Inverter Split AC Deep Clean',
+                price: 450,
+                quantity: 1,
+            },
+        ];
+        window.localStorage.setItem('serbizyu.picks', JSON.stringify(mockPicks));
+
+        render(<Picks {...baseProps} />);
+
+        // Click attach deal chain button
+        const attachBtn = screen.getByRole('button', { name: /\+ Attach Deal Chain/i });
+        fireEvent.click(attachBtn);
+
+        // Deal chain attached: title and connected nodes displayed
+        expect(screen.getByText(/Turnkey Sourced Parts/i)).toBeTruthy();
+        expect(screen.getByText(/STORE: Tagudin HW/i)).toBeTruthy();
+        expect(screen.getByText(/COURIER: Danny Exp/i)).toBeTruthy();
+        expect(screen.getByRole('button', { name: 'Detach' })).toBeTruthy();
     });
 });
