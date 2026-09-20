@@ -1,15 +1,20 @@
 import type { ReactNode } from 'react';
+import { ShoppingBag } from 'lucide-react';
 import type { ActingContextData } from '../mobile/types';
 
 interface DesktopGlobalNavProps {
     actingContext?: ActingContextData;
     activeRoute?: string;
+    picksCount?: number;
+    onPicksClick?: () => void;
     rightSlot?: ReactNode;
 }
 
 export function DesktopGlobalNav({
     actingContext,
     activeRoute = 'listings',
+    picksCount = 0,
+    onPicksClick,
     rightSlot,
 }: DesktopGlobalNavProps) {
     return (
@@ -75,19 +80,28 @@ export function DesktopGlobalNav({
                                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                             }`}
                         >
-                            Orders &amp; Work
+                            Orders
                         </a>
                     </nav>
                 </div>
 
                 {/* Right Area: Location + Context + Profile */}
                 <div className="flex items-center gap-3">
-                    {/* Location Badge */}
-                    <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                        <span className="text-emerald-600">📍</span>
-                        <span>Tagudin Centro</span>
-                    </div>
-
+                    {/* Picks Cart Equivalent Button */}
+                    <button
+                        type="button"
+                        onClick={onPicksClick}
+                        className="relative flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-[#0F2F58] shadow-xs transition-colors hover:bg-slate-50"
+                        aria-label="View citizen picks"
+                    >
+                        <ShoppingBag className="size-4 text-[#0F2F58]" />
+                        <span>Picks</span>
+                        {picksCount > 0 && (
+                            <span className="flex size-5 items-center justify-center rounded-full bg-[#0F2F58] text-[10px] font-extrabold text-white">
+                                {picksCount}
+                            </span>
+                        )}
+                    </button>
                     {/* Acting-for Badge (if active) */}
                     {actingContext?.isActingOnBehalf && (
                         <div className="flex items-center gap-2 rounded-full border border-amber-300 bg-[#FEF3C7] px-3 py-1 text-xs font-bold text-[#92400E]">

@@ -25,6 +25,8 @@ import { MarketplaceCard } from '../marketplace/components/MarketplaceCard';
 import { StickyBasketBar } from '../marketplace/components/StickyBasketBar';
 import { BottomNavBar, type NavTabId } from '../marketplace/components/BottomNavBar';
 import type { BasketItem, MarketplaceCategory } from '../marketplace/types';
+import { PicksDrawer } from '../components/marketplace/PicksDrawer';
+import GlovoWaveModal from '../components/mobile/GlovoWaveModal';
 
 // Curated Category Definitions
 const MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
@@ -95,7 +97,11 @@ export default function Browse(props: HomeProps) {
 
     // Mobile quick filter chips state
     const [mobileFilterIds, setMobileFilterIds] = useState<string[]>(['top_rated']);
-
+    const [picksOpen, setPicksOpen] = useState(false);
+    const [mobileCategoryModal, setMobileCategoryModal] = useState<{
+        open: boolean;
+        category: MarketplaceCategory | null;
+    }>({ open: false, category: null });
     // Basket State
     const [basket, setBasket] = useState<BasketItem[]>([]);
     const [pinnedIds, setPinnedIds] = useState<string[]>([]);
@@ -254,6 +260,8 @@ export default function Browse(props: HomeProps) {
                 {/* 1. Global Navigation Bar */}
                 <DesktopGlobalNav
                     activeRoute="browse"
+                    picksCount={basket.reduce((sum, item) => sum + item.quantity, 0)}
+                    onPicksClick={() => setPicksOpen(true)}
                     actingContext={{
                         actorUserId: props.session?.userId || 'usr_guest',
                         ownerUserId: 'usr_guest',
@@ -262,78 +270,16 @@ export default function Browse(props: HomeProps) {
                         isActingOnBehalf: false,
                     }}
                     rightSlot={
-                        <div className="flex items-center gap-2">
-                            <Link
-                                href="/my-listings"
-                                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-[#0F2F58] hover:bg-slate-50 transition-colors shadow-xs"
-                            >
-                                <span>My Listings</span>
-                            </Link>
-                            <Link
-                                href="/dev/true-ui-kit"
-                                className="flex items-center gap-1.5 rounded-full bg-[#0F2F58] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#153e74] transition-colors shadow-xs"
-                            >
-                                <span>+ Post a Request</span>
-                            </Link>
-                        </div>
+                        <Link
+                            href="/requests/create"
+                            className="flex items-center gap-1.5 rounded-full bg-[#0F2F58] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#153e74] transition-colors shadow-xs"
+                        >
+                            <span>+ Post Request</span>
+                        </Link>
                     }
                 />
 
-                {/* 2. Top Category Quick-Switch Bar */}
-                <div className="border-b border-slate-200 bg-white shadow-xs">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-2.5">
-                        <div className="flex items-center gap-2 overflow-x-auto py-1">
-                            {MARKETPLACE_CATEGORIES.map((cat) => {
-                                const isActive = selectedCategory === cat.code;
-                                const count = categoryCounts[cat.code] || 0;
-                                return (
-                                    <button
-                                        key={cat.code}
-                                        type="button"
-                                        onClick={() => setSelectedCategory(cat.code)}
-                                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                                            isActive
-                                                ? 'bg-[#0F2F58] text-white shadow-xs'
-                                                : 'border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                                        }`}
-                                    >
-                                        <span>{cat.label}</span>
-                                        <span
-                                            className={`rounded-full px-1.5 py-0.2 text-[10px] font-semibold ${
-                                                isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                                            }`}
-                                        >
-                                            {count}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* Search Input in Bar */}
-                        <div className="relative w-72 shrink-0">
-                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search services, products, tags..."
-                                className="h-9 w-full rounded-full border border-slate-300 bg-[#FAFCFB] pr-8 pl-9 text-xs font-semibold text-slate-900 outline-none transition-colors focus:border-[#0F2F58] focus:bg-white"
-                            />
-                            {searchQuery && (
-                                <button
-                                    type="button"
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute top-1/2 right-2.5 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                                >
-                                    <X className="size-3.5" />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* 3. Main Discovery 2-Column Layout */}
+                {/* 2. Main Discovery 2-Column Layout */}
                 <main className="mx-auto max-w-7xl px-6 py-8">
                     <div className="grid grid-cols-12 gap-8 items-start">
                         {/* =========================================================================
@@ -353,6 +299,27 @@ export default function Browse(props: HomeProps) {
                                     >
                                         <RotateCcw className="size-3" />
                                         <span>Reset</span>
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Search Input in Sidebar */}
+                            <div className="relative mt-3">
+                                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search services or goods..."
+                                    className="h-9 w-full rounded-lg border border-slate-300 bg-[#FAFCFB] pr-8 pl-9 text-xs font-semibold text-slate-900 outline-none transition-colors focus:border-[#0F2F58] focus:bg-white"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute top-1/2 right-2.5 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    >
+                                        <X className="size-3.5" />
                                     </button>
                                 )}
                             </div>
@@ -888,7 +855,13 @@ export default function Browse(props: HomeProps) {
                     <CategoryTabs
                         categories={MARKETPLACE_CATEGORIES}
                         selectedCategory={selectedCategory}
-                        onSelectCategory={setSelectedCategory}
+                        onSelectCategory={(code) => {
+                            setSelectedCategory(code);
+                            const cat = MARKETPLACE_CATEGORIES.find((c) => c.code === code);
+                            if (cat && code !== 'all') {
+                                setMobileCategoryModal({ open: true, category: cat });
+                            }
+                        }}
                     />
 
                     {/* Tier 3: Spend Threshold Fee Tracker */}
@@ -936,7 +909,7 @@ export default function Browse(props: HomeProps) {
                     <StickyBasketBar
                         count={basket.reduce((sum, item) => sum + item.quantity, 0)}
                         totalAmount={basketTotal}
-                        onViewBasket={() => alert('Proceeding to Checkout / Escrow')}
+                        onViewBasket={() => setPicksOpen(true)}
                     />
 
                     {/* Bottom Navigation Bar */}
@@ -945,12 +918,67 @@ export default function Browse(props: HomeProps) {
                         onTabSelect={(tab: NavTabId) => {
                             setMobileActiveTab(tab);
                             if (tab === 'explore') router.visit('/');
+                            if (tab === 'saved') setPicksOpen(true);
                             if (tab === 'orders') router.visit('/orders');
                             if (tab === 'profile') router.visit('/my-listings');
                         }}
                     />
                 </div>
             </div>
+
+            {/* Mobile Category Glovo Wave Modal */}
+            <GlovoWaveModal
+                open={mobileCategoryModal.open}
+                onClose={() => setMobileCategoryModal({ open: false, category: null })}
+                title={mobileCategoryModal.category?.label || 'Tagudin Category'}
+                subtitle={`Explore verified local providers offering ${mobileCategoryModal.category?.label.toLowerCase() || 'services'}`}
+                bottomSlot={
+                    <button
+                        type="button"
+                        onClick={() => setMobileCategoryModal({ open: false, category: null })}
+                        className="flex h-11 w-full cursor-pointer items-center justify-center rounded-full bg-[#0F2F58] text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
+                    >
+                        <span>View {categoryCounts[mobileCategoryModal.category?.code || 'all'] || 0} Listings in Tagudin</span>
+                    </button>
+                }
+            >
+                <div className="flex flex-col gap-2.5 py-3">
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
+                        <div className="font-extrabold text-[#0F2F58]">Standard Barangay SLA</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                            Same-day intake &amp; milestone completion verified by photo evidence in Tagudin Centro.
+                        </div>
+                    </div>
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-xs">
+                        <div className="font-extrabold text-emerald-800">Tiwala Escrow Protection</div>
+                        <div className="text-[11px] text-emerald-700 mt-0.5">
+                            Citizen funds stay protected in municipal escrow until you approve final milestone delivery.
+                        </div>
+                    </div>
+                </div>
+            </GlovoWaveModal>
+
+            {/* Citizen Picks Drawer */}
+            <PicksDrawer
+                open={picksOpen}
+                onClose={() => setPicksOpen(false)}
+                items={basket}
+                onUpdateQuantity={(id, delta) => {
+                    setBasket((prev) =>
+                        prev
+                            .map((item) =>
+                                item.id === id ? { ...item, quantity: item.quantity + delta } : item,
+                            )
+                            .filter((item) => item.quantity > 0),
+                    );
+                }}
+                onRemoveItem={(id) => {
+                    setBasket((prev) => prev.filter((item) => item.id !== id));
+                }}
+                onCheckout={() => {
+                    alert(`Proceeding to Escrow Authorization for ${basket.length} picks totaling ₱${basketTotal.toFixed(2)}`);
+                }}
+            />
         </div>
     );
 }
