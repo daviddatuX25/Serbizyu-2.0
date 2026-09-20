@@ -1094,6 +1094,42 @@
       gap: 12px;
       margin-bottom: 12px;
     }
+    /* Themed thin scrollbar for work canvas */
+    .work-canvas-light-box {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(13, 113, 95, 0.25) transparent;
+    }
+    .work-canvas-light-box::-webkit-scrollbar {
+      height: 3px;
+    }
+    .work-canvas-light-box::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .work-canvas-light-box::-webkit-scrollbar-thumb {
+      background: rgba(13, 113, 95, 0.25);
+      border-radius: var(--radius-pill);
+    }
+
+    /* Partner Combos Carousel Deck */
+    .partner-combos-deck {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      gap: 10px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      scroll-behavior: smooth;
+      padding-bottom: 2px;
+    }
+    .partner-combos-deck::-webkit-scrollbar {
+      display: none;
+    }
+    .partner-combo-slide {
+      flex: 0 0 100%;
+      min-width: 100%;
+      scroll-snap-align: start;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
@@ -1396,82 +1432,46 @@
         <!-- Section Divider: Extend Listing (Partnered Services) -->
         <div style="border-top: 1.5px solid var(--line); margin: 14px 0 8px; padding-top: 12px;">
           <div style="display: flex; align-items: center; justify-content: space-between;">
-            <span style="font-size: 11.5px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.5px;">Partnered Services</span>
-            <span style="font-size: 9px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 1.5px 6px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">DEAL CHAIN</span>
-          </div>
-        </div>
-        <div id="extend-listing-content-container">
-          <!-- Combination 1: Doorstep Delivery -->
-          <div class="extension-partner-card active" id="combo-card-delivery" style="border-color: #0F2F58; background: #F8FAFD; margin-bottom: 8px;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-transit">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Doorstep Delivery</div>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <button type="button" class="btn-default-badge active" onclick="setAsListingDefault(this)">★ Default</button>
-                <button type="button" class="btn-item-remove" onclick="removeCombinationCard('combo-card-delivery')" title="Detach combination">&times;</button>
-              </div>
+            <div>
+              <span style="font-size: 11.5px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.5px;">Partnered Options</span>
+              <div style="font-size: 9.5px; color: var(--ink-muted); margin-top: 1px;">Customer-selectable delivery &amp; install combinations</div>
             </div>
-
-            <!-- Slot: Courier Partner Selector -->
-            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="delivery-partner-name">Danny Express Motorcycle Pool</div>
-                <div class="partner-current-meta" id="delivery-partner-meta">₱35.00 route fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-
-          <!-- Combination 2: Sourced Part & Installation -->
-          <div class="extension-partner-card" id="combo-card-installation" style="border-color: var(--line); background: #FFFFFF; margin-bottom: 8px;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-labor">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Part &amp; Installation Labor</div>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <button type="button" class="btn-default-badge" onclick="setAsListingDefault(this)">Make Default</button>
-                <button type="button" class="btn-item-remove" onclick="removeCombinationCard('combo-card-installation')" title="Detach combination">&times;</button>
-              </div>
-            </div>
-
-            <!-- Slot 1: Courier -->
-            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')" style="margin-bottom: 6px;">
-              <div class="partner-current-info">
-                <div class="partner-current-name">Danny Express Motorcycle Pool</div>
-                <div class="partner-current-meta">₱35.00 route fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-
-            <!-- Slot 2: Technician -->
-            <div class="partner-selector-box" onclick="openSlotListingPicker('installation')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="install-partner-name">Kuya Ben Aircon Services</div>
-                <div class="partner-current-meta" id="install-partner-meta">₱250.00 labor</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
+            <span style="font-size: 9px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">DEAL CHAIN</span>
           </div>
         </div>
 
-        <!-- Open Multi-Node Deal Chain Catalog Button -->
-        <button type="button" class="btn-add-item-dashed" style="margin-top: 8px;" onclick="openBundleCatalog()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          <span>Attach More Partner Combinations</span>
-          <span style="font-size: 9.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.2px;">DEAL CHAIN</span>
-        </button>
+        <!-- Horizontal Paginated Carousel Deck for Combinations -->
+        <div id="partner-combos-carousel-wrapper" style="position: relative; margin-top: 6px;">
+          <div class="partner-combos-deck" id="partner-combos-deck">
+            <!-- Rendered dynamically by renderPartnerCombosDeck() -->
+          </div>
 
+          <!-- Carousel Pagination & Navigation Controls -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding: 2px;">
+            <button type="button" id="btn-combo-prev" onclick="navComboCarousel(-1)" style="font-size: 11px; font-weight: 700; color: #0F2F58; background: #FFFFFF; border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 3px 10px; cursor: pointer; display: flex; align-items: center; gap: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+              <span>‹ Prev</span>
+            </button>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div id="combo-carousel-dots" style="display: flex; align-items: center; gap: 4px;">
+                <!-- Dots generated dynamically: ● ○ -->
+              </div>
+              <span id="combo-carousel-counter" style="font-size: 10px; font-weight: 700; color: var(--ink-muted); font-family: 'JetBrains Mono', monospace;">Option 1 of 2</span>
+            </div>
+            <button type="button" id="btn-combo-next" onclick="navComboCarousel(1)" style="font-size: 11px; font-weight: 700; color: #0F2F58; background: #FFFFFF; border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 3px 10px; cursor: pointer; display: flex; align-items: center; gap: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+              <span>Next ›</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Deal Chain Dedicated Action Button -->
+        <div style="margin-top: 10px;">
+          <button type="button" class="btn-add-item-dashed" onclick="openBundleCatalog()" style="width: 100%; height: 38px; font-size: 11.5px; font-weight: 700;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span>Attach Delivery / Service Extension</span>
+            <span style="font-size: 9.5px; font-weight: 800; background: #0F2F58; color: #FFFFFF; padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.2px;">DEAL CHAIN</span>
+          </button>
+        </div>
+      </section>
     </main>
 
     <!-- Sticky Bottom Dock with Glovo Dots & Mode Switcher -->
@@ -1636,7 +1636,6 @@
                   </div>
                 </div>
               </div>
-              <div class="combo-subtext-muted">Tagudin hardware category default: courier delivery + technician installation</div>
             </article>
 
             <!-- Card 1: Tool Rental Kit + Courier Delivery -->
@@ -1682,7 +1681,6 @@
                   </div>
                 </div>
               </div>
-              <div class="combo-subtext-muted">Tagudin Tool Depot supplies professional vacuum &amp; gauge kit + doorstep courier for DIYers</div>
             </article>
 
             <!-- Card 2: Old Unit Hauling & Eco-Recycling -->
@@ -1728,7 +1726,6 @@
                   </div>
                 </div>
               </div>
-              <div class="combo-subtext-muted">Eco-courier delivers new part and hauls away damaged old capacitor for verified town recycling</div>
             </article>
 
             <!-- Card 3: Post-Service Safety Inspection -->
@@ -1763,22 +1760,15 @@
                   </div>
                 </div>
               </div>
-              <div class="combo-subtext-muted">Certified breaker load and wiring checkup after AC install</div>
             </article>
 
-            <!-- Card 4: Custom Chain / Empty Slot Fallback Card -->
-            <article class="compact-combo-card" style="border: 1.5px dashed #CBD5E1; background: #F8FAFC;" onclick="applyChainRecipe('custom_empty')">
-              <div class="combo-card-top-row">
-                <span class="combo-title-bold" style="color: var(--brand-navy); display: flex; align-items: center; gap: 5px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"></path></svg>
-                  <span>Build Custom Chain with Empty Slot</span>
-                </span>
-                <button type="button" class="btn-mini-add-combo" style="background:#FFFFFF; border-color:var(--brand-navy); color:var(--brand-navy);" onclick="event.stopPropagation(); applyChainRecipe('custom_empty')">+ Empty Slot</button>
-              </div>
-              <div class="combo-subtext-muted">
-                Need a custom team or your preferred courier isn't listed? Stage an open chain container and fill the missing slot later from Browse.
-              </div>
-            </article>
+          </div>
+          <!-- Bottom Action: Build Custom Chain in Deal Studio (Dedicated Affordance) -->
+          <div style="flex-shrink: 0; padding-top: 10px; border-top: 1.5px solid var(--line); background: #FFFFFF;">
+            <a href="deal-chain-builder.html" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 38px; background: #0F2F58; color: #FFFFFF; border-radius: var(--radius-pill); text-decoration: none; font-size: 12px; font-weight: 800; letter-spacing: 0.2px; box-shadow: 0 4px 12px rgba(15,47,88,0.2);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Build Custom Chain in Deal Studio ↗</span>
+            </a>
           </div>
         </div>
       </div>
@@ -2378,41 +2368,19 @@
     }
 
     function chooseSlotListing(name, meta, isOpenSlot = false) {
-      if (activeSlotTarget === 'delivery') {
-        const elName = document.getElementById('delivery-partner-name');
-        const elMeta = document.getElementById('delivery-partner-meta');
-        if (elName) elName.innerText = name;
-        if (elMeta) elMeta.innerText = meta;
-        const card = document.querySelector('#partner-delivery-card-wrap .extension-partner-card');
-        if (card) {
-          card.style.borderColor = isOpenSlot ? '#D97706' : '#0F2F58';
-          card.style.background = isOpenSlot ? '#FFFDF9' : '#F8FAFD';
+      if (attachedCombos[currentComboIdx]) {
+        const combo = attachedCombos[currentComboIdx];
+        const slot = combo.slots.find(s => s.type === activeSlotTarget);
+        if (slot) {
+          slot.name = name;
+          slot.meta = meta;
         }
-      } else if (activeSlotTarget === 'installation') {
-        const elName = document.getElementById('install-partner-name');
-        const elMeta = document.getElementById('install-partner-meta');
-        if (elName) elName.innerText = name;
-        if (elMeta) elMeta.innerText = meta;
-        const card = document.querySelector('#partner-install-card-wrap .extension-partner-card');
-        if (card) {
-          card.style.borderColor = isOpenSlot ? '#D97706' : '#0F2F58';
-          card.style.background = isOpenSlot ? '#FFFDF9' : '#F8FAFD';
+        const node = combo.nodes.find(n => n.type === activeSlotTarget);
+        if (node) {
+          node.title = name;
+          node.sub = meta.split(' ')[0] || meta;
         }
-      } else if (activeSlotTarget === 'tools') {
-        const elName = document.getElementById('tool-partner-name');
-        const elMeta = document.getElementById('tool-partner-meta');
-        if (elName) elName.innerText = name;
-        if (elMeta) elMeta.innerText = meta;
-      } else if (activeSlotTarget === 'hauling') {
-        const elName = document.getElementById('haul-partner-name');
-        const elMeta = document.getElementById('haul-partner-meta');
-        if (elName) elName.innerText = name;
-        if (elMeta) elMeta.innerText = meta;
-      } else if (activeSlotTarget === 'audit') {
-        const elName = document.getElementById('audit-partner-name');
-        const elMeta = document.getElementById('audit-partner-meta');
-        if (elName) elName.innerText = name;
-        if (elMeta) elMeta.innerText = meta;
+        renderPartnerCombosDeck();
       }
       closeSlotListingPicker();
     }
@@ -2503,10 +2471,7 @@
     let defaultDeliveryInstallHTML = '';
 
     window.addEventListener('DOMContentLoaded', () => {
-      const container = document.getElementById('extend-listing-content-container');
-      if (container) {
-        defaultDeliveryInstallHTML = container.innerHTML;
-      }
+      renderPartnerCombosDeck();
       // Detect acting-on-behalf owner from URL
       const urlParams = new URLSearchParams(window.location.search);
       const ownerParam = urlParams.get('owner');
@@ -2541,201 +2506,265 @@
       }
     }
 
-    let currentActiveRecipe = 'default_delivery_install';
+    // =========================================================================
+    // PARTNER COMBOS (DEAL CHAIN) DECK & CAROUSEL FOR PRODUCTS
+    // =========================================================================
+    let attachedCombos = [
+      {
+        id: 'combo-delivery',
+        title: 'Doorstep Delivery',
+        icon: '🛵',
+        isDefault: true,
+        nodes: [
+          { role: 'PRODUCT', title: '35uF Cap', sub: '₱180', type: 'product', bg: '#FEF3C7', color: '#B45309' },
+          { role: 'COURIER', title: 'Danny Exp', sub: '₱35', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' }
+        ],
+        slots: [
+          { type: 'delivery', role: 'Doorstep Courier Runner', name: 'Danny Express Motorcycle Pool', meta: '₱35.00 route fee' }
+        ]
+      },
+      {
+        id: 'combo-installation',
+        title: 'Part & Installation Labor',
+        icon: '🔧',
+        isDefault: false,
+        nodes: [
+          { role: 'PRODUCT', title: '35uF Cap', sub: '₱180', type: 'product', bg: '#FEF3C7', color: '#B45309' },
+          { role: 'COURIER', title: 'Danny Exp', sub: '₱35', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
+          { role: 'INSTALL', title: 'Kuya Ben', sub: '₱250', type: 'installation', bg: '#ECFDF5', color: '#059669' }
+        ],
+        slots: [
+          { type: 'delivery', role: 'Doorstep Courier Runner', name: 'Danny Express Motorcycle Pool', meta: '₱35.00 route fee' },
+          { type: 'installation', role: 'Technician Labor Partner', name: 'Kuya Ben Aircon Services', meta: '₱250.00 labor' }
+        ]
+      }
+    ];
+
+    let currentComboIdx = 0;
+
+    function renderPartnerCombosDeck() {
+      const deck = document.getElementById('partner-combos-deck');
+      const dotsTrack = document.getElementById('combo-carousel-dots');
+      const counterText = document.getElementById('combo-carousel-counter');
+      const prevBtn = document.getElementById('btn-combo-prev');
+      const nextBtn = document.getElementById('btn-combo-next');
+      if (!deck) return;
+
+      if (attachedCombos.length === 0) {
+        deck.innerHTML = `
+          <div style="background:#FAFCFB; border:1.5px dashed var(--line); border-radius:12px; padding:16px; text-align:center; width:100%;">
+            <div style="font-size:12px; font-weight:800; color:#0F2F58; margin-bottom:2px;">No Partnered Options Attached</div>
+            <div style="font-size:10px; color:var(--ink-muted); margin-bottom:6px;">This product will be counter-pickup only.</div>
+          </div>
+        `;
+        if (dotsTrack) dotsTrack.innerHTML = '';
+        if (counterText) counterText.innerText = '0 Options';
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        return;
+      }
+
+      if (currentComboIdx >= attachedCombos.length) {
+        currentComboIdx = attachedCombos.length - 1;
+      }
+      if (currentComboIdx < 0) {
+        currentComboIdx = 0;
+      }
+
+      let slidesHtml = '';
+      attachedCombos.forEach((combo, cIdx) => {
+        let dagNodesHtml = '';
+        combo.nodes.forEach((n, nIdx) => {
+          dagNodesHtml += `
+            <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:8px; padding:4px 7px; flex-shrink:0; display:flex; flex-direction:column; gap:2px; min-width:82px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
+                <span style="font-size:7px; font-weight:800; background:${n.bg}; color:${n.color}; padding:1px 4px; border-radius:4px;">${n.role}</span>
+                <span style="font-size:8px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#64748B;">${n.sub}</span>
+              </div>
+              <div style="font-size:9.5px; font-weight:800; color:#0F2F58; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
+            </div>
+          `;
+          if (nIdx < combo.nodes.length - 1) {
+            dagNodesHtml += `
+              <svg width="16" height="10" viewBox="0 0 16 10" fill="none" style="flex-shrink:0;">
+                <line x1="0" y1="5" x2="16" y2="5" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3 2"/>
+              </svg>
+            `;
+          }
+        });
+
+        let slotsHtml = '';
+        if (combo.slots.length === 0) {
+          slotsHtml = `<div style="font-size:10px; color:var(--ink-muted); font-style:italic; padding:4px 0;">Counter pickup only. No external transit.</div>`;
+        } else {
+          combo.slots.forEach((s) => {
+            slotsHtml += `
+              <div class="partner-selector-box" onclick="openSlotListingPicker('${s.type}')" style="background:#FFFFFF; border:1px solid var(--line); border-radius:8px; padding:5px 8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+                <div>
+                  <div style="font-size:8.5px; font-weight:700; color:var(--ink-muted); text-transform:uppercase;">${s.role}</div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:11px; font-weight:800; color:#0F2F58;">${s.name}</span>
+                    <span style="font-size:9.5px; color:var(--forest-700); font-family:'JetBrains Mono',monospace; font-weight:700;">${s.meta}</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-change-partner" style="font-size:10px; padding:2px 7px;">Change ▾</button>
+              </div>
+            `;
+          });
+        }
+
+        slidesHtml += `
+          <div class="partner-combo-slide" style="flex:0 0 100%; min-width:100%; scroll-snap-align:start; box-sizing:border-box;">
+            <div style="background:#FAFCFB; border:1.5px solid ${combo.isDefault ? '#0F2F58' : 'var(--line)'}; border-radius:12px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+              <!-- Top Header -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="font-size:13px;">${combo.icon || '📦'}</span>
+                  <span style="font-size:12px; font-weight:800; color:#0F2F58;">${combo.title}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button type="button" class="btn-default-badge ${combo.isDefault ? 'active' : ''}" onclick="toggleComboDefault(${cIdx})" style="font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:var(--radius-pill); cursor:pointer;">
+                    ${combo.isDefault ? '★ Default' : 'Make Default'}
+                  </button>
+                  <button type="button" class="btn-item-remove" onclick="removePartnerCombo(${cIdx})" aria-label="Remove option" style="font-size:15px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+                </div>
+              </div>
+
+              <!-- Compact DAG Canvas View -->
+              <div class="work-canvas-light-box" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:7px 10px; overflow-x:auto; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:6px; min-width:260px;">
+                  ${dagNodesHtml}
+                </div>
+              </div>
+
+              <!-- Slot Binding Selectors -->
+              <div style="display:flex; flex-direction:column; gap:5px;">
+                ${slotsHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      deck.innerHTML = slidesHtml;
+
+      // Update Dots & Counter
+      if (dotsTrack) {
+        let dotsHtml = '';
+        attachedCombos.forEach((_, dIdx) => {
+          dotsHtml += `<span onclick="goToComboSlide(${dIdx})" style="width:${dIdx === currentComboIdx ? '14px' : '5px'}; height:5px; border-radius:9999px; background:${dIdx === currentComboIdx ? '#0F2F58' : '#CBD5E1'}; cursor:pointer; transition:all 0.2s;"></span>`;
+        });
+        dotsTrack.innerHTML = dotsHtml;
+      }
+      if (counterText) {
+        counterText.innerText = `Option ${currentComboIdx + 1} of ${attachedCombos.length}`;
+      }
+      if (prevBtn) prevBtn.disabled = currentComboIdx === 0;
+      if (nextBtn) nextBtn.disabled = currentComboIdx === attachedCombos.length - 1;
+
+      // Scroll deck to current slide
+      const slideEls = deck.querySelectorAll('.partner-combo-slide');
+      if (slideEls[currentComboIdx]) {
+        slideEls[currentComboIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+      }
+    }
+
+    function navComboCarousel(dir) {
+      currentComboIdx = Math.max(0, Math.min(attachedCombos.length - 1, currentComboIdx + dir));
+      renderPartnerCombosDeck();
+    }
+
+    function goToComboSlide(idx) {
+      currentComboIdx = Math.max(0, Math.min(attachedCombos.length - 1, idx));
+      renderPartnerCombosDeck();
+    }
+
+    function toggleComboDefault(idx) {
+      attachedCombos.forEach((c, i) => {
+        c.isDefault = (i === idx);
+      });
+      renderPartnerCombosDeck();
+    }
+
+    function removePartnerCombo(idx) {
+      if (attachedCombos.length <= 1) {
+        if (!confirm('Remove this partnered option? This product will be counter-pickup only.')) return;
+      }
+      attachedCombos.splice(idx, 1);
+      if (currentComboIdx >= attachedCombos.length) {
+        currentComboIdx = Math.max(0, attachedCombos.length - 1);
+      }
+      renderPartnerCombosDeck();
+    }
 
     function applyChainRecipe(recipeKey) {
-      currentActiveRecipe = recipeKey;
-      const container = document.getElementById('extend-listing-content-container');
-      if (!container) return;
-      if (!defaultDeliveryInstallHTML && container) {
-        defaultDeliveryInstallHTML = container.innerHTML;
-      }
-
-      if (recipeKey === 'tool_rental') {
-        container.innerHTML = `
-          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Tool Rental Kit + Courier Delivery · +₱120.00</div>
-            <button type="button" class="btn-change-partner" onclick="applyChainRecipe('default_delivery_install')">Reset ↺</button>
-          </div>
-
-          <!-- Slot 1: Tool Rental Depot -->
-          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9; margin-bottom: 8px;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-pickup">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Tool Rental Depot</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open Slot</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('tools')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="tool-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="tool-partner-meta">₱85.00 rental fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-
-          <!-- Slot 2: Courier Transit Runner -->
-          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-transit">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Courier Transit Runner</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open Slot</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="delivery-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="delivery-partner-meta">₱35.00 route fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-        `;
+      if (recipeKey === 'default_delivery_install') {
+        attachedCombos.push({
+          id: `combo-${Date.now()}`,
+          title: 'Part & Installation Labor',
+          icon: '🔧',
+          isDefault: attachedCombos.length === 0,
+          nodes: [
+            { role: 'PRODUCT', title: '35uF Cap', sub: '₱180', type: 'product', bg: '#FEF3C7', color: '#B45309' },
+            { role: 'COURIER', title: 'Danny Exp', sub: '₱35', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
+            { role: 'INSTALL', title: 'Kuya Ben', sub: '₱250', type: 'installation', bg: '#ECFDF5', color: '#059669' }
+          ],
+          slots: [
+            { type: 'delivery', role: 'Doorstep Courier Runner', name: 'Danny Express Motorcycle Pool', meta: '₱35.00 route fee' },
+            { type: 'installation', role: 'Technician Labor Partner', name: 'Kuya Ben Aircon Services', meta: '₱250.00 labor' }
+          ]
+        });
+      } else if (recipeKey === 'tool_rental') {
+        attachedCombos.push({
+          id: `combo-${Date.now()}`,
+          title: 'Tool Rental Kit + Courier Delivery',
+          icon: '🧰',
+          isDefault: attachedCombos.length === 0,
+          nodes: [
+            { role: 'PRODUCT', title: '35uF Cap', sub: '₱180', type: 'product', bg: '#FEF3C7', color: '#B45309' },
+            { role: 'TOOL', title: 'Vacuum Kit', sub: '₱85', type: 'tools', bg: '#FEF3C7', color: '#B45309' },
+            { role: 'COURIER', title: 'Danny Exp', sub: '₱35', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' }
+          ],
+          slots: [
+            { type: 'tools', role: 'Tool Rental Depot', name: 'Tagudin Tool Depot', meta: '₱85.00 rental fee' },
+            { type: 'delivery', role: 'Courier Transit Runner', name: 'Danny Express Motorcycle Pool', meta: '₱35.00 route fee' }
+          ]
+        });
       } else if (recipeKey === 'hauling') {
-        container.innerHTML = `
-          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Old Unit Hauling &amp; Eco-Recycling · +₱80.00</div>
-            <button type="button" class="btn-change-partner" onclick="applyChainRecipe('default_delivery_install')">Reset ↺</button>
-          </div>
-
-          <!-- Slot 1: Doorstep Delivery Courier -->
-          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9; margin-bottom: 8px;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-transit">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Doorstep Delivery Courier</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open Slot</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="delivery-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="delivery-partner-meta">₱35.00 route fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-
-          <!-- Slot 2: Eco-Tricycle Hauling -->
-          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-pickup">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Eco-Tricycle Hauler</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open Slot</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('hauling')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="haul-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="haul-partner-meta">₱45.00 hauling fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-        `;
+        attachedCombos.push({
+          id: `combo-${Date.now()}`,
+          title: 'Old Unit Hauling & Eco-Recycling',
+          icon: '♻️',
+          isDefault: attachedCombos.length === 0,
+          nodes: [
+            { role: 'PRODUCT', title: 'New 35uF', sub: '₱180', type: 'product', bg: '#FEF3C7', color: '#B45309' },
+            { role: 'COURIER', title: 'Delivery', sub: '₱35', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
+            { role: 'RECYCLE', title: 'Old Scrap', sub: '₱45', type: 'hauling', bg: '#FEF3C7', color: '#B45309' }
+          ],
+          slots: [
+            { type: 'delivery', role: 'Doorstep Delivery Courier', name: 'Danny Express Motorcycle Pool', meta: '₱35.00 route fee' },
+            { type: 'hauling', role: 'Eco-Tricycle Hauler', name: 'Eco-Tricycle Runner', meta: '₱45.00 hauling fee' }
+          ]
+        });
       } else if (recipeKey === 'post_service_inspection') {
-        container.innerHTML = `
-          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Post-Service Electrical Inspection · +₱150.00</div>
-            <button type="button" class="btn-change-partner" onclick="applyChainRecipe('default_delivery_install')">Reset ↺</button>
-          </div>
-
-          <!-- Slot 1: Installation Labor -->
-          <div class="extension-partner-card active" style="border-color: #0F2F58; background: #F8FAFD; margin-bottom: 8px;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon icon-labor">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Installation Labor</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Attached</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('installation')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="install-partner-name">Kuya Ben Aircon Services</div>
-                <div class="partner-current-meta" id="install-partner-meta">₱350.00 labor</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-
-          <!-- Slot 2: Post-Service Safety Inspection -->
-          <div class="extension-partner-card active" style="border-color: #7C3AED; background: #F5F3FF;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon" style="background: #EDE9FE; color: #7C3AED;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Safety Inspection</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active" style="background: #7C3AED; color: #fff;">★ Audit Node</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('audit')">
-              <div class="partner-current-info">
-                <div class="partner-current-name" id="audit-partner-name">Open Slot</div>
-                <div class="partner-current-meta" id="audit-partner-meta">₱150.00 audit fee</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-        `;
-      } else if (recipeKey === 'custom_empty') {
-        container.innerHTML = `
-          <div style="background: #F8FAFD; border: 1.5px solid #0F2F58; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 12px; font-weight: 800; color: #0F2F58;">Custom Open Tender Slot</div>
-            <button type="button" class="btn-change-partner" onclick="applyChainRecipe('default_delivery_install')">Reset ↺</button>
-          </div>
-
-          <!-- Slot 1: Open Sourcing / Tender Slot -->
-          <div class="extension-partner-card active" style="border-color: #D97706; background: #FFFDF9;">
-            <div class="extension-card-top">
-              <div class="extension-title-badge-group">
-                <div class="extension-archetype-icon" style="background: #FEF3C7; color: #B45309;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                </div>
-                <div>
-                  <div class="extension-name-title">Open Tender Slot</div>
-                </div>
-              </div>
-              <span class="btn-default-badge active">★ Open</span>
-            </div>
-            <div class="partner-selector-box" onclick="openSlotListingPicker('delivery')">
-              <div class="partner-current-info">
-                <div class="partner-current-name">Open Slot</div>
-                <div class="partner-current-meta">Open bidding</div>
-              </div>
-              <button type="button" class="btn-change-partner">Change ▾</button>
-            </div>
-          </div>
-        `;
-      } else {
-        container.innerHTML = defaultDeliveryInstallHTML;
+        attachedCombos.push({
+          id: `combo-${Date.now()}`,
+          title: 'Post-Service Electrical Inspection',
+          icon: '🛡️',
+          isDefault: attachedCombos.length === 0,
+          nodes: [
+            { role: 'PRODUCT', title: '35uF Cap', sub: '₱180', type: 'product', bg: '#FEF3C7', color: '#B45309' },
+            { role: 'INSTALL', title: 'Kuya Ben', sub: '₱350', type: 'installation', bg: '#ECFDF5', color: '#059669' },
+            { role: 'AUDIT', title: 'Safety Check', sub: '₱150', type: 'audit', bg: '#F5F3FF', color: '#6D28D9' }
+          ],
+          slots: [
+            { type: 'installation', role: 'Installation Labor', name: 'Kuya Ben Aircon Services', meta: '₱350.00 labor' },
+            { type: 'audit', role: 'Safety Inspection', name: 'Safety Auditor Slot', meta: '₱150.00 audit fee' }
+          ]
+        });
       }
+      currentComboIdx = attachedCombos.length - 1;
+      renderPartnerCombosDeck();
       closeBundleCatalog();
     }
   </script>
