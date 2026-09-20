@@ -1234,6 +1234,33 @@
           <label class="field-label">Description</label>
           <textarea class="field-textarea" id="product-description" rows="3">OEM replacement 35uF ±5% 450VAC dual run capacitor for split & window inverter air conditioning units. Counter-verified and tested.</textarea>
         </div>
+        <div class="field-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="field-label" style="margin: 0;">Specifications &amp; Features</label>
+            <span style="font-size: 10px; color: var(--forest-700); font-weight: 700;">Guaranteed Specs</span>
+          </div>
+          <div class="inclusions-dynamic-list" id="specs-list" style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+              <input type="text" class="custom-item-input" value="35uF ±5% capacitance tolerance rating" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Specification...">
+              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+            </div>
+            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+              <input type="text" class="custom-item-input" value="450VAC 50/60Hz explosion-proof aluminum can" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Specification...">
+              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+            </div>
+            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+              <input type="text" class="custom-item-input" value="Standard 4-pin quick-connect terminals" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Specification...">
+              <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+            </div>
+          </div>
+          <button type="button" class="btn-add-item-dashed" onclick="addSpecItem()" style="width: 100%; height: 34px; font-size: 11px; font-weight: 700; margin-top: 6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add Specification</span>
+          </button>
+        </div>
 
         <div class="field-group">
           <label class="field-label">Product Category</label>
@@ -1244,20 +1271,6 @@
             <option value="tools">Hand &amp; Power Tools</option>
           </select>
         </div>
-
-        <div class="field-group">
-          <label class="field-label">Fulfillment Shape</label>
-          <div class="option-pills-row" id="product-shape-pills">
-            <button type="button" class="option-pill active" onclick="selectSinglePill(this, 'product-shape-pills')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>A4 Counter Handoff</span>
-            </button>
-            <button type="button" class="option-pill" onclick="selectSinglePill(this, 'product-shape-pills')">
-              <span>A9 Digital Deliverable</span>
-            </button>
-          </div>
-        </div>
-
         <div class="field-group">
           <label class="field-label">Product Photo</label>
           <div class="product-photo-row">
@@ -1319,54 +1332,75 @@
         <div class="field-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <label class="field-label" style="margin: 0;">Product Variations &amp; Primary Default</label>
-            <span style="font-size: 10px; color: var(--ink-muted);">Tap to set primary default</span>
+            <span style="font-size: 10px; color: var(--ink-muted);">Visibly editable specs &amp; pricing</span>
           </div>
-          <div class="inclusions-dynamic-list" id="product-variants-list">
-            <div class="variant-option-card active" onclick="setDefaultProductVariantCard(this)">
-              <div class="variant-card-header">
-                <div class="variant-radio-title">
-                  <span class="variant-radio-dot"></span>
-                  <input type="text" class="variant-name-input" value="35uF Standard Inverter" placeholder="Variation name...">
+          <div class="inclusions-dynamic-list" id="product-variants-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Variant 1 -->
+            <div class="variant-option-card active" style="background:#FFFFFF; border:1.5px solid #0F2F58; border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <input type="text" class="variant-name-input" value="35uF Standard Inverter" style="font-size:11.5px; font-weight:700; color:#0F2F58; border:1px solid #D1D5DB; background:#FAFCFB; border-radius:6px; padding:3px 8px; flex:1; height:26px; outline:none;" placeholder="Variation title...">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button type="button" class="btn-default-badge active" onclick="setVariantDefault(this)" style="font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:var(--radius-pill); cursor:pointer;">★ Default</button>
+                  <button type="button" class="btn-item-remove" onclick="removeVariantRow(this)" aria-label="Remove" style="font-size:15px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
                 </div>
-                <span class="btn-default-badge active">★ Primary Default</span>
               </div>
-              <div class="variant-card-footer">
-                <span class="variant-stock-tag">24 units counter stock</span>
-                <span class="variant-price-tag">₱180.00</span>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <div style="display:flex; align-items:center; gap:3px; background:#FAFCFB; border:1px solid #D1D5DB; border-radius:6px; padding:0 6px; height:26px;">
+                  <span style="font-size:10px; font-weight:800; color:var(--forest-700);">₱</span>
+                  <input type="text" class="variant-price-input" value="180.00" oninput="updateDockPrice()" style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); width:54px; border:none; background:transparent; outline:none; text-align:right;">
+                </div>
+                <div style="display:flex; align-items:center; gap:3px; background:#FAFCFB; border:1px solid #D1D5DB; border-radius:6px; padding:0 6px; height:26px;">
+                  <input type="number" min="0" max="9999" class="variant-stock-input" value="24" style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--ink); width:32px; border:none; background:transparent; outline:none; text-align:right;">
+                  <span style="font-size:9.5px; color:var(--ink-muted); font-weight:700;">units stock</span>
+                </div>
               </div>
             </div>
 
-            <div class="variant-option-card" onclick="setDefaultProductVariantCard(this)">
-              <div class="variant-card-header">
-                <div class="variant-radio-title">
-                  <span class="variant-radio-dot"></span>
-                  <input type="text" class="variant-name-input" value="45uF Heavy-Duty Dual" placeholder="Variation name...">
+            <!-- Variant 2 -->
+            <div class="variant-option-card" style="background:#FFFFFF; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <input type="text" class="variant-name-input" value="45uF Heavy-Duty Dual" style="font-size:11.5px; font-weight:700; color:#0F2F58; border:1px solid #D1D5DB; background:#FAFCFB; border-radius:6px; padding:3px 8px; flex:1; height:26px; outline:none;" placeholder="Variation title...">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button type="button" class="btn-default-badge" onclick="setVariantDefault(this)" style="font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:var(--radius-pill); cursor:pointer;">Make Default</button>
+                  <button type="button" class="btn-item-remove" onclick="removeVariantRow(this)" aria-label="Remove" style="font-size:15px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
                 </div>
-                <button type="button" class="btn-default-badge" onclick="event.stopPropagation(); setDefaultProductVariantCard(this.closest('.variant-option-card'))">Make Default</button>
               </div>
-              <div class="variant-card-footer">
-                <span class="variant-stock-tag">12 units counter stock</span>
-                <span class="variant-price-tag">₱220.00</span>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <div style="display:flex; align-items:center; gap:3px; background:#FAFCFB; border:1px solid #D1D5DB; border-radius:6px; padding:0 6px; height:26px;">
+                  <span style="font-size:10px; font-weight:800; color:var(--forest-700);">₱</span>
+                  <input type="text" class="variant-price-input" value="220.00" oninput="updateDockPrice()" style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); width:54px; border:none; background:transparent; outline:none; text-align:right;">
+                </div>
+                <div style="display:flex; align-items:center; gap:3px; background:#FAFCFB; border:1px solid #D1D5DB; border-radius:6px; padding:0 6px; height:26px;">
+                  <input type="number" min="0" max="9999" class="variant-stock-input" value="12" style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--ink); width:32px; border:none; background:transparent; outline:none; text-align:right;">
+                  <span style="font-size:9.5px; color:var(--ink-muted); font-weight:700;">units stock</span>
+                </div>
               </div>
             </div>
 
-            <div class="variant-option-card" onclick="setDefaultProductVariantCard(this)">
-              <div class="variant-card-header">
-                <div class="variant-radio-title">
-                  <span class="variant-radio-dot"></span>
-                  <input type="text" class="variant-name-input" value="50uF Commercial Floor Unit" placeholder="Variation name...">
+            <!-- Variant 3 -->
+            <div class="variant-option-card" style="background:#FFFFFF; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <input type="text" class="variant-name-input" value="50uF Commercial Floor Unit" style="font-size:11.5px; font-weight:700; color:#0F2F58; border:1px solid #D1D5DB; background:#FAFCFB; border-radius:6px; padding:3px 8px; flex:1; height:26px; outline:none;" placeholder="Variation title...">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button type="button" class="btn-default-badge" onclick="setVariantDefault(this)" style="font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:var(--radius-pill); cursor:pointer;">Make Default</button>
+                  <button type="button" class="btn-item-remove" onclick="removeVariantRow(this)" aria-label="Remove" style="font-size:15px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
                 </div>
-                <button type="button" class="btn-default-badge" onclick="event.stopPropagation(); setDefaultProductVariantCard(this.closest('.variant-option-card'))">Make Default</button>
               </div>
-              <div class="variant-card-footer">
-                <span class="variant-stock-tag">8 units counter stock</span>
-                <span class="variant-price-tag">₱260.00</span>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <div style="display:flex; align-items:center; gap:3px; background:#FAFCFB; border:1px solid #D1D5DB; border-radius:6px; padding:0 6px; height:26px;">
+                  <span style="font-size:10px; font-weight:800; color:var(--forest-700);">₱</span>
+                  <input type="text" class="variant-price-input" value="260.00" oninput="updateDockPrice()" style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); width:54px; border:none; background:transparent; outline:none; text-align:right;">
+                </div>
+                <div style="display:flex; align-items:center; gap:3px; background:#FAFCFB; border:1px solid #D1D5DB; border-radius:6px; padding:0 6px; height:26px;">
+                  <input type="number" min="0" max="9999" class="variant-stock-input" value="8" style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--ink); width:32px; border:none; background:transparent; outline:none; text-align:right;">
+                  <span style="font-size:9.5px; color:var(--ink-muted); font-weight:700;">units stock</span>
+                </div>
               </div>
             </div>
           </div>
-          <button type="button" class="btn-add-item-dashed" onclick="addProductVariantCard()">
+          <button type="button" class="btn-add-item-dashed" onclick="addProductVariantCard()" style="width: 100%; height: 36px; font-size: 11.5px; font-weight: 700; margin-top: 8px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add Variation (Rating / Size)</span>
+            <span>Add Product Variation</span>
           </button>
         </div>
 
@@ -2124,28 +2158,92 @@
       }
     }
 
+    function setVariantDefault(btn) {
+      const card = btn.closest('.variant-option-card');
+      const list = document.getElementById('product-variants-list');
+      if (!card || !list) return;
+
+      list.querySelectorAll('.variant-option-card').forEach(c => {
+        c.classList.remove('active');
+        c.style.borderColor = 'var(--line)';
+        const b = c.querySelector('.btn-default-badge');
+        if (b) {
+          b.classList.remove('active');
+          b.innerText = 'Make Default';
+        }
+      });
+
+      card.classList.add('active');
+      card.style.borderColor = '#0F2F58';
+      btn.classList.add('active');
+      btn.innerText = '★ Default';
+
+      const priceInput = card.querySelector('.variant-price-input');
+      if (priceInput) {
+        const pEl = document.getElementById('product-price');
+        if (pEl) pEl.value = priceInput.value;
+        updateDockPrice();
+      }
+    }
+
+    function removeVariantRow(btn) {
+      const card = btn.closest('.variant-option-card');
+      const list = document.getElementById('product-variants-list');
+      if (list && list.querySelectorAll('.variant-option-card').length <= 1) {
+        alert('Product must have at least 1 variation.');
+        return;
+      }
+      if (card) card.remove();
+      updateDockPrice();
+    }
+
     function addProductVariantCard() {
       const list = document.getElementById('product-variants-list');
       if (!list) return;
+      const count = list.querySelectorAll('.variant-option-card').length + 1;
       const div = document.createElement('div');
       div.className = 'variant-option-card';
-      div.onclick = function() { setDefaultProductVariantCard(this); };
+      div.style.cssText = 'background:#FFFFFF; border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.03);';
       div.innerHTML = `
-        <div class="variant-card-header">
-          <div class="variant-radio-title">
-            <span class="variant-radio-dot"></span>
-            <input type="text" class="variant-name-input" placeholder="New variation (e.g. 60uF Turbo)..." autofocus>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <input type="text" class="variant-name-input" value="${count * 15}uF Turbo Heavy-Duty" style="font-size:11.5px; font-weight:700; color:#0F2F58; border:1px solid #D1D5DB; background:#FAFCFB; border-radius:6px; padding:3px 8px; flex:1; height:26px; outline:none;" placeholder="Variation title...">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button type="button" class="btn-default-badge" onclick="setVariantDefault(this)" style="font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:var(--radius-pill); cursor:pointer;">Make Default</button>
+            <button type="button" class="btn-item-remove" onclick="removeVariantRow(this)" aria-label="Remove" style="font-size:15px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
           </div>
-          <button type="button" class="btn-default-badge" onclick="event.stopPropagation(); setDefaultProductVariantCard(this.closest('.variant-option-card'))">Make Default</button>
-          <button type="button" class="btn-item-remove" onclick="event.stopPropagation(); this.closest('.variant-option-card').remove()" aria-label="Remove">&times;</button>
         </div>
-        <div class="variant-card-footer">
-          <span class="variant-stock-tag">0 units in stock</span>
-          <input type="text" class="custom-item-input" style="width: 70px; height: 22px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; color: var(--forest-700); text-align: right;" value="₱ 0.00">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <div style="display:flex; align-items:center; gap:3px; background:#FAFCFB; border:1px solid #D1D5DB; border-radius:6px; padding:0 6px; height:26px;">
+            <span style="font-size:10px; font-weight:800; color:var(--forest-700);">₱</span>
+            <input type="text" class="variant-price-input" value="${180 + count * 40}.00" oninput="updateDockPrice()" style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--forest-700); width:54px; border:none; background:transparent; outline:none; text-align:right;">
+          </div>
+          <div style="display:flex; align-items:center; gap:3px; background:#FAFCFB; border:1px solid #D1D5DB; border-radius:6px; padding:0 6px; height:26px;">
+            <input type="number" min="0" max="9999" class="variant-stock-input" value="10" style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--ink); width:32px; border:none; background:transparent; outline:none; text-align:right;">
+            <span style="font-size:9.5px; color:var(--ink-muted); font-weight:700;">units stock</span>
+          </div>
         </div>
       `;
       list.appendChild(div);
+    }
+
+    function addSpecItem() {
+      const list = document.getElementById('specs-list');
+      if (!list) return;
+      const div = document.createElement('div');
+      div.className = 'custom-item-card';
+      div.style.cssText = 'background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;';
+      div.innerHTML = `
+        <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+        <input type="text" class="custom-item-input" value="" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Specification...">
+        <button type="button" class="btn-item-remove" onclick="removeDynamicItem(this)" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+      `;
+      list.appendChild(div);
       div.querySelector('input').focus();
+    }
+
+    function removeDynamicItem(btn) {
+      const row = btn.closest('.custom-item-card');
+      if (row) row.remove();
     }
 
     let currentDiscoveryTarget = 'delivery'; // 'delivery' | 'installation' | 'custom'
