@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -10,7 +10,6 @@ import {
     Minus,
     ShoppingBag,
     Truck,
-    Package,
     AlertCircle,
     ChevronDown,
     ChevronUp,
@@ -18,10 +17,17 @@ import {
     MessageSquare,
     ArrowRight,
     Check,
+    Search,
+    Wrench,
+    Store,
+    FileCheck,
+    Sparkles,
+    Zap,
 } from 'lucide-react';
 import type { HomeProps } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
 import { PicksDrawer } from '../components/marketplace/PicksDrawer';
+import GlovoWaveModal from '../components/mobile/GlovoWaveModal';
 import type { BasketItem } from '../marketplace/types';
 
 // Category Images
@@ -66,7 +72,7 @@ const CATEGORY_PACKAGES: Record<string, PackageTier[]> = {
             title: '2 Units Dual Split',
             price: 850,
             origPrice: 1100,
-            sub: 'Save ₱250 bundle',
+            sub: 'Save ₱50 bundle',
             inclusions: [
                 'Complete service on two indoor units',
                 'Outdoor condensing unit pressure flush & fin inspection',
@@ -79,7 +85,7 @@ const CATEGORY_PACKAGES: Record<string, PackageTier[]> = {
             title: '3 Units Full Home',
             price: 1200,
             origPrice: 1650,
-            sub: 'Save ₱450 package',
+            sub: 'Save ₱150 package',
             inclusions: [
                 'Complete service on three indoor units + outdoor units',
                 'Anti-bacterial ozone air duct sanitization',
@@ -192,31 +198,115 @@ const CATEGORY_PACKAGES: Record<string, PackageTier[]> = {
     ],
 };
 
-// Deal Chain Slots
-type DealChainSlot = {
+// Partner Candidate Definition for Substitution
+export type PartnerCandidate = {
     id: string;
-    title: string;
-    desc: string;
-    price: number;
-    icon: 'package' | 'truck';
+    role: 'courier' | 'technician' | 'store' | 'auditor';
+    name: string;
+    sub: string;
+    fee: number;
+    category: string;
+    icon: 'truck' | 'labor' | 'store' | 'audit';
 };
 
-const CATEGORY_SLOTS: Record<string, DealChainSlot[]> = {
-    repairs: [
-        { id: 'parts', title: 'Tagudin Hardware Parts', desc: 'Coil cleaning foam & replacement pipe seal', price: 180, icon: 'package' },
-        { id: 'courier', title: 'Danny Express Courier', desc: 'Parts pick-up & direct delivery to site', price: 80, icon: 'truck' },
+export const PARTNER_CATALOG: Record<'courier' | 'technician' | 'store' | 'auditor', PartnerCandidate[]> = {
+    courier: [
+        {
+            id: 'c-1',
+            role: 'courier',
+            name: 'Danny Express Motorcycle Pool',
+            sub: 'Fast 15–25m · Insulated box · Centro & all barangays',
+            fee: 35,
+            category: 'motorcycle',
+            icon: 'truck',
+        },
+        {
+            id: 'c-2',
+            role: 'courier',
+            name: 'Kuya Danny Tricycle Cargo',
+            sub: 'Heavy / Bulky cargo sidecar · All Tagudin',
+            fee: 60,
+            category: 'tricycle',
+            icon: 'truck',
+        },
+        {
+            id: 'c-3',
+            role: 'courier',
+            name: 'Barangay Centro Bicycle Runner',
+            sub: 'Local Poblacion Centro eco delivery',
+            fee: 25,
+            category: 'bicycle',
+            icon: 'truck',
+        },
     ],
-    'local-food': [
-        { id: 'courier', title: 'Danny Express Direct Delivery', desc: 'Warm delivery directly to your home in Tagudin', price: 80, icon: 'truck' },
-        { id: 'gift', title: 'Fiesta Gift Box & Ribbon', desc: 'Festive packaging for family occasions', price: 50, icon: 'package' },
+    technician: [
+        {
+            id: 't-1',
+            role: 'technician',
+            name: 'Kuya Ben Aircon Services',
+            sub: 'Certified AC & Refrigeration Technician',
+            fee: 250,
+            category: 'hvac',
+            icon: 'labor',
+        },
+        {
+            id: 't-2',
+            role: 'technician',
+            name: 'Mark Electrical & HVAC Services',
+            sub: 'Licensed Master Electrician · Power isolation',
+            fee: 280,
+            category: 'electrician',
+            icon: 'labor',
+        },
+        {
+            id: 't-3',
+            role: 'technician',
+            name: 'Tagudin Trade Repair Guild',
+            sub: 'Multi-trade contractor team',
+            fee: 220,
+            category: 'guild',
+            icon: 'labor',
+        },
     ],
-    'print-assist': [
-        { id: 'usb', title: 'USB Flash Drive Soft-Copy Backup', desc: 'Encrypted drive with soft copies included', price: 150, icon: 'package' },
-        { id: 'courier', title: 'Danny Express Courier', desc: 'Direct delivery of printed documents', price: 80, icon: 'truck' },
+    store: [
+        {
+            id: 's-1',
+            role: 'store',
+            name: 'Tagudin Hardware & Supply Depot',
+            sub: 'Direct counter lane · Genuine parts guarantee',
+            fee: 180,
+            category: 'depot',
+            icon: 'store',
+        },
+        {
+            id: 's-2',
+            role: 'store',
+            name: 'Centro Electrical & Aircon Depot',
+            sub: 'Original OEM capacitors and chemical foam',
+            fee: 195,
+            category: 'oem',
+            icon: 'store',
+        },
     ],
-    default: [
-        { id: 'parts', title: 'Procured Materials Budget', desc: 'Hardware supplies from local merchants', price: 180, icon: 'package' },
-        { id: 'courier', title: 'Danny Express Courier', desc: 'Direct runner support in Tagudin', price: 80, icon: 'truck' },
+    auditor: [
+        {
+            id: 'a-1',
+            role: 'auditor',
+            name: 'Safety Check (Master Electrician)',
+            sub: 'Safety certificate & thermal load inspection',
+            fee: 150,
+            category: 'electrician',
+            icon: 'audit',
+        },
+        {
+            id: 'a-2',
+            role: 'auditor',
+            name: 'Tagudin Safety & Electrical Audit Guild',
+            sub: 'Complete municipal electrical audit certificate',
+            fee: 160,
+            category: 'guild',
+            icon: 'audit',
+        },
     ],
 };
 
@@ -229,6 +319,7 @@ type ReviewItem = {
     stars: number;
     packageTag: string;
     quote: string;
+    hasPhoto?: boolean;
 };
 
 const SAMPLE_REVIEWS: ReviewItem[] = [
@@ -240,6 +331,7 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
         stars: 5,
         packageTag: '2 Units Dual Split',
         quote: 'Very thorough clean. Blower fan wheel was removed and washed with alkaline chemical foam. Malamig na ulit aircon namin!',
+        hasPhoto: true,
     },
     {
         id: 'rev-2',
@@ -249,6 +341,7 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
         stars: 5,
         packageTag: '1 Unit Standard',
         quote: 'Arrived right on time in Centro. Clean workmanship, walang kalat sa kwarto.',
+        hasPhoto: true,
     },
     {
         id: 'rev-3',
@@ -258,6 +351,7 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
         stars: 5,
         packageTag: '1 Unit Standard + Condenser',
         quote: 'Mabilis mag-troubleshoot si Kuya Ben. Pinalitan capacitor at nilinis coil.',
+        hasPhoto: false,
     },
     {
         id: 'rev-4',
@@ -267,6 +361,7 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
         stars: 4,
         packageTag: 'Express Service',
         quote: 'Maayos kausap at maaasahan sa mga biglaang takbo sa centro.',
+        hasPhoto: false,
     },
 ];
 
@@ -287,37 +382,60 @@ function getCategoryPackages(categoryCode?: string | null): PackageTier[] {
     return CATEGORY_PACKAGES[code] || CATEGORY_PACKAGES.default;
 }
 
-function getCategorySlots(categoryCode?: string | null): DealChainSlot[] {
-    const code = (categoryCode || 'default').toLowerCase();
-    return CATEGORY_SLOTS[code] || CATEGORY_SLOTS.default;
-}
-
 export default function ListingDetail(props: HomeProps) {
     const listing = props.activeListingDetail;
 
     // Available packages for this category
     const packages = getCategoryPackages(listing?.category_code || listing?.categoryCode);
-    const slots = getCategorySlots(listing?.category_code || listing?.categoryCode);
 
     // Selected package tier state
     const [selectedPackageIndex, setSelectedPackageIndex] = useState(0);
     const activePackage = packages[selectedPackageIndex] || packages[0];
 
+    // Deal Chain Fulfillment Scope Mode
+    const isService = (listing?.listing_type || listing?.listingType) !== 'product';
+    const [serviceScope, setServiceScope] = useState<'direct' | 'turnkey' | 'audit'>('direct');
+    const [productScope, setProductScope] = useState<'pickup' | 'delivery' | 'installation'>('pickup');
+
+    // Selected active partners in each slot
+    const [currentCourier, setCurrentCourier] = useState<PartnerCandidate>(PARTNER_CATALOG.courier[0]);
+    const [currentTech, setCurrentTech] = useState<PartnerCandidate>(PARTNER_CATALOG.technician[0]);
+    const [currentStore, setCurrentStore] = useState<PartnerCandidate>(PARTNER_CATALOG.store[0]);
+    const [currentAudit, setCurrentAudit] = useState<PartnerCandidate>(PARTNER_CATALOG.auditor[0]);
+
+    // Partner Substitution Modal State
+    const [subModalRole, setSubModalRole] = useState<'courier' | 'technician' | 'store' | 'auditor' | null>(null);
+    const [subSearch, setSubSearch] = useState('');
+    const [subCategory, setSubCategory] = useState('all');
+
+    // Collapsible Customizer Option Toggles (Fast Clean & Chemical Flush)
+    const [customizerOpen, setCustomizerOpen] = useState(false);
+    const [fastClean, setFastClean] = useState(false);
+    const [chemicalFlush, setChemicalFlush] = useState(false);
+
+    // Contextual Deal Chain Slot URL param (?chain_slot=)
+    const [chainSlotContext, setChainSlotContext] = useState<string | null>(null);
+
     // Picks / Basket state
     const [basket, setBasket] = useState<BasketItem[]>([]);
     const [picksOpen, setPicksOpen] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
-
-    // Purchase customization state
     const [quantity, setQuantity] = useState(1);
-    const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([]);
 
     // Reviews expansion & filter state
     const [reviewsExpanded, setReviewsExpanded] = useState(false);
     const [reviewFilter, setReviewFilter] = useState<'all' | '5' | '4' | 'photos'>('all');
+    const [reviewPage, setReviewPage] = useState(1);
 
-    // Synchronize pins & basket with localStorage
+    // Read query parameters and localStorage on mount
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const slot = params.get('chain_slot');
+            if (slot) {
+                setChainSlotContext(slot);
+            }
+        }
         try {
             const storedBasket = localStorage.getItem('serbizyu.picks');
             if (storedBasket) {
@@ -351,9 +469,7 @@ export default function ListingDetail(props: HomeProps) {
             try {
                 const storedPins = localStorage.getItem('serbizyu.browse.pins');
                 const pins: string[] = storedPins ? JSON.parse(storedPins) : [];
-                const updated = next
-                    ? [...pins, listing.id]
-                    : pins.filter((id) => id !== listing.id);
+                const updated = next ? [...pins, listing.id] : pins.filter((id) => id !== listing.id);
                 localStorage.setItem('serbizyu.browse.pins', JSON.stringify(updated));
             } catch {
                 // ignore
@@ -362,26 +478,40 @@ export default function ListingDetail(props: HomeProps) {
         });
     };
 
-    const toggleSlot = (slotId: string) => {
-        setSelectedSlotIds((prev) =>
-            prev.includes(slotId) ? prev.filter((id) => id !== slotId) : [...prev, slotId],
+    // Calculate Partner Scope Add-on Price
+    const scopeAddonFee = useMemo(() => {
+        if (isService) {
+            if (serviceScope === 'turnkey') return currentStore.fee + currentCourier.fee;
+            if (serviceScope === 'audit') return currentAudit.fee;
+            return 0;
+        } else {
+            if (productScope === 'delivery') return currentCourier.fee;
+            if (productScope === 'installation') return currentCourier.fee + currentTech.fee;
+            return 0;
+        }
+    }, [isService, serviceScope, productScope, currentStore.fee, currentCourier.fee, currentAudit.fee, currentTech.fee]);
+
+    // Customizer speed & enhancement fees
+    const customizerFee = (fastClean ? 100 : 0) + (chemicalFlush ? 150 : 0);
+
+    // Final Unit Price & Total Calculation
+    const unitPrice = (activePackage?.price || 450) + scopeAddonFee + customizerFee;
+    const calculatedTotal = unitPrice * quantity;
+
+    // Direct Booking action (Separate from Add to Picks!)
+    const handleDirectAction = () => {
+        if (chainSlotContext) {
+            alert(`Staged into Deal Chain Slot [${chainSlotContext}] for ₱${calculatedTotal.toFixed(2)}`);
+            return;
+        }
+        alert(
+            `Proceeding directly to Tiwala Escrow Booking for ${activePackage.title} (${quantity} unit) totaling ₱${calculatedTotal.toFixed(2)}`,
         );
     };
 
-    const isService = (listing?.listing_type || listing?.listingType) !== 'product';
-    const photoUrl = getCategoryPhoto(listing?.category_code || listing?.categoryCode);
-
-    // Dynamic price calculation based on selected package + add-ons
-    const basePrice = activePackage?.price || 450;
-    const slotsTotal = slots
-        .filter((slot) => selectedSlotIds.includes(slot.id))
-        .reduce((sum, slot) => sum + slot.price, 0);
-
-    const calculatedTotal = (basePrice + slotsTotal) * quantity;
-
+    // Secondary Add to Picks action (mutates local storage and opens drawer)
     const handleAddToPicks = () => {
         if (!listing) return;
-        const finalUnitPrice = basePrice + slotsTotal;
 
         const existing = basket.find((b) => b.id === listing.id);
         let updated: BasketItem[];
@@ -391,7 +521,7 @@ export default function ListingDetail(props: HomeProps) {
                     ? {
                           ...b,
                           quantity: b.quantity + quantity,
-                          price: finalUnitPrice,
+                          price: unitPrice,
                           title: `${listing.title} (${activePackage.title})`,
                       }
                     : b,
@@ -402,7 +532,7 @@ export default function ListingDetail(props: HomeProps) {
                 {
                     id: listing.id,
                     title: `${listing.title} (${activePackage.title})`,
-                    price: finalUnitPrice,
+                    price: unitPrice,
                     quantity,
                 },
             ];
@@ -412,17 +542,44 @@ export default function ListingDetail(props: HomeProps) {
         setPicksOpen(true);
     };
 
-    const handleDirectAction = () => {
-        handleAddToPicks();
-        alert(`Proceeding directly to Escrow Authorization for ${activePackage.title} totaling ₱${calculatedTotal.toFixed(2)}`);
+    // Candidate list for active substitution modal
+    const currentCandidates = useMemo(() => {
+        if (!subModalRole) return [];
+        return PARTNER_CATALOG[subModalRole].filter((cand) => {
+            if (subCategory !== 'all' && cand.category !== subCategory) return false;
+            if (subSearch.trim()) {
+                const q = subSearch.toLowerCase();
+                return cand.name.toLowerCase().includes(q) || cand.sub.toLowerCase().includes(q);
+            }
+            return true;
+        });
+    }, [subModalRole, subCategory, subSearch]);
+
+    const handleSelectCandidate = (candidate: PartnerCandidate) => {
+        if (candidate.role === 'courier') setCurrentCourier(candidate);
+        if (candidate.role === 'technician') setCurrentTech(candidate);
+        if (candidate.role === 'store') setCurrentStore(candidate);
+        if (candidate.role === 'auditor') setCurrentAudit(candidate);
+        setSubModalRole(null);
+        setSubSearch('');
+        setSubCategory('all');
     };
 
-    // Filter reviews
-    const filteredReviews = SAMPLE_REVIEWS.filter((rev) => {
-        if (reviewFilter === '5') return rev.stars === 5;
-        if (reviewFilter === '4') return rev.stars === 4;
-        return true;
-    });
+    // Reviews filtering: exclude featured review by ID (identity-based)
+    const nonFeaturedReviews = useMemo(() => {
+        return SAMPLE_REVIEWS.filter((r) => r.id !== 'rev-1');
+    }, []);
+
+    const filteredExtendedReviews = useMemo(() => {
+        return nonFeaturedReviews.filter((r) => {
+            if (reviewFilter === '5') return r.stars === 5;
+            if (reviewFilter === '4') return r.stars === 4;
+            if (reviewFilter === 'photos') return Boolean(r.hasPhoto);
+            return true;
+        });
+    }, [nonFeaturedReviews, reviewFilter]);
+
+    const photoUrl = getCategoryPhoto(listing?.category_code || listing?.categoryCode);
 
     if (!listing) {
         return (
@@ -503,6 +660,21 @@ export default function ListingDetail(props: HomeProps) {
 
             {/* Main Content Area */}
             <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
+                {/* Contextual Deal Chain Slot Indicator (When redirected via ?chain_slot=) */}
+                {chainSlotContext && (
+                    <div className="mb-4 flex items-center justify-between rounded-xl border border-amber-400 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-900 shadow-xs">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="size-4 text-amber-600" />
+                            <span>
+                                <strong>Filling Deal Chain Slot:</strong> {chainSlotContext.replace('_', ' ').toUpperCase()} Node
+                            </span>
+                        </div>
+                        <span className="rounded-full bg-amber-200 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800 uppercase">
+                            Chain Slot
+                        </span>
+                    </div>
+                )}
+
                 {/* Breadcrumbs (Desktop) */}
                 <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-500 mb-6">
                     <Link href="/browse" className="hover:text-[#0F2F58] flex items-center gap-1">
@@ -517,15 +689,11 @@ export default function ListingDetail(props: HomeProps) {
 
                 {/* 2-Column Product / Service Detail Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                    {/* LEFT COLUMN (58% on Desktop): Media, Hierarchy, Packages, Milestones & Reviews */}
+                    {/* LEFT COLUMN (58% on Desktop): Media, Hierarchy, Scope Presets, Live Pipeline, & Reviews */}
                     <div className="flex flex-col gap-5 lg:col-span-7">
                         {/* 1. Hero Image Container (Clean, without messy text overlays) */}
                         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xs">
-                            <img
-                                src={photoUrl}
-                                alt={listing.title}
-                                className="size-full object-cover"
-                            />
+                            <img src={photoUrl} alt={listing.title} className="size-full object-cover" />
                             <button
                                 type="button"
                                 onClick={togglePin}
@@ -558,7 +726,7 @@ export default function ListingDetail(props: HomeProps) {
                             {/* Price Line (Big Price + Strikethrough + Unit Label) */}
                             <div className="flex items-baseline gap-2.5 pt-0.5">
                                 <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#0F2F58]">
-                                    ₱{activePackage.price.toFixed(2)}
+                                    ₱{unitPrice.toFixed(2)}
                                 </span>
                                 {activePackage.origPrice && (
                                     <span className="font-mono text-sm text-slate-400 line-through">
@@ -616,7 +784,7 @@ export default function ListingDetail(props: HomeProps) {
                             </div>
                         </div>
 
-                        {/* 3. Package Presets Carousel (Choice of Package Tiers) */}
+                        {/* 3. Package Presets & Options Customizer */}
                         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                             <div className="flex items-baseline justify-between mb-3">
                                 <div>
@@ -625,9 +793,7 @@ export default function ListingDetail(props: HomeProps) {
                                     </h2>
                                     <p className="text-xs text-slate-500 mt-0.5">Select service scope or batch size</p>
                                 </div>
-                                <span className="text-[11px] font-bold text-[#0F2F58]">
-                                    {packages.length} Tiers Available
-                                </span>
+                                <span className="text-[11px] font-bold text-[#0F2F58]">{packages.length} Tiers Available</span>
                             </div>
 
                             {/* Horizontal Preset Cards Carousel */}
@@ -654,15 +820,13 @@ export default function ListingDetail(props: HomeProps) {
                                             <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
                                                 ₱{pkg.price.toFixed(2)}
                                             </div>
-                                            <div className="text-[10px] text-slate-500 mt-0.5">
-                                                {pkg.sub}
-                                            </div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">{pkg.sub}</div>
                                         </button>
                                     );
                                 })}
                             </div>
 
-                            {/* Active Inclusions Checklist for Selected Tier */}
+                            {/* Inclusions Checklist for Selected Tier */}
                             <div className="mt-4 border-t border-slate-100 pt-3">
                                 <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">
                                     Included in {activePackage.title}:
@@ -678,65 +842,385 @@ export default function ListingDetail(props: HomeProps) {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Collapsible Options Customizer Link */}
+                            <div className="mt-4 flex flex-col items-center border-t border-slate-100 pt-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setCustomizerOpen((prev) => !prev)}
+                                    className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-bold text-[#0F2F58] hover:underline"
+                                >
+                                    <span>Customize service speed &amp; add-ons</span>
+                                    {customizerOpen ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                                </button>
+                            </div>
+
+                            {/* Collapsible Options Panel (Fast Clean & Chemical Flush) */}
+                            {customizerOpen && (
+                                <div className="mt-3 flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                                    <label
+                                        className={`flex cursor-pointer items-center justify-between rounded-lg border p-2.5 transition-colors ${
+                                            fastClean ? 'border-[#0F2F58] bg-[#EBF2FA]' : 'border-slate-200 bg-white'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            <input
+                                                type="checkbox"
+                                                checked={fastClean}
+                                                onChange={(e) => setFastClean(e.target.checked)}
+                                                className="size-4 rounded accent-[#0F2F58]"
+                                            />
+                                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                                                <Zap className="size-3.5 text-amber-500" />
+                                                <span>Fast Clean (Same-Day / Rush Priority)</span>
+                                            </div>
+                                        </div>
+                                        <span className="font-mono text-xs font-extrabold text-[#0F2F58]">+₱100.00</span>
+                                    </label>
+
+                                    <label
+                                        className={`flex cursor-pointer items-center justify-between rounded-lg border p-2.5 transition-colors ${
+                                            chemicalFlush ? 'border-[#0F2F58] bg-[#EBF2FA]' : 'border-slate-200 bg-white'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            <input
+                                                type="checkbox"
+                                                checked={chemicalFlush}
+                                                onChange={(e) => setChemicalFlush(e.target.checked)}
+                                                className="size-4 rounded accent-[#0F2F58]"
+                                            />
+                                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                                                <Sparkles className="size-3.5 text-emerald-600" />
+                                                <span>Anti-Bacterial Chemical Flush (Deep Ozone Clean)</span>
+                                            </div>
+                                        </div>
+                                        <span className="font-mono text-xs font-extrabold text-[#0F2F58]">+₱150.00</span>
+                                    </label>
+                                </div>
+                            )}
                         </div>
 
-                        {/* 4. Partner Deal Chain Extensions */}
-                        {slots.length > 0 && (
-                            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                    <div>
-                                        <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#0F2F58]">
-                                            Partner Deal Chain Extensions
-                                        </h2>
-                                        <p className="text-xs text-slate-500 mt-0.5">
-                                            Attach multi-party logistics and hardware suppliers
-                                        </p>
-                                    </div>
-                                    <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200">
-                                        Multi-Slot
-                                    </span>
+                        {/* 4. Deal Chain Fulfillment Scope Presets & Custom Partner Substitution */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                            <div className="flex items-baseline justify-between mb-3">
+                                <div>
+                                    <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                        Select Fulfillment Scope
+                                    </h2>
+                                    <p className="text-xs text-slate-500 mt-0.5">Partner other verified Tagudin listings</p>
                                 </div>
+                                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200">
+                                    Deal Chain
+                                </span>
+                            </div>
 
-                                <div className="mt-4 flex flex-col gap-2.5">
-                                    {slots.map((slot) => {
-                                        const isSelected = selectedSlotIds.includes(slot.id);
-                                        return (
-                                            <label
-                                                key={slot.id}
-                                                className={`flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all ${
-                                                    isSelected
-                                                        ? 'border-[#0F2F58] bg-[#EBF2FA]'
-                                                        : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
-                                                }`}
-                                            >
+                            {/* Scope Presets Carousel */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {isService ? (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => setServiceScope('direct')}
+                                            className={`flex flex-col text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
+                                                serviceScope === 'direct'
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
+                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="text-xs font-extrabold text-[#0F2F58]">Labor Only</span>
+                                                {serviceScope === 'direct' && <Check className="size-3.5 text-[#0F2F58]" />}
+                                            </div>
+                                            <div className="mt-1 font-mono text-sm font-extrabold text-emerald-700">Included</div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">Direct provider service</div>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setServiceScope('turnkey')}
+                                            className={`flex flex-col text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
+                                                serviceScope === 'turnkey'
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
+                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="text-xs font-extrabold text-[#0F2F58]">Turnkey Parts</span>
+                                                {serviceScope === 'turnkey' && <Check className="size-3.5 text-[#0F2F58]" />}
+                                            </div>
+                                            <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
+                                                +₱{(currentStore.fee + currentCourier.fee).toFixed(2)}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">Store + Courier delivery</div>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setServiceScope('audit')}
+                                            className={`flex flex-col text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
+                                                serviceScope === 'audit'
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
+                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="text-xs font-extrabold text-[#0F2F58]">Safety Audit</span>
+                                                {serviceScope === 'audit' && <Check className="size-3.5 text-[#0F2F58]" />}
+                                            </div>
+                                            <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
+                                                +₱{currentAudit.fee.toFixed(2)}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">Municipal safety certificate</div>
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductScope('pickup')}
+                                            className={`flex flex-col text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
+                                                productScope === 'pickup'
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
+                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="text-xs font-extrabold text-[#0F2F58]">In-Store Pickup</span>
+                                                {productScope === 'pickup' && <Check className="size-3.5 text-[#0F2F58]" />}
+                                            </div>
+                                            <div className="mt-1 font-mono text-sm font-extrabold text-emerald-700">Free</div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">Ready at stall counter</div>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductScope('delivery')}
+                                            className={`flex flex-col text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
+                                                productScope === 'delivery'
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
+                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="text-xs font-extrabold text-[#0F2F58]">Doorstep Delivery</span>
+                                                {productScope === 'delivery' && <Check className="size-3.5 text-[#0F2F58]" />}
+                                            </div>
+                                            <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
+                                                +₱{currentCourier.fee.toFixed(2)}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">{currentCourier.name.split(' ')[0]}</div>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductScope('installation')}
+                                            className={`flex flex-col text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
+                                                productScope === 'installation'
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
+                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="text-xs font-extrabold text-[#0F2F58]">Installation Labor</span>
+                                                {productScope === 'installation' && <Check className="size-3.5 text-[#0F2F58]" />}
+                                            </div>
+                                            <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
+                                                +₱{(currentCourier.fee + currentTech.fee).toFixed(2)}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">Rider + Certified Tech</div>
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Connected Deal Chain Flow & Live Pipeline Diagram (Visible when chain active) */}
+                            {((isService && serviceScope !== 'direct') || (!isService && productScope !== 'pickup')) && (
+                                <div className="mt-4 border-t border-slate-100 pt-4">
+                                    <div className="flex items-center justify-between mb-2.5">
+                                        <span className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                            Connected Deal Chain Flow
+                                        </span>
+                                        <span className="text-[11px] font-bold text-emerald-700">Multi-Party Pipeline</span>
+                                    </div>
+
+                                    {/* Horizontal Animated Deal Chain Pipeline */}
+                                    <div className="flex items-center gap-1.5 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-3 [scrollbar-width:none]">
+                                        {/* Node 1 */}
+                                        <div className="flex min-w-[85px] flex-col rounded-lg border border-slate-200 bg-white p-2 text-center shadow-xs">
+                                            <span className="rounded bg-amber-100 px-1 py-0.2 text-[8px] font-extrabold text-amber-800 uppercase">
+                                                {isService ? 'Part Store' : 'Stall'}
+                                            </span>
+                                            <div className="mt-1 text-[10px] font-bold text-slate-800 truncate">
+                                                {isService ? currentStore.name.split(' ')[0] : 'Tagudin Stall'}
+                                            </div>
+                                            <div className="text-[8.5px] text-slate-500">
+                                                {isService ? `₱${currentStore.fee.toFixed(0)}` : 'Ready'}
+                                            </div>
+                                        </div>
+
+                                        {/* Wire 1 */}
+                                        <div className="flex flex-col items-center justify-center px-1">
+                                            <svg className="w-6 h-3 text-[#0F2F58]" viewBox="0 0 28 12">
+                                                <line
+                                                    x1="0"
+                                                    y1="6"
+                                                    x2="28"
+                                                    y2="6"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeDasharray="4 4"
+                                                />
+                                            </svg>
+                                            <span className="text-[8px] font-bold text-emerald-700 uppercase">Transit</span>
+                                        </div>
+
+                                        {/* Node 2 */}
+                                        <div className="flex min-w-[85px] flex-col rounded-lg border border-slate-200 bg-white p-2 text-center shadow-xs">
+                                            <span className="rounded bg-sky-100 px-1 py-0.2 text-[8px] font-extrabold text-sky-800 uppercase">
+                                                Courier
+                                            </span>
+                                            <div className="mt-1 text-[10px] font-bold text-slate-800 truncate">
+                                                {currentCourier.name.split(' ')[0]}
+                                            </div>
+                                            <div className="text-[8.5px] text-slate-500">₱{currentCourier.fee.toFixed(0)}</div>
+                                        </div>
+
+                                        {/* Wire 2 */}
+                                        <div className="flex flex-col items-center justify-center px-1">
+                                            <svg className="w-6 h-3 text-[#0F2F58]" viewBox="0 0 28 12">
+                                                <line
+                                                    x1="0"
+                                                    y1="6"
+                                                    x2="28"
+                                                    y2="6"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeDasharray="4 4"
+                                                />
+                                            </svg>
+                                            <span className="text-[8px] font-bold text-emerald-700 uppercase">On-Site</span>
+                                        </div>
+
+                                        {/* Node 3 */}
+                                        <div className="flex min-w-[85px] flex-col rounded-lg border border-slate-200 bg-white p-2 text-center shadow-xs">
+                                            <span className="rounded bg-emerald-100 px-1 py-0.2 text-[8px] font-extrabold text-emerald-800 uppercase">
+                                                {isService ? 'Labor' : productScope === 'installation' ? 'Installer' : 'Customer'}
+                                            </span>
+                                            <div className="mt-1 text-[10px] font-bold text-slate-800 truncate">
+                                                {isService
+                                                    ? 'Kuya Ben'
+                                                    : productScope === 'installation'
+                                                    ? currentTech.name.split(' ')[0]
+                                                    : 'You'}
+                                            </div>
+                                            <div className="text-[8.5px] text-slate-500">
+                                                {isService ? `₱${activePackage.price.toFixed(0)}` : 'Delivered'}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Partner Custom Slot Banners with [Change ▾] buttons */}
+                                    <div className="mt-3 flex flex-col gap-2">
+                                        {/* Store Slot Banner (Turnkey mode) */}
+                                        {isService && serviceScope === 'turnkey' && (
+                                            <div className="flex items-center justify-between rounded-xl border border-[#0F2F58] bg-[#F8FAFD] p-3 shadow-xs">
                                                 <div className="flex items-center gap-2.5">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isSelected}
-                                                        onChange={() => toggleSlot(slot.id)}
-                                                        className="size-4 accent-[#0F2F58] rounded"
-                                                    />
+                                                    <div className="flex size-7 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
+                                                        <Store className="size-4" />
+                                                    </div>
                                                     <div>
-                                                        <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                                                            {slot.icon === 'truck' ? (
-                                                                <Truck className="size-3.5 text-blue-700" />
-                                                            ) : (
-                                                                <Package className="size-3.5 text-amber-700" />
-                                                            )}
-                                                            <span>{slot.title}</span>
+                                                        <div className="text-xs font-extrabold text-slate-900">
+                                                            {currentStore.name}
                                                         </div>
-                                                        <div className="text-[10px] text-slate-500">{slot.desc}</div>
+                                                        <div className="text-[10px] text-slate-500">{currentStore.sub}</div>
                                                     </div>
                                                 </div>
-                                                <span className="font-mono text-xs font-extrabold text-slate-900">
-                                                    +₱{slot.price.toFixed(2)}
-                                                </span>
-                                            </label>
-                                        );
-                                    })}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSubModalRole('store')}
+                                                    className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[10.5px] font-bold text-[#0F2F58] shadow-xs hover:bg-[#EBF2FA] cursor-pointer"
+                                                >
+                                                    Change Store ▾
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Courier Slot Banner */}
+                                        {((isService && serviceScope === 'turnkey') || (!isService && productScope !== 'pickup')) && (
+                                            <div className="flex items-center justify-between rounded-xl border border-[#0F2F58] bg-[#F8FAFD] p-3 shadow-xs">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="flex size-7 items-center justify-center rounded-lg bg-sky-100 text-sky-800">
+                                                        <Truck className="size-4" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-xs font-extrabold text-slate-900">
+                                                            {currentCourier.name}
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-500">{currentCourier.sub}</div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSubModalRole('courier')}
+                                                    className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[10.5px] font-bold text-[#0F2F58] shadow-xs hover:bg-[#EBF2FA] cursor-pointer"
+                                                >
+                                                    Change Courier ▾
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Technician Slot Banner (Product installation mode) */}
+                                        {!isService && productScope === 'installation' && (
+                                            <div className="flex items-center justify-between rounded-xl border border-[#0F2F58] bg-[#F8FAFD] p-3 shadow-xs">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+                                                        <Wrench className="size-4" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-xs font-extrabold text-slate-900">
+                                                            {currentTech.name}
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-500">{currentTech.sub}</div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSubModalRole('technician')}
+                                                    className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[10.5px] font-bold text-[#0F2F58] shadow-xs hover:bg-[#EBF2FA] cursor-pointer"
+                                                >
+                                                    Change Technician ▾
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Safety Auditor Slot Banner (Service audit mode) */}
+                                        {isService && serviceScope === 'audit' && (
+                                            <div className="flex items-center justify-between rounded-xl border border-[#0F2F58] bg-[#F8FAFD] p-3 shadow-xs">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="flex size-7 items-center justify-center rounded-lg bg-purple-100 text-purple-800">
+                                                        <FileCheck className="size-4" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-xs font-extrabold text-slate-900">
+                                                            {currentAudit.name}
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-500">{currentAudit.sub}</div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSubModalRole('auditor')}
+                                                    className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[10.5px] font-bold text-[#0F2F58] shadow-xs hover:bg-[#EBF2FA] cursor-pointer"
+                                                >
+                                                    Change Auditor ▾
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
 
                         {/* 5. Verified Customer Reviews Section (Matching Design Kit Screen 07) */}
                         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col gap-4">
@@ -810,7 +1294,7 @@ export default function ListingDetail(props: HomeProps) {
                                     onClick={() => setReviewsExpanded((prev) => !prev)}
                                     className="inline-flex cursor-pointer items-center gap-1 text-xs font-bold text-[#0F2F58] hover:underline"
                                 >
-                                    <span>{reviewsExpanded ? 'Hide reviews' : `+ View more reviews (${SAMPLE_REVIEWS.length - 1} more)`}</span>
+                                    <span>{reviewsExpanded ? 'Hide reviews' : '+ View more reviews (127 more)'}</span>
                                     {reviewsExpanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
                                 </button>
                             </div>
@@ -821,9 +1305,10 @@ export default function ListingDetail(props: HomeProps) {
                                     {/* Rating Filter Chips */}
                                     <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
                                         {[
-                                            { id: 'all', label: `All (${SAMPLE_REVIEWS.length})` },
-                                            { id: '5', label: '★ 5 Stars' },
-                                            { id: '4', label: '★ 4 Stars' },
+                                            { id: 'all', label: 'All (128)' },
+                                            { id: '5', label: '★ 5 Stars (120)' },
+                                            { id: '4', label: '★ 4 Stars (6)' },
+                                            { id: 'photos', label: 'With Photos (18)' },
                                         ].map((rf) => (
                                             <button
                                                 key={rf.id}
@@ -840,9 +1325,9 @@ export default function ListingDetail(props: HomeProps) {
                                         ))}
                                     </div>
 
-                                    {/* Filtered Review List */}
+                                    {/* Filtered Review List (Excludes featured review by identity) */}
                                     <div className="flex flex-col gap-2.5">
-                                        {filteredReviews.slice(1).map((rev) => (
+                                        {filteredExtendedReviews.map((rev) => (
                                             <div
                                                 key={rev.id}
                                                 className="rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs"
@@ -869,6 +1354,28 @@ export default function ListingDetail(props: HomeProps) {
                                             </div>
                                         ))}
                                     </div>
+
+                                    {/* Reviews Pagination Bar */}
+                                    <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+                                        <span>Page {reviewPage} of 6</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                disabled={reviewPage <= 1}
+                                                onClick={() => setReviewPage((p) => Math.max(1, p - 1))}
+                                                className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 disabled:opacity-40"
+                                            >
+                                                ‹ Prev
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setReviewPage((p) => p + 1)}
+                                                className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                            >
+                                                Next ›
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </section>
@@ -884,7 +1391,7 @@ export default function ListingDetail(props: HomeProps) {
                                         Selected: {activePackage.title}
                                     </div>
                                     <div className="mt-1 font-mono text-2xl font-extrabold text-[#0F2F58]">
-                                        ₱{activePackage.price.toFixed(2)}
+                                        ₱{unitPrice.toFixed(2)}
                                     </div>
                                 </div>
                                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-extrabold text-emerald-800 border border-emerald-200">
@@ -927,12 +1434,24 @@ export default function ListingDetail(props: HomeProps) {
                             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-2 text-xs">
                                 <div className="flex justify-between text-slate-600">
                                     <span>Base Package ({activePackage.title}):</span>
-                                    <span className="font-mono font-bold text-slate-800">₱{(basePrice * quantity).toFixed(2)}</span>
+                                    <span className="font-mono font-bold text-slate-800">
+                                        ₱{(activePackage.price * quantity).toFixed(2)}
+                                    </span>
                                 </div>
-                                {slotsTotal > 0 && (
+                                {scopeAddonFee > 0 && (
                                     <div className="flex justify-between text-slate-600">
-                                        <span>Deal Chain Extensions:</span>
-                                        <span className="font-mono font-bold text-slate-800">+₱{(slotsTotal * quantity).toFixed(2)}</span>
+                                        <span>Deal Chain Partner Extension:</span>
+                                        <span className="font-mono font-bold text-slate-800">
+                                            +₱{(scopeAddonFee * quantity).toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+                                {customizerFee > 0 && (
+                                    <div className="flex justify-between text-slate-600">
+                                        <span>Customizer Enhancements:</span>
+                                        <span className="font-mono font-bold text-slate-800">
+                                            +₱{(customizerFee * quantity).toFixed(2)}
+                                        </span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-slate-600">
@@ -945,7 +1464,7 @@ export default function ListingDetail(props: HomeProps) {
                                 </div>
                             </div>
 
-                            {/* DUAL CTAs: Direct Action + Add to Picks */}
+                            {/* DUAL CTAs: Direct Booking vs Add to Picks */}
                             <div className="flex flex-col gap-2.5 pt-1">
                                 {/* 1. Primary Direct Action CTA */}
                                 <button
@@ -953,7 +1472,11 @@ export default function ListingDetail(props: HomeProps) {
                                     onClick={handleDirectAction}
                                     className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold tracking-wide text-white shadow-md transition-all hover:bg-[#153e74] active:scale-98"
                                 >
-                                    <span>{isService ? 'Book Service Now' : 'Buy Product Now'} · ₱{calculatedTotal.toFixed(2)}</span>
+                                    <span>
+                                        {chainSlotContext
+                                            ? `Add to Chain Slot · ₱${calculatedTotal.toFixed(2)}`
+                                            : `${isService ? 'Book Service Now' : 'Buy Product Now'} · ₱${calculatedTotal.toFixed(2)}`}
+                                    </span>
                                     <ArrowRight className="size-4" />
                                 </button>
 
@@ -989,7 +1512,11 @@ export default function ListingDetail(props: HomeProps) {
                         onClick={handleDirectAction}
                         className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold text-white shadow-md active:bg-[#0a2240]"
                     >
-                        <span>{isService ? 'Book Service' : 'Buy Now'} · ₱{calculatedTotal.toFixed(2)}</span>
+                        <span>
+                            {chainSlotContext
+                                ? `Add to Slot · ₱${calculatedTotal.toFixed(2)}`
+                                : `${isService ? 'Book Service' : 'Buy Now'} · ₱${calculatedTotal.toFixed(2)}`}
+                        </span>
                         <ArrowRight className="size-4" />
                     </button>
 
@@ -1006,6 +1533,147 @@ export default function ListingDetail(props: HomeProps) {
                     </button>
                 </div>
             </div>
+
+            {/* Partner Substitution Organic Wave Modal */}
+            <GlovoWaveModal
+                open={Boolean(subModalRole)}
+                onClose={() => setSubModalRole(null)}
+                title={`Substitute ${
+                    subModalRole === 'courier'
+                        ? 'Courier Delivery'
+                        : subModalRole === 'technician'
+                        ? 'Technician Labor'
+                        : subModalRole === 'store'
+                        ? 'Hardware Store'
+                        : 'Safety Auditor'
+                }`}
+                subtitle="Choose an alternative verified Tagudin partner for this slot"
+                headerSlot={
+                    <div className="mt-2 flex flex-col gap-2">
+                        {/* Search Box */}
+                        <div className="relative">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                value={subSearch}
+                                onChange={(e) => setSubSearch(e.target.value)}
+                                placeholder="Search partner name or specialty..."
+                                className="h-9 w-full rounded-full border border-slate-200 bg-slate-50 pr-4 pl-8.5 text-xs text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
+                            />
+                        </div>
+
+                        {/* Filter Chips */}
+                        <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
+                            {subModalRole === 'courier' && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSubCategory('all')}
+                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                            subCategory === 'all'
+                                                ? 'bg-[#0F2F58] text-white'
+                                                : 'border border-slate-200 bg-white text-slate-600'
+                                        }`}
+                                    >
+                                        ⭐ All Couriers
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSubCategory('motorcycle')}
+                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                            subCategory === 'motorcycle'
+                                                ? 'bg-[#0F2F58] text-white'
+                                                : 'border border-slate-200 bg-white text-slate-600'
+                                        }`}
+                                    >
+                                        Motorcycle
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSubCategory('tricycle')}
+                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                            subCategory === 'tricycle'
+                                                ? 'bg-[#0F2F58] text-white'
+                                                : 'border border-slate-200 bg-white text-slate-600'
+                                        }`}
+                                    >
+                                        Tricycle Cargo
+                                    </button>
+                                </>
+                            )}
+                            {subModalRole === 'technician' && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSubCategory('all')}
+                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                            subCategory === 'all'
+                                                ? 'bg-[#0F2F58] text-white'
+                                                : 'border border-slate-200 bg-white text-slate-600'
+                                        }`}
+                                    >
+                                        ⭐ All Technicians
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSubCategory('hvac')}
+                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                            subCategory === 'hvac'
+                                                ? 'bg-[#0F2F58] text-white'
+                                                : 'border border-slate-200 bg-white text-slate-600'
+                                        }`}
+                                    >
+                                        AC &amp; HVAC
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSubCategory('electrician')}
+                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                            subCategory === 'electrician'
+                                                ? 'bg-[#0F2F58] text-white'
+                                                : 'border border-slate-200 bg-white text-slate-600'
+                                        }`}
+                                    >
+                                        Master Electrician
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                }
+            >
+                {/* Candidate Options List */}
+                <div className="flex flex-col gap-2.5 py-2">
+                    {currentCandidates.map((cand) => (
+                        <div
+                            key={cand.id}
+                            onClick={() => handleSelectCandidate(cand)}
+                            className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-3 transition-colors hover:border-[#0F2F58] hover:bg-white"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <div className="flex size-8 items-center justify-center rounded-lg bg-white border border-slate-200 text-[#0F2F58] font-bold">
+                                    {cand.icon === 'truck' ? (
+                                        <Truck className="size-4" />
+                                    ) : cand.icon === 'labor' ? (
+                                        <Wrench className="size-4" />
+                                    ) : cand.icon === 'store' ? (
+                                        <Store className="size-4" />
+                                    ) : (
+                                        <FileCheck className="size-4" />
+                                    )}
+                                </div>
+                                <div>
+                                    <div className="text-xs font-extrabold text-slate-900">{cand.name}</div>
+                                    <div className="text-[10px] text-slate-500">{cand.sub}</div>
+                                </div>
+                            </div>
+                            <span className="font-mono text-xs font-extrabold text-[#0F2F58]">
+                                +₱{cand.fee.toFixed(2)}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </GlovoWaveModal>
 
             {/* Citizen Picks Drawer */}
             <PicksDrawer

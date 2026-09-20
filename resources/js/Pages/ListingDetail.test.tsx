@@ -48,32 +48,71 @@ describe('ListingDetail Page', () => {
         return (el || container) as HTMLElement;
     }
 
-    it('renders listing details, work execution gates, and starting rate', () => {
+    it('renders listing details, package tier options, and starting rate', () => {
         const { container } = render(<ListingDetail {...baseProps} />);
         const desktop = getDesktop(container as HTMLElement);
 
         expect(within(desktop).getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText('₱450.00').length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText('Kuya Ben AC').length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Kuya Ben AC/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/Choose Package Tier/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/1 Unit Standard/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/Tiwala Escrow Protection/i).length).toBeGreaterThan(0);
     });
 
-    it('updates total escrow amount when deal chain add-on is selected', () => {
+    it('updates total escrow amount and renders live pipeline when turnkey deal chain preset is selected', () => {
         const { container } = render(<ListingDetail {...baseProps} />);
         const desktop = getDesktop(container as HTMLElement);
 
-        // Initially ₱450.00
-        expect(within(desktop).getAllByText('Total Escrow Amount:').length).toBeGreaterThan(0);
+        // Initially Labor Only (₱450.00)
         expect(within(desktop).getAllByText('₱450.00').length).toBeGreaterThan(0);
 
-        // Check "Tagudin Hardware Parts" (+₱180.00)
-        const partsCheckbox = within(desktop).getAllByRole('checkbox')[0];
-        fireEvent.click(partsCheckbox);
+        // Click "Turnkey Parts"
+        const turnkeyBtn = within(desktop).getByRole('button', { name: /Turnkey Parts/i });
+        fireEvent.click(turnkeyBtn);
 
-        // 450 + 180 = ₱630.00
-        expect(within(desktop).getAllByText('₱630.00').length).toBeGreaterThan(0);
+        // Renders Connected Deal Chain Flow & Partner Banners
+        expect(within(desktop).getAllByText(/Connected Deal Chain Flow/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Change Courier ▾/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Change Store ▾/i).length).toBeGreaterThan(0);
+    });
+
+    it('opens partner substitution modal and substitutes selected partner', () => {
+        const { container } = render(<ListingDetail {...baseProps} />);
+        const desktop = getDesktop(container as HTMLElement);
+
+        // Switch to Turnkey Parts to show courier banner
+        fireEvent.click(within(desktop).getByRole('button', { name: /Turnkey Parts/i }));
+
+        // Click "Change Courier ▾"
+        const changeCourierBtn = within(desktop).getByRole('button', { name: /Change Courier ▾/i });
+        fireEvent.click(changeCourierBtn);
+
+        // Substitution Modal opens
+        expect(screen.getByText('Substitute Courier Delivery')).toBeTruthy();
+        expect(screen.getByText(/Kuya Danny Tricycle Cargo/i)).toBeTruthy();
+
+        // Select Kuya Danny Tricycle Cargo
+        fireEvent.click(screen.getByText(/Kuya Danny Tricycle Cargo/i));
+
+        // Slot banner reflects substituted partner
+        expect(within(desktop).getAllByText(/Kuya Danny Tricycle Cargo/i).length).toBeGreaterThan(0);
+    });
+
+    it('toggles package customizer and adds rush priority enhancements', () => {
+        const { container } = render(<ListingDetail {...baseProps} />);
+        const desktop = getDesktop(container as HTMLElement);
+
+        // Click customize service options toggle
+        const customizerToggle = within(desktop).getByRole('button', { name: /Customize service speed/i });
+        fireEvent.click(customizerToggle);
+
+        // Check Fast Clean (+₱100)
+        const fastCleanCheckbox = within(desktop).getAllByRole('checkbox')[0];
+        fireEvent.click(fastCleanCheckbox);
+
+        // 450 + 100 = ₱550.00
+        expect(within(desktop).getAllByText('₱550.00').length).toBeGreaterThan(0);
     });
 
     it('updates quantity and multiplies total escrow calculation', () => {
@@ -94,11 +133,11 @@ describe('ListingDetail Page', () => {
         // Click Add to Citizen Picks button
         const addBtn = within(desktop).getAllByRole('button', { name: /Add to Citizen Picks/i })[0];
         fireEvent.click(addBtn);
+
         // Picks drawer opens with item
         expect(screen.getByText('Citizen Picks')).toBeTruthy();
         expect(screen.getByText('1 item ready for escrow')).toBeTruthy();
-        expect(screen.getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThan(0);
-        expect(screen.getByText('Proceed to Escrow Booking')).toBeTruthy();
+        expect(screen.getAllByText(/Inverter Split AC Deep Clean/).length).toBeGreaterThan(0);
     });
 
     it('renders unavailable notice when listing is missing', () => {
@@ -126,10 +165,11 @@ describe('ListingDetail Page', () => {
         const toggleBtn = within(desktop).getByRole('button', { name: /\+ View more reviews/i });
         fireEvent.click(toggleBtn);
 
-        // Extended reviews visible
-        expect(within(desktop).getByText('★ 5 Stars')).toBeTruthy();
+        // Extended reviews with mock counts and pagination visible
+        expect(within(desktop).getByText('★ 5 Stars (120)')).toBeTruthy();
+        expect(within(desktop).getByText('With Photos (18)')).toBeTruthy();
         expect(within(desktop).getByText('Ramil D. · Barangay Bio')).toBeTruthy();
-        expect(within(desktop).getByText(/Arrived right on time in Centro/i)).toBeTruthy();
+        expect(within(desktop).getByText('Page 1 of 6')).toBeTruthy();
     });
 
     it('adapts headers and specifications dynamically for product listings', () => {
@@ -154,6 +194,7 @@ describe('ListingDetail Page', () => {
         expect(within(desktop).getAllByText('Weekend bibingka tray').length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/Verified Local Product/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/Solo Snack Box/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Fresh morning batch steaming/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/In-Store Pickup/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Doorstep Delivery/i).length).toBeGreaterThan(0);
     });
 });
