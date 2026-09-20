@@ -70,11 +70,17 @@ final readonly class ListingProjection
                 ? (string) $attributes['currency']
                 : null;
         }
-
         if (array_key_exists('capacity_summary', $attributes) && $attributes['capacity_summary'] !== null) {
             $projection['capacity_summary'] = (string) $attributes['capacity_summary'];
         }
 
+        if (array_key_exists('package_tiers', $attributes) && is_array($attributes['package_tiers'])) {
+            $projection['package_tiers'] = $attributes['package_tiers'];
+        }
+
+        if (array_key_exists('milestone_stages', $attributes) && is_array($attributes['milestone_stages'])) {
+            $projection['milestone_stages'] = $attributes['milestone_stages'];
+        }
         if ($public) {
             $projection['owner_name'] = (string) $attributes['owner_name'];
             $projection['owner'] = [

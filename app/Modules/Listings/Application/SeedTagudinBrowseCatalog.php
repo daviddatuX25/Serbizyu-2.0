@@ -90,6 +90,8 @@ final class SeedTagudinBrowseCatalog
                     'scope' => $row['scope'],
                     'fixture_key' => $row['fixture_key'],
                     'evidence_class' => 'CAPSTONE',
+                    'package_tiers' => $row['package_tiers'] ?? [],
+                    'milestone_stages' => $row['milestone_stages'] ?? [],
                 ], JSON_THROW_ON_ERROR),
                 'price_amount_minor' => $row['price_amount_minor'],
                 'currency' => $row['currency'],

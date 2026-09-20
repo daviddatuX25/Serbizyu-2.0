@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\IdentityAccess\Application\DemoFixtures;
 use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
+use App\Modules\Listings\Application\PublicListingDetailQuery;
 use App\Modules\Listings\Application\PublicListingsQuery;
 use App\Modules\Listings\Application\SeedTagudinBrowseCatalog;
 use App\Modules\Listings\Infrastructure\Demo\TagudinBrowseCatalog;
@@ -48,6 +49,18 @@ it('seeds a scalable Tagudin browse catalog without losing the contract fixture'
         ->and($priced['price_amount_minor'])->toBe(8000)
         ->and($priced['currency'])->toBe('PHP')
         ->and($priced['area'])->toBe('Tagudin');
+
+    $acDetail = app(PublicListingDetailQuery::class)->handle(
+        '0198a3b1-7c40-7abc-8def-5234567890b8',
+        (string) Str::uuid7()
+    );
+
+    expect($acDetail)->not->toBeNull()
+        ->and($acDetail['package_tiers'])->toBeArray()
+        ->and(count($acDetail['package_tiers']))->toBe(3)
+        ->and($acDetail['package_tiers'][0]['title'])->toBe('1 Unit Standard')
+        ->and($acDetail['milestone_stages'])->toBeArray()
+        ->and(count($acDetail['milestone_stages']))->toBe(4);
 });
 
 it('keeps contract-only supply when the browse catalog is not seeded', function (): void {

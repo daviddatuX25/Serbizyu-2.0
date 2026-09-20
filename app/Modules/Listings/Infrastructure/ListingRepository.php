@@ -647,11 +647,17 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             $projection['price_amount_minor'] = (int) $row->price_amount_minor;
             $projection['currency'] = isset($row->currency) && is_string($row->currency) ? $row->currency : null;
         }
-
         if (isset($capacity['summary']) && is_string($capacity['summary']) && $capacity['summary'] !== '') {
             $projection['capacity_summary'] = $capacity['summary'];
         }
 
+        if (isset($terms['package_tiers']) && is_array($terms['package_tiers'])) {
+            $projection['package_tiers'] = $terms['package_tiers'];
+        }
+
+        if (isset($terms['milestone_stages']) && is_array($terms['milestone_stages'])) {
+            $projection['milestone_stages'] = $terms['milestone_stages'];
+        }
         if ($public) {
             $projection['owner_name'] = (string) $row->owner_name;
             $projection['owner'] = ['display_name' => (string) $row->owner_name];

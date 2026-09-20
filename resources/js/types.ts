@@ -85,6 +85,25 @@ export type ListingRecord = {
     price_amount_minor?: number | null;
     currency?: string | null;
     capacity_summary?: string | null;
+    package_tiers?: PackageTierRecord[];
+    packageTiers?: PackageTierRecord[];
+    milestone_stages?: MilestoneStageRecord[];
+    milestoneStages?: MilestoneStageRecord[];
+};
+
+export type PackageTierRecord = {
+    id: string;
+    title: string;
+    price: number;
+    orig_price?: number;
+    origPrice?: number;
+    sub: string;
+    inclusions: string[];
+};
+
+export type MilestoneStageRecord = {
+    title: string;
+    description: string;
 };
 
 export type ListingDraft = ListingRecord & {

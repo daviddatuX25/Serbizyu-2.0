@@ -25,7 +25,9 @@ use App\Shared\Contracts\FixtureConstants;
  *     scope: string,
  *     price_amount_minor: int|null,
  *     currency: string|null,
- *     capacity_summary: string
+ *     capacity_summary: string,
+ *     package_tiers?: list<array{id: string, title: string, price: int, orig_price?: int, sub: string, inclusions: list<string>}>,
+ *     milestone_stages?: list<array{title: string, description: string}>
  * }
  */
 final class TagudinBrowseCatalog
@@ -107,6 +109,16 @@ final class TagudinBrowseCatalog
                 'price_amount_minor' => 18000,
                 'currency' => 'PHP',
                 'capacity_summary' => 'Ready Saturday morning · pickup only',
+                'package_tiers' => [
+                    ['id' => 'pkg-food-1', 'title' => 'Solo Snack Box', 'price' => 80, 'orig_price' => 95, 'sub' => '2 pcs warm bibingka', 'inclusions' => ['Fresh morning batch steaming in clay oven', 'Wrapped in organic wilted banana leaves', 'Includes signature coconut latik dip cup']],
+                    ['id' => 'pkg-food-2', 'title' => 'Family Fiesta Tray', 'price' => 180, 'orig_price' => 220, 'sub' => '6 pcs sharing tray', 'inclusions' => ['Six freshly baked banana-leaf bibingka cakes', 'Generous toasted coconut shreds & salted egg toppings', 'Insulated thermal box keeping warm for 2 hours']],
+                    ['id' => 'pkg-food-3', 'title' => 'Party Jumbo Crate', 'price' => 350, 'orig_price' => 420, 'sub' => '12 pcs party set', 'inclusions' => ['Twelve specialty bibingka cakes', 'Custom greeting ribbon & festive tag', 'Bulk condiment jars & biodegradable serving ware']],
+                ],
+                'milestone_stages' => [
+                    ['title' => 'Morning batch baking & clay oven steaming', 'description' => 'Stage 1 · Kitchen batch preparation gate'],
+                    ['title' => 'Fresh packaging in wilted banana leaves', 'description' => 'Stage 2 · Fresh seal packaging gate'],
+                    ['title' => 'Warm insulated tray handoff at Tagudin Market', 'description' => 'Stage 3 · Stall pickup or courier dispatch'],
+                ],
             ],
             [
                 'fixture_key' => 'active-tagudin-document-scan-01',
@@ -149,6 +161,17 @@ final class TagudinBrowseCatalog
                 'price_amount_minor' => 45000,
                 'currency' => 'PHP',
                 'capacity_summary' => 'Fixed rate SLA · Appointment',
+                'package_tiers' => [
+                    ['id' => 'pkg-1', 'title' => '1 Unit Standard', 'price' => 450, 'orig_price' => 550, 'sub' => 'Deep coil & drain clean', 'inclusions' => ['On-site breaker isolation & diagnostic status check', 'Evaporator coil alkaline chemical foam disinfection', 'Blower fan wheel disassembly and grease flush', 'Dual-probe delta temperature test (ΔT ≥ 12°C)']],
+                    ['id' => 'pkg-2', 'title' => '2 Units Dual Split', 'price' => 850, 'orig_price' => 1100, 'sub' => 'Save ₱50 bundle', 'inclusions' => ['Complete service on two indoor units', 'Outdoor condensing unit pressure flush & fin inspection', 'Freon operating pressure calibration test', 'Full photographic milestone sign-off']],
+                    ['id' => 'pkg-3', 'title' => '3 Units Full Home', 'price' => 1200, 'orig_price' => 1650, 'sub' => 'Save ₱150 package', 'inclusions' => ['Complete service on three indoor units + outdoor units', 'Anti-bacterial ozone air duct sanitization', 'Priority same-day completion guarantee', 'Customer OTP handover & digital service warranty']],
+                ],
+                'milestone_stages' => [
+                    ['title' => 'Breaker isolation & coil status triage', 'description' => 'Stage 1 · Breaker lockout photo gate'],
+                    ['title' => 'Chemical foam wash & pressure rinse', 'description' => 'Stage 2 · Foam coverage photo gate'],
+                    ['title' => 'Cold compressor run & amp verification', 'description' => 'Stage 3 · Amperage reading photo gate'],
+                    ['title' => 'Delta temperature drop test (ΔT ≥ 12°C)', 'description' => 'Stage 4 · Probe delta photo + Citizen OTP sign-off'],
+                ],
             ],
             [
                 'fixture_key' => 'active-tagudin-courier-01',

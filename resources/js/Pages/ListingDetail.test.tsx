@@ -197,4 +197,52 @@ describe('ListingDetail Page', () => {
         expect(within(desktop).getAllByText(/In-Store Pickup/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/Doorstep Delivery/i).length).toBeGreaterThan(0);
     });
+    it('renders server-projected package tiers and milestone stages from database terms', () => {
+        const customListing: ListingRecord = {
+            id: 'custom-listing-1',
+            title: 'Custom Metal Fabrication Service',
+            description: 'Custom welding and stainless gate fabrication.',
+            category_code: 'repairs',
+            listing_type: 'service',
+            status: 'active',
+            area: 'Tagudin Centro',
+            owner_name: 'Mang Lando Steel',
+            public: true,
+            price_amount_minor: 150000,
+            currency: 'PHP',
+            package_tiers: [
+                {
+                    id: 'custom-pkg-1',
+                    title: 'Light Gate Repair',
+                    price: 1500,
+                    sub: 'Hinge welding & alignment',
+                    inclusions: ['On-site metal inspection', 'Spot welding and grind', 'Anti-rust primer coat'],
+                },
+                {
+                    id: 'custom-pkg-2',
+                    title: 'Full Stainless Fabrication',
+                    price: 4500,
+                    sub: 'Custom security grille',
+                    inclusions: ['Measurement & material cut', 'TIG welding assembly', 'Mirror polish finish'],
+                },
+            ],
+            milestone_stages: [
+                { title: 'Material measurement & cutting', description: 'Stage 1 · Cut specifications gate' },
+                { title: 'TIG welding and structural test', description: 'Stage 2 · Weld bead penetration test' },
+            ],
+        };
+
+        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={customListing} />);
+        const desktop = getDesktop(container as HTMLElement);
+
+        // Server-projected package tiers are rendered!
+        expect(within(desktop).getByText('Light Gate Repair')).toBeTruthy();
+        expect(within(desktop).getByText('Full Stainless Fabrication')).toBeTruthy();
+        expect(within(desktop).getByText('Hinge welding & alignment')).toBeTruthy();
+        expect(within(desktop).getByText('Anti-rust primer coat')).toBeTruthy();
+
+        // Server-projected milestone stages are rendered!
+        expect(within(desktop).getByText('Material measurement & cutting')).toBeTruthy();
+        expect(within(desktop).getByText('Stage 1 · Cut specifications gate')).toBeTruthy();
+    });
 });

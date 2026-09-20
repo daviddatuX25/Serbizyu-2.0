@@ -385,12 +385,38 @@ function getCategoryPackages(categoryCode?: string | null): PackageTier[] {
 export default function ListingDetail(props: HomeProps) {
     const listing = props.activeListingDetail;
 
-    // Available packages for this category
-    const packages = getCategoryPackages(listing?.category_code || listing?.categoryCode);
+    // Available packages for this listing (prioritizing server-projected listing.package_tiers)
+    const packages = useMemo<PackageTier[]>(() => {
+        if (listing?.package_tiers && listing.package_tiers.length > 0) {
+            return listing.package_tiers.map((t) => ({
+                id: t.id,
+                title: t.title,
+                price: t.price,
+                origPrice: t.orig_price ?? t.origPrice,
+                sub: t.sub,
+                inclusions: t.inclusions,
+            }));
+        }
+        return getCategoryPackages(listing?.category_code || listing?.categoryCode);
+    }, [listing?.package_tiers, listing?.category_code, listing?.categoryCode]);
 
     // Selected package tier state
     const [selectedPackageIndex, setSelectedPackageIndex] = useState(0);
-    const activePackage = packages[selectedPackageIndex] || packages[0];
+    const activePackage = packages[selectedPackageIndex] || packages[0] || {
+        id: 'pkg-default',
+        title: 'Standard Package',
+        price: 450,
+        sub: 'Base scope',
+        inclusions: ['Standard verified task execution'],
+    };
+
+    // Server-projected milestone stages (or empty if not defined)
+    const milestoneStages = useMemo(() => {
+        if (listing?.milestone_stages && listing.milestone_stages.length > 0) {
+            return listing.milestone_stages;
+        }
+        return [];
+    }, [listing?.milestone_stages]);
 
     // Deal Chain Fulfillment Scope Mode
     const isService = (listing?.listing_type || listing?.listingType) !== 'product';
@@ -899,6 +925,41 @@ export default function ListingDetail(props: HomeProps) {
                                 </div>
                             )}
                         </div>
+
+                        {/* 3b. Work Execution Milestones (Rendered when server projects milestone_stages) */}
+                        {milestoneStages.length > 0 && (
+                            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+                                    <div>
+                                        <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                            Work Execution Milestones
+                                        </h2>
+                                        <p className="text-xs text-slate-500 mt-0.5">
+                                            Guaranteed proof gates tracked by T4 Work engine
+                                        </p>
+                                    </div>
+                                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800 border border-emerald-200">
+                                        Verified Gates
+                                    </span>
+                                </div>
+                                <div className="flex flex-col gap-2.5">
+                                    {milestoneStages.map((stage, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="flex items-start gap-3 rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs"
+                                        >
+                                            <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px]">
+                                                {idx + 1}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-slate-800">{stage.title}</div>
+                                                <div className="text-[11px] text-slate-500 mt-0.5">{stage.description}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* 4. Deal Chain Fulfillment Scope Presets & Custom Partner Substitution */}
                         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
