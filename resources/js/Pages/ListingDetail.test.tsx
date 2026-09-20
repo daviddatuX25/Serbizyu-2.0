@@ -108,4 +108,53 @@ describe('ListingDetail Page', () => {
         expect(screen.getByText(/not currently available for public viewing/i)).toBeTruthy();
         expect(screen.getByRole('link', { name: /Back to Marketplace/i })).toBeTruthy();
     });
+
+    it('renders verified customer reviews suite and expands more reviews on demand', () => {
+        const { container } = render(<ListingDetail {...baseProps} />);
+        const desktop = getDesktop(container as HTMLElement);
+
+        // Header and satisfaction rating
+        expect(within(desktop).getAllByText(/Customer Reviews/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/98% Satisfaction/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Job photos from Tagudin homes/i).length).toBeGreaterThan(0);
+
+        // Featured review visible
+        expect(within(desktop).getAllByText(/Maria S\./i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Very thorough clean/i).length).toBeGreaterThan(0);
+
+        // Click "+ View more reviews"
+        const toggleBtn = within(desktop).getByRole('button', { name: /\+ View more reviews/i });
+        fireEvent.click(toggleBtn);
+
+        // Extended reviews visible
+        expect(within(desktop).getByText('★ 5 Stars')).toBeTruthy();
+        expect(within(desktop).getByText('Ramil D. · Barangay Bio')).toBeTruthy();
+        expect(within(desktop).getByText(/Arrived right on time in Centro/i)).toBeTruthy();
+    });
+
+    it('adapts headers and specifications dynamically for product listings', () => {
+        const productListing: ListingRecord = {
+            id: 'product-1',
+            title: 'Weekend bibingka tray',
+            description: 'Fresh warm bibingka cakes in banana leaf wrapping.',
+            category_code: 'local-food',
+            listing_type: 'product',
+            status: 'active',
+            area: 'Tagudin Market',
+            owner_name: 'Auntie Tess',
+            public: true,
+            price_amount_minor: 18000,
+            currency: 'PHP',
+        };
+
+        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={productListing} />);
+        const desktop = getDesktop(container as HTMLElement);
+
+        // Check product adaptations
+        expect(within(desktop).getAllByText('Weekend bibingka tray').length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText('Product Unit Price').length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Product Specifications & Prep/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText('Fresh Daily Supply').length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Morning batch baking/i).length).toBeGreaterThan(0);
+    });
 });
