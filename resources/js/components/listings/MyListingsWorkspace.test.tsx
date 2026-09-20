@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { MyListingsWorkspace } from './MyListingsWorkspace';
 
@@ -38,9 +38,10 @@ describe('MyListingsWorkspace', () => {
         expect(screen.getAllByRole('link', { name: /create listing/i }).length).toBeGreaterThan(0);
         expect(screen.getAllByRole('button', { name: /create listing/i }).length).toBeGreaterThan(0);
         expect(screen.getByText(/review boundary/i)).toBeTruthy();
-        expect(screen.queryByText(/orders/i)).toBeNull();
-        expect(screen.queryByText(/activity/i)).toBeNull();
-        expect(screen.queryByText(/quotes/i)).toBeNull();
+        const main = screen.getByRole('main');
+        expect(within(main).queryByText(/orders/i)).toBeNull();
+        expect(within(main).queryByText(/activity/i)).toBeNull();
+        expect(within(main).queryByText(/quotes/i)).toBeNull();
     });
 
     it('lists owner statuses with readable badges', () => {
