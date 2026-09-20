@@ -3,7 +3,6 @@ import { Link, router } from '@inertiajs/react';
 import {
     ShoppingBag,
     ArrowLeft,
-    X,
     Plus,
     Minus,
     Trash2,
@@ -13,17 +12,21 @@ import {
     Truck,
     Wrench,
     Link as LinkIcon,
+    ChevronDown,
+    ChevronUp,
 } from 'lucide-react';
 import type { HomeProps } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
 import { DealChainCheckoutModal } from '../components/marketplace/DealChainCheckoutModal';
+import { BundleChainModal } from '../components/marketplace/BundleChainModal';
 import { DEAL_CHAIN_RECIPES } from '../marketplace/dealChainRecipes';
 import type { BasketItem } from '../marketplace/types';
 
 export default function Picks(props: HomeProps) {
     const [basket, setBasket] = useState<BasketItem[]>([]);
     const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
-    const [activeRecipePickerId, setActiveRecipePickerId] = useState<string | null>(null);
+    const [chainModalItem, setChainModalItem] = useState<BasketItem | null>(null);
+    const [expandedSlotItemIds, setExpandedSlotItemIds] = useState<string[]>([]);
     useEffect(() => {
         try {
             const stored = localStorage.getItem('serbizyu.picks');
@@ -237,129 +240,96 @@ export default function Picks(props: HomeProps) {
 
                                             {/* Deal Chain Button & Visual Pipeline */}
                                             {item.dealChain ? (
-                                                <div className="mt-1 flex flex-col gap-1.5 rounded-lg border border-[#0F2F58]/20 bg-[#F0F4F8] p-2.5">
+                                                <div className="mt-1 flex flex-col gap-2 rounded-xl border border-[#0F2F58]/20 bg-[#F0F4F8] p-3">
                                                     <div className="flex items-center justify-between text-xs">
-                                                        <span className="font-extrabold text-[#0F2F58] flex items-center gap-1.5">
+                                                        <div className="flex items-center gap-1.5 font-extrabold text-[#0F2F58]">
                                                             <LinkIcon className="size-3.5" />
-                                                            <span>
-                                                                {item.dealChain.title} (+₱{item.dealChain.extraFee.toFixed(2)})
+                                                            <span>{item.dealChain.title}</span>
+                                                            <span className="rounded-full bg-[#EBF2FA] px-2 py-0.5 text-[10px] font-extrabold text-[#0F2F58]">
+                                                                {item.dealChain.nodes.length} Bound
                                                             </span>
-                                                        </span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleAttachDealChain(item.id, null)}
-                                                            className="text-slate-400 hover:text-red-600 font-bold cursor-pointer text-xs"
-                                                        >
-                                                            Detach
-                                                        </button>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setExpandedSlotItemIds((prev) =>
+                                                                        prev.includes(item.id)
+                                                                            ? prev.filter((id) => id !== item.id)
+                                                                            : [...prev, item.id],
+                                                                    );
+                                                                }}
+                                                                className="flex items-center gap-1 text-xs font-extrabold text-[#0F2F58] hover:underline cursor-pointer"
+                                                            >
+                                                                <span>{expandedSlotItemIds.includes(item.id) ? 'Hide Slots' : 'Slots'}</span>
+                                                                {expandedSlotItemIds.includes(item.id) ? (
+                                                                    <ChevronUp className="size-3.5" />
+                                                                ) : (
+                                                                    <ChevronDown className="size-3.5" />
+                                                                )}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleAttachDealChain(item.id, null)}
+                                                                className="text-slate-400 hover:text-red-600 font-bold cursor-pointer text-xs"
+                                                            >
+                                                                Unlink
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    {/* Connected Nodes */}
-                                                    <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+
+                                                    {/* Compact Node-Wire Pipeline */}
+                                                    <div className="flex items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none]">
                                                         {item.dealChain.nodes.map((node, nIdx) => (
                                                             <div key={nIdx} className="flex items-center gap-1.5 shrink-0">
-                                                                <span className="rounded-md bg-white px-2 py-0.5 text-[10px] font-extrabold text-slate-800 border border-slate-200 shadow-xs">
-                                                                    {node.role}: {node.title}
-                                                                </span>
+                                                                <div className="flex items-center gap-1.5 rounded-md bg-white px-2 py-1 text-[10px] font-extrabold text-slate-800 border border-slate-200 shadow-xs">
+                                                                    <span className="text-[8px] uppercase font-bold text-amber-800 bg-amber-100 px-1 py-0.2 rounded-xs">
+                                                                        {node.role}
+                                                                    </span>
+                                                                    <span>{node.title}</span>
+                                                                </div>
                                                                 {nIdx < item.dealChain!.nodes.length - 1 && (
-                                                                    <span className="text-slate-400 text-xs">→</span>
+                                                                    <div className="flex items-center text-slate-400 text-xs px-0.5 font-bold">
+                                                                        <span>→</span>
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         ))}
                                                     </div>
-                                                </div>
-                                            ) : (
-                                                <div className="mt-1 flex flex-col gap-1.5">
-                                                    {activeRecipePickerId === item.id ? (
-                                                        <div className="flex flex-col gap-2 rounded-xl border border-[#0F2F58]/30 bg-[#F8FAFD] p-3.5 shadow-xs">
-                                                            <div className="flex items-center justify-between text-xs font-extrabold text-[#0F2F58]">
-                                                                <span>Select Deal Chain Partner</span>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setActiveRecipePickerId(null)}
-                                                                    className="text-slate-400 hover:text-slate-700 cursor-pointer"
-                                                                    aria-label="Cancel"
-                                                                >
-                                                                    <X className="size-4" />
-                                                                </button>
-                                                            </div>
 
-                                                            <div className="flex flex-col gap-2">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        handleAttachDealChain(item.id, 'turnkey_parts');
-                                                                        setActiveRecipePickerId(null);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:border-[#0F2F58] hover:bg-[#EBF2FA]"
+                                                    {/* Detailed Slots Breakdown (Toggleable) */}
+                                                    {expandedSlotItemIds.includes(item.id) && (
+                                                        <div className="mt-1 flex flex-col gap-1.5 border-t border-slate-200 pt-2.5">
+                                                            {item.dealChain.nodes.map((node, nIdx) => (
+                                                                <div
+                                                                    key={nIdx}
+                                                                    className="flex items-center justify-between rounded-lg bg-white p-2.5 border border-slate-200 text-xs"
                                                                 >
-                                                                    <div>
-                                                                        <div className="text-xs font-extrabold text-slate-900">
-                                                                            🔗 Turnkey Sourced Parts
-                                                                        </div>
-                                                                        <div className="text-[11px] text-slate-500">
-                                                                            Hardware Depot + Courier + Labor
-                                                                        </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[9.5px] font-bold text-slate-400 uppercase">
+                                                                            Slot #{nIdx + 1}
+                                                                        </span>
+                                                                        <span className="font-extrabold text-slate-900">{node.title}</span>
+                                                                        <span className="text-[10.5px] text-slate-500">({node.sub})</span>
                                                                     </div>
                                                                     <span className="font-mono text-xs font-bold text-[#0F2F58]">
-                                                                        +₱215.00
+                                                                        Bound
                                                                     </span>
-                                                                </button>
-
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        handleAttachDealChain(item.id, 'courier_delivery');
-                                                                        setActiveRecipePickerId(null);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:border-[#0F2F58] hover:bg-[#EBF2FA]"
-                                                                >
-                                                                    <div>
-                                                                        <div className="text-xs font-extrabold text-slate-900">
-                                                                            🚚 Doorstep Courier Transit
-                                                                        </div>
-                                                                        <div className="text-[11px] text-slate-500">
-                                                                            Danny Express Motorcycle Pool
-                                                                        </div>
-                                                                    </div>
-                                                                    <span className="font-mono text-xs font-bold text-[#0F2F58]">
-                                                                        +₱35.00
-                                                                    </span>
-                                                                </button>
-
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        handleAttachDealChain(item.id, 'safety_audit');
-                                                                        setActiveRecipePickerId(null);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:border-[#0F2F58] hover:bg-[#EBF2FA]"
-                                                                >
-                                                                    <div>
-                                                                        <div className="text-xs font-extrabold text-slate-900">
-                                                                            🛡️ Quality & Safety Inspection
-                                                                        </div>
-                                                                        <div className="text-[11px] text-slate-500">
-                                                                            Barangay Safety & Code Audit
-                                                                        </div>
-                                                                    </div>
-                                                                    <span className="font-mono text-xs font-bold text-[#0F2F58]">
-                                                                        +₱65.00
-                                                                    </span>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center justify-between">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setActiveRecipePickerId(item.id)}
-                                                                className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-dashed border-[#0F2F58] bg-[#F0F4F8] px-3 py-1.5 text-xs font-bold text-[#0F2F58] transition-colors hover:bg-[#E2E8F0]"
-                                                            >
-                                                                <LinkIcon className="size-3.5" />
-                                                                <span>+ Attach Deal Chain Partner (Parts / Courier)...</span>
-                                                            </button>
+                                                                </div>
+                                                            ))}
                                                         </div>
                                                     )}
+                                                </div>
+                                            ) : (
+                                                <div className="mt-1 flex items-center justify-between">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setChainModalItem(item)}
+                                                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-dashed border-[#0F2F58] bg-[#F0F4F8] px-3 py-1.5 text-xs font-bold text-[#0F2F58] transition-colors hover:bg-[#E2E8F0]"
+                                                    >
+                                                        <LinkIcon className="size-3.5" />
+                                                        <span>+ Attach Deal Chain Partner (Parts / Courier)...</span>
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
@@ -481,6 +451,16 @@ export default function Picks(props: HomeProps) {
                     </div>
                 )}
             </main>
+
+            {/* Bundle & Chain Services Modal */}
+            <BundleChainModal
+                open={Boolean(chainModalItem)}
+                onClose={() => setChainModalItem(null)}
+                item={chainModalItem}
+                onSelectRecipe={(itemId, recipeId) => {
+                    handleAttachDealChain(itemId, recipeId);
+                }}
+            />
 
             {/* Dedicated Deal Chain Checkout Modal (Payment Selection & Authorization) */}
             <DealChainCheckoutModal

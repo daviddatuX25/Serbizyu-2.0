@@ -117,9 +117,9 @@ describe('PicksDrawer', () => {
 
         expect(screen.getByText(/Attached Deal Chain Child Orders/i)).toBeTruthy();
         expect(screen.getByText(/Non-Cascading Settlement Protection/i)).toBeTruthy();
-        expect(screen.getByText('Tagudin Hardware & Supply Depot')).toBeTruthy();
-        expect(screen.getByText('Danny Express Motorcycle Pool')).toBeTruthy();
-        expect(screen.getByText('Kuya Ben Aircon Services')).toBeTruthy();
+        expect(screen.getAllByText('Tagudin Hardware & Supply Depot').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('Danny Express Motorcycle Pool').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('Kuya Ben Aircon Services').length).toBeGreaterThanOrEqual(1);
     });
 
     it('opens interactive recipe selector and calls onAttachDealChain on selection', () => {
@@ -141,9 +141,9 @@ describe('PicksDrawer', () => {
         const attachButtons = screen.getAllByText(/\+ Attach Deal Chain/i);
         fireEvent.click(attachButtons[0]);
 
-        // Recipe selection options appear
-        expect(screen.getByText('Select Deal Chain Partner')).toBeTruthy();
-        const turnkeyOption = screen.getByText(/Turnkey Sourced Parts/i);
+        // Bundle & Chain Services Modal opens
+        expect(screen.getByText('Bundle & Chain Services')).toBeTruthy();
+        const turnkeyOption = screen.getByText(/All-In Parts/i);
         expect(turnkeyOption).toBeTruthy();
 
         // Click Turnkey recipe

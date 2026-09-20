@@ -135,20 +135,18 @@ describe('Picks Page', () => {
         // Click attach deal chain button to open recipe selector
         const attachBtn = screen.getByRole('button', { name: /\+ Attach Deal Chain/i });
         fireEvent.click(attachBtn);
-
-        expect(screen.getByText('Select Deal Chain Partner')).toBeTruthy();
-        const turnkeyOption = screen.getByText(/Turnkey Sourced Parts/i);
+        expect(screen.getByText('Bundle & Chain Services')).toBeTruthy();
+        const turnkeyOption = screen.getByText(/All-In Parts/i);
         expect(turnkeyOption).toBeTruthy();
 
         // Select Turnkey Sourced Parts
         fireEvent.click(turnkeyOption);
 
-        // Deal chain attached: title, connected nodes, and Detach displayed
+        // Deal chain attached: title, connected nodes, and Unlink displayed
         expect(screen.getAllByText(/Turnkey Sourced Parts/i).length).toBeGreaterThanOrEqual(1);
-        expect(screen.getByText(/STORE: Tagudin HW/i)).toBeTruthy();
-        expect(screen.getByText(/COURIER: Danny Exp/i)).toBeTruthy();
-        expect(screen.getByRole('button', { name: 'Detach' })).toBeTruthy();
-
+        expect(screen.getAllByText(/Tagudin HW/i).length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText(/Danny Exp/i).length).toBeGreaterThanOrEqual(1);
+        expect(screen.getByRole('button', { name: 'Unlink' })).toBeTruthy();
         // Child orders breakdown and settlement banner now appear dynamically
         expect(screen.getByText('Attached Deal Chain Child Orders')).toBeTruthy();
         expect(screen.getByText(/Non-Cascading Settlement Protection/i)).toBeTruthy();
