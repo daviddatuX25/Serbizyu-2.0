@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     ShoppingBag,
     X,
@@ -34,13 +34,40 @@ export function PicksDrawer({
 }: PicksDrawerProps) {
     const [selectedPayment, setSelectedPayment] = useState<'cash' | 'gcash' | 'escrow'>('cash');
 
+    // Body scroll lock to eliminate double scrollbars and background scrolling
+    useEffect(() => {
+        if (!open) return;
+        const originalOverflow = document.body.style.overflow;
+        const originalPaddingRight = document.body.style.paddingRight;
+
+        // Prevent layout shift when scrollbar disappears
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        document.body.style.overflow = 'hidden';
+        if (scrollbarWidth > 0) {
+            document.body.style.paddingRight = `${scrollbarWidth}px`;
+        }
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = originalOverflow;
+            document.body.style.paddingRight = originalPaddingRight;
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [open, onClose]);
+
     if (!open) return null;
 
     const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
     const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     return (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+        <div className="fixed inset-0 z-50 overflow-hidden" style={{ overscrollBehavior: 'contain' }}>
             {/* Backdrop (visible on desktop) */}
             <div
                 className="hidden lg:block fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
@@ -50,7 +77,7 @@ export function PicksDrawer({
 
             {/* Container: 100% Full-screen on mobile, slide-over drawer on desktop */}
             <div className="fixed inset-0 lg:inset-y-0 lg:left-auto lg:right-0 flex w-full lg:max-w-lg z-50">
-                <div className="w-full h-full bg-white shadow-2xl flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif]">
+                <div className="w-full h-full bg-white shadow-2xl flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif] overscroll-contain">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3.5 sm:px-6">
                         <div className="flex items-center gap-2.5">
