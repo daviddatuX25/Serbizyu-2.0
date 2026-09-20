@@ -17,7 +17,6 @@ import {
     MessageSquare,
     ArrowRight,
     Check,
-    Search,
     Wrench,
     Store,
     FileCheck,
@@ -27,9 +26,10 @@ import {
 import type { HomeProps } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
 import { PicksDrawer } from '../components/marketplace/PicksDrawer';
-import GlovoWaveModal from '../components/mobile/GlovoWaveModal';
+import { PartnerSelectionDrawer } from '../components/marketplace/PartnerSelectionDrawer';
+import { DealChainCheckoutModal } from '../components/marketplace/DealChainCheckoutModal';
+import { DEAL_CHAIN_RECIPES } from '../marketplace/dealChainRecipes';
 import type { BasketItem } from '../marketplace/types';
-
 // Category Images
 const CATEGORY_IMAGES: Record<string, string> = {
     repairs: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=900&auto=format&fit=crop&q=80',
@@ -430,10 +430,8 @@ export default function ListingDetail(props: HomeProps) {
     const [currentAudit, setCurrentAudit] = useState<PartnerCandidate>(PARTNER_CATALOG.auditor[0]);
 
     // Partner Substitution Modal State
+    // Partner Substitution Drawer State
     const [subModalRole, setSubModalRole] = useState<'courier' | 'technician' | 'store' | 'auditor' | null>(null);
-    const [subSearch, setSubSearch] = useState('');
-    const [subCategory, setSubCategory] = useState('all');
-
     // Collapsible Customizer Option Toggles (Fast Clean & Chemical Flush)
     const [customizerOpen, setCustomizerOpen] = useState(false);
     const [fastClean, setFastClean] = useState(false);
@@ -445,9 +443,9 @@ export default function ListingDetail(props: HomeProps) {
     // Picks / Basket state
     const [basket, setBasket] = useState<BasketItem[]>([]);
     const [picksOpen, setPicksOpen] = useState(false);
+    const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
     const [quantity, setQuantity] = useState(1);
-
     // Reviews expansion & filter state
     const [reviewsExpanded, setReviewsExpanded] = useState(false);
     const [reviewFilter, setReviewFilter] = useState<'all' | '5' | '4' | 'photos'>('all');
@@ -566,19 +564,52 @@ export default function ListingDetail(props: HomeProps) {
         saveBasket(updated);
         setPicksOpen(true);
     };
-
-    // Candidate list for active substitution modal
-    const currentCandidates = useMemo(() => {
-        if (!subModalRole) return [];
-        return PARTNER_CATALOG[subModalRole].filter((cand) => {
-            if (subCategory !== 'all' && cand.category !== subCategory) return false;
-            if (subSearch.trim()) {
-                const q = subSearch.toLowerCase();
-                return cand.name.toLowerCase().includes(q) || cand.sub.toLowerCase().includes(q);
-            }
-            return true;
+    const handleAttachDealChain = (
+        itemId: string,
+        recipeId: 'turnkey_parts' | 'courier_delivery' | 'safety_audit' | null,
+    ) => {
+        const recipe = recipeId ? DEAL_CHAIN_RECIPES[recipeId] : null;
+        const updated = basket.map((item) => {
+            if (item.id !== itemId) return item;
+            const currentAddon = item.dealChain?.extraFee || 0;
+            const newAddon = recipe?.extraFee || 0;
+            const newPrice = item.price - currentAddon + newAddon;
+            return {
+                ...item,
+                price: newPrice,
+                dealChain: recipe || undefined,
+            };
         });
-    }, [subModalRole, subCategory, subSearch]);
+        saveBasket(updated);
+    };
+
+    const handleAuthorizeDealChain = (paymentMethod: 'cash' | 'gcash' | 'escrow') => {
+        setCheckoutModalOpen(false);
+        router.post(
+            '/deal-chains/authorize',
+            {
+                payment_method: paymentMethod,
+                items: basket.map((b) => ({
+                    id: b.id,
+                    title: b.title,
+                    price: b.price,
+                    quantity: b.quantity,
+                    deal_chain: b.dealChain?.recipeId || null,
+                })),
+                total_amount: basket.reduce((sum, item) => sum + item.price * item.quantity, 0),
+            },
+            {
+                onError: () => {
+                    if (basket.length > 0) {
+                        router.visit(`/listings/${basket[0].id}/book`);
+                    }
+                },
+                onSuccess: () => {
+                    saveBasket([]);
+                },
+            },
+        );
+    };
 
     const handleSelectCandidate = (candidate: PartnerCandidate) => {
         if (candidate.role === 'courier') setCurrentCourier(candidate);
@@ -586,10 +617,7 @@ export default function ListingDetail(props: HomeProps) {
         if (candidate.role === 'store') setCurrentStore(candidate);
         if (candidate.role === 'auditor') setCurrentAudit(candidate);
         setSubModalRole(null);
-        setSubSearch('');
-        setSubCategory('all');
     };
-
     // Reviews filtering: exclude featured review by ID (identity-based)
     const nonFeaturedReviews = useMemo(() => {
         return SAMPLE_REVIEWS.filter((r) => r.id !== 'rev-1');
@@ -1594,146 +1622,23 @@ export default function ListingDetail(props: HomeProps) {
                 </div>
             </div>
 
-            {/* Partner Substitution Organic Wave Modal */}
-            <GlovoWaveModal
+            {/* Partner Selection Right-Side Drawer */}
+            <PartnerSelectionDrawer
                 open={Boolean(subModalRole)}
                 onClose={() => setSubModalRole(null)}
-                title={`Substitute ${
-                    subModalRole === 'courier'
-                        ? 'Courier Delivery'
+                role={subModalRole}
+                candidates={subModalRole ? PARTNER_CATALOG[subModalRole] : []}
+                currentSelectedId={
+                    subModalRole === 'store'
+                        ? currentStore.id
+                        : subModalRole === 'courier'
+                        ? currentCourier.id
                         : subModalRole === 'technician'
-                        ? 'Technician Labor'
-                        : subModalRole === 'store'
-                        ? 'Hardware Store'
-                        : 'Safety Auditor'
-                }`}
-                subtitle="Choose an alternative verified Tagudin partner for this slot"
-                headerSlot={
-                    <div className="mt-2 flex flex-col gap-2">
-                        {/* Search Box */}
-                        <div className="relative">
-                            <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="text"
-                                value={subSearch}
-                                onChange={(e) => setSubSearch(e.target.value)}
-                                placeholder="Search partner name or specialty..."
-                                className="h-9 w-full rounded-full border border-slate-200 bg-slate-50 pr-4 pl-8.5 text-xs text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
-                            />
-                        </div>
-
-                        {/* Filter Chips */}
-                        <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
-                            {subModalRole === 'courier' && (
-                                <>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSubCategory('all')}
-                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                            subCategory === 'all'
-                                                ? 'bg-[#0F2F58] text-white'
-                                                : 'border border-slate-200 bg-white text-slate-600'
-                                        }`}
-                                    >
-                                        ⭐ All Couriers
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSubCategory('motorcycle')}
-                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                            subCategory === 'motorcycle'
-                                                ? 'bg-[#0F2F58] text-white'
-                                                : 'border border-slate-200 bg-white text-slate-600'
-                                        }`}
-                                    >
-                                        Motorcycle
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSubCategory('tricycle')}
-                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                            subCategory === 'tricycle'
-                                                ? 'bg-[#0F2F58] text-white'
-                                                : 'border border-slate-200 bg-white text-slate-600'
-                                        }`}
-                                    >
-                                        Tricycle Cargo
-                                    </button>
-                                </>
-                            )}
-                            {subModalRole === 'technician' && (
-                                <>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSubCategory('all')}
-                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                            subCategory === 'all'
-                                                ? 'bg-[#0F2F58] text-white'
-                                                : 'border border-slate-200 bg-white text-slate-600'
-                                        }`}
-                                    >
-                                        ⭐ All Technicians
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSubCategory('hvac')}
-                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                            subCategory === 'hvac'
-                                                ? 'bg-[#0F2F58] text-white'
-                                                : 'border border-slate-200 bg-white text-slate-600'
-                                        }`}
-                                    >
-                                        AC &amp; HVAC
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSubCategory('electrician')}
-                                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                            subCategory === 'electrician'
-                                                ? 'bg-[#0F2F58] text-white'
-                                                : 'border border-slate-200 bg-white text-slate-600'
-                                        }`}
-                                    >
-                                        Master Electrician
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    </div>
+                        ? currentTech.id
+                        : currentAudit.id
                 }
-            >
-                {/* Candidate Options List */}
-                <div className="flex flex-col gap-2.5 py-2">
-                    {currentCandidates.map((cand) => (
-                        <div
-                            key={cand.id}
-                            onClick={() => handleSelectCandidate(cand)}
-                            className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-3 transition-colors hover:border-[#0F2F58] hover:bg-white"
-                        >
-                            <div className="flex items-center gap-2.5">
-                                <div className="flex size-8 items-center justify-center rounded-lg bg-white border border-slate-200 text-[#0F2F58] font-bold">
-                                    {cand.icon === 'truck' ? (
-                                        <Truck className="size-4" />
-                                    ) : cand.icon === 'labor' ? (
-                                        <Wrench className="size-4" />
-                                    ) : cand.icon === 'store' ? (
-                                        <Store className="size-4" />
-                                    ) : (
-                                        <FileCheck className="size-4" />
-                                    )}
-                                </div>
-                                <div>
-                                    <div className="text-xs font-extrabold text-slate-900">{cand.name}</div>
-                                    <div className="text-[10px] text-slate-500">{cand.sub}</div>
-                                </div>
-                            </div>
-                            <span className="font-mono text-xs font-extrabold text-[#0F2F58]">
-                                +₱{cand.fee.toFixed(2)}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </GlovoWaveModal>
+                onSelect={handleSelectCandidate}
+            />
 
             {/* Citizen Picks Drawer */}
             <PicksDrawer
@@ -1751,8 +1656,19 @@ export default function ListingDetail(props: HomeProps) {
                     saveBasket(next);
                 }}
                 onCheckout={() => {
-                    alert(`Proceeding to Escrow Authorization for ${basket.length} picks totaling ₱${calculatedTotal.toFixed(2)}`);
+                    setPicksOpen(false);
+                    setCheckoutModalOpen(true);
                 }}
+                onAttachDealChain={handleAttachDealChain}
+            />
+
+            {/* Dedicated Deal Chain Checkout Modal */}
+            <DealChainCheckoutModal
+                open={checkoutModalOpen}
+                onClose={() => setCheckoutModalOpen(false)}
+                items={basket}
+                totalAmount={basket.reduce((sum, item) => sum + item.price * item.quantity, 0)}
+                onAuthorize={handleAuthorizeDealChain}
             />
         </div>
     );

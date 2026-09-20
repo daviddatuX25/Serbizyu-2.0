@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     ShoppingBag,
     X,
@@ -37,7 +37,7 @@ export function PicksDrawer({
     onCheckout,
     onAttachDealChain,
 }: PicksDrawerProps) {
-    // Body scroll lock to eliminate double scrollbars and background scrolling
+    const [activeRecipePickerId, setActiveRecipePickerId] = useState<string | null>(null);
     useEffect(() => {
         if (!open) return;
         const originalOverflow = document.body.style.overflow;
@@ -68,7 +68,7 @@ export function PicksDrawer({
 
     const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
     const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
+    const itemsWithDealChain = items.filter((item) => Boolean(item.dealChain));
     return (
         <div className="fixed inset-0 z-50 overflow-hidden" style={{ overscrollBehavior: 'contain' }}>
             {/* Backdrop (visible on desktop) */}
@@ -232,85 +232,158 @@ export function PicksDrawer({
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="mt-1 flex items-center justify-between">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => onAttachDealChain?.(item.id, 'turnkey_parts')}
-                                                        className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-[#0F2F58] bg-[#F0F4F8] px-2.5 py-1 text-[10.5px] font-bold text-[#0F2F58] transition-colors hover:bg-[#E2E8F0]"
-                                                    >
-                                                        <LinkIcon className="size-3" />
-                                                        <span>+ Attach Deal Chain (Parts / Courier)...</span>
-                                                    </button>
+                                                <div className="mt-1 flex flex-col gap-1.5">
+                                                    {activeRecipePickerId === item.id ? (
+                                                        <div className="flex flex-col gap-2 rounded-xl border border-[#0F2F58]/30 bg-[#F8FAFD] p-3 shadow-xs">
+                                                            <div className="flex items-center justify-between text-xs font-extrabold text-[#0F2F58]">
+                                                                <span>Select Deal Chain Partner</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setActiveRecipePickerId(null)}
+                                                                    className="text-slate-400 hover:text-slate-700 cursor-pointer"
+                                                                    aria-label="Cancel"
+                                                                >
+                                                                    <X className="size-3.5" />
+                                                                </button>
+                                                            </div>
+
+                                                            <div className="flex flex-col gap-1.5">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        onAttachDealChain?.(item.id, 'turnkey_parts');
+                                                                        setActiveRecipePickerId(null);
+                                                                    }}
+                                                                    className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white p-2 text-left transition-colors hover:border-[#0F2F58] hover:bg-[#EBF2FA]"
+                                                                >
+                                                                    <div>
+                                                                        <div className="text-xs font-extrabold text-slate-900">
+                                                                            🔗 Turnkey Sourced Parts
+                                                                        </div>
+                                                                        <div className="text-[10px] text-slate-500">
+                                                                            Hardware Depot + Courier + Labor
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className="font-mono text-xs font-bold text-[#0F2F58]">
+                                                                        +₱215.00
+                                                                    </span>
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        onAttachDealChain?.(item.id, 'courier_delivery');
+                                                                        setActiveRecipePickerId(null);
+                                                                    }}
+                                                                    className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white p-2 text-left transition-colors hover:border-[#0F2F58] hover:bg-[#EBF2FA]"
+                                                                >
+                                                                    <div>
+                                                                        <div className="text-xs font-extrabold text-slate-900">
+                                                                            🚚 Doorstep Courier Transit
+                                                                        </div>
+                                                                        <div className="text-[10px] text-slate-500">
+                                                                            Danny Express Motorcycle Pool
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className="font-mono text-xs font-bold text-[#0F2F58]">
+                                                                        +₱35.00
+                                                                    </span>
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        onAttachDealChain?.(item.id, 'safety_audit');
+                                                                        setActiveRecipePickerId(null);
+                                                                    }}
+                                                                    className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white p-2 text-left transition-colors hover:border-[#0F2F58] hover:bg-[#EBF2FA]"
+                                                                >
+                                                                    <div>
+                                                                        <div className="text-xs font-extrabold text-slate-900">
+                                                                            🛡️ Quality & Safety Inspection
+                                                                        </div>
+                                                                        <div className="text-[10px] text-slate-500">
+                                                                            Barangay Safety & Code Audit
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className="font-mono text-xs font-bold text-[#0F2F58]">
+                                                                        +₱65.00
+                                                                    </span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center justify-between">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setActiveRecipePickerId(item.id)}
+                                                                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-[#0F2F58] bg-[#F0F4F8] px-2.5 py-1 text-[10.5px] font-bold text-[#0F2F58] transition-colors hover:bg-[#E2E8F0]"
+                                                            >
+                                                                <LinkIcon className="size-3" />
+                                                                <span>+ Attach Deal Chain (Parts / Courier)...</span>
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Itemized Deal Chain Child Orders Breakdown */}
-                                <div className="flex flex-col gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
-                                            Itemized Deal Chain Child Orders
-                                        </div>
-                                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9.5px] font-extrabold text-amber-800 uppercase">
-                                            Non-Cascading
-                                        </span>
-                                    </div>
-
-                                    {/* Child Order 1 */}
-                                    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-xs">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex size-6 items-center justify-center rounded-md bg-amber-50 text-amber-700">
-                                                <Package className="size-3.5" />
+                                {/* Itemized Deal Chain Child Orders: ONLY shown when deal chains are attached */}
+                                {itemsWithDealChain.length > 0 && (
+                                    <div className="flex flex-col gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                                Attached Deal Chain Child Orders
                                             </div>
+                                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9.5px] font-extrabold text-amber-800 uppercase">
+                                                Non-Cascading
+                                            </span>
+                                        </div>
+
+                                        {itemsWithDealChain.flatMap((item) =>
+                                            item.dealChain!.nodes.map((node, nodeIdx) => (
+                                                <div
+                                                    key={`${item.id}-${nodeIdx}`}
+                                                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-xs"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex size-6 items-center justify-center rounded-md bg-blue-50 text-[#0F2F58]">
+                                                            {node.role.toLowerCase().includes('store') && <Package className="size-3.5" />}
+                                                            {node.role.toLowerCase().includes('courier') && <Truck className="size-3.5" />}
+                                                            {node.role.toLowerCase().includes('labor') && <Wrench className="size-3.5" />}
+                                                            {!node.role.toLowerCase().includes('store') &&
+                                                             !node.role.toLowerCase().includes('courier') &&
+                                                             !node.role.toLowerCase().includes('labor') && (
+                                                                <Package className="size-3.5" />
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[9px] font-bold text-slate-400 uppercase">
+                                                                Slot #{nodeIdx + 1} · {node.role}
+                                                            </span>
+                                                            <div className="font-extrabold text-slate-900">
+                                                                {node.title}
+                                                            </div>
+                                                            <div className="text-[10px] text-slate-500">
+                                                                {item.title} ({node.sub})
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+
+                                        {/* Soundness Shield Box */}
+                                        <div className="mt-1 flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-[11px] text-blue-950">
+                                            <ShieldCheck className="size-4.5 shrink-0 text-[#0F2F58] mt-0.5" />
                                             <div>
-                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Order #ORD-101</span>
-                                                <div className="font-extrabold text-slate-900">Tagudin Hardware Parts</div>
-                                                <div className="text-[10px] text-slate-500">Inventory isolation · Counter lane 2</div>
+                                                <strong>Non-Cascading Settlement Protection:</strong> Each child order is held in its own independent escrow line. If courier transit encounters delays, the store&apos;s inventory and technician labor remain financially isolated and protected.
                                             </div>
                                         </div>
-                                        <span className="font-mono font-bold text-slate-900">₱180.00</span>
                                     </div>
-
-                                    {/* Child Order 2 */}
-                                    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-xs">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex size-6 items-center justify-center rounded-md bg-sky-50 text-sky-700">
-                                                <Truck className="size-3.5" />
-                                            </div>
-                                            <div>
-                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Order #ORD-102</span>
-                                                <div className="font-extrabold text-slate-900">Danny Express Motorcycle</div>
-                                                <div className="text-[10px] text-slate-500">Doorstep transit · Gated on part ready</div>
-                                            </div>
-                                        </div>
-                                        <span className="font-mono font-bold text-slate-900">₱35.00</span>
-                                    </div>
-
-                                    {/* Child Order 3 */}
-                                    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-xs">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex size-6 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
-                                                <Wrench className="size-3.5" />
-                                            </div>
-                                            <div>
-                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Order #ORD-103</span>
-                                                <div className="font-extrabold text-slate-900">Kuya Ben Aircon Services</div>
-                                                <div className="text-[10px] text-slate-500">Service labor · Gated on delivery sign-off</div>
-                                            </div>
-                                        </div>
-                                        <span className="font-mono font-bold text-slate-900">₱450.00</span>
-                                    </div>
-                                </div>
-
-                                {/* Soundness Shield Box */}
-                                <div className="flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-[11px] text-blue-950">
-                                    <ShieldCheck className="size-4.5 shrink-0 text-[#0F2F58] mt-0.5" />
-                                    <div>
-                                        <strong>Non-Cascading Settlement Protection:</strong> Each child order is held in its own independent escrow line. If courier transit encounters delays, the store's inventory is financially isolated and protected.
-                                    </div>
-                                </div>
+                                )}
                             </>
                         )}
                     </div>

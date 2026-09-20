@@ -88,8 +88,8 @@ describe('ListingDetail Page', () => {
         const changeCourierBtn = within(desktop).getByRole('button', { name: /Change Courier ▾/i });
         fireEvent.click(changeCourierBtn);
 
-        // Substitution Modal opens
-        expect(screen.getByText('Substitute Courier Delivery')).toBeTruthy();
+        // Substitution Drawer opens
+        expect(screen.getByText('Select Courier Partner')).toBeTruthy();
         expect(screen.getByText(/Kuya Danny Tricycle Cargo/i)).toBeTruthy();
 
         // Select Kuya Danny Tricycle Cargo

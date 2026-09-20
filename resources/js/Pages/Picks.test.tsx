@@ -1,18 +1,22 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import Picks from './Picks';
 import type { HomeProps } from '../types';
 
-vi.mock('@inertiajs/react', () => ({
-    Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
-        <a href={href} {...props}>
-            {children}
-        </a>
-    ),
-    router: {
-        visit: vi.fn(),
+const baseProps: HomeProps = {
+    auth: {
+        user: {
+            id: 'user-1',
+            phone: '09171234567',
+            name: 'Test Citizen',
+            roles: ['buyer'],
+        },
     },
-}));
+    slice: {
+        session: null,
+        activeListing: null,
+    },
+};
 
 describe('Picks Page', () => {
     afterEach(() => {
@@ -20,22 +24,15 @@ describe('Picks Page', () => {
         window.localStorage.clear();
     });
 
-    const baseProps: HomeProps = {
-        session: {
-            authenticated: true,
-            userId: 'usr_buyer',
-            displayName: 'Maria Santos',
-        },
-    };
-
-    it('renders empty tray state when no items are staged', () => {
+    it('renders empty state when no items staged in localStorage', () => {
         render(<Picks {...baseProps} />);
 
         expect(screen.getByText('Your Picks Tray is Empty')).toBeTruthy();
+        expect(screen.getByText(/Explore verified Tagudin marketplace listings/i)).toBeTruthy();
         expect(screen.getByRole('link', { name: 'Explore Marketplace' })).toBeTruthy();
     });
 
-    it('renders staged items, child orders breakdown, and payment selection', () => {
+    it('renders staged items and opens checkout modal without fake static orders', () => {
         const mockPicks = [
             {
                 id: 'listing-1',
@@ -62,15 +59,9 @@ describe('Picks Page', () => {
         // Subtotal: 450 + 360 = 810
         expect(screen.getAllByText('₱810.00').length).toBeGreaterThanOrEqual(1);
 
-        // Child orders breakdown
-        expect(screen.getByText('Itemized Deal Chain Child Orders')).toBeTruthy();
-        expect(screen.getByText('Order #ORD-101')).toBeTruthy();
-        expect(screen.getByText('Tagudin Hardware Parts Depot')).toBeTruthy();
-        expect(screen.getByText('Order #ORD-102')).toBeTruthy();
-        expect(screen.getByText('Danny Express Motorcycle Pool')).toBeTruthy();
-
-        // Non-cascading settlement banner
-        expect(screen.getByText(/Non-Cascading Settlement Protection/i)).toBeTruthy();
+        // No fake child orders when items have no deal chain attached
+        expect(screen.queryByText('Attached Deal Chain Child Orders')).toBeNull();
+        expect(screen.queryByText(/Non-Cascading Settlement Protection/i)).toBeNull();
 
         // Click Proceed to Escrow Checkout
         const checkoutBtn = screen.getByRole('button', { name: /Proceed to Escrow Checkout/i });
@@ -83,6 +74,7 @@ describe('Picks Page', () => {
         expect(screen.getByRole('button', { name: /Tiwala Escrow/i })).toBeTruthy();
         expect(screen.getByRole('button', { name: /Authorize Deal Chain & Escrow/i })).toBeTruthy();
     });
+
     it('updates quantity and recalculates escrow total', () => {
         const mockPicks = [
             {
@@ -126,7 +118,8 @@ describe('Picks Page', () => {
         // Now empty
         expect(screen.getByText('Your Picks Tray is Empty')).toBeTruthy();
     });
-    it('attaches Deal Chain recipe to staged item and displays connected pipeline', () => {
+
+    it('opens recipe selector, attaches Deal Chain recipe, and displays connected pipeline', () => {
         const mockPicks = [
             {
                 id: 'listing-1',
@@ -139,14 +132,25 @@ describe('Picks Page', () => {
 
         render(<Picks {...baseProps} />);
 
-        // Click attach deal chain button
+        // Click attach deal chain button to open recipe selector
         const attachBtn = screen.getByRole('button', { name: /\+ Attach Deal Chain/i });
         fireEvent.click(attachBtn);
 
-        // Deal chain attached: title and connected nodes displayed
-        expect(screen.getByText(/Turnkey Sourced Parts/i)).toBeTruthy();
+        expect(screen.getByText('Select Deal Chain Partner')).toBeTruthy();
+        const turnkeyOption = screen.getByText(/Turnkey Sourced Parts/i);
+        expect(turnkeyOption).toBeTruthy();
+
+        // Select Turnkey Sourced Parts
+        fireEvent.click(turnkeyOption);
+
+        // Deal chain attached: title, connected nodes, and Detach displayed
+        expect(screen.getAllByText(/Turnkey Sourced Parts/i).length).toBeGreaterThanOrEqual(1);
         expect(screen.getByText(/STORE: Tagudin HW/i)).toBeTruthy();
         expect(screen.getByText(/COURIER: Danny Exp/i)).toBeTruthy();
         expect(screen.getByRole('button', { name: 'Detach' })).toBeTruthy();
+
+        // Child orders breakdown and settlement banner now appear dynamically
+        expect(screen.getByText('Attached Deal Chain Child Orders')).toBeTruthy();
+        expect(screen.getByText(/Non-Cascading Settlement Protection/i)).toBeTruthy();
     });
 });
