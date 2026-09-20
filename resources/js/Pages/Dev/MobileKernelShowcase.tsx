@@ -180,6 +180,7 @@ export default function MobileKernelShowcase() {
 
     return (
         <AppLayout
+            variant="split"
             actingContext={{
                 actorUserId: 'usr_rosa',
                 ownerUserId: 'usr_mang_jose',
@@ -187,6 +188,40 @@ export default function MobileKernelShowcase() {
                 consentGrantId: 'cg_101',
                 isActingOnBehalf: isActing,
             }}
+            previewSlot={
+                <div className="flex flex-col gap-3">
+                    <div className="flex h-28 w-full items-center justify-center rounded-lg bg-emerald-100 font-[var(--sz-font-display)] text-xs font-bold text-emerald-900">
+                        📷 Inverter Split AC Cover Photo
+                    </div>
+                    <div className="text-sm font-extrabold text-[#0F2F58]">
+                        Inverter Split AC Deep Clean &amp; Checkup
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                        <span className="font-bold text-emerald-700">★ 4.9</span>
+                        <span>(42 reviews)</span>
+                        <span>·</span>
+                        <span>Tagudin Centro</span>
+                    </div>
+                    <div className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-xs text-slate-700">
+                        <div className="mb-1 font-bold text-[#0F2F58]">What's Included:</div>
+                        <div className="flex flex-col gap-1 text-[11px]">
+                            <div>✓ Chemical foam wash &amp; disinfection</div>
+                            <div>✓ Blower wheel grease flush</div>
+                            <div>✓ High-pressure drain line unclog</div>
+                        </div>
+                    </div>
+                    <div className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-xs">
+                        <div className="mb-0.5 font-bold text-[#0F2F58]">Work Execution SLA:</div>
+                        <div className="font-mono text-xs font-bold text-emerald-700">
+                            75 mins · 4 Verified Milestone Gates
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+                        <span className="text-xs text-slate-500">Starting labor:</span>
+                        <span className="font-mono text-base font-extrabold text-[#0F2F58]">₱450.00</span>
+                    </div>
+                </div>
+            }
             header={
                 <StepWizardHeader
                     title={viewMode === 'advanced' ? 'All-in-One Editor' : `Step ${currentStep} of 3`}

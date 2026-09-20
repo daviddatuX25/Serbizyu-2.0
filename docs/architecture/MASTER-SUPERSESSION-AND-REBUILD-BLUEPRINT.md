@@ -111,27 +111,46 @@ The Admin subsystem (`app/Modules/Operations/` & `resources/js/Pages/Admin/`) is
 
 ---
 
-## 6. Frontend Rebuild Strategy: True Mobile-First Web Modules
+## 6. Frontend Rebuild Strategy: Adaptive Responsive Layout Matrix
+
+Rather than forcing every screen into an identical narrow column or an inappropriate dual-pane split, Serbizyu 2.0 adopts an **Adaptive Responsive Architecture**. Every surface is built touch-first for mobile ($100\text{vw}$), and then organically transforms into its most natural, high-leverage desktop layout on larger displays ($\ge 1024\text{px}$):
 
 ```
-      TRUE MOBILE-FIRST BREAKPOINT BEHAVIOR
-      
-      Mobile (<640px)                Desktop (≥1024px)
-┌─────────────────────────┐    ┌──────────────────────────────────┐
-│ 100vw Full Bleed        │    │ Centered Container (max-w-2xl)   │
-│ Touch-First Tap (44px)  │ ── │ Keyboard Nav & Dual Columns      │
-│ Bottom Sticky Dock      │    │ Floating Centered Dialogs        │
-│ Slide-up Sheet Modals   │    │ Full Desktop Overview            │
-└─────────────────────────┘    └──────────────────────────────────┘
+====================================================================================================
+                        ADAPTIVE DESKTOP LAYOUT MATRIX BY SCREEN ARCHETYPE
+====================================================================================================
+
+  SCREEN ARCHETYPE            MOBILE (<640px)                DESKTOP (≥1024px)
+┌───────────────────────────┬──────────────────────────────┬───────────────────────────────────────┐
+│ A. Creation Trinity       │ 3-Step Touch Wizard          │ Dual-Pane Split:                      │
+│    (Service, Product,     │ Full-width single column     │ Left (55%): Form Inputs               │
+│     Request)              │ Bottom sticky dock           │ Right (45% Sticky): Live Buyer Preview│
+├───────────────────────────┼──────────────────────────────┼───────────────────────────────────────┤
+│ B. Marketplace Browse     │ Vertical Feed + Filter Chips │ Master-Detail Catalog (Airbnb style): │
+│    (PLP)                  │ Floating basket bar          │ Left (280px): Filter Facets Sidebar   │
+│                           │                              │ Right: 3-to-4 Column Card Grid        │
+├───────────────────────────┼──────────────────────────────┼───────────────────────────────────────┤
+│ C. Listing Detail         │ Vertical Stack               │ Classic E-Commerce PDP Split:         │
+│    (PDP)                  │ Bottom Book Now dock         │ Left (65%): Gallery, Specs & Work DAG │
+│                           │                              │ Right (35% Sticky): Rates & Checkout  │
+├───────────────────────────┼──────────────────────────────┼───────────────────────────────────────┤
+│ D. DAG Studios            │ Horizontal Canvas Viewport   │ Widescreen Canvas Workspace:          │
+│    (Work & Deal Chain)    │ Bottom slide-up inspector    │ Infinite pan/zoom canvas, floating    │
+│                           │                              │ node toolbox, right property drawer   │
+├───────────────────────────┼──────────────────────────────┼───────────────────────────────────────┤
+│ E. Order Execution        │ Tabbed Views (Status / Chat) │ Unified Order Ops Hub:                │
+│    (OrderDetail & Active) │ Bottom action bar            │ Left (60%): Live Milestone Timeline   │
+│                           │                              │ Right (40%): Multi-Party Chat Stream  │
+├───────────────────────────┼──────────────────────────────┼───────────────────────────────────────┤
+│ F. Account, Auth, Profile │ Centered Focus Container     │ Clean Centered Focus Container:       │
+│    (SignIn, Settings)     │ Full-width padding           │ Max-w-md or max-w-xl centered card    │
+└───────────────────────────┴──────────────────────────────┴───────────────────────────────────────┘
 ```
 
-* **No Artificial Simulator Bezels**: The `.phone-shell` wrapper from the design kit is strictly a desktop preview harness. In the production React build, pages are natively responsive.
-* **Deep Modular Architecture**:
-  * `WorkPipelineCanvas.tsx`: Encapsulates SVG curve math, branch/join rendering, and $3\text{px}$ themed scrollbar.
-  * `DealChainCarousel.tsx`: Encapsulates horizontal scroll-snap, compact DAG rendering, and slot provider re-binding.
-  * `GlovoWaveModal.tsx`: Encapsulates asymmetrical wave cap styling, fixed header search, scroll body, and bottom studio links.
-  * `EditableStageList.tsx`: Encapsulates visible 1px borders, clock duration inputs (`type="number"`), and camera evidence tags.
-
+### 6.1 Architectural Rules:
+1. **Never Waste Desktop Real Estate**: Creation interfaces leverage desktop width by displaying the live, reactive WYSIWYG customer preview card side-by-side with form inputs.
+2. **Never Force Dual-Pane Where Unnatural**: Settings, OTP login, and simple forms remain focused single-column containers (`max-w-md` or `max-w-xl`). Browse uses standard catalog grid with a left filter sidebar.
+3. **Deep Module Reuse**: All deep modules (`WorkPipelineCanvas`, `DealChainCarousel`, `EditableStageList`, `GlovoWaveModal`) are responsive primitives that function identically whether inside a mobile touch wizard or embedded in a desktop dual-pane grid.
 ---
 
 ## 7. OpenSpec Plan-Implement-Iterate Engine
