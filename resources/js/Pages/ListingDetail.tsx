@@ -15,6 +15,9 @@ import {
     ChevronDown,
     ChevronUp,
     Camera,
+    MessageSquare,
+    ArrowRight,
+    Check,
 } from 'lucide-react';
 import type { HomeProps } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
@@ -33,12 +36,163 @@ const CATEGORY_IMAGES: Record<string, string> = {
     default: 'https://images.unsplash.com/photo-1581092918056-0c4c5acdfb82?w=900&auto=format&fit=crop&q=80',
 };
 
-// Workflow Steps & Deal Chain Extensions
-type WorkflowStep = {
+// Package Tier Presets
+export type PackageTier = {
+    id: string;
     title: string;
-    description: string;
+    price: number;
+    origPrice?: number;
+    sub: string;
+    inclusions: string[];
 };
 
+const CATEGORY_PACKAGES: Record<string, PackageTier[]> = {
+    repairs: [
+        {
+            id: 'pkg-1',
+            title: '1 Unit Standard',
+            price: 450,
+            origPrice: 550,
+            sub: 'Deep coil & drain clean',
+            inclusions: [
+                'On-site breaker isolation & diagnostic status check',
+                'Evaporator coil alkaline chemical foam disinfection',
+                'Blower fan wheel disassembly and grease flush',
+                'Dual-probe delta temperature test (ΔT ≥ 12°C)',
+            ],
+        },
+        {
+            id: 'pkg-2',
+            title: '2 Units Dual Split',
+            price: 850,
+            origPrice: 1100,
+            sub: 'Save ₱250 bundle',
+            inclusions: [
+                'Complete service on two indoor units',
+                'Outdoor condensing unit pressure flush & fin inspection',
+                'Freon operating pressure calibration test',
+                'Full photographic milestone sign-off',
+            ],
+        },
+        {
+            id: 'pkg-3',
+            title: '3 Units Full Home',
+            price: 1200,
+            origPrice: 1650,
+            sub: 'Save ₱450 package',
+            inclusions: [
+                'Complete service on three indoor units + outdoor units',
+                'Anti-bacterial ozone air duct sanitization',
+                'Priority same-day completion guarantee',
+                'Customer OTP handover & digital service warranty',
+            ],
+        },
+    ],
+    'local-food': [
+        {
+            id: 'pkg-food-1',
+            title: 'Solo Snack Box',
+            price: 80,
+            origPrice: 95,
+            sub: '2 pcs warm bibingka',
+            inclusions: [
+                'Fresh morning batch steaming in clay oven',
+                'Wrapped in organic wilted banana leaves',
+                'Includes signature coconut latik dip cup',
+            ],
+        },
+        {
+            id: 'pkg-food-2',
+            title: 'Family Fiesta Tray',
+            price: 180,
+            origPrice: 220,
+            sub: '6 pcs sharing tray',
+            inclusions: [
+                'Six freshly baked banana-leaf bibingka cakes',
+                'Generous toasted coconut shreds & salted egg toppings',
+                'Insulated thermal box keeping warm for 2 hours',
+            ],
+        },
+        {
+            id: 'pkg-food-3',
+            title: 'Party Jumbo Crate',
+            price: 350,
+            origPrice: 420,
+            sub: '12 pcs party set',
+            inclusions: [
+                'Twelve specialty bibingka cakes',
+                'Custom greeting ribbon & festive tag',
+                'Bulk condiment jars & biodegradable serving ware',
+            ],
+        },
+    ],
+    'print-assist': [
+        {
+            id: 'pkg-print-1',
+            title: 'Single Document Proof',
+            price: 80,
+            origPrice: 100,
+            sub: 'Soft proof + 1 copy',
+            inclusions: [
+                'Resolution & color calibration check',
+                'Digital PDF soft-copy export',
+                'Initial print sample inspection',
+            ],
+        },
+        {
+            id: 'pkg-print-2',
+            title: 'Standard Batch (10)',
+            price: 250,
+            origPrice: 320,
+            sub: '10 high-grade copies',
+            inclusions: [
+                'Full layout optimization and soft-proof email',
+                'High-speed digital color laser reproduction',
+                'Protective moisture-sealed envelope packaging',
+            ],
+        },
+        {
+            id: 'pkg-print-3',
+            title: 'Commercial Bulk (50+)',
+            price: 850,
+            origPrice: 1100,
+            sub: 'Commercial package',
+            inclusions: [
+                'Complete multi-page booklet or flyer batch',
+                'Precision guillotine trimming & folding',
+                'Direct courier handoff in Tagudin',
+            ],
+        },
+    ],
+    default: [
+        {
+            id: 'pkg-def-1',
+            title: 'Standard Scope',
+            price: 120,
+            origPrice: 150,
+            sub: 'Base verified task',
+            inclusions: [
+                'Initial task briefing & scope alignment',
+                'Standard execution by verified Tagudin citizen',
+                'Photo proof and milestone completion verification',
+            ],
+        },
+        {
+            id: 'pkg-def-2',
+            title: 'Extended Package',
+            price: 240,
+            origPrice: 300,
+            sub: 'Double capacity scope',
+            inclusions: [
+                'Complete task execution with extra care',
+                'Quality review guarantee & assistance',
+                'Direct courier or transport inclusion',
+            ],
+        },
+    ],
+};
+
+// Deal Chain Slots
 type DealChainSlot = {
     id: string;
     title: string;
@@ -47,85 +201,23 @@ type DealChainSlot = {
     icon: 'package' | 'truck';
 };
 
-type CategoryWorkflow = {
-    shapeLabel: string;
-    steps: WorkflowStep[];
-    dealChainSlots: DealChainSlot[];
-};
-
-const CATEGORY_WORKFLOWS: Record<string, CategoryWorkflow> = {
-    repairs: {
-        shapeLabel: 'A3 Appointment · On-Site Service',
-        steps: [
-            { title: 'Breaker isolation & coil status triage', description: 'Stage 1 · Breaker lockout photo gate' },
-            { title: 'Chemical foam wash & pressure rinse', description: 'Stage 2 · Foam coverage photo gate' },
-            { title: 'Cold compressor run & amp verification', description: 'Stage 3 · Amperage reading photo gate' },
-            { title: 'Delta temperature drop test (ΔT ≥ 12°C)', description: 'Stage 4 · Probe delta photo + Citizen OTP sign-off' },
-        ],
-        dealChainSlots: [
-            { id: 'parts', title: 'Tagudin Hardware Parts', desc: 'Coil cleaning foam & replacement pipe seal', price: 180, icon: 'package' },
-            { id: 'courier', title: 'Danny Express Courier', desc: 'Parts pick-up & direct delivery to site', price: 80, icon: 'truck' },
-        ],
-    },
-    'local-food': {
-        shapeLabel: 'A4 Handoff · Fresh Food Prep',
-        steps: [
-            { title: 'Morning batch baking & clay oven steaming', description: 'Stage 1 · Kitchen batch preparation gate' },
-            { title: 'Fresh packaging in wilted banana leaves', description: 'Stage 2 · Fresh seal packaging gate' },
-            { title: 'Warm insulated tray handoff at Tagudin Market', description: 'Stage 3 · Stall pickup or courier dispatch' },
-        ],
-        dealChainSlots: [
-            { id: 'courier', title: 'Danny Express Direct Delivery', desc: 'Warm delivery directly to your home in Tagudin', price: 80, icon: 'truck' },
-            { id: 'gift', title: 'Fiesta Gift Box & Ribbon', desc: 'Festive packaging for family occasions', price: 50, icon: 'package' },
-        ],
-    },
-    'print-assist': {
-        shapeLabel: 'A1 Linear Project · Soft-Copy Production',
-        steps: [
-            { title: 'File upload & document resolution audit', description: 'Stage 1 · Soft proof PDF inspection' },
-            { title: 'High-resolution scan & laser print calibration', description: 'Stage 2 · Sample check & color match' },
-            { title: 'Soft-copy email delivery or paper batch handoff', description: 'Stage 3 · Final package handoff' },
-        ],
-        dealChainSlots: [
-            { id: 'usb', title: 'USB Flash Drive Soft-Copy Backup', desc: 'Encrypted drive with soft copies included', price: 150, icon: 'package' },
-            { id: 'courier', title: 'Danny Express Courier', desc: 'Direct delivery of printed documents', price: 80, icon: 'truck' },
-        ],
-    },
-    'greeting-cards': {
-        shapeLabel: 'A1 Linear Project · Hand-Crafted Art',
-        steps: [
-            { title: 'Occasion brief & custom calligraphy names', description: 'Stage 1 · Design draft review' },
-            { title: 'Hand-drawing on textured specialty paper', description: 'Stage 2 · Photo progress gate' },
-            { title: 'Final envelope wax sealing & handoff', description: 'Stage 3 · Final handoff' },
-        ],
-        dealChainSlots: [
-            { id: 'box', title: 'Ribbon Keepsake Gift Box', desc: 'Custom presentation box with wax seal', price: 60, icon: 'package' },
-            { id: 'courier', title: 'Danny Express Courier', desc: 'Hand-delivered to your recipient', price: 80, icon: 'truck' },
-        ],
-    },
-    courier: {
-        shapeLabel: 'A2 Dispatch · Express Transport',
-        steps: [
-            { title: 'Item pickup at sender location', description: 'Stage 1 · Sender item photo gate' },
-            { title: 'Secure transit across Tagudin routes', description: 'Stage 2 · GPS check-in' },
-            { title: 'Recipient handover & signature', description: 'Stage 3 · Recipient sign-off photo gate' },
-        ],
-        dealChainSlots: [
-            { id: 'return', title: 'Return Trip Errand', desc: 'Immediate back-trip delivery in Centro', price: 50, icon: 'truck' },
-        ],
-    },
-    default: {
-        shapeLabel: 'A4 Handoff · Verified Local Task',
-        steps: [
-            { title: 'Task briefing & on-site scope alignment', description: 'Stage 1 · Initial scope review' },
-            { title: 'Task execution according to standards', description: 'Stage 2 · In-progress photo gate' },
-            { title: 'Citizen inspection & OTP sign-off', description: 'Stage 3 · Completion verification' },
-        ],
-        dealChainSlots: [
-            { id: 'parts', title: 'Procured Materials Budget', desc: 'Hardware supplies from local merchants', price: 180, icon: 'package' },
-            { id: 'courier', title: 'Danny Express Courier', desc: 'Direct runner support in Tagudin', price: 80, icon: 'truck' },
-        ],
-    },
+const CATEGORY_SLOTS: Record<string, DealChainSlot[]> = {
+    repairs: [
+        { id: 'parts', title: 'Tagudin Hardware Parts', desc: 'Coil cleaning foam & replacement pipe seal', price: 180, icon: 'package' },
+        { id: 'courier', title: 'Danny Express Courier', desc: 'Parts pick-up & direct delivery to site', price: 80, icon: 'truck' },
+    ],
+    'local-food': [
+        { id: 'courier', title: 'Danny Express Direct Delivery', desc: 'Warm delivery directly to your home in Tagudin', price: 80, icon: 'truck' },
+        { id: 'gift', title: 'Fiesta Gift Box & Ribbon', desc: 'Festive packaging for family occasions', price: 50, icon: 'package' },
+    ],
+    'print-assist': [
+        { id: 'usb', title: 'USB Flash Drive Soft-Copy Backup', desc: 'Encrypted drive with soft copies included', price: 150, icon: 'package' },
+        { id: 'courier', title: 'Danny Express Courier', desc: 'Direct delivery of printed documents', price: 80, icon: 'truck' },
+    ],
+    default: [
+        { id: 'parts', title: 'Procured Materials Budget', desc: 'Hardware supplies from local merchants', price: 180, icon: 'package' },
+        { id: 'courier', title: 'Danny Express Courier', desc: 'Direct runner support in Tagudin', price: 80, icon: 'truck' },
+    ],
 };
 
 // Verified Customer Reviews
@@ -146,7 +238,7 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
         barangay: 'Barangay Centro',
         timeAgo: '3 days ago',
         stars: 5,
-        packageTag: 'Standard Full Package',
+        packageTag: '2 Units Dual Split',
         quote: 'Very thorough clean. Blower fan wheel was removed and washed with alkaline chemical foam. Malamig na ulit aircon namin!',
     },
     {
@@ -173,7 +265,7 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
         barangay: 'Pudoc West',
         timeAgo: '3 weeks ago',
         stars: 4,
-        packageTag: 'Express Delivery',
+        packageTag: 'Express Service',
         quote: 'Maayos kausap at maaasahan sa mga biglaang takbo sa centro.',
     },
 ];
@@ -190,24 +282,26 @@ function getCategoryPhoto(categoryCode?: string | null): string {
     return CATEGORY_IMAGES[code] || CATEGORY_IMAGES.default;
 }
 
-function getWorkflow(categoryCode?: string | null): CategoryWorkflow {
+function getCategoryPackages(categoryCode?: string | null): PackageTier[] {
     const code = (categoryCode || 'default').toLowerCase();
-    return CATEGORY_WORKFLOWS[code] || CATEGORY_WORKFLOWS.default;
+    return CATEGORY_PACKAGES[code] || CATEGORY_PACKAGES.default;
 }
 
-function formatPrice(minor?: number | null): string {
-    if (typeof minor === 'number' && Number.isFinite(minor)) {
-        return `₱${(minor / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    }
-    return '₱80.00';
-}
-
-function getPriceNumber(minor?: number | null): number {
-    return typeof minor === 'number' && Number.isFinite(minor) ? minor / 100 : 80;
+function getCategorySlots(categoryCode?: string | null): DealChainSlot[] {
+    const code = (categoryCode || 'default').toLowerCase();
+    return CATEGORY_SLOTS[code] || CATEGORY_SLOTS.default;
 }
 
 export default function ListingDetail(props: HomeProps) {
     const listing = props.activeListingDetail;
+
+    // Available packages for this category
+    const packages = getCategoryPackages(listing?.category_code || listing?.categoryCode);
+    const slots = getCategorySlots(listing?.category_code || listing?.categoryCode);
+
+    // Selected package tier state
+    const [selectedPackageIndex, setSelectedPackageIndex] = useState(0);
+    const activePackage = packages[selectedPackageIndex] || packages[0];
 
     // Picks / Basket state
     const [basket, setBasket] = useState<BasketItem[]>([]);
@@ -276,11 +370,10 @@ export default function ListingDetail(props: HomeProps) {
 
     const isService = (listing?.listing_type || listing?.listingType) !== 'product';
     const photoUrl = getCategoryPhoto(listing?.category_code || listing?.categoryCode);
-    const workflow = getWorkflow(listing?.category_code || listing?.categoryCode);
-    const basePrice = getPriceNumber(listing?.price_amount_minor);
 
-    // Calculate slots total
-    const slotsTotal = workflow.dealChainSlots
+    // Dynamic price calculation based on selected package + add-ons
+    const basePrice = activePackage?.price || 450;
+    const slotsTotal = slots
         .filter((slot) => selectedSlotIds.includes(slot.id))
         .reduce((sum, slot) => sum + slot.price, 0);
 
@@ -294,14 +387,21 @@ export default function ListingDetail(props: HomeProps) {
         let updated: BasketItem[];
         if (existing) {
             updated = basket.map((b) =>
-                b.id === listing.id ? { ...b, quantity: b.quantity + quantity, price: finalUnitPrice } : b,
+                b.id === listing.id
+                    ? {
+                          ...b,
+                          quantity: b.quantity + quantity,
+                          price: finalUnitPrice,
+                          title: `${listing.title} (${activePackage.title})`,
+                      }
+                    : b,
             );
         } else {
             updated = [
                 ...basket,
                 {
                     id: listing.id,
-                    title: listing.title,
+                    title: `${listing.title} (${activePackage.title})`,
                     price: finalUnitPrice,
                     quantity,
                 },
@@ -310,6 +410,11 @@ export default function ListingDetail(props: HomeProps) {
 
         saveBasket(updated);
         setPicksOpen(true);
+    };
+
+    const handleDirectAction = () => {
+        handleAddToPicks();
+        alert(`Proceeding directly to Escrow Authorization for ${activePackage.title} totaling ₱${calculatedTotal.toFixed(2)}`);
     };
 
     // Filter reviews
@@ -412,31 +517,15 @@ export default function ListingDetail(props: HomeProps) {
 
                 {/* 2-Column Product / Service Detail Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                    {/* LEFT COLUMN (58% on Desktop): Media, Work Pipeline, Profile & Reviews */}
-                    <div className="flex flex-col gap-6 lg:col-span-7">
-                        {/* Hero Image Container */}
+                    {/* LEFT COLUMN (58% on Desktop): Media, Hierarchy, Packages, Milestones & Reviews */}
+                    <div className="flex flex-col gap-5 lg:col-span-7">
+                        {/* 1. Hero Image Container (Clean, without messy text overlays) */}
                         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xs">
                             <img
                                 src={photoUrl}
                                 alt={listing.title}
                                 className="size-full object-cover"
                             />
-                            {/* Badges on Image */}
-                            <div className="absolute top-3.5 left-3.5 flex items-center gap-2">
-                                <span
-                                    className={`rounded-full px-3 py-1 text-[11px] font-extrabold tracking-wide uppercase shadow-sm ${
-                                        isService ? 'bg-[#0F2F58] text-white' : 'bg-emerald-700 text-white'
-                                    }`}
-                                >
-                                    {isService ? 'Service · Labor' : 'Product · Local Goods'}
-                                </span>
-                                <span className="flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-extrabold text-amber-800 shadow-sm backdrop-blur-xs">
-                                    <Star className="size-3.5 fill-amber-500 text-amber-500" />
-                                    <span>4.9</span>
-                                    <span className="text-slate-500 font-medium">(128 reviews)</span>
-                                </span>
-                            </div>
-
                             <button
                                 type="button"
                                 onClick={togglePin}
@@ -449,92 +538,207 @@ export default function ListingDetail(props: HomeProps) {
                             </button>
                         </div>
 
-                        {/* Title & Description Box */}
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                            <h1 className="text-xl sm:text-2xl font-extrabold text-[#0F2F58] leading-tight">
-                                {listing.title}
-                            </h1>
-                            <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
-                                <MapPin className="size-3.5 text-slate-400" />
-                                <span className="font-semibold">{listing.area || listing.locality || 'Tagudin Centro'}</span>
-                                <span>·</span>
-                                <span className="text-emerald-700 font-bold">Verified Citizen Provider</span>
-                            </div>
-
-                            <p className="mt-4 text-xs sm:text-sm leading-relaxed text-slate-700">
-                                {listing.description ||
-                                    'Standard verified offering in Tagudin, Ilocos Sur. Backed by municipal escrow protection and photo milestone evidence.'}
-                            </p>
-                        </div>
-
-                        {/* What's Included & Execution Gates (Dynamically adapted by category/service) */}
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                <div>
-                                    <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#0F2F58]">
-                                        {isService ? "What's Included & Execution Gates" : 'Product Specifications & Prep'}
-                                    </h2>
-                                    <p className="mt-0.5 text-xs text-slate-500">
-                                        {isService
-                                            ? 'Guaranteed deliverables verified through required milestone photo proofs'
-                                            : 'Fresh daily preparation standards verified in Tagudin'}
-                                    </p>
-                                </div>
-                                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-extrabold text-slate-700">
-                                    {workflow.shapeLabel}
+                        {/* 2. Main Title, Price Line & Rating Row Card (Exact Mock Hierarchy) */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col gap-3">
+                            {/* Promo / Category Badge */}
+                            <div className="flex items-center gap-2">
+                                <span className="rounded-full bg-[#EBF2FA] px-3 py-0.5 text-[11px] font-extrabold tracking-wide uppercase text-[#0F2F58]">
+                                    {isService ? 'Verified Service' : 'Verified Local Product'}
+                                </span>
+                                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-bold text-amber-800 border border-amber-200">
+                                    -18% Tagudin Launch Promo
                                 </span>
                             </div>
 
-                            <div className="mt-4 flex flex-col gap-2.5">
-                                {workflow.steps.map((step, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="flex items-start gap-3 rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs"
-                                    >
-                                        <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px]">
-                                            ✓
+                            {/* Main Title */}
+                            <h1 className="text-xl sm:text-2xl font-extrabold text-[#0F2F58] leading-tight">
+                                {listing.title}
+                            </h1>
+
+                            {/* Price Line (Big Price + Strikethrough + Unit Label) */}
+                            <div className="flex items-baseline gap-2.5 pt-0.5">
+                                <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#0F2F58]">
+                                    ₱{activePackage.price.toFixed(2)}
+                                </span>
+                                {activePackage.origPrice && (
+                                    <span className="font-mono text-sm text-slate-400 line-through">
+                                        ₱{activePackage.origPrice.toFixed(2)}
+                                    </span>
+                                )}
+                                <span className="text-xs font-semibold text-slate-500">
+                                    {isService ? '/ service unit' : '/ item package'}
+                                </span>
+                            </div>
+
+                            {/* Rating Row (Directly Below Price, Matching Mock) */}
+                            <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+                                <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-extrabold text-amber-800 border border-amber-200">
+                                    <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                                    <span>4.9</span>
+                                </span>
+                                <span className="text-xs text-slate-500 font-medium">(128 reviews)</span>
+                                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 border border-emerald-200">
+                                    98% satisfaction
+                                </span>
+                            </div>
+
+                            {/* Description */}
+                            <p className="text-xs sm:text-sm leading-relaxed text-slate-700">
+                                {listing.description ||
+                                    'Standard verified offering in Tagudin, Ilocos Sur. Backed by municipal escrow protection and photo milestone evidence.'}
+                            </p>
+
+                            {/* Provider Box with Chat Button */}
+                            <div className="mt-2 flex items-center justify-between rounded-xl border border-slate-200 bg-[#FAFCFB] p-3.5">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex size-10 items-center justify-center rounded-full bg-[#0F2F58] text-white font-extrabold text-sm">
+                                        {(listing.owner_name || listing.ownerName || 'P').charAt(0)}
+                                    </div>
+                                    <div>
+                                        <div className="text-xs sm:text-sm font-extrabold text-slate-900">
+                                            {listing.owner_name || listing.ownerName || 'Kuya Ben Refrigeration'}
                                         </div>
-                                        <div>
-                                            <div className="font-bold text-slate-800">{step.title}</div>
-                                            <div className="text-[11px] text-slate-500 mt-0.5">
-                                                {step.description}
-                                            </div>
+                                        <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
+                                            <MapPin className="size-3 text-slate-400" />
+                                            <span>{listing.area || 'Tagudin Centro'} · Verified Citizen Provider</span>
                                         </div>
                                     </div>
-                                ))}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => alert(`Chat opened with ${listing.owner_name || 'provider'}`)}
+                                    className="flex cursor-pointer items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-800 shadow-xs hover:bg-slate-50 transition-colors"
+                                >
+                                    <MessageSquare className="size-3.5" />
+                                    <span>Chat</span>
+                                </button>
                             </div>
                         </div>
 
-                        {/* Provider Profile Card */}
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex items-center justify-between">
-                            <div className="flex items-center gap-3.5">
-                                <div className="flex size-11 items-center justify-center rounded-full bg-[#0F2F58] text-white font-extrabold text-sm">
-                                    {(listing.owner_name || listing.ownerName || 'P').charAt(0)}
-                                </div>
+                        {/* 3. Package Presets Carousel (Choice of Package Tiers) */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                            <div className="flex items-baseline justify-between mb-3">
                                 <div>
-                                    <div className="text-sm font-extrabold text-slate-900">
-                                        {listing.owner_name || listing.ownerName || 'Tagudin Verified Provider'}
-                                    </div>
-                                    <div className="text-xs text-slate-500 mt-0.5">
-                                        4.9 ★ · 67 completed citizen orders in Tagudin
-                                    </div>
+                                    <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                        Choose Package Tier
+                                    </h2>
+                                    <p className="text-xs text-slate-500 mt-0.5">Select service scope or batch size</p>
                                 </div>
+                                <span className="text-[11px] font-bold text-[#0F2F58]">
+                                    {packages.length} Tiers Available
+                                </span>
                             </div>
 
-                            <a
-                                href="https://maps.google.com"
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-bold text-[#0F2F58] hover:bg-slate-100 transition-colors"
-                            >
-                                <MapPin className="size-3.5" />
-                                <span>Visit Stall</span>
-                            </a>
+                            {/* Horizontal Preset Cards Carousel */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {packages.map((pkg, idx) => {
+                                    const isSelected = selectedPackageIndex === idx;
+                                    return (
+                                        <button
+                                            key={pkg.id}
+                                            type="button"
+                                            onClick={() => setSelectedPackageIndex(idx)}
+                                            className={`flex flex-col text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
+                                                isSelected
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
+                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className={`text-xs font-extrabold ${isSelected ? 'text-[#0F2F58]' : 'text-slate-900'}`}>
+                                                    {pkg.title}
+                                                </span>
+                                                {isSelected && <Check className="size-3.5 text-[#0F2F58]" />}
+                                            </div>
+                                            <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
+                                                ₱{pkg.price.toFixed(2)}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">
+                                                {pkg.sub}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Active Inclusions Checklist for Selected Tier */}
+                            <div className="mt-4 border-t border-slate-100 pt-3">
+                                <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">
+                                    Included in {activePackage.title}:
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    {activePackage.inclusions.map((inc, i) => (
+                                        <div key={i} className="flex items-center gap-2 text-xs text-slate-700">
+                                            <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-[9px]">
+                                                ✓
+                                            </span>
+                                            <span>{inc}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
-                        {/* =========================================================================
-                            VERIFIED CUSTOMER REVIEWS SECTION (Matches docs/design-kit/listing-detail.html)
-                            ========================================================================= */}
+                        {/* 4. Partner Deal Chain Extensions */}
+                        {slots.length > 0 && (
+                            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div>
+                                        <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                            Partner Deal Chain Extensions
+                                        </h2>
+                                        <p className="text-xs text-slate-500 mt-0.5">
+                                            Attach multi-party logistics and hardware suppliers
+                                        </p>
+                                    </div>
+                                    <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200">
+                                        Multi-Slot
+                                    </span>
+                                </div>
+
+                                <div className="mt-4 flex flex-col gap-2.5">
+                                    {slots.map((slot) => {
+                                        const isSelected = selectedSlotIds.includes(slot.id);
+                                        return (
+                                            <label
+                                                key={slot.id}
+                                                className={`flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all ${
+                                                    isSelected
+                                                        ? 'border-[#0F2F58] bg-[#EBF2FA]'
+                                                        : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleSlot(slot.id)}
+                                                        className="size-4 accent-[#0F2F58] rounded"
+                                                    />
+                                                    <div>
+                                                        <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                                                            {slot.icon === 'truck' ? (
+                                                                <Truck className="size-3.5 text-blue-700" />
+                                                            ) : (
+                                                                <Package className="size-3.5 text-amber-700" />
+                                                            )}
+                                                            <span>{slot.title}</span>
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-500">{slot.desc}</div>
+                                                    </div>
+                                                </div>
+                                                <span className="font-mono text-xs font-extrabold text-slate-900">
+                                                    +₱{slot.price.toFixed(2)}
+                                                </span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 5. Verified Customer Reviews Section (Matching Design Kit Screen 07) */}
                         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col gap-4">
                             {/* Review Top Summary */}
                             <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
@@ -670,31 +874,31 @@ export default function ListingDetail(props: HomeProps) {
                         </section>
                     </div>
 
-                    {/* RIGHT COLUMN (42% on Desktop): Sticky Purchase / Escrow Card */}
+                    {/* RIGHT COLUMN (42% on Desktop): Sticky Purchase / Escrow Card with DUAL CTAs */}
                     <div className="lg:col-span-5 sticky top-24">
                         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md flex flex-col gap-5">
-                            {/* Price Header */}
+                            {/* Selected Package Header */}
                             <div className="flex items-baseline justify-between border-b border-slate-100 pb-4">
                                 <div>
                                     <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                                        {isService ? 'Starting Labor Rate' : 'Product Unit Price'}
+                                        Selected: {activePackage.title}
                                     </div>
                                     <div className="mt-1 font-mono text-2xl font-extrabold text-[#0F2F58]">
-                                        {formatPrice(listing.price_amount_minor)}
+                                        ₱{activePackage.price.toFixed(2)}
                                     </div>
                                 </div>
                                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-extrabold text-emerald-800 border border-emerald-200">
-                                    {isService ? 'Fixed Rate SLA' : 'Fresh Daily Supply'}
+                                    Fixed Rate SLA
                                 </span>
                             </div>
 
                             {/* Quantity Stepper */}
                             <div>
                                 <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                                    {isService ? 'Service Units / Quantity' : 'Quantity / Trays'}
+                                    Quantity
                                 </label>
                                 <div className="mt-2 flex items-center justify-between rounded-xl border border-slate-200 bg-[#FAFCFB] p-2">
-                                    <span className="text-xs font-semibold text-slate-700 pl-2">Quantity</span>
+                                    <span className="text-xs font-semibold text-slate-700 pl-2">Batch / Units</span>
                                     <div className="flex items-center gap-3">
                                         <button
                                             type="button"
@@ -719,65 +923,21 @@ export default function ListingDetail(props: HomeProps) {
                                 </div>
                             </div>
 
-                            {/* Partner Deal Chain Extensions (Dynamic per category) */}
-                            {workflow.dealChainSlots.length > 0 && (
-                                <div>
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                                            Partner Deal Chain Extensions
-                                        </label>
-                                        <span className="text-[10px] font-bold text-emerald-700">Optional Add-ons</span>
-                                    </div>
-                                    <div className="mt-2 flex flex-col gap-2">
-                                        {workflow.dealChainSlots.map((slot) => {
-                                            const isSelected = selectedSlotIds.includes(slot.id);
-                                            return (
-                                                <label
-                                                    key={slot.id}
-                                                    className={`flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all ${
-                                                        isSelected
-                                                            ? 'border-[#0F2F58] bg-[#EBF2FA]'
-                                                            : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center gap-2.5">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelected}
-                                                            onChange={() => toggleSlot(slot.id)}
-                                                            className="size-4 accent-[#0F2F58] rounded"
-                                                        />
-                                                        <div>
-                                                            <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                                                                {slot.icon === 'truck' ? (
-                                                                    <Truck className="size-3.5 text-blue-700" />
-                                                                ) : (
-                                                                    <Package className="size-3.5 text-amber-700" />
-                                                                )}
-                                                                <span>{slot.title}</span>
-                                                            </div>
-                                                            <div className="text-[10px] text-slate-500">{slot.desc}</div>
-                                                        </div>
-                                                    </div>
-                                                    <span className="font-mono text-xs font-extrabold text-slate-900">
-                                                        +₱{slot.price.toFixed(2)}
-                                                    </span>
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Escrow Total Breakdown */}
                             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-2 text-xs">
                                 <div className="flex justify-between text-slate-600">
-                                    <span>Labor &amp; Items Subtotal:</span>
-                                    <span className="font-mono font-bold text-slate-800">₱{calculatedTotal.toFixed(2)}</span>
+                                    <span>Base Package ({activePackage.title}):</span>
+                                    <span className="font-mono font-bold text-slate-800">₱{(basePrice * quantity).toFixed(2)}</span>
                                 </div>
+                                {slotsTotal > 0 && (
+                                    <div className="flex justify-between text-slate-600">
+                                        <span>Deal Chain Extensions:</span>
+                                        <span className="font-mono font-bold text-slate-800">+₱{(slotsTotal * quantity).toFixed(2)}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between text-slate-600">
-                                    <span>Tiwala Community Protection:</span>
-                                    <span className="font-mono font-bold text-emerald-700">₱0.00 (Free Launch)</span>
+                                    <span>Tiwala Community Assurance:</span>
+                                    <span className="font-mono font-bold text-emerald-700">₱0.00 (Launch Promo)</span>
                                 </div>
                                 <div className="flex justify-between border-t border-slate-200 pt-2 text-sm font-extrabold text-[#0F2F58]">
                                     <span>Total Escrow Amount:</span>
@@ -785,15 +945,26 @@ export default function ListingDetail(props: HomeProps) {
                                 </div>
                             </div>
 
-                            {/* Primary Action Button */}
-                            <div className="flex flex-col gap-2.5 pt-2">
+                            {/* DUAL CTAs: Direct Action + Add to Picks */}
+                            <div className="flex flex-col gap-2.5 pt-1">
+                                {/* 1. Primary Direct Action CTA */}
+                                <button
+                                    type="button"
+                                    onClick={handleDirectAction}
+                                    className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold tracking-wide text-white shadow-md transition-all hover:bg-[#153e74] active:scale-98"
+                                >
+                                    <span>{isService ? 'Book Service Now' : 'Buy Product Now'} · ₱{calculatedTotal.toFixed(2)}</span>
+                                    <ArrowRight className="size-4" />
+                                </button>
+
+                                {/* 2. Secondary Add to Picks CTA */}
                                 <button
                                     type="button"
                                     onClick={handleAddToPicks}
-                                    className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold tracking-wide text-white shadow-md transition-all hover:bg-[#153e74] active:scale-98"
+                                    className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-slate-300 bg-white text-xs font-bold text-[#0F2F58] shadow-xs transition-colors hover:bg-slate-50"
                                 >
                                     <ShoppingBag className="size-4" />
-                                    <span>Add to Citizen Picks (₱{calculatedTotal.toFixed(2)})</span>
+                                    <span>+ Add to Citizen Picks</span>
                                 </button>
                             </div>
 
@@ -809,23 +980,29 @@ export default function ListingDetail(props: HomeProps) {
                 </div>
             </main>
 
-            {/* Mobile Bottom Booking Dock (Fixed at bottom for mobile screens) */}
+            {/* Mobile Bottom Booking Dock (Dual CTA matching mock) */}
             <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur lg:hidden">
-                <div className="flex items-center justify-between gap-3">
-                    <div>
-                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total</div>
-                        <div className="font-mono text-lg font-extrabold text-[#0F2F58]">
-                            ₱{calculatedTotal.toFixed(2)}
-                        </div>
-                    </div>
+                <div className="flex items-center gap-2.5">
+                    {/* Primary Direct Action Button (~75% width) */}
+                    <button
+                        type="button"
+                        onClick={handleDirectAction}
+                        className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold text-white shadow-md active:bg-[#0a2240]"
+                    >
+                        <span>{isService ? 'Book Service' : 'Buy Now'} · ₱{calculatedTotal.toFixed(2)}</span>
+                        <ArrowRight className="size-4" />
+                    </button>
 
+                    {/* Secondary Add to Picks Button (~25% width) */}
                     <button
                         type="button"
                         onClick={handleAddToPicks}
-                        className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold text-white shadow-md active:bg-[#0a2240]"
+                        className="flex h-11 items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-3.5 text-xs font-bold text-[#0F2F58] shadow-xs active:bg-slate-100"
+                        title="Add to Citizen Picks"
+                        aria-label="Add to Citizen Picks"
                     >
                         <ShoppingBag className="size-4" />
-                        <span>Add to Picks</span>
+                        <span className="hidden sm:inline">Picks</span>
                     </button>
                 </div>
             </div>

@@ -55,7 +55,8 @@ describe('ListingDetail Page', () => {
         expect(within(desktop).getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText('₱450.00').length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText('Kuya Ben AC').length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/What's Included & Execution Gates/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Choose Package Tier/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/1 Unit Standard/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/Tiwala Escrow Protection/i).length).toBeGreaterThan(0);
     });
 
@@ -91,9 +92,8 @@ describe('ListingDetail Page', () => {
         const desktop = getDesktop(container as HTMLElement);
 
         // Click Add to Citizen Picks button
-        const addBtn = within(desktop).getByRole('button', { name: /Add to Citizen Picks/i });
+        const addBtn = within(desktop).getAllByRole('button', { name: /Add to Citizen Picks/i })[0];
         fireEvent.click(addBtn);
-
         // Picks drawer opens with item
         expect(screen.getByText('Citizen Picks')).toBeTruthy();
         expect(screen.getByText('1 item ready for escrow')).toBeTruthy();
@@ -152,9 +152,8 @@ describe('ListingDetail Page', () => {
 
         // Check product adaptations
         expect(within(desktop).getAllByText('Weekend bibingka tray').length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText('Product Unit Price').length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Product Specifications & Prep/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText('Fresh Daily Supply').length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Morning batch baking/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Verified Local Product/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Solo Snack Box/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Fresh morning batch steaming/i).length).toBeGreaterThan(0);
     });
 });
