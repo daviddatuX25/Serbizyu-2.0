@@ -2262,6 +2262,47 @@
       scroll-snap-align: start;
       box-sizing: border-box;
     }
+    /* Switch toggle for optional pipeline */
+    .switch-toggle {
+      position: relative;
+      display: inline-block;
+      width: 38px;
+      height: 22px;
+      margin: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .switch-toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #CBD5E1;
+      transition: .2s;
+      border-radius: 22px;
+    }
+    .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .switch-toggle input:checked + .switch-slider {
+      background-color: var(--forest-600);
+    }
+    .switch-toggle input:checked + .switch-slider:before {
+      transform: translateX(16px);
+    }
   </style>
 </head>
 <body>
@@ -2403,52 +2444,100 @@
           </div>
         </div>
 
-        <!-- Work Execution Pipeline (From Work Catalog) -->
-        <div class="field-block" style="margin-top: 14px; padding-top: 12px; border-top: 1.5px solid var(--line);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div>
-              <label class="field-label" style="margin: 0; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #0F2F58; font-weight: 800;">Target Work Pipeline</label>
-              <div style="font-size: 9.5px; color: var(--ink-muted); margin-top: 1px;">Standard operational stages &amp; milestone SLA</div>
-            </div>
-            <span style="font-size: 8.5px; font-weight: 800; background: var(--forest-50); color: var(--forest-700); border: 1px solid var(--forest-200); padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">WORK CATALOG</span>
+        <!-- Simple Specific Requirements (Default View) -->
+        <div class="field-block" id="simple-request-tasks-container" style="margin-top: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="field-label" style="margin: 0;">Specific Requirements</label>
+            <span style="font-size: 10px; color: var(--ink-muted);">Key tasks for servicer</span>
           </div>
+          <div class="inclusions-dynamic-list" id="request-tasks-list" style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+              <input type="text" class="custom-item-input" value="Inspect kitchen water line and under-sink pipe fittings" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Describe requirement...">
+              <button type="button" class="btn-item-remove" onclick="this.closest('.custom-item-card').remove()" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+            </div>
+            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+              <input type="text" class="custom-item-input" value="Replace corroded brass gate shutoff valve" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Describe requirement...">
+              <button type="button" class="btn-item-remove" onclick="this.closest('.custom-item-card').remove()" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+            </div>
+            <div class="custom-item-card" style="background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+              <input type="text" class="custom-item-input" value="Pressure test joint with household faucets open" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Describe requirement...">
+              <button type="button" class="btn-item-remove" onclick="this.closest('.custom-item-card').remove()" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+            </div>
+          </div>
+          <button type="button" class="btn-add-item-dashed" onclick="addSimpleRequestTask()" style="width: 100%; height: 34px; font-size: 11px; font-weight: 700; margin-top: 6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add Requirement Task</span>
+          </button>
+        </div>
 
-          <!-- Active Work Catalog Item Card -->
-          <div style="background: #FAFCFB; border: 1.5px solid var(--forest-200); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--forest-50); border: 1px solid var(--forest-200); display: flex; align-items: center; justify-content: center; color: var(--forest-700); flex-shrink: 0;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <!-- Optional Governed Work Pipeline Toggle (Off by default for simple requests) -->
+        <div class="field-block" style="margin-top: 14px; padding-top: 10px; border-top: 1.5px solid var(--line);">
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #FAFCFB; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 28px; height: 28px; border-radius: 7px; background: #EBF2FA; color: #0F2F58; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </div>
               <div>
-                <div style="font-size: 12px; font-weight: 800; color: #0F2F58;" id="active-work-title">Plumbing Leak &amp; Valve Triage</div>
-                <div style="font-size: 10px; color: var(--ink-muted); font-family: 'JetBrains Mono', monospace;" id="active-work-meta">A1 Linear · 3 Stages · 45m SLA</div>
+                <div style="font-size: 11.5px; font-weight: 800; color: #0F2F58;">Attach Governed Work Pipeline</div>
+                <div style="font-size: 9.5px; color: var(--ink-muted);">Standard catalog template with milestone SLAs &amp; evidence gates</div>
               </div>
             </div>
-            <button type="button" onclick="openWorkCatalogModal()" style="font-size: 11px; font-weight: 800; color: var(--forest-700); background: #FFFFFF; border: 1px solid var(--forest-300); border-radius: var(--radius-pill); padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <span>Change ▾</span>
-            </button>
+            <label class="switch-toggle">
+              <input type="checkbox" id="toggle-request-pipeline" onchange="toggleRequestPipelineSection(this.checked)">
+              <span class="switch-slider"></span>
+            </label>
           </div>
 
-          <!-- Compact Visual Work Pipeline Preview (Horizontal Bounded Canvas - Light Mode) -->
-          <div class="work-canvas-light-box" id="work-preview-canvas-box" style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 10px 12px; overflow-x: auto;">
-            <div id="work-preview-pipeline-track" style="display: flex; align-items: center; gap: 6px; min-width: 320px;">
-              <!-- Rendered dynamically by JS -->
+          <!-- Target Work Pipeline Container (Hidden by default, reveals when toggle is ON) -->
+          <div id="request-work-pipeline-container" style="display: none; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div>
+                <label class="field-label" style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: #0F2F58; font-weight: 800;">Target Work Pipeline</label>
+                <div style="font-size: 9.5px; color: var(--ink-muted); margin-top: 1px;">Standard operational stages &amp; milestone SLA</div>
+              </div>
+              <span style="font-size: 8.5px; font-weight: 800; background: var(--forest-50); color: var(--forest-700); border: 1px solid var(--forest-200); padding: 2px 7px; border-radius: var(--radius-pill); letter-spacing: 0.3px;">WORK CATALOG</span>
             </div>
-          </div>
 
-          <!-- Editable Milestone Requirements & Evidence List -->
-          <div style="margin-top: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 10.5px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.3px;">Milestone Requirements &amp; Evidence</span>
-              <span style="font-size: 9px; color: var(--forest-700); font-weight: 700;" id="work-stages-count-badge">3 Tracked Gates</span>
+            <!-- Active Work Catalog Item Card -->
+            <div style="background: #FAFCFB; border: 1.5px solid var(--forest-200); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--forest-50); border: 1px solid var(--forest-200); display: flex; align-items: center; justify-content: center; color: var(--forest-700); flex-shrink: 0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div>
+                  <div style="font-size: 12px; font-weight: 800; color: #0F2F58;" id="active-work-title">Plumbing Leak &amp; Valve Triage</div>
+                  <div style="font-size: 10px; color: var(--ink-muted); font-family: 'JetBrains Mono', monospace;" id="active-work-meta">A1 Linear · 3 Stages · 45m SLA</div>
+                </div>
+              </div>
+              <button type="button" onclick="openWorkCatalogModal()" style="font-size: 11px; font-weight: 800; color: var(--forest-700); background: #FFFFFF; border: 1px solid var(--forest-300); border-radius: var(--radius-pill); padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                <span>Change ▾</span>
+              </button>
             </div>
-            <div id="work-stages-editable-list" style="display: flex; flex-direction: column; gap: 6px;">
-              <!-- Rendered dynamically as editable requirement cards -->
+
+            <!-- Compact Visual Work Pipeline Preview (Horizontal Bounded Canvas - Light Mode) -->
+            <div class="work-canvas-light-box" id="work-preview-canvas-box" style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 10px 12px; overflow-x: auto;">
+              <div id="work-preview-pipeline-track" style="display: flex; align-items: center; gap: 6px; min-width: 320px;">
+                <!-- Rendered dynamically by JS -->
+              </div>
             </div>
-            <button type="button" class="btn-add-item-dashed" onclick="addWorkStageNode()" style="width: 100%; height: 32px; font-size: 11px; font-weight: 700; margin-top: 6px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>Add Requirement Node</span>
-            </button>
+
+            <!-- Editable Milestone Requirements & Evidence List -->
+            <div style="margin-top: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 10.5px; font-weight: 800; color: #0F2F58; text-transform: uppercase; letter-spacing: 0.3px;">Milestone Requirements &amp; Evidence</span>
+                <span style="font-size: 9px; color: var(--forest-700); font-weight: 700;" id="work-stages-count-badge">3 Tracked Gates</span>
+              </div>
+              <div id="work-stages-editable-list" style="display: flex; flex-direction: column; gap: 6px;">
+                <!-- Rendered dynamically as editable requirement cards -->
+              </div>
+              <button type="button" class="btn-add-item-dashed" onclick="addWorkStageNode()" style="width: 100%; height: 32px; font-size: 11px; font-weight: 700; margin-top: 6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Add Requirement Node</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -4163,14 +4252,43 @@
         metaEl.innerText = `${template.shape} · ${currentWorkStages.length} Stages · ${totalMins}m SLA`;
       }
     }
+    let isRequestPipelineEnabled = false;
+
+    function toggleRequestPipelineSection(isEnabled) {
+      isRequestPipelineEnabled = isEnabled;
+      const container = document.getElementById('request-work-pipeline-container');
+      const simpleTasks = document.getElementById('simple-request-tasks-container');
+      if (container) {
+        container.style.display = isEnabled ? 'block' : 'none';
+        if (isEnabled) {
+          renderWorkPreviewCanvas();
+          renderEditableStagesList();
+        }
+      }
+      if (simpleTasks) {
+        simpleTasks.style.display = isEnabled ? 'none' : 'block';
+      }
+    }
+
+    function addSimpleRequestTask() {
+      const list = document.getElementById('request-tasks-list');
+      if (!list) return;
+      const div = document.createElement('div');
+      div.className = 'custom-item-card';
+      div.style.cssText = 'background:#FAFCFB; border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px;';
+      div.innerHTML = `
+        <span style="color:var(--forest-600); font-weight:800; font-size:12px;">✓</span>
+        <input type="text" class="custom-item-input" value="" style="flex:1; font-size:11.5px; font-weight:600; color:var(--ink); border:none; background:transparent; outline:none;" placeholder="Describe requirement...">
+        <button type="button" class="btn-item-remove" onclick="this.closest('.custom-item-card').remove()" aria-label="Remove" style="font-size:14px; color:var(--ink-muted); background:none; border:none; cursor:pointer;">&times;</button>
+      `;
+      list.appendChild(div);
+      div.querySelector('input').focus();
+    }
 
     let defaultRequestSourcingHTML = '';
 
     window.addEventListener('DOMContentLoaded', () => {
-      renderWorkPreviewCanvas();
-      renderEditableStagesList();
       renderPartnerCombosDeck();
-
       // Detect acting-on-behalf owner from URL
       const urlParams = new URLSearchParams(window.location.search);
       const ownerParam = urlParams.get('owner');
