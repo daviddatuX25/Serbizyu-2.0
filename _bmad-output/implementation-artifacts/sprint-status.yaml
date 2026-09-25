@@ -15,7 +15,7 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   epic-1: in-progress
   1-1-create-and-resume-a-secure-account: done
-  1-2-sign-in-and-recover-without-enumeration: backlog
+  1-2-sign-in-and-recover-without-enumeration: done
   1-3-manage-additive-capabilities-and-profile-readiness: backlog
   1-4-submit-and-review-identity-evidence-safely: backlog
   1-5-grant-and-revoke-agent-authority: backlog
