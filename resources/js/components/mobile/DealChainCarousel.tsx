@@ -256,32 +256,43 @@ export default function DealChainCarousel({
 }: DealChainCarouselProps) {
     const deckRef = useRef<HTMLDivElement>(null);
 
-    /* ── Scroll-snap detection (sync activeIndex from manual swipe) ── */
+    /* Sync the selected option only after swipe or smooth-scroll settles. */
     useEffect(() => {
         const deck = deckRef.current;
         if (!deck) return;
 
-        let rafId = 0;
-        const onScroll = () => {
-            cancelAnimationFrame(rafId);
-            rafId = requestAnimationFrame(() => {
-                const slides = deck.children;
-                if (slides.length === 0) return;
-                const deckLeft = deck.scrollLeft;
-                const slideWidth = (slides[0] as HTMLElement).offsetWidth;
-                if (slideWidth === 0) return;
-                const snappedIndex = Math.round(deckLeft / slideWidth);
-                const clamped = Math.max(0, Math.min(combinations.length - 1, snappedIndex));
-                if (clamped !== activeIndex) {
-                    onIndexChange(clamped);
+        let settleTimer: number | undefined;
+
+        const syncActiveIndex = () => {
+            const deckLeft = deck.getBoundingClientRect().left;
+            let nearestIndex = 0;
+            let nearestDistance = Number.POSITIVE_INFINITY;
+
+            Array.from(deck.children).forEach((slide, index) => {
+                const distance = Math.abs(
+                    (slide as HTMLElement).getBoundingClientRect().left - deckLeft,
+                );
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestIndex = index;
                 }
             });
+
+            const clamped = Math.max(0, Math.min(combinations.length - 1, nearestIndex));
+            if (clamped !== activeIndex) {
+                onIndexChange(clamped);
+            }
+        };
+
+        const onScroll = () => {
+            window.clearTimeout(settleTimer);
+            settleTimer = window.setTimeout(syncActiveIndex, 220);
         };
 
         deck.addEventListener('scroll', onScroll, { passive: true });
         return () => {
             deck.removeEventListener('scroll', onScroll);
-            cancelAnimationFrame(rafId);
+            window.clearTimeout(settleTimer);
         };
     }, [activeIndex, combinations.length, onIndexChange]);
 

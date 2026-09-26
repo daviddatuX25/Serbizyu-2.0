@@ -1,5 +1,7 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 
 import { AppLayout } from '../AppLayout';
 import { StickyDock } from '../StickyDock';
@@ -371,6 +373,136 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             const changeButtons = screen.getAllByRole('button', { name: /change ▾/i });
             fireEvent.click(changeButtons[0]);
             expect(onSlotChange).toHaveBeenCalledWith('c1', 'store');
+        });
+
+        it('keeps the next option selected while smooth-scroll events are in flight', async () => {
+            const scrollIntoViewDescriptor = Object.getOwnPropertyDescriptor(
+                HTMLElement.prototype,
+                'scrollIntoView',
+            );
+            const offsetWidthDescriptor = Object.getOwnPropertyDescriptor(
+                HTMLElement.prototype,
+                'offsetWidth',
+            );
+            let settleAnimation: number | undefined;
+
+            vi.useFakeTimers();
+            vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+                window.setTimeout(() => callback(performance.now()), 16),
+            );
+            vi.stubGlobal('cancelAnimationFrame', (timer: number) => window.clearTimeout(timer));
+
+            Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+                configurable: true,
+                get: () => 600,
+            });
+            Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+                configurable: true,
+                value: function (this: HTMLElement): void {
+                    const deck = this.parentElement;
+                    if (!(deck instanceof HTMLElement) || !deck.classList.contains('snap-x')) {
+                        return;
+                    }
+
+                    const slides = Array.from(deck.children) as HTMLElement[];
+                    const targetIndex = slides.indexOf(this);
+                    const createRect = (left: number): DOMRect =>
+                        ({
+                            x: left,
+                            y: 0,
+                            left,
+                            top: 0,
+                            right: left + 600,
+                            bottom: 180,
+                            width: 600,
+                            height: 180,
+                            toJSON: () => ({}),
+                        }) as DOMRect;
+
+                    Object.defineProperty(deck, 'getBoundingClientRect', {
+                        configurable: true,
+                        value: () => createRect(0),
+                    });
+                    slides.forEach((slide, index) => {
+                        Object.defineProperty(slide, 'getBoundingClientRect', {
+                            configurable: true,
+                            value: () => createRect(index * 610 - deck.scrollLeft),
+                        });
+                    });
+
+                    if (settleAnimation) {
+                        window.clearTimeout(settleAnimation);
+                        settleAnimation = undefined;
+                    }
+
+                    if (targetIndex === 0) {
+                        deck.scrollLeft = 0;
+                        return;
+                    }
+
+                    deck.scrollLeft = 2;
+                    fireEvent.scroll(deck);
+                    let animationStep = 0;
+                    const animate = () => {
+                        animationStep += 1;
+                        deck.scrollLeft = animationStep < 6 ? animationStep * 100 : 610;
+                        fireEvent.scroll(deck);
+                        if (animationStep < 6) {
+                            settleAnimation = window.setTimeout(animate, 50);
+                        }
+                    };
+                    settleAnimation = window.setTimeout(animate, 50);
+                },
+            });
+
+            const ControlledCarousel = () => {
+                const [activeIndex, setActiveIndex] = useState(0);
+
+                return (
+                    <>
+                        <output data-testid="active-option">Option {activeIndex + 1} of 2</output>
+                        <DealChainCarousel
+                            combinations={combinations}
+                            activeIndex={activeIndex}
+                            onIndexChange={setActiveIndex}
+                            onSlotChangeClick={vi.fn()}
+                        />
+                    </>
+                );
+            };
+
+            const { unmount } = render(<ControlledCarousel />);
+
+            try {
+                await act(async () => {
+                    fireEvent.click(screen.getByRole('button', { name: /next/i }));
+                    await vi.advanceTimersByTimeAsync(700);
+                });
+
+                expect(screen.getByTestId('active-option').textContent).toBe('Option 2 of 2');
+            } finally {
+                unmount();
+                window.clearTimeout(settleAnimation);
+                vi.useRealTimers();
+                vi.unstubAllGlobals();
+                if (scrollIntoViewDescriptor) {
+                    Object.defineProperty(
+                        HTMLElement.prototype,
+                        'scrollIntoView',
+                        scrollIntoViewDescriptor,
+                    );
+                } else {
+                    delete (HTMLElement.prototype as Partial<HTMLElement>).scrollIntoView;
+                }
+                if (offsetWidthDescriptor) {
+                    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidthDescriptor);
+                } else {
+                    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+                        configurable: true,
+                        get: () => 0,
+                    });
+                }
+            }
         });
     });
 
