@@ -15,21 +15,17 @@ export interface DealChainCarouselProps {
 /* ── Compact DAG Node ── */
 function DagNode({ node }: { node: DealChainNode }) {
     return (
-        <div className="shrink-0 flex flex-col gap-0.5 min-w-[82px] rounded-lg border border-slate-300 bg-white px-[7px] py-1 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+        <div className="flex min-w-[82px] shrink-0 flex-col gap-0.5 rounded-lg border border-slate-300 bg-white px-[7px] py-1 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
             <div className="flex items-center justify-between gap-1">
                 <span
-                    className="rounded px-1 text-[7px] font-extrabold leading-tight"
+                    className="rounded px-1 text-[7px] leading-tight font-extrabold"
                     style={{ background: node.bg, color: node.color }}
                 >
                     {node.role}
                 </span>
-                <span className="font-mono text-[8px] font-bold text-slate-500">
-                    {node.sub}
-                </span>
+                <span className="font-mono text-[8px] font-bold text-slate-500">{node.sub}</span>
             </div>
-            <div className="truncate text-[9.5px] font-extrabold text-[#0F2F58]">
-                {node.title}
-            </div>
+            <div className="truncate text-[9.5px] font-extrabold text-[#0F2F58]">{node.title}</div>
         </div>
     );
 }
@@ -37,13 +33,7 @@ function DagNode({ node }: { node: DealChainNode }) {
 /* ── DAG Connector Arrow ── */
 function DagArrow() {
     return (
-        <svg
-            width="16"
-            height="10"
-            viewBox="0 0 16 10"
-            fill="none"
-            className="shrink-0"
-        >
+        <svg width="16" height="10" viewBox="0 0 16 10" fill="none" className="shrink-0">
             <line
                 x1="0"
                 y1="5"
@@ -74,19 +64,15 @@ function SlotBinderRow({
             className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white px-2 py-[5px] text-left transition-colors hover:border-[#0F2F58]"
         >
             <div>
-                <div className="text-[8.5px] font-bold uppercase text-slate-500">
-                    {slot.role}
-                </div>
+                <div className="text-[8.5px] font-bold text-slate-500 uppercase">{slot.role}</div>
                 <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-extrabold text-[#0F2F58]">
-                        {slot.name}
-                    </span>
+                    <span className="text-[11px] font-extrabold text-[#0F2F58]">{slot.name}</span>
                     <span className="font-mono text-[9.5px] font-bold text-[--forest-700,#0a574a]">
                         {slot.meta}
                     </span>
                 </div>
             </div>
-            <span className="shrink-0 whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-extrabold text-[#0F2F58]">
+            <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-[#0F2F58]">
                 Change ▾
             </span>
         </button>
@@ -122,7 +108,7 @@ function ComboSlide({
     onRemoveCombo?: (comboId: string) => void;
 }) {
     return (
-        <div className="box-border flex-[0_0_100%] min-w-full snap-start">
+        <div className="box-border min-w-full flex-[0_0_100%] snap-start">
             <div
                 className="rounded-xl border-[1.5px] p-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
                 style={{
@@ -133,17 +119,17 @@ function ComboSlide({
                 {/* Top Header */}
                 <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[13px]">{combo.icon || '📦'}</span>
-                        <span className="text-xs font-extrabold text-[#0F2F58]">
-                            {combo.title}
+                        <span className="text-[13px] text-[#0F2F58]">
+                            {combo.icon && combo.icon.length <= 3 ? combo.icon : <LinkChainIcon />}
                         </span>
+                        <span className="text-xs font-extrabold text-[#0F2F58]">{combo.title}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <button
                             type="button"
                             onClick={() => onToggleDefault?.(combo.id)}
                             aria-label={combo.isDefault ? 'Currently default' : 'Set as default'}
-                            className={`inline-flex cursor-pointer items-center gap-0.5 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9.5px] font-bold transition-all ${
+                            className={`inline-flex cursor-pointer items-center gap-0.5 rounded-full border px-2 py-0.5 text-[9.5px] font-bold whitespace-nowrap transition-all ${
                                 combo.isDefault
                                     ? 'border-transparent bg-[#0F2F58] text-white shadow-sm'
                                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
@@ -155,7 +141,7 @@ function ComboSlide({
                             type="button"
                             onClick={() => onRemoveCombo?.(combo.id)}
                             aria-label="Remove option"
-                            className="min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer border-none bg-transparent text-[15px] text-slate-500 hover:text-red-500 transition-colors"
+                            className="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center border-none bg-transparent text-[15px] text-slate-500 transition-colors hover:text-red-500"
                         >
                             ×
                         </button>
@@ -168,7 +154,7 @@ function ComboSlide({
                 {/* Slot Binding Rows */}
                 <div className="flex flex-col gap-[5px]">
                     {combo.slots.length === 0 ? (
-                        <div className="py-1 text-[10px] italic text-slate-500">
+                        <div className="py-1 text-[10px] text-slate-500 italic">
                             No external partner dependencies. Fulfilled directly by your team.
                         </div>
                     ) : (
@@ -202,13 +188,7 @@ function EmptyDeck() {
 }
 
 /* ── Pagination Dot ── */
-function PaginationDot({
-    active,
-    onClick,
-}: {
-    active: boolean;
-    onClick: () => void;
-}) {
+function PaginationDot({ active, onClick }: { active: boolean; onClick: () => void }) {
     return (
         <button
             type="button"
@@ -355,11 +335,7 @@ export default function DealChainCarousel({
             {/* ── Navigation Bar ── */}
             {!isEmpty && (
                 <div className="mt-2 flex items-center justify-between px-0.5">
-                    <NavButton
-                        direction="prev"
-                        disabled={activeIndex === 0}
-                        onClick={goPrev}
-                    />
+                    <NavButton direction="prev" disabled={activeIndex === 0} onClick={goPrev} />
                     <div className="flex items-center gap-1.5">
                         <div className="flex items-center gap-1">
                             {combinations.map((_, i) => (

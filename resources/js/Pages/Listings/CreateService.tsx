@@ -25,6 +25,7 @@ import {
     WorkNodeCustomizerModal,
     WorkCatalogModal,
     DealChainCarousel,
+    GlovoWaveModal,
     type WorkStage,
     type WorkTemplate,
     type DealChainCombination,
@@ -332,7 +333,7 @@ export default function CreateService() {
         {
             id: 'combo-1',
             title: 'All-In Parts, Courier & Labor',
-            icon: '🔧',
+            icon: 'Wrench',
             isDefault: true,
             nodes: [
                 {
@@ -378,7 +379,7 @@ export default function CreateService() {
         {
             id: 'combo-2',
             title: 'Doorstep Courier Transit Only',
-            icon: '🛵',
+            icon: 'Truck',
             isDefault: false,
             nodes: [
                 {
@@ -418,11 +419,11 @@ export default function CreateService() {
     ]);
 
     const [activeComboIndex, setActiveComboIndex] = useState(0);
+    const [attachChainModalOpen, setAttachChainModalOpen] = useState(false);
     const [slotPickerTarget, setSlotPickerTarget] = useState<{
         comboId: string;
         slotType: SlotType;
     } | null>(null);
-
     // Inclusions
     const addInclusion = () => {
         if (!newInclusion.trim()) return;
@@ -494,14 +495,34 @@ export default function CreateService() {
         );
     };
 
-    // Deal Chain Slot Swap Handler
+    // Deal Chain Slot Swap & Combo Handlers
     const handleSwapSlot = (candidate: SlotCandidateListing) => {
         if (!slotPickerTarget) return;
+        const shortName =
+            candidate.provider_name.includes('Danny Express')
+                ? 'Danny Exp'
+                : candidate.provider_name.includes('Centro Eco')
+                  ? 'Centro Eco'
+                  : candidate.provider_name.includes('Tagudin Hardware')
+                    ? 'Hardware'
+                    : candidate.provider_name.includes('Kuya Ben')
+                      ? 'Kuya Ben'
+                      : candidate.provider_name.slice(0, 12);
+        const priceStr = `₱${Math.round(candidate.price_minor / 100)}`;
+
         setCombinations((prev) =>
             prev.map((combo) => {
                 if (combo.id !== slotPickerTarget.comboId) return combo;
                 return {
                     ...combo,
+                    nodes: combo.nodes.map((n) => {
+                        if (n.type !== slotPickerTarget.slotType) return n;
+                        return {
+                            ...n,
+                            title: shortName,
+                            sub: priceStr,
+                        };
+                    }),
                     slots: combo.slots.map((s) => {
                         if (s.type !== slotPickerTarget.slotType) return s;
                         return {
@@ -516,6 +537,44 @@ export default function CreateService() {
         setSlotPickerTarget(null);
     };
 
+    const handleToggleComboDefault = (comboId: string) => {
+        setCombinations((prev) =>
+            prev.map((c) => ({
+                ...c,
+                isDefault: c.id === comboId,
+            })),
+        );
+    };
+
+    const handleRemoveCombo = (comboId: string) => {
+        setCombinations((prev) => {
+            const next = prev.filter((c) => c.id !== comboId);
+            if (next.length > 0 && !next.some((c) => c.isDefault)) {
+                next[0] = { ...next[0], isDefault: true };
+            }
+            return next;
+        });
+        setActiveComboIndex((prev) => Math.max(0, prev - 1));
+    };
+
+    const handleAddServiceCombo = (preset: {
+        title: string;
+        icon: string;
+        nodes: DealChainCombination['nodes'];
+        slots: DealChainCombination['slots'];
+    }) => {
+        const newCombo: DealChainCombination = {
+            id: `combo-custom-${Date.now()}`,
+            title: preset.title,
+            icon: preset.icon,
+            isDefault: combinations.length === 0,
+            nodes: preset.nodes.map((n) => ({ ...n })),
+            slots: preset.slots.map((s) => ({ ...s })),
+        };
+        setCombinations((prev) => [...prev, newCombo]);
+        setActiveComboIndex(combinations.length);
+        setAttachChainModalOpen(false);
+    };
     // Derived effective base price in centavos
     const effectivePriceMinor =
         pricingMode === 'packages'
@@ -895,7 +954,11 @@ export default function CreateService() {
 
                 {/* Stepper Progress Bar */}
                 <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white px-5 py-3 shadow-2xs">
-                    <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setStep(1)}
+                        className="flex cursor-pointer items-center gap-2 text-left transition-opacity hover:opacity-80"
+                    >
                         <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
                             step >= 1 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
                         }`}>
@@ -904,9 +967,14 @@ export default function CreateService() {
                         <span className={`text-xs font-bold ${step === 1 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
                             Trade Scope &amp; Archetype
                         </span>
-                    </div>
+                    </button>
                     <div className="h-0.5 w-12 bg-slate-200 sm:w-24" />
-                    <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        disabled={!title.trim()}
+                        onClick={() => setStep(2)}
+                        className="flex cursor-pointer items-center gap-2 text-left transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
                         <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
                             step >= 2 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
                         }`}>
@@ -915,9 +983,14 @@ export default function CreateService() {
                         <span className={`text-xs font-bold ${step === 2 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
                             Rates &amp; Options
                         </span>
-                    </div>
+                    </button>
                     <div className="h-0.5 w-12 bg-slate-200 sm:w-24" />
-                    <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        disabled={!title.trim()}
+                        onClick={() => setStep(3)}
+                        className="flex cursor-pointer items-center gap-2 text-left transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
                         <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
                             step >= 3 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
                         }`}>
@@ -926,7 +999,7 @@ export default function CreateService() {
                         <span className={`text-xs font-bold ${step === 3 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
                             Chains &amp; Launch
                         </span>
-                    </div>
+                    </button>
                 </div>
 
                 {/* Responsive 2-Column Grid */}
@@ -1549,6 +1622,9 @@ export default function CreateService() {
                                     onSlotChangeClick={(comboId, slotType) =>
                                         setSlotPickerTarget({ comboId, slotType })
                                     }
+                                    onToggleDefault={handleToggleComboDefault}
+                                    onRemoveCombo={handleRemoveCombo}
+                                    onAddComboClick={() => setAttachChainModalOpen(true)}
                                 />
                             </div>
 
@@ -1688,6 +1764,94 @@ export default function CreateService() {
                     role={slotPickerTarget?.slotType || 'store'}
                     onSelectCandidate={handleSwapSlot}
                 />
+
+                {/* Attach Partner Combination Modal */}
+                <GlovoWaveModal
+                    open={attachChainModalOpen}
+                    onClose={() => setAttachChainModalOpen(false)}
+                    title="Attach Partner Deal Chain"
+                    subtitle="Verified Tagudin parts, courier, and inspection combinations"
+                >
+                    <div className="flex flex-col gap-3 py-1 font-['Plus_Jakarta_Sans',sans-serif]">
+                        <p className="text-xs text-slate-500">
+                            Select a verified multi-party Deal Chain combination to attach to your service listing:
+                        </p>
+                        <div className="flex flex-col gap-2.5 max-h-[50vh] overflow-y-auto pr-1">
+                            {[
+                                {
+                                    key: 'parts_courier_labor',
+                                    title: 'All-In Parts, Courier & Labor',
+                                    icon: 'Wrench',
+                                    desc: 'Source spare parts from hardware store + courier transit to customer site',
+                                    nodes: [
+                                        { role: 'STORE', title: '35uF Cap', sub: '₱180', type: 'store', bg: '#FEF3C7', color: '#B45309' },
+                                        { role: 'COURIER', title: 'Danny Exp', sub: '₱35', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
+                                        { role: 'LABOR', title: 'Your Service', sub: `₱${Math.round(effectivePriceMinor / 100)}`, type: 'labor', bg: '#ECFDF5', color: '#059669' },
+                                    ],
+                                    slots: [
+                                        { type: 'store' as SlotType, role: 'Hardware Part Supplier', name: 'Tagudin Hardware Depot', meta: '₱180.00 counter pickup' },
+                                        { type: 'delivery' as SlotType, role: 'Doorstep Courier Runner', name: 'Danny Express Motorcycle Pool', meta: '₱35.00 route fee' },
+                                    ],
+                                },
+                                {
+                                    key: 'courier_only',
+                                    title: 'Doorstep Courier Transit Only',
+                                    icon: 'Truck',
+                                    desc: 'Customer-supplied part picked up and delivered by local courier',
+                                    nodes: [
+                                        { role: 'STORE', title: 'Pickup', sub: 'Counter', type: 'store', bg: '#FEF3C7', color: '#B45309' },
+                                        { role: 'COURIER', title: 'Danny Exp', sub: '₱35', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
+                                        { role: 'LABOR', title: 'Your Service', sub: `₱${Math.round(effectivePriceMinor / 100)}`, type: 'labor', bg: '#ECFDF5', color: '#059669' },
+                                    ],
+                                    slots: [
+                                        { type: 'delivery' as SlotType, role: 'Doorstep Courier Runner', name: 'Danny Express Motorcycle Pool', meta: '₱35.00 route fee' },
+                                    ],
+                                },
+                                {
+                                    key: 'safety_audit',
+                                    title: 'Service + Safety Electrical Audit',
+                                    icon: 'ShieldCheck',
+                                    desc: 'Include certified post-repair electrical and appliance safety audit',
+                                    nodes: [
+                                        { role: 'LABOR', title: 'Your Service', sub: `₱${Math.round(effectivePriceMinor / 100)}`, type: 'labor', bg: '#ECFDF5', color: '#059669' },
+                                        { role: 'AUDIT', title: 'Safety Check', sub: '₱150', type: 'audit', bg: '#FEF3C7', color: '#B45309' },
+                                    ],
+                                    slots: [
+                                        { type: 'audit' as SlotType, role: 'Certified Safety Auditor', name: 'Safety Check (Master Electrician)', meta: '₱150.00 municipal certificate' },
+                                    ],
+                                },
+                            ].map((preset) => (
+                                <div
+                                    key={preset.key}
+                                    onClick={() => handleAddServiceCombo(preset)}
+                                    className="flex cursor-pointer items-start justify-between rounded-2xl border border-slate-200 bg-white p-3.5 transition-all hover:border-[#0F2F58] hover:bg-[#F0F5FA]/50 shadow-2xs"
+                                >
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-extrabold text-[#0F2F58]">
+                                                {preset.title}
+                                            </span>
+                                            <span className="rounded-full bg-[#0F2F58] px-1.5 py-0.2 text-[8px] font-extrabold text-white">
+                                                DEAL CHAIN
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500">{preset.desc}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleAddServiceCombo(preset);
+                                        }}
+                                        className="shrink-0 cursor-pointer rounded-xl bg-[#FFC72C] px-3 py-1.5 text-xs font-bold text-slate-950 shadow-2xs hover:bg-[#F2BA18]"
+                                    >
+                                        + Attach
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </GlovoWaveModal>
             </div>
         </div>
     );

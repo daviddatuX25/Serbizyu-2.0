@@ -161,7 +161,7 @@ const PRESET_RECIPES = [
     {
         key: 'tool_rental',
         title: 'Tool Rental Kit + Courier Delivery',
-        icon: '🧰',
+        icon: 'Wrench',
         description: 'Tagudin tool depot rental and motorcycle courier delivery',
         slots: [
             {
@@ -191,7 +191,7 @@ const PRESET_RECIPES = [
     {
         key: 'hauling',
         title: 'Delivery + Eco-Scrap Removal',
-        icon: '♻️',
+        icon: 'Package',
         description: 'Doorstep delivery combined with old scrap disposal & material reclaim',
         slots: [
             {
@@ -220,6 +220,20 @@ const PRESET_RECIPES = [
     },
 ];
 
+function renderComboIcon(iconName: string, className = 'size-4') {
+    switch (iconName) {
+        case 'Truck':
+            return <Truck className={className} />;
+        case 'Wrench':
+            return <Wrench className={className} />;
+        case 'Package':
+            return <Package className={className} />;
+        case 'ShieldCheck':
+            return <ShieldCheck className={className} />;
+        default:
+            return <Truck className={className} />;
+    }
+}
 export default function CreateProduct() {
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -789,7 +803,11 @@ export default function CreateProduct() {
 
                 {/* Stepper Progress Bar */}
                 <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white px-5 py-3 shadow-2xs">
-                    <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setStep(1)}
+                        className="flex cursor-pointer items-center gap-2 text-left transition-opacity hover:opacity-80"
+                    >
                         <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
                             step >= 1 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
                         }`}>
@@ -798,9 +816,14 @@ export default function CreateProduct() {
                         <span className={`text-xs font-bold ${step === 1 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
                             Product Identity &amp; Stall
                         </span>
-                    </div>
+                    </button>
                     <div className="h-0.5 w-12 bg-slate-200 sm:w-24" />
-                    <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        disabled={!title.trim()}
+                        onClick={() => setStep(2)}
+                        className="flex cursor-pointer items-center gap-2 text-left transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
                         <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
                             step >= 2 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
                         }`}>
@@ -809,9 +832,14 @@ export default function CreateProduct() {
                         <span className={`text-xs font-bold ${step === 2 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
                             Variations &amp; Pricing
                         </span>
-                    </div>
+                    </button>
                     <div className="h-0.5 w-12 bg-slate-200 sm:w-24" />
-                    <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        disabled={!title.trim()}
+                        onClick={() => setStep(3)}
+                        className="flex cursor-pointer items-center gap-2 text-left transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
                         <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
                             step >= 3 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
                         }`}>
@@ -820,7 +848,7 @@ export default function CreateProduct() {
                         <span className={`text-xs font-bold ${step === 3 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
                             Fulfillment &amp; Launch
                         </span>
-                    </div>
+                    </button>
                 </div>
 
                 {/* Responsive 2-Column Grid */}
@@ -1162,7 +1190,7 @@ export default function CreateProduct() {
                                                         : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                                                 }`}
                                             >
-                                                <span>{c.icon}</span>
+                                                {renderComboIcon(c.icon, 'size-3.5')}
                                                 <span>{c.title}</span>
                                                 {selectedFulfillment === c.id && (
                                                     <span className="rounded-full bg-emerald-500 px-1 py-0.2 text-[8px] font-bold text-white">
@@ -1186,8 +1214,10 @@ export default function CreateProduct() {
                                         >
                                             {/* Combo Header */}
                                             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xl">{currentCombo.icon}</span>
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EBF2FA] text-[#0F2F58]">
+                                                        {renderComboIcon(currentCombo.icon, 'size-4')}
+                                                    </span>
                                                     <div>
                                                         <div className="flex items-center gap-2">
                                                             <h3 className="text-sm font-extrabold text-[#0F2F58]">
@@ -1340,7 +1370,11 @@ export default function CreateProduct() {
                                             <button
                                                 type="button"
                                                 disabled={currentComboIdx === 0}
-                                                onClick={() => setCurrentComboIdx((prev) => Math.max(0, prev - 1))}
+                                                onClick={() => {
+                                                    const nextIdx = Math.max(0, currentComboIdx - 1);
+                                                    setCurrentComboIdx(nextIdx);
+                                                    if (combos[nextIdx]) setSelectedFulfillment(combos[nextIdx].id);
+                                                }}
                                                 className="flex cursor-pointer items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-[#0F2F58] shadow-2xs hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
                                             >
                                                 <ChevronLeft className="size-3.5" />
@@ -1353,7 +1387,10 @@ export default function CreateProduct() {
                                                         <button
                                                             key={dIdx}
                                                             type="button"
-                                                            onClick={() => setCurrentComboIdx(dIdx)}
+                                                            onClick={() => {
+                                                                setCurrentComboIdx(dIdx);
+                                                                if (combos[dIdx]) setSelectedFulfillment(combos[dIdx].id);
+                                                            }}
                                                             className={`h-1.5 cursor-pointer rounded-full transition-all ${
                                                                 dIdx === currentComboIdx
                                                                     ? 'w-5 bg-[#0F2F58]'
@@ -1371,7 +1408,11 @@ export default function CreateProduct() {
                                             <button
                                                 type="button"
                                                 disabled={currentComboIdx >= combos.length - 1}
-                                                onClick={() => setCurrentComboIdx((prev) => Math.min(combos.length - 1, prev + 1))}
+                                                onClick={() => {
+                                                    const nextIdx = Math.min(combos.length - 1, currentComboIdx + 1);
+                                                    setCurrentComboIdx(nextIdx);
+                                                    if (combos[nextIdx]) setSelectedFulfillment(combos[nextIdx].id);
+                                                }}
                                                 className="flex cursor-pointer items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-[#0F2F58] shadow-2xs hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
                                             >
                                                 <span>Next</span>
@@ -1576,8 +1617,8 @@ export default function CreateProduct() {
                                     className="flex cursor-pointer items-start justify-between rounded-2xl border border-slate-200 bg-white p-3.5 transition-all hover:border-[#0F2F58] hover:bg-[#F0F5FA]/50 active:scale-[0.99] shadow-2xs"
                                 >
                                     <div className="flex items-start gap-3">
-                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">
-                                            {recipe.icon}
+                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-[#0F2F58]">
+                                            {renderComboIcon(recipe.icon, 'size-5')}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-1.5">

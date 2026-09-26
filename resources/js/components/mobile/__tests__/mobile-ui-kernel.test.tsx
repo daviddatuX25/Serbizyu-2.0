@@ -10,8 +10,8 @@ import DealChainCarousel from '../DealChainCarousel';
 import GlovoWaveModal from '../GlovoWaveModal';
 import WorkCatalogModal from '../WorkCatalogModal';
 import WorkNodeCustomizerModal from '../WorkNodeCustomizerModal';
+import { SlotListingPickerModal } from '../../marketplace/SlotListingPickerModal';
 import type { WorkStage, WorkTemplate, DealChainCombination, ActingContextData } from '../types';
-
 afterEach(cleanup);
 describe('Mobile UI Kernel — Foundation Primitives', () => {
     describe('AppLayout', () => {
@@ -770,6 +770,52 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             const saved: WorkStage[] = onSave.mock.calls[0][0];
             expect(saved[0].clearanceMode).toBe('customer_approval');
             expect(saved[0].requiredProofs).toContain('metric_reading');
+        });
+    });
+
+    describe('SlotListingPickerModal — Role Normalization & State Sync Regression', () => {
+        it('normalizes lowercase "delivery" role to COURIER candidates instead of empty state', () => {
+            render(
+                <SlotListingPickerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    role="delivery"
+                    onSelectCandidate={vi.fn()}
+                />,
+            );
+
+            expect(screen.getByText('Tagudin Express Motorcycle Delivery')).toBeDefined();
+            expect(screen.getByText('Barangay Centro Bicycle Runner')).toBeDefined();
+        });
+
+        it('resets selected candidate when role switches from COURIER to LABOR', () => {
+            const onSelect = vi.fn();
+            const { rerender } = render(
+                <SlotListingPickerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    role="COURIER"
+                    onSelectCandidate={onSelect}
+                />,
+            );
+
+            // Select bicycle courier
+            fireEvent.click(screen.getByText('Barangay Centro Bicycle Runner'));
+
+            // Now switch role to LABOR
+            rerender(
+                <SlotListingPickerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    role="LABOR"
+                    onSelectCandidate={onSelect}
+                />,
+            );
+
+            // Confirm selection — must return a LABOR candidate, not the stale COURIER candidate
+            fireEvent.click(screen.getByRole('button', { name: /Confirm Partner Selection/i }));
+            expect(onSelect).toHaveBeenCalledTimes(1);
+            expect(onSelect.mock.calls[0][0].role).toBe('LABOR');
         });
     });
 });
