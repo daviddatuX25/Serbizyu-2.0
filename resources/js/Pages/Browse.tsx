@@ -10,7 +10,6 @@ import {
     Heart,
     List,
     MapPin,
-    Plus,
     RotateCcw,
     Search,
     ShieldCheck,
@@ -207,27 +206,6 @@ export default function Browse(props: HomeProps) {
         });
     };
 
-    const handleAddToCart = (item: ListingRecord) => {
-        const price = getPriceRaw(item);
-        const listingContext = {
-            category_code: item.category_code ?? item.categoryCode ?? null,
-            listing_type: item.listing_type ?? item.listingType ?? null,
-            work_shape: item.work_shape ?? item.workShape ?? null,
-        };
-        const existing = basket.find((b) => b.id === item.id);
-        let updated: BasketItem[];
-        if (existing) {
-            updated = basket.map((b) =>
-                b.id === item.id ? { ...b, ...listingContext, quantity: b.quantity + 1 } : b,
-            );
-        } else {
-            updated = [
-                ...basket,
-                { id: item.id, title: item.title, price, quantity: 1, ...listingContext },
-            ];
-        }
-        saveBasket(updated);
-    };
     const basketTotal = useMemo(() => {
         return basket.reduce((sum, item) => sum + item.price * item.quantity, 0);
     }, [basket]);
@@ -424,23 +402,15 @@ export default function Browse(props: HomeProps) {
                         consentGrantId: 'cg_public',
                         isActingOnBehalf: false,
                     }}
-                    rightSlot={
-                        <Link
-                            href="/requests/create"
-                            className="flex items-center gap-1.5 rounded-full bg-[#0F2F58] px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-[#153e74]"
-                        >
-                            <span>+ Post Request</span>
-                        </Link>
-                    }
                 />
 
                 {/* 2. Main Discovery 2-Column Layout */}
                 <main className="mx-auto max-w-7xl px-6 py-8">
                     <div className="grid grid-cols-12 items-start gap-8">
                         {/* =========================================================================
-                            LEFT COLUMN (270px width): INLINE FILTER CONTROLS (NO MODAL POPUP!)
+                            LEFT COLUMN (270px width): INDEPENDENTLY SCROLLABLE INLINE FILTER CONTROLS
                             ========================================================================= */}
-                        <aside className="sticky top-24 col-span-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+                        <aside className="sticky top-20 col-span-3 max-h-[calc(100vh-6rem)] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white p-5 shadow-xs [scrollbar-width:thin]">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div className="flex items-center gap-2">
                                     <SlidersHorizontal className="size-4 text-[#0F2F58]" />
@@ -662,14 +632,6 @@ export default function Browse(props: HomeProps) {
                                             {communityRequests.length}
                                         </span>
                                     </button>
-
-                                    <Link
-                                        href="/requests/create"
-                                        className="ml-auto inline-flex items-center gap-1.5 rounded-xl border border-teal-600 bg-teal-50 px-3.5 py-1.5 text-xs font-bold text-teal-800 hover:bg-teal-100 transition-colors"
-                                    >
-                                        <Plus className="size-3.5 stroke-[2.5]" />
-                                        <span>Post a Request</span>
-                                    </Link>
                                 </div>
 
                                 <div className="flex items-center justify-between">
@@ -991,7 +953,7 @@ export default function Browse(props: HomeProps) {
                                                         </div>
                                                     </div>
 
-                                                    {/* Pricing & Booking Row */}
+                                                    {/* Pricing & Detail Row */}
                                                     <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
                                                         <div>
                                                             <div className="text-[9.5px] font-bold tracking-wider text-slate-400 uppercase">
@@ -1002,17 +964,9 @@ export default function Browse(props: HomeProps) {
                                                             </div>
                                                         </div>
 
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleAddToCart(listing);
-                                                            }}
-                                                            className="flex cursor-pointer items-center gap-1.5 rounded-full bg-[#0F2F58] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#153e74] active:scale-95"
-                                                        >
-                                                            <Plus className="size-3.5" />
-                                                            <span>Book Now</span>
-                                                        </button>
+                                                        <span className="text-xs font-bold text-slate-500 transition-colors group-hover:text-[#0F2F58]">
+                                                            View details →
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </article>
@@ -1088,16 +1042,6 @@ export default function Browse(props: HomeProps) {
                                                             Fixed rate
                                                         </div>
                                                     </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleAddToCart(listing);
-                                                        }}
-                                                        className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-[#0F2F58] text-white shadow-xs hover:bg-[#153e74]"
-                                                    >
-                                                        <Plus className="size-4" />
-                                                    </button>
                                                 </div>
                                             </article>
                                         );
@@ -1250,14 +1194,6 @@ export default function Browse(props: HomeProps) {
                                 {communityRequests.length}
                             </span>
                         </button>
-
-                        <Link
-                            href="/requests/create"
-                            className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100"
-                            title="Post Request"
-                        >
-                            <Plus className="size-4 stroke-[2.5]" />
-                        </Link>
                     </div>
 
                     {/* Tier 2: The Single Sleek Sieve Bar */}
@@ -1474,7 +1410,6 @@ export default function Browse(props: HomeProps) {
                                     onSelect={(selected) =>
                                         router.visit(`/listings/${selected.id}`)
                                     }
-                                    onAddToCart={handleAddToCart}
                                 />
                             ))
                         )}

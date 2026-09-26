@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import type { FormDataConvertible } from '@inertiajs/core';
-import { ArrowLeft, ArrowRight, Wrench, Plus, Trash2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Package, Wrench, Plus, Trash2, ShieldCheck } from 'lucide-react';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import { BottomNavBar, type NavTabId } from '../../marketplace/components/BottomNavBar';
 import { CreatorPostModal } from '../../components/marketplace/CreatorPostModal';
@@ -594,7 +594,7 @@ export default function CreateService() {
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900">
-            <DesktopGlobalNav activeRoute="browse" />
+            <DesktopGlobalNav activeRoute="create_listing" />
 
             <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col bg-white pb-[90px] lg:pb-8 shadow-xs lg:my-8 lg:min-h-[auto] lg:rounded-2xl lg:border lg:border-slate-200">
                 <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur lg:rounded-t-2xl">
@@ -609,11 +609,29 @@ export default function CreateService() {
                             Step {step} of 3
                         </span>
                         <h1 className="text-xs font-extrabold text-[#0F2F58]">
-                            Service Listing Editor
+                            Create Marketplace Listing
                         </h1>
                     </div>
                     <div className="size-9" />
                 </header>
+
+                {/* Listing Type Switcher: Service vs Product */}
+                <div className="grid grid-cols-2 gap-1.5 border-b border-slate-200/80 bg-slate-50 px-4 py-2.5">
+                    <Link
+                        href="/listings/create/service"
+                        className="flex items-center justify-center gap-1.5 rounded-xl bg-[#0F2F58] py-2 text-xs font-extrabold text-white shadow-xs"
+                    >
+                        <Wrench className="size-3.5" />
+                        <span>Service Offering</span>
+                    </Link>
+                    <Link
+                        href="/listings/create/product"
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200/80 bg-white py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    >
+                        <Package className="size-3.5" />
+                        <span>Product / Goods</span>
+                    </Link>
+                </div>
 
                 {/* Stepper Progress Indicator */}
                 <div className="flex items-center justify-center gap-1.5 border-b border-slate-100 bg-[#FAFCFB] py-2.5">

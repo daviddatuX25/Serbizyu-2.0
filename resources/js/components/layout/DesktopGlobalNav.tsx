@@ -116,7 +116,7 @@ export function DesktopGlobalNav({
                                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                             }`}
                         >
-                            + Post a Service
+                            + Create a Listing
                         </a>
                         <a
                             href="/my-listings"
