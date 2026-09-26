@@ -1215,12 +1215,56 @@ export default function Browse(props: HomeProps) {
                             )}
                         </div>
                     </header>
-                    {/* Tier 2: The Single Sleek Sieve Bar (replaces stacked category & filter chip rows) */}
+                    {/* Marketplace Segment Switcher: Services vs Citizen Requests */}
+                    <div className="flex items-center gap-1.5 border-b border-slate-200/80 bg-white px-3 py-2">
+                        <button
+                            type="button"
+                            onClick={() => setMarketplaceTab('listings')}
+                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-extrabold transition-all cursor-pointer ${
+                                marketplaceTab === 'listings'
+                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                        >
+                            <span>🏷️ Services</span>
+                            <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                                marketplaceTab === 'listings' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                            }`}>
+                                {filteredListings.length}
+                            </span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setMarketplaceTab('requests')}
+                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-extrabold transition-all cursor-pointer ${
+                                marketplaceTab === 'requests'
+                                    ? 'bg-[#0D715F] text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                        >
+                            <span>📢 Requests</span>
+                            <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                                marketplaceTab === 'requests' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                            }`}>
+                                {communityRequests.length}
+                            </span>
+                        </button>
+
+                        <Link
+                            href="/requests/create"
+                            className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100"
+                            title="Post Request"
+                        >
+                            <Plus className="size-4 stroke-[2.5]" />
+                        </Link>
+                    </div>
+
+                    {/* Tier 2: The Single Sleek Sieve Bar */}
                     <div
-                        className="flex [scrollbar-width:none] items-center gap-2 overflow-x-auto border-b border-slate-200/80 bg-white px-3.5 py-2.5 [&::-webkit-scrollbar]:hidden"
+                        className="flex [scrollbar-width:none] items-center gap-2 overflow-x-auto border-b border-slate-200/80 bg-white px-3.5 py-2 [&::-webkit-scrollbar]:hidden"
                         aria-label="Marketplace Sieves"
                     >
-                        {/* 1. Category Pill */}
                         <button
                             type="button"
                             onClick={() => setActiveMobileModal('category')}
@@ -1345,10 +1389,68 @@ export default function Browse(props: HomeProps) {
                         </button>
                     </div>
 
-                    {/* Results Feed */}
+                    {/* Mobile Results Feed */}
                     <div className="flex flex-col gap-3 p-4">
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                            <span>{filteredListings.length} results in Tagudin</span>
+                        {marketplaceTab === 'requests' ? (
+                            communityRequests.length === 0 ? (
+                                <div className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-xs text-slate-500 space-y-2">
+                                    <p className="font-bold text-[#0F2F58]">No open requests right now.</p>
+                                    <Link
+                                        href="/requests/create"
+                                        className="inline-block rounded-full bg-[#0D715F] px-4 py-1.5 text-xs font-bold text-white shadow-xs"
+                                    >
+                                        Post a Request
+                                    </Link>
+                                </div>
+                            ) : (
+                                communityRequests.map((req) => (
+                                    <article
+                                        key={req.id}
+                                        onClick={() => router.visit(`/requests/${req.id}`)}
+                                        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition-all active:scale-[0.99] cursor-pointer space-y-2.5"
+                                    >
+                                        <div className="flex items-center justify-between gap-1 text-[11px]">
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 font-bold text-[#0D715F]">
+                                                <Sparkles className="size-3" />
+                                                <span>Open Tender</span>
+                                            </span>
+                                            <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full capitalize">
+                                                ⏱️ {req.urgency}
+                                            </span>
+                                        </div>
+
+                                        <h3 className="text-sm font-extrabold text-[#0F2F58] leading-snug">
+                                            {req.title}
+                                        </h3>
+
+                                        <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                                            "{req.description}"
+                                        </p>
+
+                                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                                            <div>
+                                                <span className="text-sm font-black text-[#0D715F]">
+                                                    {req.budget_amount_minor ? `₱${(req.budget_amount_minor / 100).toFixed(2)}` : 'Open Budget'}
+                                                </span>
+                                                <span className="block text-[10px] text-slate-400 font-medium">{req.area}</span>
+                                            </div>
+
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                                    {req.quotes_count} {req.quotes_count === 1 ? 'Bid' : 'Bids'}
+                                                </span>
+                                                <span className="rounded-lg bg-[#0D715F] text-white px-2.5 py-1 text-xs font-bold">
+                                                    Quote →
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </article>
+                                ))
+                            )
+                        ) : (
+                            <>
+                                <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                                    <span>{filteredListings.length} results in Tagudin</span>
                             {hasActiveFilters && (
                                 <button
                                     type="button"
@@ -1376,8 +1478,9 @@ export default function Browse(props: HomeProps) {
                                 />
                             ))
                         )}
-                    </div>
-
+                        </>
+                    )}
+                </div>
                     {/* Bottom Navigation Bar */}
                     <BottomNavBar
                         activeTab={mobileActiveTab}
