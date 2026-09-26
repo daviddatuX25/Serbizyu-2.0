@@ -3,6 +3,8 @@
  * Canonical interfaces for Work Pipeline DAGs, Deal Chains, and Responsive Shells.
  */
 
+export type WorkStageGateType = 'arrival' | 'execution' | 'diagnostic' | 'signoff';
+
 export interface WorkStage {
     id: string;
     num: string;
@@ -13,6 +15,7 @@ export interface WorkStage {
     color: string;
     bg: string;
     lane?: 'top' | 'btm' | 'center';
+    gateType?: WorkStageGateType;
 }
 
 export interface WorkTemplate {
@@ -26,7 +29,8 @@ export interface WorkTemplate {
     stages: WorkStage[];
 }
 
-export type SlotType = 'store' | 'delivery' | 'installation' | 'audit' | 'hauling' | 'parts' | 'diagnostic' | 'tools';
+export type SlotType =
+    'store' | 'delivery' | 'installation' | 'audit' | 'hauling' | 'parts' | 'diagnostic' | 'tools';
 
 export interface PartnerSlot {
     type: SlotType;

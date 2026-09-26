@@ -6,4 +6,5 @@ export { default as EditableStageRow } from './EditableStageRow';
 export { default as WorkCatalogModal } from './WorkCatalogModal';
 export { default as DealChainCarousel } from './DealChainCarousel';
 export { default as GlovoWaveModal } from './GlovoWaveModal';
+export { default as WorkNodeCustomizerModal } from './WorkNodeCustomizerModal';
 export * from './types';

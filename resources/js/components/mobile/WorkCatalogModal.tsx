@@ -69,13 +69,13 @@ export default function WorkCatalogModal({
         >
             {/* Modal sheet */}
             <div
-                className="w-full flex flex-col relative"
+                className="relative flex w-full flex-col"
                 style={{ maxHeight: '88%' }}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Glovo organic wave cap */}
                 <svg
-                    className="w-full block shrink-0"
+                    className="block w-full shrink-0"
                     viewBox="0 0 390 34"
                     preserveAspectRatio="none"
                     style={{ height: 34, marginBottom: -1 }}
@@ -89,7 +89,7 @@ export default function WorkCatalogModal({
 
                 {/* Content area */}
                 <div
-                    className="bg-white flex flex-col flex-1 min-h-0"
+                    className="flex min-h-0 flex-1 flex-col bg-white"
                     style={{ padding: '4px 18px 16px', maxHeight: '84vh' }}
                 >
                     {/* Fixed top: header + search + chips */}
@@ -121,8 +121,7 @@ export default function WorkCatalogModal({
                                 type="button"
                                 onClick={onClose}
                                 aria-label="Close"
-                                className="flex items-center justify-center shrink-0 transition-colors duration-150
-                                           hover:bg-gray-200"
+                                className="flex shrink-0 items-center justify-center transition-colors duration-150 hover:bg-gray-200"
                                 style={{
                                     width: 32,
                                     height: 32,
@@ -133,7 +132,14 @@ export default function WorkCatalogModal({
                                     color: '#111827',
                                 }}
                             >
-                                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                                <svg
+                                    width={14}
+                                    height={14}
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2.5}
+                                >
                                     <path d="M18 6 6 18M6 6l12 12" />
                                 </svg>
                             </button>
@@ -150,7 +156,15 @@ export default function WorkCatalogModal({
                                 margin: '8px 0 6px',
                             }}
                         >
-                            <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth={2.5} aria-hidden>
+                            <svg
+                                width={15}
+                                height={15}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#64748B"
+                                strokeWidth={2.5}
+                                aria-hidden
+                            >
                                 <circle cx={11} cy={11} r={8} />
                                 <path d="m21 21-4.3-4.3" />
                             </svg>
@@ -225,11 +239,14 @@ export default function WorkCatalogModal({
 
                     {/* Scrollable template list */}
                     <div
-                        className="flex-1 overflow-y-auto flex flex-col gap-2"
+                        className="flex flex-1 flex-col gap-2 overflow-y-auto"
                         style={{ padding: '4px 2px 10px' }}
                     >
                         {filtered.length === 0 ? (
-                            <div className="text-center py-5 text-[11px]" style={{ color: 'var(--ink-muted, #64748b)' }}>
+                            <div
+                                className="py-5 text-center text-[11px]"
+                                style={{ color: 'var(--ink-muted, #64748b)' }}
+                            >
                                 No matching workflows found in catalog.
                             </div>
                         ) : (
@@ -240,7 +257,7 @@ export default function WorkCatalogModal({
                                         key={t.id}
                                         type="button"
                                         onClick={() => onSelect(t)}
-                                        className="flex justify-between items-start gap-2.5 text-left transition-all duration-150 w-full"
+                                        className="flex w-full items-start justify-between gap-2.5 text-left transition-all duration-150"
                                         style={{
                                             background: isActive ? '#F0FDF4' : '#FAFCFB',
                                             border: isActive
@@ -252,22 +269,25 @@ export default function WorkCatalogModal({
                                             fontFamily: 'inherit',
                                         }}
                                     >
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-1.5 mb-0.5">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="mb-0.5 flex items-center gap-1.5">
                                                 <span className="text-[12px] font-extrabold text-[#0F2F58]">
                                                     {t.title}
                                                 </span>
                                                 {isActive && (
                                                     <span
-                                                        className="text-[8px] font-extrabold text-white px-[5px] py-[1px] rounded"
-                                                        style={{ background: 'var(--forest-600, #0d715f)' }}
+                                                        className="rounded px-[5px] py-[1px] text-[8px] font-extrabold text-white"
+                                                        style={{
+                                                            background:
+                                                                'var(--forest-600, #0d715f)',
+                                                        }}
                                                     >
                                                         ACTIVE
                                                     </span>
                                                 )}
                                             </div>
                                             <div
-                                                className="text-[10px] mb-1"
+                                                className="mb-1 text-[10px]"
                                                 style={{
                                                     color: 'var(--ink-muted, #64748b)',
                                                     lineHeight: 1.35,
@@ -275,22 +295,37 @@ export default function WorkCatalogModal({
                                             >
                                                 {t.description}
                                             </div>
-                                            <div className="flex items-center gap-2 text-[9.5px] font-mono">
-                                                <span className="font-bold" style={{ color: 'var(--forest-700, #0a574a)' }}>
+                                            <div className="flex items-center gap-2 font-mono text-[9.5px]">
+                                                <span
+                                                    className="font-bold"
+                                                    style={{ color: 'var(--forest-700, #0a574a)' }}
+                                                >
                                                     {t.shape}
                                                 </span>
-                                                <span style={{ color: 'var(--ink-muted, #64748b)' }}>·</span>
+                                                <span
+                                                    style={{ color: 'var(--ink-muted, #64748b)' }}
+                                                >
+                                                    ·
+                                                </span>
                                                 <span className="font-bold text-[#0284C7]">
                                                     {t.stages.length} Stages
                                                 </span>
-                                                <span style={{ color: 'var(--ink-muted, #64748b)' }}>·</span>
-                                                <span className="font-bold text-[#D97706]">{t.sla} SLA</span>
+                                                <span
+                                                    style={{ color: 'var(--ink-muted, #64748b)' }}
+                                                >
+                                                    ·
+                                                </span>
+                                                <span className="font-bold text-[#D97706]">
+                                                    {t.sla} SLA
+                                                </span>
                                             </div>
                                         </div>
                                         <span
                                             className="shrink-0 text-[10.5px] font-bold"
                                             style={{
-                                                color: isActive ? 'var(--forest-700, #0a574a)' : 'var(--ink, #12201c)',
+                                                color: isActive
+                                                    ? 'var(--forest-700, #0a574a)'
+                                                    : 'var(--ink, #12201c)',
                                                 background: isActive ? '#FFFFFF' : '#F1F5F9',
                                                 border: `1px solid ${
                                                     isActive
@@ -319,8 +354,11 @@ export default function WorkCatalogModal({
                     >
                         <button
                             type="button"
-                            onClick={onBuildCustom}
-                            className="flex items-center justify-center gap-2 w-full transition-opacity duration-150 hover:opacity-90"
+                            onClick={() => {
+                                onClose();
+                                onBuildCustom?.();
+                            }}
+                            className="flex w-full items-center justify-center gap-2 transition-opacity duration-150 hover:opacity-90"
                             style={{
                                 height: 38,
                                 background: '#0F2F58',
@@ -333,22 +371,31 @@ export default function WorkCatalogModal({
                                 cursor: 'pointer',
                                 boxShadow: '0 4px 12px rgba(15,47,88,0.2)',
                                 fontFamily: 'inherit',
-                                minHeight: 44, /* Touch target */
+                                minHeight: 44 /* Touch target */,
                             }}
                         >
-                            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden>
+                            <svg
+                                width={14}
+                                height={14}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2.5}
+                                aria-hidden
+                            >
                                 <path d="M12 5v14M5 12h14" />
                             </svg>
                             <span>Build Custom Workflow in Work Studio ↗</span>
                         </button>
                         <div
-                            className="text-center mt-1"
+                            className="mt-1 text-center"
                             style={{
                                 fontSize: '9.5px',
                                 color: 'var(--ink-muted, #64748b)',
                             }}
                         >
-                            Design complex multi-branch DAGs, parallel lanes, and custom sensor gates
+                            Design complex multi-branch DAGs, parallel lanes, and custom sensor
+                            gates
                         </div>
                     </div>
                 </div>

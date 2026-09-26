@@ -22,7 +22,7 @@ import { CreatorPostModal } from '../../components/marketplace/CreatorPostModal'
 import { QuickDealScanModal } from '../../components/marketplace/QuickDealScanModal';
 import {
     WorkPipelineCanvas,
-    EditableStageRow,
+    WorkNodeCustomizerModal,
     WorkCatalogModal,
     DealChainCarousel,
     type WorkStage,
@@ -264,6 +264,7 @@ export default function CreateService() {
     );
     const [stages, setStages] = useState<WorkStage[]>(TAGUDIN_WORK_TEMPLATES[0].stages);
     const [workModalOpen, setWorkModalOpen] = useState(false);
+    const [customizerModalOpen, setCustomizerModalOpen] = useState(false);
     const [builderMode, setBuilderMode] = useState<'simple' | 'advanced'>('simple');
     const [previewTab, setPreviewTab] = useState<'card' | 'timeline'>('card');
     const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
@@ -431,33 +432,6 @@ export default function CreateService() {
 
     const removeInclusion = (index: number) => {
         setInclusions((prev) => prev.filter((_, i) => i !== index));
-    };
-
-    // Stage Handlers
-    const handleStageChange = (idx: number, updated: Partial<WorkStage>) => {
-        setStages((prev) => prev.map((s, i) => (i === idx ? { ...s, ...updated } : s)));
-    };
-
-    const handleStageRemove = (idx: number) => {
-        if (stages.length <= 1) return;
-        setStages((prev) => prev.filter((_, i) => i !== idx));
-    };
-
-    const handleAddStageNode = () => {
-        const count = stages.length + 1;
-        setStages((prev) => [
-            ...prev,
-            {
-                id: `s${count}`,
-                num: String(count),
-                title: 'Quality Verification Gate',
-                dur: '15m',
-                desc: 'Detailed quality and safety sign-off before handoff.',
-                evidence: 'Sign-off verification photo',
-                color: '#0D715F',
-                bg: '#E8F7F1',
-            },
-        ]);
     };
 
     // Template selection
@@ -1156,44 +1130,39 @@ export default function CreateService() {
                                             </button>
                                         </div>
 
-                                        {/* Visual Work Pipeline Canvas */}
-                                        <div className="rounded-xl border border-slate-200 bg-[#F8FAFC] p-3">
-                                            <WorkPipelineCanvas
-                                                stages={stages}
-                                                flowType={selectedTemplate.flowType}
-                                            />
-                                        </div>
-
-                                        {/* Editable Stage Milestones & Evidence List */}
-                                        <div className="space-y-2 pt-1">
+                                        {/* Visual Work Pipeline Canvas Summary & Studio Trigger */}
+                                        <div className="space-y-3 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3.5 shadow-2xs">
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-[10.5px] font-extrabold text-[#0F2F58] uppercase">
-                                                    Stage Milestones &amp; Evidence
-                                                </span>
-                                                <span className="text-[9.5px] font-bold text-emerald-700">
-                                                    {stages.length} Tracked Gates
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-[10.5px] font-extrabold uppercase text-[#0F2F58]">
+                                                        Verified Work Execution DAG
+                                                    </span>
+                                                    <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[9.5px] font-extrabold text-emerald-800">
+                                                        {stages.length} Verified Gates
+                                                    </span>
+                                                </div>
+                                                <span className="font-mono text-[10px] font-bold text-slate-500">
+                                                    {stages.reduce((acc, s) => acc + (parseInt(s.dur, 10) || 0), 0)}m Total SLA
                                                 </span>
                                             </div>
 
-                                            <div className="flex flex-col gap-2">
-                                                {stages.map((stage, idx) => (
-                                                    <EditableStageRow
-                                                        key={stage.id || idx}
-                                                        stage={stage}
-                                                        index={idx}
-                                                        onChange={handleStageChange}
-                                                        onRemove={handleStageRemove}
-                                                    />
-                                                ))}
+                                            <div className="overflow-x-auto py-1">
+                                                <WorkPipelineCanvas
+                                                    stages={stages}
+                                                    flowType={selectedTemplate.flowType}
+                                                    onStageClick={() => setCustomizerModalOpen(true)}
+                                                />
                                             </div>
 
                                             <button
                                                 type="button"
-                                                onClick={handleAddStageNode}
-                                                className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+                                                onClick={() => setCustomizerModalOpen(true)}
+                                                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-2.5 text-xs font-extrabold text-[#0F2F58] shadow-2xs transition-all hover:border-[#0F2F58] hover:bg-slate-50 hover:shadow-xs min-h-[44px]"
                                             >
-                                                <Plus className="size-3.5" />
-                                                <span>Add Stage Node</span>
+                                                <span>🛠️ Customize Workflow in Studio</span>
+                                                <span className="text-[11px] font-medium text-slate-400">
+                                                    ({stages.length} nodes · Inspect &amp; Refine)
+                                                </span>
                                             </button>
                                         </div>
                                     </div>
@@ -1692,6 +1661,24 @@ export default function CreateService() {
                     templates={TAGUDIN_WORK_TEMPLATES}
                     activeTemplateId={selectedTemplate.id}
                     onSelect={handleSelectTemplate}
+                    onBuildCustom={() => {
+                        setWorkModalOpen(false);
+                        setCustomizerModalOpen(true);
+                    }}
+                />
+
+                {/* Work Node Customizer Modal */}
+                <WorkNodeCustomizerModal
+                    open={customizerModalOpen}
+                    onClose={() => setCustomizerModalOpen(false)}
+                    stages={stages}
+                    flowType={selectedTemplate.flowType}
+                    onSave={(updatedStages) => {
+                        setStages(updatedStages);
+                    }}
+                    onResetToTemplate={() => {
+                        setStages(selectedTemplate.stages);
+                    }}
                 />
 
                 {/* Deal Chain Slot Picker Modal */}

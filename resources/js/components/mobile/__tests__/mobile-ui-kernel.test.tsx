@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AppLayout } from '../AppLayout';
 import { StickyDock } from '../StickyDock';
@@ -8,8 +8,11 @@ import WorkPipelineCanvas from '../WorkPipelineCanvas';
 import EditableStageRow from '../EditableStageRow';
 import DealChainCarousel from '../DealChainCarousel';
 import GlovoWaveModal from '../GlovoWaveModal';
-import type { WorkStage, DealChainCombination, ActingContextData } from '../types';
+import WorkCatalogModal from '../WorkCatalogModal';
+import WorkNodeCustomizerModal from '../WorkNodeCustomizerModal';
+import type { WorkStage, WorkTemplate, DealChainCombination, ActingContextData } from '../types';
 
+afterEach(cleanup);
 describe('Mobile UI Kernel — Foundation Primitives', () => {
     describe('AppLayout', () => {
         it('renders header, content, and dock slots in responsive container', () => {
@@ -108,9 +111,36 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
 
     describe('WorkPipelineCanvas', () => {
         const linearStages: WorkStage[] = [
-            { id: '1', num: '1', title: 'Intake Triage', dur: '15m', desc: 'Breaker off', evidence: 'Photo', color: '#0D715F', bg: '#E8F7F1' },
-            { id: '2', num: '2', title: 'Coil Wash', dur: '20m', desc: 'Chemical foam', evidence: 'Photo', color: '#0F766E', bg: '#CCFBF1' },
-            { id: '3', num: '3', title: 'Delta Test', dur: '15m', desc: 'Temp drop', evidence: 'OTP', color: '#475569', bg: '#F1F5F9' },
+            {
+                id: '1',
+                num: '1',
+                title: 'Intake Triage',
+                dur: '15m',
+                desc: 'Breaker off',
+                evidence: 'Photo',
+                color: '#0D715F',
+                bg: '#E8F7F1',
+            },
+            {
+                id: '2',
+                num: '2',
+                title: 'Coil Wash',
+                dur: '20m',
+                desc: 'Chemical foam',
+                evidence: 'Photo',
+                color: '#0F766E',
+                bg: '#CCFBF1',
+            },
+            {
+                id: '3',
+                num: '3',
+                title: 'Delta Test',
+                dur: '15m',
+                desc: 'Temp drop',
+                evidence: 'OTP',
+                color: '#475569',
+                bg: '#F1F5F9',
+            },
         ];
 
         it('renders linear stages with title, number badge, and durations', () => {
@@ -135,18 +165,51 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
 
         it('renders parallel stream layout with 2A and 2B concurrent lanes', () => {
             const parallelStages: WorkStage[] = [
-                { id: '1', num: '1', title: 'Intake', dur: '15m', desc: 'Triage', evidence: 'Photo', color: '#0D715F', bg: '#E8F7F1' },
-                { id: '2a', num: '2A', lane: 'top', title: 'Indoor Coil', dur: '25m', desc: 'Evaporator', evidence: 'Photo', color: '#0284C7', bg: '#E0F2FE' },
-                { id: '2b', num: '2B', lane: 'btm', title: 'Outdoor Unit', dur: '20m', desc: 'Condenser', evidence: 'Photo', color: '#166534', bg: '#DCFCE7' },
-                { id: '3', num: '3', title: 'Joint Test', dur: '15m', desc: 'Delta test', evidence: 'OTP', color: '#7E22CE', bg: '#F3E8FF' },
+                {
+                    id: '1',
+                    num: '1',
+                    title: 'Intake',
+                    dur: '15m',
+                    desc: 'Triage',
+                    evidence: 'Photo',
+                    color: '#0D715F',
+                    bg: '#E8F7F1',
+                },
+                {
+                    id: '2a',
+                    num: '2A',
+                    lane: 'top',
+                    title: 'Indoor Coil',
+                    dur: '25m',
+                    desc: 'Evaporator',
+                    evidence: 'Photo',
+                    color: '#0284C7',
+                    bg: '#E0F2FE',
+                },
+                {
+                    id: '2b',
+                    num: '2B',
+                    lane: 'btm',
+                    title: 'Outdoor Unit',
+                    dur: '20m',
+                    desc: 'Condenser',
+                    evidence: 'Photo',
+                    color: '#166534',
+                    bg: '#DCFCE7',
+                },
+                {
+                    id: '3',
+                    num: '3',
+                    title: 'Joint Test',
+                    dur: '15m',
+                    desc: 'Delta test',
+                    evidence: 'OTP',
+                    color: '#7E22CE',
+                    bg: '#F3E8FF',
+                },
             ];
 
-            render(
-                <WorkPipelineCanvas
-                    stages={parallelStages}
-                    flowType="parallel"
-                />,
-            );
+            render(<WorkPipelineCanvas stages={parallelStages} flowType="parallel" />);
 
             expect(screen.getByText('Indoor Coil')).toBeDefined();
             expect(screen.getByText('Outdoor Unit')).toBeDefined();
@@ -205,13 +268,44 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
                 icon: '📦',
                 isDefault: true,
                 nodes: [
-                    { role: 'STORE', title: 'Open Slot', sub: '₱180', type: 'store', bg: '#FEF3C7', color: '#B45309' },
-                    { role: 'COURIER', title: 'Open Slot', sub: '₱80', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
-                    { role: 'YOU', title: 'Your Labor', sub: '₱450', type: 'labor', bg: '#E8F7F1', color: '#0D715F' },
+                    {
+                        role: 'STORE',
+                        title: 'Open Slot',
+                        sub: '₱180',
+                        type: 'store',
+                        bg: '#FEF3C7',
+                        color: '#B45309',
+                    },
+                    {
+                        role: 'COURIER',
+                        title: 'Open Slot',
+                        sub: '₱80',
+                        type: 'delivery',
+                        bg: '#E0F2FE',
+                        color: '#0284C7',
+                    },
+                    {
+                        role: 'YOU',
+                        title: 'Your Labor',
+                        sub: '₱450',
+                        type: 'labor',
+                        bg: '#E8F7F1',
+                        color: '#0D715F',
+                    },
                 ],
                 slots: [
-                    { type: 'store', role: 'Hardware Store Depot', name: 'Tagudin Hardware', meta: '₱180.00 parts budget' },
-                    { type: 'delivery', role: 'Parts Courier Runner', name: 'Danny Express', meta: '₱80.00 route fee' },
+                    {
+                        type: 'store',
+                        role: 'Hardware Store Depot',
+                        name: 'Tagudin Hardware',
+                        meta: '₱180.00 parts budget',
+                    },
+                    {
+                        type: 'delivery',
+                        role: 'Parts Courier Runner',
+                        name: 'Danny Express',
+                        meta: '₱80.00 route fee',
+                    },
                 ],
             },
             {
@@ -220,11 +314,30 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
                 icon: '🛡️',
                 isDefault: false,
                 nodes: [
-                    { role: 'YOU', title: 'Your Labor', sub: '₱450', type: 'labor', bg: '#E8F7F1', color: '#0D715F' },
-                    { role: 'AUDIT', title: 'Open Slot', sub: '₱150', type: 'audit', bg: '#EDE9FE', color: '#7C3AED' },
+                    {
+                        role: 'YOU',
+                        title: 'Your Labor',
+                        sub: '₱450',
+                        type: 'labor',
+                        bg: '#E8F7F1',
+                        color: '#0D715F',
+                    },
+                    {
+                        role: 'AUDIT',
+                        title: 'Open Slot',
+                        sub: '₱150',
+                        type: 'audit',
+                        bg: '#EDE9FE',
+                        color: '#7C3AED',
+                    },
                 ],
                 slots: [
-                    { type: 'audit', role: 'Safety Auditor Slot', name: 'Open Slot', meta: '₱150.00 audit fee' },
+                    {
+                        type: 'audit',
+                        role: 'Safety Auditor Slot',
+                        name: 'Open Slot',
+                        meta: '₱150.00 audit fee',
+                    },
                 ],
             },
         ];
@@ -289,19 +402,287 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             expect(onClose).toHaveBeenCalledTimes(1);
         });
 
+        it('adapts the same popup primitive to mobile sheets and desktop modals', () => {
+            const onClose = vi.fn();
+
+            render(
+                <GlovoWaveModal isOpen={true} onClose={onClose} title="Responsive Deal Chain">
+                    <div>Responsive content</div>
+                </GlovoWaveModal>,
+            );
+
+            const dialog = screen.getByRole('dialog', { name: 'Responsive Deal Chain' });
+            const surface = dialog.querySelector('[data-modal-surface="true"]');
+
+            expect(dialog.parentElement).toBe(document.body);
+            expect(dialog.className).toContain('sm:items-center');
+            expect(dialog.querySelector('.glovo-wave-cap')).toBeTruthy();
+            expect(surface?.className).toContain('sm:max-w-2xl');
+            expect(surface?.className).toContain('sm:rounded-2xl');
+            expect(document.body.style.overflow).toBe('hidden');
+
+            fireEvent.keyDown(document, { key: 'Escape' });
+            expect(onClose).toHaveBeenCalledOnce();
+        });
+
         it('does not render when isOpen is false', () => {
             render(
-                <GlovoWaveModal
-                    isOpen={false}
-                    onClose={vi.fn()}
-                    title="Closed Modal"
-                >
+                <GlovoWaveModal isOpen={false} onClose={vi.fn()} title="Closed Modal">
                     <div>Hidden Content</div>
                 </GlovoWaveModal>,
             );
 
             expect(screen.queryByText('Closed Modal')).toBeNull();
             expect(screen.queryByText('Hidden Content')).toBeNull();
+        });
+    });
+
+    describe('WorkCatalogModal', () => {
+        const mockTemplate: WorkTemplate = {
+            id: 'tmpl-test',
+            category: 'electrical',
+            title: 'Test Electrical Protocol',
+            shape: 'Linear',
+            sla: '45m',
+            flowType: 'linear',
+            description: 'Standard electrical triage and test',
+            stages: [
+                {
+                    id: 's1',
+                    num: '1',
+                    title: 'Intake Triage',
+                    dur: '15m',
+                    desc: 'Safety inspection',
+                    evidence: 'Breaker photo',
+                    color: '#0D715F',
+                    bg: '#E8F7F1',
+                },
+            ],
+        };
+
+        it('calls onClose and onBuildCustom when clicking "Build Custom Workflow in Work Studio ↗"', () => {
+            const onClose = vi.fn();
+            const onBuildCustom = vi.fn();
+            const onSelect = vi.fn();
+
+            render(
+                <WorkCatalogModal
+                    open={true}
+                    onClose={onClose}
+                    templates={[mockTemplate]}
+                    activeTemplateId="tmpl-test"
+                    onSelect={onSelect}
+                    onBuildCustom={onBuildCustom}
+                />,
+            );
+
+            const buildCustomBtn = screen.getByRole('button', {
+                name: /Build Custom Workflow in Work Studio ↗/i,
+            });
+            expect(buildCustomBtn).toBeDefined();
+
+            fireEvent.click(buildCustomBtn);
+            expect(onClose).toHaveBeenCalledTimes(1);
+            expect(onBuildCustom).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('WorkNodeCustomizerModal', () => {
+        const initialStages: WorkStage[] = [
+            {
+                id: 'stage-1',
+                num: '1',
+                title: 'Intake Triage & Breaker Lockout',
+                dur: '15m',
+                desc: 'Isolate main breaker',
+                evidence: 'Breaker lock-out photo gate',
+                color: '#0D715F',
+                bg: '#E8F7F1',
+                gateType: 'arrival',
+            },
+            {
+                id: 'stage-2',
+                num: '2',
+                title: 'Chemical Foam Clean',
+                dur: '30m',
+                desc: 'Evaporator coil wash',
+                evidence: 'Chemical foam coverage photo gate',
+                color: '#0F766E',
+                bg: '#CCFBF1',
+                gateType: 'execution',
+            },
+            {
+                id: 'stage-3',
+                num: '3',
+                title: 'Final OTP Release',
+                dur: '15m',
+                desc: 'Dual customer sign-off',
+                evidence: 'Dual customer signature & OTP release',
+                color: '#047857',
+                bg: '#D1FAE5',
+                gateType: 'signoff',
+            },
+        ];
+
+        it('renders modal dialog with pipeline overview, stage list, and inspector when open', () => {
+            const onClose = vi.fn();
+            const onSave = vi.fn();
+
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={onClose}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            expect(screen.getByText(/Work Studio · Workflow Customizer/i)).toBeDefined();
+            expect(screen.getByText(/3 Verified Gates/i)).toBeDefined();
+            expect(screen.getByDisplayValue('Intake Triage & Breaker Lockout')).toBeDefined();
+            expect(screen.getByRole('button', { name: /Apply Workflow to Listing/i })).toBeDefined();
+        });
+
+        it('allows modifying stage title, duration preset, and evidence', () => {
+            const onSave = vi.fn();
+            const onClose = vi.fn();
+
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={onClose}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            // Change title
+            const titleInput = screen.getByDisplayValue('Intake Triage & Breaker Lockout');
+            fireEvent.change(titleInput, { target: { value: 'Modified Intake Gate' } });
+
+            // Click 45m duration preset
+            const dur45Btn = screen.getByRole('button', { name: '45m' });
+            fireEvent.click(dur45Btn);
+
+            // Save workflow
+            const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
+            fireEvent.click(applyBtn);
+
+            expect(onSave).toHaveBeenCalledTimes(1);
+            const savedStages: WorkStage[] = onSave.mock.calls[0][0];
+            expect(savedStages[0].title).toBe('Modified Intake Gate');
+            expect(savedStages[0].dur).toBe('45m');
+            expect(onClose).toHaveBeenCalledTimes(1);
+        });
+
+        it('allows switching gate classification', () => {
+            const onSave = vi.fn();
+            const onClose = vi.fn();
+
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={onClose}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            // Select Diagnostic gate classification
+            const diagGate = screen.getByText('Diagnostic / Measurement Gate');
+            fireEvent.click(diagGate);
+
+            const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
+            fireEvent.click(applyBtn);
+
+            const savedStages: WorkStage[] = onSave.mock.calls[0][0];
+            expect(savedStages[0].gateType).toBe('diagnostic');
+            expect(savedStages[0].color).toBe('#B45309');
+            expect(savedStages[0].bg).toBe('#FEF3C7');
+        });
+
+        it('allows adding a new stage node', () => {
+            const onSave = vi.fn();
+            const onClose = vi.fn();
+
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={onClose}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            const addBtn = screen.getByRole('button', { name: /\+ Add Stage Node/i });
+            fireEvent.click(addBtn);
+
+            expect(screen.getByText(/Stage Nodes \(4\)/i)).toBeDefined();
+
+            const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
+            fireEvent.click(applyBtn);
+
+            const savedStages: WorkStage[] = onSave.mock.calls[0][0];
+            expect(savedStages.length).toBe(4);
+            expect(savedStages[3].num).toBe('4');
+        });
+
+        it('allows reordering stages and updates numbering', () => {
+            const onSave = vi.fn();
+            const onClose = vi.fn();
+
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={onClose}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            // First stage down arrow
+            const downButtons = screen.getAllByRole('button', { name: /Move stage down/i });
+            fireEvent.click(downButtons[0]);
+
+            const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
+            fireEvent.click(applyBtn);
+
+            const savedStages: WorkStage[] = onSave.mock.calls[0][0];
+            expect(savedStages[0].title).toBe('Chemical Foam Clean');
+            expect(savedStages[0].num).toBe('1');
+            expect(savedStages[1].title).toBe('Intake Triage & Breaker Lockout');
+            expect(savedStages[1].num).toBe('2');
+        });
+
+        it('calls onResetToTemplate when reset button is clicked', () => {
+            const onReset = vi.fn();
+
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    stages={initialStages}
+                    onSave={vi.fn()}
+                    onResetToTemplate={onReset}
+                />,
+            );
+
+            const resetBtn = screen.getByRole('button', { name: /Reset to Archetype/i });
+            fireEvent.click(resetBtn);
+            expect(onReset).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not render when open is false', () => {
+            render(
+                <WorkNodeCustomizerModal
+                    open={false}
+                    onClose={vi.fn()}
+                    stages={initialStages}
+                    onSave={vi.fn()}
+                />,
+            );
+
+            expect(screen.queryByText(/Work Studio · Workflow Customizer/i)).toBeNull();
         });
     });
 });
