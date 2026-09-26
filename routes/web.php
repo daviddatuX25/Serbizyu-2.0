@@ -57,8 +57,12 @@ Route::get('/my-listings/{listing}', [MyListingsController::class, 'show'])
     ->name('listings.preview');
 
 Route::get('/browse', BrowseController::class)->name('browse');
-Route::get('/requests/{id}', [RequestController::class, 'show'])->name('requests.show');
-Route::get('/listings/{listing}', [ListingController::class, 'show'])->name('listings.show');
+Route::get('/requests/create', [RequestController::class, 'create'])->name('requests.create');
+Route::get('/requests/{id}', [RequestController::class, 'show'])->whereUuid('id')->name('requests.show');
+Route::get('/listings/create', fn () => redirect()->route('listings.create.service'))->name('listings.create');
+Route::get('/listings/create/service', [ListingController::class, 'createService'])->name('listings.create.service');
+Route::get('/listings/create/product', [ListingController::class, 'createProduct'])->name('listings.create.product');
+Route::get('/listings/{listing}', [ListingController::class, 'show'])->whereUuid('listing')->name('listings.show');
 Route::post('/listings', [ListingController::class, 'store'])
     ->middleware('throttle:listing-writes')
     ->name('listings.store');
@@ -77,12 +81,9 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::post('/account/capabilities', [CapabilityController::class, 'store'])->name('account.capabilities.store');
     Route::delete('/account/capabilities/{role}', [CapabilityController::class, 'destroy'])->name('account.capabilities.destroy');
     Route::get('/account/readiness', [CapabilityController::class, 'readiness'])->name('account.readiness');
-    Route::get('/requests/create', [RequestController::class, 'create'])->name('requests.create');
     Route::post('/requests', [RequestController::class, 'store'])->name('requests.store');
     Route::post('/requests/{id}/quotes', [RequestController::class, 'storeQuote'])->name('requests.quotes.store');
     Route::post('/requests/{id}/quotes/{quote}/accept', [RequestController::class, 'acceptQuote'])->name('requests.quotes.accept');
-    Route::get('/listings/create/service', [ListingController::class, 'createService'])->name('listings.create.service');
-    Route::get('/listings/create/product', [ListingController::class, 'createProduct'])->name('listings.create.product');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/listings/{listing}/book', [OrderController::class, 'start'])
         ->middleware('throttle:30,1')
