@@ -15,8 +15,7 @@ import {
     X,
     ZoomIn,
 } from 'lucide-react';
-import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
-
+import { AppShell } from '../../components/AppShell';
 interface QuoteItem {
     id: string;
     request_id: string;
@@ -142,33 +141,21 @@ export default function RequestShow({ request, quotes, session }: RequestDetailP
     };
 
     return (
-        <div className="min-h-screen w-full bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 antialiased flex flex-col">
+        <AppShell
+            session={session}
+            activeRoute="requests"
+            activeMobileTab="explore"
+            rightSlot={
+                <Link
+                    href="/browse"
+                    className="flex items-center gap-1.5 rounded-full bg-slate-100 hover:bg-slate-200 px-4 py-1.5 text-xs font-bold text-slate-800 transition-colors"
+                >
+                    <ArrowLeft className="size-3.5 stroke-[2.5]" />
+                    <span>Back to Marketplace</span>
+                </Link>
+            }
+        >
             <Head title={`Request: ${request.title}`} />
-
-            {/* Desktop Navigation Bar */}
-            <div className="hidden lg:block sticky top-0 z-40 bg-white border-b border-slate-200">
-                <DesktopGlobalNav
-                    session={session}
-                    activeRoute="requests"
-                    actingContext={{
-                        actorUserId: session?.user_id || 'usr_guest',
-                        ownerUserId: session?.user_id || 'usr_guest',
-                        ownerName: session?.display_name || 'Tagudin Resident',
-                        consentGrantId: 'cg_public',
-                        isActingOnBehalf: false,
-                    }}
-                    rightSlot={
-                        <Link
-                            href="/browse"
-                            className="flex items-center gap-1.5 rounded-full bg-slate-100 hover:bg-slate-200 px-4 py-1.5 text-xs font-bold text-slate-800 transition-colors"
-                        >
-                            <ArrowLeft className="size-3.5 stroke-[2.5]" />
-                            <span>Back to Marketplace</span>
-                        </Link>
-                    }
-                />
-            </div>
-
             {/* Mobile Header */}
             <div className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center justify-between">
                 <Link
@@ -487,6 +474,6 @@ export default function RequestShow({ request, quotes, session }: RequestDetailP
                     </div>
                 </div>
             )}
-        </div>
+        </AppShell>
     );
 }

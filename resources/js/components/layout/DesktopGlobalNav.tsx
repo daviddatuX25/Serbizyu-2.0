@@ -119,6 +119,7 @@ export function DesktopGlobalNav({
                             + Post a Service
                         </a>
                         <a
+                            href="/my-listings"
                             className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
                                 activeRoute === 'listings'
                                     ? 'bg-[#EBF2FA] text-[#0F2F58]'

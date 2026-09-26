@@ -50,11 +50,15 @@ final class BrowseController
                 'user_profiles.display_name as requester_name'
             )
             ->get()
-            ->map(function ($r) {
+            ->map(function ($r) use ($state) {
                 $itemList = is_string($r->item_list) ? json_decode($r->item_list, true) : (array) $r->item_list;
                 $timing = is_string($r->timing) ? json_decode($r->timing, true) : (array) $r->timing;
                 $location = is_string($r->location) ? json_decode($r->location, true) : (array) $r->location;
-                $quotesCount = DB::table('quotes')->where('request_id', $r->id)->count();
+
+                // ADR-R-004 & VP-BRW-003: Bid counts are private to requester only
+                $viewerId = $state['session']['userId'] ?? null;
+                $isRequester = $viewerId !== null && (string) $viewerId === (string) $r->requester_user_id;
+                $quotesCount = $isRequester ? DB::table('quotes')->where('request_id', $r->id)->count() : null;
 
                 return [
                     'id' => (string) $r->id,
