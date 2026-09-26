@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AdminIdentityVerificationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrowseController;
 use App\Http\Controllers\CapabilityController;
 use App\Http\Controllers\DealChainController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\IdentityEvidenceController;
 use App\Http\Controllers\ListingController;
 use App\Http\Controllers\MyListingsController;
 use App\Http\Controllers\OrderController;
@@ -104,7 +106,22 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
         ->name('deal-chains.show');
     Route::get('/api/deal-chains/slot-candidates', [DealChainController::class, 'slotCandidates'])
         ->name('deal-chains.slot-candidates');
+
+    // Participant identity evidence & verifications
+    Route::post('/account/identity/evidence', [IdentityEvidenceController::class, 'store'])->name('account.identity.evidence.store');
+    Route::get('/account/identity/evidence', [IdentityEvidenceController::class, 'index'])->name('account.identity.evidence.index');
+    Route::get('/account/identity/evidence/{id}/file', [IdentityEvidenceController::class, 'download'])->name('account.identity.evidence.download');
+    Route::delete('/account/identity/evidence/{id}', [IdentityEvidenceController::class, 'destroy'])->name('account.identity.evidence.destroy');
+    Route::get('/account/identity/trust-level', [IdentityEvidenceController::class, 'trustLevel'])->name('account.identity.trust-level');
+
+    // Admin identity verification review & retention holds
+    Route::get('/admin/identity-verifications', [AdminIdentityVerificationController::class, 'index'])->name('admin.identity-verifications.index');
+    Route::post('/admin/identity-verifications/{id}/review', [AdminIdentityVerificationController::class, 'review'])->name('admin.identity-verifications.review');
+    Route::post('/admin/identity/retention-holds', [AdminIdentityVerificationController::class, 'createRetentionHold'])->name('admin.identity.retention-holds.store');
+    Route::delete('/admin/identity/retention-holds/{id}', [AdminIdentityVerificationController::class, 'releaseRetentionHold'])->name('admin.identity.retention-holds.destroy');
 });
+
+Route::get('/users/{userId}/trust-profile', [IdentityEvidenceController::class, 'publicTrustProfile'])->name('users.trust-profile');
 
 Route::get('/admin', fn () => Inertia::render('Admin/Triage'))->name('admin.triage');
 Route::get('/admin/triage', fn () => Inertia::render('Admin/Triage'))->name('admin.triage.index');
