@@ -3,6 +3,21 @@
  * Canonical interfaces for Work Pipeline DAGs, Deal Chains, and Responsive Shells.
  */
 
+export type WorkInteractionType =
+    | 'solo_execution'
+    | 'co_presence'
+    | 'custody_transfer'
+    | 'quality_check'
+    | 'client_signoff';
+
+export type WorkEvidenceProtocol =
+    | 'photo_proof'
+    | 'customer_otp'
+    | 'file_artifact'
+    | 'metric_reading'
+    | 'checklist_declaration'
+    | 'none';
+
 export type WorkStageGateType = 'arrival' | 'execution' | 'diagnostic' | 'signoff';
 
 export interface WorkStage {
@@ -15,9 +30,24 @@ export interface WorkStage {
     color: string;
     bg: string;
     lane?: 'top' | 'btm' | 'center';
+    interactionType?: WorkInteractionType;
+    evidenceProtocol?: WorkEvidenceProtocol;
     gateType?: WorkStageGateType;
 }
 
+export interface WorkNodePrimitive {
+    id: string;
+    title: string;
+    desc: string;
+    dur: string;
+    interactionType: WorkInteractionType;
+    evidenceProtocol: WorkEvidenceProtocol;
+    evidence: string;
+    color: string;
+    bg: string;
+    icon: string;
+    categoryTag: string;
+}
 export interface WorkTemplate {
     id: string;
     category: string;

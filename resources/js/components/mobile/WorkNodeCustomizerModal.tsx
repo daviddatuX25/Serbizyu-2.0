@@ -11,7 +11,18 @@ import {
     Trash2,
 } from 'lucide-react';
 import WorkPipelineCanvas from './WorkPipelineCanvas';
-import type { WorkStage, WorkStageGateType } from './types';
+import {
+    INTERACTION_TYPE_DEFINITIONS,
+    EVIDENCE_PROTOCOL_DEFINITIONS,
+    WORK_NODE_CATALOG,
+} from './workNodeCatalog';
+import type {
+    WorkStage,
+    WorkStageGateType,
+    WorkInteractionType,
+    WorkEvidenceProtocol,
+    WorkNodePrimitive,
+} from './types';
 
 export interface WorkNodeCustomizerModalProps {
     open: boolean;
@@ -83,7 +94,47 @@ export const GATE_CLASSIFICATIONS: GateClassificationOption[] = [
 
 const PRESET_DURATIONS = ['15m', '30m', '45m', '60m', '90m', '120m'] as const;
 
-function resolveStageGateType(stage: WorkStage, index: number, total: number): WorkStageGateType {
+function resolveStageInteractionType(stage: WorkStage, index: number, total: number): WorkInteractionType {
+    if (stage.interactionType) return stage.interactionType;
+    if (index === 0) return 'co_presence';
+    if (index === total - 1) return 'client_signoff';
+    const text = `${stage.title} ${stage.desc}`.toLowerCase();
+    if (
+        text.includes('pickup') ||
+        text.includes('dropoff') ||
+        text.includes('deliver') ||
+        text.includes('courier') ||
+        text.includes('handoff') ||
+        text.includes('custody')
+    ) {
+        return 'custody_transfer';
+    }
+    if (
+        text.includes('test') ||
+        text.includes('check') ||
+        text.includes('diagnostic') ||
+        text.includes('scan') ||
+        text.includes('reading') ||
+        text.includes('temp') ||
+        text.includes('pressure')
+    ) {
+        return 'quality_check';
+    }
+    return 'solo_execution';
+}
+
+function resolveStageEvidenceProtocol(stage: WorkStage, index: number, total: number): WorkEvidenceProtocol {
+    if (stage.evidenceProtocol) return stage.evidenceProtocol;
+    if (index === total - 1) return 'customer_otp';
+    const text = `${stage.title} ${stage.evidence} ${stage.desc}`.toLowerCase();
+    if (text.includes('otp') || text.includes('signature') || text.includes('sign-off')) return 'customer_otp';
+    if (text.includes('file') || text.includes('pdf') || text.includes('cad') || text.includes('upload') || text.includes('download')) return 'file_artifact';
+    if (text.includes('reading') || text.includes('delta') || text.includes('gauge') || text.includes('amp') || text.includes('volt')) return 'metric_reading';
+    if (text.includes('checklist') || text.includes('intake') || text.includes('steps')) return 'checklist_declaration';
+    return 'photo_proof';
+}
+
+export function resolveStageGateType(stage: WorkStage, index: number, total: number): WorkStageGateType {
     if (stage.gateType) return stage.gateType;
     if (index === 0) return 'arrival';
     if (index === total - 1) return 'signoff';
@@ -103,7 +154,6 @@ function resolveStageGateType(stage: WorkStage, index: number, total: number): W
     }
     return 'execution';
 }
-
 function WaveCap() {
     return (
         <svg
@@ -204,9 +254,16 @@ export default function WorkNodeCustomizerModal({
         return localStages.reduce((acc, s) => acc + (parseInt(s.dur, 10) || 0), 0);
     }, [localStages]);
 
-    const currentGateType = useMemo(() => {
-        if (!currentStage) return 'execution';
-        return resolveStageGateType(currentStage, selectedIndex, localStages.length);
+    const [inspectorTab, setInspectorTab] = useState<'configure' | 'catalog'>('configure');
+
+    const currentInteractionType = useMemo(() => {
+        if (!currentStage) return 'solo_execution';
+        return resolveStageInteractionType(currentStage, selectedIndex, localStages.length);
+    }, [currentStage, selectedIndex, localStages.length]);
+
+    const currentEvidenceProtocol = useMemo(() => {
+        if (!currentStage) return 'photo_proof';
+        return resolveStageEvidenceProtocol(currentStage, selectedIndex, localStages.length);
     }, [currentStage, selectedIndex, localStages.length]);
 
     const updateCurrentStage = (patch: Partial<WorkStage>) => {
@@ -251,31 +308,54 @@ export default function WorkNodeCustomizerModal({
         }
     };
 
+    const handleAddFromCatalog = (primitive: WorkNodePrimitive) => {
+        const count = localStages.length + 1;
+        const newId = `stage-${primitive.id}-${Date.now()}`;
+        const newStage: WorkStage = {
+            id: newId,
+            num: String(count),
+            title: primitive.title,
+            dur: primitive.dur,
+            desc: primitive.desc,
+            evidence: primitive.evidence,
+            color: primitive.color,
+            bg: primitive.bg,
+            interactionType: primitive.interactionType,
+            evidenceProtocol: primitive.evidenceProtocol,
+        };
+
+        const next = [...localStages, newStage];
+        setLocalStages(next);
+        setSelectedStageId(newId);
+        setInspectorTab('configure');
+    };
+
     const handleAddStage = () => {
         const count = localStages.length + 1;
         const newId = `stage-custom-${Date.now()}-${count}`;
         const newStage: WorkStage = {
             id: newId,
             num: String(count),
-            title: 'Quality Verification Gate',
-            dur: '15m',
-            desc: 'Operational safety inspection and customer handoff checklist.',
-            evidence: 'Verification sign-off photo gate',
-            color: '#0D715F',
-            bg: '#E8F7F1',
-            gateType: 'execution',
+            title: 'Custom Task Node',
+            dur: '30m',
+            desc: 'Describe procedures, tool usage, safety precautions...',
+            evidence: 'Time-stamped photo or digital completion token',
+            color: '#0F2F58',
+            bg: '#EBF2FA',
+            interactionType: 'solo_execution',
+            evidenceProtocol: 'photo_proof',
         };
 
         const next = [...localStages, newStage];
         setLocalStages(next);
         setSelectedStageId(newId);
+        setInspectorTab('configure');
     };
 
     const handleSave = () => {
         onSave(localStages);
         onClose();
     };
-
     const handleReset = () => {
         if (onResetToTemplate) {
             onResetToTemplate();
@@ -373,15 +453,20 @@ export default function WorkNodeCustomizerModal({
                             <div className="flex-1 space-y-2 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
                                 {localStages.map((stage, idx) => {
                                     const isSelected = stage.id === (currentStage?.id || selectedStageId);
-                                    const gate = resolveStageGateType(stage, idx, localStages.length);
-                                    const gateMeta = GATE_CLASSIFICATIONS.find((g) => g.type === gate);
+                                    const interaction = resolveStageInteractionType(stage, idx, localStages.length);
+                                    const interactionMeta = INTERACTION_TYPE_DEFINITIONS.find((i) => i.type === interaction);
+                                    const protocol = resolveStageEvidenceProtocol(stage, idx, localStages.length);
+                                    const protocolMeta = EVIDENCE_PROTOCOL_DEFINITIONS.find((p) => p.protocol === protocol);
 
                                     return (
                                         <div
                                             key={stage.id}
-                                            onClick={() => setSelectedStageId(stage.id)}
+                                            onClick={() => {
+                                                setSelectedStageId(stage.id);
+                                                setInspectorTab('configure');
+                                            }}
                                             className={`group relative flex cursor-pointer flex-col gap-1.5 rounded-xl border p-2.5 transition-all ${
-                                                isSelected
+                                                isSelected && inspectorTab === 'configure'
                                                     ? 'border-[#0F2F58] bg-slate-50/80 shadow-xs ring-1 ring-[#0F2F58]'
                                                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                                             }`}
@@ -438,12 +523,18 @@ export default function WorkNodeCustomizerModal({
                                             </div>
 
                                             <div className="flex items-center justify-between text-[10px] text-slate-500">
+                                                <div className="flex items-center gap-1">
+                                                    <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold ${interactionMeta?.badgeStyle || 'bg-slate-100 text-slate-700'}`}>
+                                                        <span>{interactionMeta?.icon}</span>
+                                                        <span>{interactionMeta?.label}</span>
+                                                    </span>
+                                                    <span className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1 py-0.5 text-[9px] font-semibold text-slate-600">
+                                                        <span>{protocolMeta?.icon}</span>
+                                                    </span>
+                                                </div>
                                                 <span className="flex items-center gap-1 font-mono font-bold text-slate-600">
                                                     <Clock className="size-2.5 text-slate-400" />
                                                     {stage.dur}
-                                                </span>
-                                                <span className="truncate text-[9.5px] font-semibold text-emerald-700">
-                                                    {gateMeta?.icon} {stage.evidence || 'Evidence gate'}
                                                 </span>
                                             </div>
                                         </div>
@@ -451,40 +542,129 @@ export default function WorkNodeCustomizerModal({
                                 })}
                             </div>
 
-                            <button
-                                type="button"
-                                onClick={handleAddStage}
-                                className="mt-2.5 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-bold text-[#0F2F58] transition-colors hover:border-[#0F2F58] hover:bg-slate-50"
-                            >
-                                <Plus className="size-3.5" />
-                                <span>+ Add Stage Node</span>
-                            </button>
+                            <div className="mt-2.5 flex flex-col gap-1.5 border-t border-slate-100 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setInspectorTab('catalog')}
+                                    className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50/70 py-2 text-xs font-bold text-indigo-900 transition-colors hover:bg-indigo-100 min-h-[38px]"
+                                >
+                                    <span>📚 Add from Node Catalog</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleAddStage}
+                                    className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50 min-h-[38px]"
+                                >
+                                    <Plus className="size-3.5" />
+                                    <span>+ Add Stage Node</span>
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Right Column: Stage Inspector Form */}
+                        {/* Right Column: Stage Inspector & Node Catalog */}
                         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pl-0 md:pl-2" style={{ scrollbarWidth: 'thin' }}>
-                            {currentStage ? (
-                                <div className="space-y-3.5 pb-2">
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <div className="flex items-center gap-2">
-                                            <span
-                                                className="flex size-6 items-center justify-center rounded-lg text-xs font-extrabold"
-                                                style={{
-                                                    background: currentStage.bg || '#E8F7F1',
-                                                    color: currentStage.color || '#0D715F',
-                                                }}
-                                            >
-                                                #{currentStage.num}
-                                            </span>
-                                            <span className="text-xs font-extrabold text-[#0F2F58]">
-                                                Stage Inspector Configuration
-                                            </span>
+                            {/* Tab Switcher */}
+                            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2">
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => setInspectorTab('configure')}
+                                        className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                                            inspectorTab === 'configure'
+                                                ? 'bg-[#0F2F58] text-white shadow-xs'
+                                                : 'text-slate-600 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        Stage Inspector
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setInspectorTab('catalog')}
+                                        className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                                            inspectorTab === 'catalog'
+                                                ? 'bg-indigo-600 text-white shadow-xs'
+                                                : 'text-indigo-900 hover:bg-indigo-50'
+                                        }`}
+                                    >
+                                        <span>📚 Node Catalog Primitives</span>
+                                        <span className="rounded-full bg-indigo-200/50 px-1.5 text-[9px] font-mono">8</span>
+                                    </button>
+                                </div>
+
+                                {currentStage && inspectorTab === 'configure' && (
+                                    <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-600">
+                                        Node #{currentStage.num} · {currentStage.dur}
+                                    </span>
+                                )}
+                            </div>
+
+                            {inspectorTab === 'catalog' && (
+                                <div className="space-y-3 pb-2">
+                                    <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-2.5">
+                                        <div className="text-xs font-extrabold text-indigo-950">
+                                            Universal Work Node Catalog (Atomic Lego Blocks)
                                         </div>
-                                        <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                                            Node ID: {currentStage.id}
-                                        </span>
+                                        <p className="mt-0.5 text-[11px] text-indigo-900/80">
+                                            Universal interaction primitives applicable across trades, digital delivery, physical transport, and Deal Chains. 1-click to append to your pipeline.
+                                        </p>
                                     </div>
 
+                                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                        {WORK_NODE_CATALOG.map((prim) => {
+                                            const intMeta = INTERACTION_TYPE_DEFINITIONS.find((i) => i.type === prim.interactionType);
+                                            const protoMeta = EVIDENCE_PROTOCOL_DEFINITIONS.find((p) => p.protocol === prim.evidenceProtocol);
+
+                                            return (
+                                                <div
+                                                    key={prim.id}
+                                                    className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-2xs transition-all hover:border-indigo-300 hover:shadow-xs"
+                                                >
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center justify-between gap-1.5">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-base">{prim.icon}</span>
+                                                                <span className="text-xs font-extrabold text-slate-900">
+                                                                    {prim.title}
+                                                                </span>
+                                                            </div>
+                                                            <span className="font-mono text-[10px] font-bold text-slate-500">
+                                                                {prim.dur}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[10.5px] leading-relaxed text-slate-600">
+                                                            {prim.desc}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+                                                        <div className="flex flex-wrap items-center gap-1">
+                                                            <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold ${intMeta?.badgeStyle || 'bg-slate-100'}`}>
+                                                                <span>{intMeta?.icon}</span>
+                                                                <span>{intMeta?.label}</span>
+                                                            </span>
+                                                            <span className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-slate-700">
+                                                                <span>{protoMeta?.icon}</span>
+                                                                <span>{protoMeta?.label}</span>
+                                                            </span>
+                                                        </div>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleAddFromCatalog(prim)}
+                                                            className="shrink-0 cursor-pointer rounded-lg bg-[#0F2F58] px-2.5 py-1 text-[11px] font-bold text-white shadow-2xs hover:bg-[#153e74]"
+                                                        >
+                                                            + Add Node
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {inspectorTab === 'configure' && currentStage && (
+                                <div className="space-y-3.5 pb-2">
                                     {/* Title Field */}
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-slate-700">
@@ -494,7 +674,7 @@ export default function WorkNodeCustomizerModal({
                                             type="text"
                                             value={currentStage.title}
                                             onChange={(e) => updateCurrentStage({ title: e.target.value })}
-                                            placeholder="e.g. Intake Triage & Breaker Lockout"
+                                            placeholder="e.g. Site Check-in, Fabrication, Quality Testing..."
                                             className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:ring-1 focus:ring-[#0F2F58]"
                                         />
                                     </div>
@@ -502,7 +682,7 @@ export default function WorkNodeCustomizerModal({
                                     {/* Description / Instructions */}
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-slate-700">
-                                            Stage Description / Operational Scope
+                                            Operational Scope / Description
                                         </label>
                                         <textarea
                                             rows={2}
@@ -560,58 +740,112 @@ export default function WorkNodeCustomizerModal({
                                         </div>
                                     </div>
 
-                                    {/* Gate & Evidence Classification */}
-                                    <div className="space-y-2">
+                                    {/* Axis 1: Interaction & Accountability Model */}
+                                    <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-bold text-slate-700">
-                                                Gate &amp; Evidence Classification
+                                                1. Interaction &amp; Accountability Model
                                             </label>
-                                            <span className="text-[10px] text-slate-500">Escrow verification type</span>
+                                            <span className="text-[10px] text-slate-500">Who executes or verifies?</span>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                            {GATE_CLASSIFICATIONS.map((cat) => {
-                                                const isSelected = currentGateType === cat.type;
-
+                                        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                                            {INTERACTION_TYPE_DEFINITIONS.map((def) => {
+                                                const isSelected = currentInteractionType === def.type;
                                                 return (
                                                     <div
-                                                        key={cat.type}
+                                                        key={def.type}
                                                         onClick={() => {
+                                                            let gateType: WorkStageGateType = 'execution';
+                                                            let color = '#0F766E';
+                                                            let bg = '#CCFBF1';
+                                                            if (def.type === 'co_presence') {
+                                                                gateType = 'arrival';
+                                                                color = '#0D715F';
+                                                                bg = '#E8F7F1';
+                                                            } else if (def.type === 'quality_check') {
+                                                                gateType = 'diagnostic';
+                                                                color = '#B45309';
+                                                                bg = '#FEF3C7';
+                                                            } else if (def.type === 'client_signoff') {
+                                                                gateType = 'signoff';
+                                                                color = '#047857';
+                                                                bg = '#D1FAE5';
+                                                            } else if (def.type === 'custody_transfer') {
+                                                                gateType = 'execution';
+                                                                color = '#4F46E5';
+                                                                bg = '#EEF2FF';
+                                                            }
                                                             updateCurrentStage({
-                                                                gateType: cat.type,
-                                                                color: cat.color,
-                                                                bg: cat.bg,
-                                                                evidence: currentStage.evidence
-                                                                    ? currentStage.evidence
-                                                                    : cat.defaultEvidence,
+                                                                interactionType: def.type,
+                                                                gateType,
+                                                                color,
+                                                                bg,
                                                             });
                                                         }}
-                                                        className={`relative flex cursor-pointer flex-col justify-between rounded-xl border p-2.5 transition-all ${
+                                                        className={`flex cursor-pointer items-start gap-2 rounded-xl border p-2.5 transition-all ${
                                                             isSelected
                                                                 ? 'border-[#0F2F58] bg-[#F8FAFC] shadow-2xs ring-1 ring-[#0F2F58]'
                                                                 : 'border-slate-200 bg-white hover:border-slate-300'
                                                         }`}
                                                     >
-                                                        <div className="flex items-start justify-between gap-1.5">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className="text-base">{cat.icon}</span>
+                                                        <span className="shrink-0 text-base">{def.icon}</span>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center justify-between">
                                                                 <span className="text-xs font-extrabold text-slate-900">
-                                                                    {cat.title}
+                                                                    {def.label}
                                                                 </span>
+                                                                {isSelected && <Check className="size-3 stroke-[3] text-[#0F2F58]" />}
                                                             </div>
-                                                            <div
-                                                                className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
-                                                                    isSelected
-                                                                        ? 'border-[#0F2F58] bg-[#0F2F58] text-white'
-                                                                        : 'border-slate-300 bg-white'
-                                                                }`}
-                                                            >
-                                                                {isSelected && <Check className="size-2.5 stroke-[3]" />}
-                                                            </div>
+                                                            {def.type === 'quality_check' && (
+                                                                <div className="text-[9.5px] font-bold text-amber-800">
+                                                                    <span>Diagnostic / Measurement Gate</span>
+                                                                </div>
+                                                            )}
+                                                            <p className="mt-0.5 text-[10px] leading-tight text-slate-500">
+                                                                {def.description}
+                                                            </p>
                                                         </div>
-                                                        <p className="mt-1 text-[10.5px] leading-tight text-slate-500">
-                                                            {cat.subtitle}
-                                                        </p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Axis 2: Required Evidence Protocol */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-bold text-slate-700">
+                                                2. Required Evidence Protocol
+                                            </label>
+                                            <span className="text-[10px] text-slate-500">How is milestone proven?</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                                            {EVIDENCE_PROTOCOL_DEFINITIONS.map((def) => {
+                                                const isSelected = currentEvidenceProtocol === def.protocol;
+                                                return (
+                                                    <div
+                                                        key={def.protocol}
+                                                        onClick={() => updateCurrentStage({ evidenceProtocol: def.protocol })}
+                                                        className={`flex cursor-pointer items-start gap-2 rounded-xl border p-2.5 transition-all ${
+                                                            isSelected
+                                                                ? 'border-indigo-600 bg-indigo-50/40 shadow-2xs ring-1 ring-indigo-600'
+                                                                : 'border-slate-200 bg-white hover:border-slate-300'
+                                                        }`}
+                                                    >
+                                                        <span className="shrink-0 text-base">{def.icon}</span>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-xs font-extrabold text-slate-900">
+                                                                    {def.label}
+                                                                </span>
+                                                                {isSelected && <Check className="size-3 stroke-[3] text-indigo-600" />}
+                                                            </div>
+                                                            <p className="mt-0.5 text-[10px] leading-tight text-slate-500">
+                                                                {def.description}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 );
                                             })}
@@ -621,23 +855,25 @@ export default function WorkNodeCustomizerModal({
                                     {/* Evidence Description / Requirement label */}
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-slate-700">
-                                            Evidence Requirement / Label
+                                            Specific Evidence Guidance / Instructions
                                         </label>
                                         <input
                                             type="text"
                                             value={currentStage.evidence || ''}
                                             onChange={(e) => updateCurrentStage({ evidence: e.target.value })}
-                                            placeholder="e.g. Breaker lock-out photo gate"
+                                            placeholder="e.g. Clear photo showing serial number & gauge reading"
                                             className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:ring-1 focus:ring-[#0F2F58]"
                                         />
                                         <p className="text-[10px] text-slate-400">
-                                            Required proof uploaded by provider before customer milestone sign-off.
+                                            Instructions displayed to the operator when uploading proof for milestone progression.
                                         </p>
                                     </div>
                                 </div>
-                            ) : (
+                            )}
+
+                            {inspectorTab === 'configure' && !currentStage && (
                                 <div className="flex flex-1 items-center justify-center p-8 text-center text-xs text-slate-400">
-                                    No stage selected. Select or add a stage to edit its attributes.
+                                    No stage selected. Select or add a stage from the catalog to configure.
                                 </div>
                             )}
                         </div>

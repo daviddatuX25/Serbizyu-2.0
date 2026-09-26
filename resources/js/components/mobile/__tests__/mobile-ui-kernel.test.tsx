@@ -684,5 +684,73 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
 
             expect(screen.queryByText(/Work Studio · Workflow Customizer/i)).toBeNull();
         });
+
+        it('renders Universal Node Catalog primitives and allows adding a primitive to the pipeline', () => {
+            const onSave = vi.fn();
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            // Open Node Catalog tab
+            const catalogTab = screen.getByRole('button', { name: /Node Catalog Primitives/i });
+            fireEvent.click(catalogTab);
+
+            // Check that Universal Primitives are rendered
+            expect(screen.getByText('Universal Work Node Catalog (Atomic Lego Blocks)')).toBeDefined();
+            expect(screen.getByText('Site Arrival & Check-In')).toBeDefined();
+            expect(screen.getByText('Custody Intake / Stall Pickup')).toBeDefined();
+            expect(screen.getByText('Digital Artifact Delivery')).toBeDefined();
+
+            // Click "+ Add Node" on Digital Artifact Delivery
+            const addNodeBtns = screen.getAllByRole('button', { name: /\+ Add Node/i });
+            fireEvent.click(addNodeBtns[5]); // Digital Artifact Delivery
+
+            // Verify stage count grew to 4 and inspector switched to configure
+            expect(screen.getByText(/Stage Nodes \(4\)/i)).toBeDefined();
+
+            // Apply workflow
+            const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
+            fireEvent.click(applyBtn);
+
+            expect(onSave).toHaveBeenCalledTimes(1);
+            const saved: WorkStage[] = onSave.mock.calls[0][0];
+            expect(saved.length).toBe(4);
+            expect(saved[3].title).toBe('Digital Artifact Delivery');
+            expect(saved[3].interactionType).toBe('solo_execution');
+            expect(saved[3].evidenceProtocol).toBe('file_artifact');
+        });
+
+        it('allows configuring interaction type and evidence protocols', () => {
+            const onSave = vi.fn();
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            // Click Custody Transfer interaction model
+            const custodyCard = screen.getByText('Custody Transfer');
+            fireEvent.click(custodyCard);
+
+            // Click Metric / Value Reading evidence protocol
+            const metricProtocol = screen.getByText('Metric / Value Reading');
+            fireEvent.click(metricProtocol);
+
+            // Save
+            const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
+            fireEvent.click(applyBtn);
+
+            const saved: WorkStage[] = onSave.mock.calls[0][0];
+            expect(saved[0].interactionType).toBe('custody_transfer');
+            expect(saved[0].evidenceProtocol).toBe('metric_reading');
+        });
     });
 });
