@@ -184,7 +184,7 @@ final class RequestController extends Controller
             'quotes_count' => count($quotesData),
         ];
 
-        if ($request->wantsJson() || $request->expectsJson()) {
+        if (($request->wantsJson() || $request->expectsJson()) && ! $request->header('X-Inertia')) {
             return response()->json([
                 'data' => [
                     'request' => $requestData,

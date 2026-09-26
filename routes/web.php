@@ -57,6 +57,7 @@ Route::get('/my-listings/{listing}', [MyListingsController::class, 'show'])
     ->name('listings.preview');
 
 Route::get('/browse', BrowseController::class)->name('browse');
+Route::get('/requests/{id}', [RequestController::class, 'show'])->name('requests.show');
 Route::get('/listings/{listing}', [ListingController::class, 'show'])->name('listings.show');
 Route::post('/listings', [ListingController::class, 'store'])
     ->middleware('throttle:listing-writes')
@@ -78,7 +79,6 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::get('/account/readiness', [CapabilityController::class, 'readiness'])->name('account.readiness');
     Route::get('/requests/create', [RequestController::class, 'create'])->name('requests.create');
     Route::post('/requests', [RequestController::class, 'store'])->name('requests.store');
-    Route::get('/requests/{id}', [RequestController::class, 'show'])->name('requests.show');
     Route::post('/requests/{id}/quotes', [RequestController::class, 'storeQuote'])->name('requests.quotes.store');
     Route::post('/requests/{id}/quotes/{quote}/accept', [RequestController::class, 'acceptQuote'])->name('requests.quotes.accept');
     Route::get('/listings/create/service', [ListingController::class, 'createService'])->name('listings.create.service');

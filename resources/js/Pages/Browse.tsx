@@ -1,64 +1,100 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import {
+    ArrowUpDown,
+    Bell,
+    Check,
+    ChevronDown,
+    Clock,
+    Grid,
+    Heart,
+    List,
+    MapPin,
+    Plus,
+    RotateCcw,
     Search,
+    ShieldCheck,
+    ShoppingBag,
     SlidersHorizontal,
     Star,
-    MapPin,
+    Sparkles,
     X,
-    ChevronDown,
-    Plus,
-    Heart,
-    Grid,
-    List,
-    RotateCcw,
-    ShieldCheck,
-    Clock,
-    ArrowUpDown,
 } from 'lucide-react';
 import type { HomeProps, ListingRecord } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
-import { CategoryTabs } from '../marketplace/components/CategoryTabs';
-import { FilterChipBar, type FilterOption } from '../marketplace/components/FilterChipBar';
-import { FeeThresholdTracker } from '../marketplace/components/FeeThresholdTracker';
 import { MarketplaceCard } from '../marketplace/components/MarketplaceCard';
-import { StickyBasketBar } from '../marketplace/components/StickyBasketBar';
 import { BottomNavBar, type NavTabId } from '../marketplace/components/BottomNavBar';
-import type { BasketItem, MarketplaceCategory } from '../marketplace/types';
+import type {
+    BasketItem,
+    MarketplaceCategory,
+    PublishedDealChainRecipeId,
+    SlotCandidateListing,
+} from '../marketplace/types';
 import { PicksDrawer } from '../components/marketplace/PicksDrawer';
 import { DealChainCheckoutModal } from '../components/marketplace/DealChainCheckoutModal';
-import { DEAL_CHAIN_RECIPES } from '../marketplace/dealChainRecipes';
+import { indexDealChainRecipes } from '../marketplace/dealChainRecipes';
+import type { DealChainRecipeDefinition } from '../marketplace/dealChainRecipes';
 import GlovoWaveModal from '../components/mobile/GlovoWaveModal';
+import { CreatorPostModal } from '../components/marketplace/CreatorPostModal';
+import { QuickDealScanModal } from '../components/marketplace/QuickDealScanModal';
 
 // Curated Category Definitions
-const MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
-    { code: 'all', label: 'All Services & Goods' },
-    { code: 'repairs', label: 'Repairs & AC' },
-    { code: 'home-cleaning', label: 'Cleaning & Help' },
-    { code: 'courier', label: 'Courier & Padala' },
-    { code: 'local-food', label: 'Local Food & Bakery' },
-    { code: 'print-assist', label: 'Print & Soft-Copy' },
-    { code: 'greeting-cards', label: 'Cards & Crafts' },
+const MARKETPLACE_CATEGORIES: (MarketplaceCategory & { icon: string; description: string })[] = [
+    {
+        code: 'all',
+        label: 'All Services & Goods',
+        icon: '🏷️',
+        description: 'Complete Tagudin marketplace offerings',
+    },
+    {
+        code: 'repairs',
+        label: 'Repairs & AC',
+        icon: '🔧',
+        description: 'Aircon cleaning, electrical, plumbing & appliance care',
+    },
+    {
+        code: 'home-cleaning',
+        label: 'Cleaning & Help',
+        icon: '🧹',
+        description: 'House cleaning, laundry, errand runs',
+    },
+    {
+        code: 'courier',
+        label: 'Courier & Padala',
+        icon: '📦',
+        description: 'Same-day parcel pickup & delivery in Tagudin',
+    },
+    {
+        code: 'local-food',
+        label: 'Local Food & Bakery',
+        icon: '🍞',
+        description: 'Bibingka, fresh pastries, native kakanin',
+    },
+    {
+        code: 'print-assist',
+        label: 'Print & Soft-Copy',
+        icon: '🖨️',
+        description: 'Document printing, photocopy, scanning',
+    },
+    {
+        code: 'greeting-cards',
+        label: 'Cards & Crafts',
+        icon: '🎨',
+        description: 'Handmade crafts, personalized cards & gifts',
+    },
 ];
 
 // Curated Category Images for High-Craft Visuals
 const CATEGORY_IMAGES: Record<string, string> = {
-    repairs: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&auto=format&fit=crop&q=80',
-    'home-cleaning': 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&auto=format&fit=crop&q=80',
-    courier: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&auto=format&fit=crop&q=80',
-    'local-food': 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=600&auto=format&fit=crop&q=80',
-    'print-assist': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&auto=format&fit=crop&q=80',
-    'greeting-cards': 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=600&auto=format&fit=crop&q=80',
-    'local-services': 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600&auto=format&fit=crop&q=80',
-    default: 'https://images.unsplash.com/photo-1581092918056-0c4c5acdfb82?w=600&auto=format&fit=crop&q=80',
+    repairs: '/photos/ac-clean.jpg',
+    'home-cleaning': '/photos/req-electrician.jpg',
+    courier: '/photos/courier.jpg',
+    'local-food': '/photos/bibingka.jpg',
+    'print-assist': '/photos/greeting.jpg',
+    'greeting-cards': '/photos/greeting.jpg',
+    'local-services': '/photos/ac-clean.jpg',
+    default: '/photos/ac-clean.jpg',
 };
-
-const MOBILE_FILTER_OPTIONS: FilterOption[] = [
-    { id: 'top_rated', label: 'Top Rated (4.8+)', hasStarIcon: true },
-    { id: 'available_today', label: 'Available Today' },
-    { id: 'verified_pro', label: 'Police Cleared Pro' },
-    { id: 'under_200', label: 'Under ₱200' },
-];
 
 function getCategoryPhoto(categoryCode?: string | null): string {
     const code = (categoryCode || 'default').toLowerCase();
@@ -85,30 +121,54 @@ export default function Browse(props: HomeProps) {
         if (Array.isArray(props.listings)) return props.listings;
         return [];
     }, [props.publicListings, props.listings]);
+    const dealChainRecipes = useMemo(
+        () =>
+            indexDealChainRecipes(
+                props.dealChainCatalog as DealChainRecipeDefinition[] | undefined,
+            ),
+        [props.dealChainCatalog],
+    );
 
     // Search and Filter State
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
-    const [listingTypeFilter, setListingTypeFilter] = useState<'all' | 'service' | 'product'>('all');
+    const [listingTypeFilter, setListingTypeFilter] = useState<'all' | 'service' | 'product'>(
+        'all',
+    );
     const [priceRangeFilter, setPriceRangeFilter] = useState<PriceRange>('all');
     const [topRatedOnly, setTopRatedOnly] = useState(false);
     const [verifiedProOnly, setVerifiedProOnly] = useState(false);
     const [availableTodayOnly, setAvailableTodayOnly] = useState(false);
     const [sortBy, setSortBy] = useState<SortOption>('recommended');
     const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
-
-    // Mobile quick filter chips state
-    const [mobileFilterIds, setMobileFilterIds] = useState<string[]>(['top_rated']);
+    const [marketplaceTab, setMarketplaceTab] = useState<'listings' | 'requests'>('listings');
+    const communityRequests = props.communityRequests || [];
+    type ActiveMobileModal = 'category' | 'type' | 'price' | 'trust' | 'sort' | null;
+    const [activeMobileModal, setActiveMobileModal] = useState<ActiveMobileModal>(null);
+    const [searchFocused, setSearchFocused] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
     const [picksOpen, setPicksOpen] = useState(false);
     const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
-    const [mobileCategoryModal, setMobileCategoryModal] = useState<{
-        open: boolean;
-        category: MarketplaceCategory | null;
-    }>({ open: false, category: null });
-    // Basket State
+    const [creatorOpen, setCreatorOpen] = useState(false);
+    const [quickDealOpen, setQuickDealOpen] = useState(false);
     const [basket, setBasket] = useState<BasketItem[]>([]);
     const [pinnedIds, setPinnedIds] = useState<string[]>([]);
     const [mobileActiveTab, setMobileActiveTab] = useState<NavTabId>('explore');
+    const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
+
+    const authenticated = Boolean(
+        props.session?.authenticated ?? props.session?.isAuthenticated ?? props.session?.userId,
+    );
+
+    const userDisplayName =
+        props.readiness?.displayName ??
+        props.readiness?.display_name ??
+        props.session?.displayName ??
+        props.session?.display_name ??
+        props.session?.phone ??
+        'Citizen';
+
+    const userInitial = userDisplayName ? userDisplayName.charAt(0).toUpperCase() : 'U';
 
     // Load pins and picks from localStorage on mount
     useEffect(() => {
@@ -149,24 +209,30 @@ export default function Browse(props: HomeProps) {
 
     const handleAddToCart = (item: ListingRecord) => {
         const price = getPriceRaw(item);
+        const listingContext = {
+            category_code: item.category_code ?? item.categoryCode ?? null,
+            listing_type: item.listing_type ?? item.listingType ?? null,
+            work_shape: item.work_shape ?? item.workShape ?? null,
+        };
         const existing = basket.find((b) => b.id === item.id);
         let updated: BasketItem[];
         if (existing) {
-            updated = basket.map((b) => (b.id === item.id ? { ...b, quantity: b.quantity + 1 } : b));
+            updated = basket.map((b) =>
+                b.id === item.id ? { ...b, ...listingContext, quantity: b.quantity + 1 } : b,
+            );
         } else {
-            updated = [...basket, { id: item.id, title: item.title, price, quantity: 1 }];
+            updated = [
+                ...basket,
+                { id: item.id, title: item.title, price, quantity: 1, ...listingContext },
+            ];
         }
         saveBasket(updated);
     };
     const basketTotal = useMemo(() => {
         return basket.reduce((sum, item) => sum + item.price * item.quantity, 0);
     }, [basket]);
-
-    const handleAttachDealChain = (
-        itemId: string,
-        recipeId: 'turnkey_parts' | 'courier_delivery' | 'safety_audit' | null,
-    ) => {
-        const recipe = recipeId ? DEAL_CHAIN_RECIPES[recipeId] : null;
+    const handleAttachDealChain = (itemId: string, recipeId: PublishedDealChainRecipeId | null) => {
+        const recipe = recipeId ? dealChainRecipes[recipeId] : null;
         const updated = basket.map((item) => {
             if (item.id !== itemId) return item;
             const currentAddon = item.dealChain?.extraFee || 0;
@@ -180,44 +246,74 @@ export default function Browse(props: HomeProps) {
         });
         saveBasket(updated);
     };
+    const handleSwapSlotCandidate = (
+        itemId: string,
+        nodeIndex: number,
+        candidate: SlotCandidateListing,
+    ) => {
+        setBasket((prev) =>
+            prev.map((item) => {
+                if (item.id !== itemId || !item.dealChain) return item;
+                const updatedNodes = [...item.dealChain.nodes];
+                const oldNode = updatedNodes[nodeIndex];
+                const oldPrice = oldNode.priceMinor ?? (oldNode.type === 'store' ? 18000 : 8000);
+                const newPrice = candidate.price_minor;
+                const priceDiff = (newPrice - oldPrice) / 100;
 
-    const handleAuthorizeDealChain = (paymentMethod: 'cash' | 'gcash' | 'escrow') => {
+                updatedNodes[nodeIndex] = {
+                    ...oldNode,
+                    id: candidate.id,
+                    title: candidate.title,
+                    sub: candidate.provider_name,
+                    listingId: candidate.id,
+                    providerId: candidate.provider_user_id,
+                    priceMinor: candidate.price_minor,
+                };
+
+                return {
+                    ...item,
+                    price: item.price + priceDiff,
+                    dealChain: {
+                        ...item.dealChain,
+                        extraFee: Math.max(0, item.dealChain.extraFee + priceDiff),
+                        nodes: updatedNodes,
+                    },
+                };
+            }),
+        );
+    };
+
+    const handleAuthorizeDealChain = () => {
         setCheckoutModalOpen(false);
         router.post(
             '/deal-chains/authorize',
             {
-                payment_method: paymentMethod,
                 items: basket.map((b) => ({
                     id: b.id,
-                    title: b.title,
-                    price: b.price,
                     quantity: b.quantity,
                     deal_chain: b.dealChain?.recipeId || null,
+                    slot_overrides: b.dealChain?.nodes
+                        ? Object.fromEntries(
+                              b.dealChain.nodes
+                                  .filter((n) => n.listingId)
+                                  .map((n) => [
+                                      n.type,
+                                      {
+                                          listing_id: n.listingId,
+                                          provider_user_id: n.providerId,
+                                          price_minor: n.priceMinor,
+                                      },
+                                  ]),
+                          )
+                        : null,
                 })),
-                total_amount: basketTotal,
             },
             {
-                onError: () => {
-                    if (basket.length > 0) {
-                        router.visit(`/listings/${basket[0].id}/book`);
-                    }
-                },
                 onSuccess: () => {
                     saveBasket([]);
                 },
             },
         );
-    };
-    const handleToggleMobileFilter = (filterId: string) => {
-        setMobileFilterIds((prev) =>
-            prev.includes(filterId) ? prev.filter((id) => id !== filterId) : [...prev, filterId],
-        );
-        if (filterId === 'top_rated') setTopRatedOnly((v) => !v);
-        if (filterId === 'verified_pro') setVerifiedProOnly((v) => !v);
-        if (filterId === 'available_today') setAvailableTodayOnly((v) => !v);
-        if (filterId === 'under_200') {
-            setPriceRangeFilter((prev) => (prev === 'under_150' ? 'all' : 'under_150'));
-        }
     };
 
     const resetAllFilters = () => {
@@ -228,7 +324,6 @@ export default function Browse(props: HomeProps) {
         setTopRatedOnly(false);
         setVerifiedProOnly(false);
         setAvailableTodayOnly(false);
-        setMobileFilterIds([]);
     };
 
     const hasActiveFilters =
@@ -250,7 +345,9 @@ export default function Browse(props: HomeProps) {
                     const titleMatch = item.title.toLowerCase().includes(q);
                     const descMatch = (item.description || '').toLowerCase().includes(q);
                     const areaMatch = (item.area || item.locality || '').toLowerCase().includes(q);
-                    const catMatch = (item.category_code || item.categoryCode || '').toLowerCase().includes(q);
+                    const catMatch = (item.category_code || item.categoryCode || '')
+                        .toLowerCase()
+                        .includes(q);
                     if (!titleMatch && !descMatch && !areaMatch && !catMatch) {
                         return false;
                     }
@@ -276,7 +373,8 @@ export default function Browse(props: HomeProps) {
                 if (priceRangeFilter !== 'all') {
                     const price = getPriceRaw(item);
                     if (priceRangeFilter === 'under_150' && price > 150) return false;
-                    if (priceRangeFilter === '150_300' && (price < 150 || price > 300)) return false;
+                    if (priceRangeFilter === '150_300' && (price < 150 || price > 300))
+                        return false;
                     if (priceRangeFilter === '300_plus' && price < 300) return false;
                 }
 
@@ -294,14 +392,7 @@ export default function Browse(props: HomeProps) {
                 }
                 return 0; // recommended / default ordering
             });
-    }, [
-        rawListings,
-        searchQuery,
-        selectedCategory,
-        listingTypeFilter,
-        priceRangeFilter,
-        sortBy,
-    ]);
+    }, [rawListings, searchQuery, selectedCategory, listingTypeFilter, priceRangeFilter, sortBy]);
 
     // Category Counts Map
     const categoryCounts = useMemo(() => {
@@ -314,13 +405,15 @@ export default function Browse(props: HomeProps) {
     }, [rawListings]);
 
     return (
-        <div className="min-h-screen w-full bg-[#F8FAFC] text-slate-900 font-['Plus_Jakarta_Sans',sans-serif]">
+        <div className="min-h-screen w-full bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900">
             {/* =========================================================================
                 DESKTOP SHELL (Visible on Desktop lg:, Hidden on Mobile)
                 ========================================================================= */}
             <div className="hidden lg:block">
                 {/* 1. Global Navigation Bar */}
                 <DesktopGlobalNav
+                    session={props.session}
+                    readiness={props.readiness}
                     activeRoute="browse"
                     picksCount={basket.reduce((sum, item) => sum + item.quantity, 0)}
                     onPicksClick={() => setPicksOpen(true)}
@@ -334,7 +427,7 @@ export default function Browse(props: HomeProps) {
                     rightSlot={
                         <Link
                             href="/requests/create"
-                            className="flex items-center gap-1.5 rounded-full bg-[#0F2F58] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#153e74] transition-colors shadow-xs"
+                            className="flex items-center gap-1.5 rounded-full bg-[#0F2F58] px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-[#153e74]"
                         >
                             <span>+ Post Request</span>
                         </Link>
@@ -343,21 +436,23 @@ export default function Browse(props: HomeProps) {
 
                 {/* 2. Main Discovery 2-Column Layout */}
                 <main className="mx-auto max-w-7xl px-6 py-8">
-                    <div className="grid grid-cols-12 gap-8 items-start">
+                    <div className="grid grid-cols-12 items-start gap-8">
                         {/* =========================================================================
                             LEFT COLUMN (270px width): INLINE FILTER CONTROLS (NO MODAL POPUP!)
                             ========================================================================= */}
-                        <aside className="col-span-3 sticky top-24 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+                        <aside className="sticky top-24 col-span-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div className="flex items-center gap-2">
                                     <SlidersHorizontal className="size-4 text-[#0F2F58]" />
-                                    <span className="text-sm font-extrabold text-[#0F2F58]">Filters</span>
+                                    <span className="text-sm font-extrabold text-[#0F2F58]">
+                                        Filters
+                                    </span>
                                 </div>
                                 {hasActiveFilters && (
                                     <button
                                         type="button"
                                         onClick={resetAllFilters}
-                                        className="flex items-center gap-1 text-[11px] font-bold text-amber-800 hover:text-amber-900 cursor-pointer"
+                                        className="flex cursor-pointer items-center gap-1 text-[11px] font-bold text-amber-800 hover:text-amber-900"
                                     >
                                         <RotateCcw className="size-3" />
                                         <span>Reset</span>
@@ -373,13 +468,13 @@ export default function Browse(props: HomeProps) {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Search services or goods..."
-                                    className="h-9 w-full rounded-lg border border-slate-300 bg-[#FAFCFB] pr-8 pl-9 text-xs font-semibold text-slate-900 outline-none transition-colors focus:border-[#0F2F58] focus:bg-white"
+                                    className="h-9 w-full rounded-lg border border-slate-300 bg-[#FAFCFB] pr-8 pl-9 text-xs font-semibold text-slate-900 transition-colors outline-none focus:border-[#0F2F58] focus:bg-white"
                                 />
                                 {searchQuery && (
                                     <button
                                         type="button"
                                         onClick={() => setSearchQuery('')}
-                                        className="absolute top-1/2 right-2.5 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                        className="absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600"
                                     >
                                         <X className="size-3.5" />
                                     </button>
@@ -388,7 +483,7 @@ export default function Browse(props: HomeProps) {
 
                             {/* Section 1: Categories */}
                             <div className="mt-4 border-b border-slate-100 pb-4">
-                                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                <label className="text-[11px] font-bold tracking-wider text-slate-500 uppercase">
                                     Category
                                 </label>
                                 <div className="mt-2.5 flex flex-col gap-1">
@@ -400,9 +495,9 @@ export default function Browse(props: HomeProps) {
                                                 key={cat.code}
                                                 type="button"
                                                 onClick={() => setSelectedCategory(cat.code)}
-                                                className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer text-left ${
+                                                className={`flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold transition-colors ${
                                                     isSelected
-                                                        ? 'bg-[#0F2F58] text-white font-bold'
+                                                        ? 'bg-[#0F2F58] font-bold text-white'
                                                         : 'text-slate-700 hover:bg-slate-100'
                                                 }`}
                                             >
@@ -424,7 +519,7 @@ export default function Browse(props: HomeProps) {
 
                             {/* Section 2: Fulfillment / Listing Type */}
                             <div className="mt-4 border-b border-slate-100 pb-4">
-                                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                <label className="text-[11px] font-bold tracking-wider text-slate-500 uppercase">
                                     Listing Type
                                 </label>
                                 <div className="mt-2 grid grid-cols-3 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
@@ -433,7 +528,7 @@ export default function Browse(props: HomeProps) {
                                             key={t}
                                             type="button"
                                             onClick={() => setListingTypeFilter(t)}
-                                            className={`rounded-md py-1 text-[11px] font-bold capitalize transition-all cursor-pointer ${
+                                            className={`cursor-pointer rounded-md py-1 text-[11px] font-bold capitalize transition-all ${
                                                 listingTypeFilter === t
                                                     ? 'bg-[#0F2F58] text-white shadow-xs'
                                                     : 'text-slate-600 hover:text-slate-900'
@@ -447,7 +542,7 @@ export default function Browse(props: HomeProps) {
 
                             {/* Section 3: Price Budget */}
                             <div className="mt-4 border-b border-slate-100 pb-4">
-                                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                <label className="text-[11px] font-bold tracking-wider text-slate-500 uppercase">
                                     Price Range
                                 </label>
                                 <div className="mt-2 flex flex-col gap-1.5">
@@ -459,13 +554,15 @@ export default function Browse(props: HomeProps) {
                                     ].map((opt) => (
                                         <label
                                             key={opt.id}
-                                            className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer hover:text-slate-900"
+                                            className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-700 hover:text-slate-900"
                                         >
                                             <input
                                                 type="radio"
                                                 name="priceFilter"
                                                 checked={priceRangeFilter === opt.id}
-                                                onChange={() => setPriceRangeFilter(opt.id as PriceRange)}
+                                                onChange={() =>
+                                                    setPriceRangeFilter(opt.id as PriceRange)
+                                                }
                                                 className="size-3.5 accent-[#0F2F58]"
                                             />
                                             <span>{opt.label}</span>
@@ -476,16 +573,16 @@ export default function Browse(props: HomeProps) {
 
                             {/* Section 4: Trust & Assurance */}
                             <div className="mt-4">
-                                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                <label className="text-[11px] font-bold tracking-wider text-slate-500 uppercase">
                                     Trust &amp; Assurance
                                 </label>
                                 <div className="mt-2.5 flex flex-col gap-2">
-                                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer hover:text-slate-900">
+                                    <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-700 hover:text-slate-900">
                                         <input
                                             type="checkbox"
                                             checked={topRatedOnly}
                                             onChange={(e) => setTopRatedOnly(e.target.checked)}
-                                            className="size-3.5 accent-[#0F2F58] rounded"
+                                            className="size-3.5 rounded accent-[#0F2F58]"
                                         />
                                         <span className="flex items-center gap-1">
                                             <Star className="size-3 fill-amber-500 text-amber-500" />
@@ -493,12 +590,12 @@ export default function Browse(props: HomeProps) {
                                         </span>
                                     </label>
 
-                                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer hover:text-slate-900">
+                                    <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-700 hover:text-slate-900">
                                         <input
                                             type="checkbox"
                                             checked={verifiedProOnly}
                                             onChange={(e) => setVerifiedProOnly(e.target.checked)}
-                                            className="size-3.5 accent-[#0F2F58] rounded"
+                                            className="size-3.5 rounded accent-[#0F2F58]"
                                         />
                                         <span className="flex items-center gap-1">
                                             <ShieldCheck className="size-3.5 text-emerald-600" />
@@ -506,12 +603,14 @@ export default function Browse(props: HomeProps) {
                                         </span>
                                     </label>
 
-                                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer hover:text-slate-900">
+                                    <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-700 hover:text-slate-900">
                                         <input
                                             type="checkbox"
                                             checked={availableTodayOnly}
-                                            onChange={(e) => setAvailableTodayOnly(e.target.checked)}
-                                            className="size-3.5 accent-[#0F2F58] rounded"
+                                            onChange={(e) =>
+                                                setAvailableTodayOnly(e.target.checked)
+                                            }
+                                            className="size-3.5 rounded accent-[#0F2F58]"
                                         />
                                         <span className="flex items-center gap-1">
                                             <Clock className="size-3.5 text-blue-600" />
@@ -528,13 +627,62 @@ export default function Browse(props: HomeProps) {
                         <section className="col-span-9 flex flex-col gap-6">
                             {/* Control Bar: Title, Count, Active Chips, Sort, Layout */}
                             <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                                {/* Marketplace Mode Tab Switcher */}
+                                <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setMarketplaceTab('listings')}
+                                        className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-extrabold transition-all cursor-pointer ${
+                                            marketplaceTab === 'listings'
+                                                ? 'bg-[#0F2F58] text-white shadow-xs'
+                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        }`}
+                                    >
+                                        <span>🏷️ Available Services &amp; Goods</span>
+                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                            marketplaceTab === 'listings' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                                        }`}>
+                                            {filteredListings.length}
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setMarketplaceTab('requests')}
+                                        className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-extrabold transition-all cursor-pointer ${
+                                            marketplaceTab === 'requests'
+                                                ? 'bg-[#0D715F] text-white shadow-xs'
+                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        }`}
+                                    >
+                                        <span>📢 Citizen Requests (Job Board)</span>
+                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                            marketplaceTab === 'requests' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                                        }`}>
+                                            {communityRequests.length}
+                                        </span>
+                                    </button>
+
+                                    <Link
+                                        href="/requests/create"
+                                        className="ml-auto inline-flex items-center gap-1.5 rounded-xl border border-teal-600 bg-teal-50 px-3.5 py-1.5 text-xs font-bold text-teal-800 hover:bg-teal-100 transition-colors"
+                                    >
+                                        <Plus className="size-3.5 stroke-[2.5]" />
+                                        <span>Post a Request</span>
+                                    </Link>
+                                </div>
+
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h1 className="text-lg font-extrabold text-[#0F2F58]">
-                                            Verified Services &amp; Local Products
+                                            {marketplaceTab === 'listings'
+                                                ? 'Verified Services & Local Products'
+                                                : 'Community Job Tenders & Requests'}
                                         </h1>
                                         <p className="mt-0.5 text-xs text-slate-500">
-                                            Showing {filteredListings.length} active public offerings in Tagudin
+                                            {marketplaceTab === 'listings'
+                                                ? `Showing ${filteredListings.length} active public offerings in Tagudin`
+                                                : `Showing ${communityRequests.length} open citizen requests awaiting provider bids`}
                                         </p>
                                     </div>
 
@@ -545,12 +693,18 @@ export default function Browse(props: HomeProps) {
                                             <span>Sort:</span>
                                             <select
                                                 value={sortBy}
-                                                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                                className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-800 outline-none cursor-pointer focus:border-[#0F2F58]"
+                                                onChange={(e) =>
+                                                    setSortBy(e.target.value as SortOption)
+                                                }
+                                                className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2F58]"
                                             >
                                                 <option value="recommended">Recommended</option>
-                                                <option value="price_asc">Price: Low to High</option>
-                                                <option value="price_desc">Price: High to Low</option>
+                                                <option value="price_asc">
+                                                    Price: Low to High
+                                                </option>
+                                                <option value="price_desc">
+                                                    Price: High to Low
+                                                </option>
                                                 <option value="rating">Highest Rated</option>
                                             </select>
                                         </div>
@@ -560,7 +714,7 @@ export default function Browse(props: HomeProps) {
                                             <button
                                                 type="button"
                                                 onClick={() => setLayoutMode('grid')}
-                                                className={`rounded-md p-1.5 cursor-pointer transition-colors ${
+                                                className={`cursor-pointer rounded-md p-1.5 transition-colors ${
                                                     layoutMode === 'grid'
                                                         ? 'bg-white text-[#0F2F58] shadow-xs'
                                                         : 'text-slate-400 hover:text-slate-600'
@@ -572,7 +726,7 @@ export default function Browse(props: HomeProps) {
                                             <button
                                                 type="button"
                                                 onClick={() => setLayoutMode('list')}
-                                                className={`rounded-md p-1.5 cursor-pointer transition-colors ${
+                                                className={`cursor-pointer rounded-md p-1.5 transition-colors ${
                                                     layoutMode === 'list'
                                                         ? 'bg-white text-[#0F2F58] shadow-xs'
                                                         : 'text-slate-400 hover:text-slate-600'
@@ -588,10 +742,16 @@ export default function Browse(props: HomeProps) {
                                 {/* Active Filter Badges */}
                                 {hasActiveFilters && (
                                     <div className="flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-2.5">
-                                        <span className="text-[11px] font-bold text-slate-400">Active filters:</span>
+                                        <span className="text-[11px] font-bold text-slate-400">
+                                            Active filters:
+                                        </span>
                                         {selectedCategory !== 'all' && (
                                             <span className="flex items-center gap-1 rounded-full bg-[#EBF2FA] px-2.5 py-0.5 text-[11px] font-bold text-[#0F2F58]">
-                                                {MARKETPLACE_CATEGORIES.find((c) => c.code === selectedCategory)?.label}
+                                                {
+                                                    MARKETPLACE_CATEGORIES.find(
+                                                        (c) => c.code === selectedCategory,
+                                                    )?.label
+                                                }
                                                 <button
                                                     type="button"
                                                     onClick={() => setSelectedCategory('all')}
@@ -641,8 +801,76 @@ export default function Browse(props: HomeProps) {
                                 )}
                             </div>
 
-                            {/* Empty State */}
-                            {filteredListings.length === 0 ? (
+                            {/* COMMUNITY REQUESTS BOARD VIEW */}
+                            {marketplaceTab === 'requests' ? (
+                                communityRequests.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
+                                        <div className="flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                                            <Search className="size-6" />
+                                        </div>
+                                        <h3 className="mt-3 text-sm font-extrabold text-[#0F2F58]">
+                                            No active citizen requests right now
+                                        </h3>
+                                        <p className="mt-1 max-w-sm text-xs text-slate-500">
+                                            Be the first citizen in Tagudin to post a job request or repair need!
+                                        </p>
+                                        <Link
+                                            href="/requests/create"
+                                            className="mt-4 rounded-full bg-[#0D715F] px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#0a574a]"
+                                        >
+                                            Post a Request
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        {communityRequests.map((req) => (
+                                            <article
+                                                key={req.id}
+                                                onClick={() => router.visit(`/requests/${req.id}`)}
+                                                className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all hover:border-[#0D715F] hover:shadow-md cursor-pointer"
+                                            >
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-0.5 text-[11px] font-bold text-[#0D715F]">
+                                                            <Sparkles className="size-3" />
+                                                            <span>Open Tender</span>
+                                                        </span>
+                                                        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full capitalize">
+                                                            ⏱️ {req.urgency}
+                                                        </span>
+                                                    </div>
+
+                                                    <h3 className="text-sm font-extrabold text-[#0F2F58] group-hover:text-[#0D715F] transition-colors leading-snug">
+                                                        {req.title}
+                                                    </h3>
+
+                                                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                                                        "{req.description}"
+                                                    </p>
+                                                </div>
+
+                                                <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs mt-4">
+                                                    <div>
+                                                        <span className="text-sm font-extrabold text-[#0D715F]">
+                                                            {req.budget_amount_minor ? `₱${(req.budget_amount_minor / 100).toFixed(2)}` : 'Open Budget'}
+                                                        </span>
+                                                        <span className="block text-[10px] text-slate-400 font-medium">Estimated Budget</span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700">
+                                                            {req.quotes_count} {req.quotes_count === 1 ? 'Bid' : 'Bids'}
+                                                        </span>
+                                                        <span className="rounded-xl bg-[#0D715F] text-white px-3 py-1.5 text-xs font-bold group-hover:bg-[#0a574a] transition-colors">
+                                                            Quote →
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        ))}
+                                    </div>
+                                )
+                            ) : filteredListings.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
                                     <div className="flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                                         <Search className="size-6" />
@@ -651,30 +879,37 @@ export default function Browse(props: HomeProps) {
                                         No matching listings found
                                     </h3>
                                     <p className="mt-1 max-w-sm text-xs text-slate-500">
-                                        Try adjusting your search query, choosing a different category, or resetting active filters.
+                                        Try adjusting your search query, choosing a different
+                                        category, or resetting active filters.
                                     </p>
                                     <button
                                         type="button"
                                         onClick={resetAllFilters}
-                                        className="mt-4 rounded-full bg-[#0F2F58] px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#153e74] cursor-pointer"
+                                        className="mt-4 cursor-pointer rounded-full bg-[#0F2F58] px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#153e74]"
                                     >
                                         Reset All Filters
                                     </button>
                                 </div>
                             ) : layoutMode === 'grid' ? (
                                 /* Impeccable Card Grid */
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                                     {filteredListings.map((listing) => {
                                         const isPinned = pinnedIds.includes(listing.id);
-                                        const photoUrl = getCategoryPhoto(listing.category_code || listing.categoryCode);
+                                        const photoUrl = getCategoryPhoto(
+                                            listing.category_code || listing.categoryCode,
+                                        );
                                         const priceDisplay = getPriceDisplay(listing);
-                                        const isService = (listing.listing_type || listing.listingType) !== 'product';
+                                        const isService =
+                                            (listing.listing_type || listing.listingType) !==
+                                            'product';
 
                                         return (
                                             <article
                                                 key={listing.id}
-                                                onClick={() => router.visit(`/listings/${listing.id}`)}
-                                                className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-all hover:shadow-md hover:border-slate-300 cursor-pointer"
+                                                onClick={() =>
+                                                    router.visit(`/listings/${listing.id}`)
+                                                }
+                                                className="group flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-all hover:border-slate-300 hover:shadow-md"
                                             >
                                                 {/* Cover Photo with Badges */}
                                                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
@@ -708,12 +943,20 @@ export default function Browse(props: HomeProps) {
                                                             e.stopPropagation();
                                                             togglePin(listing.id);
                                                         }}
-                                                        className={`absolute top-2.5 right-2.5 flex size-8 items-center justify-center rounded-full bg-white/90 shadow-xs transition-transform active:scale-90 hover:scale-105 cursor-pointer backdrop-blur-xs ${
-                                                            isPinned ? 'text-red-500' : 'text-slate-600 hover:text-red-500'
+                                                        className={`absolute top-2.5 right-2.5 flex size-8 cursor-pointer items-center justify-center rounded-full bg-white/90 shadow-xs backdrop-blur-xs transition-transform hover:scale-105 active:scale-90 ${
+                                                            isPinned
+                                                                ? 'text-red-500'
+                                                                : 'text-slate-600 hover:text-red-500'
                                                         }`}
-                                                        aria-label={isPinned ? 'Unpin listing' : 'Pin listing'}
+                                                        aria-label={
+                                                            isPinned
+                                                                ? 'Unpin listing'
+                                                                : 'Pin listing'
+                                                        }
                                                     >
-                                                        <Heart className={`size-4 ${isPinned ? 'fill-red-500' : ''}`} />
+                                                        <Heart
+                                                            className={`size-4 ${isPinned ? 'fill-red-500' : ''}`}
+                                                        />
                                                     </button>
                                                 </div>
 
@@ -724,7 +967,8 @@ export default function Browse(props: HomeProps) {
                                                             {listing.title}
                                                         </h3>
                                                         <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">
-                                                            {listing.description || 'Verified local marketplace offering in Tagudin, Ilocos Sur.'}
+                                                            {listing.description ||
+                                                                'Verified local marketplace offering in Tagudin, Ilocos Sur.'}
                                                         </p>
 
                                                         {/* Provider & Area Tag */}
@@ -733,12 +977,16 @@ export default function Browse(props: HomeProps) {
                                                                 {listing.title.charAt(0)}
                                                             </div>
                                                             <span className="font-semibold text-slate-700">
-                                                                {listing.owner_name || listing.ownerName || 'Tagudin Provider'}
+                                                                {listing.owner_name ||
+                                                                    listing.ownerName ||
+                                                                    'Tagudin Provider'}
                                                             </span>
                                                             <span>·</span>
                                                             <span className="flex items-center gap-0.5 text-slate-500">
                                                                 <MapPin className="size-3 text-slate-400" />
-                                                                {listing.area || listing.locality || 'Centro'}
+                                                                {listing.area ||
+                                                                    listing.locality ||
+                                                                    'Centro'}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -746,7 +994,7 @@ export default function Browse(props: HomeProps) {
                                                     {/* Pricing & Booking Row */}
                                                     <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
                                                         <div>
-                                                            <div className="text-[9.5px] uppercase font-bold tracking-wider text-slate-400">
+                                                            <div className="text-[9.5px] font-bold tracking-wider text-slate-400 uppercase">
                                                                 Starting at
                                                             </div>
                                                             <div className="font-mono text-base font-extrabold text-[#0F2F58]">
@@ -760,7 +1008,7 @@ export default function Browse(props: HomeProps) {
                                                                 e.stopPropagation();
                                                                 handleAddToCart(listing);
                                                             }}
-                                                            className="flex items-center gap-1.5 rounded-full bg-[#0F2F58] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#153e74] active:scale-95 cursor-pointer"
+                                                            className="flex cursor-pointer items-center gap-1.5 rounded-full bg-[#0F2F58] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#153e74] active:scale-95"
                                                         >
                                                             <Plus className="size-3.5" />
                                                             <span>Book Now</span>
@@ -776,14 +1024,18 @@ export default function Browse(props: HomeProps) {
                                 <div className="flex flex-col gap-3">
                                     {filteredListings.map((listing) => {
                                         const isPinned = pinnedIds.includes(listing.id);
-                                        const photoUrl = getCategoryPhoto(listing.category_code || listing.categoryCode);
+                                        const photoUrl = getCategoryPhoto(
+                                            listing.category_code || listing.categoryCode,
+                                        );
                                         const priceDisplay = getPriceDisplay(listing);
 
                                         return (
                                             <article
                                                 key={listing.id}
-                                                onClick={() => router.visit(`/listings/${listing.id}`)}
-                                                className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition-all hover:shadow-md cursor-pointer"
+                                                onClick={() =>
+                                                    router.visit(`/listings/${listing.id}`)
+                                                }
+                                                className="group flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition-all hover:shadow-md"
                                             >
                                                 <div className="flex items-center gap-4">
                                                     <img
@@ -796,10 +1048,11 @@ export default function Browse(props: HomeProps) {
                                                         <h3 className="text-sm font-extrabold text-[#0F2F58] group-hover:text-blue-900">
                                                             {listing.title}
                                                         </h3>
-                                                        <p className="line-clamp-1 mt-0.5 text-xs text-slate-500">
-                                                            {listing.description || 'Verified local service'}
+                                                        <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
+                                                            {listing.description ||
+                                                                'Verified local service'}
                                                         </p>
-                                                        <div className="mt-1.5 flex items-center gap-2 text-[11px] text-slate-600 font-medium">
+                                                        <div className="mt-1.5 flex items-center gap-2 text-[11px] font-medium text-slate-600">
                                                             <span className="flex items-center gap-0.5 font-bold text-amber-700">
                                                                 <Star className="size-3 fill-amber-500 text-amber-500" />
                                                                 4.9
@@ -816,18 +1069,24 @@ export default function Browse(props: HomeProps) {
                                                             e.stopPropagation();
                                                             togglePin(listing.id);
                                                         }}
-                                                        className={`flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white cursor-pointer ${
-                                                            isPinned ? 'text-red-500' : 'text-slate-400 hover:text-red-500'
+                                                        className={`flex size-8 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white ${
+                                                            isPinned
+                                                                ? 'text-red-500'
+                                                                : 'text-slate-400 hover:text-red-500'
                                                         }`}
                                                         aria-label="Pin listing"
                                                     >
-                                                        <Heart className={`size-4 ${isPinned ? 'fill-red-500' : ''}`} />
+                                                        <Heart
+                                                            className={`size-4 ${isPinned ? 'fill-red-500' : ''}`}
+                                                        />
                                                     </button>
                                                     <div className="text-right">
                                                         <div className="font-mono text-base font-extrabold text-[#0F2F58]">
                                                             {priceDisplay}
                                                         </div>
-                                                        <div className="text-[10px] text-slate-400">Fixed rate</div>
+                                                        <div className="text-[10px] text-slate-400">
+                                                            Fixed rate
+                                                        </div>
                                                     </div>
                                                     <button
                                                         type="button"
@@ -835,7 +1094,7 @@ export default function Browse(props: HomeProps) {
                                                             e.stopPropagation();
                                                             handleAddToCart(listing);
                                                         }}
-                                                        className="flex size-9 items-center justify-center rounded-full bg-[#0F2F58] text-white shadow-xs hover:bg-[#153e74] cursor-pointer"
+                                                        className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-[#0F2F58] text-white shadow-xs hover:bg-[#153e74]"
                                                     >
                                                         <Plus className="size-4" />
                                                     </button>
@@ -856,95 +1115,245 @@ export default function Browse(props: HomeProps) {
                 ========================================================================= */}
             <div className="flex min-h-screen flex-col items-center bg-[#F8F9FA] pb-[90px] lg:hidden">
                 <div className="flex min-h-screen w-full flex-col bg-white shadow-xs">
-                    {/* Tier 1: Sticky Topbar with Search + Filter Action */}
-                    <header className="sticky top-0 z-40 border-b border-slate-100 bg-white px-4 pt-3 pb-2.5">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                                <div className="flex size-8 items-center justify-center rounded-full bg-[#EBF2FA] text-[#0F2F58]">
-                                    <MapPin className="size-4" />
+                    {/* Tier 1: Sticky Topbar with Logo, Search, Picks, and Notifications */}
+                    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white px-3 py-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
+                        <div className="flex w-full items-center gap-2 transition-all">
+                            {/* Brand Logo (on far left before search bar) */}
+                            <a
+                                href="/"
+                                className="flex shrink-0 items-center"
+                                aria-label="Serbizyu Home"
+                            >
+                                <div className="flex size-9 items-center justify-center rounded-xl bg-[#0F2F58] font-bold text-white shadow-xs">
+                                    <svg
+                                        width="17"
+                                        height="17"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                    >
+                                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                                        <path d="M2 17l10 5 10-5" />
+                                        <path d="M2 12l10 5 10-5" />
+                                    </svg>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[9.5px] font-extrabold tracking-wider text-slate-400 uppercase">
-                                        Location
-                                    </span>
-                                    <span className="flex items-center gap-1 text-xs font-extrabold text-slate-900">
-                                        Tagudin Centro
-                                        <ChevronDown className="size-3 text-slate-500" />
-                                    </span>
-                                </div>
+                            </a>
+
+                            {/* Search Input (flexible width, expands on click to occupy right space) */}
+                            <div className="relative min-w-0 flex-1 transition-all">
+                                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    ref={searchInputRef}
+                                    type="text"
+                                    value={searchQuery}
+                                    onFocus={() => setSearchFocused(true)}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search services & goods..."
+                                    className="h-10 w-full rounded-full border border-slate-200 bg-[#F4F4F5] pr-8 pl-9 text-xs font-semibold text-slate-900 transition-all outline-none placeholder:text-slate-400 focus:border-[#0F2F58] focus:bg-white focus:ring-2 focus:ring-[#0F2F58]/10"
+                                />
+                                {searchQuery ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600"
+                                    >
+                                        <X className="size-3.5" />
+                                    </button>
+                                ) : null}
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => alert(`Shortlist contains ${pinnedIds.length} pinned items.`)}
-                                    className="relative flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-xs"
-                                    aria-label="Wishlist"
-                                >
-                                    <Heart className="size-4" />
-                                    {pinnedIds.length > 0 && (
-                                        <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-[#0F2F58] text-[9px] font-extrabold text-white">
-                                            {pinnedIds.length}
-                                        </span>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
+                            {/* When NOT focused: Show Picks and Notifications (Notification replaces profile icon) */}
+                            {!searchFocused ? (
+                                <div className="flex shrink-0 items-center gap-1.5 transition-all">
+                                    {/* My Picks / Cart Button with Yellow Badge */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setPicksOpen(true)}
+                                        className="relative flex size-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50"
+                                        aria-label="My Picks"
+                                        title="My Picks"
+                                    >
+                                        <ShoppingBag className="size-4 text-[#0F2F58]" />
+                                        {basket.length > 0 && (
+                                            <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-[#FFC244] text-[9.5px] font-extrabold text-[#0F2F58] shadow-xs">
+                                                {basket.reduce(
+                                                    (sum, item) => sum + item.quantity,
+                                                    0,
+                                                )}
+                                            </span>
+                                        )}
+                                    </button>
 
-                        {/* Search Input */}
-                        <div className="relative mt-2.5">
-                            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search services (e.g. AC cleaning, repair, food)"
-                                className="h-10 w-full rounded-full border border-slate-200 bg-[#F4F4F5] pr-10 pl-9.5 text-xs font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#0F2F58] focus:bg-white"
-                            />
-                            {searchQuery ? (
+                                    {/* Notification Bell Icon (replaces profile icon) */}
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            alert(
+                                                'Tagudin Updates & Notifications: 0 pending alerts in Centro.',
+                                            )
+                                        }
+                                        className="flex size-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50"
+                                        aria-label="Notifications"
+                                        title="Notifications"
+                                    >
+                                        <Bell className="size-4 text-[#0F2F58]" />
+                                    </button>
+                                </div>
+                            ) : (
+                                /* When focused: Show Cancel to collapse and restore icons */
                                 <button
                                     type="button"
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400"
+                                    onClick={() => {
+                                        setSearchFocused(false);
+                                        if (searchInputRef.current) searchInputRef.current.blur();
+                                    }}
+                                    className="shrink-0 cursor-pointer px-1 text-xs font-bold text-[#0F2F58] transition-all hover:underline"
                                 >
-                                    <X className="size-3.5" />
+                                    Cancel
                                 </button>
-                            ) : null}
+                            )}
                         </div>
                     </header>
+                    {/* Tier 2: The Single Sleek Sieve Bar (replaces stacked category & filter chip rows) */}
+                    <div
+                        className="flex [scrollbar-width:none] items-center gap-2 overflow-x-auto border-b border-slate-200/80 bg-white px-3.5 py-2.5 [&::-webkit-scrollbar]:hidden"
+                        aria-label="Marketplace Sieves"
+                    >
+                        {/* 1. Category Pill */}
+                        <button
+                            type="button"
+                            onClick={() => setActiveMobileModal('category')}
+                            className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-all active:scale-95 ${
+                                selectedCategory !== 'all'
+                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                    : 'border border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                            }`}
+                        >
+                            <span>🗂️</span>
+                            <span>
+                                {selectedCategory !== 'all'
+                                    ? MARKETPLACE_CATEGORIES.find(
+                                          (c) => c.code === selectedCategory,
+                                      )?.label || 'Category'
+                                    : 'All Categories'}
+                            </span>
+                            <ChevronDown className="size-3 opacity-70" />
+                        </button>
 
-                    {/* Tier 2: Category Tabs Bar */}
-                    <CategoryTabs
-                        categories={MARKETPLACE_CATEGORIES}
-                        selectedCategory={selectedCategory}
-                        onSelectCategory={(code) => {
-                            setSelectedCategory(code);
-                            const cat = MARKETPLACE_CATEGORIES.find((c) => c.code === code);
-                            if (cat && code !== 'all') {
-                                setMobileCategoryModal({ open: true, category: cat });
-                            }
-                        }}
-                    />
+                        {/* 2. Offering Type (Services vs Products) */}
+                        <button
+                            type="button"
+                            onClick={() => setActiveMobileModal('type')}
+                            className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-all active:scale-95 ${
+                                listingTypeFilter !== 'all'
+                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                    : 'border border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                            }`}
+                        >
+                            <span>🏷️</span>
+                            <span>
+                                {listingTypeFilter === 'all'
+                                    ? 'All Types'
+                                    : listingTypeFilter === 'service'
+                                      ? 'Services'
+                                      : 'Products'}
+                            </span>
+                            <ChevronDown className="size-3 opacity-70" />
+                        </button>
 
-                    {/* Tier 3: Spend Threshold Fee Tracker */}
-                    <FeeThresholdTracker currentTotal={basketTotal} thresholdAmount={500} savingsAmount={45} />
+                        {/* 3. Budget / Price Range */}
+                        <button
+                            type="button"
+                            onClick={() => setActiveMobileModal('price')}
+                            className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-all active:scale-95 ${
+                                priceRangeFilter !== 'all'
+                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                    : 'border border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                            }`}
+                        >
+                            <span className="font-mono">₱</span>
+                            <span>
+                                {priceRangeFilter === 'all'
+                                    ? 'Any Price'
+                                    : priceRangeFilter === 'under_150'
+                                      ? 'Under ₱150'
+                                      : priceRangeFilter === '150_300'
+                                        ? '₱150–₱300'
+                                        : '₱300+'}
+                            </span>
+                            <ChevronDown className="size-3 opacity-70" />
+                        </button>
 
-                    {/* Tier 4: Quick Filter Chips */}
-                    <FilterChipBar
-                        options={MOBILE_FILTER_OPTIONS}
-                        activeFilterIds={mobileFilterIds}
-                        onToggleFilter={handleToggleMobileFilter}
-                    />
+                        {/* 4. Trust & Badges */}
+                        <button
+                            type="button"
+                            onClick={() => setActiveMobileModal('trust')}
+                            className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-all active:scale-95 ${
+                                topRatedOnly || verifiedProOnly
+                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                    : 'border border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                            }`}
+                        >
+                            <Star
+                                className={`size-3.5 ${topRatedOnly || verifiedProOnly ? 'fill-[#FFC244] stroke-[#FFC244]' : 'fill-[#FFC244] stroke-[#D97706]'}`}
+                            />
+                            <span>
+                                {topRatedOnly
+                                    ? 'Top Rated'
+                                    : verifiedProOnly
+                                      ? 'Verified Pro'
+                                      : 'Trust Badges'}
+                            </span>
+                            <ChevronDown className="size-3 opacity-70" />
+                        </button>
+
+                        {/* 5. Fast Toggle: Available Today */}
+                        <button
+                            type="button"
+                            onClick={() => setAvailableTodayOnly(!availableTodayOnly)}
+                            className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-all active:scale-95 ${
+                                availableTodayOnly
+                                    ? 'bg-[#10B981] text-white shadow-xs'
+                                    : 'border border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                            }`}
+                        >
+                            <span>⚡ Available Today</span>
+                        </button>
+
+                        {/* 6. Sort Option */}
+                        <button
+                            type="button"
+                            onClick={() => setActiveMobileModal('sort')}
+                            className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-all active:scale-95 ${
+                                sortBy !== 'recommended'
+                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                    : 'border border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                            }`}
+                        >
+                            <ArrowUpDown className="size-3.5" />
+                            <span>
+                                {sortBy === 'recommended'
+                                    ? 'Sort'
+                                    : sortBy === 'price_asc'
+                                      ? '₱ Low→High'
+                                      : sortBy === 'price_desc'
+                                        ? '₱ High→Low'
+                                        : 'Rating'}
+                            </span>
+                            <ChevronDown className="size-3 opacity-70" />
+                        </button>
+                    </div>
 
                     {/* Results Feed */}
                     <div className="flex flex-col gap-3 p-4">
-                        <div className="flex items-center justify-between text-xs text-slate-500 font-bold">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-500">
                             <span>{filteredListings.length} results in Tagudin</span>
                             {hasActiveFilters && (
                                 <button
                                     type="button"
                                     onClick={resetAllFilters}
-                                    className="text-[#0F2F58] underline cursor-pointer"
+                                    className="cursor-pointer text-[#0F2F58] underline"
                                 >
                                     Clear filters
                                 </button>
@@ -960,63 +1369,522 @@ export default function Browse(props: HomeProps) {
                                 <MarketplaceCard
                                     key={item.id}
                                     listing={item}
-                                    onSelect={(selected) => router.visit(`/listings/${selected.id}`)}
+                                    onSelect={(selected) =>
+                                        router.visit(`/listings/${selected.id}`)
+                                    }
                                     onAddToCart={handleAddToCart}
                                 />
                             ))
                         )}
                     </div>
 
-                    {/* Floating Sticky Basket Bar */}
-                    <StickyBasketBar
-                        count={basket.reduce((sum, item) => sum + item.quantity, 0)}
-                        totalAmount={basketTotal}
-                        onViewBasket={() => setPicksOpen(true)}
-                    />
-
                     {/* Bottom Navigation Bar */}
                     <BottomNavBar
                         activeTab={mobileActiveTab}
+                        ordersCount={basket.reduce((sum, item) => sum + item.quantity, 0)}
                         onTabSelect={(tab: NavTabId) => {
                             setMobileActiveTab(tab);
-                            if (tab === 'explore') router.visit('/');
-                            if (tab === 'saved') setPicksOpen(true);
+                            if (tab === 'explore') {
+                                setSearchQuery('');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                            if (tab === 'post') setCreatorOpen(true);
+                            if (tab === 'quick_deal') setQuickDealOpen(true);
                             if (tab === 'orders') router.visit('/orders');
-                            if (tab === 'profile') router.visit('/my-listings');
+                            if (tab === 'profile') setProfileDrawerOpen(true);
                         }}
+                        onQuickDealClick={() => setQuickDealOpen(true)}
                     />
                 </div>
             </div>
 
+            {/* Mobile Profile / Account Glovo Wave Modal */}
+            <GlovoWaveModal
+                open={profileDrawerOpen}
+                onClose={() => {
+                    setProfileDrawerOpen(false);
+                    setMobileActiveTab('explore');
+                }}
+                title={
+                    authenticated
+                        ? props.readiness?.displayName || props.session?.displayName || 'My Account'
+                        : 'Welcome to Serbizyu'
+                }
+                subtitle={
+                    authenticated ? 'Tagudin Citizen Account' : 'Tagudin neighborhood marketplace'
+                }
+                bottomSlot={
+                    authenticated ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setProfileDrawerOpen(false);
+                                router.post('/auth/logout', {}, { preserveScroll: false });
+                            }}
+                            className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-rose-200 bg-rose-50 text-xs font-extrabold text-rose-700 transition-colors hover:bg-rose-100"
+                        >
+                            <span>Log Out</span>
+                        </button>
+                    ) : (
+                        <div className="flex w-full flex-col gap-2">
+                            <a
+                                href="/auth/sign-in"
+                                className="flex h-11 w-full items-center justify-center rounded-full bg-[#0F2F58] text-xs font-extrabold text-white shadow-md transition-colors hover:bg-[#153e74]"
+                            >
+                                Sign In to Your Account
+                            </a>
+                            <a
+                                href="/auth/register"
+                                className="flex h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-bold text-slate-800 transition-colors hover:bg-slate-50"
+                            >
+                                Create an Account
+                            </a>
+                        </div>
+                    )
+                }
+            >
+                {authenticated ? (
+                    <div className="flex flex-col gap-3 py-2">
+                        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex size-10 items-center justify-center rounded-full bg-[#0F2F58] text-sm font-extrabold text-white shadow-xs">
+                                    {userInitial}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-extrabold text-slate-900">
+                                        {userDisplayName}
+                                    </span>
+                                    <span className="text-xs text-slate-500">
+                                        {props.session?.phone || 'Mobile Verified'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="mt-3 inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                                <ShieldCheck className="size-3.5" />
+                                <span>
+                                    {props.readiness?.ready
+                                        ? 'Verified Provider · Ready'
+                                        : 'Level 1: Phone Verified'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <a
+                                href="/my-listings"
+                                className="flex items-center justify-between rounded-xl p-3 text-xs font-bold text-slate-800 transition-colors hover:bg-slate-100"
+                            >
+                                <span>📦 My Listings & Services</span>
+                                <span className="text-slate-400">→</span>
+                            </a>
+                            <a
+                                href="/orders"
+                                className="flex items-center justify-between rounded-xl p-3 text-xs font-bold text-slate-800 transition-colors hover:bg-slate-100"
+                            >
+                                <span>🛍️ My Orders & Milestones</span>
+                                <span className="text-slate-400">→</span>
+                            </a>
+                            <a
+                                href="/requests/create"
+                                className="flex items-center justify-between rounded-xl p-3 text-xs font-bold text-slate-800 transition-colors hover:bg-slate-100"
+                            >
+                                <span>✍️ Post a Request</span>
+                                <span className="text-slate-400">→</span>
+                            </a>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-3 py-2">
+                        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs">
+                            <div className="text-sm font-extrabold text-[#0F2F58]">
+                                Why sign in to Serbizyu?
+                            </div>
+                            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                                Tagudin's community marketplace links you directly to trusted local
+                                neighbors for aircon repairs, cleaning, delicacies, and custom
+                                errands.
+                            </p>
+                            <ul className="mt-3 flex flex-col gap-2 text-xs text-slate-600">
+                                <li className="flex items-center gap-2">
+                                    <span className="font-bold text-emerald-600">✓</span>
+                                    <span>Track and coordinate multi-service deal chains</span>
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <span className="font-bold text-emerald-600">✓</span>
+                                    <span>Book verified police/barangay cleared pros</span>
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <span className="font-bold text-emerald-600">✓</span>
+                                    <span>Create and manage your own service listings</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                )}
+            </GlovoWaveModal>
+
             {/* Mobile Category Glovo Wave Modal */}
             <GlovoWaveModal
-                open={mobileCategoryModal.open}
-                onClose={() => setMobileCategoryModal({ open: false, category: null })}
-                title={mobileCategoryModal.category?.label || 'Tagudin Category'}
-                subtitle={`Explore verified local providers offering ${mobileCategoryModal.category?.label.toLowerCase() || 'services'}`}
+                open={activeMobileModal === 'category'}
+                onClose={() => setActiveMobileModal(null)}
+                title="Browse Categories"
+                subtitle="Select a trade or service category in Tagudin"
                 bottomSlot={
                     <button
                         type="button"
-                        onClick={() => setMobileCategoryModal({ open: false, category: null })}
-                        className="flex h-11 w-full cursor-pointer items-center justify-center rounded-full bg-[#0F2F58] text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
+                        onClick={() => setActiveMobileModal(null)}
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98]"
                     >
-                        <span>View {categoryCounts[mobileCategoryModal.category?.code || 'all'] || 0} Listings in Tagudin</span>
+                        <span>Show {filteredListings.length} Results</span>
+                        <span>→</span>
                     </button>
                 }
             >
-                <div className="flex flex-col gap-2.5 py-3">
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
-                        <div className="font-extrabold text-[#0F2F58]">Standard Barangay SLA</div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">
-                            Same-day intake &amp; milestone completion verified by photo evidence in Tagudin Centro.
+                <div className="flex flex-col gap-2 p-1">
+                    {MARKETPLACE_CATEGORIES.map((cat) => {
+                        const isSelected = selectedCategory === cat.code;
+                        const count =
+                            cat.code === 'all' ? rawListings.length : categoryCounts[cat.code] || 0;
+
+                        return (
+                            <div
+                                key={cat.code}
+                                onClick={() => setSelectedCategory(cat.code)}
+                                className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-all ${
+                                    isSelected
+                                        ? 'border-[#0F2F58] bg-[#EBF2FA] text-slate-950 shadow-2xs'
+                                        : 'border-slate-100 bg-[#FAFCFB] text-slate-800 hover:bg-slate-50'
+                                }`}
+                            >
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <span className="shrink-0 text-xl">{cat.icon}</span>
+                                    <div className="min-w-0">
+                                        <div className="truncate text-xs font-bold text-slate-900">
+                                            {cat.label}
+                                        </div>
+                                        <div className="mt-0.5 truncate text-[11px] text-slate-500">
+                                            {cat.description}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-2">
+                                    <span className="rounded-full border border-slate-200 bg-white/80 px-2 py-0.5 text-[11px] font-bold text-slate-500">
+                                        {count}
+                                    </span>
+                                    <div
+                                        className={`flex size-5 items-center justify-center rounded-full border-2 transition-colors ${
+                                            isSelected
+                                                ? 'border-[#0F2F58] bg-[#0F2F58] text-white'
+                                                : 'border-slate-300 bg-white'
+                                        }`}
+                                    >
+                                        {isSelected && <Check className="size-3 stroke-[3]" />}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </GlovoWaveModal>
+
+            {/* Mobile Listing Type Glovo Wave Modal */}
+            <GlovoWaveModal
+                open={activeMobileModal === 'type'}
+                onClose={() => setActiveMobileModal(null)}
+                title="Offering Types"
+                subtitle="Filter between services or physical products"
+                bottomSlot={
+                    <button
+                        type="button"
+                        onClick={() => setActiveMobileModal(null)}
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98]"
+                    >
+                        <span>Apply Type Filter</span>
+                        <span>→</span>
+                    </button>
+                }
+            >
+                <div className="flex flex-col gap-2 p-1">
+                    {[
+                        {
+                            id: 'all',
+                            title: 'All Offerings',
+                            desc: 'Browse both labor services and local goods',
+                            icon: '🏷️',
+                        },
+                        {
+                            id: 'service',
+                            title: 'Services & Labor',
+                            desc: 'Aircon repair, plumbing, cleaning, custom errands',
+                            icon: '🔧',
+                        },
+                        {
+                            id: 'product',
+                            title: 'Products & Food',
+                            desc: 'Fresh food, hardware parts, crafts & materials',
+                            icon: '📦',
+                        },
+                    ].map((t) => {
+                        const isSelected = listingTypeFilter === t.id;
+                        return (
+                            <div
+                                key={t.id}
+                                onClick={() =>
+                                    setListingTypeFilter(t.id as 'all' | 'service' | 'product')
+                                }
+                                className={`flex cursor-pointer items-center justify-between rounded-xl border p-3.5 transition-all ${
+                                    isSelected
+                                        ? 'border-[#0F2F58] bg-[#EBF2FA] text-slate-950'
+                                        : 'border-slate-100 bg-[#FAFCFB] text-slate-800 hover:bg-slate-50'
+                                }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xl">{t.icon}</span>
+                                    <div>
+                                        <div className="text-xs font-bold text-slate-900">
+                                            {t.title}
+                                        </div>
+                                        <div className="mt-0.5 text-[11px] text-slate-500">
+                                            {t.desc}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    className={`flex size-5 items-center justify-center rounded-full border-2 ${
+                                        isSelected
+                                            ? 'border-[#0F2F58] bg-[#0F2F58] text-white'
+                                            : 'border-slate-300'
+                                    }`}
+                                >
+                                    {isSelected && <Check className="size-3 stroke-[3]" />}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </GlovoWaveModal>
+
+            {/* Mobile Budget & Price Glovo Wave Modal */}
+            <GlovoWaveModal
+                open={activeMobileModal === 'price'}
+                onClose={() => setActiveMobileModal(null)}
+                title="Price & Budget"
+                subtitle="Filter by community pricing tiers"
+                bottomSlot={
+                    <button
+                        type="button"
+                        onClick={() => setActiveMobileModal(null)}
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98]"
+                    >
+                        <span>Apply Budget</span>
+                        <span>→</span>
+                    </button>
+                }
+            >
+                <div className="flex flex-col gap-2 p-1">
+                    {[
+                        {
+                            id: 'all',
+                            title: 'Any Budget',
+                            desc: 'Show all price levels in Tagudin',
+                        },
+                        {
+                            id: 'under_150',
+                            title: 'Budget Friendly (Under ₱150)',
+                            desc: 'Errand runs, simple button fix, snack orders',
+                        },
+                        {
+                            id: '150_300',
+                            title: 'Standard (₱150 – ₱300)',
+                            desc: 'Haircut, deep fan clean, document scanning',
+                        },
+                        {
+                            id: '300_plus',
+                            title: 'Major Projects (₱300+)',
+                            desc: 'Split AC deep clean, plumbing overhaul, carpentry',
+                        },
+                    ].map((p) => {
+                        const isSelected = priceRangeFilter === p.id;
+                        return (
+                            <div
+                                key={p.id}
+                                onClick={() => setPriceRangeFilter(p.id as PriceRange)}
+                                className={`flex cursor-pointer items-center justify-between rounded-xl border p-3.5 transition-all ${
+                                    isSelected
+                                        ? 'border-[#0F2F58] bg-[#EBF2FA] text-slate-950'
+                                        : 'border-slate-100 bg-[#FAFCFB] text-slate-800 hover:bg-slate-50'
+                                }`}
+                            >
+                                <div>
+                                    <div className="text-xs font-bold text-slate-900">
+                                        {p.title}
+                                    </div>
+                                    <div className="mt-0.5 text-[11px] text-slate-500">
+                                        {p.desc}
+                                    </div>
+                                </div>
+                                <div
+                                    className={`flex size-5 items-center justify-center rounded-full border-2 ${
+                                        isSelected
+                                            ? 'border-[#0F2F58] bg-[#0F2F58] text-white'
+                                            : 'border-slate-300'
+                                    }`}
+                                >
+                                    {isSelected && <Check className="size-3 stroke-[3]" />}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </GlovoWaveModal>
+
+            {/* Mobile Trust & Badges Glovo Wave Modal */}
+            <GlovoWaveModal
+                open={activeMobileModal === 'trust'}
+                onClose={() => setActiveMobileModal(null)}
+                title="Trust & Verification"
+                subtitle="Filter by community credentials"
+                bottomSlot={
+                    <button
+                        type="button"
+                        onClick={() => setActiveMobileModal(null)}
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98]"
+                    >
+                        <span>Apply Trust Filters</span>
+                        <span>→</span>
+                    </button>
+                }
+            >
+                <div className="flex flex-col gap-2.5 p-1">
+                    <div
+                        onClick={() => setTopRatedOnly(!topRatedOnly)}
+                        className={`flex cursor-pointer items-center justify-between rounded-xl border p-3.5 transition-all ${
+                            topRatedOnly
+                                ? 'border-[#0F2F58] bg-[#EBF2FA]'
+                                : 'border-slate-100 bg-[#FAFCFB]'
+                        }`}
+                    >
+                        <div>
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                                <Star className="size-3.5 fill-[#FFC244] stroke-[#FFC244]" />
+                                <span>Top Rated (4.8+ Stars)</span>
+                            </div>
+                            <div className="mt-0.5 text-[11px] text-slate-500">
+                                Providers with consistent 5-star community reviews in Tagudin
+                            </div>
+                        </div>
+                        <div
+                            className={`flex size-5 items-center justify-center rounded-md border-2 ${
+                                topRatedOnly
+                                    ? 'border-[#0F2F58] bg-[#0F2F58] text-white'
+                                    : 'border-slate-300'
+                            }`}
+                        >
+                            {topRatedOnly && <Check className="size-3 stroke-[3]" />}
                         </div>
                     </div>
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-xs">
-                        <div className="font-extrabold text-emerald-800">Tiwala Escrow Protection</div>
-                        <div className="text-[11px] text-emerald-700 mt-0.5">
-                            Citizen funds stay protected in municipal escrow until you approve final milestone delivery.
+
+                    <div
+                        onClick={() => setVerifiedProOnly(!verifiedProOnly)}
+                        className={`flex cursor-pointer items-center justify-between rounded-xl border p-3.5 transition-all ${
+                            verifiedProOnly
+                                ? 'border-[#0F2F58] bg-[#EBF2FA]'
+                                : 'border-slate-100 bg-[#FAFCFB]'
+                        }`}
+                    >
+                        <div>
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                                <ShieldCheck className="size-3.5 text-emerald-600" />
+                                <span>Police Cleared &amp; Certified Pro</span>
+                            </div>
+                            <div className="mt-0.5 text-[11px] text-slate-500">
+                                Background checked tradespeople with credentials on file
+                            </div>
+                        </div>
+                        <div
+                            className={`flex size-5 items-center justify-center rounded-md border-2 ${
+                                verifiedProOnly
+                                    ? 'border-[#0F2F58] bg-[#0F2F58] text-white'
+                                    : 'border-slate-300'
+                            }`}
+                        >
+                            {verifiedProOnly && <Check className="size-3 stroke-[3]" />}
                         </div>
                     </div>
+                </div>
+            </GlovoWaveModal>
+
+            {/* Mobile Sort Glovo Wave Modal */}
+            <GlovoWaveModal
+                open={activeMobileModal === 'sort'}
+                onClose={() => setActiveMobileModal(null)}
+                title="Sort Offers"
+                subtitle="Choose your preferred listing order"
+                bottomSlot={
+                    <button
+                        type="button"
+                        onClick={() => setActiveMobileModal(null)}
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98]"
+                    >
+                        <span>Apply Sorting</span>
+                        <span>→</span>
+                    </button>
+                }
+            >
+                <div className="flex flex-col gap-2 p-1">
+                    {[
+                        {
+                            id: 'recommended',
+                            title: 'Recommended',
+                            desc: 'Balanced by proximity in Tagudin & activity',
+                        },
+                        {
+                            id: 'rating',
+                            title: 'Highest Customer Rating',
+                            desc: 'Ranked by neighbor satisfaction',
+                        },
+                        {
+                            id: 'price_asc',
+                            title: 'Price: Low to High',
+                            desc: 'Budget-first sorting',
+                        },
+                        {
+                            id: 'price_desc',
+                            title: 'Price: High to Low',
+                            desc: 'Comprehensive & major project packages first',
+                        },
+                    ].map((s) => {
+                        const isSelected = sortBy === s.id;
+                        return (
+                            <div
+                                key={s.id}
+                                onClick={() => setSortBy(s.id as SortOption)}
+                                className={`flex cursor-pointer items-center justify-between rounded-xl border p-3.5 transition-all ${
+                                    isSelected
+                                        ? 'border-[#0F2F58] bg-[#EBF2FA] text-slate-950'
+                                        : 'border-slate-100 bg-[#FAFCFB] text-slate-800 hover:bg-slate-50'
+                                }`}
+                            >
+                                <div>
+                                    <div className="text-xs font-bold text-slate-900">
+                                        {s.title}
+                                    </div>
+                                    <div className="mt-0.5 text-[11px] text-slate-500">
+                                        {s.desc}
+                                    </div>
+                                </div>
+                                <div
+                                    className={`flex size-5 items-center justify-center rounded-full border-2 ${
+                                        isSelected
+                                            ? 'border-[#0F2F58] bg-[#0F2F58] text-white'
+                                            : 'border-slate-300'
+                                    }`}
+                                >
+                                    {isSelected && <Check className="size-3 stroke-[3]" />}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </GlovoWaveModal>
 
@@ -1025,11 +1893,14 @@ export default function Browse(props: HomeProps) {
                 open={picksOpen}
                 onClose={() => setPicksOpen(false)}
                 items={basket}
+                recipes={Object.values(dealChainRecipes)}
                 onUpdateQuantity={(id, delta) => {
                     setBasket((prev) =>
                         prev
                             .map((item) =>
-                                item.id === id ? { ...item, quantity: item.quantity + delta } : item,
+                                item.id === id
+                                    ? { ...item, quantity: item.quantity + delta }
+                                    : item,
                             )
                             .filter((item) => item.quantity > 0),
                     );
@@ -1039,9 +1910,16 @@ export default function Browse(props: HomeProps) {
                 }}
                 onCheckout={() => {
                     setPicksOpen(false);
-                    setCheckoutModalOpen(true);
+                    const itemsWithDealChain = basket.filter((item) => Boolean(item.dealChain));
+                    if (itemsWithDealChain.length > 0) {
+                        setCheckoutModalOpen(true);
+                    } else if (basket.length > 0) {
+                        // Direct ordinary booking -> forms order proposal
+                        router.visit(`/listings/${basket[0].id}/book`);
+                    }
                 }}
                 onAttachDealChain={handleAttachDealChain}
+                onSwapSlotCandidate={handleSwapSlotCandidate}
             />
 
             {/* Dedicated Deal Chain Checkout Modal (Zero Dummy Alerts) */}
@@ -1051,6 +1929,17 @@ export default function Browse(props: HomeProps) {
                 items={basket}
                 totalAmount={basketTotal}
                 onAuthorize={handleAuthorizeDealChain}
+            />
+
+            {/* Creator Post Drawer Modal */}
+            <CreatorPostModal open={creatorOpen} onClose={() => setCreatorOpen(false)} />
+
+            {/* Quick Deal Scanner Modal */}
+            <QuickDealScanModal
+                open={quickDealOpen}
+                onClose={() => setQuickDealOpen(false)}
+                userPhone={props.session?.phone || '+63 917 123 4567'}
+                userName={userDisplayName}
             />
         </div>
     );

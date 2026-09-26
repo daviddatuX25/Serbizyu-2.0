@@ -58,6 +58,25 @@ export type ReadinessState = {
     nextRoute?: string | null;
 };
 
+export type PackageTierRecord = {
+    id: string;
+    title: string;
+    price: number;
+    orig_price?: number;
+    origPrice?: number;
+    sub: string;
+    inclusions: string[];
+};
+
+export type MilestoneStageRecord = {
+    id?: string;
+    title?: string;
+    label?: string;
+    description?: string;
+    sub?: string;
+    state?: string;
+};
+
 export type ListingRecord = {
     id: string;
     title: string;
@@ -89,21 +108,77 @@ export type ListingRecord = {
     packageTiers?: PackageTierRecord[];
     milestone_stages?: MilestoneStageRecord[];
     milestoneStages?: MilestoneStageRecord[];
+    work_catalog?: WorkCatalogReference | null;
+    addons?: ListingAddonRecord[];
+    partner_candidates?: PartnerCandidateRecord[];
+    catalog_source?: string | null;
 };
 
-export type PackageTierRecord = {
+export type WorkCatalogReference = {
+    code: string;
+    shape_contract_version: number;
+    payload_schema_version: number;
+    catalog_version: number;
+};
+
+export type ListingAddonRecord = {
     id: string;
-    title: string;
-    price: number;
-    orig_price?: number;
-    origPrice?: number;
-    sub: string;
-    inclusions: string[];
-};
-
-export type MilestoneStageRecord = {
+    code: string;
     title: string;
     description: string;
+    price_amount_minor: number;
+    currency: string;
+    partner_role: 'courier' | 'technician' | 'store' | 'auditor';
+    partner_fixture_keys: string[];
+    status: 'available' | 'unavailable' | string;
+    settlement_mode: 'independent_provider_agreement' | string;
+};
+
+export type PartnerCandidateRecord = {
+    id: string;
+    role: 'courier' | 'technician' | 'store' | 'auditor';
+    name: string;
+    sub: string;
+    fee_amount_minor: number;
+    category: string;
+    icon: 'truck' | 'labor' | 'store' | 'audit';
+    listing_fixture_key?: string | null;
+};
+
+export type DealChainCatalogRecord = {
+    recipeId: string;
+    pattern: string;
+    patternCapsule: string[];
+    title: string;
+    extraFee: number;
+    rating: string;
+    bookedCount: string;
+    desc: string;
+    applicableCategories: string[];
+    applicableListingTypes?: string[];
+    applicableWorkShapes?: string[];
+    nodes: Array<{
+        role: string;
+        title: string;
+        sub: string;
+        type: 'store' | 'delivery' | 'labor' | 'audit';
+    }>;
+};
+
+export type WorkCatalogRecord = {
+    id: string;
+    catalog_code: string;
+    work_shape: string;
+    shape_contract_version: number;
+    payload_schema_version: number;
+    catalog_version: number;
+    title: string;
+    summary: string;
+    status: string;
+    variance_threshold_percent: number;
+    evaluation_window_hours: number;
+    steps: Array<Record<string, unknown>>;
+    observed_variations: Array<Record<string, unknown>>;
 };
 
 export type ListingDraft = ListingRecord & {
@@ -147,7 +222,22 @@ export type HomeProps = PageProps & {
     readiness?: ReadinessState | null;
     draft?: ListingDraft | null;
     publicListings?: ListingRecord[];
+    communityRequests?: Array<{
+        id: string;
+        title: string;
+        description: string;
+        photo?: string | null;
+        budget_amount_minor?: number | null;
+        currency: string;
+        urgency: string;
+        area: string;
+        requester_name: string;
+        quotes_count: number;
+        created_at: string;
+    }>;
     activeListingDetail?: ListingRecord | null;
+    dealChainCatalog?: DealChainCatalogRecord[];
+    workCatalog?: WorkCatalogRecord[];
     booking?: {
         direct_booking_enabled?: boolean;
         can_propose?: boolean;
