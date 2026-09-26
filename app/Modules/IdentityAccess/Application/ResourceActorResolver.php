@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\DB;
  */
 final class ResourceActorResolver
 {
-    public function __construct(private readonly ConsentGrantService $consents) {}
+    public function __construct(
+        private readonly ConsentGrantService $consents,
+        private readonly RoleAssignmentService $roles,
+    ) {}
 
     public function resolve(
         Request $request,
@@ -23,6 +26,12 @@ final class ResourceActorResolver
         string $resourceType,
         string $requiredAction,
     ): ResourceActor {
+        $suppliedOwner = trim((string) (
+            $request->input('owner_user_id')
+            ?? $request->input('owner_id')
+            ?? $request->headers->get('X-Owner-User-Id')
+            ?? ''
+        ));
         $actingFor = trim((string) (
             $request->input('acting_for_user_id')
             ?? $request->headers->get('X-Acting-For-User-Id')
@@ -34,6 +43,14 @@ final class ResourceActorResolver
             ?? ''
         ));
 
+        if ($suppliedOwner !== '' && $suppliedOwner !== $sessionUserId && $actingFor === '') {
+            throw new IdentityAccessError(
+                'AUTHORIZATION_DENIED',
+                'Client-supplied Owner is forbidden without an active Agent consent grant.',
+                $correlationId,
+                status: 403,
+            );
+        }
         if ($actingFor === '' && $grantId === '') {
             return new ResourceActor(
                 resourceOwnerId: $sessionUserId,
@@ -57,6 +74,14 @@ final class ResourceActorResolver
                 'Acting-for must target a different owner account.',
                 $correlationId,
                 fieldErrors: ['acting_for_user_id' => ['Choose the owner you are assisting.']],
+            );
+        }
+        if (! $this->roles->hasActive($sessionUserId, 'agent')) {
+            throw new IdentityAccessError(
+                'AUTHORIZATION_DENIED',
+                'Active Agent capability is required to perform acting-for operations.',
+                $correlationId,
+                status: 403,
             );
         }
 

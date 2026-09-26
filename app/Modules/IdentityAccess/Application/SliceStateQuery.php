@@ -15,6 +15,7 @@ final class SliceStateQuery
     public function __construct(
         private readonly CurrentSession $session,
         private readonly OwnerListingReader $ownerListings,
+        private readonly RoleAssignmentService $roles,
     ) {}
 
     /** @return array<string, mixed> */
@@ -27,21 +28,26 @@ final class SliceStateQuery
         $correlationId = (string) $request->attributes->get('correlation_id', (string) Str::uuid7());
 
         if ($session !== null && ($session['authenticated'] ?? false)) {
-            $profile = DB::table('user_profiles')->where('user_id', $session['user_id'])->first();
+            $userId = (string) $session['user_id'];
+            $profile = DB::table('user_profiles')->where('user_id', $userId)->first();
             $access = $profile === null ? [] : (json_decode((string) $profile->accessibility_preferences, true) ?: []);
             $language = $profile === null ? [] : (json_decode((string) $profile->language_preferences, true) ?: []);
-            $providerIntent = DB::table('role_assignments')->where('user_id', $session['user_id'])->where('role_code', 'provide')->where('status', 'active')->exists();
+            $hasProvider = $this->roles->hasActive($userId, 'provider');
+            $hasMerchant = $this->roles->hasActive($userId, 'merchant');
             $profileComplete = $profile !== null && trim((string) ($profile->display_name ?? '')) !== '';
             $passwordSet = Schema::hasColumn('users', 'password')
-                && filled(DB::table('users')->where('id', $session['user_id'])->value('password'));
-            $ready = $providerIntent && $profileComplete && $passwordSet;
+                && filled(DB::table('users')->where('id', $userId)->value('password'));
+            $ready = $profileComplete && $passwordSet;
             $emailAttached = Schema::hasColumn('users', 'email')
-                && filled(DB::table('users')->where('id', $session['user_id'])->value('email'));
+                && filled(DB::table('users')->where('id', $userId)->value('email'));
             $readiness = [
                 'status' => $ready ? 'ready' : 'setup_required',
                 'ready' => $ready,
-                'provider_intent' => $providerIntent,
-                'can_create_draft' => $providerIntent && $passwordSet,
+                'provider_intent' => $hasProvider,
+                'can_create_draft' => ($hasProvider || $hasMerchant) && $passwordSet,
+                'roles' => $this->roles->activeRoleCodes($userId),
+                'capabilities' => $this->roles->activeCapabilities($userId),
+                'purpose_specific_actions' => $this->roles->purposeSpecificActions($userId),
                 'display_name' => $profile->display_name ?? null,
                 'area_code' => $profile->service_area_display ?? 'Tagudin',
                 'language_code' => $language['primary'] ?? 'fil',
@@ -52,9 +58,9 @@ final class SliceStateQuery
                 'password_set' => $passwordSet,
                 'passwordSet' => $passwordSet,
                 'blockers' => $ready ? [] : ['Complete your profile setup before creating a listing.'],
-                'next_route' => $ready ? '/my-listings' : '/#onboarding',
+                'next_route' => $hasProvider ? '/my-listings' : ($ready ? '/browse' : '/#onboarding'),
             ];
-            $myListings = $this->ownerListings->ownerListings((string) $session['user_id'], $correlationId);
+            $myListings = $this->ownerListings->ownerListings($userId, $correlationId);
             $draft = collect($myListings)->first(static fn (array $listing): bool => ($listing['status'] ?? null) === 'draft');
         }
 

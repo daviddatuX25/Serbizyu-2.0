@@ -39,7 +39,10 @@ final class OnboardingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'provider_intent' => ['required', 'boolean'],
+            'provider_intent' => ['sometimes', 'boolean'],
+            'role' => ['sometimes', 'nullable', 'string'],
+            'roles' => ['sometimes', 'nullable', 'array'],
+            'capabilities' => ['sometimes', 'nullable', 'array'],
             'display_name' => ['required', 'string', 'max:120'],
             'area_code' => ['nullable', 'string', 'max:64'],
             'service_area_display' => ['nullable', 'string', 'max:64'],

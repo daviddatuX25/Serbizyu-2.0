@@ -35,10 +35,34 @@ final class OnboardingService
         $help = trim((string) ($input['help_preference'] ?? 'self_managed'));
         $providerIntent = (bool) ($input['provider_intent'] ?? false);
         $password = (string) ($input['password'] ?? '');
+        $requestedRoles = [];
+        if ($providerIntent) {
+            $requestedRoles[] = 'buy';
+            $requestedRoles[] = 'provide';
+        }
+        if (! empty($input['role'])) {
+            $requestedRoles[] = (string) $input['role'];
+        }
+        if (! empty($input['roles']) && is_array($input['roles'])) {
+            foreach ($input['roles'] as $r) {
+                $requestedRoles[] = (string) $r;
+            }
+        }
+        if (! empty($input['capabilities']) && is_array($input['capabilities'])) {
+            foreach ($input['capabilities'] as $c) {
+                $requestedRoles[] = (string) $c;
+            }
+        }
+        $requestedRoles = array_values(array_unique($requestedRoles));
 
         $errors = [];
-        if (! $providerIntent) {
+        if (! $providerIntent && $requestedRoles === []) {
             $errors['provider_intent'][] = 'Provider capability intent is required for this listing slice.';
+        }
+        foreach ($requestedRoles as $r) {
+            if (RoleAssignmentService::canonicalRoleCode($r) === 'admin' || ! RoleAssignmentService::isSupportedParticipantRole($r)) {
+                $errors['role'][] = "Capability '{$r}' is not supported for participant self-activation.";
+            }
         }
         if ($displayName === '' || mb_strlen($displayName) > 120) {
             $errors['display_name'][] = 'Use a display name between 1 and 120 characters.';
@@ -61,7 +85,7 @@ final class OnboardingService
 
         $activeRoles = [];
 
-        DB::transaction(function () use ($userId, $displayName, $area, $language, $input, $help, $correlationId, &$activeRoles): void {
+        DB::transaction(function () use ($userId, $displayName, $area, $language, $input, $help, $correlationId, $requestedRoles, &$activeRoles): void {
             $now = now();
             DB::table('users')->where('id', $userId)->update([
                 'primary_access_tier' => 'L1',
@@ -82,18 +106,14 @@ final class OnboardingService
                 'updated_at' => $now,
             ]);
 
-            $this->roles->ensureActive(
-                userId: $userId,
-                roleCode: 'buy',
-                correlationId: $correlationId,
-                scope: ['source' => 'onboarding'],
-            );
-            $this->roles->ensureActive(
-                userId: $userId,
-                roleCode: 'provide',
-                correlationId: $correlationId,
-                scope: ['source' => 'onboarding', 'area' => 'Tagudin'],
-            );
+            foreach ($requestedRoles as $roleCode) {
+                $this->roles->ensureActive(
+                    userId: $userId,
+                    roleCode: $roleCode,
+                    correlationId: $correlationId,
+                    scope: ['source' => 'onboarding'],
+                );
+            }
             $activeRoles = $this->roles->activeRoleCodes($userId);
 
             if (Schema::hasTable('identity_verifications')) {
@@ -141,8 +161,8 @@ final class OnboardingService
         return [
             'status' => 'ready',
             'ready' => true,
-            'provider_intent' => true,
-            'providerIntent' => true,
+            'provider_intent' => $providerIntent || in_array('provide', $activeRoles, true) || in_array('provider', $activeRoles, true),
+            'providerIntent' => $providerIntent || in_array('provide', $activeRoles, true) || in_array('provider', $activeRoles, true),
             'display_name' => $displayName,
             'displayName' => $displayName,
             'area_code' => $area,
@@ -158,6 +178,9 @@ final class OnboardingService
             'password_set' => true,
             'passwordSet' => true,
             'roles' => $activeRoles,
+            'capabilities' => $this->roles->activeCapabilities($userId),
+            'purpose_specific_actions' => $this->roles->purposeSpecificActions($userId),
+            'readiness' => $this->roles->readinessState($userId),
             'identity_review_status' => $identityReview,
             'identityReviewStatus' => $identityReview,
             'blockers' => ['Identity review remains a fictional pending gate; submission moves to pending review only.'],

@@ -8,6 +8,9 @@ use App\Models\User;
 use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryChannel;
 use App\Modules\IdentityAccess\Infrastructure\Notifications\FakeOtpDelivery;
 use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -48,12 +51,56 @@ trait AuthenticatesWithPhoneOtp
 
     protected function authenticateProvider(): string
     {
-        return $this->authenticateWithPhone('+639171111001');
+        $userId = $this->authenticateWithPhone('+639171111001');
+
+        $user = User::query()->find($userId);
+        if ($user !== null && ! filled($user->password)) {
+            $user->forceFill(['password' => Hash::make('Password123!')])->save();
+        }
+
+        $now = now();
+        DB::table('role_assignments')->updateOrInsert(
+            ['user_id' => $userId, 'role_code' => 'provide', 'status' => 'active'],
+            [
+                'id' => (string) Str::uuid7(),
+                'granted_by_user_id' => $userId,
+                'effective_at' => $now,
+                'scope' => '{}',
+                'version' => 1,
+                'correlation_id' => (string) Str::uuid7(),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        );
+
+        return $userId;
     }
 
     protected function authenticateBuyer(): string
     {
-        return $this->authenticateWithPhone('+639172222001');
+        $userId = $this->authenticateWithPhone('+639172222001');
+
+        $user = User::query()->find($userId);
+        if ($user !== null && ! filled($user->password)) {
+            $user->forceFill(['password' => Hash::make('Password123!')])->save();
+        }
+
+        $now = now();
+        DB::table('role_assignments')->updateOrInsert(
+            ['user_id' => $userId, 'role_code' => 'buy', 'status' => 'active'],
+            [
+                'id' => (string) Str::uuid7(),
+                'granted_by_user_id' => $userId,
+                'effective_at' => $now,
+                'scope' => '{}',
+                'version' => 1,
+                'correlation_id' => (string) Str::uuid7(),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        );
+
+        return $userId;
     }
 
     protected function logoutAuthenticatedUser(): void

@@ -7,12 +7,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateListingDraftRequest;
 use App\Http\Requests\SubmitListingRequest;
 use App\Http\Requests\UpdateListingDraftRequest;
+use App\Modules\Catalogs\Application\DealChainCatalog;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
 use App\Modules\IdentityAccess\Application\ResourceActorResolver;
+use App\Modules\IdentityAccess\Application\RoleAssignmentService;
 use App\Modules\IdentityAccess\Application\SliceStateQuery;
 use App\Modules\Listings\Application\CreateListingDraft;
 use App\Modules\Listings\Application\ListingError;
+use App\Modules\Listings\Application\OwnerListingsQuery;
 use App\Modules\Listings\Application\ProtectedEditAttempt;
 use App\Modules\Listings\Application\PublicListingDetailQuery;
 use App\Modules\Listings\Application\PublicListingsQuery;
@@ -34,17 +37,33 @@ final class ListingController
         private readonly SubmitListing $submitListing,
         private readonly PublicListingsQuery $publicListings,
         private readonly PublicListingDetailQuery $publicListingDetail,
+        private readonly OwnerListingsQuery $ownerListings,
         private readonly ProtectedEditAttempt $protectedEditAttempt,
         private readonly SliceStateQuery $sliceState,
         private readonly EnvironmentValidator $environment,
+        private readonly DealChainCatalog $dealChainCatalog,
+        private readonly RoleAssignmentService $roles,
     ) {}
 
-    public function show(Request $request, string $listing): InertiaResponse
+    public function show(Request $request, string $listing): mixed
     {
         $correlationId = $this->correlationId($request);
+        $activeListingDetail = $this->publicListingDetail->handle($listing, $correlationId);
+
+        if ($activeListingDetail === null && $request->user() !== null) {
+            $ownerListing = $this->ownerListings->find(
+                $listing,
+                (string) $request->user()->getAuthIdentifier(),
+                $correlationId,
+            );
+
+            if ($ownerListing !== null) {
+                return redirect()->route('listings.preview', ['listing' => $listing]);
+            }
+        }
+
         $state = $this->sliceState->for($request);
         $publicListings = $this->publicListings->handle($correlationId);
-        $activeListingDetail = $this->publicListingDetail->handle($listing, $correlationId);
         $booking = $this->bookingContext($request, $activeListingDetail);
 
         $slice = [
@@ -66,6 +85,7 @@ final class ListingController
             ...$slice,
             'slice' => $slice,
             'booking' => $booking,
+            'dealChainCatalog' => $this->dealChainCatalog->frontend(),
             'experience' => 'foundation_v1',
             'pageMode' => 'detail',
         ]);
@@ -79,9 +99,51 @@ final class ListingController
         try {
             $sessionUserId = $this->session->requireUser($request, $correlationId);
             $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.create');
+
+            $listingType = (string) ($validated['listing_type'] ?? 'service');
+            $hasProvider = $this->roles->hasActive($actor->resourceOwnerId, 'provider');
+            $hasMerchant = $this->roles->hasActive($actor->resourceOwnerId, 'merchant');
+
+            if ($listingType === 'product') {
+                if (! $hasMerchant && ! $hasProvider) {
+                    throw new IdentityAccessError(
+                        'PREREQUISITE_FAILED',
+                        'Active merchant or provider capability is required to create a product listing.',
+                        $correlationId,
+                        status: 403,
+                    );
+                }
+            } else {
+                if (! $hasProvider) {
+                    throw new IdentityAccessError(
+                        'PREREQUISITE_FAILED',
+                        'Active provider capability is required to create a service listing.',
+                        $correlationId,
+                        status: 403,
+                    );
+                }
+            }
+
+            $readiness = $this->roles->readinessState($actor->resourceOwnerId);
+            if (! $readiness['ready']) {
+                throw new IdentityAccessError(
+                    'PREREQUISITE_FAILED',
+                    'Profile readiness must be complete before creating a listing draft.',
+                    $correlationId,
+                    status: 403,
+                    fieldErrors: ['readiness' => $readiness['blockers']],
+                );
+            }
+
             $listing = $this->createListing->handle($actor, $validated, $correlationId);
 
-            return $this->success($request, ['data' => $listing], $correlationId, 201);
+            if ($request->expectsJson() || $request->wantsJson()) {
+                return $this->success($request, ['data' => $listing], $correlationId, 201);
+            }
+
+            return redirect()
+                ->route('listings.preview', ['listing' => $listing['id']])
+                ->with('notice', 'Private draft saved. Review it before submitting.');
         } catch (IdentityAccessError|ListingError $error) {
             return $this->failure($request, $error);
         }
@@ -198,6 +260,30 @@ final class ListingController
         }
 
         return back();
+    }
+
+    public function createService(Request $request): InertiaResponse
+    {
+        $correlationId = $this->correlationId($request);
+        $state = $this->sliceState->for($request);
+
+        return Inertia::render('Listings/CreateService', [
+            'session' => $state['session'] ?? null,
+            'readiness' => $state['readiness'] ?? null,
+            'correlationId' => $correlationId,
+        ]);
+    }
+
+    public function createProduct(Request $request): InertiaResponse
+    {
+        $correlationId = $this->correlationId($request);
+        $state = $this->sliceState->for($request);
+
+        return Inertia::render('Listings/CreateProduct', [
+            'session' => $state['session'] ?? null,
+            'readiness' => $state['readiness'] ?? null,
+            'correlationId' => $correlationId,
+        ]);
     }
 
     private function failure(Request $request, IdentityAccessError|ListingError $error): mixed
