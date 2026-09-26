@@ -631,7 +631,7 @@ export default function CreateService() {
                                 : 'text-slate-600 hover:text-slate-900'
                         }`}
                     >
-                        <span>🏷️ Card</span>
+                        <span>Marketplace Card</span>
                     </button>
                     <button
                         type="button"
@@ -642,7 +642,7 @@ export default function CreateService() {
                                 : 'text-slate-600 hover:text-slate-900'
                         }`}
                     >
-                        <span>⏱️ Order Gates ({stages.length})</span>
+                        <span>Order Gates ({stages.length})</span>
                     </button>
                 </div>
             </div>
@@ -942,7 +942,7 @@ export default function CreateService() {
                                             <span>Labor &amp; Service Offering</span>
                                         </span>
                                         <span className="text-[11px] font-semibold text-slate-500">
-                                            {builderMode === 'simple' ? '⚡ Simple Fast Mode' : '🛠️ Advanced Studio'}
+                                            {builderMode === 'simple' ? 'Simple Fast Mode' : 'Advanced Studio'}
                                         </span>
                                     </div>
                                     <h2 className="mt-1 text-lg font-extrabold text-slate-900">
@@ -1113,7 +1113,7 @@ export default function CreateService() {
                                                                 ? 'bg-amber-100 text-amber-900 border border-amber-300'
                                                                 : 'bg-emerald-100 text-emerald-800'
                                                         }`}>
-                                                            {isCustomizedFromTemplate ? '⚡ Custom Variation' : '🏛️ Official Archetype'}
+                                                            {isCustomizedFromTemplate ? 'Custom Sequence' : 'Official Template'}
                                                         </span>
                                                         <span className="font-mono text-[10px] text-slate-500">
                                                             {selectedTemplate.shape} · {stages.length} Stages · {selectedTemplate.sla}
@@ -1159,7 +1159,7 @@ export default function CreateService() {
                                                 onClick={() => setCustomizerModalOpen(true)}
                                                 className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-2.5 text-xs font-extrabold text-[#0F2F58] shadow-2xs transition-all hover:border-[#0F2F58] hover:bg-slate-50 hover:shadow-xs min-h-[44px]"
                                             >
-                                                <span>🛠️ Customize Workflow in Studio</span>
+                                                <span>Customize Workflow in Studio</span>
                                                 <span className="text-[11px] font-medium text-slate-400">
                                                     ({stages.length} nodes · Inspect &amp; Refine)
                                                 </span>

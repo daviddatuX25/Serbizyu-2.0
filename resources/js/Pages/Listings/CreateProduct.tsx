@@ -58,7 +58,7 @@ const DEFAULT_COMBOS: PartnerCombo[] = [
     {
         id: 'combo-delivery',
         title: 'Doorstep Delivery',
-        icon: '🛵',
+        icon: 'Truck',
         description: 'On-demand motorcycle delivery straight to customer door in Tagudin.',
         isDefault: true,
         slots: [
@@ -78,7 +78,7 @@ const DEFAULT_COMBOS: PartnerCombo[] = [
     {
         id: 'combo-installation',
         title: 'Delivery + Installation Labor',
-        icon: '🔧',
+        icon: 'Wrench',
         description: 'Courier transit combined with on-site certified technician labor.',
         isDefault: false,
         slots: [
@@ -112,7 +112,7 @@ const PRESET_RECIPES = [
     {
         key: 'doorstep_delivery',
         title: 'Doorstep Delivery',
-        icon: '🛵',
+        icon: 'Truck',
         description: 'Tagudin motorcycle courier dispatch straight to recipient door',
         slots: [
             {
@@ -131,7 +131,7 @@ const PRESET_RECIPES = [
     {
         key: 'delivery_install',
         title: 'Delivery + Installation Labor',
-        icon: '🔧',
+        icon: 'Wrench',
         description: 'Courier transit + certified trade technician installation combo',
         slots: [
             {
@@ -429,7 +429,7 @@ export default function CreateProduct() {
                 title: `${feeFormatted} ${partnerName} Delivery`,
                 badge: feeFormatted,
                 icon: <Truck className="size-3.5 text-indigo-600" />,
-                description: courierSlot ? `${courierSlot.providerName} (★ ${courierSlot.rating.toFixed(1)})` : 'Courier delivery',
+                description: courierSlot ? `${courierSlot.providerName} · Rating ${courierSlot.rating.toFixed(1)}` : 'Courier delivery',
                 totalFee,
                 activeCombo,
             };
@@ -633,7 +633,7 @@ export default function CreateProduct() {
                         </span>
                     </div>
                     <div className="absolute top-2.5 right-2.5 rounded-full bg-white/95 px-2 py-0.5 text-[10.5px] font-extrabold text-slate-900 shadow-2xs backdrop-blur">
-                        ★ 5.0 (New Stall)
+                        5.0 (New Stall)
                     </div>
                 </div>
 
@@ -714,7 +714,7 @@ export default function CreateProduct() {
                                         key={idx}
                                         className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[9.5px] font-medium text-slate-700"
                                     >
-                                        <span>{s.roleType === 'COURIER' ? '🛵' : '🔧'}</span>
+                                        {s.roleType === 'COURIER' ? <Truck className="size-3.5 text-indigo-600" /> : <Wrench className="size-3.5 text-amber-600" />}
                                         <span className="font-bold text-slate-900">{s.providerName}</span>
                                         <span className="font-mono font-bold text-emerald-700">+₱{s.fee.toFixed(2)}</span>
                                     </span>
@@ -979,7 +979,7 @@ export default function CreateProduct() {
                                                     <div className="flex shrink-0 items-center gap-1.5">
                                                         {v.isDefault ? (
                                                             <span className="rounded-full bg-[#EBF2FA] px-2 py-0.5 text-[9px] font-extrabold text-[#0F2F58]">
-                                                                ★ Default
+                                                                Default Variant
                                                             </span>
                                                         ) : (
                                                             <button
@@ -1116,7 +1116,7 @@ export default function CreateProduct() {
                                                     : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
                                             }`}
                                         >
-                                            {selectedFulfillment === 'pickup' ? '★ Selected Active' : 'Select as Active'}
+                                            {selectedFulfillment === 'pickup' ? 'Active Selection' : 'Select as Active'}
                                         </button>
                                     </div>
                                 </div>
@@ -1212,7 +1212,7 @@ export default function CreateProduct() {
                                                                 : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
                                                         }`}
                                                     >
-                                                        {selectedFulfillment === currentCombo.id ? '★ Selected Active' : 'Select as Active'}
+                                                        {selectedFulfillment === currentCombo.id ? 'Active Selection' : 'Select as Active'}
                                                     </button>
                                                     <button
                                                         type="button"

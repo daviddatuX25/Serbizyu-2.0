@@ -7,20 +7,37 @@ import {
     Clock,
     Plus,
     RotateCcw,
-    Sliders,
+    SlidersHorizontal,
     Trash2,
+    Eye,
+    Camera,
+    Gauge,
+    KeyRound,
+    ListChecks,
+    UserCheck,
+    ShieldAlert,
+    Handshake,
+    MapPin,
+    PackageCheck,
+    Wrench,
+    SearchCheck,
+    FileText,
+    Truck,
+    FileSignature,
+    AlertCircle,
+    X,
 } from 'lucide-react';
 import WorkPipelineCanvas from './WorkPipelineCanvas';
 import {
-    INTERACTION_TYPE_DEFINITIONS,
-    EVIDENCE_PROTOCOL_DEFINITIONS,
+    CLEARANCE_MODE_DEFINITIONS,
+    REQUIRED_PROOF_DEFINITIONS,
     WORK_NODE_CATALOG,
 } from './workNodeCatalog';
 import type {
     WorkStage,
     WorkStageGateType,
-    WorkInteractionType,
-    WorkEvidenceProtocol,
+    WorkClearanceMode,
+    WorkEvidenceType,
     WorkNodePrimitive,
 } from './types';
 
@@ -48,7 +65,7 @@ export interface GateClassificationOption {
 export const GATE_CLASSIFICATIONS: GateClassificationOption[] = [
     {
         type: 'arrival',
-        icon: '🚪',
+        icon: '',
         title: 'Arrival / Intake Gate',
         subtitle: 'Lock-out photo, initial inspection, site safety triage',
         defaultEvidence: 'Breaker lock-out / arrival photo gate',
@@ -59,7 +76,7 @@ export const GATE_CLASSIFICATIONS: GateClassificationOption[] = [
     },
     {
         type: 'execution',
-        icon: '📸',
+        icon: '',
         title: 'Execution Proof Gate',
         subtitle: 'Chemical foam coverage photo, repair progress photo, installation',
         defaultEvidence: 'Workmanship & progress photo gate',
@@ -70,7 +87,7 @@ export const GATE_CLASSIFICATIONS: GateClassificationOption[] = [
     },
     {
         type: 'diagnostic',
-        icon: '⚡',
+        icon: '',
         title: 'Diagnostic / Measurement Gate',
         subtitle: 'Amperage test reading, pressure gauge photo, delta temperature',
         defaultEvidence: 'Amperage reading / gauge photo gate',
@@ -81,7 +98,7 @@ export const GATE_CLASSIFICATIONS: GateClassificationOption[] = [
     },
     {
         type: 'signoff',
-        icon: '✍️',
+        icon: '',
         title: 'Final Sign-off Gate',
         subtitle: 'Dual customer signature + digital OTP milestone release',
         defaultEvidence: 'Dual customer signature & OTP release',
@@ -94,48 +111,9 @@ export const GATE_CLASSIFICATIONS: GateClassificationOption[] = [
 
 const PRESET_DURATIONS = ['15m', '30m', '45m', '60m', '90m', '120m'] as const;
 
-function resolveStageInteractionType(stage: WorkStage, index: number, total: number): WorkInteractionType {
-    if (stage.interactionType) return stage.interactionType;
-    if (index === 0) return 'co_presence';
-    if (index === total - 1) return 'client_signoff';
-    const text = `${stage.title} ${stage.desc}`.toLowerCase();
-    if (
-        text.includes('pickup') ||
-        text.includes('dropoff') ||
-        text.includes('deliver') ||
-        text.includes('courier') ||
-        text.includes('handoff') ||
-        text.includes('custody')
-    ) {
-        return 'custody_transfer';
-    }
-    if (
-        text.includes('test') ||
-        text.includes('check') ||
-        text.includes('diagnostic') ||
-        text.includes('scan') ||
-        text.includes('reading') ||
-        text.includes('temp') ||
-        text.includes('pressure')
-    ) {
-        return 'quality_check';
-    }
-    return 'solo_execution';
-}
-
-function resolveStageEvidenceProtocol(stage: WorkStage, index: number, total: number): WorkEvidenceProtocol {
-    if (stage.evidenceProtocol) return stage.evidenceProtocol;
-    if (index === total - 1) return 'customer_otp';
-    const text = `${stage.title} ${stage.evidence} ${stage.desc}`.toLowerCase();
-    if (text.includes('otp') || text.includes('signature') || text.includes('sign-off')) return 'customer_otp';
-    if (text.includes('file') || text.includes('pdf') || text.includes('cad') || text.includes('upload') || text.includes('download')) return 'file_artifact';
-    if (text.includes('reading') || text.includes('delta') || text.includes('gauge') || text.includes('amp') || text.includes('volt')) return 'metric_reading';
-    if (text.includes('checklist') || text.includes('intake') || text.includes('steps')) return 'checklist_declaration';
-    return 'photo_proof';
-}
-
 export function resolveStageGateType(stage: WorkStage, index: number, total: number): WorkStageGateType {
     if (stage.gateType) return stage.gateType;
+    if (stage.clearanceMode === 'customer_approval') return 'signoff';
     if (index === 0) return 'arrival';
     if (index === total - 1) return 'signoff';
     const text = `${stage.title} ${stage.desc} ${stage.evidence}`.toLowerCase();
@@ -154,43 +132,75 @@ export function resolveStageGateType(stage: WorkStage, index: number, total: num
     }
     return 'execution';
 }
-function WaveCap() {
-    return (
-        <svg
-            aria-hidden="true"
-            className="glovo-wave-cap block w-full shrink-0 sm:hidden"
-            style={{ height: 34, marginBottom: -1 }}
-            viewBox="0 0 390 34"
-            preserveAspectRatio="none"
-        >
-            <path
-                d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z"
-                fill="#FFFFFF"
-            />
-        </svg>
-    );
+
+function resolveStageClearanceMode(stage: WorkStage, index: number, total: number): WorkClearanceMode {
+    if (stage.clearanceMode) return stage.clearanceMode;
+    if (index === total - 1) return 'customer_approval';
+    const text = `${stage.title} ${stage.desc}`.toLowerCase();
+    if (text.includes('pickup') || text.includes('dropoff') || text.includes('deliver') || text.includes('courier') || text.includes('handoff')) {
+        return 'physical_handoff';
+    }
+    if (text.includes('approval') || text.includes('inspect') || text.includes('sign-off')) {
+        return 'customer_approval';
+    }
+    return 'worker_direct';
 }
 
-function CloseCircle({ onClick }: { onClick: () => void }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            aria-label="Close"
-            className="flex h-8 min-h-[44px] w-8 min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-slate-100 text-slate-700 transition-colors hover:bg-slate-200"
-        >
-            <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-            >
-                <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-        </button>
-    );
+function resolveStageProofs(stage: WorkStage, index: number, total: number): WorkEvidenceType[] {
+    if (stage.requiredProofs && stage.requiredProofs.length > 0) return stage.requiredProofs;
+    const list: WorkEvidenceType[] = [];
+    const text = `${stage.title} ${stage.desc} ${stage.evidence}`.toLowerCase();
+
+    if (text.includes('photo') || text.includes('camera') || text.includes('foam') || text.includes('lockout') || index === 0) {
+        list.push('photo_proof');
+    }
+    if (text.includes('reading') || text.includes('delta') || text.includes('temp') || text.includes('gauge') || text.includes('amp') || text.includes('volt')) {
+        list.push('metric_reading');
+    }
+    if (text.includes('otp') || text.includes('signature') || text.includes('sign-off') || index === total - 1) {
+        list.push('customer_otp');
+    }
+    if (text.includes('checklist') || text.includes('intake')) {
+        list.push('checklist_steps');
+    }
+
+    return list.length > 0 ? list : ['photo_proof'];
+}
+
+function renderLucideIcon(name: string, className = 'size-4') {
+    switch (name) {
+        case 'MapPin':
+            return <MapPin className={className} />;
+        case 'PackageCheck':
+            return <PackageCheck className={className} />;
+        case 'SearchCheck':
+            return <SearchCheck className={className} />;
+        case 'Wrench':
+            return <Wrench className={className} />;
+        case 'Gauge':
+            return <Gauge className={className} />;
+        case 'FileText':
+            return <FileText className={className} />;
+        case 'Truck':
+            return <Truck className={className} />;
+        case 'Signature':
+        case 'FileSignature':
+            return <FileSignature className={className} />;
+        case 'Camera':
+            return <Camera className={className} />;
+        case 'KeyRound':
+            return <KeyRound className={className} />;
+        case 'ListChecks':
+            return <ListChecks className={className} />;
+        case 'UserCheck':
+            return <UserCheck className={className} />;
+        case 'ShieldAlert':
+            return <ShieldAlert className={className} />;
+        case 'Handshake':
+            return <Handshake className={className} />;
+        default:
+            return <Check className={className} />;
+    }
 }
 
 export default function WorkNodeCustomizerModal({
@@ -204,33 +214,30 @@ export default function WorkNodeCustomizerModal({
     const titleId = useId();
     const [localStages, setLocalStages] = useState<WorkStage[]>([]);
     const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
+    const [inspectorTab, setInspectorTab] = useState<'configure' | 'simulator' | 'catalog'>('configure');
+    const [simulatorPerspective, setSimulatorPerspective] = useState<'worker' | 'customer'>('worker');
 
-    // Sync from props when modal opens
     useEffect(() => {
         if (open) {
-            const initial = stages.length > 0 ? stages : [];
-            setLocalStages(initial);
-            if (initial.length > 0) {
-                setSelectedStageId(initial[0].id);
-            }
+            const deepCopy = JSON.parse(JSON.stringify(stages)) as WorkStage[];
+            setLocalStages(deepCopy);
+            setSelectedStageId(deepCopy[0]?.id || null);
+            setInspectorTab('configure');
         }
     }, [open, stages]);
 
-    // Keyboard & body scroll management
+    // Body scroll lock
     useEffect(() => {
         if (!open) return;
-
-        const handleKey = (e: KeyboardEvent) => {
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
         };
-
-        const prevOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-        document.addEventListener('keydown', handleKey);
-
+        window.addEventListener('keydown', handleKeyDown);
         return () => {
-            document.body.style.overflow = prevOverflow;
-            document.removeEventListener('keydown', handleKey);
+            document.body.style.overflow = originalOverflow;
+            window.removeEventListener('keydown', handleKeyDown);
         };
     }, [open, onClose]);
 
@@ -254,16 +261,14 @@ export default function WorkNodeCustomizerModal({
         return localStages.reduce((acc, s) => acc + (parseInt(s.dur, 10) || 0), 0);
     }, [localStages]);
 
-    const [inspectorTab, setInspectorTab] = useState<'configure' | 'catalog'>('configure');
-
-    const currentInteractionType = useMemo(() => {
-        if (!currentStage) return 'solo_execution';
-        return resolveStageInteractionType(currentStage, selectedIndex, localStages.length);
+    const currentClearanceMode = useMemo(() => {
+        if (!currentStage) return 'worker_direct';
+        return resolveStageClearanceMode(currentStage, selectedIndex, localStages.length);
     }, [currentStage, selectedIndex, localStages.length]);
 
-    const currentEvidenceProtocol = useMemo(() => {
-        if (!currentStage) return 'photo_proof';
-        return resolveStageEvidenceProtocol(currentStage, selectedIndex, localStages.length);
+    const currentProofs = useMemo(() => {
+        if (!currentStage) return ['photo_proof'];
+        return resolveStageProofs(currentStage, selectedIndex, localStages.length);
     }, [currentStage, selectedIndex, localStages.length]);
 
     const updateCurrentStage = (patch: Partial<WorkStage>) => {
@@ -271,6 +276,16 @@ export default function WorkNodeCustomizerModal({
         setLocalStages((prev) =>
             prev.map((s) => (s.id === currentStage.id ? { ...s, ...patch } : s)),
         );
+    };
+
+    const handleToggleProof = (proofType: WorkEvidenceType) => {
+        const existing = new Set(currentProofs);
+        if (existing.has(proofType)) {
+            existing.delete(proofType);
+        } else {
+            existing.add(proofType);
+        }
+        updateCurrentStage({ requiredProofs: Array.from(existing) as WorkEvidenceType[] });
     };
 
     const handleReorder = (idx: number, direction: 'up' | 'down') => {
@@ -301,7 +316,6 @@ export default function WorkNodeCustomizerModal({
             }));
 
         setLocalStages(next);
-
         if (selectedStageId === targetId) {
             const nextIdx = Math.min(idx, next.length - 1);
             setSelectedStageId(next[nextIdx].id);
@@ -320,8 +334,13 @@ export default function WorkNodeCustomizerModal({
             evidence: primitive.evidence,
             color: primitive.color,
             bg: primitive.bg,
+            clearanceMode: primitive.clearanceMode,
+            handoffParty: primitive.handoffParty,
+            requiredProofs: primitive.requiredProofs,
+            metricUnit: primitive.metricUnit || '',
             interactionType: primitive.interactionType,
             evidenceProtocol: primitive.evidenceProtocol,
+            gateType: primitive.clearanceMode === 'customer_approval' ? 'signoff' : 'execution',
         };
 
         const next = [...localStages, newStage];
@@ -336,14 +355,15 @@ export default function WorkNodeCustomizerModal({
         const newStage: WorkStage = {
             id: newId,
             num: String(count),
-            title: 'Custom Task Node',
+            title: 'Custom Execution Step',
             dur: '30m',
-            desc: 'Describe procedures, tool usage, safety precautions...',
-            evidence: 'Time-stamped photo or digital completion token',
+            desc: 'Describe step procedures, required equipment, and milestone instructions.',
+            evidence: 'Visual progress photo or completion verification.',
             color: '#0F2F58',
             bg: '#EBF2FA',
-            interactionType: 'solo_execution',
-            evidenceProtocol: 'photo_proof',
+            clearanceMode: 'worker_direct',
+            requiredProofs: ['photo_proof'],
+            gateType: 'execution',
         };
 
         const next = [...localStages, newStage];
@@ -356,6 +376,7 @@ export default function WorkNodeCustomizerModal({
         onSave(localStages);
         onClose();
     };
+
     const handleReset = () => {
         if (onResetToTemplate) {
             onResetToTemplate();
@@ -376,29 +397,27 @@ export default function WorkNodeCustomizerModal({
             <div
                 data-modal-surface="true"
                 onClick={(e) => e.stopPropagation()}
-                className="flex max-h-[92vh] w-full translate-y-0 flex-col overflow-hidden bg-transparent transition-transform duration-300 sm:max-h-[90vh] sm:max-w-4xl lg:max-w-5xl sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:shadow-2xl"
+                className="flex max-h-[94vh] w-full translate-y-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl transition-transform duration-300 sm:max-h-[90vh] sm:max-w-4xl lg:max-w-5xl sm:rounded-2xl"
                 style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
             >
-                <WaveCap />
-
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white px-4 pt-2 pb-3 sm:px-6 sm:pt-4">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white px-4 pt-3 pb-3 sm:px-6 sm:pt-4">
                     {/* Header */}
                     <div className="shrink-0 border-b border-slate-100 pb-3">
                         <div className="flex items-center justify-between gap-4">
                             <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2.5">
                                     <div className="flex size-7 items-center justify-center rounded-lg bg-[#0F2F58] text-white">
-                                        <Sliders className="size-4" />
+                                        <SlidersHorizontal className="size-4" />
                                     </div>
                                     <div>
                                         <h3
                                             id={titleId}
-                                            className="m-0 text-base sm:text-lg font-extrabold text-[#0F2F58]"
+                                            className="m-0 text-base sm:text-lg font-extrabold text-[#0F2F58] tracking-tight"
                                         >
-                                            Work Studio · Workflow Customizer
+                                            Work Studio · Execution Pipeline
                                         </h3>
                                         <p className="mt-0.5 text-[11px] text-slate-500">
-                                            Configure verified order gates, target SLAs, and milestone escrow evidence.
+                                            Configure step clearance authority, evidence verification, and customer approval gates.
                                         </p>
                                     </div>
                                 </div>
@@ -409,13 +428,20 @@ export default function WorkNodeCustomizerModal({
                                     <button
                                         type="button"
                                         onClick={handleReset}
-                                        className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100"
+                                        className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition-colors"
                                     >
-                                        <RotateCcw className="size-3" />
+                                        <RotateCcw className="size-3 text-slate-500" />
                                         <span>Reset to Archetype</span>
                                     </button>
                                 )}
-                                <CloseCircle onClick={onClose} />
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    aria-label="Close"
+                                    className="flex h-8 w-8 min-h-[36px] min-w-[36px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                                >
+                                    <X className="size-4" />
+                                </button>
                             </div>
                         </div>
 
@@ -423,10 +449,10 @@ export default function WorkNodeCustomizerModal({
                         <div className="mt-3 rounded-xl border border-slate-200 bg-[#F8FAFC] p-2.5">
                             <div className="mb-1 flex items-center justify-between px-1 text-[10px]">
                                 <span className="font-extrabold uppercase tracking-wide text-slate-500">
-                                    DAG Pipeline Overview
+                                    Pipeline Sequence
                                 </span>
-                                <span className="font-mono font-bold text-emerald-700">
-                                    {localStages.length} Verified Gates · {totalMinutes}m Total SLA
+                                <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                    {localStages.length} Verified Steps · {totalMinutes}m Total SLA
                                 </span>
                             </div>
                             <div className="overflow-x-auto py-1">
@@ -444,37 +470,36 @@ export default function WorkNodeCustomizerModal({
                         {/* Left Column: Stage Node List */}
                         <div className="flex min-h-0 flex-col md:w-5/12 lg:w-4/12 border-b border-slate-100 pb-3 md:border-b-0 md:border-r md:pr-4">
                             <div className="mb-2 flex items-center justify-between">
-                                <span className="text-xs font-extrabold text-[#0F2F58] uppercase">
-                                    Stage Nodes ({localStages.length})
+                                <span className="text-xs font-extrabold text-[#0F2F58] uppercase tracking-wider">
+                                    Steps ({localStages.length})
                                 </span>
-                                <span className="text-[10px] text-slate-500">Click to configure</span>
+                                <span className="text-[10px] text-slate-400 font-semibold">Select to edit</span>
                             </div>
 
                             <div className="flex-1 space-y-2 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
                                 {localStages.map((stage, idx) => {
                                     const isSelected = stage.id === (currentStage?.id || selectedStageId);
-                                    const interaction = resolveStageInteractionType(stage, idx, localStages.length);
-                                    const interactionMeta = INTERACTION_TYPE_DEFINITIONS.find((i) => i.type === interaction);
-                                    const protocol = resolveStageEvidenceProtocol(stage, idx, localStages.length);
-                                    const protocolMeta = EVIDENCE_PROTOCOL_DEFINITIONS.find((p) => p.protocol === protocol);
+                                    const mode = resolveStageClearanceMode(stage, idx, localStages.length);
+                                    const modeMeta = CLEARANCE_MODE_DEFINITIONS.find((m) => m.mode === mode);
+                                    const proofs = resolveStageProofs(stage, idx, localStages.length);
 
                                     return (
                                         <div
                                             key={stage.id}
                                             onClick={() => {
                                                 setSelectedStageId(stage.id);
-                                                setInspectorTab('configure');
+                                                if (inspectorTab === 'catalog') setInspectorTab('configure');
                                             }}
                                             className={`group relative flex cursor-pointer flex-col gap-1.5 rounded-xl border p-2.5 transition-all ${
-                                                isSelected && inspectorTab === 'configure'
-                                                    ? 'border-[#0F2F58] bg-slate-50/80 shadow-xs ring-1 ring-[#0F2F58]'
+                                                isSelected && inspectorTab !== 'catalog'
+                                                    ? 'border-[#0F2F58] bg-[#FAFCFB] shadow-xs ring-1 ring-[#0F2F58]'
                                                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                                             }`}
                                         >
                                             <div className="flex items-center justify-between gap-1.5">
-                                                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                                                <div className="flex min-w-0 flex-1 items-center gap-2">
                                                     <span
-                                                        className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-extrabold"
+                                                        className="flex size-5 shrink-0 items-center justify-center rounded text-[10px] font-extrabold"
                                                         style={{
                                                             background: stage.bg || '#E8F7F1',
                                                             color: stage.color || '#0D715F',
@@ -482,7 +507,7 @@ export default function WorkNodeCustomizerModal({
                                                     >
                                                         {stage.num || String(idx + 1)}
                                                     </span>
-                                                    <span className="truncate text-xs font-extrabold text-[#0F2F58]">
+                                                    <span className="truncate text-xs font-extrabold text-slate-900">
                                                         {stage.title}
                                                     </span>
                                                 </div>
@@ -522,15 +547,22 @@ export default function WorkNodeCustomizerModal({
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center justify-between text-[10px] text-slate-500">
-                                                <div className="flex items-center gap-1">
-                                                    <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold ${interactionMeta?.badgeStyle || 'bg-slate-100 text-slate-700'}`}>
-                                                        <span>{interactionMeta?.icon}</span>
-                                                        <span>{interactionMeta?.label}</span>
+                                            <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5 border-t border-slate-100">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold border ${modeMeta?.badgeStyle || 'bg-slate-100 text-slate-700'}`}>
+                                                        {modeMeta?.label}
                                                     </span>
-                                                    <span className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1 py-0.5 text-[9px] font-semibold text-slate-600">
-                                                        <span>{protocolMeta?.icon}</span>
-                                                    </span>
+                                                    <div className="flex items-center gap-1 text-slate-400">
+                                                        {proofs.map((p) => {
+                                                            const iconDef = REQUIRED_PROOF_DEFINITIONS.find((d) => d.type === p);
+                                                            if (!iconDef) return null;
+                                                            return (
+                                                                <span key={p} title={iconDef.label}>
+                                                                    {renderLucideIcon(iconDef.lucideIcon, 'size-3 text-slate-500')}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                                 <span className="flex items-center gap-1 font-mono font-bold text-slate-600">
                                                     <Clock className="size-2.5 text-slate-400" />
@@ -546,14 +578,18 @@ export default function WorkNodeCustomizerModal({
                                 <button
                                     type="button"
                                     onClick={() => setInspectorTab('catalog')}
-                                    className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50/70 py-2 text-xs font-bold text-indigo-900 transition-colors hover:bg-indigo-100 min-h-[38px]"
+                                    className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-bold transition-all min-h-[38px] ${
+                                        inspectorTab === 'catalog'
+                                            ? 'border-[#0F2F58] bg-[#0F2F58] text-white shadow-xs'
+                                            : 'border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100'
+                                    }`}
                                 >
-                                    <span>📚 Add from Node Catalog</span>
+                                    <span>From Step Library</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleAddStage}
-                                    className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50 min-h-[38px]"
+                                    className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-bold text-[#0F2F58] transition-colors hover:border-[#0F2F58] hover:bg-slate-50 min-h-[38px]"
                                 >
                                     <Plus className="size-3.5" />
                                     <span>+ Add Stage Node</span>
@@ -561,7 +597,7 @@ export default function WorkNodeCustomizerModal({
                             </div>
                         </div>
 
-                        {/* Right Column: Stage Inspector & Node Catalog */}
+                        {/* Right Column: Stage Inspector & Node Catalog & Live Simulator */}
                         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pl-0 md:pl-2" style={{ scrollbarWidth: 'thin' }}>
                             {/* Tab Switcher */}
                             <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2">
@@ -575,129 +611,77 @@ export default function WorkNodeCustomizerModal({
                                                 : 'text-slate-600 hover:bg-slate-100'
                                         }`}
                                     >
-                                        Stage Inspector
+                                        Step Configuration
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setInspectorTab('simulator')}
+                                        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                                            inspectorTab === 'simulator'
+                                                ? 'bg-emerald-700 text-white shadow-xs'
+                                                : 'text-emerald-800 hover:bg-emerald-50'
+                                        }`}
+                                    >
+                                        <Eye className="size-3.5" />
+                                        <span>Live Order Simulator</span>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setInspectorTab('catalog')}
                                         className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
                                             inspectorTab === 'catalog'
-                                                ? 'bg-indigo-600 text-white shadow-xs'
-                                                : 'text-indigo-900 hover:bg-indigo-50'
+                                                ? 'bg-slate-900 text-white shadow-xs'
+                                                : 'text-slate-700 hover:bg-slate-100'
                                         }`}
                                     >
-                                        <span>📚 Node Catalog Primitives</span>
-                                        <span className="rounded-full bg-indigo-200/50 px-1.5 text-[9px] font-mono">8</span>
+                                        <span>Step Library</span>
+                                        <span className="rounded-full bg-slate-200/60 px-1.5 text-[9px] font-mono text-slate-700">8</span>
                                     </button>
                                 </div>
 
-                                {currentStage && inspectorTab === 'configure' && (
+                                {currentStage && inspectorTab !== 'catalog' && (
                                     <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-600">
-                                        Node #{currentStage.num} · {currentStage.dur}
+                                        Step #{currentStage.num} · {currentStage.dur}
                                     </span>
                                 )}
                             </div>
 
-                            {inspectorTab === 'catalog' && (
-                                <div className="space-y-3 pb-2">
-                                    <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-2.5">
-                                        <div className="text-xs font-extrabold text-indigo-950">
-                                            Universal Work Node Catalog (Atomic Lego Blocks)
-                                        </div>
-                                        <p className="mt-0.5 text-[11px] text-indigo-900/80">
-                                            Universal interaction primitives applicable across trades, digital delivery, physical transport, and Deal Chains. 1-click to append to your pipeline.
-                                        </p>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                                        {WORK_NODE_CATALOG.map((prim) => {
-                                            const intMeta = INTERACTION_TYPE_DEFINITIONS.find((i) => i.type === prim.interactionType);
-                                            const protoMeta = EVIDENCE_PROTOCOL_DEFINITIONS.find((p) => p.protocol === prim.evidenceProtocol);
-
-                                            return (
-                                                <div
-                                                    key={prim.id}
-                                                    className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-2xs transition-all hover:border-indigo-300 hover:shadow-xs"
-                                                >
-                                                    <div className="space-y-1">
-                                                        <div className="flex items-center justify-between gap-1.5">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className="text-base">{prim.icon}</span>
-                                                                <span className="text-xs font-extrabold text-slate-900">
-                                                                    {prim.title}
-                                                                </span>
-                                                            </div>
-                                                            <span className="font-mono text-[10px] font-bold text-slate-500">
-                                                                {prim.dur}
-                                                            </span>
-                                                        </div>
-                                                        <p className="text-[10.5px] leading-relaxed text-slate-600">
-                                                            {prim.desc}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
-                                                        <div className="flex flex-wrap items-center gap-1">
-                                                            <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold ${intMeta?.badgeStyle || 'bg-slate-100'}`}>
-                                                                <span>{intMeta?.icon}</span>
-                                                                <span>{intMeta?.label}</span>
-                                                            </span>
-                                                            <span className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-slate-700">
-                                                                <span>{protoMeta?.icon}</span>
-                                                                <span>{protoMeta?.label}</span>
-                                                            </span>
-                                                        </div>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleAddFromCatalog(prim)}
-                                                            className="shrink-0 cursor-pointer rounded-lg bg-[#0F2F58] px-2.5 py-1 text-[11px] font-bold text-white shadow-2xs hover:bg-[#153e74]"
-                                                        >
-                                                            + Add Node
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-
+                            {/* TAB 1: STEP CONFIGURATION */}
                             {inspectorTab === 'configure' && currentStage && (
                                 <div className="space-y-3.5 pb-2">
                                     {/* Title Field */}
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-slate-700">
-                                            Stage Title
+                                            Step Title
                                         </label>
                                         <input
                                             type="text"
                                             value={currentStage.title}
                                             onChange={(e) => updateCurrentStage({ title: e.target.value })}
-                                            placeholder="e.g. Site Check-in, Fabrication, Quality Testing..."
+                                            placeholder="e.g. Site Check-In, Disinfection Flush, Delta Temp Test..."
                                             className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:ring-1 focus:ring-[#0F2F58]"
                                         />
                                     </div>
 
-                                    {/* Description / Instructions */}
+                                    {/* Scope / Description */}
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-slate-700">
-                                            Operational Scope / Description
+                                            Scope &amp; Operating Instructions
                                         </label>
                                         <textarea
                                             rows={2}
                                             value={currentStage.desc || ''}
                                             onChange={(e) => updateCurrentStage({ desc: e.target.value })}
-                                            placeholder="Describe step-by-step procedures, tool usage, safety precautions..."
+                                            placeholder="Describe step procedures, required equipment, safety isolation steps..."
                                             className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3 py-2 text-xs font-normal text-slate-800 outline-none focus:border-[#0F2F58] focus:ring-1 focus:ring-[#0F2F58]"
                                         />
                                     </div>
 
-                                    {/* SLA / Target Duration */}
+                                    {/* Duration Presets */}
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-bold text-slate-700">
-                                                SLA / Target Duration
+                                                Target Duration (SLA)
                                             </label>
                                             <span className="font-mono text-[10px] font-bold text-emerald-700">
                                                 Current: {currentStage.dur}
@@ -740,187 +724,473 @@ export default function WorkNodeCustomizerModal({
                                         </div>
                                     </div>
 
-                                    {/* Axis 1: Interaction & Accountability Model */}
+                                    {/* 1. Who Clears This Step? */}
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-bold text-slate-700">
-                                                1. Interaction &amp; Accountability Model
+                                                Who Clears This Step?
                                             </label>
-                                            <span className="text-[10px] text-slate-500">Who executes or verifies?</span>
+                                            <span className="text-[10px] text-slate-400 font-semibold">Milestone authority</span>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                                            {INTERACTION_TYPE_DEFINITIONS.map((def) => {
-                                                const isSelected = currentInteractionType === def.type;
+                                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                            {CLEARANCE_MODE_DEFINITIONS.map((def) => {
+                                                const isSelected = currentClearanceMode === def.mode;
                                                 return (
                                                     <div
-                                                        key={def.type}
+                                                        key={def.mode}
                                                         onClick={() => {
                                                             let gateType: WorkStageGateType = 'execution';
-                                                            let color = '#0F766E';
-                                                            let bg = '#CCFBF1';
-                                                            if (def.type === 'co_presence') {
-                                                                gateType = 'arrival';
-                                                                color = '#0D715F';
-                                                                bg = '#E8F7F1';
-                                                            } else if (def.type === 'quality_check') {
-                                                                gateType = 'diagnostic';
-                                                                color = '#B45309';
-                                                                bg = '#FEF3C7';
-                                                            } else if (def.type === 'client_signoff') {
-                                                                gateType = 'signoff';
-                                                                color = '#047857';
-                                                                bg = '#D1FAE5';
-                                                            } else if (def.type === 'custody_transfer') {
-                                                                gateType = 'execution';
-                                                                color = '#4F46E5';
-                                                                bg = '#EEF2FF';
-                                                            }
+                                                            if (def.mode === 'customer_approval') gateType = 'signoff';
+                                                            else if (def.mode === 'physical_handoff') gateType = 'execution';
+                                                            else gateType = selectedIndex === 0 ? 'arrival' : 'execution';
+
                                                             updateCurrentStage({
-                                                                interactionType: def.type,
+                                                                clearanceMode: def.mode,
                                                                 gateType,
-                                                                color,
-                                                                bg,
                                                             });
                                                         }}
-                                                        className={`flex cursor-pointer items-start gap-2 rounded-xl border p-2.5 transition-all ${
+                                                        className={`flex cursor-pointer flex-col justify-between rounded-xl border p-2.5 transition-all ${
                                                             isSelected
-                                                                ? 'border-[#0F2F58] bg-[#F8FAFC] shadow-2xs ring-1 ring-[#0F2F58]'
+                                                                ? 'border-[#0F2F58] bg-[#FAFCFB] shadow-xs ring-1 ring-[#0F2F58]'
                                                                 : 'border-slate-200 bg-white hover:border-slate-300'
                                                         }`}
                                                     >
-                                                        <span className="shrink-0 text-base">{def.icon}</span>
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="flex items-center justify-between">
+                                                        <div className="flex items-center justify-between gap-1">
+                                                            <div className="flex items-center gap-1.5">
+                                                                {renderLucideIcon(def.lucideIcon, `size-4 ${isSelected ? 'text-[#0F2F58]' : 'text-slate-500'}`)}
                                                                 <span className="text-xs font-extrabold text-slate-900">
                                                                     {def.label}
                                                                 </span>
-                                                                {isSelected && <Check className="size-3 stroke-[3] text-[#0F2F58]" />}
                                                             </div>
-                                                            {def.type === 'quality_check' && (
-                                                                <div className="text-[9.5px] font-bold text-amber-800">
-                                                                    <span>Diagnostic / Measurement Gate</span>
-                                                                </div>
-                                                            )}
-                                                            <p className="mt-0.5 text-[10px] leading-tight text-slate-500">
-                                                                {def.description}
-                                                            </p>
+                                                            {isSelected && <Check className="size-3.5 stroke-[3] text-[#0F2F58]" />}
                                                         </div>
+                                                        <p className="mt-1 text-[10px] leading-relaxed text-slate-500">
+                                                            {def.description}
+                                                        </p>
                                                     </div>
                                                 );
                                             })}
                                         </div>
+
+                                        {/* Physical handoff sub-choice */}
+                                        {currentClearanceMode === 'physical_handoff' && (
+                                            <div className="mt-2 rounded-xl border border-blue-100 bg-blue-50/50 p-2.5 space-y-1.5">
+                                                <span className="text-[11px] font-extrabold text-[#0F2F58]">
+                                                    Handoff Receipt Authority:
+                                                </span>
+                                                <div className="flex flex-wrap gap-2 text-xs">
+                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-700">
+                                                        <input
+                                                            type="radio"
+                                                            name="handoffParty"
+                                                            checked={currentStage.handoffParty !== 'worker_dropoff'}
+                                                            onChange={() => updateCurrentStage({ handoffParty: 'recipient_confirm' })}
+                                                            className="accent-[#0F2F58]"
+                                                        />
+                                                        <span>Recipient Confirms (OTP / App Tap)</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-700">
+                                                        <input
+                                                            type="radio"
+                                                            name="handoffParty"
+                                                            checked={currentStage.handoffParty === 'worker_dropoff'}
+                                                            onChange={() => updateCurrentStage({ handoffParty: 'worker_dropoff' })}
+                                                            className="accent-[#0F2F58]"
+                                                        />
+                                                        <span>Worker Drop-off Photo (Porch / Counter)</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Axis 2: Required Evidence Protocol */}
+                                    {/* 2. Required Proof (Multi-Select) */}
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-bold text-slate-700">
-                                                2. Required Evidence Protocol
+                                                Required Proof (Multi-Select)
                                             </label>
-                                            <span className="text-[10px] text-slate-500">How is milestone proven?</span>
+                                            <span className="text-[10px] text-slate-400 font-semibold">Select all that apply</span>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                                            {EVIDENCE_PROTOCOL_DEFINITIONS.map((def) => {
-                                                const isSelected = currentEvidenceProtocol === def.protocol;
+                                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                            {REQUIRED_PROOF_DEFINITIONS.map((def) => {
+                                                const isChecked = currentProofs.includes(def.type);
                                                 return (
-                                                    <div
-                                                        key={def.protocol}
-                                                        onClick={() => updateCurrentStage({ evidenceProtocol: def.protocol })}
-                                                        className={`flex cursor-pointer items-start gap-2 rounded-xl border p-2.5 transition-all ${
-                                                            isSelected
-                                                                ? 'border-indigo-600 bg-indigo-50/40 shadow-2xs ring-1 ring-indigo-600'
+                                                    <label
+                                                        key={def.type}
+                                                        className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-2.5 transition-all ${
+                                                            isChecked
+                                                                ? 'border-[#0F2F58] bg-[#FAFCFB] shadow-2xs'
                                                                 : 'border-slate-200 bg-white hover:border-slate-300'
                                                         }`}
                                                     >
-                                                        <span className="shrink-0 text-base">{def.icon}</span>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isChecked}
+                                                            onChange={() => handleToggleProof(def.type)}
+                                                            className="mt-0.5 size-4 accent-[#0F2F58] cursor-pointer rounded"
+                                                        />
                                                         <div className="min-w-0 flex-1">
-                                                            <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-1.5">
+                                                                {renderLucideIcon(def.lucideIcon, 'size-3.5 text-slate-600')}
                                                                 <span className="text-xs font-extrabold text-slate-900">
                                                                     {def.label}
                                                                 </span>
-                                                                {isSelected && <Check className="size-3 stroke-[3] text-indigo-600" />}
                                                             </div>
                                                             <p className="mt-0.5 text-[10px] leading-tight text-slate-500">
                                                                 {def.description}
                                                             </p>
                                                         </div>
-                                                    </div>
+                                                    </label>
                                                 );
                                             })}
                                         </div>
+
+                                        {/* Metric reading unit input */}
+                                        {currentProofs.includes('metric_reading') && (
+                                            <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/50 p-2 text-xs">
+                                                <span className="font-bold text-amber-950 shrink-0">Measurement Unit:</span>
+                                                <input
+                                                    type="text"
+                                                    value={currentStage.metricUnit || '°C delta'}
+                                                    onChange={(e) => updateCurrentStage({ metricUnit: e.target.value })}
+                                                    placeholder="e.g. °C delta, Volts, psi, kg"
+                                                    className="rounded-lg border border-amber-300 bg-white px-2 py-1 text-xs font-mono font-bold text-slate-900 outline-none w-36"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Evidence Description / Requirement label */}
+                                    {/* Specific Instructions / Label */}
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-slate-700">
-                                            Specific Evidence Guidance / Instructions
+                                            Evidence Guidance for Worker &amp; Customer
                                         </label>
                                         <input
                                             type="text"
                                             value={currentStage.evidence || ''}
                                             onChange={(e) => updateCurrentStage({ evidence: e.target.value })}
-                                            placeholder="e.g. Clear photo showing serial number & gauge reading"
+                                            placeholder="e.g. Clear photo showing cold air thermometer reading"
                                             className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:ring-1 focus:ring-[#0F2F58]"
                                         />
-                                        <p className="text-[10px] text-slate-400">
-                                            Instructions displayed to the operator when uploading proof for milestone progression.
-                                        </p>
                                     </div>
                                 </div>
                             )}
 
-                            {inspectorTab === 'configure' && !currentStage && (
+                            {/* TAB 2: LIVE ORDER SIMULATOR */}
+                            {inspectorTab === 'simulator' && currentStage && (
+                                <div className="space-y-3 pb-2">
+                                    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+                                        <div>
+                                            <span className="text-xs font-extrabold text-slate-900">
+                                                Production Screen Preview
+                                            </span>
+                                            <p className="text-[10px] text-slate-500">
+                                                Interactive preview of how this step appears on /orders/{'{id}'}.
+                                            </p>
+                                        </div>
+
+                                        <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-0.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSimulatorPerspective('worker')}
+                                                className={`rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
+                                                    simulatorPerspective === 'worker'
+                                                        ? 'bg-[#0F2F58] text-white shadow-2xs'
+                                                        : 'text-slate-600 hover:text-slate-900'
+                                                }`}
+                                            >
+                                                Worker View
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSimulatorPerspective('customer')}
+                                                className={`rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
+                                                    simulatorPerspective === 'customer'
+                                                        ? 'bg-[#0F2F58] text-white shadow-2xs'
+                                                        : 'text-slate-600 hover:text-slate-900'
+                                                }`}
+                                            >
+                                                Customer View
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Simulated Phone Shell */}
+                                    <div className="mx-auto max-w-md rounded-2xl border-2 border-slate-800 bg-white p-4 shadow-xl space-y-3 font-sans">
+                                        {/* Status Header */}
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                            <div>
+                                                <span className="text-[10px] font-mono font-bold text-slate-400">
+                                                    ORDER #ORD-104 · STEP {currentStage.num} OF {localStages.length}
+                                                </span>
+                                                <div className="text-sm font-extrabold text-slate-900">
+                                                    {currentStage.title}
+                                                </div>
+                                            </div>
+                                            <span className="font-mono text-xs font-bold text-slate-600">
+                                                ~{currentStage.dur}
+                                            </span>
+                                        </div>
+
+                                        {/* Scope */}
+                                        {currentStage.desc && (
+                                            <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                                {currentStage.desc}
+                                            </p>
+                                        )}
+
+                                        {/* Perspective Details */}
+                                        {simulatorPerspective === 'worker' ? (
+                                            <div className="space-y-3 border-t border-slate-100 pt-2">
+                                                <span className="text-[10.5px] font-extrabold uppercase text-slate-500 tracking-wider">
+                                                    Worker Execution Inputs
+                                                </span>
+
+                                                {/* Proof Inputs */}
+                                                <div className="space-y-2">
+                                                    {currentProofs.includes('photo_proof') && (
+                                                        <div className="rounded-xl border border-dashed border-slate-300 p-3 text-center bg-slate-50/50">
+                                                            <Camera className="mx-auto size-5 text-slate-400 mb-1" />
+                                                            <div className="text-xs font-bold text-slate-800">
+                                                                Photo Proof Required
+                                                            </div>
+                                                            <span className="text-[10px] text-slate-500">
+                                                                {currentStage.evidence || 'Snap photo before continuing'}
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    {currentProofs.includes('metric_reading') && (
+                                                        <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-2.5 flex items-center justify-between">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Gauge className="size-4 text-amber-700" />
+                                                                <span className="text-xs font-bold text-slate-900">
+                                                                    Measurement Reading
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1 font-mono text-xs font-bold">
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="12.4"
+                                                                    disabled
+                                                                    className="w-14 rounded border border-amber-300 bg-white px-2 py-0.5 text-right text-xs"
+                                                                />
+                                                                <span>{currentStage.metricUnit || '°C'}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {currentProofs.includes('customer_otp') && (
+                                                        <div className="rounded-xl border border-indigo-200 bg-indigo-50/40 p-2.5 flex items-center justify-between">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <KeyRound className="size-4 text-indigo-700" />
+                                                                <span className="text-xs font-bold text-slate-900">
+                                                                    Customer 4-Digit OTP
+                                                                </span>
+                                                            </div>
+                                                            <span className="font-mono text-xs font-bold text-slate-400 tracking-widest">
+                                                                [ · · · · ]
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    {currentProofs.includes('checklist_steps') && (
+                                                        <div className="rounded-xl border border-slate-200 bg-white p-2.5 space-y-1.5 text-xs font-semibold text-slate-700">
+                                                            <label className="flex items-center gap-2">
+                                                                <input type="checkbox" defaultChecked disabled className="accent-[#0F2F58]" />
+                                                                <span>1. Safety Breaker Lockout verified</span>
+                                                            </label>
+                                                            <label className="flex items-center gap-2">
+                                                                <input type="checkbox" defaultChecked disabled className="accent-[#0F2F58]" />
+                                                                <span>2. Customer area cleared and protected</span>
+                                                            </label>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Action CTA */}
+                                                {currentClearanceMode === 'customer_approval' ? (
+                                                    <button
+                                                        type="button"
+                                                        disabled
+                                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-2.5 text-xs font-extrabold text-white shadow-xs"
+                                                    >
+                                                        <span>Submit for Customer Approval ➔</span>
+                                                    </button>
+                                                ) : currentClearanceMode === 'physical_handoff' ? (
+                                                    <button
+                                                        type="button"
+                                                        disabled
+                                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 py-2.5 text-xs font-extrabold text-white shadow-xs"
+                                                    >
+                                                        <span>Confirm Custody Handover ➔</span>
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        disabled
+                                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0F2F58] py-2.5 text-xs font-extrabold text-white shadow-xs"
+                                                    >
+                                                        <span>Complete Step &amp; Advance ➔</span>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3 border-t border-slate-100 pt-2">
+                                                <span className="text-[10.5px] font-extrabold uppercase text-slate-500 tracking-wider">
+                                                    Customer Experience
+                                                </span>
+
+                                                {currentClearanceMode === 'customer_approval' ? (
+                                                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 space-y-2">
+                                                        <div className="flex items-center gap-1.5 text-amber-950 font-extrabold text-xs">
+                                                            <AlertCircle className="size-4 text-amber-700" />
+                                                            <span>Action Required: Approve Step</span>
+                                                        </div>
+                                                        <p className="text-[11px] text-amber-900 leading-tight">
+                                                            Provider has completed this milestone. Please inspect the work and confirm to release milestone progression.
+                                                        </p>
+                                                        <div className="flex gap-2 pt-1">
+                                                            <button
+                                                                type="button"
+                                                                disabled
+                                                                className="flex-1 rounded-lg bg-emerald-700 py-1.5 text-[11px] font-extrabold text-white text-center"
+                                                            >
+                                                                Approve &amp; Advance
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                disabled
+                                                                className="flex-1 rounded-lg border border-slate-300 bg-white py-1.5 text-[11px] font-bold text-slate-700 text-center"
+                                                            >
+                                                                Request Adjustment
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : currentProofs.includes('customer_otp') ? (
+                                                    <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 space-y-1 text-center">
+                                                        <div className="text-xs font-bold text-indigo-950">
+                                                            Your Milestone Release OTP
+                                                        </div>
+                                                        <div className="font-mono text-xl font-extrabold text-[#0F2F58] tracking-widest">
+                                                            8 4 2 1
+                                                        </div>
+                                                        <span className="text-[10px] text-slate-500">
+                                                            Provide to technician only when physically satisfied with the completed task.
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-1 text-xs text-slate-600">
+                                                        <div className="font-bold text-slate-900">
+                                                            Service Underway
+                                                        </div>
+                                                        <p className="text-[11px]">
+                                                            Provider is currently performing this step (~{currentStage.dur}). Live status will update automatically.
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* TAB 3: STEP LIBRARY */}
+                            {inspectorTab === 'catalog' && (
+                                <div className="space-y-3 pb-2">
+                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+                                        <div className="text-xs font-extrabold text-slate-900">
+                                            Universal Step Library
+                                        </div>
+                                        <p className="mt-0.5 text-[11px] text-slate-500">
+                                            Operational primitives for service trades, goods delivery, diagnostic inspections, and client sign-offs. 1-click to append to your sequence.
+                                        </p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                        {WORK_NODE_CATALOG.map((prim) => {
+                                            const modeMeta = CLEARANCE_MODE_DEFINITIONS.find((m) => m.mode === prim.clearanceMode);
+
+                                            return (
+                                                <div
+                                                    key={prim.id}
+                                                    className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-2xs transition-all hover:border-[#0F2F58] hover:shadow-xs"
+                                                >
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center justify-between gap-1.5">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-slate-700">
+                                                                    {renderLucideIcon(prim.lucideIcon, 'size-4')}
+                                                                </span>
+                                                                <span className="text-xs font-extrabold text-slate-900">
+                                                                    {prim.title}
+                                                                </span>
+                                                            </div>
+                                                            <span className="font-mono text-[10px] font-bold text-slate-500">
+                                                                {prim.dur}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[10.5px] leading-relaxed text-slate-600">
+                                                            {prim.desc}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+                                                        <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold border ${modeMeta?.badgeStyle || 'bg-slate-100 text-slate-700'}`}>
+                                                            {modeMeta?.label}
+                                                        </span>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleAddFromCatalog(prim)}
+                                                            className="shrink-0 cursor-pointer rounded-lg bg-[#0F2F58] px-2.5 py-1 text-[11px] font-bold text-white shadow-2xs hover:bg-[#153e74] transition-colors"
+                                                        >
+                                                            + Add Step
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {inspectorTab !== 'catalog' && !currentStage && (
                                 <div className="flex flex-1 items-center justify-center p-8 text-center text-xs text-slate-400">
-                                    No stage selected. Select or add a stage from the catalog to configure.
+                                    No step selected. Select or add a step from the library to configure.
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Bottom Actions */}
-                    <div className="shrink-0 border-t border-slate-200 bg-white pt-3">
-                        <div className="flex items-center justify-between gap-3">
+                    {/* Bottom Action Footer */}
+                    <div className="mt-3 flex shrink-0 items-center justify-between border-t border-slate-100 pt-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 min-h-[44px]"
+                        >
+                            Cancel
+                        </button>
+
+                        <div className="flex items-center gap-2">
                             <button
                                 type="button"
-                                onClick={onClose}
-                                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-slate-50 min-h-[44px]"
+                                onClick={handleSave}
+                                className="cursor-pointer rounded-xl bg-[#0F2F58] px-5 py-2.5 text-xs font-extrabold text-white shadow-xs hover:bg-[#153e74] min-h-[44px] transition-colors"
                             >
-                                Cancel
+                                Apply Workflow to Listing ➔
                             </button>
-
-                            <div className="flex items-center gap-2">
-                                {onResetToTemplate && (
-                                    <button
-                                        type="button"
-                                        onClick={handleReset}
-                                        className="sm:hidden rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 min-h-[44px]"
-                                    >
-                                        Reset Archetype
-                                    </button>
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={handleSave}
-                                    className="flex items-center justify-center gap-2 rounded-xl bg-[#0F2F58] px-5 py-2 text-xs font-extrabold text-white shadow-md hover:bg-[#0D284C] transition-colors min-h-[44px]"
-                                >
-                                    <Check className="size-4 stroke-[2.5]" />
-                                    <span>Apply Workflow to Listing</span>
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <style>{`
-                [data-modal-surface] .overflow-y-auto::-webkit-scrollbar { width: 4px; }
-                [data-modal-surface] .overflow-y-auto::-webkit-scrollbar-track { background: transparent; }
-                [data-modal-surface] .overflow-y-auto::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
-            `}</style>
         </div>
     );
 
-    return typeof document === 'undefined' ? dialogContent : createPortal(dialogContent, document.body);
+    if (typeof document === 'undefined') return null;
+    return createPortal(dialogContent, document.body);
 }

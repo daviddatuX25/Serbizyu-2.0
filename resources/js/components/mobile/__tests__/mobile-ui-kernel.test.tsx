@@ -537,8 +537,8 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
                 />,
             );
 
-            expect(screen.getByText(/Work Studio · Workflow Customizer/i)).toBeDefined();
-            expect(screen.getByText(/3 Verified Gates/i)).toBeDefined();
+            expect(screen.getByText(/Work Studio · Execution Pipeline/i)).toBeDefined();
+            expect(screen.getByText(/3 Verified Steps/i)).toBeDefined();
             expect(screen.getByDisplayValue('Intake Triage & Breaker Lockout')).toBeDefined();
             expect(screen.getByRole('button', { name: /Apply Workflow to Listing/i })).toBeDefined();
         });
@@ -575,7 +575,7 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             expect(onClose).toHaveBeenCalledTimes(1);
         });
 
-        it('allows switching gate classification', () => {
+        it('allows switching clearance mode', () => {
             const onSave = vi.fn();
             const onClose = vi.fn();
 
@@ -588,19 +588,16 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
                 />,
             );
 
-            // Select Diagnostic gate classification
-            const diagGate = screen.getByText('Diagnostic / Measurement Gate');
-            fireEvent.click(diagGate);
-
+            // Select Customer Approval Required in the inspector
+            const approvalCards = screen.getAllByText('Customer Approval Required');
+            fireEvent.click(approvalCards[approvalCards.length - 1]);
             const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
             fireEvent.click(applyBtn);
 
             const savedStages: WorkStage[] = onSave.mock.calls[0][0];
-            expect(savedStages[0].gateType).toBe('diagnostic');
-            expect(savedStages[0].color).toBe('#B45309');
-            expect(savedStages[0].bg).toBe('#FEF3C7');
+            expect(savedStages[0].clearanceMode).toBe('customer_approval');
+            expect(savedStages[0].gateType).toBe('signoff');
         });
-
         it('allows adding a new stage node', () => {
             const onSave = vi.fn();
             const onClose = vi.fn();
@@ -617,8 +614,7 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             const addBtn = screen.getByRole('button', { name: /\+ Add Stage Node/i });
             fireEvent.click(addBtn);
 
-            expect(screen.getByText(/Stage Nodes \(4\)/i)).toBeDefined();
-
+            expect(screen.getByText(/Steps \(4\)/i)).toBeDefined();
             const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
             fireEvent.click(applyBtn);
 
@@ -682,10 +678,10 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
                 />,
             );
 
-            expect(screen.queryByText(/Work Studio · Workflow Customizer/i)).toBeNull();
+            expect(screen.queryByText(/Work Studio · Execution Pipeline/i)).toBeNull();
         });
 
-        it('renders Universal Node Catalog primitives and allows adding a primitive to the pipeline', () => {
+        it('renders Universal Step Library primitives and allows adding a primitive to the pipeline', () => {
             const onSave = vi.fn();
             render(
                 <WorkNodeCustomizerModal
@@ -696,22 +692,21 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
                 />,
             );
 
-            // Open Node Catalog tab
-            const catalogTab = screen.getByRole('button', { name: /Node Catalog Primitives/i });
-            fireEvent.click(catalogTab);
-
+            // Open Step Library tab via the explicit button
+            const libraryBtn = screen.getByRole('button', { name: 'From Step Library' });
+            fireEvent.click(libraryBtn);
             // Check that Universal Primitives are rendered
-            expect(screen.getByText('Universal Work Node Catalog (Atomic Lego Blocks)')).toBeDefined();
+            expect(screen.getByText('Universal Step Library')).toBeDefined();
             expect(screen.getByText('Site Arrival & Check-In')).toBeDefined();
             expect(screen.getByText('Custody Intake / Stall Pickup')).toBeDefined();
             expect(screen.getByText('Digital Artifact Delivery')).toBeDefined();
 
-            // Click "+ Add Node" on Digital Artifact Delivery
-            const addNodeBtns = screen.getAllByRole('button', { name: /\+ Add Node/i });
-            fireEvent.click(addNodeBtns[5]); // Digital Artifact Delivery
+            // Click "+ Add Step" on Digital Artifact Delivery
+            const addStepBtns = screen.getAllByRole('button', { name: /\+ Add Step/i });
+            fireEvent.click(addStepBtns[5]); // Digital Artifact Delivery
 
             // Verify stage count grew to 4 and inspector switched to configure
-            expect(screen.getByText(/Stage Nodes \(4\)/i)).toBeDefined();
+            expect(screen.getByText(/Steps \(4\)/i)).toBeDefined();
 
             // Apply workflow
             const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
@@ -721,11 +716,37 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             const saved: WorkStage[] = onSave.mock.calls[0][0];
             expect(saved.length).toBe(4);
             expect(saved[3].title).toBe('Digital Artifact Delivery');
-            expect(saved[3].interactionType).toBe('solo_execution');
-            expect(saved[3].evidenceProtocol).toBe('file_artifact');
+            expect(saved[3].clearanceMode).toBe('customer_approval');
         });
 
-        it('allows configuring interaction type and evidence protocols', () => {
+        it('renders interactive Live Order Simulator with Worker and Customer views', () => {
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    stages={initialStages}
+                    onSave={vi.fn()}
+                />,
+            );
+
+            // Switch to simulator tab
+            const simTab = screen.getByRole('button', { name: /Live Order Simulator/i });
+            fireEvent.click(simTab);
+
+            // Verify Worker View simulation
+            expect(screen.getByText('Production Screen Preview')).toBeDefined();
+            expect(screen.getByText('Worker Execution Inputs')).toBeDefined();
+            expect(screen.getByText('Photo Proof Required')).toBeDefined();
+
+            // Toggle to Customer View
+            const customerBtn = screen.getByRole('button', { name: /Customer View/i });
+            fireEvent.click(customerBtn);
+
+            expect(screen.getByText('Customer Experience')).toBeDefined();
+            expect(screen.getByText('Service Underway')).toBeDefined();
+        });
+
+        it('allows configuring clearance mode and multi-proofs', () => {
             const onSave = vi.fn();
             render(
                 <WorkNodeCustomizerModal
@@ -735,22 +756,20 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
                     onSave={onSave}
                 />,
             );
-
-            // Click Custody Transfer interaction model
-            const custodyCard = screen.getByText('Custody Transfer');
-            fireEvent.click(custodyCard);
-
-            // Click Metric / Value Reading evidence protocol
-            const metricProtocol = screen.getByText('Metric / Value Reading');
-            fireEvent.click(metricProtocol);
+            // Click Customer Approval Required in inspector
+            const approvalCards = screen.getAllByText('Customer Approval Required');
+            fireEvent.click(approvalCards[approvalCards.length - 1]);
+            // Check Metric reading checkbox
+            const metricCheckbox = screen.getByRole('checkbox', { name: /Metric \/ Measurement Reading/i });
+            fireEvent.click(metricCheckbox);
 
             // Save
             const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
             fireEvent.click(applyBtn);
 
             const saved: WorkStage[] = onSave.mock.calls[0][0];
-            expect(saved[0].interactionType).toBe('custody_transfer');
-            expect(saved[0].evidenceProtocol).toBe('metric_reading');
+            expect(saved[0].clearanceMode).toBe('customer_approval');
+            expect(saved[0].requiredProofs).toContain('metric_reading');
         });
     });
 });

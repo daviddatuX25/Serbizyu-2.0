@@ -3,6 +3,16 @@
  * Canonical interfaces for Work Pipeline DAGs, Deal Chains, and Responsive Shells.
  */
 
+export type WorkClearanceMode = 'worker_direct' | 'customer_approval' | 'physical_handoff';
+
+export type HandoffParty = 'recipient_confirm' | 'worker_dropoff';
+
+export type WorkEvidenceType =
+    | 'photo_proof'
+    | 'metric_reading'
+    | 'customer_otp'
+    | 'checklist_steps';
+
 export type WorkInteractionType =
     | 'solo_execution'
     | 'co_presence'
@@ -30,6 +40,10 @@ export interface WorkStage {
     color: string;
     bg: string;
     lane?: 'top' | 'btm' | 'center';
+    clearanceMode?: WorkClearanceMode;
+    handoffParty?: HandoffParty;
+    requiredProofs?: WorkEvidenceType[];
+    metricUnit?: string;
     interactionType?: WorkInteractionType;
     evidenceProtocol?: WorkEvidenceProtocol;
     gateType?: WorkStageGateType;
@@ -40,13 +54,17 @@ export interface WorkNodePrimitive {
     title: string;
     desc: string;
     dur: string;
-    interactionType: WorkInteractionType;
-    evidenceProtocol: WorkEvidenceProtocol;
+    clearanceMode: WorkClearanceMode;
+    handoffParty?: HandoffParty;
+    requiredProofs: WorkEvidenceType[];
+    metricUnit?: string;
     evidence: string;
     color: string;
     bg: string;
-    icon: string;
+    lucideIcon: string;
     categoryTag: string;
+    interactionType?: WorkInteractionType;
+    evidenceProtocol?: WorkEvidenceProtocol;
 }
 export interface WorkTemplate {
     id: string;
