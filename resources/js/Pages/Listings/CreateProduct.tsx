@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, router } from '@inertiajs/react';
 import type { FormDataConvertible } from '@inertiajs/core';
 import {
@@ -10,6 +10,10 @@ import {
     Truck,
     Wrench,
     ShieldCheck,
+    Eye,
+    X,
+    Clock,
+    Store,
 } from 'lucide-react';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import { BottomNavBar, type NavTabId } from '../../marketplace/components/BottomNavBar';
@@ -36,8 +40,7 @@ export default function CreateProduct() {
     const [category, setCategory] = useState('repairs');
     const [description, setDescription] = useState('');
     const [pickupSla, setPickupSla] = useState('15');
-
-    // Step 2: Variations & Pricing
+    const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
     const [variants, setVariants] = useState<ProductVariantForm[]>([
         {
             id: 'var-1',
@@ -224,64 +227,236 @@ export default function CreateProduct() {
             },
         });
     };
+    const categoryPhoto = useMemo(() => {
+        switch (category) {
+            case 'repairs':
+            case 'appliance':
+                return '/photos/ac-capacitor.jpg';
+            case 'food':
+            case 'bakery':
+                return '/photos/bibingka.jpg';
+            case 'crafts':
+            case 'greeting-cards':
+                return '/photos/greeting.jpg';
+            case 'hardware':
+                return '/photos/req-cement.jpg';
+            default:
+                return '/photos/ac-capacitor.jpg';
+        }
+    }, [category]);
+
+    const renderCustomerLiveTwin = () => (
+        <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#0F2F58] uppercase tracking-wider">
+                        <Eye className="size-3.5 text-amber-600" />
+                        <span>Customer Live Twin</span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                        Real-time preview of citizen product view
+                    </p>
+                </div>
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-900 uppercase">
+                    Marketplace Card
+                </span>
+            </div>
+
+            {/* Product Card Preview */}
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md">
+                <div className="relative h-44 w-full overflow-hidden bg-slate-100">
+                    <img
+                        src={categoryPhoto}
+                        alt={title || 'Marketplace Good'}
+                        className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                    />
+                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                        <span className="rounded-full bg-[#0F2F58]/90 px-2.5 py-1 text-[10px] font-extrabold text-white backdrop-blur uppercase">
+                            Product / Goods
+                        </span>
+                        <span className="rounded-full bg-amber-600/90 px-2.5 py-1 text-[10px] font-extrabold text-white backdrop-blur uppercase">
+                            Physical Item
+                        </span>
+                    </div>
+                    <div className="absolute top-2.5 right-2.5 rounded-full bg-white/95 px-2 py-0.5 text-[10.5px] font-extrabold text-slate-900 shadow-2xs backdrop-blur">
+                        ★ 5.0 (New Stall)
+                    </div>
+                </div>
+
+                <div className="p-4 space-y-2.5">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                        <div className="flex items-center gap-1">
+                            <Store className="size-3 text-slate-400" />
+                            <span>Tagudin Public Market</span>
+                        </div>
+                        <span className="font-semibold text-emerald-700">0% Platform Fee</span>
+                    </div>
+
+                    <h3 className="line-clamp-2 text-sm font-extrabold text-[#0F2F58]">
+                        {title.trim() || 'AC Run Capacitor (35uF 450V)'}
+                    </h3>
+
+                    <div className="flex items-baseline justify-between border-t border-slate-100 pt-2.5">
+                        <div>
+                            <span className="text-[10px] font-semibold text-slate-400 uppercase">
+                                {variants.length > 1 ? 'Starting from' : 'Unit Price'}
+                            </span>
+                            <div className="font-mono text-base font-extrabold text-[#0F2F58]">
+                                ₱{(defaultVariant ? defaultVariant.price : 0).toLocaleString('en-PH', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                })}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
+                            <Clock className="size-3 text-slate-400" />
+                            <span>Counter ready in ~{pickupSla || '15'}m</span>
+                        </div>
+                    </div>
+
+                    {/* Variants Chips */}
+                    {variants.length > 0 && (
+                        <div className="space-y-1.5 border-t border-slate-100 pt-2">
+                            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                <span>Available Variants ({variants.length})</span>
+                                <span>Stock: {variants.reduce((acc, v) => acc + (v.stock || 0), 0)}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                                {variants.map((v) => (
+                                    <span
+                                        key={v.id}
+                                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold border ${
+                                            v.isDefault
+                                                ? 'bg-[#EBF2FA] text-[#0F2F58] border-[#0F2F58]/30 font-bold'
+                                                : 'bg-slate-50 text-slate-700 border-slate-200/60'
+                                        }`}
+                                    >
+                                        <span>{v.name}</span>
+                                        <span className="font-mono text-slate-500">· ₱{v.price}</span>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Delivery & Escrow Assurance */}
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-[10.5px]">
+                        <div className="flex items-center gap-1 font-semibold text-indigo-900">
+                            <Truck className="size-3 text-indigo-600" />
+                            <span>
+                                {deliveryMode === 'courier'
+                                    ? 'Tagudin Courier Dispatch'
+                                    : deliveryMode === 'install'
+                                      ? 'Install & Technician Ready'
+                                      : 'Direct Counter Pickup'}
+                            </span>
+                        </div>
+                        <span className="font-bold text-emerald-700">Ready in Stall</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-[11px] text-amber-900 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold">
+                    <ShieldCheck className="size-3.5 text-amber-700" />
+                    <span>Counter Verification Protected</span>
+                </div>
+                <p className="text-[10.5px] leading-relaxed text-amber-800">
+                    Shoppers pick up at Tagudin Public Market stall or have local couriers relay with photo intake receipt.
+                </p>
+            </div>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900">
+        <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 pb-16">
             <DesktopGlobalNav activeRoute="create_listing" />
 
-            <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col bg-white pb-[90px] lg:pb-8 shadow-xs lg:my-8 lg:min-h-[auto] lg:rounded-2xl lg:border lg:border-slate-200">
-                {/* Header */}
-                <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur lg:rounded-t-2xl">
-                    <Link
-                        href="/browse"
-                        className="flex size-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 hover:bg-slate-100"
-                    >
-                        <ArrowLeft className="size-4" />
-                    </Link>
-                    <div className="text-center">
-                        <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                            Step {step} of 3
-                        </span>
-                        <h1 className="text-xs font-extrabold text-[#0F2F58]">
-                            Create Marketplace Listing
-                        </h1>
+            <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:py-6 space-y-6">
+                {/* Top Header Control Bar */}
+                <header className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href="/browse"
+                            className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors"
+                        >
+                            <ArrowLeft className="size-4" />
+                        </Link>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-sm font-extrabold text-[#0F2F58] sm:text-base">
+                                    Create Marketplace Listing
+                                </h1>
+                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-900 uppercase">
+                                    Step {step} of 3
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-500">
+                                List physical parts, fresh delicacies, and crafts for Tagudin citizens.
+                            </p>
+                        </div>
                     </div>
-                    <div className="size-9" />
+
+                    {/* Listing Type Switcher */}
+                    <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200/60">
+                        <Link
+                            href="/listings/create/service"
+                            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:text-slate-900"
+                        >
+                            <Wrench className="size-3.5" />
+                            <span>Service</span>
+                        </Link>
+                        <Link
+                            href="/listings/create/product"
+                            className="flex items-center gap-1.5 rounded-lg bg-[#0F2F58] px-3 py-1.5 text-xs font-extrabold text-white shadow-xs"
+                        >
+                            <Package className="size-3.5" />
+                            <span>Product</span>
+                        </Link>
+                    </div>
                 </header>
 
-                {/* Listing Type Switcher: Service vs Product */}
-                <div className="grid grid-cols-2 gap-1.5 border-b border-slate-200/80 bg-slate-50 px-4 py-2.5">
-                    <Link
-                        href="/listings/create/service"
-                        className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200/80 bg-white py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-                    >
-                        <Wrench className="size-3.5" />
-                        <span>Service Offering</span>
-                    </Link>
-                    <Link
-                        href="/listings/create/product"
-                        className="flex items-center justify-center gap-1.5 rounded-xl bg-[#0F2F58] py-2 text-xs font-extrabold text-white shadow-xs"
-                    >
-                        <Package className="size-3.5" />
-                        <span>Product / Goods</span>
-                    </Link>
+                {/* Stepper Progress Bar */}
+                <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white px-5 py-3 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                        <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                            step >= 1 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
+                        }`}>
+                            1
+                        </div>
+                        <span className={`text-xs font-bold ${step === 1 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
+                            Product Identity &amp; Stall
+                        </span>
+                    </div>
+                    <div className="h-0.5 w-12 bg-slate-200 sm:w-24" />
+                    <div className="flex items-center gap-2">
+                        <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                            step >= 2 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
+                        }`}>
+                            2
+                        </div>
+                        <span className={`text-xs font-bold ${step === 2 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
+                            Variations &amp; Pricing
+                        </span>
+                    </div>
+                    <div className="h-0.5 w-12 bg-slate-200 sm:w-24" />
+                    <div className="flex items-center gap-2">
+                        <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                            step >= 3 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
+                        }`}>
+                            3
+                        </div>
+                        <span className={`text-xs font-bold ${step === 3 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
+                            Fulfillment &amp; Launch
+                        </span>
+                    </div>
                 </div>
 
-                {/* Stepper Progress Indicator */}
-                <div className="flex items-center justify-center gap-1.5 border-b border-slate-100 bg-[#FAFCFB] py-2.5">
-                    <div
-                        className={`h-1.5 rounded-full transition-all ${step === 1 ? 'w-8 bg-[#0F2F58]' : 'w-2 bg-slate-300'}`}
-                    />
-                    <div
-                        className={`h-1.5 rounded-full transition-all ${step === 2 ? 'w-8 bg-[#0F2F58]' : 'w-2 bg-slate-300'}`}
-                    />
-                    <div
-                        className={`h-1.5 rounded-full transition-all ${step === 3 ? 'w-8 bg-[#0F2F58]' : 'w-2 bg-slate-300'}`}
-                    />
-                </div>
-
-                {/* Step Form Container */}
-                <main className="flex-1 space-y-5 p-5">
+                {/* Responsive 2-Column Grid */}
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
+                    {/* LEFT COLUMN: Product Form Studio (Cols 1-7) */}
+                    <main className="rounded-2xl border border-slate-200/80 bg-white p-5 lg:col-span-7 lg:p-7 shadow-xs space-y-6">
                     {step === 1 && (
                         <div className="space-y-4">
                             <div>
@@ -681,7 +856,46 @@ export default function CreateProduct() {
                             </div>
                         </form>
                     )}
-                </main>
+                    </main>
+
+                    {/* RIGHT COLUMN: Customer Live Twin Product Preview (Cols 8-12, Sticky on Desktop) */}
+                    <aside className="sticky top-20 hidden space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs lg:col-span-5 lg:block">
+                        {renderCustomerLiveTwin()}
+                    </aside>
+                </div>
+
+                {/* Floating Preview Button for Mobile Screens */}
+                <div className="fixed bottom-20 right-4 z-40 lg:hidden">
+                    <button
+                        type="button"
+                        onClick={() => setMobilePreviewOpen(true)}
+                        className="flex items-center gap-2 rounded-full bg-[#0F2F58] px-4 py-2.5 text-xs font-bold text-white shadow-lg transition-transform active:scale-95 cursor-pointer"
+                    >
+                        <Eye className="size-4 text-amber-400" />
+                        <span>Live Twin Preview</span>
+                    </button>
+                </div>
+
+                {/* Mobile Customer Twin Modal Sheet */}
+                {mobilePreviewOpen && (
+                    <div className="fixed inset-0 z-50 flex items-end bg-slate-900/60 backdrop-blur-xs lg:hidden">
+                        <div className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl">
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <span className="font-extrabold text-[#0F2F58] text-sm">Customer Live Twin</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setMobilePreviewOpen(false)}
+                                    className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+                                >
+                                    <X className="size-5" />
+                                </button>
+                            </div>
+                            <div className="pt-3">
+                                {renderCustomerLiveTwin()}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <BottomNavBar
                     activeTab="post"

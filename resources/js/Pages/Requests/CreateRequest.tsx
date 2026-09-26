@@ -7,6 +7,10 @@ import {
     Calendar,
     Clock,
     ShieldCheck,
+    Eye,
+    X,
+    MapPin,
+    Coins,
 } from 'lucide-react';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import { BottomNavBar, type NavTabId } from '../../marketplace/components/BottomNavBar';
@@ -40,7 +44,7 @@ export default function CreateRequest(_props: CreateRequestProps) {
     // Step 3: Fulfillment & Location
     const [fulfillment, setFulfillment] = useState<'direct' | 'courier' | 'all'>('direct');
     const [area] = useState('Tagudin Centro');
-
+    const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
     // Form Submission
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -76,45 +80,152 @@ export default function CreateRequest(_props: CreateRequestProps) {
             },
         });
     };
+    const renderCustomerLiveTwin = () => (
+        <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#0F2F58] uppercase tracking-wider">
+                        <Eye className="size-3.5 text-blue-600" />
+                        <span>Job Board Live Twin</span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                        Real-time preview of how local providers see this request
+                    </p>
+                </div>
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-extrabold text-blue-900 uppercase">
+                    Citizen Need
+                </span>
+            </div>
+
+            {/* Community Request Card Preview */}
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3 transition-all hover:shadow-md">
+                <div className="flex items-center justify-between text-xs">
+                    <span className="rounded-full bg-[#EBF2FA] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0F2F58] uppercase">
+                        {category}
+                    </span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        urgency === 'today'
+                            ? 'bg-rose-100 text-rose-800'
+                            : urgency === 'this_week'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-100 text-slate-600'
+                    }`}>
+                        {urgency === 'today' ? '⚡ Needed Today' : urgency === 'this_week' ? '📅 This Week' : '🕒 Flexible Timing'}
+                    </span>
+                </div>
+
+                <div>
+                    <h3 className="text-sm font-extrabold text-[#0F2F58]">
+                        {title.trim() || 'Need urgent electrician / plumbing repair'}
+                    </h3>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-600 line-clamp-3">
+                        {description.trim() || 'Describe what you need fixed, installed, or picked up in Tagudin...'}
+                    </p>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-slate-100 pt-2.5 text-xs">
+                    <div className="flex items-center gap-1 font-mono font-bold text-[#0F2F58]">
+                        <Coins className="size-3.5 text-emerald-600" />
+                        <span>
+                            {budgetMode === 'fixed'
+                                ? `₱${parseFloat(budget || '0').toLocaleString('en-PH', { minimumFractionDigits: 2 })} Target Budget`
+                                : 'Open to Competitive Bids'}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-[10.5px] text-slate-500">
+                    <div className="flex items-center gap-1">
+                        <MapPin className="size-3 text-slate-400" />
+                        <span className="truncate max-w-[170px]">{area || 'Tagudin Centro'}</span>
+                    </div>
+                    <span className="font-semibold text-emerald-700">0% Citizen Fee</span>
+                </div>
+            </div>
+
+            <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-[11px] text-blue-950 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold">
+                    <ShieldCheck className="size-3.5 text-blue-700" />
+                    <span>Public Tagudin Job Rails</span>
+                </div>
+                <p className="text-[10.5px] leading-relaxed text-blue-900/90">
+                    Verified local trades in Tagudin will be notified. You can review quotes, check provider badges, and accept when satisfied.
+                </p>
+            </div>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900">
+        <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 pb-16">
             <DesktopGlobalNav activeRoute="browse" />
 
-            <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col bg-white pb-[90px] lg:pb-8 shadow-xs lg:my-8 lg:min-h-[auto] lg:rounded-2xl lg:border lg:border-slate-200">
-                <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur lg:rounded-t-2xl">
-                    <Link
-                        href="/browse"
-                        className="flex size-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 hover:bg-slate-100"
-                    >
-                        <ArrowLeft className="size-4" />
-                    </Link>
-                    <div className="text-center">
-                        <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                            Step {step} of 3
-                        </span>
-                        <h1 className="text-xs font-extrabold text-[#0F2F58]">
-                            Post Community Request
-                        </h1>
+            <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:py-6 space-y-6">
+                {/* Top Header Control Bar */}
+                <header className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href="/browse"
+                            className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors"
+                        >
+                            <ArrowLeft className="size-4" />
+                        </Link>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-sm font-extrabold text-[#0F2F58] sm:text-base">
+                                    Post Community Request
+                                </h1>
+                                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-extrabold text-blue-900 uppercase">
+                                    Step {step} of 3
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-500">
+                                Request assistance, emergency repairs, or services from verified Tagudin providers.
+                            </p>
+                        </div>
                     </div>
-                    <div className="size-9" />
                 </header>
 
                 {/* Stepper Progress */}
-                <div className="flex items-center justify-center gap-1.5 border-b border-slate-100 bg-[#FAFCFB] py-2.5">
-                    <div
-                        className={`h-1.5 rounded-full transition-all ${step === 1 ? 'w-8 bg-[#0F2F58]' : 'w-2 bg-slate-300'}`}
-                    />
-                    <div
-                        className={`h-1.5 rounded-full transition-all ${step === 2 ? 'w-8 bg-[#0F2F58]' : 'w-2 bg-slate-300'}`}
-                    />
-                    <div
-                        className={`h-1.5 rounded-full transition-all ${step === 3 ? 'w-8 bg-[#0F2F58]' : 'w-2 bg-slate-300'}`}
-                    />
+                <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white px-5 py-3 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                        <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                            step >= 1 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
+                        }`}>
+                            1
+                        </div>
+                        <span className={`text-xs font-bold ${step === 1 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
+                            Need &amp; Category
+                        </span>
+                    </div>
+                    <div className="h-0.5 w-12 bg-slate-200 sm:w-24" />
+                    <div className="flex items-center gap-2">
+                        <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                            step >= 2 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
+                        }`}>
+                            2
+                        </div>
+                        <span className={`text-xs font-bold ${step === 2 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
+                            Urgency &amp; Budget
+                        </span>
+                    </div>
+                    <div className="h-0.5 w-12 bg-slate-200 sm:w-24" />
+                    <div className="flex items-center gap-2">
+                        <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                            step >= 3 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
+                        }`}>
+                            3
+                        </div>
+                        <span className={`text-xs font-bold ${step === 3 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
+                            Location &amp; Submit
+                        </span>
+                    </div>
                 </div>
 
-                {/* Step Form Content */}
-                <main className="flex-1 space-y-5 p-5">
+                {/* Responsive 2-Column Grid */}
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
+                    {/* LEFT COLUMN: Request Form Studio (Cols 1-7) */}
+                    <main className="rounded-2xl border border-slate-200/80 bg-white p-5 lg:col-span-7 lg:p-7 shadow-xs space-y-6">
                     {step === 1 && (
                         <div className="space-y-4">
                             <div>
@@ -410,7 +521,46 @@ export default function CreateRequest(_props: CreateRequestProps) {
                             </div>
                         </form>
                     )}
-                </main>
+                    </main>
+
+                    {/* RIGHT COLUMN: Customer Live Twin Request Preview (Cols 8-12, Sticky on Desktop) */}
+                    <aside className="sticky top-20 hidden space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs lg:col-span-5 lg:block">
+                        {renderCustomerLiveTwin()}
+                    </aside>
+                </div>
+
+                {/* Floating Preview Button for Mobile Screens */}
+                <div className="fixed bottom-20 right-4 z-40 lg:hidden">
+                    <button
+                        type="button"
+                        onClick={() => setMobilePreviewOpen(true)}
+                        className="flex items-center gap-2 rounded-full bg-[#0F2F58] px-4 py-2.5 text-xs font-bold text-white shadow-lg transition-transform active:scale-95 cursor-pointer"
+                    >
+                        <Eye className="size-4 text-blue-400" />
+                        <span>Live Twin Preview</span>
+                    </button>
+                </div>
+
+                {/* Mobile Customer Twin Modal Sheet */}
+                {mobilePreviewOpen && (
+                    <div className="fixed inset-0 z-50 flex items-end bg-slate-900/60 backdrop-blur-xs lg:hidden">
+                        <div className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl">
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <span className="font-extrabold text-[#0F2F58] text-sm">Citizen Job Board Twin</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setMobilePreviewOpen(false)}
+                                    className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+                                >
+                                    <X className="size-5" />
+                                </button>
+                            </div>
+                            <div className="pt-3">
+                                {renderCustomerLiveTwin()}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <BottomNavBar
                     activeTab="post"
