@@ -78,6 +78,9 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::get('/account/readiness', [CapabilityController::class, 'readiness'])->name('account.readiness');
     Route::get('/requests/create', [RequestController::class, 'create'])->name('requests.create');
     Route::post('/requests', [RequestController::class, 'store'])->name('requests.store');
+    Route::get('/requests/{id}', [RequestController::class, 'show'])->name('requests.show');
+    Route::post('/requests/{id}/quotes', [RequestController::class, 'storeQuote'])->name('requests.quotes.store');
+    Route::post('/requests/{id}/quotes/{quote}/accept', [RequestController::class, 'acceptQuote'])->name('requests.quotes.accept');
     Route::get('/listings/create/service', [ListingController::class, 'createService'])->name('listings.create.service');
     Route::get('/listings/create/product', [ListingController::class, 'createProduct'])->name('listings.create.product');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
