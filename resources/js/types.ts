@@ -165,9 +165,27 @@ export type DealChainCatalogRecord = {
     }>;
 };
 
+export type WorkNodeRecord = {
+    id: string;
+    ordinal: number;
+    title: string;
+    description: string;
+    node_kind: 'checkin_intake' | 'execution_proof' | 'decision_gate' | 'handoff_ready' | 'final_signoff' | string;
+    evidence_type: 'photo_required' | 'video_required' | 'meter_log' | 'receipt_upload' | 'dual_sign' | string;
+    evidence_description: string;
+    control_mode: 'provider_advance' | 'customer_confirm' | 'counterparty_handoff' | string;
+    mandatory: boolean;
+    duration_label?: string | null;
+    status?: 'active' | 'completed' | 'locked' | 'awaiting_customer_confirmation' | string;
+    completed_at?: string | null;
+    customer_confirmed_at?: string | null;
+    evidence_payload?: Record<string, unknown> | null;
+};
+
 export type WorkCatalogRecord = {
     id: string;
     catalog_code: string;
+    signature_hash?: string;
     work_shape: string;
     shape_contract_version: number;
     payload_schema_version: number;
@@ -175,6 +193,9 @@ export type WorkCatalogRecord = {
     title: string;
     summary: string;
     status: string;
+    category_codes?: string[];
+    listing_types?: string[];
+    total_adopted_count?: number;
     variance_threshold_percent: number;
     evaluation_window_hours: number;
     steps: Array<Record<string, unknown>>;

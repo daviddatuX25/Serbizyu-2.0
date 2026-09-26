@@ -18,6 +18,7 @@ use App\Shared\Application\OutboxWriter;
 use App\Shared\Application\ResourceActor;
 use App\Shared\Contracts\ActingForAuthorizer;
 use App\Shared\Contracts\OwnerListingReader;
+use App\Shared\Contracts\WorkSpecificationPort;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -32,6 +33,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         private readonly OutboxWriter $outbox,
         private readonly ActingForAuthorizer $actingFor,
         private readonly GovernedCatalogService $catalog,
+        private readonly WorkSpecificationPort $workSpecs,
     ) {}
 
     /**
@@ -233,13 +235,22 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 $workShape,
                 $correlationId,
             );
-            $this->insertVersion($listingId, $nextVersion, $actor->actorUserId, [
+            $this->insertVersion($listingId, $nextVersion, $actor->actorUserId, array_merge([
                 'title' => (string) ($terms['title'] ?? ''),
                 'description' => (string) $current->description,
                 'category_code' => (string) ($terms['category_code'] ?? ''),
                 'listing_type' => (string) $listing->listing_type,
                 'work_shape' => $workShape,
-            ], $correlationId, $now, $pins);
+                'package_tiers' => $terms['package_tiers'] ?? null,
+                'addons' => $terms['addons'] ?? null,
+                'milestone_stages' => $terms['milestone_stages'] ?? null,
+                'work_specification' => $terms['work_specification'] ?? null,
+                'work_catalog_code' => $terms['work_catalog_code'] ?? null,
+                'inclusions' => $terms['inclusions'] ?? null,
+                'variants' => $terms['variants'] ?? null,
+                'pricing_mode' => $terms['pricing_mode'] ?? null,
+                'currency' => $current->currency,
+            ]), $correlationId, $now, $pins);
 
             Listing::query()->where('id', $listingId)->update([
                 'status' => 'pending_review',
@@ -286,32 +297,30 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
 
     public function ownerListings(string $ownerUserId, string $correlationId): array
     {
-        if (! Schema::hasTable('listing_versions') || ! Schema::hasTable('listings') || ! Schema::hasTable('categories')) {
+        if (! $this->hasOwnerTables()) {
             return [];
         }
 
-        return Listing::query()
-            ->join('listing_versions', function ($join): void {
-                $join->on('listing_versions.listing_id', '=', 'listings.id')
-                    ->on('listing_versions.version_number', '=', 'listings.current_version');
-            })
-            ->join('categories', 'categories.id', '=', 'listings.category_id')
-            ->where('listings.owner_user_id', $ownerUserId)
+        return $this->ownerQuery($ownerUserId)
             ->orderByDesc('listings.updated_at')
-            ->select(
-                'listings.*',
-                'listing_versions.description',
-                'listing_versions.terms',
-                'listing_versions.availability_capacity_summary',
-                'listing_versions.price_amount_minor',
-                'listing_versions.currency',
-                'categories.code as category_code',
-            )
-            ->toBase()
             ->get()
             ->map(fn (object $row): array => $this->mapProjection($row, false))
             ->values()
             ->all();
+    }
+
+    /** @return array<string, mixed>|null */
+    public function ownerListing(string $listingId, string $ownerUserId, string $correlationId): ?array
+    {
+        if (! $this->hasOwnerTables()) {
+            return null;
+        }
+
+        $row = $this->ownerQuery($ownerUserId)
+            ->where('listings.id', $listingId)
+            ->first();
+
+        return $row === null ? null : $this->mapProjection($row, false);
     }
 
     /** @return list<array<string, mixed>> */
@@ -397,6 +406,17 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 );
             }
         }
+    }
+
+    private function hasOwnerTables(): bool
+    {
+        foreach (['listings', 'listing_versions', 'categories'] as $table) {
+            if (! Schema::hasTable($table)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function hasPublicTables(): bool
@@ -524,23 +544,55 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         mixed $now,
         array $pins,
     ): void {
+        $priceMinor = isset($input['price_amount_minor']) && is_numeric($input['price_amount_minor'])
+            ? (int) $input['price_amount_minor']
+            : (isset($input['package_tiers'][0]['price']) && is_numeric($input['package_tiers'][0]['price'])
+                ? (int) round(((float) $input['package_tiers'][0]['price']) * 100)
+                : (isset($input['variants'][0]['price']) && is_numeric($input['variants'][0]['price'])
+                    ? (int) round(((float) $input['variants'][0]['price']) * 100)
+                    : null));
+
+        $currency = isset($input['currency']) && is_string($input['currency']) && strlen($input['currency']) === 3
+            ? strtoupper($input['currency'])
+            : ($priceMinor !== null ? 'PHP' : null);
+
+        $terms = [
+            'title' => trim((string) $input['title']),
+            'category_code' => trim((string) $input['category_code']),
+            'work_shape' => isset($input['work_shape']) && is_string($input['work_shape']) && trim($input['work_shape']) !== '' ? trim($input['work_shape']) : null,
+            'scope' => (string) ($input['scope'] ?? 'Tagudin community listing'),
+            'fixture_key' => isset($input['fixture_key']) && is_string($input['fixture_key']) && $input['fixture_key'] !== '' ? $input['fixture_key'] : null,
+            'evidence_class' => isset($input['evidence_class']) && is_string($input['evidence_class']) && $input['evidence_class'] !== '' ? $input['evidence_class'] : null,
+        ];
+
+        foreach (['package_tiers', 'addons', 'milestone_stages', 'work_specification', 'work_catalog_code', 'inclusions', 'variants', 'pricing_mode'] as $extraField) {
+            if (isset($input[$extraField]) && $input[$extraField] !== null) {
+                $terms[$extraField] = $input[$extraField];
+            }
+        }
+
+        if (isset($input['milestone_stages']) && is_array($input['milestone_stages']) && $input['milestone_stages'] !== []) {
+            $resolvedWork = $this->workSpecs->resolveAndRecordListingWork(
+                workShape: (string) ($terms['work_shape'] ?? 'A1'),
+                categoryCode: (string) $terms['category_code'],
+                listingType: (string) ($input['listing_type'] ?? 'service'),
+                listingTitle: (string) $terms['title'],
+                rawStages: $input['milestone_stages'],
+                selectedCatalogCode: isset($input['work_catalog_code']) && is_string($input['work_catalog_code']) ? $input['work_catalog_code'] : null,
+            );
+            $terms['milestone_stages'] = $resolvedWork['nodes'];
+            $terms['work_specification'] = $resolvedWork;
+        }
         $row = [
             'id' => (string) Str::uuid7(),
             'listing_id' => $listingId,
             'version_number' => $version,
             'description' => trim((string) $input['description']),
-            'terms' => json_encode(array_filter([
-                'title' => trim((string) $input['title']),
-                'category_code' => trim((string) $input['category_code']),
-                'work_shape' => isset($input['work_shape']) && is_string($input['work_shape']) && trim($input['work_shape']) !== '' ? trim($input['work_shape']) : null,
-                'scope' => (string) ($input['scope'] ?? 'Fictional local listing scope'),
-                'fixture_key' => isset($input['fixture_key']) && is_string($input['fixture_key']) && $input['fixture_key'] !== '' ? $input['fixture_key'] : null,
-                'evidence_class' => isset($input['evidence_class']) && is_string($input['evidence_class']) && $input['evidence_class'] !== '' ? $input['evidence_class'] : null,
-            ], static fn ($value): bool => $value !== null), JSON_THROW_ON_ERROR),
-            'price_amount_minor' => null,
-            'currency' => null,
+            'terms' => json_encode(array_filter($terms, static fn ($value): bool => $value !== null), JSON_THROW_ON_ERROR),
+            'price_amount_minor' => $priceMinor,
+            'currency' => $currency,
             'payment_lane_availability' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),
-            'availability_capacity_summary' => json_encode(['summary' => 'Not provided in this first slice'], JSON_THROW_ON_ERROR),
+            'availability_capacity_summary' => json_encode(['summary' => 'Direct Tagudin counter or scheduled booking'], JSON_THROW_ON_ERROR),
             'safety_copy' => 'Agree scope and handoff details directly; this demo does not hold funds.',
             'effective_from' => $now,
             'effective_to' => null,
@@ -567,23 +619,34 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
     /** @return array<string, mixed> */
     private function ownerProjection(string $listingId, string $ownerId, string $correlationId): array
     {
-        $row = Listing::query()
+        $listing = $this->ownerListing($listingId, $ownerId, $correlationId);
+
+        if ($listing === null) {
+            throw new ListingError('LISTING_NOT_FOUND', 'The listing could not be found.', $correlationId, status: 404);
+        }
+
+        return $listing;
+    }
+
+    private function ownerQuery(string $ownerUserId): Builder
+    {
+        return Listing::query()
             ->join('listing_versions', function ($join): void {
                 $join->on('listing_versions.listing_id', '=', 'listings.id')
                     ->on('listing_versions.version_number', '=', 'listings.current_version');
             })
             ->join('categories', 'categories.id', '=', 'listings.category_id')
-            ->where('listings.id', $listingId)
-            ->where('listings.owner_user_id', $ownerId)
-            ->select('listings.*', 'listing_versions.description', 'listing_versions.terms', 'categories.code as category_code')
-            ->toBase()
-            ->first();
-
-        if ($row === null) {
-            throw new ListingError('LISTING_NOT_FOUND', 'The listing could not be found.', $correlationId, status: 404);
-        }
-
-        return $this->mapProjection($row, false);
+            ->where('listings.owner_user_id', $ownerUserId)
+            ->select(
+                'listings.*',
+                'listing_versions.description',
+                'listing_versions.terms',
+                'listing_versions.availability_capacity_summary',
+                'listing_versions.price_amount_minor',
+                'listing_versions.currency',
+                'categories.code as category_code',
+            )
+            ->toBase();
     }
 
     private function publicQuery(): Builder
@@ -657,6 +720,16 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
 
         if (isset($terms['milestone_stages']) && is_array($terms['milestone_stages'])) {
             $projection['milestone_stages'] = $terms['milestone_stages'];
+        }
+
+        foreach (['work_catalog', 'work_specification', 'addons', 'partner_candidates'] as $catalogField) {
+            if (isset($terms[$catalogField]) && is_array($terms[$catalogField])) {
+                $projection[$catalogField] = $terms[$catalogField];
+            }
+        }
+
+        if (isset($terms['catalog_source']) && is_string($terms['catalog_source']) && $terms['catalog_source'] !== '') {
+            $projection['catalog_source'] = $terms['catalog_source'];
         }
         if ($public) {
             $projection['owner_name'] = (string) $row->owner_name;

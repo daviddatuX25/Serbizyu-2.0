@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
+use App\Modules\Catalogs\Application\WorkCatalog;
 use App\Modules\IdentityAccess\Application\ConsentActingForAuthorizer;
-use App\Modules\IdentityAccess\Application\Contracts\NotificationChannel;
 use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryChannel;
 use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryInspector;
 use App\Modules\IdentityAccess\Application\DemoFixtureService;
@@ -26,6 +26,7 @@ use App\Shared\Contracts\OrderCapacityPort;
 use App\Shared\Contracts\OrderListingSourcePort;
 use App\Shared\Contracts\OrderPaymentObligationPort;
 use App\Shared\Contracts\OwnerListingReader;
+use App\Shared\Contracts\WorkSpecificationPort;
 use App\Shared\Support\EnvironmentValidator;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -56,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ActingForAuthorizer::class, ConsentActingForAuthorizer::class);
         $this->app->bind(OAuthLoginPort::class, DisabledOAuthLoginPort::class);
         $this->app->singleton(WorkContractRegistry::class, DefaultWorkContractRegistry::class);
+        $this->app->singleton(WorkSpecificationPort::class, WorkCatalog::class);
 
         $this->app->bind(OtpDeliveryChannel::class, function ($app): OtpDeliveryChannel {
             $mode = (string) config('serbizyu.providers.notifications.mode', 'disabled');

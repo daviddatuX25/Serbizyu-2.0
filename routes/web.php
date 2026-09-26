@@ -99,6 +99,8 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
         ->name('orders.work.propose-completion');
     Route::post('/orders/{order}/work/signoff', [OrderController::class, 'signoffWork'])
         ->name('orders.work.signoff');
+    Route::post('/orders/{order}/work-nodes/{node}', [OrderController::class, 'advanceWorkNode'])
+        ->name('orders.work-nodes.advance');
     Route::post('/orders/{order}/courier/pickup', [OrderController::class, 'courierPickup'])
         ->name('orders.courier.pickup');
     Route::post('/orders/{order}/courier/handoff', [OrderController::class, 'courierHandoff'])

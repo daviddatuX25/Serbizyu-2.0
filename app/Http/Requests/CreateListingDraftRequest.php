@@ -22,6 +22,15 @@ final class CreateListingDraftRequest extends FormRequest
             'category_code' => ['required', 'string', 'regex:/^[a-z0-9][a-z0-9_-]{1,63}$/'],
             'listing_type' => ['required', 'string', 'in:service,product'],
             'work_shape' => ['required', 'string', 'in:A1,A3,A4,A9'],
+            'price_amount_minor' => ['nullable', 'integer', 'min:0'],
+            'currency' => ['nullable', 'string', 'size:3'],
+            'pricing_mode' => ['nullable', 'string', 'in:fixed,range,packages'],
+            'package_tiers' => ['nullable', 'array'],
+            'addons' => ['nullable', 'array'],
+            'milestone_stages' => ['nullable', 'array'],
+            'work_catalog_code' => ['nullable', 'string', 'max:120'],
+            'inclusions' => ['nullable', 'array'],
+            'variants' => ['nullable', 'array'],
         ];
     }
 }

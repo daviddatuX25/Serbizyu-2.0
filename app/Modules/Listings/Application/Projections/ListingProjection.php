@@ -81,6 +81,16 @@ final readonly class ListingProjection
         if (array_key_exists('milestone_stages', $attributes) && is_array($attributes['milestone_stages'])) {
             $projection['milestone_stages'] = $attributes['milestone_stages'];
         }
+
+        foreach (['work_catalog', 'work_specification', 'addons', 'partner_candidates'] as $catalogField) {
+            if (array_key_exists($catalogField, $attributes) && is_array($attributes[$catalogField])) {
+                $projection[$catalogField] = $attributes[$catalogField];
+            }
+        }
+
+        if (array_key_exists('catalog_source', $attributes) && is_string($attributes['catalog_source'])) {
+            $projection['catalog_source'] = $attributes['catalog_source'];
+        }
         if ($public) {
             $projection['owner_name'] = (string) $attributes['owner_name'];
             $projection['owner'] = [

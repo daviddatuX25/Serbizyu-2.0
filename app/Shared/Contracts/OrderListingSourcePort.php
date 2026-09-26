@@ -27,7 +27,9 @@ namespace App\Shared\Contracts;
  *     capability_profile_id: string,
  *     capability_profile_family_code: string|null,
  *     capability_profile_business_version: int|null,
- *     work_shape: string
+ *     work_shape: string,
+ *     work_specification?: array<string, mixed>|null,
+ *     milestone_stages?: list<array<string, mixed>>
  * }
  */
 interface OrderListingSourcePort

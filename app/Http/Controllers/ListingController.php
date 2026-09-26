@@ -8,6 +8,7 @@ use App\Http\Requests\CreateListingDraftRequest;
 use App\Http\Requests\SubmitListingRequest;
 use App\Http\Requests\UpdateListingDraftRequest;
 use App\Modules\Catalogs\Application\DealChainCatalog;
+use App\Modules\Catalogs\Application\WorkCatalog;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
 use App\Modules\IdentityAccess\Application\ResourceActorResolver;
@@ -42,6 +43,7 @@ final class ListingController
         private readonly SliceStateQuery $sliceState,
         private readonly EnvironmentValidator $environment,
         private readonly DealChainCatalog $dealChainCatalog,
+        private readonly WorkCatalog $workCatalog,
         private readonly RoleAssignmentService $roles,
     ) {}
 
@@ -271,6 +273,8 @@ final class ListingController
             'session' => $state['session'] ?? null,
             'readiness' => $state['readiness'] ?? null,
             'correlationId' => $correlationId,
+            'workCatalog' => $this->workCatalog->frontend(),
+            'workOptions' => $this->workCatalog->optionsFor(null, 'service'),
         ]);
     }
 
@@ -283,6 +287,8 @@ final class ListingController
             'session' => $state['session'] ?? null,
             'readiness' => $state['readiness'] ?? null,
             'correlationId' => $correlationId,
+            'workCatalog' => $this->workCatalog->frontend(),
+            'workOptions' => $this->workCatalog->optionsFor(null, 'product'),
         ]);
     }
 

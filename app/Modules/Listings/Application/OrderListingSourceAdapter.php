@@ -98,6 +98,8 @@ final class OrderListingSourceAdapter implements OrderListingSourcePort
             'capability_profile_family_code' => $row->capability_profile_family_code !== null ? (string) $row->capability_profile_family_code : null,
             'capability_profile_business_version' => $row->capability_profile_business_version !== null ? (int) $row->capability_profile_business_version : null,
             'work_shape' => (string) $row->work_shape,
+            'work_specification' => isset($terms['work_specification']) && is_array($terms['work_specification']) ? $terms['work_specification'] : null,
+            'milestone_stages' => isset($terms['milestone_stages']) && is_array($terms['milestone_stages']) ? $terms['milestone_stages'] : [],
         ];
     }
 }

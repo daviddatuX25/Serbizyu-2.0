@@ -26,6 +26,7 @@ final class FinalizeOrderAgreement
         private readonly OutboxWriter $outbox,
         private readonly WorkContractRegistry $workRegistry,
         private readonly OrderPaymentObligationPort $payments,
+        private readonly WorkExecutionService $workExecution,
     ) {}
 
     /**
@@ -328,7 +329,7 @@ final class FinalizeOrderAgreement
                 'correlation_id' => $correlationId,
                 'created_at' => $now,
             ]);
-
+            $structure = $this->workExecution->initializeStructure($source, $workContract->shapeCode);
             $workId = (string) Str::uuid7();
             DB::table('work_instances')->insert([
                 'id' => $workId,
@@ -343,15 +344,14 @@ final class FinalizeOrderAgreement
                 'started_at' => null,
                 'completion_proposed_at' => null,
                 'completed_at' => null,
-                'structure' => null,
-                'structure_payload_version' => null,
+                'structure' => json_encode($structure, JSON_THROW_ON_ERROR),
+                'structure_payload_version' => 1,
                 'completion_evidence_id' => null,
                 'correlation_id' => $correlationId,
                 'version' => 1,
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
-
             $obligationId = $this->payments->createPrimary(
                 orderId: $orderId,
                 workInstanceId: $workId,

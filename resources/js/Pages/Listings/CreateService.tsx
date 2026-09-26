@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, router } from '@inertiajs/react';
 import type { FormDataConvertible } from '@inertiajs/core';
 import { ArrowLeft, ArrowRight, Package, Wrench, Plus, Trash2, ShieldCheck } from 'lucide-react';
@@ -251,6 +251,13 @@ export default function CreateService() {
     const [stages, setStages] = useState<WorkStage[]>(TAGUDIN_WORK_TEMPLATES[0].stages);
     const [workModalOpen, setWorkModalOpen] = useState(false);
 
+    const isCustomizedFromTemplate = useMemo(() => {
+        if (stages.length !== selectedTemplate.stages.length) return true;
+        return stages.some((s, idx) => {
+            const orig = selectedTemplate.stages[idx];
+            return !orig || orig.id !== s.id || orig.title !== s.title;
+        });
+    }, [stages, selectedTemplate]);
     // Step 2: Rates & Options
     const [pricingMode, setPricingMode] = useState<'fixed' | 'range' | 'packages'>('packages');
     const [fixedPrice, setFixedPrice] = useState('450');
@@ -547,8 +554,8 @@ export default function CreateService() {
             category_code: category,
             listing_type: 'service',
             work_shape: workShapeCode,
+            work_catalog_code: selectedTemplate.id,
             price_amount_minor: effectivePriceMinor,
-            currency: 'PHP',
             pricing_mode: pricingMode,
             inclusions,
             package_tiers: packageTiers.map((tier) => ({
@@ -733,9 +740,16 @@ export default function CreateService() {
                                             <div className="truncate text-xs font-extrabold text-[#0F2F58]">
                                                 {selectedTemplate.title}
                                             </div>
-                                            <div className="font-mono text-[10px] text-slate-500">
-                                                {selectedTemplate.shape} · {stages.length} Stages ·{' '}
-                                                {selectedTemplate.sla}
+                                            <div className="flex items-center gap-1.5 pt-0.5">
+                                                <span className={`inline-flex items-center rounded-md px-1.5 py-0.2 text-[9px] font-extrabold uppercase ${
+                                                    isCustomizedFromTemplate ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-800'
+                                                }`}>
+                                                    {isCustomizedFromTemplate ? '⚡ Custom Variation' : '🏛️ Official Archetype'}
+                                                </span>
+                                                <span className="font-mono text-[10px] text-slate-500">
+                                                    {selectedTemplate.shape} · {stages.length} Stages ·{' '}
+                                                    {selectedTemplate.sla}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
