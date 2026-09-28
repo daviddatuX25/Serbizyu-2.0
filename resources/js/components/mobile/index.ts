@@ -7,5 +7,8 @@ export { default as WorkCatalogModal } from './WorkCatalogModal';
 export { default as DealChainCarousel } from './DealChainCarousel';
 export { default as GlovoWaveModal } from './GlovoWaveModal';
 export { default as WorkNodeCustomizerModal } from './WorkNodeCustomizerModal';
+export { default as DealChainCatalogModal } from './DealChainCatalogModal';
+export { default as DealChainCustomizerModal } from './DealChainCustomizerModal';
+export { default as DealChainCanvas } from './DealChainCanvas';
 export * from './types';
 export * from './workNodeCatalog';

@@ -1,3 +1,5 @@
+import type { SlotCandidateListing } from '../../marketplace/types';
+
 /**
  * Serbizyu 2.0 — Mobile-First Component & Domain Contracts
  * Canonical interfaces for Work Pipeline DAGs, Deal Chains, and Responsive Shells.
@@ -36,6 +38,7 @@ export interface WorkStage {
     title: string;
     dur: string;
     desc: string;
+    evidenceType?: string;
     evidence: string;
     color: string;
     bg: string;
@@ -71,6 +74,9 @@ export interface WorkTemplate {
     category: string;
     title: string;
     shape: string;
+    categoryCodes?: string[];
+    catalogCode?: string;
+    setVersion?: number;
     sla: string;
     flowType: 'linear' | 'parallel' | 'branch';
     description: string;
@@ -80,20 +86,45 @@ export interface WorkTemplate {
 export type SlotType =
     'store' | 'delivery' | 'installation' | 'audit' | 'hauling' | 'parts' | 'diagnostic' | 'tools';
 
-export interface PartnerSlot {
-    type: SlotType;
-    role: string;
-    name: string;
-    meta: string;
+export interface DealChainDependencyEdge {
+    id: string;
+    predecessorId: string;
+    successorId: string;
+    conditionCode?: string;
+    dependencyType: 'blocks';
+    status?: 'active' | 'removed';
 }
 
-export interface DealChainNode {
+export interface PartnerSlot extends Partial<Pick<SlotCandidateListing, 'id' | 'title' | 'area' | 'price_minor' | 'priceMinor' | 'provider_name' | 'photo_url'>> {
+    role: string;
+    type: SlotType;
+    name: string;
+    meta: string;
+    listingId?: string;
+    feeMinor?: number;
+    coverThumbnailUrl?: string;
+    isOpenSlot?: boolean;
+    tier?: number;
+    predecessorIds?: string[];
+    conditionCode?: string;
+    allowBypass?: boolean;
+}
+
+export interface DealChainNode extends Partial<Pick<SlotCandidateListing, 'id' | 'area' | 'price_minor' | 'priceMinor' | 'provider_name' | 'photo_url'>> {
     role: string;
     title: string;
     sub: string;
     type: string;
     bg: string;
     color: string;
+    listingId?: string;
+    feeMinor?: number;
+    coverThumbnailUrl?: string;
+    isPrimary?: boolean;
+    tier?: number;
+    predecessorIds?: string[];
+    conditionCode?: string;
+    allowBypass?: boolean;
 }
 
 export interface DealChainCombination {
@@ -101,8 +132,41 @@ export interface DealChainCombination {
     title: string;
     icon: string;
     isDefault: boolean;
+    recipeId?: string;
+    catalogVersion?: number;
+    isCustom?: boolean;
+    basedOnTitle?: string;
+    description?: string;
     nodes: DealChainNode[];
     slots: PartnerSlot[];
+    dependencies?: DealChainDependencyEdge[];
+    flowType?: 'linear' | 'parallel' | 'complex';
+}
+export interface DealChainTemplate {
+    recipeId: string;
+    catalogVersion: number;
+    pattern: string;
+    patternCapsule: string[];
+    title: string;
+    extraFee: number;
+    extraFeeMinor: number;
+    rating: string;
+    bookedCount: string;
+    desc: string;
+    applicableCategories: string[];
+    applicableListingTypes: string[];
+    applicableWorkShapes: string[];
+    nodes: Array<{
+        key: string;
+        role: string;
+        title: string;
+        sub: string;
+        type: string;
+        listingId?: string | null;
+        providerName?: string | null;
+        image?: string | null;
+        priceMinor?: number | null;
+    }>;
 }
 
 export interface ActingContextData {
