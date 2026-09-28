@@ -7,14 +7,47 @@ export type MarketplaceCategory = {
 };
 
 export type DealChainNode = {
+    id?: string;
     role: string;
     title: string;
     sub: string;
-    type: 'store' | 'delivery' | 'labor' | 'audit';
+    type: 'store' | 'delivery' | 'labor' | 'audit' | 'recycle';
+    listingId?: string;
+    providerId?: string;
+    priceMinor?: number;
+    image?: string;
+    providerName?: string;
 };
 
+export interface SlotCandidateListing {
+    id: string;
+    title: string;
+    provider_name: string;
+    provider_user_id?: string;
+    area: string;
+    price_minor: number;
+    priceMinor?: number;
+    sla_text: string;
+    photo_url?: string;
+    rating?: number;
+    role: 'STORE' | 'COURIER' | 'LABOR' | 'AUDIT' | 'RECYCLE';
+}
+
+export type DealChainRecipeId =
+    | 'turnkey_parts'
+    | 'courier_delivery'
+    | 'safety_audit'
+    | 'product_install'
+    | 'food_beverage_relay'
+    | 'craft_gift_relay'
+    | 'print_courier_relay'
+    | 'garment_relay'
+    | 'market_hauling_relay'
+    | 'direct';
+export type PublishedDealChainRecipeId = Exclude<DealChainRecipeId, 'direct'>;
+
 export type AttachedDealChain = {
-    recipeId: 'turnkey_parts' | 'courier_delivery' | 'safety_audit' | 'direct';
+    recipeId: DealChainRecipeId;
     title: string;
     extraFee: number;
     nodes: DealChainNode[];
@@ -25,6 +58,11 @@ export type BasketItem = {
     title: string;
     price: number;
     quantity: number;
+    category_code?: string | null;
+    listing_type?: string | null;
+    work_shape?: string | null;
+    image?: string | null;
+    providerName?: string | null;
     notes?: string;
     dealChain?: AttachedDealChain;
 };

@@ -10,6 +10,7 @@ export interface SlotListingPickerModalProps {
     currentListingId?: string;
     candidates?: SlotCandidateListing[];
     onSelectCandidate: (candidate: SlotCandidateListing) => void;
+    onSelectOpenSlot?: () => void;
 }
 
 const DEFAULT_TAGUDIN_CANDIDATES: SlotCandidateListing[] = [
@@ -139,12 +140,15 @@ export function SlotListingPickerModal({
     onClose,
     role,
     currentListingId,
-    candidates = DEFAULT_TAGUDIN_CANDIDATES,
+    candidates,
     onSelectCandidate,
+    onSelectOpenSlot,
 }: SlotListingPickerModalProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCategory, setFilterCategory] = useState<'all' | 'top_rated' | 'favorites'>('all');
     const [selectedId, setSelectedId] = useState<string>(currentListingId || '');
+    const [liveCandidates, setLiveCandidates] = useState<SlotCandidateListing[]>(DEFAULT_TAGUDIN_CANDIDATES);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -179,9 +183,44 @@ export function SlotListingPickerModal({
         }
         return roleUpper;
     }, [roleUpper]);
+    useEffect(() => {
+        if (!open || candidates !== undefined || import.meta.env.MODE === 'test' || typeof fetch === 'undefined') {
+            setIsLoading(false);
+            return;
+        }
+
+        const controller = new AbortController();
+        setIsLoading(true);
+
+        fetch(`/api/deal-chains/slot-candidates?role=${encodeURIComponent(canonicalRole)}`, {
+            signal: controller.signal,
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Unable to load slot candidates');
+                return response.json();
+            })
+            .then((payload: { data?: SlotCandidateListing[] }) => {
+                if (Array.isArray(payload.data)) {
+                    setLiveCandidates(payload.data);
+                }
+            })
+            .catch((err: unknown) => {
+                if (err instanceof Error && err.name === 'AbortError') return;
+                // Only fall back to default tagudin fixtures if API request fails / offline
+                setLiveCandidates(DEFAULT_TAGUDIN_CANDIDATES);
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setIsLoading(false);
+            });
+
+        return () => controller.abort();
+    }, [open, candidates, canonicalRole]);
+
+    const visibleCandidates = candidates ?? liveCandidates;
+
 
     const matchingList = useMemo(() => {
-        return candidates.filter((item) => {
+        return visibleCandidates.filter((item) => {
             if (item.role !== canonicalRole) return false;
 
             if (filterCategory === 'top_rated' && (item.rating || 0) < 4.85) {
@@ -198,18 +237,23 @@ export function SlotListingPickerModal({
 
             return true;
         });
-    }, [candidates, canonicalRole, filterCategory, searchQuery]);
+    }, [visibleCandidates, canonicalRole, filterCategory, searchQuery]);
 
     const activeCandidate = useMemo(() => {
         return matchingList.find((c) => c.id === selectedId) || matchingList[0];
     }, [matchingList, selectedId]);
     const handleConfirm = () => {
         if (activeCandidate) {
-            onSelectCandidate(activeCandidate);
+            const rawMinor = activeCandidate.price_minor ?? activeCandidate.priceMinor ?? 0;
+            const normalizedCandidate: SlotCandidateListing = {
+                ...activeCandidate,
+                price_minor: Number.isFinite(rawMinor) ? Number(rawMinor) : 0,
+                priceMinor: Number.isFinite(rawMinor) ? Number(rawMinor) : 0,
+            };
+            onSelectCandidate(normalizedCandidate);
         }
         onClose();
     };
-
     return (
         <GlovoWaveModal
             open={open}
@@ -220,9 +264,10 @@ export function SlotListingPickerModal({
                 <button
                     type="button"
                     onClick={handleConfirm}
-                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98]"
+                    disabled={isLoading || !activeCandidate}
+                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    <span>Confirm Partner Selection</span>
+                    <span>{isLoading ? 'Checking Available Partners...' : 'Confirm Partner Selection'}</span>
                     <span>→</span>
                 </button>
             }
@@ -277,7 +322,34 @@ export function SlotListingPickerModal({
                         Community Vouched
                     </button>
                 </div>
+                {onSelectOpenSlot && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            onSelectOpenSlot();
+                            onClose();
+                        }}
+                        className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-dashed border-[#0F2F58]/40 bg-[#F0F5FA]/60 px-3.5 py-2.5 text-left transition-all hover:border-[#0F2F58]"
+                    >
+                        <div>
+                            <div className="text-[11px] font-extrabold text-[#0F2F58]">
+                                Leave as Open {canonicalRole} Role Slot
+                            </div>
+                            <div className="text-[10px] text-slate-600">
+                                Buyer can choose any verified Tagudin {canonicalRole.toLowerCase()} partner at checkout
+                            </div>
+                        </div>
+                        <span className="rounded-full bg-[#0F2F58] px-2.5 py-0.5 text-[9.5px] font-extrabold text-white">
+                            Open Slot
+                        </span>
+                    </button>
+                )}
 
+                {isLoading && (
+                    <div className="px-2 py-1 text-[10px] font-medium text-slate-400" role="status">
+                        Finding active local partners…
+                    </div>
+                )}
                 {/* Candidates List */}
                 <div className="flex max-h-[46vh] flex-col gap-2.5 space-y-0.5 overflow-y-auto pr-1">
                     {matchingList.length === 0 ? (
@@ -360,7 +432,7 @@ export function SlotListingPickerModal({
                                         </div>
 
                                         <span className="font-mono text-xs font-extrabold text-[#0F2F58]">
-                                            ₱{(candidate.price_minor / 100).toFixed(2)}
+                                            ₱{((candidate.price_minor ?? candidate.priceMinor ?? 0) / 100).toFixed(2)}
                                         </span>
                                     </div>
                                 </div>

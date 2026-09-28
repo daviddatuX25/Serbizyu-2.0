@@ -59,7 +59,7 @@ Route::get('/my-listings/{listing}', [MyListingsController::class, 'show'])
 Route::get('/browse', BrowseController::class)->name('browse');
 Route::get('/requests/create', [RequestController::class, 'create'])->name('requests.create');
 Route::get('/requests/{id}', [RequestController::class, 'show'])->whereUuid('id')->name('requests.show');
-Route::get('/listings/create', fn () => redirect()->route('listings.create.service'))->name('listings.create');
+Route::get('/listings/create', [ListingController::class, 'create'])->name('listings.create');
 Route::get('/listings/create/service', [ListingController::class, 'createService'])->name('listings.create.service');
 Route::get('/listings/create/product', [ListingController::class, 'createProduct'])->name('listings.create.product');
 Route::get('/listings/{listing}', [ListingController::class, 'show'])->whereUuid('listing')->name('listings.show');
@@ -146,13 +146,18 @@ Route::get('/admin/listings', fn () => Inertia::render('Admin/Listings/Index'))-
 Route::get('/admin/tenders', fn () => Inertia::render('Admin/Tenders/Index'))->name('admin.tenders.index');
 Route::get('/admin/requests', fn () => Inertia::render('Admin/Tenders/Index'))->name('admin.requests.index');
 Route::get('/admin/users', fn () => Inertia::render('Admin/Users/Index'))->name('admin.users.index');
-Route::get('/admin/catalogs/work', fn (WorkCatalog $catalog) => Inertia::render('Admin/Catalogs/WorkCatalog', [
-    'workCatalog' => $catalog->frontend(),
-]))->name('admin.catalogs.work');
-Route::get('/admin/catalogs/deal-chains', fn (DealChainCatalog $catalog) => Inertia::render('Admin/Catalogs/DealChainStudio', [
-    'dealChainCatalog' => $catalog->frontend(),
-]))->name('admin.catalogs.deal-chains');
-Route::get('/admin/catalogs/taxonomy', fn () => Inertia::render('Admin/Catalogs/TaxonomyStudio'))->name('admin.catalogs.taxonomy');
+Route::middleware(EnsureAuthenticated::class . ':admin')
+    ->prefix('/admin/catalogs')
+    ->name('admin.catalogs.')
+    ->group(function (): void {
+        Route::get('/work', fn (WorkCatalog $catalog) => Inertia::render('Admin/Catalogs/WorkCatalog', [
+            'workCatalog' => $catalog->frontend(),
+        ]))->name('work');
+        Route::get('/deal-chains', fn (DealChainCatalog $catalog) => Inertia::render('Admin/Catalogs/DealChainStudio', [
+            'dealChainCatalog' => $catalog->frontend(),
+        ]))->name('deal-chains');
+        Route::get('/taxonomy', fn () => Inertia::render('Admin/Catalogs/TaxonomyStudio'))->name('taxonomy');
+    });
 Route::get('/admin/financials', fn () => Inertia::render('Admin/Financials/Index'))->name('admin.financials.index');
 Route::get('/admin/disputes', fn () => Inertia::render('Admin/Disputes/Index'))->name('admin.disputes.index');
 Route::get('/admin/telemetry', fn () => Inertia::render('Admin/System/TelemetryIndex'))->name('admin.telemetry.index');
