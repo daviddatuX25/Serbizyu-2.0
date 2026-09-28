@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, LogOut, Package, ShoppingBag, User as UserIcon } from 'lucide-react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import type { ActingContextData } from '../mobile/types';
 import type { ReadinessState, SliceSession } from '@/types';
 
@@ -19,26 +19,91 @@ export function DesktopGlobalNav({
     readiness,
     actingContext,
     activeRoute = 'browse',
-    picksCount = 0,
+    picksCount,
     onPicksClick,
     rightSlot,
 }: DesktopGlobalNavProps) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // Fallback to Inertia page props if explicit props are not passed
+    interface NavInertiaProps extends Record<string, unknown> {
+        session?: SliceSession | null;
+        readiness?: ReadinessState | null;
+        slice?: {
+            session?: SliceSession | null;
+            readiness?: ReadinessState | null;
+        };
+    }
+
+    let pageProps: NavInertiaProps = {};
+    try {
+        pageProps = typeof usePage === 'function' ? (usePage<NavInertiaProps>()?.props || {}) : {};
+    } catch {
+        pageProps = {};
+    }
+
+    const effectiveSession =
+        session !== undefined
+            ? session
+            : (pageProps.session ?? pageProps.slice?.session ?? null);
+
+    const effectiveReadiness =
+        readiness !== undefined
+            ? readiness
+            : (pageProps.readiness ?? pageProps.slice?.readiness ?? null);
+
     const authenticated = Boolean(
-        session?.authenticated ?? session?.isAuthenticated ?? session?.userId,
+        effectiveSession?.authenticated ??
+            effectiveSession?.isAuthenticated ??
+            effectiveSession?.userId,
     );
 
     const displayName =
-        readiness?.displayName ??
-        readiness?.display_name ??
-        session?.displayName ??
-        session?.display_name ??
-        session?.phone ??
+        effectiveReadiness?.displayName ??
+        effectiveReadiness?.display_name ??
+        effectiveSession?.displayName ??
+        effectiveSession?.display_name ??
+        effectiveSession?.phone ??
         'Citizen';
 
     const initial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
+
+    // Live picks count synchronized via storage and custom events
+    const [localPicksCount, setLocalPicksCount] = useState<number>(picksCount ?? 0);
+
+    useEffect(() => {
+        const readStoragePicks = () => {
+            try {
+                const stored = localStorage.getItem('serbizyu.picks');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed)) {
+                        setLocalPicksCount(
+                            parsed.reduce((sum: number, item: { quantity?: number }) => sum + (item.quantity || 1), 0),
+                        );
+                        return;
+                    }
+                }
+                setLocalPicksCount(0);
+            } catch {
+                setLocalPicksCount(0);
+            }
+        };
+
+        if (typeof picksCount === 'number') {
+            setLocalPicksCount(picksCount);
+        } else {
+            readStoragePicks();
+        }
+        window.addEventListener('storage', readStoragePicks);
+        window.addEventListener('serbizyu:picks-updated', readStoragePicks);
+
+        return () => {
+            window.removeEventListener('storage', readStoragePicks);
+            window.removeEventListener('serbizyu:picks-updated', readStoragePicks);
+        };
+    }, [picksCount]);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -152,9 +217,9 @@ export function DesktopGlobalNav({
                     >
                         <ShoppingBag className="size-4 text-[#0F2F58]" />
                         <span>Picks</span>
-                        {picksCount > 0 && (
+                        {localPicksCount > 0 && (
                             <span className="flex size-5 items-center justify-center rounded-full bg-[#0F2F58] text-[10px] font-extrabold text-white">
-                                {picksCount}
+                                {localPicksCount}
                             </span>
                         )}
                     </button>
@@ -196,7 +261,7 @@ export function DesktopGlobalNav({
                                             {displayName}
                                         </p>
                                         <p className="mt-0.5 text-[11px] font-medium text-emerald-600">
-                                            {readiness?.ready
+                                            {effectiveReadiness?.ready
                                                 ? '✓ Verified Provider'
                                                 : '✓ Verified Citizen'}
                                         </p>

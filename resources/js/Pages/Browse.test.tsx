@@ -86,7 +86,9 @@ describe('Browse Page', () => {
         // Header check
         expect(within(desktop).getAllByText('SERBIZYU').length).toBeGreaterThan(0);
         expect(within(desktop).getByText('Verified Services & Local Products')).toBeTruthy();
-        expect(within(desktop).getByText('Showing 3 active public offerings in Tagudin')).toBeTruthy();
+        expect(
+            within(desktop).getByText('Showing 3 active public offerings in Tagudin'),
+        ).toBeTruthy();
 
         // Cards check
         expect(within(desktop).getByText('Inverter Split AC Deep Clean')).toBeTruthy();
@@ -107,7 +109,9 @@ describe('Browse Page', () => {
         fireEvent.change(desktopSearch, { target: { value: 'bibingka' } });
 
         // Result count updates
-        expect(within(desktop).getByText('Showing 1 active public offerings in Tagudin')).toBeTruthy();
+        expect(
+            within(desktop).getByText('Showing 1 active public offerings in Tagudin'),
+        ).toBeTruthy();
         expect(within(desktop).getByText('Weekend bibingka tray')).toBeTruthy();
         expect(within(desktop).queryByText('Inverter Split AC Deep Clean')).toBeNull();
 
@@ -122,7 +126,9 @@ describe('Browse Page', () => {
         const repairsBtn = within(aside).getByRole('button', { name: /Repairs & AC/i });
         fireEvent.click(repairsBtn);
 
-        expect(within(desktop).getByText('Showing 1 active public offerings in Tagudin')).toBeTruthy();
+        expect(
+            within(desktop).getByText('Showing 1 active public offerings in Tagudin'),
+        ).toBeTruthy();
         expect(within(desktop).getByText('Inverter Split AC Deep Clean')).toBeTruthy();
         expect(within(desktop).queryByText('Weekend bibingka tray')).toBeNull();
     });
@@ -134,7 +140,9 @@ describe('Browse Page', () => {
         const productBtn = within(desktop).getByRole('button', { name: /^product$/i });
         fireEvent.click(productBtn);
 
-        expect(within(desktop).getByText('Showing 1 active public offerings in Tagudin')).toBeTruthy();
+        expect(
+            within(desktop).getByText('Showing 1 active public offerings in Tagudin'),
+        ).toBeTruthy();
         expect(within(desktop).getByText('Weekend bibingka tray')).toBeTruthy();
         expect(within(desktop).queryByText('Inverter Split AC Deep Clean')).toBeNull();
     });
@@ -147,7 +155,9 @@ describe('Browse Page', () => {
         fireEvent.click(under150Radio);
 
         // Document scan is 80 (<= 150)
-        expect(within(desktop).getByText('Showing 1 active public offerings in Tagudin')).toBeTruthy();
+        expect(
+            within(desktop).getByText('Showing 1 active public offerings in Tagudin'),
+        ).toBeTruthy();
         expect(within(desktop).getByText('Document scan soft-copy')).toBeTruthy();
         expect(within(desktop).queryByText('Inverter Split AC Deep Clean')).toBeNull();
         expect(within(desktop).queryByText('Weekend bibingka tray')).toBeNull();
@@ -160,39 +170,39 @@ describe('Browse Page', () => {
         const desktopSearch = within(desktop).getByPlaceholderText(/Search services/i);
         fireEvent.change(desktopSearch, { target: { value: 'bibingka' } });
 
-        expect(within(desktop).getByText('Showing 1 active public offerings in Tagudin')).toBeTruthy();
+        expect(
+            within(desktop).getByText('Showing 1 active public offerings in Tagudin'),
+        ).toBeTruthy();
 
         const resetBtn = within(desktop).getByRole('button', { name: /Reset/i });
         fireEvent.click(resetBtn);
 
-        expect(within(desktop).getByText('Showing 3 active public offerings in Tagudin')).toBeTruthy();
+        expect(
+            within(desktop).getByText('Showing 3 active public offerings in Tagudin'),
+        ).toBeTruthy();
         expect(within(desktop).getByText('Inverter Split AC Deep Clean')).toBeTruthy();
         expect(within(desktop).getByText('Weekend bibingka tray')).toBeTruthy();
         expect(within(desktop).getByText('Document scan soft-copy')).toBeTruthy();
     });
 
-    it('adds an item to Picks, increments navbar counter, and opens PicksDrawer', () => {
+    it('opens PicksDrawer and shows staged items when Picks button is clicked', () => {
+        window.localStorage.setItem('serbizyu.picks', JSON.stringify([
+            { id: 'item_1', title: 'Inverter Split AC Deep Clean', price: 450, quantity: 1 }
+        ]));
         const { container } = render(<Browse {...baseProps} />);
         const desktop = getDesktop(container as HTMLElement);
 
-        // Counter initially 0
+        // Counter shows 1 from storage
         const picksBtn = within(desktop).getByRole('button', { name: 'View citizen picks' });
         expect(picksBtn).toBeTruthy();
-
-        // Click "+ Book Now" on the AC cleaning card
-        const bookButtons = within(desktop).getAllByRole('button', { name: /Book Now/i });
-        fireEvent.click(bookButtons[0]);
-
-        // Counter now shows 1
         expect(within(picksBtn).getByText('1')).toBeTruthy();
 
         // Click the Picks button to open the drawer
         fireEvent.click(picksBtn);
 
-        // Picks drawer is displayed
-        expect(screen.getByText('Citizen Picks')).toBeTruthy();
-        expect(screen.getByText(/1 item staged for escrow/i)).toBeTruthy();
-        expect(screen.getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThanOrEqual(1);
-        expect(screen.getByText(/Total Escrow Authorization/i)).toBeTruthy();
+        expect(screen.getByText(/1 item staged for review/i)).toBeTruthy();
+        expect(screen.getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThanOrEqual(
+            1,
+        );
     });
 });

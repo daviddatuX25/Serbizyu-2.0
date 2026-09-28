@@ -17,6 +17,7 @@ import {
     SlidersHorizontal,
     Star,
     Sparkles,
+    Video,
     X,
 } from 'lucide-react';
 import type { HomeProps, ListingRecord } from '../types';
@@ -169,26 +170,45 @@ export default function Browse(props: HomeProps) {
 
     const userInitial = userDisplayName ? userDisplayName.charAt(0).toUpperCase() : 'U';
 
-    // Load pins and picks from localStorage on mount
+    // Load pins and picks from localStorage on mount & synchronize across tabs and navigations
     useEffect(() => {
         try {
             const stored = localStorage.getItem('serbizyu.browse.pins');
             if (stored) {
                 setPinnedIds(JSON.parse(stored));
             }
-            const storedPicks = localStorage.getItem('serbizyu.picks');
-            if (storedPicks) {
-                setBasket(JSON.parse(storedPicks));
-            }
         } catch {
             // ignore
         }
+
+        const syncPicks = () => {
+            try {
+                const storedPicks = localStorage.getItem('serbizyu.picks');
+                if (storedPicks) {
+                    setBasket(JSON.parse(storedPicks));
+                } else {
+                    setBasket([]);
+                }
+            } catch {
+                // ignore
+            }
+        };
+
+        syncPicks();
+        window.addEventListener('storage', syncPicks);
+        window.addEventListener('serbizyu:picks-updated', syncPicks);
+
+        return () => {
+            window.removeEventListener('storage', syncPicks);
+            window.removeEventListener('serbizyu:picks-updated', syncPicks);
+        };
     }, []);
 
     const saveBasket = (newBasket: BasketItem[]) => {
         setBasket(newBasket);
         try {
             localStorage.setItem('serbizyu.picks', JSON.stringify(newBasket));
+            window.dispatchEvent(new Event('serbizyu:picks-updated'));
         } catch {
             // ignore
         }
@@ -229,8 +249,8 @@ export default function Browse(props: HomeProps) {
         nodeIndex: number,
         candidate: SlotCandidateListing,
     ) => {
-        setBasket((prev) =>
-            prev.map((item) => {
+        setBasket((prev) => {
+            const next = prev.map((item) => {
                 if (item.id !== itemId || !item.dealChain) return item;
                 const updatedNodes = [...item.dealChain.nodes];
                 const oldNode = updatedNodes[nodeIndex];
@@ -257,8 +277,10 @@ export default function Browse(props: HomeProps) {
                         nodes: updatedNodes,
                     },
                 };
-            }),
-        );
+            });
+            saveBasket(next);
+            return next;
+        });
     };
 
     const handleAuthorizeDealChain = () => {
@@ -857,9 +879,11 @@ export default function Browse(props: HomeProps) {
                                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                                     {filteredListings.map((listing) => {
                                         const isPinned = pinnedIds.includes(listing.id);
-                                        const photoUrl = getCategoryPhoto(
-                                            listing.category_code || listing.categoryCode,
-                                        );
+                                        const photoUrl =
+                                            listing.cover_thumbnail_url ||
+                                            getCategoryPhoto(
+                                                listing.category_code || listing.categoryCode,
+                                            );
                                         const priceDisplay = getPriceDisplay(listing);
                                         const isService =
                                             (listing.listing_type || listing.listingType) !==
@@ -892,12 +916,13 @@ export default function Browse(props: HomeProps) {
                                                         >
                                                             {isService ? 'Service' : 'Product'}
                                                         </span>
-                                                        <span className="flex items-center gap-0.5 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-extrabold text-amber-800 shadow-xs backdrop-blur-xs">
-                                                            <Star className="size-3 fill-amber-500 text-amber-500" />
-                                                            <span>4.9</span>
-                                                        </span>
+                                                        {listing.has_video && (
+                                                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/85 px-2 py-0.5 text-[10px] font-extrabold text-white shadow-xs backdrop-blur-xs">
+                                                                <Video className="size-3 text-[#FFC72C]" />
+                                                                <span>Video</span>
+                                                            </span>
+                                                        )}
                                                     </div>
-
                                                     {/* Heart Pin Button */}
                                                     <button
                                                         type="button"
@@ -963,10 +988,10 @@ export default function Browse(props: HomeProps) {
                                                                 {priceDisplay}
                                                             </div>
                                                         </div>
-
-                                                        <span className="text-xs font-bold text-slate-500 transition-colors group-hover:text-[#0F2F58]">
-                                                            View details →
-                                                        </span>
+                                                        <div className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800">
+                                                            <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                                                            <span>4.9</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </article>
@@ -978,9 +1003,11 @@ export default function Browse(props: HomeProps) {
                                 <div className="flex flex-col gap-3">
                                     {filteredListings.map((listing) => {
                                         const isPinned = pinnedIds.includes(listing.id);
-                                        const photoUrl = getCategoryPhoto(
-                                            listing.category_code || listing.categoryCode,
-                                        );
+                                        const photoUrl =
+                                            listing.cover_thumbnail_url ||
+                                            getCategoryPhoto(
+                                                listing.category_code || listing.categoryCode,
+                                            );
                                         const priceDisplay = getPriceDisplay(listing);
 
                                         return (
@@ -1034,12 +1061,18 @@ export default function Browse(props: HomeProps) {
                                                             className={`size-4 ${isPinned ? 'fill-red-500' : ''}`}
                                                         />
                                                     </button>
-                                                    <div className="text-right">
-                                                        <div className="font-mono text-base font-extrabold text-[#0F2F58]">
-                                                            {priceDisplay}
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="text-right">
+                                                            <div className="font-mono text-base font-extrabold text-[#0F2F58]">
+                                                                {priceDisplay}
+                                                            </div>
+                                                            <div className="text-[10px] text-slate-400">
+                                                                Fixed rate
+                                                            </div>
                                                         </div>
-                                                        <div className="text-[10px] text-slate-400">
-                                                            Fixed rate
+                                                        <div className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800">
+                                                            <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                                                            <span>4.9</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1933,18 +1966,18 @@ export default function Browse(props: HomeProps) {
                 items={basket}
                 recipes={Object.values(dealChainRecipes)}
                 onUpdateQuantity={(id, delta) => {
-                    setBasket((prev) =>
-                        prev
-                            .map((item) =>
-                                item.id === id
-                                    ? { ...item, quantity: item.quantity + delta }
-                                    : item,
-                            )
-                            .filter((item) => item.quantity > 0),
-                    );
+                    const next = basket
+                        .map((item) =>
+                            item.id === id
+                                ? { ...item, quantity: item.quantity + delta }
+                                : item,
+                        )
+                        .filter((item) => item.quantity > 0);
+                    saveBasket(next);
                 }}
                 onRemoveItem={(id) => {
-                    setBasket((prev) => prev.filter((item) => item.id !== id));
+                    const next = basket.filter((item) => item.id !== id);
+                    saveBasket(next);
                 }}
                 onCheckout={() => {
                     setPicksOpen(false);

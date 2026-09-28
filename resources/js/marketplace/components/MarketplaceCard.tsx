@@ -1,6 +1,6 @@
 import React from 'react';
+import { Star } from 'lucide-react';
 import type { ListingRecord } from '@/types';
-
 interface MarketplaceCardProps {
     listing: ListingRecord;
     onSelect: (listing: ListingRecord) => void;
@@ -44,10 +44,16 @@ export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({
                     </p>
                 </div>
 
-                <div className="mt-2 flex items-center justify-between">
-                    <span className="text-[14px] font-extrabold text-[#18181B]">
-                        {priceDisplay}
-                    </span>
+                <div className="mt-2 flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[14px] font-extrabold text-[#18181B]">
+                            {priceDisplay}
+                        </span>
+                        <span className="flex items-center gap-0.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10.5px] font-bold text-amber-800">
+                            <Star className="size-3 fill-amber-500 text-amber-500" />
+                            <span>4.9</span>
+                        </span>
+                    </div>
                     <span className="text-[11px] font-semibold text-[#0F2F58]">
                         {listing.area || 'Tagudin'}
                     </span>
