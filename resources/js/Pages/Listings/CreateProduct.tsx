@@ -29,7 +29,15 @@ import TagudinLocationPicker, { type StructuredGeography } from '../../component
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import { CreatorPostModal } from '../../components/marketplace/CreatorPostModal';
 import { QuickDealScanModal } from '../../components/marketplace/QuickDealScanModal';
-import GlovoWaveModal from '../../components/mobile/GlovoWaveModal';
+import {
+    DealChainCatalogModal,
+    DealChainCustomizerModal,
+    type DealChainCombination,
+    type DealChainNode,
+    type DealChainTemplate,
+    type PartnerSlot as DealChainPartnerSlot,
+    type SlotType,
+} from '../../components/mobile';
 import { SlotListingPickerModal } from '../../components/marketplace/SlotListingPickerModal';
 import type { SlotCandidateListing } from '../../marketplace/types';
 import type { ListingMedia, ListingRecord, SliceSession } from '../../types';
@@ -54,7 +62,7 @@ interface ProductVariantForm {
 
 export interface PartnerSlot {
     id: string;
-    roleType: 'COURIER' | 'LABOR';
+    roleType: 'STORE' | 'COURIER' | 'LABOR';
     slotLabel: string;
     providerName: string;
     fee: number;
@@ -62,6 +70,8 @@ export interface PartnerSlot {
     rating: number;
     slaText?: string;
     photoUrl?: string;
+    listingId?: string;
+    isOpenSlot?: boolean;
 }
 
 export interface PartnerCombo {
@@ -71,6 +81,13 @@ export interface PartnerCombo {
     description: string;
     isDefault: boolean;
     slots: PartnerSlot[];
+    recipeId?: string;
+    catalogVersion?: number;
+    isCustom?: boolean;
+    basedOnTitle?: string;
+    nodes?: DealChainNode[];
+    dependencies?: DealChainCombination['dependencies'];
+    flowType?: DealChainCombination['flowType'];
 }
 
 interface ProductBuilderDraft {
@@ -104,8 +121,14 @@ interface PartnerListingOption {
     coverThumbnailUrl?: string;
 }
 
+interface DealChainOptionGroups {
+    recommended: DealChainTemplate[];
+    other_recipes: DealChainTemplate[];
+}
+
 interface CreateProductProps {
     session?: SliceSession | null;
+    dealChainOptions?: DealChainOptionGroups;
     partnerListings?: PartnerListingOption[];
     editingDraft?: ListingRecord | null;
 }
@@ -278,121 +301,6 @@ export function defaultCombosForCategory(categoryCode: string): PartnerCombo[] {
     return [deliveryCombo];
 }
 
-const PRESET_RECIPES = [
-    {
-        key: 'doorstep_delivery',
-        title: 'Doorstep Delivery',
-        icon: 'Truck',
-        description: 'Tagudin motorcycle courier dispatch straight to recipient door',
-        applicableCategories: ['local-food', 'repairs', 'crafts', 'clothing', 'print-assist', 'local-services', 'general'],
-        slots: [
-            {
-                id: '0198a3b1-7c40-7abc-8def-5234567890b9',
-                roleType: 'COURIER' as const,
-                slotLabel: 'Doorstep Courier Runner',
-                providerName: 'Danny Express Motorcycle Pool',
-                fee: 35,
-                feeMinor: 3500,
-                rating: 4.9,
-                slaText: 'On-demand ~20 mins transit',
-                photoUrl: '/photos/courier.jpg',
-            },
-        ],
-    },
-    {
-        key: 'delivery_install',
-        title: 'Delivery + Installation Labor',
-        icon: 'Wrench',
-        description: 'Courier transit + certified trade technician installation combo',
-        applicableCategories: ['repairs', 'hardware', 'appliances'],
-        slots: [
-            {
-                id: '0198a3b1-7c40-7abc-8def-5234567890b9',
-                roleType: 'COURIER' as const,
-                slotLabel: 'Doorstep Courier Runner',
-                providerName: 'Danny Express Motorcycle Pool',
-                fee: 35,
-                feeMinor: 3500,
-                rating: 4.9,
-                slaText: 'On-demand ~20 mins transit',
-                photoUrl: '/photos/courier.jpg',
-            },
-            {
-                id: '0198a3b1-7c40-7abc-8def-5234567890bb',
-                roleType: 'LABOR' as const,
-                slotLabel: 'Technician Labor Partner',
-                providerName: 'Kuya Ben Aircon Services',
-                fee: 250,
-                feeMinor: 25000,
-                rating: 4.9,
-                slaText: 'Certified technician installation',
-                photoUrl: '/photos/ac-clean.jpg',
-            },
-        ],
-    },
-    {
-        key: 'tool_rental',
-        title: 'Tool Rental Kit + Courier Delivery',
-        icon: 'Wrench',
-        description: 'Tagudin tool depot rental and motorcycle courier delivery',
-        applicableCategories: ['repairs', 'hardware'],
-        slots: [
-            {
-                id: 'can_cour_bicycle',
-                roleType: 'COURIER' as const,
-                slotLabel: 'Courier Transit Runner',
-                providerName: 'Centro Eco Courier',
-                fee: 25,
-                feeMinor: 2500,
-                rating: 4.8,
-                slaText: 'Eco transit ~15 mins',
-                photoUrl: '/photos/courier.jpg',
-            },
-            {
-                id: '0198a3b1-7c40-7abc-8def-5234567890b8',
-                roleType: 'LABOR' as const,
-                slotLabel: 'Tool Prep Specialist',
-                providerName: 'Kuya Ben Aircon Services',
-                fee: 95,
-                feeMinor: 9500,
-                rating: 4.9,
-                slaText: 'Tool deployment prep',
-                photoUrl: '/photos/ac-clean.jpg',
-            },
-        ],
-    },
-    {
-        key: 'hauling',
-        title: 'Delivery + Eco-Scrap Removal',
-        icon: 'Package',
-        description: 'Doorstep delivery combined with old scrap disposal & material reclaim',
-        applicableCategories: ['repairs', 'hardware', 'general'],
-        slots: [
-            {
-                id: '0198a3b1-7c40-7abc-8def-5234567890b9',
-                roleType: 'COURIER' as const,
-                slotLabel: 'Doorstep Courier Runner',
-                providerName: 'Danny Express Motorcycle Pool',
-                fee: 35,
-                feeMinor: 3500,
-                rating: 4.9,
-                slaText: 'On-demand ~20 mins transit',
-                photoUrl: '/photos/courier.jpg',
-            },
-            {
-                id: '0198a3b1-7c40-7abc-8def-5234567890b2',
-                roleType: 'LABOR' as const,
-                slotLabel: 'Recycle Reclamation Partner',
-                providerName: 'Ate Elena Garment Repairs',
-                fee: 45,
-                feeMinor: 4500,
-                rating: 4.8,
-                slaText: 'Material reclaim and safe disposal',
-                photoUrl: '/photos/ac-clean.jpg',
-            },
-        ],
-    },
-];
 
 function renderComboIcon(iconName: string, className = 'size-4') {
     switch (iconName) {
@@ -408,11 +316,85 @@ function renderComboIcon(iconName: string, className = 'size-4') {
             return <Truck className={className} />;
     }
 }
+function toDealChainCombination(combo: PartnerCombo): DealChainCombination {
+    const slots: DealChainPartnerSlot[] = combo.slots.map((slot, index) => ({
+        id: slot.id || `slot-${index}`,
+        type: slot.roleType === 'COURIER' ? 'delivery' : slot.roleType === 'STORE' ? 'store' : 'installation',
+        role: slot.slotLabel,
+        name: slot.providerName,
+        meta: slot.slaText || `₱${slot.fee.toFixed(2)} partner fee`,
+        feeMinor: slot.feeMinor,
+        coverThumbnailUrl: slot.photoUrl,
+        listingId: slot.listingId,
+        isOpenSlot: slot.isOpenSlot,
+        tier: index,
+        conditionCode: slot.roleType === 'COURIER' ? 'delivered_to_site' : slot.roleType === 'STORE' ? 'source_ready' : 'work_completed',
+    }));
+    return {
+        id: combo.id,
+        title: combo.title,
+        icon: combo.icon,
+        description: combo.description,
+        isDefault: combo.isDefault,
+        recipeId: combo.recipeId,
+        catalogVersion: combo.catalogVersion,
+        isCustom: combo.isCustom,
+        basedOnTitle: combo.basedOnTitle,
+        nodes: combo.nodes?.length
+            ? combo.nodes
+            : [
+                ...slots.filter((slot) => slot.type === 'delivery' || slot.type === 'store').map((slot) => ({
+                    id: slot.id || '',
+                    role: slot.type === 'delivery' ? 'COURIER' : 'STORE',
+                    title: slot.name,
+                    sub: slot.meta,
+                    type: slot.type,
+                    bg: slot.type === 'delivery' ? '#E0F2FE' : '#FEF3C7',
+                    color: slot.type === 'delivery' ? '#0284C7' : '#B45309',
+                    feeMinor: slot.feeMinor,
+                    listingId: slot.listingId,
+                })),
+                {
+                    id: 'node-primary-anchor',
+                    role: 'YOUR PRODUCT',
+                    title: 'Your Product',
+                    sub: 'Product price',
+                    type: 'store',
+                    bg: '#ECFDF5',
+                    color: '#059669',
+                    isPrimary: true,
+                },
+                ...slots.filter((slot) => slot.type !== 'delivery' && slot.type !== 'store').map((slot) => ({
+                    id: slot.id || '',
+                    role: 'LABOR',
+                    title: slot.name,
+                    sub: slot.meta,
+                    type: slot.type,
+                    bg: '#ECFDF5',
+                    color: '#059669',
+                    feeMinor: slot.feeMinor,
+                    listingId: slot.listingId,
+                })),
+            ],
+        slots,
+        dependencies: combo.dependencies,
+        flowType: combo.flowType,
+    };
+}
+
 export default function CreateProduct({
+    dealChainOptions,
     session,
     partnerListings = [],
     editingDraft = null,
 }: CreateProductProps) {
+    const allDealChainRecipes = useMemo(
+        () => [
+            ...(dealChainOptions?.recommended ?? []),
+            ...(dealChainOptions?.other_recipes ?? []),
+        ],
+        [dealChainOptions],
+    );
     const slotCandidateListings = useMemo<SlotCandidateListing[]>(() => {
         if (!Array.isArray(partnerListings) || partnerListings.length === 0) {
             return [];
@@ -504,6 +486,13 @@ export default function CreateProduct({
         return {};
     });
     const [attachModalOpen, setAttachModalOpen] = useState(false);
+    const [dealChainStudioOpen, setDealChainStudioOpen] = useState(false);
+    const [customizingComboId, setCustomizingComboId] = useState<string | null>(null);
+    const studioCombination = useMemo(() => {
+        if (!customizingComboId) return null;
+        const combo = combos.find((item) => item.id === customizingComboId);
+        return combo ? toDealChainCombination(combo) : null;
+    }, [combos, customizingComboId]);
 
     const isComboExpanded = (comboId: string) => {
         return !!expandedComboIds[comboId];
@@ -523,6 +512,14 @@ export default function CreateProduct({
         comboId: string;
         slotIndex: number;
         currentListingId?: string;
+        onPickedOverride?: (partner: {
+            id: string;
+            title: string;
+            providerName: string;
+            priceMinor: number;
+            photoUrl?: string;
+            isOpenSlot?: boolean;
+        }) => void;
     }>({
         open: false,
         role: 'COURIER',
@@ -609,38 +606,47 @@ export default function CreateProduct({
     const defaultPriceMinor = Math.round((defaultVariant?.price || 0) * 100);
 
     // Slot Picker Handlers
-    const openSlotPicker = (comboId: string, slotIndex: number, role: 'COURIER' | 'LABOR', currentId?: string) => {
-        setSlotPickerState({
-            open: true,
-            role,
-            comboId,
-            slotIndex,
-            currentListingId: currentId,
-        });
+    const openSlotPicker = (comboId: string, slotIndex: number, role: PartnerSlot['roleType'], currentId?: string) => {
+        setSlotPickerState({ open: true, role, comboId, slotIndex, currentListingId: currentId });
     };
 
     const handleCandidateSelected = (candidate: SlotCandidateListing) => {
+        if (slotPickerState.onPickedOverride) {
+            slotPickerState.onPickedOverride({
+                id: candidate.id,
+                title: candidate.title,
+                providerName: candidate.provider_name,
+                priceMinor: candidate.price_minor,
+                photoUrl: candidate.photo_url,
+            });
+            setSlotPickerState((prev) => ({ ...prev, open: false, onPickedOverride: undefined }));
+            return;
+        }
         setCombos((prevCombos) =>
             prevCombos.map((c) => {
                 if (c.id !== slotPickerState.comboId) return c;
+                const selectedSlot = c.slots[slotPickerState.slotIndex];
+                const updatedSlot = {
+                    ...selectedSlot,
+                    id: selectedSlot?.id || `slot-${slotPickerState.comboId}-${slotPickerState.slotIndex}`,
+                    providerName: candidate.title || candidate.provider_name,
+                    fee: candidate.price_minor / 100,
+                    feeMinor: candidate.price_minor,
+                    rating: candidate.rating ?? 5.0,
+                    slaText: candidate.sla_text,
+                    photoUrl: candidate.photo_url,
+                    listingId: candidate.id,
+                    isOpenSlot: false,
+                };
                 return {
                     ...c,
-                    slots: c.slots.map((slot, sIdx) => {
-                        if (sIdx !== slotPickerState.slotIndex) return slot;
-                        return {
-                            ...slot,
-                            id: candidate.id,
-                            providerName: candidate.provider_name,
-                            fee: candidate.price_minor / 100,
-                            feeMinor: candidate.price_minor,
-                            rating: candidate.rating ?? 5.0,
-                            slaText: candidate.sla_text,
-                            photoUrl: candidate.photo_url,
-                        };
-                    }),
+                    slots: c.slots.map((slot, sIdx) =>
+                        sIdx === slotPickerState.slotIndex ? updatedSlot : slot,
+                    ),
                 };
             })
         );
+        setSlotPickerState((prev) => ({ ...prev, open: false }));
     };
 
 
@@ -652,23 +658,116 @@ export default function CreateProduct({
         setCurrentComboIdx((prev) => Math.max(0, prev - 1));
     };
 
-    const handleAddPresetRecipe = (presetKey: string) => {
-        const preset = PRESET_RECIPES.find((p) => p.key === presetKey);
-        if (!preset) return;
-
+    const handleSelectDealChainRecipe = (recipe: DealChainTemplate) => {
+        const primaryPricePesos = Math.round(defaultVariant?.price || 0);
+        const nodes: DealChainNode[] = recipe.nodes.map((node) => {
+            const isPrimary =
+                node.key === 'primary' ||
+                node.key === 'product' ||
+                node.title.toLowerCase().includes('primary');
+            const isStore = node.type === 'store' || node.type === 'parts' || node.type === 'tools';
+            const isCourier = node.type === 'delivery';
+            const feeMinor = node.priceMinor ?? (isCourier ? 3500 : isStore ? 18000 : 25000);
+            return {
+                id: `node-${node.key}`,
+                role: isPrimary ? 'YOUR PRODUCT' : node.role.toUpperCase(),
+                title: isPrimary ? (title || 'Your Product') : node.title,
+                sub: isPrimary ? `₱${primaryPricePesos}` : `₱${Math.round(feeMinor / 100)}`,
+                type: isPrimary ? 'store' : node.type,
+                bg: isStore ? '#FEF3C7' : isCourier ? '#E0F2FE' : '#ECFDF5',
+                color: isStore ? '#B45309' : isCourier ? '#0284C7' : '#059669',
+                listingId: node.listingId ?? undefined,
+                feeMinor: isPrimary ? undefined : feeMinor,
+                coverThumbnailUrl: node.image ?? undefined,
+                isPrimary,
+            };
+        });
+        const slots: PartnerSlot[] = recipe.nodes
+            .filter((node) =>
+                node.key !== 'primary' &&
+                node.key !== 'product' &&
+                !node.title.toLowerCase().includes('primary'),
+            )
+            .map((node, index) => {
+                const isCourier = node.type === 'delivery';
+                const isStore = node.type === 'store' || node.type === 'parts' || node.type === 'tools';
+                const feeMinor = node.priceMinor ?? (isCourier ? 3500 : isStore ? 18000 : 25000);
+                return {
+                    id: `slot-${node.key}-${index}`,
+                    roleType: isCourier ? 'COURIER' : isStore ? 'STORE' : 'LABOR',
+                    slotLabel: node.role,
+                    providerName: node.providerName || node.title,
+                    fee: feeMinor / 100,
+                    feeMinor,
+                    rating: Number(recipe.rating) || 4.9,
+                    slaText: node.sub,
+                    photoUrl: node.image ?? undefined,
+                    listingId: node.listingId ?? undefined,
+                };
+            });
         const newCombo: PartnerCombo = {
-            id: `combo-${preset.key}-${Date.now()}`,
-            title: preset.title,
-            icon: preset.icon,
-            description: preset.description,
+            id: `combo-${recipe.recipeId}-${Date.now()}`,
+            title: recipe.title,
+            icon: recipe.pattern === 'delivery' ? 'Truck' : recipe.pattern === 'audit' ? 'ShieldCheck' : 'Wrench',
+            description: recipe.desc,
             isDefault: combos.length === 0,
-            slots: preset.slots.map((s) => ({ ...s })),
+            recipeId: recipe.recipeId,
+            catalogVersion: recipe.catalogVersion || 1,
+            isCustom: false,
+            basedOnTitle: recipe.title,
+            nodes,
+            slots,
         };
-
         setCombos((prev) => [...prev, newCombo]);
         setCurrentComboIdx(combos.length);
         setSelectedFulfillment(newCombo.id);
         setAttachModalOpen(false);
+    };
+
+    const handleSaveDealChain = (updated: DealChainCombination) => {
+        const nextCombo: PartnerCombo = {
+            id: updated.id,
+            title: updated.title,
+            icon: updated.icon,
+            description: updated.description || '',
+            isDefault: updated.isDefault,
+            recipeId: updated.recipeId,
+            catalogVersion: updated.catalogVersion,
+            isCustom: updated.isCustom,
+            basedOnTitle: updated.basedOnTitle,
+            nodes: updated.nodes,
+            dependencies: updated.dependencies,
+            flowType: updated.flowType,
+            slots: updated.slots.map((slot, index) => ({
+                id: slot.id || `slot-${slot.type}-${index}`,
+                roleType: slot.type === 'delivery' ? 'COURIER' : slot.type === 'store' || slot.type === 'parts' ? 'STORE' : 'LABOR',
+                slotLabel: slot.role,
+                providerName: slot.name,
+                fee: (slot.feeMinor ?? 0) / 100,
+                feeMinor: slot.feeMinor ?? 0,
+                rating: 4.9,
+                slaText: slot.meta,
+                photoUrl: slot.coverThumbnailUrl,
+                listingId: slot.listingId,
+                isOpenSlot: slot.isOpenSlot,
+            })),
+        };
+        const existingCombo = combos.find((combo) => combo.id === updated.id);
+        if (existingCombo) {
+            setCombos((prev) =>
+                prev.map((combo) =>
+                    combo.id === updated.id
+                        ? { ...nextCombo, isDefault: combo.isDefault }
+                        : combo,
+                ),
+            );
+        } else {
+            setCombos((prev) => [...prev, { ...nextCombo, isDefault: combos.length === 0 }]);
+            setCurrentComboIdx(combos.length);
+            setSelectedFulfillment(updated.id);
+        }
+        setDealChainStudioOpen(false);
+        setCustomizingComboId(null);
     };
 
     const getShortPartnerName = (fullName: string) => {
@@ -1797,7 +1896,7 @@ export default function CreateProduct({
                                                                 </h3>
                                                                 {isSelected && (
                                                                     <span className="rounded-full bg-emerald-100 px-2 py-0.2 text-[8.5px] font-extrabold text-emerald-800 shrink-0">
-                                                                        ✓ Active Selection
+                                                                        Active
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -1875,31 +1974,18 @@ export default function CreateProduct({
                                                 {/* When flow is expanded: Show the Deal Chain Pipeline and Slot details regardless of active state */}
                                                 {isExpanded ? (
                                                     <>
-                                                        {/* Compact State Guidance Hint */}
-                                                        {isSelected ? (
-                                                            <div className="my-2 flex items-center justify-between rounded-lg border border-emerald-200/60 bg-emerald-50/70 px-2.5 py-1 text-[11px] font-semibold text-emerald-800">
-                                                                <span>✓ Active on listing — Customers will be offered this turnkey deal chain.</span>
-                                                                <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-800">
-                                                                    Active
-                                                                </span>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="my-2 flex items-center justify-between rounded-lg border border-slate-200/60 bg-[#F8FAFC] px-2.5 py-1 text-[11px] text-slate-500">
-                                                                <span>Exploring flow (Inactive) — View pipeline &amp; partners without activating.</span>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setSelectedFulfillment(c.id);
-                                                                        setCurrentComboIdx(idx);
-                                                                        setExpandedComboIds((prev) => ({ ...prev, [c.id]: true }));
-                                                                    }}
-                                                                    className="cursor-pointer font-bold text-[#0F2F58] hover:underline shrink-0 ml-2"
-                                                                >
-                                                                    Select as Active →
-                                                                </button>
-                                                            </div>
-                                                        )}
-
+                                                        <button
+                                                            type="button"
+                                                            data-testid={`customize-deal-chain-${c.id}`}
+                                                            onClick={() => {
+                                                                setCustomizingComboId(c.id);
+                                                                setDealChainStudioOpen(true);
+                                                            }}
+                                                            className="mb-2 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-[#0F2F58] hover:border-[#0F2F58]/40 hover:bg-slate-50"
+                                                        >
+                                                            <Sliders className="size-3" />
+                                                            Customize Deal Chain Nodes ({c.slots.length + 1})
+                                                        </button>
                                                         {/* Compact DAG Canvas View */}
                                                         <div className="my-2 rounded-xl border border-slate-200 bg-[#F8FAFC] p-2.5 overflow-x-auto [scrollbar-width:none]">
                                                             <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
@@ -1924,12 +2010,17 @@ export default function CreateProduct({
                                                                 {/* Pipeline Connectors & Slot Nodes */}
                                                                 {c.slots.map((s, sIdx) => {
                                                                     const isCourier = s.roleType === 'COURIER';
+                                                                    const isStore = s.roleType === 'STORE';
                                                                     const nodeBg = isCourier
                                                                         ? 'bg-[#E0F2FE]/70 border-sky-200 text-sky-900'
-                                                                        : 'bg-[#DCFCE7]/70 border-emerald-200 text-emerald-900';
+                                                                        : isStore
+                                                                          ? 'bg-amber-50/80 border-amber-200 text-amber-900'
+                                                                          : 'bg-[#DCFCE7]/70 border-emerald-200 text-emerald-900';
                                                                     const badgeBg = isCourier
                                                                         ? 'bg-[#0284C7] text-white'
-                                                                        : 'bg-[#16A34A] text-white';
+                                                                        : isStore
+                                                                          ? 'bg-amber-600 text-white'
+                                                                          : 'bg-[#16A34A] text-white';
 
                                                                     return (
                                                                         <React.Fragment key={s.id || sIdx}>
@@ -1971,7 +2062,7 @@ export default function CreateProduct({
                                                                 >
                                                                     <div className="flex items-center gap-2 min-w-0">
                                                                         <span className={`rounded px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase ${
-                                                                            s.roleType === 'COURIER' ? 'bg-sky-100 text-sky-800' : 'bg-emerald-100 text-emerald-800'
+                                                                            s.roleType === 'COURIER' ? 'bg-sky-100 text-sky-800' : s.roleType === 'STORE' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
                                                                         }`}>
                                                                             {s.roleType}
                                                                         </span>
@@ -1997,16 +2088,10 @@ export default function CreateProduct({
                                                         </div>
                                                     </>
                                                 ) : (
-                                                    <div
-                                                        onClick={() => toggleComboExpansion(c.id)}
-                                                        className="cursor-pointer pt-2 flex items-center justify-between text-[11px] text-slate-500 hover:text-slate-800 transition-colors"
-                                                    >
+                                                    <div className="pt-2 text-[11px] text-slate-500">
                                                         <span className="flex items-center gap-1.5">
                                                             <span className="size-1.5 rounded-full bg-slate-300" />
-                                                            <span>Includes {c.slots.map((s) => s.roleType).join(' + ')} · Click to explore flow &amp; partners</span>
-                                                        </span>
-                                                        <span className="font-bold text-[#0F2F58] flex items-center gap-1">
-                                                            View Flow <ChevronDown className="size-3" />
+                                                            <span>Includes {c.slots.map((s) => s.roleType).join(' + ')}</span>
                                                         </span>
                                                     </div>
                                                 )}
@@ -2021,10 +2106,7 @@ export default function CreateProduct({
                                         className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-[#FAFCFB] py-3 text-xs font-bold text-[#0F2F58] hover:border-[#0F2F58] hover:bg-[#F0F5FA] transition-all"
                                     >
                                         <Plus className="size-3.5" />
-                                        <span>Attach Delivery / Service Extension</span>
-                                        <span className="rounded-full bg-[#0F2F58] px-2 py-0.5 text-[9px] font-extrabold text-white">
-                                            DEAL CHAIN
-                                        </span>
+                                        <span>Attach Delivery / Service Extension · DEAL CHAIN</span>
                                     </button>
                                 </div>
 
@@ -2180,81 +2262,86 @@ export default function CreateProduct({
                 {/* Slot Listing Picker Modal for Swappable Deal Chain Partners */}
                 <SlotListingPickerModal
                     open={slotPickerState.open}
-                    onClose={() => setSlotPickerState((prev) => ({ ...prev, open: false }))}
+                    onClose={() => setSlotPickerState((prev) => ({ ...prev, open: false, onPickedOverride: undefined }))}
                     role={slotPickerState.role}
                     currentListingId={slotPickerState.currentListingId}
                     candidates={slotCandidateListings.length > 0 ? slotCandidateListings : undefined}
                     onSelectCandidate={handleCandidateSelected}
+                    onSelectOpenSlot={() => {
+                        const openSlot = {
+                            id: 'open-slot',
+                            title: 'Open Partner Slot',
+                            providerName: 'Buyer selects at checkout',
+                            priceMinor: 0,
+                            isOpenSlot: true,
+                        };
+                        if (slotPickerState.onPickedOverride) {
+                            slotPickerState.onPickedOverride(openSlot);
+                        } else {
+                            setCombos((prev) => prev.map((combo) => {
+                                if (combo.id !== slotPickerState.comboId) return combo;
+                                return {
+                                    ...combo,
+                                    slots: combo.slots.map((slot, index) =>
+                                        index === slotPickerState.slotIndex
+                                            ? {
+                                                ...slot,
+                                                providerName: openSlot.providerName,
+                                                fee: 0,
+                                                feeMinor: 0,
+                                                listingId: undefined,
+                                                isOpenSlot: true,
+                                            }
+                                            : slot,
+                                    ),
+                                };
+                            }));
+                        }
+                        setSlotPickerState((prev) => ({ ...prev, open: false, onPickedOverride: undefined }));
+                    }}
                 />
-
-                {/* Attach Partnered Deal Chain Extension Modal */}
-                <GlovoWaveModal
+                <DealChainCatalogModal
                     open={attachModalOpen}
                     onClose={() => setAttachModalOpen(false)}
-                    title="Attach Partnered Deal Chain Combo"
-                    subtitle="Verified Tagudin fulfillment presets & trade partner networks"
-                >
-                    <div className="flex flex-col gap-3 py-1 font-['Plus_Jakarta_Sans',sans-serif]">
-                        <p className="text-xs text-slate-500">
-                            Select a verified municipal deal chain combo to attach to this product listing:
-                        </p>
-                        <div className="flex flex-col gap-2.5 max-h-[50vh] overflow-y-auto pr-1">
-                            {PRESET_RECIPES.filter((r) => {
-                                if (!category) return true;
-                                if (r.applicableCategories.includes(category)) return true;
-                                if (isInstallationApplicable(category) && r.applicableCategories.includes('repairs')) return true;
-                                return false;
-                            }).map((recipe) => (
-                                <div
-                                    key={recipe.key}
-                                    onClick={() => handleAddPresetRecipe(recipe.key)}
-                                    className="flex cursor-pointer items-start justify-between rounded-2xl border border-slate-200 bg-white p-3.5 transition-all hover:border-[#0F2F58] hover:bg-[#F0F5FA]/50 active:scale-[0.99] shadow-2xs"
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-[#0F2F58]">
-                                            {renderComboIcon(recipe.icon, 'size-5')}
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-1.5">
-                                                <h4 className="text-xs font-extrabold text-[#0F2F58]">
-                                                    {recipe.title}
-                                                </h4>
-                                                <span className="rounded-full bg-[#0F2F58] px-1.5 py-0.2 text-[8px] font-extrabold text-white">
-                                                    DEAL CHAIN
-                                                </span>
-                                            </div>
-                                            <p className="mt-0.5 text-[11px] text-slate-500">
-                                                {recipe.description}
-                                            </p>
-                                            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                                {recipe.slots.map((s, sIdx) => (
-                                                    <span
-                                                        key={sIdx}
-                                                        className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
-                                                    >
-                                                        <span className="font-bold text-[#0F2F58]">{s.slotLabel}:</span>
-                                                        <span>{s.providerName}</span>
-                                                        <span className="font-mono text-emerald-700 font-bold">+₱{s.fee.toFixed(2)}</span>
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleAddPresetRecipe(recipe.key);
-                                        }}
-                                        className="cursor-pointer shrink-0 rounded-xl bg-[#FFC72C] px-3 py-1.5 text-xs font-bold text-slate-950 shadow-2xs hover:bg-[#F2BA18]"
-                                    >
-                                        + Attach
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </GlovoWaveModal>
+                    categoryCode={category}
+                    recommended={(dealChainOptions?.recommended ?? []).filter(
+                        (recipe) =>
+                            (recipe.applicableCategories.includes(category) ||
+                                recipe.applicableCategories.length === 0) &&
+                            (recipe.applicableListingTypes.includes('product') ||
+                                recipe.applicableListingTypes.length === 0),
+                    )}
+                    otherRecipes={allDealChainRecipes}
+                    onSelectRecipe={handleSelectDealChainRecipe}
+                    onBuildCustom={() => {
+                        setCustomizingComboId(null);
+                        setAttachModalOpen(false);
+                        setDealChainStudioOpen(true);
+                    }}
+                />
+                <DealChainCustomizerModal
+                    open={dealChainStudioOpen}
+                    onClose={() => {
+                        setDealChainStudioOpen(false);
+                        setCustomizingComboId(null);
+                    }}
+                    combination={studioCombination}
+                    primaryListingTitle={title || 'Untitled Product'}
+                    primaryListingPricePesos={Math.round(defaultVariant?.price || 0)}
+                    primaryListingType="product"
+                    onSave={handleSaveDealChain}
+                    onPickPartnerForSlot={(slotType: SlotType, onPicked) => {
+                        setSlotPickerState({
+                            open: true,
+                            role: slotType,
+                            comboId: customizingComboId || 'studio-new',
+                            slotIndex: -1,
+                            currentListingId: undefined,
+                            onPickedOverride: onPicked,
+                        });
+                    }}
+                />
+
             </div>
         </div>
     );

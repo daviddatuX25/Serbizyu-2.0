@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
+import type * as MobileComponents from '../../components/mobile';
+import type { DealChainCustomizerModalProps } from '../../components/mobile/DealChainCustomizerModal';
 import CreateProduct, { defaultCombosForCategory, isInstallationApplicable } from './CreateProduct';
 
 // Mock Inertia router and Link
@@ -21,6 +23,82 @@ vi.mock('@inertiajs/react', () => ({
         },
     }),
 }));
+
+vi.mock('../../components/mobile', async (importOriginal) => {
+    const actual = await importOriginal<typeof MobileComponents>();
+
+    return {
+        ...actual,
+        DealChainCustomizerModal: (
+            props: DealChainCustomizerModalProps,
+        ) => (
+            <>
+                <div
+                    data-testid="deal-chain-customizer-contract"
+                    data-primary-listing-type={props.primaryListingType}
+                    data-combination-id={props.combination?.id ?? ''}
+                />
+                <actual.DealChainCustomizerModal {...props} />
+            </>
+        ),
+    };
+});
+
+const dealChainOptions = {
+    recommended: [
+        {
+            recipeId: 'courier-delivery',
+            catalogVersion: 1,
+            pattern: 'delivery',
+            patternCapsule: ['Courier', 'Doorstep'],
+            title: 'Tagudin Courier Delivery',
+            extraFee: 35,
+            extraFeeMinor: 3500,
+            rating: '4.9',
+            bookedCount: '24',
+            desc: 'Courier transit for product orders.',
+            applicableCategories: [],
+            applicableListingTypes: ['product'],
+            applicableWorkShapes: [],
+            nodes: [
+                {
+                    key: 'courier',
+                    role: 'Courier',
+                    title: 'Danny Express',
+                    sub: 'Doorstep transit',
+                    type: 'delivery',
+                },
+            ],
+        },
+        {
+            recipeId: 'safety-audit',
+            catalogVersion: 1,
+            pattern: 'audit',
+            patternCapsule: ['Safety', 'Audit'],
+            title: 'Product Safety Audit',
+            extraFee: 50,
+            extraFeeMinor: 5000,
+            rating: '4.8',
+            bookedCount: '12',
+            desc: 'Inspection for listed products.',
+            applicableCategories: [],
+            applicableListingTypes: ['product'],
+            applicableWorkShapes: [],
+            nodes: [
+                {
+                    key: 'audit',
+                    role: 'Auditor',
+                    title: 'Safety Inspector',
+                    sub: 'Product inspection',
+                    type: 'audit',
+                },
+            ],
+        },
+    ],
+    other_recipes: [],
+};
+
+
 
 describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
     afterEach(() => {
@@ -240,7 +318,8 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         // The flow expands to explore without activating it
         expect(screen.getByText('Deal Chain Pipeline View')).toBeTruthy();
         expect(screen.getByText(/Attached Partner Slots/i)).toBeTruthy();
-        expect(screen.getByText(/Exploring flow \(Inactive\)/i)).toBeTruthy();
+        // Expanded flow remains uncluttered; active state is communicated by the fulfillment control.
+        expect(screen.queryByText(/Exploring flow \(Inactive\)/i)).toBeNull();
 
         // Baseline Counter Pickup remains the active default!
         expect(screen.getByText('✓ Active Default')).toBeTruthy();
@@ -257,10 +336,64 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
 
         // Now it is the active selection and the flow is expanded
         expect(screen.getAllByText('✓ Active Selection').length).toBeGreaterThanOrEqual(1);
-        expect(screen.getByText(/Active on listing/i)).toBeTruthy();
         expect(screen.getByText('Deal Chain Pipeline View')).toBeTruthy();
 
         // Counter pickup reflects that it is no longer the active default
         expect(screen.getByRole('button', { name: /Switch to Pickup Only/i })).toBeTruthy();
+    });
+
+    it('opens the Deal Chain Catalog with live search and pattern filters from Attach Delivery / Service Extension', () => {
+        render(<CreateProduct dealChainOptions={dealChainOptions} />);
+        fireEvent.click(screen.getByRole('button', { name: /^standard$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Attach Delivery \/ Service Extension/i }));
+
+        expect(screen.getByRole('dialog', { name: /Select or Build a Partner Deal Chain/i })).toBeTruthy();
+        expect(screen.getByPlaceholderText(/Search Deal Chain sets/i)).toBeTruthy();
+        expect(screen.getByRole('button', { name: 'All Deal Chains' })).toBeTruthy();
+        expect(screen.getByRole('button', { name: 'Courier Transit' })).toBeTruthy();
+        expect(screen.getByRole('button', { name: 'Safety & Quality Audit' })).toBeTruthy();
+    });
+
+    it('filters the available deal chain recipes as the catalog search is typed', () => {
+        render(<CreateProduct dealChainOptions={dealChainOptions} />);
+        fireEvent.click(screen.getByRole('button', { name: /^standard$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Attach Delivery \/ Service Extension/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Browse All Compatible/i }));
+
+        const search = screen.getByPlaceholderText(/Search Deal Chain sets/i);
+        expect(screen.getByText('Tagudin Courier Delivery')).toBeTruthy();
+        expect(screen.getByText('Product Safety Audit')).toBeTruthy();
+
+        fireEvent.change(search, { target: { value: 'safety' } });
+
+        expect(screen.getByText('Product Safety Audit')).toBeTruthy();
+        expect(screen.queryByText('Tagudin Courier Delivery')).toBeNull();
+    });
+
+    it('opens Deal Chain Studio for a product when building a custom chain', () => {
+        render(<CreateProduct dealChainOptions={dealChainOptions} />);
+        fireEvent.click(screen.getByRole('button', { name: /^standard$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Attach Delivery \/ Service Extension/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Build Custom.*Studio/i }));
+
+        const studio = screen.getByRole('dialog', { name: /Deal Chain Studio/i });
+        expect(studio).toBeTruthy();
+        expect(screen.getByTestId('deal-chain-customizer-contract').getAttribute('data-primary-listing-type')).toBe('product');
+    });
+
+    it('opens Deal Chain Studio for the expanded combo with its bound partner listing', () => {
+        render(<CreateProduct />);
+        fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
+        fireEvent.click(screen.getByTestId('toggle-flow-combo-delivery'));
+        fireEvent.click(screen.getByTestId('customize-deal-chain-combo-delivery'));
+
+        const studio = screen.getByRole('dialog', { name: /Deal Chain Studio/i });
+        expect(studio).toBeTruthy();
+        expect(screen.getByTestId('deal-chain-customizer-contract').getAttribute('data-combination-id')).toBe('combo-delivery');
+
+        fireEvent.click(within(studio).getByRole('button', { name: /Change Partner/i }));
+        fireEvent.click(screen.getByText('Barangay Centro Bicycle Runner'));
+        fireEvent.click(screen.getByRole('button', { name: /Confirm Partner Selection/i }));
+        expect(within(studio).getAllByText('Barangay Centro Bicycle Runner').length).toBeGreaterThan(0);
     });
 });
