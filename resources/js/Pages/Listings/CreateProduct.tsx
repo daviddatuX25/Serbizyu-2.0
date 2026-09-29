@@ -7,13 +7,11 @@ import {
     ChevronDown,
     ChevronUp,
     Eye,
-    Info,
     Package,
     Plus,
     ShieldCheck,
     Sliders,
     Sparkles,
-    Star,
     Store,
     Trash2,
     Truck,
@@ -1777,7 +1775,7 @@ export default function CreateProduct({
                                         return (
                                             <div
                                                 key={c.id}
-                                                className={`rounded-2xl border p-4 transition-all ${
+                                                className={`rounded-2xl border p-3.5 transition-all ${
                                                     isSelected
                                                         ? 'border-[#0F2F58] bg-[#FAFCFB] ring-2 ring-[#0F2F58]/20 shadow-xs'
                                                         : 'border-slate-200 bg-white hover:border-slate-300'
@@ -1786,36 +1784,29 @@ export default function CreateProduct({
                                                 {/* Combo Header: Clicking anywhere on header (except buttons) toggles flow expansion without changing active state */}
                                                 <div
                                                     onClick={() => toggleComboExpansion(c.id)}
-                                                    className="flex cursor-pointer items-center justify-between border-b border-slate-100 pb-3"
+                                                    className="flex cursor-pointer items-center justify-between border-b border-slate-100 pb-2.5"
                                                 >
-                                                    <div className="flex items-center gap-2.5">
-                                                        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EBF2FA] text-[#0F2F58]">
-                                                            {renderComboIcon(c.icon, 'size-4')}
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#EBF2FA] text-[#0F2F58]">
+                                                            {renderComboIcon(c.icon, 'size-3.5')}
                                                         </span>
-                                                        <div>
-                                                            <div className="flex items-center gap-2">
-                                                                <h3 className="text-sm font-extrabold text-[#0F2F58]">
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <h3 className="truncate text-xs font-extrabold text-[#0F2F58]">
                                                                     {c.title}
                                                                 </h3>
-                                                                <span className="rounded-full bg-[#0F2F58] px-2 py-0.5 text-[9px] font-extrabold text-white">
-                                                                    DEAL CHAIN
-                                                                </span>
-                                                                {isSelected ? (
-                                                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800">
+                                                                {isSelected && (
+                                                                    <span className="rounded-full bg-emerald-100 px-2 py-0.2 text-[8.5px] font-extrabold text-emerald-800 shrink-0">
                                                                         ✓ Active Selection
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500">
-                                                                        Available Option
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <p className="text-[10.5px] text-slate-500">
+                                                            <p className="truncate text-[10.5px] text-slate-500">
                                                                 {c.description}
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-1.5 shrink-0 ml-2">
                                                         {/* Touchpoint 1: View / Explore Deal Chain Flow */}
                                                         <button
                                                             type="button"
@@ -1824,10 +1815,10 @@ export default function CreateProduct({
                                                                 e.stopPropagation();
                                                                 toggleComboExpansion(c.id);
                                                             }}
-                                                            className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold transition-all ${
+                                                            className={`cursor-pointer inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold transition-all ${
                                                                 isExpanded
                                                                     ? 'border-[#0F2F58]/30 bg-[#EBF2FA] text-[#0F2F58]'
-                                                                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                                                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                                                             }`}
                                                             aria-expanded={isExpanded}
                                                             title={isExpanded ? 'Hide Deal Chain Flow' : 'Explore Deal Chain Flow'}
@@ -1856,9 +1847,9 @@ export default function CreateProduct({
                                                                     setExpandedComboIds((prev) => ({ ...prev, [c.id]: true }));
                                                                 }
                                                             }}
-                                                            className={`cursor-pointer rounded-full px-3 py-1 text-[10px] font-extrabold transition-all ${
+                                                            className={`cursor-pointer rounded-full px-2.5 py-0.5 text-[10px] font-extrabold transition-all ${
                                                                 isSelected
-                                                                    ? 'bg-[#0F2F58] text-white shadow-xs hover:bg-[#163e72]'
+                                                                    ? 'bg-[#0F2F58] text-white shadow-2xs hover:bg-[#163e72]'
                                                                     : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
                                                             }`}
                                                         >
@@ -1872,11 +1863,11 @@ export default function CreateProduct({
                                                                 e.stopPropagation();
                                                                 handleRemoveCombo(c.id);
                                                             }}
-                                                            className="cursor-pointer p-1.5 text-slate-400 hover:text-red-600 transition-colors"
+                                                            className="cursor-pointer p-1 text-slate-400 hover:text-red-500 transition-colors"
                                                             title="Remove this partnered option"
                                                             aria-label="Remove option"
                                                         >
-                                                            <Trash2 className="size-4" />
+                                                            <Trash2 className="size-3.5" />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1884,20 +1875,17 @@ export default function CreateProduct({
                                                 {/* When flow is expanded: Show the Deal Chain Pipeline and Slot details regardless of active state */}
                                                 {isExpanded ? (
                                                     <>
-                                                        {/* State Guidance Pill inside expanded card */}
+                                                        {/* Compact State Guidance Hint */}
                                                         {isSelected ? (
-                                                            <div className="my-2.5 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-1.5 text-[11px] font-semibold text-emerald-900">
+                                                            <div className="my-2 flex items-center justify-between rounded-lg border border-emerald-200/60 bg-emerald-50/70 px-2.5 py-1 text-[11px] font-semibold text-emerald-800">
                                                                 <span>✓ Active on listing — Customers will be offered this turnkey deal chain.</span>
-                                                                <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-emerald-800">
+                                                                <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-800">
                                                                     Active
                                                                 </span>
                                                             </div>
                                                         ) : (
-                                                            <div className="my-2.5 flex items-center justify-between rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-1.5 text-[11px] text-slate-600">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <Info className="size-3.5 text-slate-400 shrink-0" />
-                                                                    <span>Exploring flow (Inactive) — View pipeline &amp; partners without activating.</span>
-                                                                </div>
+                                                            <div className="my-2 flex items-center justify-between rounded-lg border border-slate-200/60 bg-[#F8FAFC] px-2.5 py-1 text-[11px] text-slate-500">
+                                                                <span>Exploring flow (Inactive) — View pipeline &amp; partners without activating.</span>
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => {
@@ -1913,15 +1901,15 @@ export default function CreateProduct({
                                                         )}
 
                                                         {/* Compact DAG Canvas View */}
-                                                        <div className="my-3 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3 overflow-x-auto [scrollbar-width:none]">
-                                                            <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+                                                        <div className="my-2 rounded-xl border border-slate-200 bg-[#F8FAFC] p-2.5 overflow-x-auto [scrollbar-width:none]">
+                                                            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                                                                 Deal Chain Pipeline View
                                                             </div>
                                                             <div className="flex items-center gap-2 min-w-max">
                                                                 {/* Product Node */}
-                                                                <div className="flex flex-col gap-1 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 shadow-2xs min-w-[105px]">
+                                                                <div className="flex flex-col gap-0.5 rounded-lg border border-amber-200 bg-amber-50/80 px-2.5 py-1.5 shadow-2xs min-w-[95px]">
                                                                     <div className="flex items-center justify-between gap-1">
-                                                                        <span className="rounded bg-amber-200/80 px-1.5 py-0.5 text-[8px] font-extrabold text-amber-900 uppercase">
+                                                                        <span className="rounded bg-amber-200/80 px-1 py-0.2 text-[7.5px] font-extrabold text-amber-900 uppercase">
                                                                             Product
                                                                         </span>
                                                                         <span className="font-mono text-[9px] font-bold text-amber-900">
@@ -1946,15 +1934,14 @@ export default function CreateProduct({
                                                                     return (
                                                                         <React.Fragment key={s.id || sIdx}>
                                                                             <div className="flex shrink-0 items-center text-slate-300">
-                                                                                <svg width="20" height="12" viewBox="0 0 20 12" fill="none" className="shrink-0">
-                                                                                    <line x1="0" y1="6" x2="16" y2="6" stroke="#10B981" strokeWidth="2" strokeDasharray="3 2" />
-                                                                                    <path d="M14 2L19 6L14 10" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                <svg width="16" height="10" viewBox="0 0 16 10" fill="none" className="shrink-0">
+                                                                                    <line x1="0" y1="5" x2="16" y2="5" stroke="#10B981" strokeWidth="1.8" strokeDasharray="3 2" />
                                                                                 </svg>
                                                                             </div>
 
-                                                                            <div className={`flex flex-col gap-1 rounded-xl border px-3 py-2 shadow-2xs min-w-[115px] ${nodeBg}`}>
+                                                                            <div className={`flex flex-col gap-0.5 rounded-lg border px-2.5 py-1.5 shadow-2xs min-w-[105px] ${nodeBg}`}>
                                                                                 <div className="flex items-center justify-between gap-1">
-                                                                                    <span className={`rounded px-1.5 py-0.5 text-[8px] font-extrabold uppercase ${badgeBg}`}>
+                                                                                    <span className={`rounded px-1 py-0.2 text-[7.5px] font-extrabold uppercase ${badgeBg}`}>
                                                                                         {s.roleType}
                                                                                     </span>
                                                                                     <span className="font-mono text-[9px] font-bold">
@@ -1971,40 +1958,29 @@ export default function CreateProduct({
                                                             </div>
                                                         </div>
 
-                                                        {/* Slot Binding Selectors */}
-                                                        <div className="space-y-2">
-                                                            <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                                                        {/* Slot Binding Selectors: Single-line compact row matching design kit */}
+                                                        <div className="space-y-1 pt-0.5">
+                                                            <div className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">
                                                                 Attached Partner Slots ({c.slots.length})
                                                             </div>
                                                             {c.slots.map((s, sIdx) => (
                                                                 <div
                                                                     key={s.id || sIdx}
                                                                     onClick={() => openSlotPicker(c.id, sIdx, s.roleType, s.id)}
-                                                                    className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200/90 bg-white p-3 shadow-2xs transition-all hover:border-[#0F2F58]/50 hover:bg-slate-50/50"
+                                                                    className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs hover:border-[#0F2F58]/50 transition-all shadow-2xs"
                                                                 >
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
-                                                                            s.roleType === 'COURIER' ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'
+                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                        <span className={`rounded px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase ${
+                                                                            s.roleType === 'COURIER' ? 'bg-sky-100 text-sky-800' : 'bg-emerald-100 text-emerald-800'
                                                                         }`}>
-                                                                            {s.roleType === 'COURIER' ? <Truck className="size-4.5" /> : <Wrench className="size-4.5" />}
-                                                                        </div>
-                                                                        <div>
-                                                                            <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400">
-                                                                                {s.slotLabel}
-                                                                            </div>
-                                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                                <span className="text-xs font-extrabold text-[#0F2F58]">
-                                                                                    {s.providerName}
-                                                                                </span>
-                                                                                <span className="flex items-center gap-0.5 rounded bg-amber-50 px-1.5 py-0.2 text-[10px] font-bold text-amber-700 border border-amber-200/50">
-                                                                                    <Star className="size-2.5 fill-amber-400 stroke-amber-500" />
-                                                                                    <span>{s.rating.toFixed(1)}</span>
-                                                                                </span>
-                                                                                <span className="font-mono text-xs font-bold text-emerald-700">
-                                                                                    +₱{s.fee.toFixed(2)} {s.roleType === 'COURIER' ? 'route fee' : 'labor'}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
+                                                                            {s.roleType}
+                                                                        </span>
+                                                                        <span className="truncate font-extrabold text-[#0F2F58]">
+                                                                            {s.providerName}
+                                                                        </span>
+                                                                        <span className="font-mono text-[11px] font-bold text-emerald-700 shrink-0">
+                                                                            +₱{s.fee.toFixed(2)}
+                                                                        </span>
                                                                     </div>
                                                                     <button
                                                                         type="button"
@@ -2012,9 +1988,9 @@ export default function CreateProduct({
                                                                             e.stopPropagation();
                                                                             openSlotPicker(c.id, sIdx, s.roleType, s.id);
                                                                         }}
-                                                                        className="cursor-pointer shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-[#0F2F58] shadow-2xs hover:bg-[#EBF2FA] hover:border-[#0F2F58]/30 transition-all"
+                                                                        className="cursor-pointer shrink-0 text-[10.5px] font-bold text-[#0F2F58] hover:underline"
                                                                     >
-                                                                        Change Partner ▾
+                                                                        Change ▾
                                                                     </button>
                                                                 </div>
                                                             ))}
@@ -2038,23 +2014,11 @@ export default function CreateProduct({
                                         );
                                     })}
 
-                                    {/* Attach Additional Presets Button */}
+                                    {/* Dedicated Single Attach Delivery / Service Extension Button (Deduplicated) */}
                                     <button
                                         type="button"
                                         onClick={() => setAttachModalOpen(true)}
-                                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-[#FAFCFB] p-4 text-xs font-bold text-[#0F2F58] hover:border-[#0F2F58] hover:bg-[#F0F5FA] transition-all"
-                                    >
-                                        <Plus className="size-4" />
-                                        <span>Attach Another Partnered Preset / Deal Chain</span>
-                                    </button>
-                                </div>
-
-                                {/* Attach Delivery / Service Extension Button */}
-                                <div className="pt-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => setAttachModalOpen(true)}
-                                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white py-2.5 text-xs font-bold text-[#0F2F58] hover:border-[#0F2F58] hover:bg-[#FAFCFB] transition-all shadow-2xs"
+                                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-[#FAFCFB] py-3 text-xs font-bold text-[#0F2F58] hover:border-[#0F2F58] hover:bg-[#F0F5FA] transition-all"
                                     >
                                         <Plus className="size-3.5" />
                                         <span>Attach Delivery / Service Extension</span>
@@ -2065,65 +2029,67 @@ export default function CreateProduct({
                                 </div>
 
                                 {/* Summary Preview Card */}
-                                <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                                        <span className="rounded-full bg-[#EBF2FA] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0F2F58] uppercase">
-                                            Shape A4 Product · {category}
-                                        </span>
-                                        <span className="font-mono text-base font-extrabold text-[#0F2F58]">
-                                            ₱{defaultVariant?.price.toFixed(2)}
-                                        </span>
-                                    </div>
-
-                                    <div>
-                                        <h3 className="text-sm font-extrabold text-slate-900">
-                                            {title || 'Untitled Product'}
-                                        </h3>
-                                        <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                                            {description || 'Direct Tagudin product listing.'}
-                                        </p>
-                                    </div>
-
-                                    <div className="space-y-1 rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs">
-                                        <div className="text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">
-                                            Active Variants ({variants.length})
+                                {builderMode === 'guided' && (
+                                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                            <span className="rounded-full bg-[#EBF2FA] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0F2F58] uppercase">
+                                                Shape A4 Product · {category}
+                                            </span>
+                                            <span className="font-mono text-base font-extrabold text-[#0F2F58]">
+                                                ₱{defaultVariant?.price.toFixed(2)}
+                                            </span>
                                         </div>
-                                        {variants.map((v, i) => (
-                                            <div
-                                                key={i}
-                                                className="flex justify-between text-slate-700"
-                                            >
-                                                <span>
-                                                    {v.name} ({v.stock} in stock)
-                                                </span>
-                                                <span className="font-mono font-bold text-[#0F2F58]">
-                                                    ₱{v.price.toFixed(2)}
-                                                </span>
+
+                                        <div>
+                                            <h3 className="text-sm font-extrabold text-slate-900">
+                                                {title || 'Untitled Product'}
+                                            </h3>
+                                            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                                                {description || 'Direct Tagudin product listing.'}
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-1 rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs">
+                                            <div className="text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">
+                                                Active Variants ({variants.length})
                                             </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Primary Fulfillment in Summary */}
-                                    <div className="rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs space-y-1">
-                                        <div className="flex items-center justify-between text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">
-                                            <span>Active Fulfillment</span>
-                                            <span className="font-mono text-emerald-700 font-bold">{activeFulfillmentInfo.badge}</span>
+                                            {variants.map((v, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="flex justify-between text-slate-700"
+                                                >
+                                                    <span>
+                                                        {v.name} ({v.stock} in stock)
+                                                    </span>
+                                                    <span className="font-mono font-bold text-[#0F2F58]">
+                                                        ₱{v.price.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="flex items-center gap-1.5 font-bold text-[#0F2F58]">
-                                            {activeFulfillmentInfo.icon}
-                                            <span>{activeFulfillmentInfo.title}</span>
-                                        </div>
-                                        <p className="text-[10.5px] text-slate-500">{activeFulfillmentInfo.description}</p>
-                                    </div>
 
-                                    <div className="flex items-center gap-2 pt-1 text-[11px] font-semibold text-amber-800">
-                                        <ShieldCheck className="size-4 shrink-0 text-amber-700" />
-                                        <span>
-                                            Saved as a private draft; review submission is a separate
-                                            step.
-                                        </span>
+                                        {/* Primary Fulfillment in Summary */}
+                                        <div className="rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs space-y-1">
+                                            <div className="flex items-center justify-between text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">
+                                                <span>Active Fulfillment</span>
+                                                <span className="font-mono text-emerald-700 font-bold">{activeFulfillmentInfo.badge}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 font-bold text-[#0F2F58]">
+                                                {activeFulfillmentInfo.icon}
+                                                <span>{activeFulfillmentInfo.title}</span>
+                                            </div>
+                                            <p className="text-[10.5px] text-slate-500">{activeFulfillmentInfo.description}</p>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 pt-1 text-[11px] font-semibold text-amber-800">
+                                            <ShieldCheck className="size-4 shrink-0 text-amber-700" />
+                                            <span>
+                                                Saved as a private draft; review submission is a separate
+                                                step.
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {builderMode === 'guided' ? (
                                     <div className="flex gap-2.5">
