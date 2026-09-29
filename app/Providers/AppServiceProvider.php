@@ -1,11 +1,11 @@
 <?php
 
 namespace App\Providers;
-
+use App\Modules\Catalogs\Application\DealChainCatalog;
 use App\Modules\Catalogs\Application\WorkCatalog;
-use App\Modules\IdentityAccess\Application\ConsentActingForAuthorizer;
 use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryChannel;
 use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryInspector;
+use App\Modules\IdentityAccess\Application\ConsentActingForAuthorizer;
 use App\Modules\IdentityAccess\Application\DemoFixtureService;
 use App\Modules\IdentityAccess\Infrastructure\Auth\DisabledOAuthLoginPort;
 use App\Modules\IdentityAccess\Infrastructure\Notifications\FakeOtpDelivery;
@@ -15,11 +15,16 @@ use App\Modules\Listings\Application\Contracts\ListingCommandStore;
 use App\Modules\Listings\Application\Contracts\PublicListingReader;
 use App\Modules\Listings\Application\OrderCapacityAdapter;
 use App\Modules\Listings\Application\OrderListingSourceAdapter;
+use App\Modules\DealCoordination\Application\DealNeedOrderLinkService;
 use App\Modules\Listings\Infrastructure\ListingRepository;
 use App\Modules\OrdersWork\Application\DefaultWorkContractRegistry;
+use App\Modules\OrdersWork\Application\FormDealNeedChildOrder;
 use App\Modules\OrdersWork\Application\WorkContractRegistry;
 use App\Modules\PaymentObligations\Application\OrderPaymentObligationAdapter;
 use App\Shared\Contracts\ActingForAuthorizer;
+use App\Shared\Contracts\ChildOrderFormationPort;
+use App\Shared\Contracts\DealNeedOrderLinkPort;
+use App\Shared\Contracts\DealChainRecipeCatalogPort;
 use App\Shared\Contracts\FixtureManager;
 use App\Shared\Contracts\OAuthLoginPort;
 use App\Shared\Contracts\OrderCapacityPort;
@@ -52,13 +57,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OrderListingSourcePort::class, OrderListingSourceAdapter::class);
         $this->app->bind(OrderCapacityPort::class, OrderCapacityAdapter::class);
         $this->app->bind(OrderPaymentObligationPort::class, OrderPaymentObligationAdapter::class);
-        $this->app->bind(NotificationChannel::class, MailpitNotificationChannel::class);
+        $this->app->bind(ChildOrderFormationPort::class, FormDealNeedChildOrder::class);
+        $this->app->bind(DealNeedOrderLinkPort::class, DealNeedOrderLinkService::class);
         $this->app->bind(FixtureManager::class, DemoFixtureService::class);
         $this->app->bind(ActingForAuthorizer::class, ConsentActingForAuthorizer::class);
         $this->app->bind(OAuthLoginPort::class, DisabledOAuthLoginPort::class);
         $this->app->singleton(WorkContractRegistry::class, DefaultWorkContractRegistry::class);
         $this->app->singleton(WorkSpecificationPort::class, WorkCatalog::class);
-
+        $this->app->singleton(DealChainRecipeCatalogPort::class, DealChainCatalog::class);
         $this->app->bind(OtpDeliveryChannel::class, function ($app): OtpDeliveryChannel {
             $mode = (string) config('serbizyu.providers.notifications.mode', 'disabled');
             $environment = (string) config('serbizyu.environment', config('app.env', 'local'));

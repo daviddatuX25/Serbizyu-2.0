@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Modules\Catalogs\Application\DealChainCatalog;
+use App\Modules\DealCoordination\Application\DealCoordinationError;
+use App\Modules\DealCoordination\Application\RespondToDealInvitation;
+use App\Modules\DealCoordination\Application\StageDealChain;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
 use App\Shared\Contracts\OrderListingSourcePort;
@@ -23,6 +26,8 @@ final class DealChainController extends Controller
         private readonly CurrentSession $session,
         private readonly OrderListingSourcePort $listingSource,
         private readonly DealChainCatalog $catalog,
+        private readonly StageDealChain $stageDealChain,
+        private readonly RespondToDealInvitation $respondToInvitation,
     ) {}
 
     public function authorize(Request $request): mixed
@@ -46,61 +51,63 @@ final class DealChainController extends Controller
                 'payment_method' => ['prohibited'],
                 'total_amount' => ['prohibited'],
             ]);
-
-            $resolvedItems = $this->resolveItems(
-                $validated['items'],
-                $userId,
-                $recipeCatalog,
+            $idempotencyKey = (string) ($request->header('X-Idempotency-Key') ?: Str::uuid7());
+            $result = $this->stageDealChain->handle(
+                coordinatorUserId: $userId,
+                items: $validated['items'],
+                idempotencyKey: $idempotencyKey,
+                correlationId: $correlationId,
             );
-            $dealChainId = (string) Str::uuid7();
-            $now = now();
-
-            DB::transaction(function () use (
-                $dealChainId,
-                $userId,
-                $correlationId,
-                $now,
-                $resolvedItems,
-                $recipeCatalog,
-            ): void {
-                DB::table('deal_chains')->insert([
-                    'id' => $dealChainId,
-                    'coordinator_user_id' => $userId,
-                    'status' => 'sourcing',
-                    'title' => 'Tagudin Deal Chain #'.strtoupper(substr($dealChainId, 0, 8)),
-                    'goal' => 'Coordinated fulfillment plan with provider agreements pending',
-                    'correlation_id' => $correlationId,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
-
-                $ordinal = 1;
-                foreach ($resolvedItems as $item) {
-                    $this->appendPlan(
-                        dealChainId: $dealChainId,
-                        coordinatorUserId: $userId,
-                        correlationId: $correlationId,
-                        now: $now,
-                        ordinal: $ordinal,
-                        recipe: $item['recipe'],
-                        recipeDefinition: $item['recipe'] === null
-                            ? null
-                            : $recipeCatalog[$item['recipe']] ?? null,
-                        source: $item['source'],
-                        quantity: $item['quantity'],
-                        slotOverrides: $item['slot_overrides'] ?? null,
-                    );
-                }
-            });
 
             return redirect()
-                ->route('deal-chains.show', ['dealChain' => $dealChainId])
+                ->route('deal-chains.show', ['dealChain' => $result['deal_chain_id']])
                 ->with(
                     'notice',
                     'Deal Chain plan staged. No Order, Work record, or payment obligation was created.',
                 );
         } catch (IdentityAccessError) {
             return redirect()->route('auth.sign-in');
+        } catch (DealCoordinationError $error) {
+            throw ValidationException::withMessages(
+                $error->envelope->fieldErrors !== [] ? $error->envelope->fieldErrors : ['items' => [$error->getMessage()]],
+            );
+        }
+    }
+
+    public function respondToInvitation(Request $request, string $invitation): JsonResponse
+    {
+        $correlationId = $this->correlationId($request);
+        $idempotencyKey = (string) ($request->header('X-Idempotency-Key') ?: Str::uuid7());
+
+        try {
+            $userId = $this->session->requireUser($request, $correlationId);
+            $validated = $request->validate([
+                'decision' => ['required', 'string', Rule::in(['accept', 'decline'])],
+                'expected_version' => ['required', 'integer', 'min:1'],
+                'response_note' => ['nullable', 'string', 'max:500'],
+            ]);
+
+            $result = $this->respondToInvitation->handle(
+                actorUserId: $userId,
+                invitationId: $invitation,
+                decision: $validated['decision'],
+                expectedInvitationVersion: (int) $validated['expected_version'],
+                idempotencyKey: $idempotencyKey,
+                correlationId: $correlationId,
+                responseNote: $validated['response_note'] ?? null,
+            );
+
+            return response()->json(['data' => $result]);
+        } catch (IdentityAccessError) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        } catch (DealCoordinationError $error) {
+            return response()->json([
+                'error' => [
+                    'code' => $error->envelope->code,
+                    'message' => $error->getMessage(),
+                    'field_errors' => $error->envelope->fieldErrors,
+                ],
+            ], $error->status);
         }
     }
 

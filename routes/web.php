@@ -112,6 +112,9 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
         ->name('deal-chains.show');
     Route::get('/api/deal-chains/slot-candidates', [DealChainController::class, 'slotCandidates'])
         ->name('deal-chains.slot-candidates');
+    Route::post('/deal-invitations/{invitation}/respond', [DealChainController::class, 'respondToInvitation'])
+        ->middleware('throttle:30,1')
+        ->name('deal-invitations.respond');
 
     // Participant identity evidence & verifications
     Route::post('/account/identity/evidence', [IdentityEvidenceController::class, 'store'])->name('account.identity.evidence.store');
