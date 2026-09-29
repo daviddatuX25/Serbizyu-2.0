@@ -14,6 +14,7 @@ import WorkCatalogModal from '../WorkCatalogModal';
 import WorkNodeCustomizerModal from '../WorkNodeCustomizerModal';
 import { SlotListingPickerModal } from '../../marketplace/SlotListingPickerModal';
 import type { WorkStage, WorkTemplate, DealChainCombination, ActingContextData } from '../types';
+import type { SlotCandidateListing } from '../../../marketplace/types';
 afterEach(cleanup);
 describe('Mobile UI Kernel — Foundation Primitives', () => {
     describe('AppLayout', () => {
@@ -706,6 +707,23 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             expect(savedStages[0].dur).toBe('45m');
             expect(onClose).toHaveBeenCalledTimes(1);
         });
+        it('clears an optional target duration', () => {
+            const onSave = vi.fn();
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            fireEvent.click(screen.getByRole('button', { name: 'No target' }));
+            fireEvent.click(screen.getByRole('button', { name: /Apply Workflow to Listing/i }));
+
+            const savedStages: WorkStage[] = onSave.mock.calls[0][0];
+            expect(savedStages[0].dur).toBe('');
+        });
 
         it('allows switching clearance mode', () => {
             const onSave = vi.fn();
@@ -753,6 +771,7 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             const savedStages: WorkStage[] = onSave.mock.calls[0][0];
             expect(savedStages.length).toBe(4);
             expect(savedStages[3].num).toBe('4');
+            expect(savedStages[3].dur).toBe('');
         });
 
         it('allows reordering stages and updates numbering', () => {
@@ -906,12 +925,46 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
     });
 
     describe('SlotListingPickerModal — Role Normalization & State Sync Regression', () => {
+        const mockCandidates: SlotCandidateListing[] = [
+            {
+                id: 'c1',
+                title: 'Tagudin Express Motorcycle Delivery',
+                provider_name: 'Danny Express Motorcycle Pool',
+                area: 'Tagudin Townwide',
+                price_minor: 8000,
+                sla_text: 'On-demand ~20 mins transit',
+                rating: 4.9,
+                role: 'COURIER',
+            },
+            {
+                id: 'c2',
+                title: 'Barangay Centro Bicycle Runner',
+                provider_name: 'Centro Eco Courier',
+                area: 'Poblacion Centro',
+                price_minor: 2500,
+                sla_text: 'Eco transit ~15 mins',
+                rating: 4.8,
+                role: 'COURIER',
+            },
+            {
+                id: 'c3',
+                title: 'Split AC Capacitor Installation',
+                provider_name: 'Kuya Ben Aircon Services',
+                area: 'Tagudin Centro',
+                price_minor: 25000,
+                sla_text: 'Certified technician installation',
+                rating: 4.9,
+                role: 'LABOR',
+            },
+        ];
+
         it('normalizes lowercase "delivery" role to COURIER candidates instead of empty state', () => {
             render(
                 <SlotListingPickerModal
                     open={true}
                     onClose={vi.fn()}
                     role="delivery"
+                    candidates={mockCandidates}
                     onSelectCandidate={vi.fn()}
                 />,
             );
@@ -927,6 +980,7 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
                     open={true}
                     onClose={vi.fn()}
                     role="COURIER"
+                    candidates={mockCandidates}
                     onSelectCandidate={onSelect}
                 />,
             );
@@ -940,6 +994,7 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
                     open={true}
                     onClose={vi.fn()}
                     role="LABOR"
+                    candidates={mockCandidates}
                     onSelectCandidate={onSelect}
                 />,
             );

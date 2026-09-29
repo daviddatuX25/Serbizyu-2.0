@@ -13,127 +13,6 @@ export interface SlotListingPickerModalProps {
     onSelectOpenSlot?: () => void;
 }
 
-const DEFAULT_TAGUDIN_CANDIDATES: SlotCandidateListing[] = [
-    // STORE CANDIDATES
-    {
-        id: '0198a3b1-7c40-7abc-8def-5234567890ba',
-        title: 'AC Run Capacitor (35uF 450V)',
-        provider_name: 'Tagudin Hardware Depot',
-        area: 'Centro, Tagudin',
-        price_minor: 18000,
-        sla_text: 'Counter Ready in 15 mins',
-        rating: 4.9,
-        role: 'STORE',
-        photo_url: '/photos/ac-capacitor.jpg',
-    },
-    {
-        id: '0198a3b1-7c40-7abc-8def-5234567890b5',
-        title: 'Weekend bibingka tray (Box of 6)',
-        provider_name: 'Tagudin Morning Bakery',
-        area: 'Poblacion, Tagudin',
-        price_minor: 18000,
-        sla_text: 'Fresh from clay oven',
-        rating: 4.9,
-        role: 'STORE',
-        photo_url: '/photos/bibingka.jpg',
-    },
-    {
-        id: '0198a3b1-7c40-7abc-8def-5234567890b7',
-        title: 'Small greens bag & native root crops',
-        provider_name: 'Tagudin Market Stall',
-        area: 'Bitalag, Tagudin',
-        price_minor: 9000,
-        sla_text: 'Market morning ready',
-        rating: 4.8,
-        role: 'STORE',
-        photo_url: '/photos/bibingka.jpg',
-    },
-
-    // COURIER CANDIDATES
-    {
-        id: '0198a3b1-7c40-7abc-8def-5234567890b9',
-        title: 'Tagudin Express Motorcycle Delivery',
-        provider_name: 'Danny Express Motorcycle Pool',
-        area: 'Tagudin Townwide',
-        price_minor: 8000,
-        sla_text: 'On-demand ~20 mins transit',
-        rating: 4.9,
-        role: 'COURIER',
-        photo_url: '/photos/courier.jpg',
-    },
-    {
-        id: 'can_cour_bicycle',
-        title: 'Barangay Centro Bicycle Runner',
-        provider_name: 'Centro Eco Courier',
-        area: 'Poblacion Centro',
-        price_minor: 2500,
-        sla_text: 'Eco transit ~15 mins',
-        rating: 4.8,
-        role: 'COURIER',
-        photo_url: '/photos/courier.jpg',
-    },
-
-    // LABOR CANDIDATES
-    {
-        id: '0198a3b1-7c40-7abc-8def-5234567890bb',
-        title: 'Split AC Capacitor Installation',
-        provider_name: 'Kuya Ben Aircon Services',
-        area: 'Tagudin Centro',
-        price_minor: 25000,
-        sla_text: 'Certified technician installation',
-        rating: 4.9,
-        role: 'LABOR',
-        photo_url: '/photos/ac-clean.jpg',
-    },
-    {
-        id: '0198a3b1-7c40-7abc-8def-5234567890b8',
-        title: 'Inverter Split AC Deep Clean & Checkup',
-        provider_name: 'Kuya Ben Aircon Services',
-        area: 'Tagudin Centro',
-        price_minor: 45000,
-        sla_text: 'Same-day scheduled labor',
-        rating: 4.9,
-        role: 'LABOR',
-        photo_url: '/photos/ac-clean.jpg',
-    },
-    {
-        id: '0198a3b1-7c40-7abc-8def-5234567890b2',
-        title: 'Simple hem and button fix',
-        provider_name: 'Ate Elena Garment Repairs',
-        area: 'Tagudin Centro',
-        price_minor: 12000,
-        sla_text: 'Walk-in same-day repair',
-        rating: 4.8,
-        role: 'LABOR',
-        photo_url: '/photos/ac-clean.jpg',
-    },
-
-    // AUDIT & QUALITY
-    {
-        id: '0198a3b1-7c40-7abc-8def-5234567890bc',
-        title: 'Home Appliance Safety Audit',
-        provider_name: 'Safety Check (Master Electrician)',
-        area: 'Tagudin Centro',
-        price_minor: 15000,
-        sla_text: 'Post-service municipal certificate',
-        rating: 5.0,
-        role: 'AUDIT',
-        photo_url: '/photos/req-electrician.jpg',
-    },
-
-    // RECYCLE & SCRAP
-    {
-        id: 'can_recycle_1',
-        title: 'Eco-Scrap & Old Part Removal Service',
-        provider_name: 'Tagudin Green Reclamation',
-        area: 'Tagudin General',
-        price_minor: 5000,
-        sla_text: 'Same-day material recycling',
-        rating: 4.8,
-        role: 'RECYCLE',
-        photo_url: '/photos/courier.jpg',
-    },
-];
 
 export function SlotListingPickerModal({
     open,
@@ -147,7 +26,7 @@ export function SlotListingPickerModal({
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCategory, setFilterCategory] = useState<'all' | 'top_rated' | 'favorites'>('all');
     const [selectedId, setSelectedId] = useState<string>(currentListingId || '');
-    const [liveCandidates, setLiveCandidates] = useState<SlotCandidateListing[]>(DEFAULT_TAGUDIN_CANDIDATES);
+    const [liveCandidates, setLiveCandidates] = useState<SlotCandidateListing[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -184,7 +63,7 @@ export function SlotListingPickerModal({
         return roleUpper;
     }, [roleUpper]);
     useEffect(() => {
-        if (!open || candidates !== undefined || import.meta.env.MODE === 'test' || typeof fetch === 'undefined') {
+        if (!open || candidates !== undefined || typeof fetch === 'undefined') {
             setIsLoading(false);
             return;
         }
@@ -202,12 +81,13 @@ export function SlotListingPickerModal({
             .then((payload: { data?: SlotCandidateListing[] }) => {
                 if (Array.isArray(payload.data)) {
                     setLiveCandidates(payload.data);
+                } else {
+                    setLiveCandidates([]);
                 }
             })
             .catch((err: unknown) => {
                 if (err instanceof Error && err.name === 'AbortError') return;
-                // Only fall back to default tagudin fixtures if API request fails / offline
-                setLiveCandidates(DEFAULT_TAGUDIN_CANDIDATES);
+                setLiveCandidates([]);
             })
             .finally(() => {
                 if (!controller.signal.aborted) setIsLoading(false);
@@ -345,16 +225,50 @@ export function SlotListingPickerModal({
                     </button>
                 )}
 
-                {isLoading && (
-                    <div className="px-2 py-1 text-[10px] font-medium text-slate-400" role="status">
-                        Finding active local partners…
-                    </div>
-                )}
                 {/* Candidates List */}
                 <div className="flex max-h-[46vh] flex-col gap-2.5 space-y-0.5 overflow-y-auto pr-1">
-                    {matchingList.length === 0 ? (
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500">
-                            No Tagudin providers found matching your search.
+                    {isLoading ? (
+                        <div className="flex flex-col gap-2.5 space-y-0.5">
+                            {[1, 2, 3].map((n) => (
+                                <div
+                                    key={n}
+                                    className="flex animate-pulse items-start justify-between rounded-2xl border border-slate-100 bg-white p-3.5"
+                                >
+                                    <div className="flex flex-1 items-start gap-3">
+                                        <div className="size-12 rounded-xl bg-slate-200" />
+                                        <div className="flex-1 space-y-2 py-0.5">
+                                            <div className="h-3 w-24 rounded bg-slate-200" />
+                                            <div className="h-4 w-40 rounded bg-slate-200" />
+                                            <div className="h-2.5 w-32 rounded bg-slate-200" />
+                                        </div>
+                                    </div>
+                                    <div className="h-4 w-12 rounded bg-slate-200" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : matchingList.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-slate-200 bg-[#FAFCFB] p-6 text-center">
+                            <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                                <Package className="size-5" />
+                            </div>
+                            <h4 className="text-xs font-bold text-slate-800">
+                                No Verified {canonicalRole} Listings in Tagudin
+                            </h4>
+                            <p className="mx-auto mt-1 max-w-xs text-[11px] text-slate-500">
+                                No active listings match your current filters. You can leave this step as Community Open Pool so qualified local providers can claim it when an order is placed.
+                            </p>
+                            {onSelectOpenSlot && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        onSelectOpenSlot();
+                                        onClose();
+                                    }}
+                                    className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0F2F58] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#1A3D6E]"
+                                >
+                                    <span>Set as Community Open Pool</span>
+                                </button>
+                            )}
                         </div>
                     ) : (
                         matchingList.map((candidate) => {

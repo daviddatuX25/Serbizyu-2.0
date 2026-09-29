@@ -534,119 +534,123 @@ final class DealChainController extends Controller
             default => 'STORE',
         };
         $filterCategory = strtolower(trim((string) $request->query('category', '')));
+        $filterBarangay = trim((string) $request->query('barangay', ''));
 
-        $realListings = DB::table('listings')
+        $query = DB::table('listings')
             ->join('listing_versions', function ($j): void {
                 $j->on('listing_versions.listing_id', '=', 'listings.id')
                     ->on('listing_versions.version_number', '=', 'listings.current_version');
             })
+            ->leftJoin('user_profiles', 'listings.owner_user_id', '=', 'user_profiles.user_id')
             ->where('listings.status', 'active')
             ->where('listings.review_status', 'approved')
-            ->select(
-                'listings.id',
-                'listings.owner_user_id',
-                'listings.listing_type',
-                'listing_versions.terms',
-                'listing_versions.price_amount_minor',
-                'listing_versions.description'
-            )
-            ->get();
+            ->where(function ($q): void {
+                $q->whereNull('listings.geography')
+                    ->orWhereRaw("listings.geography->>'municipality_name' ILIKE 'Tagudin'")
+                    ->orWhereRaw("listings.geography->>'municipality_code' = '012925000'");
+            });
 
-        $candidatesByRole = [
-            'STORE' => [],
-            'COURIER' => [],
-            'LABOR' => [],
-            'AUDIT' => [],
-            'RECYCLE' => [],
-        ];
+        if ($filterBarangay !== '') {
+            $query->where(function ($q) use ($filterBarangay): void {
+                $q->whereNull('listings.geography')
+                    ->orWhereRaw("listings.geography->>'barangay_name' ILIKE ?", ["%{$filterBarangay}%"])
+                    ->orWhereRaw("listings.geography->>'barangay_code' = ?", [$filterBarangay]);
+            });
+        }
+
+        $realListings = $query->select([
+            'listings.id',
+            'listings.owner_user_id',
+            'listings.listing_type',
+            'listings.geography',
+            'listing_versions.terms',
+            'listing_versions.price_amount_minor',
+            'listing_versions.description',
+            'user_profiles.display_name as profile_display_name',
+        ])->get();
+
+        $candidates = [];
 
         foreach ($realListings as $listing) {
             $terms = json_decode((string) $listing->terms, true) ?: [];
-            $category = (string) ($terms['category_code'] ?? '');
-            $title = (string) ($terms['title'] ?? 'Listing');
+            $geography = json_decode((string) $listing->geography, true) ?: [];
+            $category = strtolower((string) ($terms['category_code'] ?? ''));
+            $title = (string) ($terms['title'] ?? 'Verified Listing');
             $priceMinor = (int) ($listing->price_amount_minor ?? $terms['price_amount_minor'] ?? 0);
             $fixtureKey = (string) ($terms['fixture_key'] ?? '');
 
+            // Dynamic provider display name (never leaking phone or private credentials)
+            $providerName = (string) (
+                $terms['stall_location']
+                ?? $listing->profile_display_name
+                ?? $terms['provider_name']
+                ?? data_get($terms, 'owner.display_name')
+                ?? (str_contains(strtolower($title), 'hardware') ? 'Tagudin Hardware Depot' : (str_contains(strtolower($title), 'bakery') ? 'Tagudin Morning Bakery' : 'Verified Merchant'))
+            );
+
+            // Dynamic area resolution
+            $barangayName = (string) ($geography['barangay_name'] ?? '');
+            $area = $barangayName !== '' ? "{$barangayName}, Tagudin" : 'Centro, Tagudin';
+
+            // Photo resolution
+            $photoUrl = (string) (
+                data_get($terms, 'media.cover_thumbnail_url')
+                ?? data_get($terms, 'media.items.0.url')
+                ?? ($category === 'local-food' ? '/photos/bibingka.jpg' : ($listing->listing_type === 'product' ? '/photos/ac-capacitor.jpg' : '/photos/courier.jpg'))
+            );
+
+            // Role matching
+            $matchedRole = null;
             if ($listing->listing_type === 'product' || in_array($fixtureKey, ['active-tagudin-ac-capacitor-01', 'active-tagudin-bibingka-01', 'active-tagudin-greens-bag-01'], true)) {
-                if ($filterCategory === '' || $category === $filterCategory || ($filterCategory === 'repairs' && $category === 'repairs') || ($filterCategory === 'local-food' && $category === 'local-food')) {
-                    $candidatesByRole['STORE'][] = [
-                        'id' => (string) $listing->id,
-                        'title' => $title,
-                        'provider_name' => $fixtureKey === 'active-tagudin-ac-capacitor-01' ? 'Tagudin Hardware Depot' : ($fixtureKey === 'active-tagudin-bibingka-01' ? 'Tagudin Morning Bakery' : 'Tagudin Market Stall'),
-                        'provider_user_id' => (string) $listing->owner_user_id,
-                        'area' => 'Centro, Tagudin',
-                        'price_minor' => $priceMinor > 0 ? $priceMinor : 18000,
-                        'sla_text' => 'Counter Ready in 15 mins',
-                        'rating' => 4.9,
-                        'role' => 'STORE',
-                        'photo_url' => $category === 'local-food' ? '/photos/bibingka.jpg' : '/photos/ac-capacitor.jpg',
-                    ];
-                }
+                $matchedRole = 'STORE';
+            } elseif ($category === 'courier' || $category === 'delivery' || $category === 'logistics' || $fixtureKey === 'active-tagudin-courier-01' || str_contains(strtolower($title), 'courier') || str_contains(strtolower($title), 'delivery')) {
+                $matchedRole = 'COURIER';
+            } elseif ($fixtureKey === 'active-tagudin-safety-audit-01' || str_contains(strtolower($title), 'audit') || str_contains(strtolower($category), 'safety') || str_contains(strtolower($category), 'audit')) {
+                $matchedRole = 'AUDIT';
+            } elseif (str_contains(strtolower($title), 'recycle') || str_contains(strtolower($title), 'scrap') || str_contains(strtolower($category), 'recycle')) {
+                $matchedRole = 'RECYCLE';
+            } elseif ($listing->listing_type === 'service') {
+                $matchedRole = 'LABOR';
             }
 
-            if ($category === 'courier' || $fixtureKey === 'active-tagudin-courier-01') {
-                $candidatesByRole['COURIER'][] = [
-                    'id' => (string) $listing->id,
-                    'title' => $title,
-                    'provider_name' => 'Danny Express Motorcycle Pool',
-                    'provider_user_id' => (string) $listing->owner_user_id,
-                    'area' => 'Tagudin Townwide',
-                    'price_minor' => $priceMinor > 0 ? $priceMinor : 3500,
-                    'sla_text' => 'On-demand ~20 mins transit',
-                    'rating' => 4.9,
-                    'role' => 'COURIER',
-                    'photo_url' => '/photos/courier.jpg',
-                ];
+            if ($matchedRole !== $role) {
+                continue;
             }
 
-            if (in_array($fixtureKey, ['active-tagudin-ac-install-01', 'active-tagudin-ac-clean-01', 'active-tagudin-hem-fix-01'], true) || ($listing->listing_type === 'service' && $category === 'repairs')) {
-                $candidatesByRole['LABOR'][] = [
-                    'id' => (string) $listing->id,
-                    'title' => $title,
-                    'provider_name' => $fixtureKey === 'active-tagudin-hem-fix-01' ? 'Ate Elena Garment Repairs' : 'Kuya Ben Aircon Services',
-                    'provider_user_id' => (string) $listing->owner_user_id,
-                    'area' => 'Tagudin Centro',
-                    'price_minor' => $priceMinor > 0 ? $priceMinor : 25000,
-                    'sla_text' => 'Same-day scheduled labor',
-                    'rating' => 4.9,
-                    'role' => 'LABOR',
-                    'photo_url' => '/photos/ac-clean.jpg',
-                ];
+            if ($filterCategory !== '' && $category !== '' && $category !== $filterCategory) {
+                continue;
             }
 
-            if ($fixtureKey === 'active-tagudin-safety-audit-01' || str_contains(strtolower($title), 'audit')) {
-                $candidatesByRole['AUDIT'][] = [
-                    'id' => (string) $listing->id,
-                    'title' => $title,
-                    'provider_name' => 'Engr. Roberto Electrical & Safety Audit',
-                    'provider_user_id' => (string) $listing->owner_user_id,
-                    'area' => 'Tagudin Centro',
-                    'price_minor' => $priceMinor > 0 ? $priceMinor : 15000,
-                    'sla_text' => 'Post-service municipal certificate',
-                    'rating' => 5.0,
-                    'role' => 'AUDIT',
-                    'photo_url' => '/photos/req-electrician.jpg',
-                ];
-            }
+            $candidates[] = [
+                'id' => (string) $listing->id,
+                'title' => $title,
+                'provider_name' => $providerName,
+                'provider_user_id' => (string) $listing->owner_user_id,
+                'area' => $area,
+                'price_minor' => $priceMinor,
+                'sla_text' => match ($role) {
+                    'COURIER' => 'On-demand ~20 mins transit',
+                    'STORE' => 'Counter Ready in 15 mins',
+                    'LABOR' => 'Same-day scheduled labor',
+                    'AUDIT' => 'Municipal inspection certificate',
+                    'RECYCLE' => 'Same-day material recycling',
+                    default => 'Available in Tagudin',
+                },
+                'rating' => 4.9,
+                'role' => $role,
+                'photo_url' => $photoUrl,
+            ];
         }
 
-        // Verified recycling hauler
-        $candidatesByRole['RECYCLE'][] = [
-            'id' => 'can_recycle_1',
-            'title' => 'Eco-Scrap & Old Part Removal Service',
-            'provider_name' => 'Tagudin Green Reclamation',
-            'provider_user_id' => '01a06d08-9c36-7091-b797-b90a4a9144d4',
-            'area' => 'Tagudin General',
-            'price_minor' => 5000,
-            'sla_text' => 'Same-day material recycling',
-            'rating' => 4.8,
-            'role' => 'RECYCLE',
-            'photo_url' => '/photos/courier.jpg',
-        ];
-
-        $matched = $candidatesByRole[$role] ?? ($candidatesByRole['STORE'] ?? []);
-
-        return response()->json(['data' => array_values($matched)]);
+        return response()->json([
+            'data' => array_values($candidates),
+            'meta' => [
+                'role' => $role,
+                'count' => count($candidates),
+                'locality' => 'Tagudin',
+                'open_pool_supported' => true,
+            ],
+        ]);
     }
 
     private function correlationId(Request $request): string

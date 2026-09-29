@@ -91,7 +91,9 @@ Route::post('/listings/{listing}/protected-edit-attempt', [ListingController::cl
 Route::post('/api/telemetry/events', [TelemetryController::class, 'recordEvents'])
     ->middleware('throttle:60,1')
     ->name('telemetry.events');
-
+Route::get('/api/deal-chains/slot-candidates', [DealChainController::class, 'slotCandidates'])
+    ->middleware('throttle:60,1')
+    ->name('deal-chains.slot-candidates');
 Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::get('/account/capabilities', [CapabilityController::class, 'index'])->name('account.capabilities.index');
     Route::post('/account/capabilities', [CapabilityController::class, 'store'])->name('account.capabilities.store');
@@ -132,8 +134,6 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
         ->name('deal-chains.reviews.store');
     Route::get('/deal-chains/{dealChain}', [DealChainController::class, 'show'])
         ->name('deal-chains.show');
-    Route::get('/api/deal-chains/slot-candidates', [DealChainController::class, 'slotCandidates'])
-        ->name('deal-chains.slot-candidates');
     Route::post('/deal-invitations/{invitation}/respond', [DealChainController::class, 'respondToInvitation'])
         ->middleware('throttle:30,1')
         ->name('deal-invitations.respond');
