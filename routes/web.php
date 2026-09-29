@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrowseController;
 use App\Http\Controllers\CapabilityController;
 use App\Http\Controllers\DealChainController;
+use App\Http\Controllers\DealChainReviewController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IdentityEvidenceController;
@@ -16,8 +17,8 @@ use App\Http\Controllers\MyListingsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ReviewController;
-use App\Http\Middleware\EnsureAuthenticated;
 use App\Http\Controllers\TelemetryController;
+use App\Http\Middleware\EnsureAuthenticated;
 use App\Modules\Catalogs\Application\DealChainCatalog;
 use App\Modules\Catalogs\Application\WorkCatalog;
 use Illuminate\Support\Facades\Route;
@@ -126,6 +127,9 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::post('/orders/{order}/reviews', [ReviewController::class, 'store'])
         ->middleware('throttle:30,1')
         ->name('reviews.store');
+    Route::post('/deal-chains/{dealChain}/reviews', [DealChainReviewController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('deal-chains.reviews.store');
     Route::get('/deal-chains/{dealChain}', [DealChainController::class, 'show'])
         ->name('deal-chains.show');
     Route::get('/api/deal-chains/slot-candidates', [DealChainController::class, 'slotCandidates'])

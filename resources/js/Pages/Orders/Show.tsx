@@ -15,9 +15,11 @@ import {
     ChevronDown,
     Coins,
     ShieldCheck,
+    Star,
 } from 'lucide-react';
 import type { WorkNodeRecord } from '../../types';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
+import ReviewCeremonyModal from '../../components/reviews/ReviewCeremonyModal';
 
 type OrderShowProps = {
     correlationId?: string | null;
@@ -78,6 +80,9 @@ type OrderShowProps = {
         need_kind: string;
         title: string;
         status: string;
+        status_label?: string;
+        provider?: string;
+        is_current?: boolean;
     }[];
     errors?: Record<string, string | string[]>;
 };
@@ -103,6 +108,34 @@ function matchNodeKindBadge(kind: string): { label: string; style: string } {
     }
 }
 
+function getSlotBadgeStyle(status: string): string {
+    switch (status) {
+        case 'completed':
+        case 'done':
+            return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+        case 'in_transit':
+            return 'bg-blue-100 text-blue-800 border border-blue-200';
+        case 'counter_ready':
+            return 'bg-sky-100 text-sky-800 border border-sky-200';
+        case 'on_site_prep':
+            return 'bg-teal-100 text-teal-800 border border-teal-200';
+        case 'awaiting_signoff':
+            return 'bg-amber-100 text-amber-800 border border-amber-200';
+        case 'partner_confirmed':
+            return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
+        case 'invited':
+            return 'bg-purple-100 text-purple-800 border border-purple-200';
+        case 'blocked':
+        case 'gated':
+            return 'bg-amber-50 text-amber-900 border border-amber-200/80';
+        case 'replacement_needed':
+            return 'bg-rose-100 text-rose-800 border border-rose-200';
+        case 'sourcing':
+        default:
+            return 'bg-slate-100 text-slate-600 border border-slate-200';
+    }
+}
+
 export default function OrderShow(props: OrderShowProps) {
     const page = usePage<{
         errors?: Record<string, string | string[]>;
@@ -120,6 +153,7 @@ export default function OrderShow(props: OrderShowProps) {
     // Progressive disclosure toggle for Deal Chain relay
     const [isChainExpanded, setIsChainExpanded] = useState(false);
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
     // Interactive provider tasks state
     const [partBypassed, setPartBypassed] = useState(false);
@@ -532,64 +566,76 @@ export default function OrderShow(props: OrderShowProps) {
                         {/* CUSTOMER PERSPECTIVE: Progressive Disclosure Relay */}
                         {perspective === 'customer' && (
                             <div className="space-y-3">
-                                {/* Active Step 2 (Always Visible) */}
-                                <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3.5 text-xs space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex size-6 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
-                                                2
+                                {props.deal_chain_slots && props.deal_chain_slots.length > 0 ? (
+                                    <div className="space-y-2.5">
+                                        <div className="flex items-center justify-between text-xs pb-1">
+                                            <span className="font-extrabold text-[#0F2F58] uppercase tracking-wider text-[11px]">
+                                                {props.deal_chain_slots.length}-Slot Multi-Party Relay
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsChainExpanded((prev) => !prev)}
+                                                className="flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:underline cursor-pointer"
+                                            >
+                                                <span>{isChainExpanded ? 'Collapse' : 'View Full Relay'}</span>
+                                                <ChevronDown className={`size-3 transition-transform ${isChainExpanded ? 'rotate-180' : ''}`} />
+                                            </button>
+                                        </div>
+
+                                        {props.deal_chain_slots
+                                            .filter((s) => isChainExpanded || s.is_current || s.status === 'in_transit')
+                                            .map((slot) => (
+                                                <div
+                                                    key={slot.ordinal}
+                                                    className={`flex items-start gap-3 rounded-xl border p-3 text-xs transition-all ${
+                                                        slot.is_current
+                                                            ? 'border-[#0F2F58] bg-blue-50/40 ring-1 ring-[#0F2F58]/20'
+                                                            : 'border-slate-100 bg-[#FAFCFB]'
+                                                    }`}
+                                                >
+                                                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-700">
+                                                        {slot.status === 'completed' || slot.status === 'done' ? '✓' : slot.ordinal}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <span className="font-bold text-slate-800 truncate">
+                                                                {slot.ordinal}. {slot.title}
+                                                            </span>
+                                                            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-extrabold ${getSlotBadgeStyle(slot.status)}`}>
+                                                                {slot.status_label || slot.status}
+                                                            </span>
+                                                        </div>
+                                                        <div className="mt-0.5 flex items-center gap-2 text-[10.5px] text-slate-400">
+                                                            <span>· {slot.provider}</span>
+                                                            {slot.is_current && (
+                                                                <span className="rounded bg-blue-100 px-1.5 py-0.2 font-extrabold text-blue-800 text-[9px] uppercase">
+                                                                    This Task
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                ) : (
+                                    /* Fallback Direct Order Step */
+                                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3.5 text-xs space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex size-6 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                                                    1
+                                                </div>
+                                                <span className="font-extrabold text-slate-900">
+                                                    Service Execution
+                                                </span>
                                             </div>
-                                            <span className="font-extrabold text-slate-900">
-                                                Courier Transit on Highway
+                                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800 uppercase">
+                                                Active
                                             </span>
                                         </div>
-                                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800 uppercase">
-                                            Active
-                                        </span>
-                                    </div>
-                                    <p className="text-[11px] text-slate-600 leading-relaxed pl-8">
-                                        Danny Express picked up replacement parts from Tagudin Hardware and is traveling to Purok 4.
-                                    </p>
-                                </div>
-
-                                {/* Expanded Steps 1 & 3 */}
-                                {isChainExpanded && (
-                                    <div className="space-y-2.5 pt-1 border-t border-slate-100">
-                                        {/* Step 1: Store Source */}
-                                        <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs">
-                                            <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700">
-                                                ✓
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-bold text-slate-800">
-                                                        Step 1 · Store Counter Pack
-                                                    </span>
-                                                    <span className="text-[10px] font-bold text-emerald-700">Completed</span>
-                                                </div>
-                                                <p className="mt-0.5 text-[11px] text-slate-500">
-                                                    Tagudin Hardware Depot packed and released 35uF capacitor.
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Step 3: On-Site Labor */}
-                                        <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs">
-                                            <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">
-                                                3
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-bold text-slate-800">
-                                                        Step 3 · On-Site Technician Installation
-                                                    </span>
-                                                    <span className="text-[10px] font-bold text-slate-400">Queued</span>
-                                                </div>
-                                                <p className="mt-0.5 text-[11px] text-slate-500">
-                                                    Kuya Ben scheduled on-site immediately after courier delivery.
-                                                </p>
-                                            </div>
-                                        </div>
+                                        <p className="text-[11px] text-slate-600 leading-relaxed pl-8">
+                                            Provider is actively executing the agreed service deliverables.
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -891,10 +937,12 @@ export default function OrderShow(props: OrderShowProps) {
                             ) : isSettled ? (
                                 <button
                                     type="button"
-                                    onClick={() => router.visit('/browse')}
-                                    className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
+                                    data-testid="leave-review-btn"
+                                    onClick={() => setReviewModalOpen(true)}
+                                    className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0D715F] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#0a574a]"
                                 >
-                                    <span>Order Completed · Browse More Offers</span>
+                                    <Star className="size-4 fill-amber-300 text-amber-300" />
+                                    <span>Rate Service &amp; Share Feedback</span>
                                 </button>
                             ) : (
                                 <button
@@ -921,41 +969,87 @@ export default function OrderShow(props: OrderShowProps) {
                                 <span>My Listings</span>
                             </button>
 
-                            <button
-                                type="button"
-                                onClick={() => router.post(`/orders/${props.order.id}/work/propose-completion`)}
-                                className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
-                            >
-                                <span>Request Completion Sign-off</span>
-                                <ArrowRight className="size-4" />
-                            </button>
+                            {isSettled ? (
+                                <button
+                                    type="button"
+                                    data-testid="provider-reliability-btn"
+                                    onClick={() => setReviewModalOpen(true)}
+                                    className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
+                                >
+                                    <ShieldCheck className="size-4 text-emerald-400" />
+                                    <span>Citizen Reliability Feedback</span>
+                                </button>
+                            ) : isSignoff ? (
+                                <div className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 text-xs font-extrabold text-amber-800 shadow-sm">
+                                    <Clock className="size-4 text-amber-600" />
+                                    <span>Completion Proposed · Waiting for Customer</span>
+                                </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => router.post(`/orders/${props.order.id}/work/propose-completion`)}
+                                    className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
+                                >
+                                    <span>Request Completion Sign-off</span>
+                                    <ArrowRight className="size-4" />
+                                </button>
+                            )}
                         </>
                     )}
 
                     {/* COURIER ACTIONS */}
                     {perspective === 'courier' && (
                         <>
-                            <button
-                                type="button"
-                                onClick={() => router.post(`/orders/${props.order.id}/courier/pickup`)}
-                                className="flex h-11 items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 cursor-pointer"
-                            >
-                                <Package className="size-4 text-[#0F2F58]" />
-                                <span>Confirm Pickup</span>
-                            </button>
+                            {isSettled ? (
+                                <div className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 text-xs font-extrabold text-emerald-800 shadow-sm">
+                                    <CheckCircle2 className="size-4 text-emerald-600" />
+                                    <span>Delivery Completed · Transit Fee Settled</span>
+                                </div>
+                            ) : isInProgress ? (
+                                <>
+                                    <div className="flex h-11 items-center justify-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3.5 text-xs font-bold text-emerald-800">
+                                        <CheckCircle2 className="size-4 text-emerald-600" />
+                                        <span>Picked Up</span>
+                                    </div>
 
-                            <button
-                                type="button"
-                                onClick={() => router.post(`/orders/${props.order.id}/courier/handoff`)}
-                                className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
-                            >
-                                <span>Confirm Hand-off at Gate · ₱80.00</span>
-                                <ArrowRight className="size-4" />
-                            </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => router.post(`/orders/${props.order.id}/courier/handoff`)}
+                                        className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
+                                    >
+                                        <span>Confirm Hand-off at Gate · {formattedAmount}</span>
+                                        <ArrowRight className="size-4" />
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => router.post(`/orders/${props.order.id}/courier/pickup`)}
+                                    className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
+                                >
+                                    <Package className="size-4 text-white" />
+                                    <span>Confirm Package Pickup at Store</span>
+                                    <ArrowRight className="size-4" />
+                                </button>
+                            )}
                         </>
                     )}
                 </div>
             </footer>
+            <ReviewCeremonyModal
+                isOpen={reviewModalOpen}
+                onClose={() => setReviewModalOpen(false)}
+                orderId={props.order.id}
+                referenceTitle={props.order.listing_title || `Order #${props.order.id.slice(0, 8)}`}
+                actorRole={perspective === 'provider' ? 'provider' : 'buyer'}
+                targets={[
+                    {
+                        orderId: props.order.id,
+                        providerName: props.order.provider_name || 'Service Provider',
+                        role: 'Provider',
+                    },
+                ]}
+            />
         </div>
     );
 }

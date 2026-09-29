@@ -1,19 +1,8 @@
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
-import {
-    ArrowLeft,
-    ShieldCheck,
-    Phone,
-    MessageSquare,
-    Package,
-    Truck,
-    Wrench,
-    Check,
-    Clock,
-    Lock,
-} from 'lucide-react';
+import { ArrowLeft, Check, Clock, Lock, ShieldCheck, Star } from 'lucide-react';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
-
+import ReviewCeremonyModal from '../../components/reviews/ReviewCeremonyModal';
 interface DealChainRecord {
     id: string;
     coordinator_user_id: string;
@@ -21,7 +10,9 @@ interface DealChainRecord {
     title: string;
     goal: string;
     total_budget_amount?: number | null;
-    currency_code?: string;
+    currency_code?: string | null;
+    financial_state?: string;
+    child_order_count?: number;
     created_at: string;
 }
 
@@ -34,6 +25,13 @@ interface DealNeedRecord {
     description: string;
     status: string;
     requested_at: string;
+    child_order_id?: string | null;
+    child_order_status?: string | null;
+    work_status?: string | null;
+    payment_obligation_status?: string | null;
+    amount_minor?: number | null;
+    currency?: string | null;
+    amount_source?: string | null;
 }
 
 interface DealDependencyRecord {
@@ -55,6 +53,74 @@ interface DealChainDetailProps {
     worker?: string | null;
 }
 
+function statusLabel(status: string): string {
+    const labels: Record<string, string> = {
+        open: 'Open · Sourcing',
+        sourcing: 'Sourcing',
+        invited: 'Provider invited',
+        quoted: 'Quote received',
+        accepted: 'Accepted',
+        in_progress: 'In progress',
+        completed: 'Completed',
+        blocked: 'Blocked',
+        cancelled: 'Cancelled',
+        failed: 'Failed',
+    };
+
+    return labels[status] ?? status.replaceAll('_', ' ');
+}
+
+function statusTone(status: string): string {
+    if (status === 'completed') return 'border-emerald-200 bg-emerald-50 text-emerald-800';
+    if (status === 'in_progress' || status === 'accepted')
+        return 'border-sky-200 bg-sky-50 text-sky-800';
+    if (status === 'blocked' || status === 'failed')
+        return 'border-rose-200 bg-rose-50 text-rose-800';
+    if (status === 'cancelled') return 'border-slate-200 bg-slate-100 text-slate-600';
+
+    return 'border-amber-200 bg-amber-50 text-amber-900';
+}
+
+
+function slotImage(slot: DealNeedRecord): string {
+    const title = slot.title.toLowerCase();
+    if (slot.need_kind === 'product' || title.includes('capacitor') || title.includes('part') || title.includes('store')) {
+        return '/photos/ac-capacitor.jpg';
+    }
+    if (title.includes('courier') || title.includes('transit') || title.includes('delivery') || title.includes('rider')) {
+        return '/photos/courier.jpg';
+    }
+    if (title.includes('audit') || title.includes('safety') || title.includes('inspect')) {
+        return '/photos/req-electrician.jpg';
+    }
+    if (title.includes('bibingka') || title.includes('food') || title.includes('bake')) {
+        return '/photos/bibingka.jpg';
+    }
+    return '/photos/ac-clean.jpg';
+}
+
+function slotRoleBadge(slot: DealNeedRecord): { label: string; bg: string; text: string } {
+    const title = slot.title.toLowerCase();
+    if (slot.need_kind === 'product' || title.includes('capacitor') || title.includes('store')) {
+        return { label: 'STORE', bg: 'bg-amber-500', text: 'text-white' };
+    }
+    if (title.includes('courier') || title.includes('transit') || title.includes('delivery')) {
+        return { label: 'RIDER', bg: 'bg-sky-500', text: 'text-white' };
+    }
+    if (title.includes('audit') || title.includes('safety')) {
+        return { label: 'AUDIT', bg: 'bg-purple-600', text: 'text-white' };
+    }
+    return { label: 'LABOR', bg: 'bg-emerald-600', text: 'text-white' };
+}
+
+function formatAmount(slot: DealNeedRecord): string {
+    if (slot.amount_minor === null || slot.amount_minor === undefined) {
+        return 'Amount pending provider terms';
+    }
+
+    return `${slot.currency ?? 'PHP'} ${(slot.amount_minor / 100).toFixed(2)}`;
+}
+
 export default function DealChainDetail({
     chain,
     slots,
@@ -63,24 +129,30 @@ export default function DealChainDetail({
     view = 'project',
     worker = null,
 }: DealChainDetailProps) {
-    const [activePerspective, setActivePerspective] = useState<'project' | 'worker'>(view);
-    const [activeWorker, setActiveWorker] = useState<string | null>(worker);
+    const shortId = chain.id ? chain.id.substring(0, 8).toUpperCase() : 'DC';
+    const slotsById = new Map(slots.map((slot) => [slot.id, slot]));
+    const summaryAmount =
+        chain.total_budget_amount === null || chain.total_budget_amount === undefined
+            ? null
+            : `${chain.currency_code ?? 'PHP'} ${chain.total_budget_amount.toFixed(2)}`;
+    const contextLabel =
+        view === 'worker' && worker
+            ? `Server projection for ${worker}`
+            : 'Coordinator project projection';
 
-    const shortId = chain.id ? chain.id.substring(0, 8).toUpperCase() : 'DC-LIVE';
-
-    const getSlotCost = (ordinal: number) => {
-        if (ordinal === 1) return 180;
-        if (ordinal === 2) return 35;
-        if (ordinal === 3) return 450;
-        return 100;
-    };
-
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const isCompleted =
+        chain.status === 'completed' ||
+        slots.some(
+            (s) =>
+                s.status === 'completed' ||
+                s.child_order_status === 'completed' ||
+                s.child_order_status === 'closed',
+        );
     return (
-        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-['Plus_Jakarta_Sans',sans-serif]">
-            {/* Desktop Navigation */}
+        <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900">
             <DesktopGlobalNav />
 
-            {/* Mobile Header */}
             <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
                 <Link
                     href="/browse"
@@ -94,9 +166,9 @@ export default function DealChainDetail({
                     <span className="text-sm font-extrabold text-[#0F2F58]">
                         Deal Chain #{shortId}
                     </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-extrabold text-emerald-700 border border-emerald-200">
-                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Live Relay
+                    <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[9px] font-extrabold text-blue-800">
+                        <span className="size-1.5 rounded-full bg-blue-500" />
+                        Server snapshot
                     </span>
                 </div>
 
@@ -105,292 +177,231 @@ export default function DealChainDetail({
                 </div>
             </header>
 
-            <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:py-8 space-y-6">
-                {/* Desktop Breadcrumbs */}
-                <div className="hidden lg:flex items-center justify-between">
+            <main className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6 lg:py-8">
+                <div className="hidden items-center justify-between lg:flex">
                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                        <Link href="/browse" className="hover:text-[#0F2F58] flex items-center gap-1">
+                        <Link
+                            href="/browse"
+                            className="flex items-center gap-1 hover:text-[#0F2F58]"
+                        >
                             <ArrowLeft className="size-3.5" />
                             <span>Back to Marketplace</span>
                         </Link>
                         <span>/</span>
-                        <span className="text-slate-900 font-bold">Deal Chain Execution Workspace</span>
+                        <span className="font-bold text-slate-900">Deal Chain Coordination</span>
                     </div>
 
-                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-800 border border-emerald-200 shadow-2xs">
-                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>Live DAG Relay Active</span>
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-extrabold text-blue-800 shadow-2xs">
+                        <span className="size-2 rounded-full bg-blue-500" />
+                        <span>Server DAG snapshot</span>
                     </div>
                 </div>
 
-                {/* Flash Notice Banner */}
                 {notice && (
-                    <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-4 text-xs font-bold text-blue-950 shadow-xs flex items-center gap-2.5">
-                        <ShieldCheck className="size-5 text-[#0F2F58] shrink-0" />
+                    <div className="flex items-center gap-2.5 rounded-xl border border-blue-200 bg-blue-50/80 p-4 text-xs font-bold text-blue-950 shadow-xs">
+                        <ShieldCheck className="size-5 shrink-0 text-[#0F2F58]" />
                         <span>{notice}</span>
                     </div>
                 )}
-
-                {/* Perspective View Switcher Tabs */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
-                    <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-                        Execution Perspective:
-                    </div>
-                    <div className="flex items-center gap-1.5">
+                {isCompleted && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 shadow-xs">
+                        <div className="flex items-start gap-3">
+                            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
+                                <Star className="size-5 fill-amber-300 text-amber-300" />
+                            </div>
+                            <div>
+                                <h2 className="text-sm font-extrabold text-[#06362e]">
+                                    Deal Chain Completed · Rate Project
+                                </h2>
+                                <p className="mt-0.5 text-xs text-slate-600">
+                                    Review your team with single cascading feedback or granular per-provider ratings.
+                                </p>
+                            </div>
+                        </div>
                         <button
                             type="button"
-                            onClick={() => {
-                                setActivePerspective('project');
-                                setActiveWorker(null);
-                            }}
-                            className={`rounded-full px-3.5 py-1 text-xs font-bold cursor-pointer transition-colors ${
-                                activePerspective === 'project'
-                                    ? 'bg-[#0F2F58] text-white shadow-xs'
-                                    : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                            }`}
+                            data-testid="rate-deal-chain-btn"
+                            onClick={() => setReviewModalOpen(true)}
+                            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#0D715F] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-[#0a574a]"
                         >
-                            Project View (Coordinator)
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setActivePerspective('worker');
-                                setActiveWorker('ben');
-                            }}
-                            className={`rounded-full px-3.5 py-1 text-xs font-bold cursor-pointer transition-colors ${
-                                activePerspective === 'worker' && activeWorker === 'ben'
-                                    ? 'bg-[#0F2F58] text-white shadow-xs'
-                                    : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                            }`}
-                        >
-                            Technician (Gated)
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setActivePerspective('worker');
-                                setActiveWorker('danny');
-                            }}
-                            className={`rounded-full px-3.5 py-1 text-xs font-bold cursor-pointer transition-colors ${
-                                activePerspective === 'worker' && activeWorker === 'danny'
-                                    ? 'bg-[#0F2F58] text-white shadow-xs'
-                                    : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                            }`}
-                        >
-                            Courier (En Route)
+                            <Star className="size-4 fill-amber-300 text-amber-300" />
+                            <span>Rate Project ({slots.length} Providers)</span>
                         </button>
                     </div>
-                </div>
+                )}
 
-                {/* Project Hero Card */}
-                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
+                <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">
                             Deal Chain #{shortId}
                         </span>
-                        <span className="font-mono text-xl font-extrabold text-[#0F2F58]">
-                            ₱{(chain.total_budget_amount || 665).toFixed(2)} Total Escrow
+                        <span className="text-right font-mono text-sm font-extrabold text-[#0F2F58]">
+                            {summaryAmount
+                                ? `${summaryAmount} · Derived child total`
+                                : 'No child terms formed'}
                         </span>
                     </div>
 
-                    <h1 className="text-lg sm:text-xl font-extrabold text-slate-900">
-                        {chain.title || 'Tagudin Multi-Party Coordinated Delivery'}
+                    <h1 className="text-lg font-extrabold text-slate-900 sm:text-xl">
+                        {chain.title || 'Deal Chain coordination plan'}
                     </h1>
+                    <p className="text-sm text-slate-600">{chain.goal}</p>
 
-                    <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-100 p-3 text-xs text-emerald-900">
-                        <span className="size-2 shrink-0 rounded-full bg-emerald-500" />
+                    <div className="flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs text-blue-950">
+                        <span className="mt-1 size-2 shrink-0 rounded-full bg-blue-500" />
                         <span>
-                            {activePerspective === 'project' && (
-                                <strong>Active Project: Parts in transit to job site · Technician on-site prepping unit</strong>
-                            )}
-                            {activePerspective === 'worker' && activeWorker === 'ben' && (
-                                <strong>Technician View: Work step gated on Danny Express delivering the 35uF Run Capacitor</strong>
-                            )}
-                            {activePerspective === 'worker' && activeWorker === 'danny' && (
-                                <strong>Courier View: Active route from Tagudin Hardware to customer doorstep · ETA 8 mins</strong>
-                            )}
+                            <strong>{contextLabel}.</strong> Chain status:{' '}
+                            {statusLabel(chain.status)}. Financial state:{' '}
+                            {chain.financial_state?.replaceAll('_', ' ') ??
+                                'pending child agreements'}
+                            .
                         </span>
                     </div>
                 </section>
 
-                {/* Project Slots DAG Track */}
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
-                            Coordinated Project Slots ({slots.length} Nodes · {dependencies.length} Active Gates)
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-xs font-extrabold tracking-wider text-[#0F2F58] uppercase">
+                            Deal Chain Needs ({slots.length} Nodes · {dependencies.length} Active
+                            Dependencies)
                         </div>
-                        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800 uppercase">
-                            Non-Cascading Settlement Active
+                        <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-extrabold text-blue-800 uppercase">
+                            Planning graph
                         </span>
                     </div>
 
-                    {slots.map((slot, idx) => {
-                        const isSettled = slot.ordinal === 1;
-                        const isActive = slot.ordinal === 2;
-                        const isGated = slot.ordinal === 3;
+                    {slots.map((slot) => {
+                        const effectiveStatus =
+                            slot.work_status ?? slot.child_order_status ?? slot.status;
+                        const outgoingDependencies = dependencies.filter(
+                            (dependency) => dependency.predecessor_need_id === slot.id,
+                        );
+                        const incomingDependencies = dependencies.filter(
+                            (dependency) => dependency.successor_need_id === slot.id,
+                        );
 
                         return (
                             <div key={slot.id} className="space-y-3">
-                                {/* Slot Card */}
                                 <div
-                                    className={`rounded-2xl border p-5 transition-all shadow-xs ${
-                                        isSettled
-                                            ? 'border-slate-200 bg-slate-50/70'
-                                            : isActive
-                                            ? 'border-[#0F2F58] bg-white ring-1 ring-[#0F2F58]'
-                                            : 'border-slate-200 bg-white'
-                                    }`}
+                                    className={`rounded-2xl border p-5 shadow-xs transition-all ${effectiveStatus === 'in_progress' ? 'border-sky-300 bg-white ring-1 ring-sky-200' : 'border-slate-200 bg-white'}`}
                                 >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="flex items-start gap-3">
-                                            <div
-                                                className={`flex size-9 shrink-0 items-center justify-center rounded-xl font-bold mt-0.5 ${
-                                                    isSettled
-                                                        ? 'bg-slate-200 text-slate-700'
-                                                        : isActive
-                                                        ? 'bg-sky-100 text-sky-800'
-                                                        : 'bg-emerald-100 text-emerald-800'
-                                                }`}
-                                            >
-                                                {slot.need_kind === 'product' ? (
-                                                    <Package className="size-4.5" />
-                                                ) : slot.title.toLowerCase().includes('courier') ? (
-                                                    <Truck className="size-4.5" />
-                                                ) : (
-                                                    <Wrench className="size-4.5" />
-                                                )}
+                                    <div className="flex items-start justify-between gap-3.5">
+                                        <div className="flex min-w-0 flex-1 items-start gap-3.5">
+                                            <div className="relative size-13 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-2xs">
+                                                <img
+                                                    src={slotImage(slot)}
+                                                    alt={slot.title}
+                                                    className="size-full object-cover"
+                                                    onError={(e) => {
+                                                        e.currentTarget.onerror = null;
+                                                        e.currentTarget.src = '/photos/ac-clean.jpg';
+                                                    }}
+                                                />
+                                                <span
+                                                    className={`absolute bottom-0 inset-x-0 ${slotRoleBadge(slot).bg} text-[7.5px] font-extrabold ${slotRoleBadge(slot).text} text-center uppercase py-0.2 tracking-wider`}
+                                                >
+                                                    {slotRoleBadge(slot).label}
+                                                </span>
                                             </div>
-
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-extrabold text-slate-400 uppercase">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[9.5px] font-extrabold text-slate-500 uppercase">
                                                         Slot #{slot.ordinal}
                                                     </span>
-                                                    <h2 className="text-sm font-extrabold text-slate-900">
+                                                    <h2 className="text-sm font-extrabold break-words text-slate-900 leading-tight">
                                                         {slot.title}
                                                     </h2>
                                                 </div>
-                                                <div className="text-xs text-slate-500 mt-0.5">
+                                                <div className="mt-1 text-xs break-words text-slate-500 line-clamp-2 leading-relaxed">
                                                     {slot.description}
+                                                </div>
+                                                <div className="mt-2 flex items-center gap-2 text-[10.5px] font-medium text-slate-400">
+                                                    <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
+                                                        <ShieldCheck className="size-3" /> Tagudin Verified Partner Listing
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="text-right shrink-0">
-                                            <span className="font-mono text-sm font-bold text-slate-900">
-                                                ₱{getSlotCost(slot.ordinal).toFixed(2)}
+                                        <div className="max-w-[45%] shrink-0 text-right">
+                                            <span className="font-mono text-sm font-extrabold text-[#0F2F58]">
+                                                {formatAmount(slot)}
                                             </span>
+                                            {slot.amount_source && (
+                                                <div className="text-[9.5px] text-slate-400 capitalize">
+                                                    {slot.amount_source}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Mini Steps Progress Track */}
-                                    <div className="mt-4 flex items-center gap-1.5 overflow-x-auto text-[10px] font-bold">
-                                        {slot.ordinal === 1 && (
-                                            <>
-                                                <span className="rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 flex items-center gap-1">
-                                                    <Check className="size-3" /> Ordered
-                                                </span>
-                                                <span className="text-slate-300">→</span>
-                                                <span className="rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 flex items-center gap-1">
-                                                    <Check className="size-3" /> Packaged
-                                                </span>
-                                                <span className="text-slate-300">→</span>
-                                                <span className="rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 flex items-center gap-1">
-                                                    <Check className="size-3" /> Handed to Courier
-                                                </span>
-                                            </>
-                                        )}
-
-                                        {slot.ordinal === 2 && (
-                                            <>
-                                                <span className="rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 flex items-center gap-1">
-                                                    <Check className="size-3" /> Picked Up
-                                                </span>
-                                                <span className="text-slate-300">→</span>
-                                                <span className="rounded-full bg-sky-100 text-sky-800 px-2.5 py-0.5 flex items-center gap-1 animate-pulse">
-                                                    <Clock className="size-3" /> En Route · 8m ETA
-                                                </span>
-                                                <span className="text-slate-300">→</span>
-                                                <span className="rounded-full bg-slate-100 text-slate-500 px-2.5 py-0.5">
-                                                    Jobsite Dropoff
-                                                </span>
-                                            </>
-                                        )}
-
-                                        {slot.ordinal === 3 && (
-                                            <>
-                                                <span className="rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 flex items-center gap-1">
-                                                    <Check className="size-3" /> Triage
-                                                </span>
-                                                <span className="text-slate-300">→</span>
-                                                <span className="rounded-full bg-amber-100 text-amber-900 px-2.5 py-0.5 flex items-center gap-1">
-                                                    <Lock className="size-3" /> Awaiting Part (Gated)
-                                                </span>
-                                                <span className="text-slate-300">→</span>
-                                                <span className="rounded-full bg-slate-100 text-slate-500 px-2.5 py-0.5">
-                                                    Installation &amp; Test
-                                                </span>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Action Row & Escrow Status */}
-                                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
-                                        <div>
-                                            {isSettled && (
-                                                <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
-                                                    <Check className="size-3.5" /> ₱180.00 Sourced &amp; Settled
-                                                </span>
+                                    <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-3 text-[10px] font-bold">
+                                        <span
+                                            className={`rounded-full border px-2.5 py-0.5 ${statusTone(effectiveStatus)}`}
+                                        >
+                                            {effectiveStatus === 'completed' && (
+                                                <Check className="mr-1 inline size-3" />
                                             )}
-                                            {isActive && (
-                                                <span className="inline-flex items-center gap-1 text-sky-700 font-bold">
-                                                    <Clock className="size-3.5" /> ₱35.00 Escrow Held · In Transit
-                                                </span>
+                                            {effectiveStatus === 'in_progress' && (
+                                                <Clock className="mr-1 inline size-3" />
                                             )}
-                                            {isGated && (
-                                                <span className="inline-flex items-center gap-1 text-amber-800 font-bold">
-                                                    <Lock className="size-3.5" /> ₱450.00 Escrow Held · Gated on Transit
-                                                </span>
+                                            {effectiveStatus === 'blocked' && (
+                                                <Lock className="mr-1 inline size-3" />
                                             )}
-                                        </div>
-
-                                        {isActive && (
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => alert('Calling Danny Express Rider (0917-882-9912)...')}
-                                                    className="flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
-                                                >
-                                                    <Phone className="size-3.5" />
-                                                    <span>Call</span>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => alert('Opening Team Coordination Channel for Deal Chain #' + shortId)}
-                                                    className="flex items-center gap-1 rounded-full bg-[#0F2F58] px-3 py-1 text-xs font-bold text-white hover:bg-[#153e74] cursor-pointer"
-                                                >
-                                                    <MessageSquare className="size-3.5" />
-                                                    <span>Chat</span>
-                                                </button>
-                                            </div>
+                                            {statusLabel(effectiveStatus)}
+                                        </span>
+                                        {slot.child_order_status && (
+                                            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-slate-600">
+                                                Order: {statusLabel(slot.child_order_status)}
+                                            </span>
+                                        )}
+                                        {slot.work_status && (
+                                            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-slate-600">
+                                                Work: {statusLabel(slot.work_status)}
+                                            </span>
+                                        )}
+                                        {slot.payment_obligation_status && (
+                                            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-slate-600">
+                                                Payment:{' '}
+                                                {statusLabel(slot.payment_obligation_status)}
+                                            </span>
+                                        )}
+                                        {!slot.child_order_id && (
+                                            <span className="text-slate-500">
+                                                No child Order formed
+                                            </span>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Animated Dependency Wire Connector */}
-                                {idx < slots.length - 1 && (
-                                    <div className="flex items-center justify-center gap-2 py-1">
+                                {outgoingDependencies.length > 0 && (
+                                    <div className="flex flex-wrap items-center justify-center gap-2 py-1">
                                         <div className="h-4 w-0.5 bg-slate-300" />
-                                        <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
-                                            idx === 0
-                                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                                : 'bg-amber-50 text-amber-900 border-amber-200'
-                                        }`}>
-                                            {idx === 0
-                                                ? 'Part Dispatched to Courier Node'
-                                                : 'Transit Gating On-Site Labor'}
-                                        </span>
+                                        {outgoingDependencies.map((dependency) => {
+                                            const successor = slotsById.get(
+                                                dependency.successor_need_id,
+                                            );
+
+                                            return (
+                                                <span
+                                                    key={dependency.id}
+                                                    className="rounded-full border border-slate-300 bg-white px-2.5 py-0.5 text-[10px] font-extrabold text-slate-700"
+                                                >
+                                                    {dependency.condition_code} → Slot #
+                                                    {successor?.ordinal ?? '?'}
+                                                </span>
+                                            );
+                                        })}
                                         <div className="h-4 w-0.5 bg-slate-300" />
+                                    </div>
+                                )}
+
+                                {incomingDependencies.length > 0 && (
+                                    <div className="text-center text-[10px] font-semibold text-slate-400">
+                                        Unlocked by{' '}
+                                        {incomingDependencies
+                                            .map((dependency) => dependency.condition_code)
+                                            .join(', ')}
                                     </div>
                                 )}
                             </div>
@@ -398,14 +409,27 @@ export default function DealChainDetail({
                     })}
                 </div>
 
-                {/* Non-Cascading Settlement Guarantee */}
-                <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-5 text-xs text-blue-950 flex items-start gap-3">
-                    <ShieldCheck className="size-5 shrink-0 text-[#0F2F58] mt-0.5" />
+                <div className="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50/60 p-5 text-xs text-blue-950">
+                    <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#0F2F58]" />
                     <div>
-                        <strong>Non-Cascading Settlement Protection Active:</strong> Each child order in this Deal Chain holds its own independent escrow line. If courier transit encounters a delay or road issue, the store&apos;s counter inventory payment remains protected and settled, and the customer&apos;s labor budget remains securely held in municipal escrow.
+                        <strong>Planning boundary:</strong> this page is a coordination projection.
+                        Child Orders and payment obligations, when formed, remain independent; this
+                        chain has no parent escrow.
                     </div>
                 </div>
             </main>
+            <ReviewCeremonyModal
+                isOpen={reviewModalOpen}
+                onClose={() => setReviewModalOpen(false)}
+                dealChainId={chain.id}
+                referenceTitle={chain.title || `Deal Chain #${shortId}`}
+                actorRole="buyer"
+                targets={slots.map((s) => ({
+                    orderId: s.child_order_id || s.id,
+                    providerName: s.title,
+                    role: s.need_kind.toUpperCase(),
+                }))}
+            />
         </div>
     );
 }

@@ -34,7 +34,7 @@ final class SubmitReviewCommand
     ) {}
 
     /**
-     * @param list<string> $attributeChips
+     * @param  list<string>  $attributeChips
      * @return array{id: string, status: string, unblinded: bool, cascaded_count: int}
      */
     public function handle(
@@ -97,9 +97,8 @@ final class SubmitReviewCommand
             $allowed = $isBuyer ? self::ALLOWED_BUYER_CHIPS : self::ALLOWED_PROVIDER_CHIPS;
             $validChips = array_values(array_intersect($attributeChips, $allowed));
 
-            // Validate stars (buyers give 1-5; provider gives non-numeric citizen reliability, DB requires 1-5)
-            $effectiveRating = $isBuyer ? max(1, min(5, $rating)) : 5;
-
+            // Validate stars (buyers give 1-5; provider gives non-numeric citizen reliability, rating is null)
+            $effectiveRating = $isBuyer ? max(1, min(5, $rating)) : null;
             // Check if counterparty has already submitted
             $counterpartyReview = DB::table('reviews')
                 ->where('order_id', $orderId)
@@ -234,6 +233,7 @@ final class SubmitReviewCommand
                 correlationId: $correlationId,
                 auditEventId: $auditId,
             );
+
             return [
                 'id' => $reviewId,
                 'status' => $moderationStatus,
