@@ -195,11 +195,13 @@ final class StageDealChain
             $source = $this->listingSource->findActiveApproved((string) $item['id']);
             if ($source === null) {
                 $errors["items.{$index}.id"] = ['This listing is no longer available.'];
+
                 continue;
             }
 
             if ((string) $source['owner_user_id'] === $userId) {
                 $errors["items.{$index}.id"] = ['You cannot stage your own listing.'];
+
                 continue;
             }
 
@@ -208,6 +210,7 @@ final class StageDealChain
                 $errors["items.{$index}.deal_chain"] = [
                     'That partner pipeline is not available for this listing category or type.',
                 ];
+
                 continue;
             }
 
@@ -327,7 +330,7 @@ final class StageDealChain
                             'scope' => json_encode([
                                 'listing_id' => $overrideListingId,
                                 'listing_version' => (int) ($partnerListing['listing_version_number'] ?? 1),
-                                'price_minor' => (int) ($override['price_minor'] ?? 0),
+                                'price_minor' => (int) ($partnerListing['price_amount_minor'] ?? $override['price_minor'] ?? 0),
                             ], JSON_THROW_ON_ERROR),
                             'payload_version' => 1,
                             'status' => 'sent',

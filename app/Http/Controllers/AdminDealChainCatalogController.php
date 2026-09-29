@@ -94,6 +94,11 @@ final class AdminDealChainCatalogController extends Controller
             'nodes.*.frontend.title' => ['required', 'string', 'max:160'],
             'nodes.*.frontend.sub' => ['nullable', 'string', 'max:160'],
             'nodes.*.frontend.type' => ['required', 'string', 'in:store,delivery,labor,audit'],
+            'nodes.*.slot_requirement' => ['nullable', 'array'],
+            'nodes.*.slot_requirement.role' => ['nullable', 'string', 'max:60'],
+            'nodes.*.slot_requirement.capability_codes' => ['nullable', 'array'],
+            'nodes.*.slot_requirement.default_assignment_mode' => ['nullable', 'string', 'in:preferred_partner,open_pool,buyer_choice'],
+            'nodes.*.slot_requirement.estimated_fee_minor' => ['nullable', 'integer', 'min:0'],
             'dependencies' => ['present', 'array'],
             'dependencies.*.predecessor' => ['required', 'string', 'max:60'],
             'dependencies.*.successor' => ['required', 'string', 'max:60'],
@@ -222,18 +227,38 @@ final class AdminDealChainCatalogController extends Controller
         ));
 
         $normalizedNodes = array_values(array_map(
-            static fn (array $n): array => [
-                'key' => (string) $n['key'],
-                'need_kind' => (string) ($n['need_kind'] ?? ($n['frontend']['type'] === 'store' ? 'product' : 'service')),
-                'title' => (string) $n['title'],
-                'description_template' => (string) ($n['description_template'] ?? "{$n['title']} · provider agreement required"),
-                'frontend' => [
-                    'role' => (string) $n['frontend']['role'],
-                    'title' => (string) $n['frontend']['title'],
-                    'sub' => (string) ($n['frontend']['sub'] ?? 'Provider agreement required'),
-                    'type' => (string) $n['frontend']['type'],
-                ],
-            ],
+            static function (array $n): array {
+                $nodeData = [
+                    'key' => (string) $n['key'],
+                    'need_kind' => (string) ($n['need_kind'] ?? ($n['frontend']['type'] === 'store' ? 'product' : 'service')),
+                    'title' => (string) $n['title'],
+                    'description_template' => (string) ($n['description_template'] ?? "{$n['title']} · provider agreement required"),
+                    'frontend' => [
+                        'role' => (string) $n['frontend']['role'],
+                        'title' => (string) $n['frontend']['title'],
+                        'sub' => (string) ($n['frontend']['sub'] ?? 'Provider agreement required'),
+                        'type' => (string) $n['frontend']['type'],
+                    ],
+                ];
+
+                if (isset($n['slot_requirement']) && is_array($n['slot_requirement'])) {
+                    $nodeData['slot_requirement'] = $n['slot_requirement'];
+                }
+
+                if (isset($n['listing_id']) && is_string($n['listing_id'])) {
+                    $nodeData['listing_id'] = $n['listing_id'];
+                }
+
+                if (isset($n['provider_name']) && is_string($n['provider_name'])) {
+                    $nodeData['provider_name'] = $n['provider_name'];
+                }
+
+                if (isset($n['price_minor']) && is_numeric($n['price_minor'])) {
+                    $nodeData['price_minor'] = (int) $n['price_minor'];
+                }
+
+                return $nodeData;
+            },
             (array) $payload['nodes'],
         ));
 
