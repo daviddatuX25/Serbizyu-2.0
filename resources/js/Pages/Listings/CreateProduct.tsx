@@ -1751,287 +1751,197 @@ export default function CreateProduct({
                                     </div>
                                 </div>
 
-                                {/* Combos Deck Tabs Switcher */}
-                                {combos.length > 0 && (
-                                    <div className="flex gap-2 pb-1 overflow-x-auto [scrollbar-width:none]">
-                                        {combos.map((c, idx) => (
-                                            <button
+                                {/* All Available Partner Combos List */}
+                                <div className="space-y-3">
+                                    {combos.map((c, idx) => {
+                                        const isSelected = selectedFulfillment === c.id;
+
+                                        return (
+                                            <div
                                                 key={c.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    setCurrentComboIdx(idx);
-                                                    setSelectedFulfillment(c.id);
-                                                }}
-                                                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
-                                                    currentComboIdx === idx
-                                                        ? 'bg-[#0F2F58] text-white shadow-xs'
-                                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                                                className={`rounded-2xl border p-4 transition-all ${
+                                                    isSelected
+                                                        ? 'border-[#0F2F58] bg-[#FAFCFB] ring-2 ring-[#0F2F58]/20 shadow-xs'
+                                                        : 'border-slate-200 bg-white hover:border-slate-300'
                                                 }`}
                                             >
-                                                {renderComboIcon(c.icon, 'size-3.5')}
-                                                <span>{c.title}</span>
-                                                {selectedFulfillment === c.id && (
-                                                    <span className="rounded-full bg-emerald-500 px-1 py-0.2 text-[8px] font-bold text-white">
-                                                        Active
-                                                    </span>
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {/* Partner Combos Carousel Deck */}
-                                {combos.length > 0 && currentCombo ? (
-                                    <div className="space-y-3">
-                                        <div
-                                            className={`rounded-2xl border p-4 transition-all ${
-                                                selectedFulfillment === currentCombo.id
-                                                    ? 'border-[#0F2F58] bg-[#FAFCFB] ring-2 ring-[#0F2F58]/20 shadow-xs'
-                                                    : 'border-slate-200 bg-white hover:border-slate-300'
-                                            }`}
-                                        >
-                                            {/* Combo Header */}
-                                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                                <div className="flex items-center gap-2.5">
-                                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EBF2FA] text-[#0F2F58]">
-                                                        {renderComboIcon(currentCombo.icon, 'size-4')}
-                                                    </span>
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
-                                                            <h3 className="text-sm font-extrabold text-[#0F2F58]">
-                                                                {currentCombo.title}
-                                                            </h3>
-                                                            <span className="rounded-full bg-[#0F2F58] px-2 py-0.5 text-[9px] font-extrabold text-white">
-                                                                DEAL CHAIN
-                                                            </span>
-                                                        </div>
-                                                        <p className="text-[10.5px] text-slate-500">
-                                                            {currentCombo.description}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => toggleComboDefault(currentCombo.id)}
-                                                        className={`cursor-pointer rounded-full px-3 py-1 text-[10px] font-extrabold transition-all ${
-                                                            selectedFulfillment === currentCombo.id
-                                                                ? 'bg-[#0F2F58] text-white shadow-xs'
-                                                                : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
-                                                        }`}
-                                                    >
-                                                        {selectedFulfillment === currentCombo.id ? 'Active Selection' : 'Select as Active'}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveCombo(currentCombo.id)}
-                                                        className="cursor-pointer p-1.5 text-slate-400 hover:text-red-600 transition-colors"
-                                                        title="Remove this partnered option"
-                                                        aria-label="Remove option"
-                                                    >
-                                                        <Trash2 className="size-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            {selectedFulfillment === currentCombo.id ? (
-                                                <>
-                                                    {/* Compact DAG Canvas View */}
-                                                    <div className="my-3 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3 overflow-x-auto [scrollbar-width:none]">
-                                                        <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
-                                                            Deal Chain Pipeline View
-                                                        </div>
-                                                        <div className="flex items-center gap-2 min-w-max">
-                                                            {/* Product Node */}
-                                                            <div className="flex flex-col gap-1 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 shadow-2xs min-w-[105px]">
-                                                                <div className="flex items-center justify-between gap-1">
-                                                                    <span className="rounded bg-amber-200/80 px-1.5 py-0.5 text-[8px] font-extrabold text-amber-900 uppercase">
-                                                                        Product
-                                                                    </span>
-                                                                    <span className="font-mono text-[9px] font-bold text-amber-900">
-                                                                        ₱{defaultVariant?.price.toFixed(0) || '180'}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="truncate text-xs font-extrabold text-amber-950">
-                                                                    {title.trim() ? (title.length > 12 ? title.slice(0, 11) + '…' : title) : '35uF Cap'}
-                                                                </div>
+                                                {/* Combo Header */}
+                                                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EBF2FA] text-[#0F2F58]">
+                                                            {renderComboIcon(c.icon, 'size-4')}
+                                                        </span>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <h3 className="text-sm font-extrabold text-[#0F2F58]">
+                                                                    {c.title}
+                                                                </h3>
+                                                                <span className="rounded-full bg-[#0F2F58] px-2 py-0.5 text-[9px] font-extrabold text-white">
+                                                                    DEAL CHAIN
+                                                                </span>
                                                             </div>
-
-                                                            {/* Pipeline Connectors & Slot Nodes */}
-                                                            {currentCombo.slots.map((s, sIdx) => {
-                                                                const isCourier = s.roleType === 'COURIER';
-                                                                const nodeBg = isCourier
-                                                                    ? 'bg-[#E0F2FE]/70 border-sky-200 text-sky-900'
-                                                                    : 'bg-[#DCFCE7]/70 border-emerald-200 text-emerald-900';
-                                                                const badgeBg = isCourier
-                                                                    ? 'bg-[#0284C7] text-white'
-                                                                    : 'bg-[#16A34A] text-white';
-
-                                                                return (
-                                                                    <React.Fragment key={s.id || sIdx}>
-                                                                        <div className="flex shrink-0 items-center text-slate-300">
-                                                                            <svg width="20" height="12" viewBox="0 0 20 12" fill="none" className="shrink-0">
-                                                                                <line x1="0" y1="6" x2="16" y2="6" stroke="#10B981" strokeWidth="2" strokeDasharray="3 2" />
-                                                                                <path d="M14 2L19 6L14 10" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                                            </svg>
-                                                                        </div>
-
-                                                                        <div className={`flex flex-col gap-1 rounded-xl border px-3 py-2 shadow-2xs min-w-[115px] ${nodeBg}`}>
-                                                                            <div className="flex items-center justify-between gap-1">
-                                                                                <span className={`rounded px-1.5 py-0.5 text-[8px] font-extrabold uppercase ${badgeBg}`}>
-                                                                                    {s.roleType}
-                                                                                </span>
-                                                                                <span className="font-mono text-[9px] font-bold">
-                                                                                    +₱{s.fee.toFixed(0)}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div className="truncate text-xs font-extrabold">
-                                                                                {getShortPartnerName(s.providerName)}
-                                                                            </div>
-                                                                        </div>
-                                                                    </React.Fragment>
-                                                                );
-                                                            })}
+                                                            <p className="text-[10.5px] text-slate-500">
+                                                                {c.description}
+                                                            </p>
                                                         </div>
                                                     </div>
-
-                                                    {/* Slot Binding Selectors */}
-                                                    <div className="space-y-2">
-                                                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                                                            Attached Partner Slots ({currentCombo.slots.length})
-                                                        </div>
-                                                        {currentCombo.slots.map((s, sIdx) => (
-                                                            <div
-                                                                key={s.id || sIdx}
-                                                                onClick={() => openSlotPicker(currentCombo.id, sIdx, s.roleType, s.id)}
-                                                                className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200/90 bg-white p-3 shadow-2xs transition-all hover:border-[#0F2F58]/50 hover:bg-slate-50/50"
-                                                            >
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
-                                                                        s.roleType === 'COURIER' ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'
-                                                                    }`}>
-                                                                        {s.roleType === 'COURIER' ? <Truck className="size-4.5" /> : <Wrench className="size-4.5" />}
-                                                                    </div>
-                                                                    <div>
-                                                                        <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400">
-                                                                            {s.slotLabel}
-                                                                        </div>
-                                                                        <div className="flex flex-wrap items-center gap-2">
-                                                                            <span className="text-xs font-extrabold text-[#0F2F58]">
-                                                                                {s.providerName}
-                                                                            </span>
-                                                                            <span className="flex items-center gap-0.5 rounded bg-amber-50 px-1.5 py-0.2 text-[10px] font-bold text-amber-700 border border-amber-200/50">
-                                                                                <Star className="size-2.5 fill-amber-400 stroke-amber-500" />
-                                                                                <span>{s.rating.toFixed(1)}</span>
-                                                                            </span>
-                                                                            <span className="font-mono text-xs font-bold text-emerald-700">
-                                                                                +₱{s.fee.toFixed(2)} {s.roleType === 'COURIER' ? 'route fee' : 'labor'}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        openSlotPicker(currentCombo.id, sIdx, s.roleType, s.id);
-                                                                    }}
-                                                                    className="cursor-pointer shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-[#0F2F58] shadow-2xs hover:bg-[#EBF2FA] hover:border-[#0F2F58]/30 transition-all"
-                                                                >
-                                                                    Change Partner ▾
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-3 text-center">
-                                                    <p className="text-xs text-slate-500">
-                                                        Counter pickup is currently active. Activate this option to offer partnered delivery to shoppers.
-                                                    </p>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setSelectedFulfillment(currentCombo.id)}
-                                                        className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#0F2F58] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#153e74] transition-all cursor-pointer"
-                                                    >
-                                                        <span>+ Activate {currentCombo.title}</span>
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Carousel Pagination & Navigation Controls */}
-                                        <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 border border-slate-200/60">
-                                            <button
-                                                type="button"
-                                                disabled={currentComboIdx === 0}
-                                                onClick={() => {
-                                                    const nextIdx = Math.max(0, currentComboIdx - 1);
-                                                    setCurrentComboIdx(nextIdx);
-                                                    if (combos[nextIdx]) setSelectedFulfillment(combos[nextIdx].id);
-                                                }}
-                                                className="flex cursor-pointer items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-[#0F2F58] shadow-2xs hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                                            >
-                                                <ChevronLeft className="size-3.5" />
-                                                <span>Prev</span>
-                                            </button>
-
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex items-center gap-1.5">
-                                                    {combos.map((_, dIdx) => (
+                                                    <div className="flex items-center gap-2">
                                                         <button
-                                                            key={dIdx}
                                                             type="button"
                                                             onClick={() => {
-                                                                setCurrentComboIdx(dIdx);
-                                                                if (combos[dIdx]) setSelectedFulfillment(combos[dIdx].id);
+                                                                setSelectedFulfillment(isSelected ? 'pickup' : c.id);
+                                                                setCurrentComboIdx(idx);
                                                             }}
-                                                            className={`h-1.5 cursor-pointer rounded-full transition-all ${
-                                                                dIdx === currentComboIdx
-                                                                    ? 'w-5 bg-[#0F2F58]'
-                                                                    : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                                                            className={`cursor-pointer rounded-full px-3 py-1 text-[10px] font-extrabold transition-all ${
+                                                                isSelected
+                                                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                                                    : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
                                                             }`}
-                                                            aria-label={`Go to option ${dIdx + 1}`}
-                                                        />
-                                                    ))}
+                                                        >
+                                                            {isSelected ? '✓ Active Selection' : 'Select as Active'}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveCombo(c.id)}
+                                                            className="cursor-pointer p-1.5 text-slate-400 hover:text-red-600 transition-colors"
+                                                            title="Remove this partnered option"
+                                                            aria-label="Remove option"
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <span className="font-mono text-[10.5px] font-bold text-slate-500">
-                                                    Option {currentComboIdx + 1} of {combos.length}
-                                                </span>
-                                            </div>
 
-                                            <button
-                                                type="button"
-                                                disabled={currentComboIdx >= combos.length - 1}
-                                                onClick={() => {
-                                                    const nextIdx = Math.min(combos.length - 1, currentComboIdx + 1);
-                                                    setCurrentComboIdx(nextIdx);
-                                                    if (combos[nextIdx]) setSelectedFulfillment(combos[nextIdx].id);
-                                                }}
-                                                className="flex cursor-pointer items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-[#0F2F58] shadow-2xs hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                                            >
-                                                <span>Next</span>
-                                                <ChevronRight className="size-3.5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-[#FAFCFB] p-6 text-center">
-                                        <div className="text-xs font-extrabold text-[#0F2F58]">
-                                            No Partnered Options Attached
-                                        </div>
-                                        <div className="mt-1 text-[11px] text-slate-500">
-                                            This product will be counter-pickup only at {stallLocation}.
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setAttachModalOpen(true)}
-                                            className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0F2F58] px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#153e74]"
-                                        >
-                                            <Plus className="size-3.5" />
-                                            <span>Attach a Combination</span>
-                                        </button>
-                                    </div>
-                                )}
+                                                {/* When this combo is selected: Expand the Deal Chain Pipeline and Slot details */}
+                                                {isSelected ? (
+                                                    <>
+                                                        {/* Compact DAG Canvas View */}
+                                                        <div className="my-3 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3 overflow-x-auto [scrollbar-width:none]">
+                                                            <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+                                                                Deal Chain Pipeline View
+                                                            </div>
+                                                            <div className="flex items-center gap-2 min-w-max">
+                                                                {/* Product Node */}
+                                                                <div className="flex flex-col gap-1 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 shadow-2xs min-w-[105px]">
+                                                                    <div className="flex items-center justify-between gap-1">
+                                                                        <span className="rounded bg-amber-200/80 px-1.5 py-0.5 text-[8px] font-extrabold text-amber-900 uppercase">
+                                                                            Product
+                                                                        </span>
+                                                                        <span className="font-mono text-[9px] font-bold text-amber-900">
+                                                                            ₱{defaultVariant?.price.toFixed(0) || '180'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="truncate text-xs font-extrabold text-amber-950">
+                                                                        {title.trim() ? (title.length > 12 ? title.slice(0, 11) + '…' : title) : '35uF Cap'}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Pipeline Connectors & Slot Nodes */}
+                                                                {c.slots.map((s, sIdx) => {
+                                                                    const isCourier = s.roleType === 'COURIER';
+                                                                    const nodeBg = isCourier
+                                                                        ? 'bg-[#E0F2FE]/70 border-sky-200 text-sky-900'
+                                                                        : 'bg-[#DCFCE7]/70 border-emerald-200 text-emerald-900';
+                                                                    const badgeBg = isCourier
+                                                                        ? 'bg-[#0284C7] text-white'
+                                                                        : 'bg-[#16A34A] text-white';
+
+                                                                    return (
+                                                                        <React.Fragment key={s.id || sIdx}>
+                                                                            <div className="flex shrink-0 items-center text-slate-300">
+                                                                                <svg width="20" height="12" viewBox="0 0 20 12" fill="none" className="shrink-0">
+                                                                                    <line x1="0" y1="6" x2="16" y2="6" stroke="#10B981" strokeWidth="2" strokeDasharray="3 2" />
+                                                                                    <path d="M14 2L19 6L14 10" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                </svg>
+                                                                            </div>
+
+                                                                            <div className={`flex flex-col gap-1 rounded-xl border px-3 py-2 shadow-2xs min-w-[115px] ${nodeBg}`}>
+                                                                                <div className="flex items-center justify-between gap-1">
+                                                                                    <span className={`rounded px-1.5 py-0.5 text-[8px] font-extrabold uppercase ${badgeBg}`}>
+                                                                                        {s.roleType}
+                                                                                    </span>
+                                                                                    <span className="font-mono text-[9px] font-bold">
+                                                                                        +₱{s.fee.toFixed(0)}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div className="truncate text-xs font-extrabold">
+                                                                                    {getShortPartnerName(s.providerName)}
+                                                                                </div>
+                                                                            </div>
+                                                                        </React.Fragment>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Slot Binding Selectors */}
+                                                        <div className="space-y-2">
+                                                            <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                                                                Attached Partner Slots ({c.slots.length})
+                                                            </div>
+                                                            {c.slots.map((s, sIdx) => (
+                                                                <div
+                                                                    key={s.id || sIdx}
+                                                                    onClick={() => openSlotPicker(c.id, sIdx, s.roleType, s.id)}
+                                                                    className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200/90 bg-white p-3 shadow-2xs transition-all hover:border-[#0F2F58]/50 hover:bg-slate-50/50"
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
+                                                                            s.roleType === 'COURIER' ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'
+                                                                        }`}>
+                                                                            {s.roleType === 'COURIER' ? <Truck className="size-4.5" /> : <Wrench className="size-4.5" />}
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400">
+                                                                                {s.slotLabel}
+                                                                            </div>
+                                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                                <span className="text-xs font-extrabold text-[#0F2F58]">
+                                                                                    {s.providerName}
+                                                                                </span>
+                                                                                <span className="flex items-center gap-0.5 rounded bg-amber-50 px-1.5 py-0.2 text-[10px] font-bold text-amber-700 border border-amber-200/50">
+                                                                                    <Star className="size-2.5 fill-amber-400 stroke-amber-500" />
+                                                                                    <span>{s.rating.toFixed(1)}</span>
+                                                                                </span>
+                                                                                <span className="font-mono text-xs font-bold text-emerald-700">
+                                                                                    +₱{s.fee.toFixed(2)} {s.roleType === 'COURIER' ? 'route fee' : 'labor'}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            openSlotPicker(c.id, sIdx, s.roleType, s.id);
+                                                                        }}
+                                                                        className="cursor-pointer shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-[#0F2F58] shadow-2xs hover:bg-[#EBF2FA] hover:border-[#0F2F58]/30 transition-all"
+                                                                    >
+                                                                        Change Partner ▾
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="pt-2 flex items-center justify-between text-[11px] text-slate-500">
+                                                        <span>Click "Select as Active" to offer this delivery relay to customers.</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+
+                                    {/* Attach Additional Presets Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setAttachModalOpen(true)}
+                                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-[#FAFCFB] p-4 text-xs font-bold text-[#0F2F58] hover:border-[#0F2F58] hover:bg-[#F0F5FA] transition-all"
+                                    >
+                                        <Plus className="size-4" />
+                                        <span>Attach Another Partnered Preset / Deal Chain</span>
+                                    </button>
+                                </div>
 
                                 {/* Attach Delivery / Service Extension Button */}
                                 <div className="pt-1">

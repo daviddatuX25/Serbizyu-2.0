@@ -176,7 +176,7 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         expect(screen.queryByText(/Attached Partner Slots/i)).toBeNull();
 
         // Doorstep Delivery is offered cleanly as an inactive option with an activate button
-        const activateBtn = screen.getByRole('button', { name: /\+ Activate Doorstep Delivery/i });
+        const activateBtn = screen.getByRole('button', { name: /Select as Active/i });
         expect(activateBtn).toBeTruthy();
 
         // Activating Doorstep Delivery expands the pipeline view
