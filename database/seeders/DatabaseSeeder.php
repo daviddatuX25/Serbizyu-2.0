@@ -18,7 +18,10 @@ final class DatabaseSeeder extends Seeder
     {
         $this->call([
             CapstoneContractSeeder::class,
+            WorkCatalogSeeder::class,
+            DealChainCatalogSeeder::class,
             TagudinBrowseCatalogSeeder::class,
+            DealChainExecutionSeeder::class,
         ]);
     }
 }

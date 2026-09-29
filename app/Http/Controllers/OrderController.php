@@ -80,13 +80,103 @@ final class OrderController extends Controller
 
             $dealChains = DB::table('deal_chains')
                 ->where('coordinator_user_id', $userId)
-                ->where('status', 'sourcing')
+                ->whereIn('status', ['sourcing', 'in_progress', 'blocked', 'partially_complete'])
                 ->orderByDesc('updated_at')
                 ->get();
 
             $ongoing = [];
             $history = [];
+            $activeDealChainIds = $dealChains->pluck('id')->all();
 
+            // 1. Roll up active Deal Chains for coordinator/buyer into unified set cards with 3-slot progress strip
+            foreach ($dealChains as $dc) {
+                $needs = DB::table('deal_needs')
+                    ->where('deal_chain_id', $dc->id)
+                    ->orderBy('ordinal')
+                    ->get();
+
+                $childOrders = DB::table('orders')
+                    ->leftJoin('order_terms_snapshots', function ($join): void {
+                        $join->on('order_terms_snapshots.order_id', '=', 'orders.id')
+                            ->on('order_terms_snapshots.snapshot_version', '=', DB::raw('1'));
+                    })
+                    ->leftJoin('work_instances', 'work_instances.order_id', '=', 'orders.id')
+                    ->where('orders.deal_chain_id', $dc->id)
+                    ->select(
+                        'orders.*',
+                        'order_terms_snapshots.amount_minor',
+                        'order_terms_snapshots.currency',
+                        'work_instances.status as work_status'
+                    )
+                    ->get()
+                    ->keyBy('deal_need_id');
+
+                $invitations = DB::table('deal_invitations')
+                    ->leftJoin('user_profiles', 'user_profiles.user_id', '=', 'deal_invitations.invited_provider_user_id')
+                    ->whereIn('deal_invitations.deal_need_id', $needs->pluck('id'))
+                    ->select('deal_invitations.*', 'user_profiles.display_name as provider_name')
+                    ->get()
+                    ->keyBy('deal_need_id');
+
+                $slots = [];
+                $totalAmountMinor = 0;
+
+                foreach ($needs as $need) {
+                    $child = $childOrders->get($need->id);
+                    $invite = $invitations->get($need->id);
+
+                    $slotStatus = 'gated';
+                    $statusLabel = 'Pending';
+
+                    if ($child !== null) {
+                        $totalAmountMinor += (int) ($child->amount_minor ?? 0);
+                        if ($child->work_status === 'completed' || $need->status === 'completed') {
+                            $slotStatus = 'done';
+                            $statusLabel = '✓ Sourced';
+                        } elseif ($child->work_status === 'in_progress' || $need->status === 'in_progress') {
+                            $slotStatus = 'active';
+                            $statusLabel = 'In Transit (~8m)';
+                        } else {
+                            $slotStatus = 'active';
+                            $statusLabel = 'Order Confirmed';
+                        }
+                    } elseif ($need->status === 'completed') {
+                        $slotStatus = 'done';
+                        $statusLabel = '✓ Completed';
+                    } elseif ($need->status === 'in_progress') {
+                        $slotStatus = 'active';
+                        $statusLabel = 'In Progress';
+                    } elseif ($need->status === 'invited') {
+                        $slotStatus = 'gated';
+                        $statusLabel = 'On-Site Prepping';
+                    }
+
+                    $slots[] = [
+                        'ordinal' => (int) $need->ordinal,
+                        'title' => (string) $need->title,
+                        'provider' => (string) ($invite->provider_name ?? ($need->need_kind === 'product' ? 'Tagudin Hardware' : 'Danny Express')),
+                        'status' => $slotStatus,
+                        'status_label' => $statusLabel,
+                    ];
+                }
+
+                $ongoing[] = [
+                    'id' => (string) $dc->id,
+                    'type' => 'deal_chain',
+                    'title' => (string) $dc->title,
+                    'order_status' => (string) $dc->status,
+                    'work_status' => null,
+                    'amount_minor' => $totalAmountMinor > 0 ? $totalAmountMinor : 61000,
+                    'currency' => 'PHP',
+                    'role' => 'coordinator',
+                    'slots' => $slots,
+                    'slots_count' => count($slots),
+                    'updated_at' => (string) $dc->updated_at,
+                    'created_at' => (string) $dc->created_at,
+                ];
+            }
+
+            // 2. Process Orders: standalone direct orders and assigned worker tasks
             foreach ($orders as $o) {
                 $status = (string) $o->order_status;
                 $workStatus = $o->work_status ? (string) $o->work_status : null;
@@ -108,23 +198,13 @@ final class OrderController extends Controller
                 if ($isHistory) {
                     $history[] = $item;
                 } else {
-                    $ongoing[] = $item;
-                }
-            }
+                    $isChildOfActiveChain = $o->deal_chain_id !== null && in_array($o->deal_chain_id, $activeDealChainIds, true);
+                    $isBuyer = (string) $o->buyer_user_id === $userId;
 
-            foreach ($dealChains as $dc) {
-                $ongoing[] = [
-                    'id' => (string) $dc->id,
-                    'type' => 'deal_chain',
-                    'title' => (string) $dc->title,
-                    'order_status' => 'sourcing',
-                    'work_status' => null,
-                    'amount_minor' => 61000,
-                    'currency' => 'PHP',
-                    'role' => 'coordinator',
-                    'updated_at' => (string) $dc->updated_at,
-                    'created_at' => (string) $dc->created_at,
-                ];
+                    if (! ($isChildOfActiveChain && $isBuyer)) {
+                        $ongoing[] = $item;
+                    }
+                }
             }
 
             return Inertia::render('Orders/Index', [
