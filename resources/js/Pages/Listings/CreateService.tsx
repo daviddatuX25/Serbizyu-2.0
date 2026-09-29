@@ -1,23 +1,28 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link, router } from '@inertiajs/react';
 import type { FormDataConvertible } from '@inertiajs/core';
 import {
     ArrowLeft,
     ArrowRight,
-    Package,
     Wrench,
     Plus,
     Trash2,
     ShieldCheck,
-    Sparkles,
     Sliders,
+    Sparkles,
     Check,
-    Clock,
     Eye,
+    Video,
     X,
 } from 'lucide-react';
+import { FieldGuide } from '../../components/ui/FieldGuide';
+import {
+    SERVICE_FIELD_GUIDANCE,
+    SERVICE_GUIDED_STEPS,
+    type BuilderMode,
+} from '../../lib/builderGuidance';
+import TagudinLocationPicker, { type StructuredGeography } from '../../components/listings/TagudinLocationPicker';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
-import { BottomNavBar, type NavTabId } from '../../marketplace/components/BottomNavBar';
 import { CreatorPostModal } from '../../components/marketplace/CreatorPostModal';
 import { QuickDealScanModal } from '../../components/marketplace/QuickDealScanModal';
 import {
@@ -25,14 +30,27 @@ import {
     WorkNodeCustomizerModal,
     WorkCatalogModal,
     DealChainCarousel,
-    GlovoWaveModal,
+    DealChainCatalogModal,
+    DealChainCustomizerModal,
     type WorkStage,
     type WorkTemplate,
     type DealChainCombination,
+    type DealChainTemplate,
     type SlotType,
 } from '../../components/mobile';
 import { SlotListingPickerModal } from '../../components/marketplace/SlotListingPickerModal';
 import type { SlotCandidateListing } from '../../marketplace/types';
+import type { ListingMedia, ListingRecord, SliceSession } from '../../types';
+import {
+    CategoryVisualFallback,
+    ListingMediaPicker,
+    defaultMediaForCategory,
+} from '../../components/listings/ListingMediaPicker';
+import {
+    clearPendingListingDraft,
+    readPendingListingDraft,
+    savePendingListingDraft,
+} from '../../lib/pendingListingDraft';
 
 interface PackageTierForm {
     id: string;
@@ -52,284 +70,319 @@ interface AddonForm {
     isDefault?: boolean;
 }
 
-const TAGUDIN_WORK_TEMPLATES: WorkTemplate[] = [
-    {
-        id: 'tmpl-a1-inverter',
-        category: 'appliance',
-        title: 'Standard Inverter Deep Clean & Checkup',
-        shape: 'A1 Linear',
-        sla: '75m SLA',
-        flowType: 'linear',
-        description:
-            'Standard 4-stage chemical foam wash, blower fan removal, and delta temp drop test.',
-        stages: [
-            {
-                id: 's1',
-                num: '1',
-                title: 'Intake Triage & Breaker Lockout',
-                dur: '15m',
-                desc: 'Isolate main breaker, inspect coil status, and customer intake interview.',
-                evidence: 'Breaker lock-out photo gate',
-                color: '#0D715F',
-                bg: '#E8F7F1',
-            },
-            {
-                id: 's2',
-                num: '2',
-                title: 'Coil Foaming & Pressure Flush',
-                dur: '25m',
-                desc: 'Apply specialized alkaline chemical foam on evaporator fins and pressure flush drain line.',
-                evidence: 'Chemical foam coverage photo gate',
-                color: '#0F766E',
-                bg: '#CCFBF1',
-            },
-            {
-                id: 's3',
-                num: '3',
-                title: 'Cold Run & Amperage Test',
-                dur: '20m',
-                desc: 'Restore power and verify compressor startup, amp draw, and fan cycle.',
-                evidence: 'Amperage reading photo gate',
-                color: '#B45309',
-                bg: '#FEF3C7',
-            },
-            {
-                id: 's4',
-                num: '4',
-                title: 'Delta Temp Test & OTP Sign-off',
-                dur: '15m',
-                desc: 'Verify dual-probe temperature drop (ΔT ≥ 12°C) and customer digital sign-off.',
-                evidence: 'Temperature delta photo & OTP sign-off',
-                color: '#0D715F',
-                bg: '#E8F7F1',
-            },
-        ],
-    },
-    {
-        id: 'tmpl-a3-turnkey',
-        category: 'electrical',
-        title: 'Turnkey Electrical Diagnostic & Parts Replacement',
-        shape: 'A3 Turnkey',
-        sla: '90m SLA',
-        flowType: 'linear',
-        description:
-            'Multi-stage diagnostic with hardware part sourcing gate and on-site terminal replacement.',
-        stages: [
-            {
-                id: 't1',
-                num: '1',
-                title: 'Circuit Fault Triage',
-                dur: '20m',
-                desc: 'Measure voltage drop and test continuity with multimeter.',
-                evidence: 'Multimeter reading photo',
-                color: '#0D715F',
-                bg: '#E8F7F1',
-            },
-            {
-                id: 't2',
-                num: '2',
-                title: 'Hardware Part Sourcing Gate',
-                dur: '30m',
-                desc: 'Verify replacement part stock commitment at Tagudin Hardware Depot.',
-                evidence: 'Part serial number photo',
-                color: '#B45309',
-                bg: '#FEF3C7',
-            },
-            {
-                id: 't3',
-                num: '3',
-                title: 'Terminal Installation & Load Test',
-                dur: '25m',
-                desc: 'Crimp lugs, torque terminals, and run 15-minute load test.',
-                evidence: 'Installed terminal torque photo',
-                color: '#0F766E',
-                bg: '#CCFBF1',
-            },
-            {
-                id: 't4',
-                num: '4',
-                title: 'Safety Audit Sign-Off',
-                dur: '15m',
-                desc: 'Master electrician sign-off and municipal safety certificate issuance.',
-                evidence: 'Safety certificate photo',
-                color: '#0D715F',
-                bg: '#E8F7F1',
-            },
-        ],
-    },
-    {
-        id: 'tmpl-a1-plumbing',
-        category: 'plumbing',
-        title: 'Emergency Pipe Leak & Joint Repair',
-        shape: 'A1 Linear',
-        sla: '60m SLA',
-        flowType: 'linear',
-        description: 'Waterline isolation, pressure fitting, and 24-hour leak check guarantee.',
-        stages: [
-            {
-                id: 'p1',
-                num: '1',
-                title: 'Main Valve Shutoff & Pressure Release',
-                dur: '10m',
-                desc: 'Isolate municipal water meter and drain line pressure.',
-                evidence: 'Shutoff valve photo',
-                color: '#0D715F',
-                bg: '#E8F7F1',
-            },
-            {
-                id: 'p2',
-                num: '2',
-                title: 'Pipe Cutting & Solvent Weld Joint',
-                dur: '30m',
-                desc: 'Cut compromised section and solvent weld replacement PVC fitting.',
-                evidence: 'Fitted joint photo',
-                color: '#0F766E',
-                bg: '#CCFBF1',
-            },
-            {
-                id: 'p3',
-                num: '3',
-                title: 'Pressure Test & Flow Restoration',
-                dur: '20m',
-                desc: 'Restore main pressure and verify zero weeping at 40 PSI.',
-                evidence: 'Dry joint inspection photo',
-                color: '#0D715F',
-                bg: '#E8F7F1',
-            },
-        ],
-    },
-    {
-        id: 'tmpl-a1-cleaning',
-        category: 'carpentry',
-        title: 'Deep Residential Cleaning & Disinfection',
-        shape: 'A1 Linear',
-        sla: '120m SLA',
-        flowType: 'linear',
-        description: 'Room-by-room deep dust removal, tile sanitization, and trash clearing.',
-        stages: [
-            {
-                id: 'c1',
-                num: '1',
-                title: 'Intake Inspection & Room Triage',
-                dur: '15m',
-                desc: 'Walkthrough with homeowner to tag priority areas and fragile items.',
-                evidence: 'Pre-service condition photo',
-                color: '#0D715F',
-                bg: '#E8F7F1',
-            },
-            {
-                id: 'c2',
-                num: '2',
-                title: 'Deep Surface Cleaning & Degreasing',
-                dur: '60m',
-                desc: 'Floor mopping, window wiping, kitchen counter degreasing, and vacuuming.',
-                evidence: 'Degreased surface photo',
-                color: '#0F766E',
-                bg: '#CCFBF1',
-            },
-            {
-                id: 'c3',
-                num: '3',
-                title: 'Antimicrobial Spray & Room Turnover',
-                dur: '45m',
-                desc: 'Final surface sanitization and waste bag disposal.',
-                evidence: 'Clean turnover photo',
-                color: '#0D715F',
-                bg: '#E8F7F1',
-            },
-        ],
-    },
-];
+interface ServiceBuilderDraft {
+    version: 1;
+    step: number;
+    title: string;
+    category: string;
+    description: string;
+    inclusions: string[];
+    newInclusion: string;
+    selectedTemplateId: string;
+    selectedSetVersion?: number;
+    stages: WorkStage[];
+    builderMode?: BuilderMode | 'advanced' | 'simple';
+    previewTab: 'card' | 'timeline';
+    pricingMode: 'fixed' | 'range' | 'packages';
+    fixedPrice: string;
+    rangeMin: string;
+    rangeMax: string;
+    packageTiers: PackageTierForm[];
+    addons: AddonForm[];
+    combinations: DealChainCombination[];
+    activeComboIndex: number;
+    media?: ListingMedia;
+    geography?: StructuredGeography;
+}
 
-export default function CreateService() {
-    const [step, setStep] = useState<1 | 2 | 3>(1);
+interface DealChainOptionGroups {
+    recommended: DealChainTemplate[];
+    other_recipes: DealChainTemplate[];
+}
+
+interface PartnerListingOption {
+    id: string;
+    listingId?: string;
+    role: string;
+    name: string;
+    providerName: string;
+    barangay: string;
+    price: number;
+    feeMinor: number;
+    rating: string;
+    badge?: string;
+    sub: string;
+    coverThumbnailUrl?: string;
+}
+
+interface CreateServiceProps {
+    session?: SliceSession | null;
+    workCatalog?: unknown[];
+    workOptions?: WorkOptionGroups;
+    dealChainCatalog?: DealChainTemplate[];
+    dealChainOptions?: DealChainOptionGroups;
+    partnerListings?: PartnerListingOption[];
+    editingDraft?: ListingRecord | null;
+}
+function isServiceBuilderDraft(value: unknown): value is ServiceBuilderDraft {
+    if (typeof value !== 'object' || value === null) {
+        return false;
+    }
+
+    const draft = value as Partial<ServiceBuilderDraft>;
+
+    return (
+        draft.version === 1 &&
+        typeof draft.step === 'number' &&
+        draft.step >= 1 &&
+        draft.step <= 7 &&
+        typeof draft.title === 'string' &&
+        typeof draft.category === 'string' &&
+        typeof draft.description === 'string' &&
+        Array.isArray(draft.inclusions) &&
+        typeof draft.newInclusion === 'string' &&
+        typeof draft.selectedTemplateId === 'string' &&
+        Array.isArray(draft.stages) &&
+        (draft.builderMode === undefined || draft.builderMode === 'guided' || draft.builderMode === 'standard' || draft.builderMode === 'advanced' || draft.builderMode === 'simple') &&
+        (draft.previewTab === 'card' || draft.previewTab === 'timeline') &&
+        (draft.pricingMode === 'fixed' || draft.pricingMode === 'range' || draft.pricingMode === 'packages') &&
+        typeof draft.fixedPrice === 'string' &&
+        typeof draft.rangeMin === 'string' &&
+        typeof draft.rangeMax === 'string' &&
+        Array.isArray(draft.packageTiers) &&
+        Array.isArray(draft.addons) &&
+        Array.isArray(draft.combinations) &&
+        typeof draft.activeComboIndex === 'number'
+    );
+}
+interface WorkSetOption {
+    option_id: string;
+    set_code: string;
+    catalog_code: string;
+    set_version: number;
+    work_shape: string;
+    category_codes: string[];
+    listing_types: string[];
+    title: string;
+    summary: string;
+    target_duration_label?: string;
+    steps: Array<{
+        id: string;
+        title: string;
+        description: string;
+        duration_label?: string | null;
+        evidence_type?: string;
+        evidence_description?: string;
+    }>;
+}
+
+interface WorkOptionGroups {
+    recommended: WorkSetOption[];
+    other_archetypes: WorkSetOption[];
+}
+
+function toWorkTemplate(option: WorkSetOption): WorkTemplate {
+    const categoryCodes = option.category_codes ?? [];
+    const steps = option.steps ?? [];
+    return {
+        id: option.set_code || option.option_id || 'custom-template',
+        category: categoryCodes[0] || '',
+        title: option.title,
+        shape: option.work_shape,
+        categoryCodes,
+        catalogCode: option.catalog_code,
+        setVersion: option.set_version,
+        sla: option.target_duration_label || '',
+        flowType: 'linear',
+        description: option.summary,
+        stages: steps.map((step, index) => ({
+            id: step.id || `step-${index + 1}`,
+            num: String(index + 1).padStart(2, '0'),
+            title: step.title,
+            dur: step.duration_label || '',
+            desc: step.description,
+            evidence: step.evidence_description || step.evidence_type || 'Work evidence',
+            evidenceType: step.evidence_type,
+            color: '#0F2F58',
+            bg: '#EBF2FA',
+        })),
+    };
+}
+
+const EMPTY_WORK_TEMPLATE: WorkTemplate = {
+    id: '',
+    category: '',
+    title: '',
+    shape: '',
+    sla: '',
+    flowType: 'linear',
+    description: '',
+    stages: [],
+};
+
+export default function CreateService({
+    session,
+    workOptions,
+    dealChainOptions,
+    partnerListings = [],
+    editingDraft = null,
+}: CreateServiceProps) {
+    const allWorkTemplates = useMemo(
+        () => [...(workOptions?.recommended ?? []), ...(workOptions?.other_archetypes ?? [])].map(toWorkTemplate),
+        [workOptions],
+    );
+    const allDealChainRecipes = useMemo(
+        () => [
+            ...(dealChainOptions?.recommended ?? []),
+            ...(dealChainOptions?.other_recipes ?? []),
+        ],
+        [dealChainOptions],
+    );
+    const slotCandidateListings = useMemo<SlotCandidateListing[]>(() => {
+        if (!Array.isArray(partnerListings) || partnerListings.length === 0) {
+            return [];
+        }
+        return partnerListings.map((item) => {
+            const roleUpper = (item.role || 'store').toUpperCase();
+            const mappedRole: SlotCandidateListing['role'] =
+                roleUpper === 'DELIVERY' || roleUpper === 'COURIER'
+                    ? 'COURIER'
+                    : roleUpper === 'AUDIT' || roleUpper === 'AUDITOR'
+                      ? 'AUDIT'
+                      : roleUpper === 'LABOR' || roleUpper === 'TECHNICIAN'
+                        ? 'LABOR'
+                        : 'STORE';
+            return {
+                id: item.id,
+                title: item.name,
+                provider_name: item.providerName,
+                area: item.barangay || 'Tagudin Centro',
+                price_minor: item.feeMinor,
+                sla_text: item.sub || 'Verified Tagudin partner listing',
+                photo_url: item.coverThumbnailUrl,
+                rating: parseFloat(item.rating || '4.9') || 4.9,
+                role: mappedRole,
+            };
+        });
+    }, [partnerListings]);
+    const [step, setStep] = useState<number>(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [creatorOpen, setCreatorOpen] = useState(false);
     const [quickDealOpen, setQuickDealOpen] = useState(false);
 
     // Step 1: Trade Identity & Scope
-    const [title, setTitle] = useState('');
-    const [category, setCategory] = useState('repairs');
-    const [description, setDescription] = useState('');
-    const [inclusions, setInclusions] = useState<string[]>([
-        'Evaporator coil chemical foam wash & disinfection',
-        'Blower fan wheel disassembly & grease flush',
-        'High-pressure drain line unblocking',
-    ]);
-    const [newInclusion, setNewInclusion] = useState('');
-
-    // Work Pipeline Template & Canvas state
-    const [selectedTemplate, setSelectedTemplate] = useState<WorkTemplate>(
-        TAGUDIN_WORK_TEMPLATES[0],
+    const [title, setTitle] = useState(editingDraft?.title ?? '');
+    const [category, setCategory] = useState(
+        editingDraft?.category_code || editingDraft?.categoryCode || '',
     );
-    const [stages, setStages] = useState<WorkStage[]>(TAGUDIN_WORK_TEMPLATES[0].stages);
+    const [description, setDescription] = useState(editingDraft?.description ?? '');
+    const [media, setMedia] = useState<ListingMedia>(
+        editingDraft?.media ??
+            defaultMediaForCategory(
+                editingDraft?.category_code || editingDraft?.categoryCode || 'repairs',
+            ),
+    );
+    const [inclusions, setInclusions] = useState<string[]>(
+        editingDraft?.inclusions && Array.isArray(editingDraft.inclusions) && editingDraft.inclusions.length > 0
+            ? editingDraft.inclusions
+            : [],
+    );
+    const [newInclusion, setNewInclusion] = useState('');
+    // Work Pipeline Template & Canvas state
+    const draftStages = editingDraft?.milestone_stages && Array.isArray(editingDraft.milestone_stages) && editingDraft.milestone_stages.length > 0
+        ? (editingDraft.milestone_stages as unknown as WorkStage[])
+        : (editingDraft?.milestoneStages && Array.isArray(editingDraft.milestoneStages) && editingDraft.milestoneStages.length > 0
+            ? (editingDraft.milestoneStages as unknown as WorkStage[])
+            : null);
+    const initialTemplate =
+        (editingDraft?.work_catalog_code
+            ? allWorkTemplates.find((template) => template.id === editingDraft.work_catalog_code)
+            : null) ??
+        allWorkTemplates.find((template) => template.categoryCodes?.includes(category)) ??
+        EMPTY_WORK_TEMPLATE;
+    const [selectedTemplate, setSelectedTemplate] = useState<WorkTemplate>(initialTemplate);
+    const [stages, setStages] = useState<WorkStage[]>(draftStages ?? initialTemplate.stages);
     const [workModalOpen, setWorkModalOpen] = useState(false);
     const [customizerModalOpen, setCustomizerModalOpen] = useState(false);
-    const [builderMode, setBuilderMode] = useState<'simple' | 'advanced'>('simple');
     const [previewTab, setPreviewTab] = useState<'card' | 'timeline'>('card');
     const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+    const [geography, setGeography] = useState<StructuredGeography | null>(
+        (editingDraft?.geography as unknown as StructuredGeography) ?? null,
+    );
+    const [builderMode, setBuilderMode] = useState<BuilderMode>('guided');
+
+    const suggestedWorkTemplates = useMemo(
+        () => allWorkTemplates.filter((template) => template.categoryCodes?.includes(category)),
+        [allWorkTemplates, category],
+    );
 
     const isCustomizedFromTemplate = useMemo(() => {
         if (stages.length !== selectedTemplate.stages.length) return true;
-        return stages.some((s, idx) => {
-            const orig = selectedTemplate.stages[idx];
-            return !orig || orig.id !== s.id || orig.title !== s.title;
+        return stages.some((stage, index) => {
+            const original = selectedTemplate.stages[index];
+            if (!original) return true;
+            return (
+                JSON.stringify(Object.entries(stage).sort(([left], [right]) => left.localeCompare(right))) !==
+                JSON.stringify(Object.entries(original).sort(([left], [right]) => left.localeCompare(right)))
+            );
         });
     }, [stages, selectedTemplate]);
 
-    const [pricingMode, setPricingMode] = useState<'fixed' | 'range' | 'packages'>('packages');
-    const [fixedPrice, setFixedPrice] = useState('450');
-    const [rangeMin, setRangeMin] = useState('350');
-    const [rangeMax, setRangeMax] = useState('700');
+    const [pricingMode, setPricingMode] = useState<'fixed' | 'range' | 'packages'>(
+        (editingDraft?.pricing_mode as any) || (editingDraft?.pricingMode as any) || 'packages',
+    );
+    const [fixedPrice, setFixedPrice] = useState(
+        editingDraft?.price_amount_minor ? String(Math.round(editingDraft.price_amount_minor / 100)) : '',
+    );
+    const [rangeMin, setRangeMin] = useState('');
+    const [rangeMax, setRangeMax] = useState('');
+    const [packageTiers, setPackageTiers] = useState<PackageTierForm[]>(
+        editingDraft?.package_tiers && Array.isArray(editingDraft.package_tiers) && editingDraft.package_tiers.length > 0
+            ? (editingDraft.package_tiers as unknown as PackageTierForm[])
+            : (editingDraft?.packageTiers && Array.isArray(editingDraft.packageTiers) && editingDraft.packageTiers.length > 0
+                ? (editingDraft.packageTiers as unknown as PackageTierForm[])
+                : [
+                    {
+                        id: 'tier-1',
+                        title: '',
+                        price: 0,
+                        sub: '',
+                        inclusions: [],
+                    },
+                ]),
+    );
 
-    const [packageTiers, setPackageTiers] = useState<PackageTierForm[]>([
-        {
-            id: 'tier-1',
-            title: '1 Unit Standard',
-            price: 450,
-            sub: 'Deep coil & drain clean',
-            inclusions: ['Complete inspection & labor', 'Photo sign-off'],
-        },
-        {
-            id: 'tier-2',
-            title: '2 Units Dual Split',
-            price: 850,
-            sub: 'Dual room package · Save ₱50',
-            inclusions: ['Two unit full service', 'Outdoor unit check', 'Photo sign-off'],
-        },
-        {
-            id: 'tier-3',
-            title: '3 Units Full Home',
-            price: 1200,
-            sub: 'Whole home cleaning · Save ₱150',
-            inclusions: ['Three units full service', 'Priority scheduling', 'Photo sign-off'],
-        },
-    ]);
-
-    const [addons, setAddons] = useState<AddonForm[]>([
-        {
-            id: 'addon-1',
-            code: 'rush_priority',
-            title: 'Fast Clean (Same-Day / Rush Priority)',
-            description: 'Priority scheduling request for same-day completion.',
-            price_amount_minor: 10000,
-            partner_role: 'technician',
-            isDefault: false,
-        },
-        {
-            id: 'addon-2',
-            code: 'chemical_flush',
-            title: 'Anti-Bacterial Chemical Flush',
-            description: 'Deep antimicrobial foaming wash & sanitize.',
-            price_amount_minor: 15000,
-            partner_role: 'technician',
-            isDefault: true,
-        },
-    ]);
+    const [addons, setAddons] = useState<AddonForm[]>(
+        editingDraft?.addons && Array.isArray(editingDraft.addons) && editingDraft.addons.length > 0
+            ? (editingDraft.addons as unknown as AddonForm[])
+            : [
+                {
+                    id: 'addon-1',
+                    code: 'rush_priority',
+                    title: 'Fast Clean (Same-Day / Rush Priority)',
+                    description: 'Priority scheduling request for same-day completion.',
+                    price_amount_minor: 10000,
+                    partner_role: 'technician',
+                    isDefault: false,
+                },
+                {
+                    id: 'addon-2',
+                    code: 'chemical_flush',
+                    title: 'Anti-Bacterial Chemical Flush',
+                    description: 'Deep antimicrobial foaming wash & sanitize.',
+                    price_amount_minor: 15000,
+                    partner_role: 'technician',
+                    isDefault: true,
+                },
+            ],
+    );
 
     // Step 3: Deal Chain Combinations
-    const [combinations, setCombinations] = useState<DealChainCombination[]>([
+    const [combinations, setCombinations] = useState<DealChainCombination[]>(
+        editingDraft?.deal_chain_combinations && Array.isArray(editingDraft.deal_chain_combinations) && editingDraft.deal_chain_combinations.length > 0
+            ? (editingDraft.deal_chain_combinations as unknown as DealChainCombination[])
+            : [
         {
             id: 'combo-1',
             title: 'All-In Parts, Courier & Labor',
@@ -420,10 +473,70 @@ export default function CreateService() {
 
     const [activeComboIndex, setActiveComboIndex] = useState(0);
     const [attachChainModalOpen, setAttachChainModalOpen] = useState(false);
+    const [dealChainStudioOpen, setDealChainStudioOpen] = useState(false);
+    const [customizingComboId, setCustomizingComboId] = useState<string | null>(null);
     const [slotPickerTarget, setSlotPickerTarget] = useState<{
         comboId: string;
         slotType: SlotType;
+        onPickedOverride?: (partner: {
+            id: string;
+            title: string;
+            providerName: string;
+            priceMinor: number;
+            photoUrl?: string;
+            isOpenSlot?: boolean;
+        }) => void;
     } | null>(null);
+    const isAuthenticated = session?.authenticated === true || session?.isAuthenticated === true;
+    const [draftRestored, setDraftRestored] = useState(false);
+
+    useEffect(() => {
+        if (editingDraft?.id) {
+            return;
+        }
+        const pendingDraft = readPendingListingDraft('service');
+        if (!isServiceBuilderDraft(pendingDraft)) return;
+
+        const template = allWorkTemplates.find(
+            (candidate) =>
+                candidate.id === pendingDraft.selectedTemplateId &&
+                (pendingDraft.selectedSetVersion === undefined ||
+                    (candidate.setVersion ?? 1) === pendingDraft.selectedSetVersion),
+        );
+        if (!template) return;
+
+        setStep(pendingDraft.step);
+        if (pendingDraft.builderMode === 'standard' || pendingDraft.builderMode === 'advanced') {
+            setBuilderMode('standard');
+        } else if (pendingDraft.builderMode === 'guided') {
+            setBuilderMode('guided');
+        }
+        setTitle(pendingDraft.title);
+        setCategory(pendingDraft.category);
+        setDescription(pendingDraft.description);
+        setInclusions(pendingDraft.inclusions);
+        setNewInclusion(pendingDraft.newInclusion);
+        setSelectedTemplate(template);
+        setStages(pendingDraft.stages);
+        setPreviewTab(pendingDraft.previewTab);
+        setPricingMode(pendingDraft.pricingMode);
+        setFixedPrice(pendingDraft.fixedPrice);
+        setRangeMin(pendingDraft.rangeMin);
+        setRangeMax(pendingDraft.rangeMax);
+        setPackageTiers(pendingDraft.packageTiers);
+        setAddons(pendingDraft.addons);
+        setCombinations(pendingDraft.combinations);
+        if (pendingDraft.media) {
+            setMedia(pendingDraft.media);
+        }
+        setActiveComboIndex(
+            Math.min(
+                Math.max(0, pendingDraft.activeComboIndex),
+                Math.max(0, pendingDraft.combinations.length - 1),
+            ),
+        );
+        setDraftRestored(true);
+    }, []);
     // Inclusions
     const addInclusion = () => {
         if (!newInclusion.trim()) return;
@@ -448,11 +561,11 @@ export default function CreateService() {
         setPackageTiers((prev) => [
             ...prev,
             {
-                id: `tier-${count}`,
-                title: `${count} Units Bundle`,
-                price: count * 400,
-                sub: `Extended volume tier · Save ₱${count * 50}`,
-                inclusions: ['Multi-unit execution', 'Priority scheduling'],
+                id: `tier-${Date.now()}-${count}`,
+                title: '',
+                price: 0,
+                sub: '',
+                inclusions: [],
             },
         ]);
     };
@@ -498,6 +611,18 @@ export default function CreateService() {
     // Deal Chain Slot Swap & Combo Handlers
     const handleSwapSlot = (candidate: SlotCandidateListing) => {
         if (!slotPickerTarget) return;
+        if (slotPickerTarget.onPickedOverride) {
+            slotPickerTarget.onPickedOverride({
+                id: candidate.id,
+                title: candidate.title,
+                providerName: candidate.provider_name,
+                priceMinor: candidate.price_minor,
+                photoUrl: candidate.photo_url,
+                isOpenSlot: false,
+            });
+            setSlotPickerTarget(null);
+            return;
+        }
         const shortName =
             candidate.provider_name.includes('Danny Express')
                 ? 'Danny Exp'
@@ -515,22 +640,73 @@ export default function CreateService() {
                 if (combo.id !== slotPickerTarget.comboId) return combo;
                 return {
                     ...combo,
+                    isCustom: true,
+                    basedOnTitle: combo.basedOnTitle || combo.title,
                     nodes: combo.nodes.map((n) => {
                         if (n.type !== slotPickerTarget.slotType) return n;
                         return {
                             ...n,
                             title: shortName,
                             sub: priceStr,
+                            listingId: candidate.id,
+                            feeMinor: candidate.price_minor,
+                            coverThumbnailUrl: candidate.photo_url,
                         };
                     }),
                     slots: combo.slots.map((s) => {
                         if (s.type !== slotPickerTarget.slotType) return s;
                         return {
                             ...s,
-                            name: candidate.provider_name,
+                            name: candidate.title || candidate.provider_name,
                             meta: `₱${(candidate.price_minor / 100).toFixed(2)} · ${candidate.sla_text}`,
+                            listingId: candidate.id,
+                            feeMinor: candidate.price_minor,
+                            coverThumbnailUrl: candidate.photo_url,
+                            isOpenSlot: false,
                         };
                     }),
+                };
+            }),
+        );
+        setSlotPickerTarget(null);
+    };
+
+    const handleSelectOpenSlot = () => {
+        if (!slotPickerTarget) return;
+        if (slotPickerTarget.onPickedOverride) {
+            slotPickerTarget.onPickedOverride({
+                id: 'open-slot',
+                title: 'Open Role Slot',
+                providerName: 'Buyer selects at checkout',
+                priceMinor: 0,
+                isOpenSlot: true,
+            });
+            setSlotPickerTarget(null);
+            return;
+        }
+        setCombinations((prev) =>
+            prev.map((combo) => {
+                if (combo.id !== slotPickerTarget.comboId) return combo;
+                return {
+                    ...combo,
+                    isCustom: true,
+                    basedOnTitle: combo.basedOnTitle || combo.title,
+                    nodes: combo.nodes.map((n) =>
+                        n.type === slotPickerTarget.slotType
+                            ? { ...n, title: 'Open Slot', sub: 'Buyer picks', listingId: undefined }
+                            : n,
+                    ),
+                    slots: combo.slots.map((s) =>
+                        s.type === slotPickerTarget.slotType
+                            ? {
+                                  ...s,
+                                  name: `Open ${s.role} Slot`,
+                                  meta: 'Buyer selects partner at checkout',
+                                  listingId: undefined,
+                                  isOpenSlot: true,
+                              }
+                            : s,
+                    ),
                 };
             }),
         );
@@ -557,19 +733,90 @@ export default function CreateService() {
         setActiveComboIndex((prev) => Math.max(0, prev - 1));
     };
 
-    const handleAddServiceCombo = (preset: {
-        title: string;
-        icon: string;
-        nodes: DealChainCombination['nodes'];
-        slots: DealChainCombination['slots'];
-    }) => {
+    const handleSelectDealChainRecipe = (recipe: DealChainTemplate) => {
+        const primaryPesos = Math.round(effectivePriceMinor / 100);
+        const newNodes: DealChainCombination['nodes'] = recipe.nodes.map((node) => {
+            const isPrimary =
+                node.key === 'labor' ||
+                node.key === 'primary' ||
+                node.title.toLowerCase().includes('primary');
+            const isStore = node.type === 'store';
+            const isCourier = node.type === 'delivery';
+            const isAudit = node.type === 'audit';
+            return {
+                id: `node-${node.key}`,
+                role: node.role.toUpperCase(),
+                title: isPrimary ? 'Your Service' : node.title,
+                sub: isPrimary
+                    ? `₱${primaryPesos}`
+                    : node.priceMinor
+                      ? `₱${Math.round(node.priceMinor / 100)}`
+                      : isStore
+                        ? '₱180'
+                        : isCourier
+                          ? '₱35'
+                          : isAudit
+                            ? '₱150'
+                            : 'Partner',
+                type: node.type,
+                bg: isStore || isAudit ? '#FEF3C7' : isCourier ? '#E0F2FE' : '#ECFDF5',
+                color: isStore || isAudit ? '#B45309' : isCourier ? '#0284C7' : '#059669',
+                listingId: node.listingId ?? undefined,
+                feeMinor: node.priceMinor ?? undefined,
+                coverThumbnailUrl: node.image ?? undefined,
+                isPrimary,
+            };
+        });
+
+        const newSlots: DealChainCombination['slots'] = recipe.nodes
+            .filter(
+                (node) =>
+                    node.key !== 'labor' &&
+                    node.key !== 'primary' &&
+                    !node.title.toLowerCase().includes('primary'),
+            )
+            .map((node) => {
+                const slotType: SlotType =
+                    node.type === 'store'
+                        ? 'store'
+                        : node.type === 'delivery'
+                          ? 'delivery'
+                          : node.type === 'audit'
+                            ? 'audit'
+                            : 'installation';
+                const defaultFee =
+                    node.priceMinor ??
+                    (slotType === 'store' ? 18000 : slotType === 'delivery' ? 3500 : 15000);
+                return {
+                    id: `slot-${node.key}`,
+                    type: slotType,
+                    role: `${node.role} Partner`,
+                    name: node.providerName || node.title,
+                    meta: `₱${(defaultFee / 100).toFixed(2)} partner fee`,
+                    listingId: node.listingId ?? undefined,
+                    feeMinor: defaultFee,
+                    coverThumbnailUrl:
+                        node.image ??
+                        (slotType === 'store'
+                            ? '/photos/ac-capacitor.jpg'
+                            : slotType === 'delivery'
+                              ? '/photos/courier.jpg'
+                              : '/photos/req-electrician.jpg'),
+                };
+            });
+
         const newCombo: DealChainCombination = {
-            id: `combo-custom-${Date.now()}`,
-            title: preset.title,
-            icon: preset.icon,
+            id: `combo-${recipe.recipeId}-${Date.now()}`,
+            title: recipe.title,
+            icon: recipe.pattern === 'delivery' ? 'Truck' : recipe.pattern === 'audit' ? 'ShieldCheck' : 'Wrench',
             isDefault: combinations.length === 0,
-            nodes: preset.nodes.map((n) => ({ ...n })),
-            slots: preset.slots.map((s) => ({ ...s })),
+            recipeId: recipe.recipeId,
+            catalogVersion: recipe.catalogVersion || 1,
+            isCustom: false,
+            basedOnTitle: recipe.title,
+            description: recipe.desc,
+            nodes: newNodes,
+            slots: newSlots,
         };
         setCombinations((prev) => [...prev, newCombo]);
         setActiveComboIndex(combinations.length);
@@ -578,33 +825,72 @@ export default function CreateService() {
     // Derived effective base price in centavos
     const effectivePriceMinor =
         pricingMode === 'packages'
-            ? Math.round((packageTiers[0]?.price || 450) * 100)
-            : Math.round(parseFloat(fixedPrice || '450') * 100);
+            ? Math.round((packageTiers[0]?.price || 0) * 100)
+            : Math.round(parseFloat(fixedPrice || '0') * 100);
+
+    const currentBuilderDraft = (): ServiceBuilderDraft => ({
+        version: 1,
+        step,
+        title,
+        category,
+        description,
+        inclusions,
+        newInclusion,
+        selectedTemplateId: selectedTemplate.id,
+        selectedSetVersion: selectedTemplate.setVersion ?? 1,
+        builderMode,
+        stages,
+        previewTab,
+        pricingMode,
+        fixedPrice,
+        rangeMin,
+        rangeMax,
+        packageTiers,
+        addons,
+        combinations,
+        activeComboIndex,
+        media,
+        geography: geography || undefined,
+    });
+
+    const redirectGuestToSignIn = (): void => {
+        const saved = savePendingListingDraft('service', currentBuilderDraft());
+        if (!saved) {
+            setFormErrors({
+                form: 'Sign in is required to save this draft. Keep this page open and retry after enabling session storage.',
+            });
+            return;
+        }
+
+        router.visit('/auth/sign-in?return_to=%2Flistings%2Fcreate%2Fservice');
+    };
 
     // Form Submission
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (allWorkTemplates.length === 0 || !selectedTemplate.id) {
+            setFormErrors({ work_catalog_code: 'No compatible published work set is available for this service.' });
+            return;
+        }
+        if (!isAuthenticated) {
+            redirectGuestToSignIn();
+            return;
+        }
         setIsSubmitting(true);
-        setFormErrors({});
 
         const effectiveDescription =
             description.trim().length >= 10
                 ? description.trim()
                 : `${title.trim()} — Professional ${category} service in Tagudin, Ilocos Sur. Governed under ${selectedTemplate.title} with photo milestone evidence.`;
 
-        const workShapeCode = selectedTemplate.shape.startsWith('A3')
-            ? 'A3'
-            : selectedTemplate.shape.startsWith('A9')
-              ? 'A9'
-              : 'A1';
 
         const payload: Record<string, FormDataConvertible> = {
             title: title.trim(),
             description: effectiveDescription,
             category_code: category,
             listing_type: 'service',
-            work_shape: workShapeCode,
             work_catalog_code: selectedTemplate.id,
+            work_set_version: selectedTemplate.setVersion ?? 1,
             price_amount_minor: effectivePriceMinor,
             pricing_mode: pricingMode,
             inclusions,
@@ -634,51 +920,85 @@ export default function CreateService() {
                 dur: s.dur,
                 evidence: s.evidence,
             })),
+            media: media as unknown as FormDataConvertible,
+            deal_chain_combinations: combinations as unknown as FormDataConvertible,
+            deal_chain_specification: {
+                based_on_recipe_code:
+                    combinations.find((c) => c.isDefault)?.recipeId ??
+                    combinations[0]?.recipeId ??
+                    'turnkey_parts',
+                based_on_catalog_version:
+                    combinations.find((c) => c.isDefault)?.catalogVersion ??
+                    combinations[0]?.catalogVersion ??
+                    1,
+                is_custom_variation: combinations.some((c) => c.isCustom),
+                combination_count: combinations.length,
+            } as unknown as FormDataConvertible,
+            geography: (geography || {
+                area_code: 'Tagudin',
+            }) as unknown as FormDataConvertible,
         };
+
+        if (editingDraft?.id) {
+            router.patch(
+                `/listings/${editingDraft.id}`,
+                {
+                    ...payload,
+                    expected_version:
+                        editingDraft.expected_version ??
+                        editingDraft.expectedVersion ??
+                        editingDraft.version ??
+                        1,
+                },
+                {
+                    onError: (errs) => {
+                        setIsSubmitting(false);
+                        setFormErrors(errs);
+                    },
+                    onSuccess: () => {
+                        clearPendingListingDraft('service');
+                        router.visit(`/my-listings/${editingDraft.id}`);
+                    },
+                },
+            );
+            return;
+        }
 
         router.post('/listings', payload, {
             onError: (errs) => {
-                setFormErrors(errs);
                 setIsSubmitting(false);
+                if (typeof errs.form === 'string' && /sign in/i.test(errs.form)) {
+                    redirectGuestToSignIn();
+                    return;
+                }
+                setFormErrors(errs);
                 if (errs.title || errs.category_code || errs.description) {
                     setStep(1);
                 } else if (errs.price_amount_minor || errs.pricing_mode) {
                     setStep(2);
                 }
             },
+            onSuccess: () => {
+                clearPendingListingDraft('service');
+                setDraftRestored(false);
+            },
         });
     };
-
-    const categoryPhoto = useMemo(() => {
-        switch (category) {
-            case 'courier':
-                return '/photos/courier.jpg';
-            case 'greeting-cards':
-                return '/photos/greeting.jpg';
-            case 'food':
-            case 'bakery':
-                return '/photos/bibingka.jpg';
-            case 'repairs':
-            case 'home-cleaning':
-            case 'local-services':
-            case 'print-assist':
-            default:
-                return '/photos/ac-clean.jpg';
-        }
-    }, [category]);
 
     const renderCustomerLiveTwin = () => (
         <div className="space-y-4">
             {/* Header & Mode Switcher */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
-                    <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#0F2F58] uppercase tracking-wider">
-                        <Eye className="size-3.5 text-emerald-600" />
-                        <span>Customer Live Twin</span>
+                    <div>
+                        <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#0F2F58] uppercase tracking-wider">
+                            <Eye className="size-3.5 text-emerald-600" />
+                            <span>Live Listing Preview</span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-slate-500">
+                            How your listing looks to customers
+                        </p>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-slate-500">
-                        Real-time preview of citizen experience
-                    </p>
                 </div>
                 <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200/80">
                     <button
@@ -701,7 +1021,7 @@ export default function CreateService() {
                                 : 'text-slate-600 hover:text-slate-900'
                         }`}
                     >
-                        <span>Order Gates ({stages.length})</span>
+                        <span>Work Steps ({stages.length})</span>
                     </button>
                 </div>
             </div>
@@ -711,18 +1031,28 @@ export default function CreateService() {
                 <div className="space-y-3.5">
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md">
                         <div className="relative h-44 w-full overflow-hidden bg-slate-100">
-                            <img
-                                src={categoryPhoto}
-                                alt={title || 'Trade Service'}
-                                className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                            />
+                            {media.cover_thumbnail_url ? (
+                                <img
+                                    src={media.cover_thumbnail_url}
+                                    alt={title || 'Trade Service'}
+                                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                                />
+                            ) : (
+                                <CategoryVisualFallback
+                                    categoryCode={category}
+                                    title={title || 'Service Offering'}
+                                />
+                            )}
                             <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
                                 <span className="rounded-full bg-[#0F2F58]/90 px-2.5 py-1 text-[10px] font-extrabold text-white backdrop-blur uppercase">
                                     Service Offering
                                 </span>
-                                <span className="rounded-full bg-emerald-700/90 px-2.5 py-1 text-[10px] font-extrabold text-white backdrop-blur uppercase">
-                                    {selectedTemplate.shape}
-                                </span>
+                                {media.has_video && (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/90 px-2.5 py-1 text-[10px] font-extrabold text-white backdrop-blur uppercase">
+                                        <Video className="size-3 text-[#FFC72C]" />
+                                        <span>Video</span>
+                                    </span>
+                                )}
                             </div>
                             <div className="absolute top-2.5 right-2.5 rounded-full bg-white/95 px-2 py-0.5 text-[10.5px] font-extrabold text-slate-900 shadow-2xs backdrop-blur">
                                 ★ 5.0 (New)
@@ -736,7 +1066,7 @@ export default function CreateService() {
                             </div>
 
                             <h3 className="line-clamp-2 text-sm font-extrabold text-[#0F2F58]">
-                                {title.trim() || 'Inverter Split AC Deep Clean & Checkup'}
+                                {title.trim() || 'Untitled Service'}
                             </h3>
 
                             <div className="flex items-baseline justify-between border-t border-slate-100 pt-2.5">
@@ -751,9 +1081,7 @@ export default function CreateService() {
                                         })}
                                     </div>
                                 </div>
-                                <span className="text-[11px] font-bold text-slate-500">
-                                    {selectedTemplate.sla} SLA
-                                </span>
+                                {selectedTemplate.sla && <span className="text-[11px] font-bold text-slate-500">{selectedTemplate.sla} target</span>}
                             </div>
 
                             {inclusions.length > 0 && (
@@ -802,9 +1130,6 @@ export default function CreateService() {
                             <span className="font-extrabold text-[#0F2F58] uppercase text-[10.5px]">
                                 Governed Work Contract
                             </span>
-                            <span className="rounded-md bg-white px-2 py-0.5 font-mono text-[10px] font-extrabold text-emerald-800 border border-emerald-200">
-                                {selectedTemplate.shape} Archetype
-                            </span>
                         </div>
                         <p className="text-[11px] text-slate-500">
                             Buyers track execution live on `/orders` through these verified gates:
@@ -850,10 +1175,7 @@ export default function CreateService() {
                                     </p>
 
                                     <div className="flex items-center justify-between border-t border-slate-100 pt-1.5 pl-7 text-[10px] text-slate-400">
-                                        <div className="flex items-center gap-1 font-semibold text-slate-600">
-                                            <Clock className="size-3 text-slate-400" />
-                                            <span>{stage.dur}</span>
-                                        </div>
+                                        {stage.dur && <span className="font-semibold text-slate-600">{stage.dur} target estimate</span>}
                                         <span className="font-semibold text-emerald-700">
                                             📷 {stage.evidence || 'Photo verified'}
                                         </span>
@@ -874,157 +1196,134 @@ export default function CreateService() {
         </div>
     );
 
+    if (allWorkTemplates.length === 0) {
+        return (
+            <div className="min-h-screen bg-[#F8FAFC] p-6">
+                <main className="mx-auto mt-16 max-w-xl rounded-2xl border border-amber-200 bg-white p-6 text-center shadow-sm">
+                    <h1 className="text-lg font-extrabold text-slate-900">No compatible work set is available</h1>
+                    <p className="mt-2 text-sm text-slate-600">
+                        A published work set compatible with service listings is required before you can create or save this draft.
+                    </p>
+                    <Link href="/browse" className="mt-5 inline-flex rounded-xl bg-[#0F2F58] px-4 py-2.5 text-sm font-bold text-white">Return to Browse</Link>
+                </main>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 pb-16">
             <DesktopGlobalNav activeRoute="create_listing" />
 
             <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:py-6 space-y-6">
                 {/* Top Studio Control Bar */}
-                <header className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3">
+                {/* Compact 1-Row Sticky Header */}
+                <header
+                    data-testid="builder-header"
+                    className="sticky top-0 z-30 flex items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/95 px-4 py-2.5 shadow-xs backdrop-blur-md"
+                >
+                    {/* Left: Change Type + Title + Step indicator */}
+                    <div className="flex items-center gap-2.5 min-w-0">
                         <Link
-                            href="/browse"
-                            className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors"
+                            href="/listings/create"
+                            className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 cursor-pointer"
+                            title="Change Type"
                         >
                             <ArrowLeft className="size-4" />
                         </Link>
-                        <div>
+                        <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                                <h1 className="text-sm font-extrabold text-[#0F2F58] sm:text-base">
-                                    Create Marketplace Listing
-                                </h1>
-                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-900 uppercase">
-                                    Step {step} of 3
+                                <span className="text-xs sm:text-sm font-extrabold text-[#0F2F58] shrink-0">
+                                    Service Listing
                                 </span>
+                                {builderMode === 'guided' ? (
+                                    <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-900">
+                                        Step {step} of 7 · {SERVICE_GUIDED_STEPS[step - 1]?.shortTitle}
+                                    </span>
+                                ) : (
+                                    <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                        Standard Form
+                                    </span>
+                                )}
                             </div>
-                            <p className="text-xs text-slate-500">
-                                Publish verified trade offerings and governed service contracts in Tagudin.
-                            </p>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2.5">
-                        {/* Listing Type Switcher */}
-                        <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200/60">
-                            <Link
-                                href="/listings/create/service"
-                                className="flex items-center gap-1.5 rounded-lg bg-[#0F2F58] px-3 py-1.5 text-xs font-extrabold text-white shadow-xs"
-                            >
-                                <Wrench className="size-3.5" />
-                                <span>Service</span>
-                            </Link>
-                            <Link
-                                href="/listings/create/product"
-                                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:text-slate-900"
-                            >
-                                <Package className="size-3.5" />
-                                <span>Product</span>
-                            </Link>
-                        </div>
-
-                        {/* Builder Mode Switcher: Simple vs Advanced */}
-                        <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200/60">
-                            <button
-                                type="button"
-                                onClick={() => setBuilderMode('simple')}
-                                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
-                                    builderMode === 'simple'
-                                        ? 'bg-white text-[#0F2F58] shadow-xs'
-                                        : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                <Sparkles className="size-3.5 text-amber-500" />
-                                <span>Simple Mode</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setBuilderMode('advanced')}
-                                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
-                                    builderMode === 'advanced'
-                                        ? 'bg-[#0F2F58] text-white shadow-xs'
-                                        : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                <Sliders className="size-3.5" />
-                                <span>Advanced Studio</span>
-                            </button>
-                        </div>
+                    {/* Right: Mode Switcher */}
+                    <div
+                        className="flex shrink-0 items-center gap-1 rounded-xl border border-slate-200/70 bg-slate-100 p-0.5"
+                        data-testid="builder-mode-switcher"
+                    >
+                        <button
+                            type="button"
+                            onClick={() => setBuilderMode('guided')}
+                            className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                                builderMode === 'guided'
+                                    ? 'bg-white text-[#0F2F58] shadow-xs'
+                                    : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                        >
+                            <Sparkles className="size-3 text-amber-500" />
+                            <span>Guided</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setBuilderMode('standard')}
+                            className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                                builderMode === 'standard'
+                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                    : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                        >
+                            <Sliders className="size-3" />
+                            <span>Standard</span>
+                        </button>
                     </div>
+
+                    {/* Mobile Preview Button in Top Header */}
+                    <button
+                        type="button"
+                        onClick={() => setMobilePreviewOpen(true)}
+                        className="sm:hidden flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 cursor-pointer shrink-0"
+                        title="Preview Live Customer View"
+                    >
+                        <Eye className="size-3.5 text-emerald-600" />
+                        <span>Preview</span>
+                    </button>
                 </header>
 
-                {/* Stepper Progress Bar */}
-                <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white px-5 py-3 shadow-2xs">
-                    <button
-                        type="button"
-                        onClick={() => setStep(1)}
-                        className="flex cursor-pointer items-center gap-2 text-left transition-opacity hover:opacity-80"
-                    >
-                        <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
-                            step >= 1 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
-                        }`}>
-                            1
-                        </div>
-                        <span className={`text-xs font-bold ${step === 1 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
-                            Trade Scope &amp; Archetype
-                        </span>
-                    </button>
-                    <div className="h-0.5 w-12 bg-slate-200 sm:w-24" />
-                    <button
-                        type="button"
-                        disabled={!title.trim()}
-                        onClick={() => setStep(2)}
-                        className="flex cursor-pointer items-center gap-2 text-left transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
-                            step >= 2 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
-                        }`}>
-                            2
-                        </div>
-                        <span className={`text-xs font-bold ${step === 2 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
-                            Rates &amp; Options
-                        </span>
-                    </button>
-                    <div className="h-0.5 w-12 bg-slate-200 sm:w-24" />
-                    <button
-                        type="button"
-                        disabled={!title.trim()}
-                        onClick={() => setStep(3)}
-                        className="flex cursor-pointer items-center gap-2 text-left transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        <div className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
-                            step >= 3 ? 'bg-[#0F2F58] text-white' : 'bg-slate-100 text-slate-400'
-                        }`}>
-                            3
-                        </div>
-                        <span className={`text-xs font-bold ${step === 3 ? 'text-[#0F2F58]' : 'text-slate-600'}`}>
-                            Chains &amp; Launch
-                        </span>
-                    </button>
-                </div>
+                {/* Guided Mode Slim Progress Bar */}
+                {builderMode === 'guided' && (
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-slate-200/70 -mt-3">
+                        <div
+                            className="h-full bg-[#0F2F58] transition-all duration-300 ease-out"
+                            style={{ width: `${(step / 7) * 100}%` }}
+                        />
+                    </div>
+                )}
 
                 {/* Responsive 2-Column Grid */}
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
                     {/* LEFT COLUMN: Form Studio (Cols 1-7) */}
                     <main className="rounded-2xl border border-slate-200/80 bg-white p-5 lg:col-span-7 lg:p-7 shadow-xs space-y-6">
-                        {step === 1 && (
-                            <div className="space-y-5">
-                                <div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-900 uppercase">
-                                            <Wrench className="size-3 text-emerald-700" />
-                                            <span>Labor &amp; Service Offering</span>
-                                        </span>
-                                        <span className="text-[11px] font-semibold text-slate-500">
-                                            {builderMode === 'simple' ? 'Simple Fast Mode' : 'Advanced Studio'}
-                                        </span>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                        {(builderMode === 'standard' || step === 1) && (
+                            <div className="space-y-4">
+                                {builderMode === 'guided' ? (
+                                    <div>
+                                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                                            {SERVICE_GUIDED_STEPS[0].guidedTitle}
+                                        </h2>
+                                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                                            {SERVICE_GUIDED_STEPS[0].guidedDescription}
+                                        </p>
                                     </div>
-                                    <h2 className="mt-1 text-lg font-extrabold text-slate-900">
-                                        Trade Identity &amp; Scope
-                                    </h2>
-                                    <p className="mt-0.5 text-xs text-slate-500">
-                                        Define your trade title, category, and deliverables in Tagudin.
-                                    </p>
-                                </div>
+                                ) : (
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                        <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-900">
+                                            Trade Scope &amp; Craft
+                                        </h2>
+                                    </div>
+                                )}
 
                                 {formErrors.title && (
                                     <p className="text-xs font-bold text-red-600">{formErrors.title}</p>
@@ -1032,14 +1331,22 @@ export default function CreateService() {
 
                                 {/* Service Title */}
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-700">
-                                        Service Title
-                                    </label>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-bold text-slate-700">
+                                            Service Title
+                                        </label>
+                                        {builderMode === 'standard' && (
+                                            <FieldGuide
+                                                guidance={SERVICE_FIELD_GUIDANCE.title.guidance}
+                                                mode="standard"
+                                            />
+                                        )}
+                                    </div>
                                     <input
                                         type="text"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        placeholder="e.g. Inverter Split AC Deep Clean & Checkup"
+                                        placeholder={builderMode === 'guided' ? 'e.g. Inverter Split AC Deep Clean, Bread Catering, or Pipe Repair' : ''}
                                         required
                                         className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
                                     />
@@ -1047,14 +1354,46 @@ export default function CreateService() {
 
                                 {/* Trade Category */}
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-700">
-                                        Trade Category
-                                    </label>
+                                    <div className="flex items-center justify-between">
+                                        <label htmlFor="trade-category" className="text-xs font-bold text-slate-700">
+                                            Trade Category
+                                        </label>
+                                        {builderMode === 'standard' && (
+                                            <FieldGuide
+                                                guidance={SERVICE_FIELD_GUIDANCE.category.guidance}
+                                                mode="standard"
+                                            />
+                                        )}
+                                    </div>
                                     <select
+                                        id="trade-category"
                                         value={category}
-                                        onChange={(e) => setCategory(e.target.value)}
+                                        onChange={(e) => {
+                                            const nextCategory = e.target.value;
+                                            setCategory(nextCategory);
+                                            setMedia((prev) => {
+                                                if (!prev.cover_thumbnail_url?.startsWith('/photos/')) {
+                                                    return prev;
+                                                }
+                                                const nextDefault = defaultMediaForCategory(nextCategory);
+                                                const existingVideos = prev.items.filter(
+                                                    (item) => item.kind === 'video',
+                                                );
+                                                return {
+                                                    ...nextDefault,
+                                                    has_video: existingVideos.length > 0,
+                                                    items: [...nextDefault.items, ...existingVideos],
+                                                };
+                                            });
+                                            const firstMatch = allWorkTemplates.find((template) =>
+                                                template.categoryCodes?.includes(nextCategory),
+                                            );
+                                            setSelectedTemplate(firstMatch ?? EMPTY_WORK_TEMPLATE);
+                                            setStages(firstMatch?.stages ?? []);
+                                        }}
                                         className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
                                     >
+                                        <option value="" disabled>Select trade category...</option>
                                         <option value="repairs">Repairs &amp; Appliance Care</option>
                                         <option value="home-cleaning">Cleaning &amp; Home Help</option>
                                         <option value="courier">Courier &amp; Delivery</option>
@@ -1064,215 +1403,289 @@ export default function CreateService() {
                                     </select>
                                 </div>
 
-                                {/* =========================================================================
-                                    SIMPLE MODE: Archetype Selector Cards (Fast 2-minute setup)
-                                   ========================================================================= */}
-                                {builderMode === 'simple' && (
-                                    <div className="space-y-3 border-t border-slate-100 pt-3">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="text-xs font-extrabold text-[#0F2F58] uppercase tracking-wider">
-                                                    Select Work Archetype
-                                                </div>
-                                                <div className="text-[11px] text-slate-500">
-                                                    Standard governed execution pattern for this trade
-                                                </div>
-                                            </div>
-                                            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">
-                                                4 Official Archetypes
-                                            </span>
-                                        </div>
+                                {builderMode === 'guided' && (
+                                    <button
+                                        type="button"
+                                        disabled={!title.trim()}
+                                        onClick={() => setStep(2)}
+                                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs transition-colors hover:bg-[#e6b327] disabled:opacity-50"
+                                    >
+                                        <span>Continue to Visual Proof</span>
+                                        <ArrowRight className="size-3.5" />
+                                    </button>
+                                )}
+                            </div>
+                        )}
 
+                        {/* STEP 2: Visual Proof & Media */}
+                        {(builderMode === 'standard' || step === 2) && (
+                            <div className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
+                                {builderMode === 'guided' ? (
+                                    <div>
+                                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                                            {SERVICE_GUIDED_STEPS[1].guidedTitle}
+                                        </h2>
+                                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                                            {SERVICE_GUIDED_STEPS[1].guidedDescription}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                                            Media Attachments
+                                        </label>
+                                        <FieldGuide
+                                            guidance={SERVICE_FIELD_GUIDANCE.media.guidance}
+                                            mode="standard"
+                                        />
+                                    </div>
+                                )}
+
+                                <ListingMediaPicker
+                                    media={media}
+                                    categoryCode={category}
+                                    listingType="service"
+                                    onChange={setMedia}
+                                />
+
+                                {builderMode === 'guided' && (
+                                    <div className="flex gap-2.5 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep(1)}
+                                            className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep(3)}
+                                            className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327]"
+                                        >
+                                            Continue to Work Plan
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* STEP 3: Work Execution Plan */}
+                        {(builderMode === 'standard' || step === 3) && (
+                            <section className={`space-y-3.5 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
+                                {builderMode === 'guided' ? (
+                                    <div>
+                                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                                            {SERVICE_GUIDED_STEPS[2].guidedTitle}
+                                        </h2>
+                                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                                            {SERVICE_GUIDED_STEPS[2].guidedDescription}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                                            Work Execution Plan
+                                        </h3>
+                                        <FieldGuide
+                                            guidance={SERVICE_FIELD_GUIDANCE.workPlan.guidance}
+                                            mode="standard"
+                                        />
+                                    </div>
+                                )}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-700">Choose Reusable Work Workflow</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setWorkModalOpen(true)}
+                                        className="rounded-lg border border-[#0F2F58] px-3 py-1.5 text-xs font-bold text-[#0F2F58] hover:bg-[#EBF2FA]"
+                                    >
+                                        Browse All Compatible Sets
+                                    </button>
+                                </div>
+
+                                    {suggestedWorkTemplates.length === 0 ? (
+                                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                                            <p className="text-sm font-bold text-amber-950">
+                                                No category-specific work sets for {category === 'courier' ? 'Courier & Delivery' : category} yet
+                                            </p>
+                                            <p className="mt-1 text-xs text-amber-900">
+                                                Browse compatible service work sets to choose a workflow for this listing.
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => setWorkModalOpen(true)}
+                                                className="mt-3 rounded-lg bg-[#0F2F58] px-4 py-2 text-xs font-bold text-white hover:bg-[#153e74]"
+                                            >
+                                                Browse All Compatible Service Work Sets
+                                            </button>
+                                        </div>
+                                    ) : (
                                         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                                            {TAGUDIN_WORK_TEMPLATES.map((tmpl) => {
+                                            {suggestedWorkTemplates.map((tmpl) => {
                                                 const isSelected = selectedTemplate.id === tmpl.id;
                                                 return (
                                                     <button
                                                         key={tmpl.id}
                                                         type="button"
-                                                        onClick={() => {
-                                                            setSelectedTemplate(tmpl);
-                                                            setStages(tmpl.stages);
-                                                        }}
-                                                        className={`flex flex-col justify-between rounded-xl border p-3 text-left transition-all cursor-pointer ${
+                                                        onClick={() => handleSelectTemplate(tmpl)}
+                                                        className={`rounded-xl border p-3 text-left transition-all ${
                                                             isSelected
-                                                                ? 'border-[#0F2F58] bg-[#EBF2FA]/60 ring-2 ring-[#0F2F58]/20 shadow-2xs'
-                                                                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                                                                ? 'border-[#0F2F58] bg-[#EBF2FA]/60 ring-2 ring-[#0F2F58]/20'
+                                                                : 'border-slate-200 bg-white hover:border-slate-300'
                                                         }`}
                                                     >
-                                                        <div className="space-y-1">
-                                                            <div className="flex items-center justify-between">
-                                                                <span className="rounded-md bg-[#0F2F58] px-2 py-0.5 text-[9.5px] font-extrabold text-white uppercase">
-                                                                    {tmpl.shape}
-                                                                </span>
-                                                                <span className="font-mono text-[10px] font-semibold text-slate-500">
-                                                                    {tmpl.sla}
-                                                                </span>
-                                                            </div>
-                                                            <div className="text-xs font-extrabold text-slate-900 pt-0.5">
-                                                                {tmpl.title}
-                                                            </div>
-                                                            <div className="text-[10.5px] text-slate-500 line-clamp-2">
-                                                                {tmpl.description}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2 text-[10px] text-slate-500">
-                                                            <span>{tmpl.stages.length} Verified Gates</span>
-                                                            {isSelected && (
-                                                                <span className="flex items-center gap-1 font-bold text-emerald-700">
-                                                                    <Check className="size-3" /> Selected
-                                                                </span>
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <span className="text-xs font-extrabold text-slate-900">{tmpl.title}</span>
+                                                            {tmpl.sla && (
+                                                                <span className="shrink-0 text-[10px] font-semibold text-slate-500">
+                                                                    {tmpl.sla} target
+                                                                 </span>
                                                             )}
+                                                        </div>
+                                                        <p className="mt-1 text-[10.5px] text-slate-500">{tmpl.description}</p>
+                                                        <div className="mt-2 border-t border-slate-100 pt-2 text-[10px] text-slate-500">
+                                                            {tmpl.stages.length} steps
                                                         </div>
                                                     </button>
                                                 );
                                             })}
                                         </div>
+                                    )}
 
-                                        {/* Invitation to Advanced Studio */}
-                                        <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 text-xs">
-                                            <div className="space-y-0.5">
-                                                <span className="font-extrabold text-indigo-950">
-                                                    Want to customize individual gates or evidence photos?
-                                                </span>
-                                                <p className="text-[11px] text-indigo-900/80">
-                                                    Advanced Studio gives you full node editing and customer approval toggles.
-                                                </p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => setBuilderMode('advanced')}
-                                                className="shrink-0 cursor-pointer rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-indigo-700"
-                                            >
-                                                Switch to Studio ➔
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* =========================================================================
-                                    ADVANCED MODE: Full Visual Canvas & Stage Milestones
-                                   ========================================================================= */}
-                                {builderMode === 'advanced' && (
-                                    <div className="space-y-3.5 border-t border-slate-100 pt-3">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="text-xs font-extrabold text-[#0F2F58] uppercase tracking-wider">
-                                                    Work Execution Pipeline (Studio)
-                                                </div>
-                                                <div className="text-[11px] text-slate-500">
-                                                    Interactive node canvas and milestone evidence configuration
-                                                </div>
-                                            </div>
-                                            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800 uppercase">
-                                                Work Catalog
-                                            </span>
-                                        </div>
-
-                                        {/* Active Template Status Card */}
-                                        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-[#FAFCFB] p-3 shadow-2xs">
-                                            <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
-                                                    <Wrench className="size-4" />
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="truncate text-xs font-extrabold text-[#0F2F58]">
-                                                        {selectedTemplate.title}
+                                    {selectedTemplate.id && (
+                                        <div className="space-y-3 rounded-2xl border border-slate-200 bg-[#FAFCFB] p-3.5 shadow-2xs">
+                                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                                                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF2FA] text-[#0F2F58]">
+                                                        <Wrench className="size-4" />
                                                     </div>
-                                                    <div className="flex items-center gap-1.5 pt-0.5">
-                                                        <span className={`inline-flex items-center rounded-md px-1.5 py-0.2 text-[9px] font-extrabold uppercase ${
-                                                            isCustomizedFromTemplate
-                                                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                                                : 'bg-emerald-100 text-emerald-800'
-                                                        }`}>
-                                                            {isCustomizedFromTemplate ? 'Custom Sequence' : 'Official Template'}
-                                                        </span>
-                                                        <span className="font-mono text-[10px] text-slate-500">
-                                                            {selectedTemplate.shape} · {stages.length} Stages · {selectedTemplate.sla}
-                                                        </span>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="truncate text-xs font-extrabold text-[#0F2F58]">
+                                                            {selectedTemplate.title}
+                                                        </div>
+                                                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                                            <span
+                                                                className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-extrabold ${
+                                                                    isCustomizedFromTemplate
+                                                                        ? 'border border-amber-300 bg-amber-100 text-amber-900'
+                                                                        : 'bg-emerald-100 text-emerald-800'
+                                                                }`}
+                                                            >
+                                                                {isCustomizedFromTemplate ? 'Custom for this listing' : 'Published Work Set'}
+                                                            </span>
+                                                            {isCustomizedFromTemplate && (
+                                                                <span className="text-[10px] text-slate-500">
+                                                                    Based on {selectedTemplate.title}
+                                                                    {selectedTemplate.setVersion ? ` v${selectedTemplate.setVersion}` : ''}
+                                                                </span>
+                                                            )}
+                                                            <span className="text-[10px] text-slate-500">{stages.length} steps</span>
+                                                            {selectedTemplate.sla && (
+                                                                <span className="text-[10px] font-semibold text-slate-500">
+                                                                    · {selectedTemplate.sla} target
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => setWorkModalOpen(true)}
-                                                className="ml-2 shrink-0 cursor-pointer rounded-full border border-emerald-300 bg-white px-3 py-1 text-[10.5px] font-extrabold text-emerald-800 shadow-2xs transition-colors hover:bg-emerald-50"
-                                            >
-                                                Change ▾
-                                            </button>
-                                        </div>
-
-                                        {/* Visual Work Pipeline Canvas Summary & Studio Trigger */}
-                                        <div className="space-y-3 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3.5 shadow-2xs">
-                                            <div className="flex items-center justify-between text-xs">
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-[10.5px] font-extrabold uppercase text-[#0F2F58]">
-                                                        Verified Work Execution DAG
-                                                    </span>
-                                                    <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[9.5px] font-extrabold text-emerald-800">
-                                                        {stages.length} Verified Gates
-                                                    </span>
-                                                </div>
-                                                <span className="font-mono text-[10px] font-bold text-slate-500">
-                                                    {stages.reduce((acc, s) => acc + (parseInt(s.dur, 10) || 0), 0)}m Total SLA
-                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCustomizerModalOpen(true)}
+                                                    className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#0F2F58] px-3.5 py-2 text-xs font-extrabold text-white shadow-2xs hover:bg-[#153e74]"
+                                                >
+                                                    <Sliders className="size-3.5 text-[#FFC72C]" />
+                                                    <span>Customize Work Steps ({stages.length})</span>
+                                                </button>
                                             </div>
 
-                                            <div className="overflow-x-auto py-1">
+                                            {/* Visual Pipeline Canvas */}
+                                            <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white p-2.5">
                                                 <WorkPipelineCanvas
                                                     stages={stages}
                                                     flowType={selectedTemplate.flowType}
                                                     onStageClick={() => setCustomizerModalOpen(true)}
                                                 />
                                             </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => setCustomizerModalOpen(true)}
-                                                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-2.5 text-xs font-extrabold text-[#0F2F58] shadow-2xs transition-all hover:border-[#0F2F58] hover:bg-slate-50 hover:shadow-xs min-h-[44px]"
-                                            >
-                                                <span>Customize Workflow in Studio</span>
-                                                <span className="text-[11px] font-medium text-slate-400">
-                                                    ({stages.length} nodes · Inspect &amp; Refine)
-                                                </span>
-                                            </button>
                                         </div>
+                                    )}
+                                {builderMode === 'guided' && (
+                                    <div className="flex gap-2.5 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep(2)}
+                                            className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            type="button"
+                                            disabled={!selectedTemplate.id}
+                                            onClick={() => setStep(4)}
+                                            className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327] disabled:opacity-50"
+                                        >
+                                            Continue to Deliverables
+                                        </button>
+                                    </div>
+                                )}
+                            </section>
+                        )}
+
+                        {/* STEP 4: Deliverables Checklist */}
+                        {(builderMode === 'standard' || step === 4) && (
+                            <div className={`space-y-3 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
+                                {builderMode === 'guided' ? (
+                                    <div>
+                                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                                            {SERVICE_GUIDED_STEPS[3].guidedTitle}
+                                        </h2>
+                                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                                            {SERVICE_GUIDED_STEPS[3].guidedDescription}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                                            Deliverables Checklist ({inclusions.length})
+                                        </label>
+                                        <FieldGuide
+                                            guidance={SERVICE_FIELD_GUIDANCE.inclusions.guidance}
+                                            mode="standard"
+                                        />
                                     </div>
                                 )}
 
-                                {/* Inclusions / Deliverables Checklist */}
-                                <div className="space-y-2 border-t border-slate-100 pt-3">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold text-slate-700">
-                                            Included In Standard Service ({inclusions.length})
-                                        </label>
-                                        <span className="text-[10px] font-semibold text-slate-500">
-                                            Checklist for customer
-                                        </span>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1.5">
-                                        {inclusions.map((item, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-[#FAFCFB] p-2.5 text-xs font-semibold text-slate-800"
-                                            >
-                                                <div className="flex min-w-0 flex-1 items-center gap-2">
-                                                    <span className="font-extrabold text-emerald-700">✓</span>
-                                                    <span className="truncate">{item}</span>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeInclusion(idx)}
-                                                    className="cursor-pointer p-1 text-slate-400 hover:text-red-600"
-                                                    aria-label="Remove inclusion"
+                                    {inclusions.length === 0 ? (
+                                        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center">
+                                            <p className="text-xs font-semibold text-slate-500">
+                                                No deliverables added yet.
+                                            </p>
+                                            <p className="mt-0.5 text-[11px] text-slate-400">
+                                                Add what you physically perform for clients (e.g. Site Inspection, Labor, Parts Cleaning, or Handover).
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col gap-1.5">
+                                            {inclusions.map((item, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-[#FAFCFB] p-2.5 text-xs font-semibold text-slate-800"
                                                 >
-                                                    <Trash2 className="size-3.5" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
+                                                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                                                        <span className="font-extrabold text-emerald-700">✓</span>
+                                                        <span className="truncate">{item}</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeInclusion(idx)}
+                                                        className="cursor-pointer p-1 text-slate-400 hover:text-red-600"
+                                                        aria-label="Remove inclusion"
+                                                    >
+                                                        <Trash2 className="size-3.5" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     <div className="flex items-center gap-2 pt-1">
                                         <input
@@ -1285,7 +1698,7 @@ export default function CreateService() {
                                                     addInclusion();
                                                 }
                                             }}
-                                            placeholder="Add inclusion (e.g. Free drain line flush)..."
+                                            placeholder="Add a deliverable (e.g. Free inspection, Labor included)..."
                                             className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58]"
                                         />
                                         <button
@@ -1296,51 +1709,139 @@ export default function CreateService() {
                                             <Plus className="mr-1 size-3.5" /> Add
                                         </button>
                                     </div>
-                                </div>
+                                {builderMode === 'guided' && (
+                                    <div className="flex gap-2.5 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep(3)}
+                                            className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep(5)}
+                                            className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327]"
+                                        >
+                                            Continue to Base Location
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
-                                {/* Detailed Description */}
-                                <div className="space-y-1.5 border-t border-slate-100 pt-3">
-                                    <label className="text-xs font-bold text-slate-700">
-                                        Detailed Description
-                                    </label>
+                        {/* STEP 5: Service Base & Details */}
+                        {(builderMode === 'standard' || step === 5) && (
+                            <div className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
+                                {builderMode === 'guided' ? (
+                                    <div>
+                                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                                            {SERVICE_GUIDED_STEPS[4].guidedTitle}
+                                        </h2>
+                                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                                            {SERVICE_GUIDED_STEPS[4].guidedDescription}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                        <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                                            Dispatch Location &amp; Scope
+                                        </span>
+                                        <FieldGuide
+                                            guidance={SERVICE_FIELD_GUIDANCE.geography.guidance}
+                                            mode="standard"
+                                        />
+                                    </div>
+                                )}
+
+                                <TagudinLocationPicker
+                                    value={geography}
+                                    initialAddress="Tagudin Centro, Poblacion"
+                                    locationLabel={builderMode === 'guided' ? 'Service Base Barangay' : 'Service Base & Dispatch Location'}
+                                    addressPlaceholder="e.g. Master Tech Workshop, Rizal, Tagudin"
+                                    onChange={setGeography}
+                                />
+
+                                <div className="space-y-1.5 pt-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-bold text-slate-700">
+                                            Detailed Description
+                                        </label>
+                                        {builderMode === 'standard' && (
+                                            <FieldGuide
+                                                guidance={SERVICE_FIELD_GUIDANCE.description.guidance}
+                                                mode="standard"
+                                            />
+                                        )}
+                                    </div>
                                     <textarea
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                         rows={3}
-                                        placeholder="Explain your trade experience, equipment used, and municipal service standards..."
+                                        placeholder={builderMode === 'guided' ? 'Mention trade certifications or customer preparation...' : ''}
                                         className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
                                     />
                                 </div>
 
-                                <button
-                                    type="button"
-                                    disabled={!title.trim()}
-                                    onClick={() => setStep(2)}
-                                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs transition-colors hover:bg-[#e6b327] disabled:opacity-50"
-                                >
-                                    <span>Continue to Rates &amp; Options</span>
-                                    <ArrowRight className="size-3.5" />
-                                </button>
+                                {builderMode === 'guided' && (
+                                    <div className="flex gap-2.5 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep(4)}
+                                            className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep(6)}
+                                            className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327]"
+                                        >
+                                            Continue to Pricing
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                    {step === 2 && (
-                        <div className="space-y-5">
-                            <div>
-                                <h2 className="text-lg font-extrabold text-slate-900">
-                                    Rates &amp; Options
-                                </h2>
-                                <p className="mt-0.5 text-xs text-slate-500">
-                                    Set standard base pricing and optional customer add-ons.
-                                </p>
-                            </div>
+                    {/* STEP 6: Pricing & Rates */}
+                    {(builderMode === 'standard' || step === 6) && (
+                        <div className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
+                            {builderMode === 'guided' ? (
+                                <div>
+                                    <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                                        {SERVICE_GUIDED_STEPS[5].guidedTitle}
+                                    </h2>
+                                    <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                                        {SERVICE_GUIDED_STEPS[5].guidedDescription}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                                        Pricing Model &amp; Rates
+                                    </label>
+                                    <FieldGuide
+                                        guidance={SERVICE_FIELD_GUIDANCE.pricing.guidance}
+                                        mode="standard"
+                                    />
+                                </div>
+                            )}
 
-                            {/* Pricing Mode Switcher */}
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700">
-                                    Pricing Mode
-                                </label>
-                                <div className="grid grid-cols-3 gap-2">
+                                {/* Pricing Mode Switcher */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-bold text-slate-700">
+                                            {builderMode === 'guided'
+                                                ? SERVICE_FIELD_GUIDANCE.pricing.guidedLabel
+                                                : SERVICE_FIELD_GUIDANCE.pricing.advancedLabel}
+                                        </label>
+                                        <FieldGuide
+                                            guidance={SERVICE_FIELD_GUIDANCE.pricing.guidance}
+                                            mode={builderMode}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setPricingMode('fixed')}
@@ -1387,7 +1888,8 @@ export default function CreateService() {
                                         type="number"
                                         value={fixedPrice}
                                         onChange={(e) => setFixedPrice(e.target.value)}
-                                        min="50"
+                                        placeholder="e.g. 450"
+                                        min="0"
                                         className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 font-mono text-sm font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
                                     />
                                 </div>
@@ -1403,6 +1905,7 @@ export default function CreateService() {
                                             type="number"
                                             value={rangeMin}
                                             onChange={(e) => setRangeMin(e.target.value)}
+                                            placeholder="e.g. 350"
                                             className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 font-mono text-sm font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
                                         />
                                     </div>
@@ -1414,6 +1917,7 @@ export default function CreateService() {
                                             type="number"
                                             value={rangeMax}
                                             onChange={(e) => setRangeMax(e.target.value)}
+                                            placeholder="e.g. 700"
                                             className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 font-mono text-sm font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
                                         />
                                     </div>
@@ -1448,7 +1952,7 @@ export default function CreateService() {
                                                         onChange={(e) =>
                                                             updateTier(idx, 'title', e.target.value)
                                                         }
-                                                        placeholder="Tier name..."
+                                                        placeholder="Tier name (e.g. Basic, Standard, Full Day)..."
                                                         className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
                                                     />
                                                     <div className="flex shrink-0 items-center gap-1">
@@ -1457,14 +1961,15 @@ export default function CreateService() {
                                                         </span>
                                                         <input
                                                             type="number"
-                                                            value={tier.price}
+                                                            value={tier.price === 0 ? '' : tier.price}
                                                             onChange={(e) =>
                                                                 updateTier(
                                                                     idx,
                                                                     'price',
-                                                                    parseFloat(e.target.value) || 0,
+                                                                    e.target.value === '' ? 0 : parseFloat(e.target.value) || 0,
                                                                 )
                                                             }
+                                                            placeholder="0.00"
                                                             className="w-20 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right font-mono text-xs font-extrabold text-[#0F2F58] outline-none focus:border-[#0F2F58]"
                                                         />
                                                     </div>
@@ -1485,7 +1990,7 @@ export default function CreateService() {
                                                     onChange={(e) =>
                                                         updateTier(idx, 'sub', e.target.value)
                                                     }
-                                                    placeholder="Tier scope or inclusions..."
+                                                    placeholder="Tier scope or inclusions (e.g. 2 hours labor, photo sign-off)..."
                                                     className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600 outline-none focus:border-[#0F2F58]"
                                                 />
                                             </div>
@@ -1568,36 +2073,78 @@ export default function CreateService() {
                                 </div>
                             </div>
 
-                            <div className="flex gap-2.5 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setStep(1)}
-                                    className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setStep(3)}
-                                    className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327]"
-                                >
-                                    Continue to Partnered Chains
-                                </button>
-                            </div>
+                            {builderMode === 'guided' && (
+                                <div className="flex gap-2.5 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep(5)}
+                                        className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                    >
+                                        Back
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={pricingMode === 'fixed' && !fixedPrice}
+                                        onClick={() => setStep(7)}
+                                        className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327] disabled:opacity-50"
+                                    >
+                                        Continue to Partners
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    {step === 3 && (
-                        <form onSubmit={handleSubmit} className="space-y-5">
-                            <div>
-                                <h2 className="text-lg font-extrabold text-slate-900">
-                                    Partnered Deal Chains
-                                </h2>
-                                <p className="mt-0.5 text-xs text-slate-500">
-                                    Explore partner combinations before saving. Partner selections
-                                    are not persisted in the current draft contract.
-                                </p>
-                            </div>
+                    {/* STEP 7: Partner Extensions & Review */}
+                    {(builderMode === 'standard' || step === 7) && (
+                        <div className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
+                            {builderMode === 'guided' ? (
+                                <div>
+                                    <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                                        {SERVICE_GUIDED_STEPS[6].guidedTitle}
+                                    </h2>
+                                    <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                                        {SERVICE_GUIDED_STEPS[6].guidedDescription}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                                        Partnered Deal Chains &amp; Summary
+                                    </label>
+                                    <FieldGuide
+                                        guidance={SERVICE_FIELD_GUIDANCE.dealChain.guidance}
+                                        mode="standard"
+                                    />
+                                </div>
+                            )}
+                            {!isAuthenticated && (
+                                <div
+                                    data-testid="guest-save-notice"
+                                    role="status"
+                                    className="rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-3 text-xs text-blue-950"
+                                >
+                                    Sign in is required to save. Your work will be restored when you return.
+                                </div>
+                            )}
+
+                            {draftRestored && (
+                                <div
+                                    data-testid="draft-restored-notice"
+                                    role="status"
+                                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-xs font-semibold text-emerald-950"
+                                >
+                                    {isAuthenticated
+                                        ? 'Draft restored. Select Save Private Draft to create it.'
+                                        : 'Draft restored. Sign in to save it.'}
+                                </div>
+                            )}
+
+                            {formErrors.form && (
+                                <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-semibold text-red-800">
+                                    {formErrors.form}
+                                </div>
+                            )}
 
                             {/* Section 3: Partnered Options & Deal Chain Carousel matching listing-service-editor.html:2010-2058 */}
                             <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
@@ -1625,6 +2172,10 @@ export default function CreateService() {
                                     onToggleDefault={handleToggleComboDefault}
                                     onRemoveCombo={handleRemoveCombo}
                                     onAddComboClick={() => setAttachChainModalOpen(true)}
+                                    onCustomizeComboClick={(comboId) => {
+                                        setCustomizingComboId(comboId);
+                                        setDealChainStudioOpen(true);
+                                    }}
                                 />
                             </div>
 
@@ -1632,7 +2183,7 @@ export default function CreateService() {
                             <div className="space-y-3 rounded-2xl border border-slate-200 bg-[#FAFCFB] p-4 shadow-xs">
                                 <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
                                     <span className="rounded-full bg-[#EBF2FA] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0F2F58] uppercase">
-                                        {selectedTemplate.shape} · {category}
+                                        {category}
                                     </span>
                                     <span className="font-mono text-base font-extrabold text-[#0F2F58]">
                                         ₱{(effectivePriceMinor / 100).toFixed(2)}
@@ -1657,24 +2208,58 @@ export default function CreateService() {
                                 </div>
                             </div>
 
-                            <div className="flex gap-2.5">
-                                <button
-                                    type="button"
-                                    onClick={() => setStep(2)}
-                                    className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="flex-1 cursor-pointer rounded-xl bg-[#0F2F58] py-3 text-xs font-bold text-white shadow-xs hover:bg-[#153e74] disabled:opacity-50"
-                                >
-                                    {isSubmitting ? 'Saving draft...' : 'Save Private Draft'}
-                                </button>
-                            </div>
-                        </form>
+                            {builderMode === 'guided' ? (
+                                <div className="flex gap-2.5 pt-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep(6)}
+                                        className="cursor-pointer rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                    >
+                                        Back
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting || !title.trim()}
+                                        className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#0F2F58] py-3 text-xs font-bold text-white shadow-xs hover:bg-[#153e74] disabled:opacity-50"
+                                    >
+                                        {isSubmitting ? 'Saving listing...' : isAuthenticated ? 'Publish Service Listing' : 'Sign in to Publish'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="sticky bottom-4 z-20 flex items-center justify-between rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-xl backdrop-blur-md">
+                                    <div>
+                                        <span className="text-xs font-extrabold text-[#0F2F58]">Standard All-in-One Form</span>
+                                        <p className="text-[11px] text-slate-500">All sections visible · Ready to save</p>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting || !title.trim() || !selectedTemplate.id}
+                                        className="cursor-pointer rounded-xl bg-[#0F2F58] px-6 py-3 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74] disabled:opacity-50"
+                                    >
+                                        {isSubmitting ? 'Saving draft...' : isAuthenticated ? 'Save Private Draft' : 'Sign in to Save Draft'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     )}
+                    </form>
+                        {/* Bottom Mode Switcher for Mobile & Desktop */}
+                        {/* Bottom Mode Switcher for Mobile only */}
+                        <div className="sm:hidden flex justify-center border-t border-slate-100 pt-3 pb-1">
+                            <button
+                                type="button"
+                                data-testid="bottom-mode-switcher-btn"
+                                onClick={() => setBuilderMode((m) => (m === 'guided' ? 'standard' : 'guided'))}
+                                className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
+                            >
+                                <span>⚡</span>
+                                <span>
+                                    {builderMode === 'guided'
+                                        ? 'Switch to all-in-one standard form'
+                                        : 'Switch to step-by-step guided mode'}
+                                </span>
+                            </button>
+                        </div>
                     </main>
 
                     {/* RIGHT COLUMN: Customer Live Twin (Cols 8-12, Sticky on Desktop) */}
@@ -1683,24 +2268,13 @@ export default function CreateService() {
                     </aside>
                 </div>
 
-                {/* Floating Preview Button for Mobile Screens */}
-                <div className="fixed bottom-20 right-4 z-40 lg:hidden">
-                    <button
-                        type="button"
-                        onClick={() => setMobilePreviewOpen(true)}
-                        className="flex items-center gap-2 rounded-full bg-[#0F2F58] px-4 py-2.5 text-xs font-bold text-white shadow-lg transition-transform active:scale-95 cursor-pointer"
-                    >
-                        <Eye className="size-4 text-emerald-400" />
-                        <span>Live Twin Preview</span>
-                    </button>
-                </div>
 
                 {/* Mobile Customer Twin Modal Sheet */}
                 {mobilePreviewOpen && (
                     <div className="fixed inset-0 z-50 flex items-end bg-slate-900/60 backdrop-blur-xs lg:hidden">
                         <div className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl">
                             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                                <span className="font-extrabold text-[#0F2F58] text-sm">Customer Live Twin</span>
+                                <span className="font-extrabold text-[#0F2F58] text-sm">Live Listing Preview</span>
                                 <button
                                     type="button"
                                     onClick={() => setMobilePreviewOpen(false)}
@@ -1715,17 +2289,6 @@ export default function CreateService() {
                         </div>
                     </div>
                 )}
-                <BottomNavBar
-                    activeTab="post"
-                    onTabSelect={(tab: NavTabId) => {
-                        if (tab === 'explore') router.visit('/browse');
-                        if (tab === 'post') setCreatorOpen(true);
-                        if (tab === 'quick_deal') setQuickDealOpen(true);
-                        if (tab === 'orders') router.visit('/orders');
-                        if (tab === 'profile') router.visit('/my-listings');
-                    }}
-                    onQuickDealClick={() => setQuickDealOpen(true)}
-                />
 
                 <CreatorPostModal open={creatorOpen} onClose={() => setCreatorOpen(false)} />
                 <QuickDealScanModal open={quickDealOpen} onClose={() => setQuickDealOpen(false)} />
@@ -1734,7 +2297,7 @@ export default function CreateService() {
                 <WorkCatalogModal
                     open={workModalOpen}
                     onClose={() => setWorkModalOpen(false)}
-                    templates={TAGUDIN_WORK_TEMPLATES}
+                    templates={allWorkTemplates}
                     activeTemplateId={selectedTemplate.id}
                     onSelect={handleSelectTemplate}
                     onBuildCustom={() => {
@@ -1762,96 +2325,65 @@ export default function CreateService() {
                     open={Boolean(slotPickerTarget)}
                     onClose={() => setSlotPickerTarget(null)}
                     role={slotPickerTarget?.slotType || 'store'}
+                    candidates={slotCandidateListings.length > 0 ? slotCandidateListings : undefined}
                     onSelectCandidate={handleSwapSlot}
+                    onSelectOpenSlot={handleSelectOpenSlot}
                 />
 
-                {/* Attach Partner Combination Modal */}
-                <GlovoWaveModal
+                {/* Deal Chain Catalog Modal */}
+                <DealChainCatalogModal
                     open={attachChainModalOpen}
                     onClose={() => setAttachChainModalOpen(false)}
-                    title="Attach Partner Deal Chain"
-                    subtitle="Verified Tagudin parts, courier, and inspection combinations"
-                >
-                    <div className="flex flex-col gap-3 py-1 font-['Plus_Jakarta_Sans',sans-serif]">
-                        <p className="text-xs text-slate-500">
-                            Select a verified multi-party Deal Chain combination to attach to your service listing:
-                        </p>
-                        <div className="flex flex-col gap-2.5 max-h-[50vh] overflow-y-auto pr-1">
-                            {[
-                                {
-                                    key: 'parts_courier_labor',
-                                    title: 'All-In Parts, Courier & Labor',
-                                    icon: 'Wrench',
-                                    desc: 'Source spare parts from hardware store + courier transit to customer site',
-                                    nodes: [
-                                        { role: 'STORE', title: '35uF Cap', sub: '₱180', type: 'store', bg: '#FEF3C7', color: '#B45309' },
-                                        { role: 'COURIER', title: 'Danny Exp', sub: '₱35', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
-                                        { role: 'LABOR', title: 'Your Service', sub: `₱${Math.round(effectivePriceMinor / 100)}`, type: 'labor', bg: '#ECFDF5', color: '#059669' },
-                                    ],
-                                    slots: [
-                                        { type: 'store' as SlotType, role: 'Hardware Part Supplier', name: 'Tagudin Hardware Depot', meta: '₱180.00 counter pickup' },
-                                        { type: 'delivery' as SlotType, role: 'Doorstep Courier Runner', name: 'Danny Express Motorcycle Pool', meta: '₱35.00 route fee' },
-                                    ],
-                                },
-                                {
-                                    key: 'courier_only',
-                                    title: 'Doorstep Courier Transit Only',
-                                    icon: 'Truck',
-                                    desc: 'Customer-supplied part picked up and delivered by local courier',
-                                    nodes: [
-                                        { role: 'STORE', title: 'Pickup', sub: 'Counter', type: 'store', bg: '#FEF3C7', color: '#B45309' },
-                                        { role: 'COURIER', title: 'Danny Exp', sub: '₱35', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
-                                        { role: 'LABOR', title: 'Your Service', sub: `₱${Math.round(effectivePriceMinor / 100)}`, type: 'labor', bg: '#ECFDF5', color: '#059669' },
-                                    ],
-                                    slots: [
-                                        { type: 'delivery' as SlotType, role: 'Doorstep Courier Runner', name: 'Danny Express Motorcycle Pool', meta: '₱35.00 route fee' },
-                                    ],
-                                },
-                                {
-                                    key: 'safety_audit',
-                                    title: 'Service + Safety Electrical Audit',
-                                    icon: 'ShieldCheck',
-                                    desc: 'Include certified post-repair electrical and appliance safety audit',
-                                    nodes: [
-                                        { role: 'LABOR', title: 'Your Service', sub: `₱${Math.round(effectivePriceMinor / 100)}`, type: 'labor', bg: '#ECFDF5', color: '#059669' },
-                                        { role: 'AUDIT', title: 'Safety Check', sub: '₱150', type: 'audit', bg: '#FEF3C7', color: '#B45309' },
-                                    ],
-                                    slots: [
-                                        { type: 'audit' as SlotType, role: 'Certified Safety Auditor', name: 'Safety Check (Master Electrician)', meta: '₱150.00 municipal certificate' },
-                                    ],
-                                },
-                            ].map((preset) => (
-                                <div
-                                    key={preset.key}
-                                    onClick={() => handleAddServiceCombo(preset)}
-                                    className="flex cursor-pointer items-start justify-between rounded-2xl border border-slate-200 bg-white p-3.5 transition-all hover:border-[#0F2F58] hover:bg-[#F0F5FA]/50 shadow-2xs"
-                                >
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-extrabold text-[#0F2F58]">
-                                                {preset.title}
-                                            </span>
-                                            <span className="rounded-full bg-[#0F2F58] px-1.5 py-0.2 text-[8px] font-extrabold text-white">
-                                                DEAL CHAIN
-                                            </span>
-                                        </div>
-                                        <p className="text-[11px] text-slate-500">{preset.desc}</p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleAddServiceCombo(preset);
-                                        }}
-                                        className="shrink-0 cursor-pointer rounded-xl bg-[#FFC72C] px-3 py-1.5 text-xs font-bold text-slate-950 shadow-2xs hover:bg-[#F2BA18]"
-                                    >
-                                        + Attach
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </GlovoWaveModal>
+                    categoryCode={category}
+                    recommended={(dealChainOptions?.recommended ?? []).filter(
+                        (r) =>
+                            r.applicableCategories.includes(category) ||
+                            r.applicableCategories.length === 0,
+                    )}
+                    otherRecipes={allDealChainRecipes}
+                    onSelectRecipe={handleSelectDealChainRecipe}
+                    onBuildCustom={() => {
+                        setCustomizingComboId(null);
+                        setDealChainStudioOpen(true);
+                    }}
+                />
+
+                {/* Deal Chain Customizer Studio Modal */}
+                <DealChainCustomizerModal
+                    open={dealChainStudioOpen}
+                    onClose={() => {
+                        setDealChainStudioOpen(false);
+                        setCustomizingComboId(null);
+                    }}
+                    combination={
+                        customizingComboId
+                            ? combinations.find((c) => c.id === customizingComboId) ?? null
+                            : null
+                    }
+                    primaryListingTitle={title}
+                    primaryListingPricePesos={Math.round(effectivePriceMinor / 100)}
+                    primaryListingType="service"
+                    onSave={(updatedCombo) => {
+                        setCombinations((prev) => {
+                            const exists = prev.some((c) => c.id === updatedCombo.id);
+                            if (exists) {
+                                return prev.map((c) =>
+                                    c.id === updatedCombo.id ? updatedCombo : c,
+                                );
+                            }
+                            const next = [...prev, updatedCombo];
+                            setActiveComboIndex(next.length - 1);
+                            return next;
+                        });
+                    }}
+                    onPickPartnerForSlot={(slotType, onPicked) => {
+                        setSlotPickerTarget({
+                            comboId: customizingComboId || 'studio-new',
+                            slotType,
+                            onPickedOverride: onPicked,
+                        });
+                    }}
+                />
             </div>
         </div>
     );
