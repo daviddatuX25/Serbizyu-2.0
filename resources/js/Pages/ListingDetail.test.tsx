@@ -52,7 +52,9 @@ describe('ListingDetail Page', () => {
         const { container } = render(<ListingDetail {...baseProps} />);
         const desktop = getDesktop(container as HTMLElement);
 
-        expect(within(desktop).getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThan(
+            0,
+        );
         expect(within(desktop).getAllByText('₱450.00').length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/Kuya Ben AC/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/Choose Package Tier/i).length).toBeGreaterThan(0);
@@ -72,7 +74,9 @@ describe('ListingDetail Page', () => {
         fireEvent.click(turnkeyBtn);
 
         // Renders Connected Deal Chain Flow & Partner Banners
-        expect(within(desktop).getAllByText(/Connected Deal Chain Flow/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Connected Deal Chain Flow/i).length).toBeGreaterThan(
+            0,
+        );
         expect(within(desktop).getAllByText(/Change Courier ▾/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/Change Store ▾/i).length).toBeGreaterThan(0);
     });
@@ -96,7 +100,9 @@ describe('ListingDetail Page', () => {
         fireEvent.click(screen.getByText(/Kuya Danny Tricycle Cargo/i));
 
         // Slot banner reflects substituted partner
-        expect(within(desktop).getAllByText(/Kuya Danny Tricycle Cargo/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getAllByText(/Kuya Danny Tricycle Cargo/i).length).toBeGreaterThan(
+            0,
+        );
     });
 
     it('toggles package customizer and adds rush priority enhancements', () => {
@@ -104,7 +110,9 @@ describe('ListingDetail Page', () => {
         const desktop = getDesktop(container as HTMLElement);
 
         // Click customize service options toggle
-        const customizerToggle = within(desktop).getByRole('button', { name: /Customize service speed/i });
+        const customizerToggle = within(desktop).getByRole('button', {
+            name: /Customize service speed/i,
+        });
         fireEvent.click(customizerToggle);
 
         // Check Fast Clean (+₱100)
@@ -115,7 +123,7 @@ describe('ListingDetail Page', () => {
         expect(within(desktop).getAllByText('₱550.00').length).toBeGreaterThan(0);
     });
 
-    it('updates quantity and multiplies total escrow calculation', () => {
+    it('updates quantity and multiplies the planning estimate', () => {
         const { container } = render(<ListingDetail {...baseProps} />);
         const desktop = getDesktop(container as HTMLElement);
 
@@ -136,7 +144,7 @@ describe('ListingDetail Page', () => {
 
         // Picks drawer opens with item
         expect(screen.getByText('Citizen Picks')).toBeTruthy();
-        expect(screen.getByText(/1 item staged for escrow/i)).toBeTruthy();
+        expect(screen.getByText(/1 item staged for review/i)).toBeTruthy();
         expect(screen.getAllByText(/Inverter Split AC Deep Clean/).length).toBeGreaterThan(0);
     });
 
@@ -155,7 +163,9 @@ describe('ListingDetail Page', () => {
         // Header and satisfaction rating
         expect(within(desktop).getAllByText(/Customer Reviews/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/98% Satisfaction/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Job photos from Tagudin homes/i).length).toBeGreaterThan(0);
+        expect(
+            within(desktop).getAllByText(/Job photos from Tagudin homes/i).length,
+        ).toBeGreaterThan(0);
 
         // Featured review visible
         expect(within(desktop).getAllByText(/Maria S\./i).length).toBeGreaterThan(0);
@@ -187,7 +197,9 @@ describe('ListingDetail Page', () => {
             currency: 'PHP',
         };
 
-        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={productListing} />);
+        const { container } = render(
+            <ListingDetail {...baseProps} activeListingDetail={productListing} />,
+        );
         const desktop = getDesktop(container as HTMLElement);
 
         // Check product adaptations
@@ -196,6 +208,19 @@ describe('ListingDetail Page', () => {
         expect(within(desktop).getAllByText(/Solo Snack Box/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/In-Store Pickup/i).length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText(/Doorstep Delivery/i).length).toBeGreaterThan(0);
+
+        // Verified Fulfillment & Handoff Protocol for products (instead of Work Execution Pipeline)
+        expect(within(desktop).getByText('Fulfillment & Handoff Protocol')).toBeTruthy();
+        expect(within(desktop).getByText(/custody & dispatch gates/i)).toBeTruthy();
+        expect(within(desktop).getByText('Sourcing & Package Preparation')).toBeTruthy();
+        expect(within(desktop).getByText('Counter Collection & Verification')).toBeTruthy();
+        expect(within(desktop).getByText('Condition Close-Out & Release')).toBeTruthy();
+
+        // Switching to delivery updates custody gates
+        fireEvent.click(within(desktop).getByText(/Doorstep Delivery/i));
+        expect(within(desktop).getByText('Store Sourcing & Dispatch Packaging')).toBeTruthy();
+        expect(within(desktop).getByText('Courier Custody & Transit Relay')).toBeTruthy();
+        expect(within(desktop).getByText('Doorstep Arrival & Photo Confirmation')).toBeTruthy();
     });
     it('renders server-projected package tiers and milestone stages from database terms', () => {
         const customListing: ListingRecord = {
@@ -216,23 +241,39 @@ describe('ListingDetail Page', () => {
                     title: 'Light Gate Repair',
                     price: 1500,
                     sub: 'Hinge welding & alignment',
-                    inclusions: ['On-site metal inspection', 'Spot welding and grind', 'Anti-rust primer coat'],
+                    inclusions: [
+                        'On-site metal inspection',
+                        'Spot welding and grind',
+                        'Anti-rust primer coat',
+                    ],
                 },
                 {
                     id: 'custom-pkg-2',
                     title: 'Full Stainless Fabrication',
                     price: 4500,
                     sub: 'Custom security grille',
-                    inclusions: ['Measurement & material cut', 'TIG welding assembly', 'Mirror polish finish'],
+                    inclusions: [
+                        'Measurement & material cut',
+                        'TIG welding assembly',
+                        'Mirror polish finish',
+                    ],
                 },
             ],
             milestone_stages: [
-                { title: 'Material measurement & cutting', description: 'Stage 1 · Cut specifications gate' },
-                { title: 'TIG welding and structural test', description: 'Stage 2 · Weld bead penetration test' },
+                {
+                    title: 'Material measurement & cutting',
+                    description: 'Stage 1 · Cut specifications gate',
+                },
+                {
+                    title: 'TIG welding and structural test',
+                    description: 'Stage 2 · Weld bead penetration test',
+                },
             ],
         };
 
-        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={customListing} />);
+        const { container } = render(
+            <ListingDetail {...baseProps} activeListingDetail={customListing} />,
+        );
         const desktop = getDesktop(container as HTMLElement);
 
         // Server-projected package tiers are rendered!
@@ -241,8 +282,12 @@ describe('ListingDetail Page', () => {
         expect(within(desktop).getByText('Hinge welding & alignment')).toBeTruthy();
         expect(within(desktop).getByText('Anti-rust primer coat')).toBeTruthy();
 
-        // Server-projected milestone stages are rendered!
+        // Server-projected milestone stages are rendered in compact stepper!
         expect(within(desktop).getByText('Material measurement & cutting')).toBeTruthy();
+
+        // Expand pipeline details
+        const detailsBtn = within(desktop).getByRole('button', { name: /Details/i });
+        fireEvent.click(detailsBtn);
         expect(within(desktop).getByText('Stage 1 · Cut specifications gate')).toBeTruthy();
     });
 });

@@ -77,6 +77,23 @@ export type MilestoneStageRecord = {
     state?: string;
 };
 
+export type ListingMediaItem = {
+    id: string;
+    kind: 'photo' | 'video';
+    url: string;
+    thumbnail_url?: string | null;
+    caption?: string | null;
+    mime_type?: string | null;
+    size_bytes?: number | null;
+    is_cover?: boolean;
+};
+
+export type ListingMedia = {
+    cover_thumbnail_url?: string | null;
+    has_video?: boolean;
+    items: ListingMediaItem[];
+};
+
 export type ListingRecord = {
     id: string;
     title: string;
@@ -96,6 +113,9 @@ export type ListingRecord = {
     expected_version?: number | null;
     area?: string | null;
     locality?: string | null;
+    stall_location?: string | null;
+    stallLocation?: string | null;
+    geography?: Record<string, unknown> | null;
     ownerName?: string | null;
     owner_name?: string | null;
     owner?: { displayName?: string | null; display_name?: string | null } | null;
@@ -109,9 +129,26 @@ export type ListingRecord = {
     milestone_stages?: MilestoneStageRecord[];
     milestoneStages?: MilestoneStageRecord[];
     work_catalog?: WorkCatalogReference | null;
+    work_catalog_code?: string | null;
+    workCatalogCode?: string | null;
+    work_set_version?: number | null;
+    workSetVersion?: number | null;
+    pricing_mode?: string | null;
+    pricingMode?: string | null;
+    inclusions?: string[] | null;
+    variants?: Array<Record<string, unknown>> | null;
     addons?: ListingAddonRecord[];
     partner_candidates?: PartnerCandidateRecord[];
     catalog_source?: string | null;
+    cover_thumbnail_url?: string | null;
+    has_video?: boolean;
+    media?: ListingMedia | null;
+    work_specification?: Record<string, unknown> | null;
+    deal_chain_combinations?: Array<Record<string, unknown>>;
+    deal_chain_specification?: Record<string, unknown> | null;
+    terms?: Record<string, unknown> | null;
+    prep_lead_time?: 'in_stock' | 'same_day' | 'next_day' | string | null;
+    prepLeadTime?: 'in_stock' | 'same_day' | 'next_day' | string | null;
 };
 
 export type WorkCatalogReference = {

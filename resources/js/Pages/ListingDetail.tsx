@@ -548,6 +548,11 @@ export default function ListingDetail(props: HomeProps) {
             inclusions: ['Standard verified task execution'],
         };
 
+    const [serviceScope, setServiceScope] = useState<'direct' | 'turnkey' | 'audit'>('direct');
+    const [productScope, setProductScope] = useState<'pickup' | 'delivery' | 'installation'>(
+        'pickup',
+    );
+
     // Server-projected milestone stages (with truthful fallback based on listing work_shape)
     // Server-projected milestone stages (service execution pipeline)
     const milestoneStages = useMemo(() => {
@@ -589,32 +594,51 @@ export default function ListingDetail(props: HomeProps) {
                 },
             ];
         }
+        // Canonical Product Handoff Protocol (A4)
+        if (productScope === 'pickup') {
+            return [
+                {
+                    id: 'sourcing_prep',
+                    step: 1,
+                    title: 'Sourcing & Package Preparation',
+                    description: 'Merchant verifies stock count, item condition, and prepares package.',
+                },
+                {
+                    id: 'counter_handoff',
+                    step: 2,
+                    title: 'Counter Collection & Verification',
+                    description: 'Buyer inspects item at stall counter and signs receipt slip or QR.',
+                },
+                {
+                    id: 'condition_close',
+                    step: 3,
+                    title: 'Condition Close-Out & Release',
+                    description: 'Dual confirmation records successful handoff before final escrow release.',
+                },
+            ];
+        }
         return [
             {
-                id: 'order_confirmed',
+                id: 'store_prep',
                 step: 1,
-                title: 'Order Placed & Inventory Committed',
-                description: 'Merchant acknowledges availability at Tagudin store counter.',
+                title: 'Store Sourcing & Dispatch Packaging',
+                description: 'Merchant commits inventory and prepares package for courier pickup.',
             },
             {
-                id: 'courier_dispatch',
+                id: 'courier_relay',
                 step: 2,
-                title: 'Packaged & Courier Dispatch',
-                description: 'Rider picks up package with QR handshake verification.',
+                title: 'Courier Custody & Transit Relay',
+                description: 'Independently contracted courier verifies package condition and transports.',
             },
             {
-                id: 'delivery_proof',
+                id: 'doorstep_proof',
                 step: 3,
                 title: 'Doorstep Arrival & Photo Confirmation',
-                description: 'Signed and photographed proof of delivery at destination.',
+                description: 'Photographed proof of delivery and recipient confirmation at destination.',
             },
         ];
-    }, [listing?.milestone_stages, listing?.milestoneStages, isService]);
+    }, [listing?.milestone_stages, listing?.milestoneStages, isService, productScope]);
 
-    const [serviceScope, setServiceScope] = useState<'direct' | 'turnkey' | 'audit'>('direct');
-    const [productScope, setProductScope] = useState<'pickup' | 'delivery' | 'installation'>(
-        'pickup',
-    );
 
     // Selected active partners in each slot
     const [currentCourier, setCurrentCourier] = useState<PartnerCandidate>(
@@ -1328,10 +1352,12 @@ export default function ListingDetail(props: HomeProps) {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h2 className="text-sm font-extrabold tracking-wider text-[#0F2F58] uppercase">
-                                            Work Execution Pipeline
+                                            {isService ? 'Work Execution Pipeline' : 'Fulfillment & Handoff Protocol'}
                                         </h2>
                                         <p className="mt-0.5 text-xs text-slate-500">
-                                            {milestoneStages.length} verified proof gates tracked by T4 Work engine
+                                            {isService
+                                                ? `${milestoneStages.length} verified craft milestones tracked by T4 Work engine`
+                                                : `${milestoneStages.length} custody & dispatch gates protected by verified handoff`}
                                         </p>
                                     </div>
                                     <button

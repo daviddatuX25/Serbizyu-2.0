@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
+import { router } from '@inertiajs/react';
+import type { SliceSession } from '../../types';
 import type * as MobileComponents from '../../components/mobile';
 import type { DealChainCustomizerModalProps } from '../../components/mobile/DealChainCustomizerModal';
 import CreateProduct, { defaultCombosForCategory, isInstallationApplicable } from './CreateProduct';
@@ -395,5 +397,67 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         fireEvent.click(screen.getByText('Barangay Centro Bicycle Runner'));
         fireEvent.click(screen.getByRole('button', { name: /Confirm Partner Selection/i }));
         expect(within(studio).getAllByText('Barangay Centro Bicycle Runner').length).toBeGreaterThan(0);
+    });
+
+    it('renders preparation lead time controls and governed A4 handoff protocol on baseline counter pickup', () => {
+        render(<CreateProduct />);
+        fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
+
+        expect(screen.getByText(/Prep Lead Time:/i)).toBeTruthy();
+        expect(screen.getByRole('button', { name: /In Stock \(Ready\)/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /1–2 Hours Prep/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /1 Day Lead Time/i })).toBeTruthy();
+
+        // Can toggle lead time
+        fireEvent.click(screen.getByRole('button', { name: /1–2 Hours Prep/i }));
+        expect(screen.getByRole('button', { name: /1–2 Hours Prep/i }).className).toContain('bg-[#0F2F58]');
+
+        // Protocol badge and summary
+        expect(screen.getByText('A4 Handoff')).toBeTruthy();
+        expect(screen.getByText(/Sourcing & Prep.*Counter Custody.*Photo Sign-Off/i)).toBeTruthy();
+    });
+
+    it('submits draft with canonical A4 work shape, work_catalog_code, and governed milestone stages', () => {
+        const mockPost = vi.fn();
+        vi.mocked(router.post).mockImplementation(mockPost);
+
+        const session = {
+            authenticated: true,
+            user: { id: 'usr-1', name: 'Vendor Kuya', email: 'vendor@tagudin.ph' },
+            current_slice: 'product',
+        } as unknown as SliceSession;
+
+        render(
+            <CreateProduct session={session} />,
+        );
+        fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
+
+        // Fill minimal required title and price
+        const titleInput = screen.getByTestId('product-title-input');
+        fireEvent.change(titleInput, { target: { value: 'Fresh Tagudin Bibingka' } });
+
+        const priceInput = screen.getAllByRole('spinbutton')[0];
+        fireEvent.change(priceInput, { target: { value: '120' } });
+
+        // Click save draft
+        const saveBtn = screen.getByRole('button', { name: /Save Private Draft/i });
+        fireEvent.click(saveBtn);
+
+        expect(mockPost).toHaveBeenCalled();
+        expect(mockPost.mock.calls[0][0]).toBe('/listings');
+        expect(mockPost.mock.calls[0][1]).toEqual(
+            expect.objectContaining({
+                listing_type: 'product',
+                work_shape: 'A4',
+                work_catalog_code: 'tagudin-product-handoff-a4',
+                work_set_version: 1,
+                prep_lead_time: 'in_stock',
+                milestone_stages: expect.arrayContaining([
+                    expect.objectContaining({ id: 'a4-prepare', title: 'Sourcing and package preparation' }),
+                    expect.objectContaining({ id: 'a4-handoff', title: 'Handoff and recipient confirmation' }),
+                    expect.objectContaining({ id: 'a4-close', title: 'Condition close-out' }),
+                ]),
+            }),
+        );
     });
 });

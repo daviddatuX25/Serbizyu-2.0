@@ -125,9 +125,40 @@ interface DealChainOptionGroups {
     recommended: DealChainTemplate[];
     other_recipes: DealChainTemplate[];
 }
+export interface WorkStepOption {
+    id: string;
+    ordinal?: number;
+    title: string;
+    description: string;
+    node_kind?: string;
+    evidence_type?: string;
+    evidence_description?: string;
+    control_mode?: string;
+    mandatory?: boolean;
+}
+
+export interface WorkSetOption {
+    catalog_code: string;
+    set_code: string;
+    set_version: number;
+    work_shape: string;
+    title: string;
+    summary: string;
+    steps: WorkStepOption[];
+    category_codes?: string[];
+    listing_types?: string[];
+}
+
+export interface WorkOptionGroups {
+    recommended: WorkSetOption[];
+    other_archetypes: WorkSetOption[];
+}
+
 
 interface CreateProductProps {
     session?: SliceSession | null;
+    workCatalog?: Record<string, unknown>;
+    workOptions?: WorkOptionGroups;
     dealChainOptions?: DealChainOptionGroups;
     partnerListings?: PartnerListingOption[];
     editingDraft?: ListingRecord | null;
@@ -383,11 +414,64 @@ function toDealChainCombination(combo: PartnerCombo): DealChainCombination {
 }
 
 export default function CreateProduct({
+    workOptions,
     dealChainOptions,
     session,
     partnerListings = [],
     editingDraft = null,
 }: CreateProductProps) {
+    const availableWorkSets = useMemo(() => {
+        const recommended = workOptions?.recommended ?? [];
+        const others = workOptions?.other_archetypes ?? [];
+        return [...recommended, ...others];
+    }, [workOptions]);
+
+    const defaultWorkSet = useMemo<WorkSetOption>(() => {
+        return (
+            availableWorkSets.find((s) => s.work_shape === 'A4') ||
+            availableWorkSets[0] || {
+                catalog_code: 'tagudin-product-handoff-a4',
+                set_code: 'set-product-market-handoff',
+                set_version: 1,
+                work_shape: 'A4',
+                title: 'Market Product Preparation & Handoff',
+                summary: 'Prepare package, confirm recipient or courier handoff, and record condition close-out.',
+                steps: [
+                    {
+                        id: 'a4-prepare',
+                        ordinal: 1,
+                        title: 'Sourcing and package preparation',
+                        description: 'Verify the product count, condition, packaging, and dispatch details.',
+                        node_kind: 'checkin_intake',
+                        evidence_type: 'receipt_upload',
+                    },
+                    {
+                        id: 'a4-handoff',
+                        ordinal: 2,
+                        title: 'Handoff and recipient confirmation',
+                        description: 'Transfer the product to the recipient or independently contracted courier.',
+                        node_kind: 'handoff_ready',
+                        evidence_type: 'dual_sign',
+                    },
+                    {
+                        id: 'a4-close',
+                        ordinal: 3,
+                        title: 'Condition close-out',
+                        description: 'Record the delivered condition and close the product work instance.',
+                        node_kind: 'final_signoff',
+                        evidence_type: 'photo_required',
+                    },
+                ],
+            }
+        );
+    }, [availableWorkSets]);
+
+    const [prepLeadTime, setPrepLeadTime] = useState<'in_stock' | 'same_day' | 'next_day'>(() => {
+        const terms = editingDraft?.terms as Record<string, unknown> | undefined;
+        const saved = (terms?.prep_lead_time as string) || (editingDraft?.prep_lead_time as string);
+        if (saved === 'same_day' || saved === 'next_day') return saved;
+        return 'in_stock';
+    });
     const allDealChainRecipes = useMemo(
         () => [
             ...(dealChainOptions?.recommended ?? []),
@@ -906,63 +990,25 @@ export default function CreateProduct({
                       settlement_mode: 'independent_provider_agreement',
                   }));
 
-        const milestoneStages =
-            selectedFulfillment === 'pickup' || !activeCombo
-                ? [
-                      {
-                          id: 'order_confirmed',
-                          title: 'Order Placed & Inventory Committed',
-                          description: `Merchant acknowledges availability at ${stallLocation}.`,
-                          step: 1,
-                      },
-                      {
-                          id: 'counter_handoff',
-                          title: 'Counter Collection',
-                          description: `Buyer and merchant confirm item handoff at ${stallLocation}.`,
-                          step: 2,
-                      },
-                  ]
-                : [
-                      {
-                          id: 'order_confirmed',
-                          title: 'Order Placed & Inventory Committed',
-                          description: `Merchant commits inventory at ${stallLocation}.`,
-                          step: 1,
-                      },
-                      ...(activeCombo.slots.some((s) => s.roleType === 'COURIER')
-                          ? [
-                                {
-                                    id: 'courier_dispatch',
-                                    title: 'Packaged & Courier Dispatch',
-                                    description: `Handoff to ${activeCombo.slots.find((s) => s.roleType === 'COURIER')?.providerName || 'courier'}.`,
-                                    step: 2,
-                                },
-                                {
-                                    id: 'delivery_proof',
-                                    title: 'Doorstep Arrival & Handoff Confirmation',
-                                    description: 'Courier and recipient confirm handoff at destination.',
-                                    step: 3,
-                                },
-                            ]
-                          : []),
-                      ...(activeCombo.slots.some((s) => s.roleType === 'LABOR')
-                          ? [
-                                {
-                                    id: 'technician_install',
-                                    title: 'On-Site Installation Labor',
-                                    description: `Certified technician service by ${activeCombo.slots.find((s) => s.roleType === 'LABOR')?.providerName || 'labor partner'}.`,
-                                    step: 4,
-                                },
-                            ]
-                          : []),
-                  ];
+        const workCatalogCode = editingDraft?.work_catalog_code || defaultWorkSet.catalog_code;
+        const workSetVersion = editingDraft?.work_set_version || defaultWorkSet.set_version;
+        const workShape = defaultWorkSet.work_shape || 'A4';
 
+        const milestoneStages = defaultWorkSet.steps.map((step, idx) => ({
+            id: step.id,
+            title: step.title,
+            description: step.description,
+            step: step.ordinal || idx + 1,
+        }));
         const payload: Record<string, FormDataConvertible> = {
             title: title.trim(),
             description: effectiveDescription,
             category_code: category,
             listing_type: 'product',
-            work_shape: 'A4',
+            work_shape: workShape,
+            work_catalog_code: workCatalogCode,
+            work_set_version: workSetVersion,
+            prep_lead_time: prepLeadTime,
             price_amount_minor: defaultPriceMinor,
             currency: 'PHP',
             stall_location: stallLocation,
@@ -1821,6 +1867,68 @@ export default function CreateProduct({
                                                 <p className="mt-0.5 text-[11px] text-slate-600">
                                                     Direct counter collection at <span className="font-semibold text-slate-900">{stallLocation}</span>
                                                 </p>
+                                                <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                                        Prep Lead Time:
+                                                    </span>
+                                                    <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs">
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setPrepLeadTime('in_stock');
+                                                            }}
+                                                            className={`cursor-pointer rounded-md px-2 py-0.5 text-[10px] font-bold transition-all ${
+                                                                prepLeadTime === 'in_stock'
+                                                                    ? 'bg-[#0F2F58] text-white shadow-2xs'
+                                                                    : 'text-slate-600 hover:text-slate-900'
+                                                            }`}
+                                                        >
+                                                            In Stock (Ready)
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setPrepLeadTime('same_day');
+                                                            }}
+                                                            className={`cursor-pointer rounded-md px-2 py-0.5 text-[10px] font-bold transition-all ${
+                                                                prepLeadTime === 'same_day'
+                                                                    ? 'bg-[#0F2F58] text-white shadow-2xs'
+                                                                    : 'text-slate-600 hover:text-slate-900'
+                                                            }`}
+                                                        >
+                                                            1–2 Hours Prep
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setPrepLeadTime('next_day');
+                                                            }}
+                                                            className={`cursor-pointer rounded-md px-2 py-0.5 text-[10px] font-bold transition-all ${
+                                                                prepLeadTime === 'next_day'
+                                                                    ? 'bg-[#0F2F58] text-white shadow-2xs'
+                                                                    : 'text-slate-600 hover:text-slate-900'
+                                                            }`}
+                                                        >
+                                                            1 Day Lead Time
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-50/90 px-2 py-1 border border-slate-200/60 text-[10px]">
+                                                    <div className="flex items-center gap-1.5 text-slate-600">
+                                                        <span className="font-extrabold uppercase text-[8.5px] tracking-wider text-[#0F2F58]">
+                                                            Protocol:
+                                                        </span>
+                                                        <span className="font-medium text-slate-700">
+                                                            Sourcing &amp; Prep <span className="text-slate-400">➔</span> Counter Custody <span className="text-slate-400">➔</span> Photo Sign-Off
+                                                        </span>
+                                                    </div>
+                                                    <span className="rounded-full bg-emerald-50 px-1.5 py-0.2 text-[8.5px] font-bold text-emerald-800 border border-emerald-200/60">
+                                                        A4 Handoff
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                         <button
