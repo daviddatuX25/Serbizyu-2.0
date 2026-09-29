@@ -155,4 +155,37 @@ describe('CreateService Component — Granular Guided & Standard Modes', () => {
         fireEvent.click(addTierBtn);
         expect(screen.getByText('Package Tiers (2)')).toBeTruthy();
     });
+
+    it('places Detailed Description in Step 1 (Trade Identity) and keeps Step 5 (Dispatch Base) focused strictly on location', () => {
+        render(<CreateService workOptions={mockWorkOptions} />);
+
+        // Step 1 contains Title, Category, and Detailed Description
+        expect(screen.getByText('What do you want to call your service?')).toBeTruthy();
+        expect(screen.getByLabelText(/Detailed Description/i)).toBeTruthy();
+
+        // Enter title and select trade category to populate template
+        const titleInput = screen.getByPlaceholderText(/e\.g\. Inverter Split AC Deep Clean/i);
+        fireEvent.change(titleInput, { target: { value: 'Inverter Split AC Cleaning' } });
+        const categorySelect = screen.getByDisplayValue('Select trade category...') as HTMLSelectElement;
+        fireEvent.change(categorySelect, { target: { value: 'repairs' } });
+
+        // Advance to Step 2 (Proof & Photos)
+        fireEvent.click(screen.getByRole('button', { name: /continue to visual proof/i }));
+
+        // Advance to Step 3 (Work Plan)
+        fireEvent.click(screen.getByRole('button', { name: /continue to work plan/i }));
+
+        // Advance to Step 4 (Deliverables)
+        fireEvent.click(screen.getByRole('button', { name: /continue to deliverables/i }));
+
+        // Advance to Step 5 (Dispatch Base)
+        fireEvent.click(screen.getByRole('button', { name: /continue to base location/i }));
+
+        // Step 5 is strictly "Where are you based for dispatch in Tagudin?" with location picker
+        expect(screen.getByText('Where are you based for dispatch in Tagudin?')).toBeTruthy();
+        expect(screen.getAllByText(/Barangay/i).length).toBeGreaterThanOrEqual(1);
+
+        // Step 5 does NOT contain Detailed Description
+        expect(screen.queryByLabelText(/Detailed Description/i)).toBeNull();
+    });
 });

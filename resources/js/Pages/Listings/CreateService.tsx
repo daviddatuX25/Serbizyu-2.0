@@ -1344,6 +1344,7 @@ export default function CreateService({
                                     </div>
                                     <input
                                         type="text"
+                                        data-testid="service-title-input"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder={builderMode === 'guided' ? 'e.g. Inverter Split AC Deep Clean, Bread Catering, or Pipe Repair' : ''}
@@ -1401,6 +1402,29 @@ export default function CreateService({
                                         <option value="local-services">Errands &amp; General Local Services</option>
                                         <option value="greeting-cards">Handmade Cards &amp; Crafts</option>
                                     </select>
+                                </div>
+
+                                {/* Detailed Description */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label htmlFor="service-description" className="text-xs font-bold text-slate-700">
+                                            Detailed Description
+                                        </label>
+                                        {builderMode === 'standard' && (
+                                            <FieldGuide
+                                                guidance={SERVICE_FIELD_GUIDANCE.description.guidance}
+                                                mode="standard"
+                                            />
+                                        )}
+                                    </div>
+                                    <textarea
+                                        id="service-description"
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        rows={3}
+                                        placeholder={builderMode === 'guided' ? 'Mention trade certifications, experience, or what clients should prepare before arrival...' : ''}
+                                        className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
+                                    />
                                 </div>
 
                                 {builderMode === 'guided' && (
@@ -1730,7 +1754,7 @@ export default function CreateService({
                             </div>
                         )}
 
-                        {/* STEP 5: Service Base & Details */}
+                        {/* STEP 5: Service Base & Dispatch Location */}
                         {(builderMode === 'standard' || step === 5) && (
                             <div className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
                                 {builderMode === 'guided' ? (
@@ -1745,7 +1769,7 @@ export default function CreateService({
                                 ) : (
                                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                                         <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                                            Dispatch Location &amp; Scope
+                                            Service Base &amp; Dispatch Location
                                         </span>
                                         <FieldGuide
                                             guidance={SERVICE_FIELD_GUIDANCE.geography.guidance}
@@ -1762,26 +1786,6 @@ export default function CreateService({
                                     onChange={setGeography}
                                 />
 
-                                <div className="space-y-1.5 pt-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold text-slate-700">
-                                            Detailed Description
-                                        </label>
-                                        {builderMode === 'standard' && (
-                                            <FieldGuide
-                                                guidance={SERVICE_FIELD_GUIDANCE.description.guidance}
-                                                mode="standard"
-                                            />
-                                        )}
-                                    </div>
-                                    <textarea
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        rows={3}
-                                        placeholder={builderMode === 'guided' ? 'Mention trade certifications or customer preparation...' : ''}
-                                        className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
-                                    />
-                                </div>
 
                                 {builderMode === 'guided' && (
                                     <div className="flex gap-2.5 pt-2">

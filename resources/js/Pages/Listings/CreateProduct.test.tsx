@@ -135,6 +135,29 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         expect(screen.getByText('Variant 2')).toBeTruthy();
     });
 
+    it('places Detailed Description in Step 1 (Product Identity) and keeps Step 3 (Pickup Point) focused strictly on location', () => {
+        render(<CreateProduct />);
+
+        // Step 1 contains Title, Category, and Detailed Description
+        expect(screen.getByText('What merchandise or part are you selling?')).toBeTruthy();
+        expect(screen.getByLabelText(/Detailed Description/i)).toBeTruthy();
+
+        // Advance to Step 2 (Photos)
+        const nameInput = screen.getByTestId('product-title-input');
+        fireEvent.change(nameInput, { target: { value: 'Fresh Banana Bread Loaf' } });
+        fireEvent.click(screen.getByRole('button', { name: /continue to product photos/i }));
+
+        // Advance to Step 3 (Pickup Point)
+        expect(screen.getByText('Add authentic product photos')).toBeTruthy();
+        fireEvent.click(screen.getByRole('button', { name: /continue to pickup point/i }));
+
+        // Step 3 is strictly "Where can buyers collect this item?" with location picker
+        expect(screen.getByText('Where can buyers collect this item?')).toBeTruthy();
+        expect(screen.getByText(/Barangay/i)).toBeTruthy();
+        // Step 3 does NOT contain Detailed Description
+        expect(screen.queryByLabelText(/Detailed Description/i)).toBeNull();
+    });
+
     it('filters out installation labor for non-installation categories like food and defaults to Counter Pickup', () => {
         // Pure helper verification
         expect(isInstallationApplicable('local-food')).toBe(false);

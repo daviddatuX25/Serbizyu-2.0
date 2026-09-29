@@ -1217,6 +1217,7 @@ export default function CreateProduct({
                                     </div>
                                     <input
                                         type="text"
+                                        data-testid="product-title-input"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder={builderMode === 'guided' ? categoryMeta.titlePlaceholder : ''}
@@ -1293,6 +1294,29 @@ export default function CreateProduct({
                                     </select>
                                 </div>
 
+                                {/* Detailed Description */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label htmlFor="product-description" className="text-xs font-bold text-slate-700">
+                                            Detailed Description
+                                        </label>
+                                        {builderMode === 'standard' && (
+                                            <FieldGuide
+                                                guidance={PRODUCT_FIELD_GUIDANCE.description.guidance}
+                                                mode="standard"
+                                            />
+                                        )}
+                                    </div>
+                                    <textarea
+                                        id="product-description"
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        rows={3}
+                                        placeholder={builderMode === 'guided' ? 'Specify compatibility, dimensions, ingredients, or brand origin in Tagudin...' : ''}
+                                        className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
+                                    />
+                                </div>
+
                                 {builderMode === 'guided' && (
                                     <button
                                         type="button"
@@ -1359,7 +1383,7 @@ export default function CreateProduct({
                             </div>
                         )}
 
-                        {/* STEP 3: Pickup Point & Details */}
+                        {/* STEP 3: Pickup Point */}
                         {(builderMode === 'standard' || step === 3) && (
                             <div className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
                                 {builderMode === 'guided' ? (
@@ -1394,26 +1418,6 @@ export default function CreateProduct({
                                     }}
                                 />
 
-                                <div className="space-y-1.5 pt-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold text-slate-700">
-                                            Detailed Description
-                                        </label>
-                                        {builderMode === 'standard' && (
-                                            <FieldGuide
-                                                guidance={PRODUCT_FIELD_GUIDANCE.title.guidance}
-                                                mode="standard"
-                                            />
-                                        )}
-                                    </div>
-                                    <textarea
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        rows={3}
-                                        placeholder={builderMode === 'guided' ? 'Specify compatibility, dimensions, ingredients, or brand origin in Tagudin...' : ''}
-                                        className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
-                                    />
-                                </div>
 
                                 {builderMode === 'guided' && (
                                     <div className="flex gap-2.5 pt-2">

@@ -78,10 +78,10 @@ export const SERVICE_GUIDED_STEPS: StepDefinition[] = [
     },
     {
         step: 5,
-        shortTitle: 'Base & Details',
+        shortTitle: 'Dispatch Base',
         guidedTitle: 'Where are you based for dispatch in Tagudin?',
         guidedDescription:
-            'Clients see your dispatch barangay to calculate travel distance and dispatch times. Add a brief note on your trade experience and customer preparations.',
+            'Clients see your dispatch barangay to calculate travel distance and dispatch times.',
         standardTitle: 'Service Base & Dispatch Location',
     },
     {
@@ -108,7 +108,7 @@ export const PRODUCT_GUIDED_STEPS: StepDefinition[] = [
         shortTitle: 'Item & Aisle',
         guidedTitle: 'What merchandise or part are you selling?',
         guidedDescription:
-            'Include brand, part number, and key technical specifications (capacitance, voltage, size, or weight) so buyers find the exact part they need.',
+            'Include brand, part number, and key technical specifications so buyers find the exact part or goods they need.',
         standardTitle: 'Product Identity & Aisle',
     },
     {
@@ -299,6 +299,17 @@ export const PRODUCT_FIELD_GUIDANCE: Record<string, FieldDefinition> = {
             question: 'Where is pickup located?',
             answer: 'Your physical store, stall, or home workshop in Tagudin where buyers or couriers collect paid orders.',
             example: 'e.g. Public Market Stall #14, Tagudin',
+        },
+    },
+    description: {
+        id: 'description',
+        guidedLabel: 'Item details, specifications, or origin',
+        advancedLabel: 'Detailed Description',
+        guidance: {
+            id: 'description',
+            question: 'What should I write in the product description?',
+            answer: 'Specify dimensions, compatibility, ingredients, or brand origin in Tagudin so buyers know exactly what they are purchasing.',
+            example: 'e.g. 35uF ±5% explosion-proof run capacitor, standard 4-pin quick connect terminals.',
         },
     },
     fulfillment: {
