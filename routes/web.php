@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AdminDealChainCatalogController;
 use App\Http\Controllers\AdminIdentityVerificationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrowseController;
@@ -14,7 +15,9 @@ use App\Http\Controllers\ListingController;
 use App\Http\Controllers\MyListingsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RequestController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Middleware\EnsureAuthenticated;
+use App\Http\Controllers\TelemetryController;
 use App\Modules\Catalogs\Application\DealChainCatalog;
 use App\Modules\Catalogs\Application\WorkCatalog;
 use Illuminate\Support\Facades\Route;
@@ -72,9 +75,21 @@ Route::patch('/listings/{listing}', [ListingController::class, 'update'])
 Route::post('/listings/{listing}/submit', [ListingController::class, 'submit'])
     ->middleware('throttle:listing-submits')
     ->name('listings.submit');
+Route::post('/listings/{listing}/pause', [ListingController::class, 'pause'])
+    ->middleware('throttle:listing-writes')
+    ->name('listings.pause');
+Route::post('/listings/{listing}/resume', [ListingController::class, 'resume'])
+    ->middleware('throttle:listing-writes')
+    ->name('listings.resume');
+Route::post('/listings/{listing}/archive', [ListingController::class, 'archive'])
+    ->middleware('throttle:listing-writes')
+    ->name('listings.archive');
 Route::post('/listings/{listing}/protected-edit-attempt', [ListingController::class, 'protectedEditAttempt'])
     ->middleware('throttle:listing-writes')
     ->name('listings.protected-edit-attempt');
+Route::post('/api/telemetry/events', [TelemetryController::class, 'recordEvents'])
+    ->middleware('throttle:60,1')
+    ->name('telemetry.events');
 
 Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::get('/account/capabilities', [CapabilityController::class, 'index'])->name('account.capabilities.index');
@@ -108,6 +123,9 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::post('/deal-chains/authorize', [DealChainController::class, 'authorize'])
         ->middleware('throttle:30,1')
         ->name('deal-chains.authorize');
+    Route::post('/orders/{order}/reviews', [ReviewController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('reviews.store');
     Route::get('/deal-chains/{dealChain}', [DealChainController::class, 'show'])
         ->name('deal-chains.show');
     Route::get('/api/deal-chains/slot-candidates', [DealChainController::class, 'slotCandidates'])
@@ -149,16 +167,16 @@ Route::get('/admin/listings', fn () => Inertia::render('Admin/Listings/Index'))-
 Route::get('/admin/tenders', fn () => Inertia::render('Admin/Tenders/Index'))->name('admin.tenders.index');
 Route::get('/admin/requests', fn () => Inertia::render('Admin/Tenders/Index'))->name('admin.requests.index');
 Route::get('/admin/users', fn () => Inertia::render('Admin/Users/Index'))->name('admin.users.index');
-Route::middleware(EnsureAuthenticated::class . ':admin')
+Route::middleware(EnsureAuthenticated::class.':admin')
     ->prefix('/admin/catalogs')
     ->name('admin.catalogs.')
     ->group(function (): void {
         Route::get('/work', fn (WorkCatalog $catalog) => Inertia::render('Admin/Catalogs/WorkCatalog', [
             'workCatalog' => $catalog->frontend(),
         ]))->name('work');
-        Route::get('/deal-chains', fn (DealChainCatalog $catalog) => Inertia::render('Admin/Catalogs/DealChainStudio', [
-            'dealChainCatalog' => $catalog->frontend(),
-        ]))->name('deal-chains');
+        Route::get('/deal-chains', [AdminDealChainCatalogController::class, 'index'])->name('deal-chains');
+        Route::post('/deal-chains/recipes', [AdminDealChainCatalogController::class, 'storeRecipe'])->name('deal-chains.recipes.store');
+        Route::post('/deal-chains/recipes/{recipeCode}/publish', [AdminDealChainCatalogController::class, 'publishRecipe'])->name('deal-chains.recipes.publish');
         Route::get('/taxonomy', fn () => Inertia::render('Admin/Catalogs/TaxonomyStudio'))->name('taxonomy');
     });
 Route::get('/admin/financials', fn () => Inertia::render('Admin/Financials/Index'))->name('admin.financials.index');

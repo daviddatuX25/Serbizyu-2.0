@@ -951,10 +951,19 @@ export default function ListingDetail(props: HomeProps) {
         if (candidate.role === 'auditor') setCurrentAudit(candidate);
         setSubModalRole(null);
     };
-    // Reviews filtering: exclude featured review by ID (identity-based)
+    const ratingSummary = listing?.rating_summary;
+    const incomingReviews = listing?.reviews as ReviewItem[] | undefined;
+    const hasIncomingReviews = Array.isArray(incomingReviews);
+    const reviewsList = hasIncomingReviews ? incomingReviews : SAMPLE_REVIEWS;
+    const reviewsCount = ratingSummary?.reviews_count ?? (hasIncomingReviews ? incomingReviews.length : 128);
+    const avgRating = ratingSummary?.rating ?? 4.9;
+    const satisfactionPct = ratingSummary?.satisfaction_pct ?? 98;
+
+    const featuredReview = reviewsList[0] ?? null;
     const nonFeaturedReviews = useMemo(() => {
-        return SAMPLE_REVIEWS.filter((r) => r.id !== 'rev-1');
-    }, []);
+        if (!featuredReview) return [];
+        return reviewsList.filter((r) => r.id !== featuredReview.id);
+    }, [reviewsList, featuredReview]);
 
     const filteredExtendedReviews = useMemo(() => {
         return nonFeaturedReviews.filter((r) => {
@@ -964,7 +973,6 @@ export default function ListingDetail(props: HomeProps) {
             return true;
         });
     }, [nonFeaturedReviews, reviewFilter]);
-
     const photoUrl = getCategoryPhoto(listing?.category_code || listing?.categoryCode);
 
     if (!listing) {
@@ -1148,16 +1156,17 @@ export default function ListingDetail(props: HomeProps) {
                             <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
                                 <span className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-extrabold text-amber-800">
                                     <Star className="size-3.5 fill-amber-500 text-amber-500" />
-                                    <span>4.9</span>
+                                    <span>{reviewsCount > 0 ? avgRating.toFixed(1) : 'New'}</span>
                                 </span>
                                 <span className="text-xs font-medium text-slate-500">
-                                    (128 reviews)
+                                    ({reviewsCount} {reviewsCount === 1 ? 'review' : 'reviews'})
                                 </span>
-                                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
-                                    98% satisfaction
-                                </span>
+                                {reviewsCount > 0 && (
+                                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                                        {satisfactionPct}% satisfaction
+                                    </span>
+                                )}
                             </div>
-
                             {/* Description */}
                             <p className="text-xs leading-relaxed text-slate-700 sm:text-sm">
                                 {listing.description ||
@@ -1897,10 +1906,11 @@ export default function ListingDetail(props: HomeProps) {
                                     Customer Reviews
                                 </h2>
                                 <span className="text-xs font-semibold text-slate-500">
-                                    128 verified local reviews
+                                    {reviewsCount > 0
+                                        ? `${reviewsCount} verified local reviews`
+                                        : 'No reviews yet'}
                                 </span>
                             </div>
-
                             {/* Job Photos Rail from Tagudin Homes */}
                             <div>
                                 <div className="mb-2 flex items-center gap-1.5 text-[11px] font-extrabold text-slate-500">
@@ -1929,30 +1939,39 @@ export default function ListingDetail(props: HomeProps) {
                                 </div>
                             </div>
 
-                            {/* Featured Single Review Card (Always Visible) */}
-                            <div className="rounded-xl border border-slate-200 bg-[#FAFCFB] p-4">
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="font-extrabold text-slate-900">
-                                        {SAMPLE_REVIEWS[0].author} · {SAMPLE_REVIEWS[0].barangay}
-                                    </span>
-                                    <span className="text-[11px] text-slate-400">
-                                        {SAMPLE_REVIEWS[0].timeAgo}
-                                    </span>
-                                </div>
-                                <div className="mt-1.5 flex items-center justify-between">
-                                    <div className="flex items-center gap-0.5 text-amber-500">
-                                        {[...Array(SAMPLE_REVIEWS[0].stars)].map((_, i) => (
-                                            <Star key={i} className="size-3 fill-amber-500" />
-                                        ))}
+                            {/* Featured Single Review Card (Always Visible if reviews exist) */}
+                            {featuredReview ? (
+                                <div className="rounded-xl border border-slate-200 bg-[#FAFCFB] p-4">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="font-extrabold text-slate-900">
+                                            {featuredReview.author} · {featuredReview.barangay}
+                                        </span>
+                                        <span className="text-[11px] text-slate-400">
+                                            {featuredReview.timeAgo}
+                                        </span>
                                     </div>
-                                    <span className="rounded-md bg-[#EBF2FA] px-2 py-0.5 text-[10px] font-extrabold text-[#0F2F58]">
-                                        {SAMPLE_REVIEWS[0].packageTag}
-                                    </span>
+                                    <div className="mt-1.5 flex items-center justify-between">
+                                        <div className="flex items-center gap-0.5 text-amber-500">
+                                            {[...Array(featuredReview.stars)].map((_, i) => (
+                                                <Star key={i} className="size-3 fill-amber-500" />
+                                            ))}
+                                        </div>
+                                        <span className="rounded-md bg-[#EBF2FA] px-2 py-0.5 text-[10px] font-extrabold text-[#0F2F58]">
+                                            {featuredReview.packageTag}
+                                        </span>
+                                    </div>
+                                    <p className="mt-2 text-xs leading-relaxed text-slate-700">
+                                        "{featuredReview.quote}"
+                                    </p>
                                 </div>
-                                <p className="mt-2 text-xs leading-relaxed text-slate-700">
-                                    "{SAMPLE_REVIEWS[0].quote}"
-                                </p>
-                            </div>
+                            ) : (
+                                <div className="rounded-xl border border-dashed border-slate-200 bg-[#FAFCFB] p-6 text-center">
+                                    <p className="text-xs font-bold text-slate-600">No verified reviews yet</p>
+                                    <p className="mt-1 text-[11px] text-slate-400">
+                                        Customer reviews appear after verified orders are completed.
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Interactive Toggle for Extended Reviews Panel */}
                             <div className="flex flex-col items-center">

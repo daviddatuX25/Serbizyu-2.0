@@ -348,6 +348,119 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             return $response;
         });
     }
+    public function pause(
+        string $listingId,
+        ResourceActor $actor,
+        int $expectedVersion,
+        string $correlationId,
+    ): array {
+        return DB::transaction(function () use ($listingId, $actor, $expectedVersion, $correlationId): array {
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.pause');
+            $ownerId = $actor->resourceOwnerId;
+            $listing = DB::table('listings')->where('id', $listingId)->lockForUpdate()->first();
+            $this->assertOwnerAndVersion($listing, $listingId, $ownerId, $expectedVersion, $correlationId);
+
+            if ((string) $listing->status !== 'active') {
+                throw new ListingError('INVALID_STATE', 'Only an active listing can be paused.', $correlationId, status: 409);
+            }
+
+            $nextVersion = ((int) $listing->version) + 1;
+            DB::table('listings')->where('id', $listingId)->update([
+                'status' => 'paused',
+                'version' => $nextVersion,
+                'correlation_id' => $correlationId,
+                'updated_at' => now(),
+            ]);
+
+            $this->audits->record(
+                action: 'listing.paused',
+                targetType: 'listing',
+                targetId: $listingId,
+                correlationId: $correlationId,
+                actor: $actor->toActorContext(),
+                expectedVersion: $expectedVersion,
+                previous: ['status' => 'active'],
+                next: ['status' => 'paused'],
+            );
+
+            return $this->ownerProjection($listingId, $ownerId, $correlationId);
+        });
+    }
+
+    public function resume(
+        string $listingId,
+        ResourceActor $actor,
+        int $expectedVersion,
+        string $correlationId,
+    ): array {
+        return DB::transaction(function () use ($listingId, $actor, $expectedVersion, $correlationId): array {
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.resume');
+            $ownerId = $actor->resourceOwnerId;
+            $listing = DB::table('listings')->where('id', $listingId)->lockForUpdate()->first();
+            $this->assertOwnerAndVersion($listing, $listingId, $ownerId, $expectedVersion, $correlationId);
+
+            if ((string) $listing->status !== 'paused') {
+                throw new ListingError('INVALID_STATE', 'Only a paused listing can be resumed.', $correlationId, status: 409);
+            }
+
+            $nextVersion = ((int) $listing->version) + 1;
+            DB::table('listings')->where('id', $listingId)->update([
+                'status' => 'active',
+                'version' => $nextVersion,
+                'correlation_id' => $correlationId,
+                'updated_at' => now(),
+            ]);
+
+            $this->audits->record(
+                action: 'listing.resumed',
+                targetType: 'listing',
+                targetId: $listingId,
+                correlationId: $correlationId,
+                actor: $actor->toActorContext(),
+                expectedVersion: $expectedVersion,
+                previous: ['status' => 'paused'],
+                next: ['status' => 'active'],
+            );
+
+            return $this->ownerProjection($listingId, $ownerId, $correlationId);
+        });
+    }
+
+    public function archive(
+        string $listingId,
+        ResourceActor $actor,
+        int $expectedVersion,
+        string $correlationId,
+    ): array {
+        return DB::transaction(function () use ($listingId, $actor, $expectedVersion, $correlationId): array {
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.archive');
+            $ownerId = $actor->resourceOwnerId;
+            $listing = DB::table('listings')->where('id', $listingId)->lockForUpdate()->first();
+            $this->assertOwnerAndVersion($listing, $listingId, $ownerId, $expectedVersion, $correlationId);
+
+            $nextVersion = ((int) $listing->version) + 1;
+            DB::table('listings')->where('id', $listingId)->update([
+                'status' => 'archived',
+                'archived_at' => now(),
+                'version' => $nextVersion,
+                'correlation_id' => $correlationId,
+                'updated_at' => now(),
+            ]);
+
+            $this->audits->record(
+                action: 'listing.archived',
+                targetType: 'listing',
+                targetId: $listingId,
+                correlationId: $correlationId,
+                actor: $actor->toActorContext(),
+                expectedVersion: $expectedVersion,
+                previous: ['status' => (string) $listing->status],
+                next: ['status' => 'archived'],
+            );
+
+            return $this->ownerProjection($listingId, $ownerId, $correlationId);
+        });
+    }
 
     public function ownerListings(string $ownerUserId, string $correlationId): array
     {

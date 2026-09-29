@@ -149,6 +149,15 @@ export type ListingRecord = {
     terms?: Record<string, unknown> | null;
     prep_lead_time?: 'in_stock' | 'same_day' | 'next_day' | string | null;
     prepLeadTime?: 'in_stock' | 'same_day' | 'next_day' | string | null;
+    rating_summary?: {
+        rating: number;
+        bayesian_rating?: number;
+        reviews_count: number;
+        verified_count?: number;
+        satisfaction_pct?: number;
+        distribution?: Record<number, number>;
+    } | null;
+    reviews?: Array<Record<string, unknown>> | null;
 };
 
 export type WorkCatalogReference = {
@@ -184,10 +193,12 @@ export type PartnerCandidateRecord = {
 
 export type DealChainCatalogRecord = {
     recipeId: string;
+    catalogVersion?: number;
     pattern: string;
     patternCapsule: string[];
     title: string;
     extraFee: number;
+    extraFeeMinor?: number;
     rating: string;
     bookedCount: string;
     desc: string;
@@ -195,10 +206,22 @@ export type DealChainCatalogRecord = {
     applicableListingTypes?: string[];
     applicableWorkShapes?: string[];
     nodes: Array<{
+        key?: string;
+        needKind?: string;
         role: string;
         title: string;
         sub: string;
         type: 'store' | 'delivery' | 'labor' | 'audit';
+        listingId?: string | null;
+        providerName?: string | null;
+        image?: string | null;
+        priceMinor?: number | null;
+    }>;
+    dependencies?: Array<{
+        predecessor: string;
+        successor: string;
+        conditionCode: string;
+        allowBypass?: boolean;
     }>;
 };
 

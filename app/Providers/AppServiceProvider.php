@@ -20,6 +20,7 @@ use App\Modules\Listings\Infrastructure\ListingRepository;
 use App\Modules\OrdersWork\Application\DefaultWorkContractRegistry;
 use App\Modules\OrdersWork\Application\FormDealNeedChildOrder;
 use App\Modules\OrdersWork\Application\WorkContractRegistry;
+use App\Modules\TrustSupport\Application\ListingReviewService;
 use App\Modules\PaymentObligations\Application\OrderPaymentObligationAdapter;
 use App\Shared\Contracts\ActingForAuthorizer;
 use App\Shared\Contracts\ChildOrderFormationPort;
@@ -30,8 +31,11 @@ use App\Shared\Contracts\OAuthLoginPort;
 use App\Shared\Contracts\OrderCapacityPort;
 use App\Shared\Contracts\OrderListingSourcePort;
 use App\Shared\Contracts\OrderPaymentObligationPort;
+use App\Shared\Contracts\ListingReviewReaderPort;
+use App\Shared\Contracts\ListingTelemetryQueryPort;
 use App\Shared\Contracts\OwnerListingReader;
 use App\Shared\Contracts\WorkSpecificationPort;
+use App\Shared\Infrastructure\Telemetry\ListingTelemetryService;
 use App\Shared\Support\EnvironmentValidator;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -65,6 +69,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(WorkContractRegistry::class, DefaultWorkContractRegistry::class);
         $this->app->singleton(WorkSpecificationPort::class, WorkCatalog::class);
         $this->app->singleton(DealChainRecipeCatalogPort::class, DealChainCatalog::class);
+        $this->app->singleton(ListingTelemetryQueryPort::class, ListingTelemetryService::class);
+        $this->app->singleton(ListingReviewReaderPort::class, ListingReviewService::class);
         $this->app->bind(OtpDeliveryChannel::class, function ($app): OtpDeliveryChannel {
             $mode = (string) config('serbizyu.providers.notifications.mode', 'disabled');
             $environment = (string) config('serbizyu.environment', config('app.env', 'local'));

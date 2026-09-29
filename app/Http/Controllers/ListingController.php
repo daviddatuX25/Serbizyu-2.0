@@ -14,14 +14,18 @@ use App\Modules\IdentityAccess\Application\IdentityAccessError;
 use App\Modules\IdentityAccess\Application\ResourceActorResolver;
 use App\Modules\IdentityAccess\Application\RoleAssignmentService;
 use App\Modules\IdentityAccess\Application\SliceStateQuery;
+use App\Modules\Listings\Application\ArchiveListing;
 use App\Modules\Listings\Application\CreateListingDraft;
 use App\Modules\Listings\Application\ListingError;
 use App\Modules\Listings\Application\OwnerListingsQuery;
+use App\Modules\Listings\Application\PauseListing;
 use App\Modules\Listings\Application\ProtectedEditAttempt;
 use App\Modules\Listings\Application\PublicListingDetailQuery;
 use App\Modules\Listings\Application\PublicListingsQuery;
+use App\Modules\Listings\Application\ResumeListing;
 use App\Modules\Listings\Application\SubmitListing;
 use App\Modules\Listings\Application\UpdateListingDraft;
+use App\Shared\Contracts\ListingReviewReaderPort;
 use App\Shared\Support\EnvironmentValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +49,10 @@ final class ListingController
         private readonly DealChainCatalog $dealChainCatalog,
         private readonly WorkCatalog $workCatalog,
         private readonly RoleAssignmentService $roles,
+        private readonly PauseListing $pauseListing,
+        private readonly ResumeListing $resumeListing,
+        private readonly ArchiveListing $archiveListing,
+        private readonly ListingReviewReaderPort $reviews,
     ) {}
 
     public function show(Request $request, string $listing): mixed
@@ -68,6 +76,13 @@ final class ListingController
         $publicListings = $this->publicListings->handle($correlationId);
         $booking = $this->bookingContext($request, $activeListingDetail);
 
+        $reviews = $this->reviews->reviewsForListing($listing, limit: 20);
+        $reviewSummary = $this->reviews->summaryForListing($listing, $activeListingDetail['category_code'] ?? null);
+
+        if ($activeListingDetail !== null) {
+            $activeListingDetail['reviews'] = $reviews;
+            $activeListingDetail['rating_summary'] = $reviewSummary;
+        }
         $slice = [
             ...$state,
             'publicListings' => $publicListings,
@@ -199,6 +214,62 @@ final class ListingController
             return $this->failure($request, $error);
         }
     }
+    public function pause(Request $request, string $listing): mixed
+    {
+        $correlationId = $this->correlationId($request);
+        $expectedVersion = (int) $request->input('expected_version', 1);
+
+        try {
+            $sessionUserId = $this->session->requireUser($request, $correlationId);
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.pause');
+            $paused = $this->pauseListing->handle($listing, $actor, $expectedVersion, $correlationId);
+
+            if ($request->wantsJson()) {
+                return $this->success($request, ['data' => $paused], $correlationId);
+            }
+            return back()->with('notice', 'Listing paused. It is now hidden from public browse.');
+        } catch (IdentityAccessError|ListingError $error) {
+            return $this->failure($request, $error);
+        }
+    }
+
+    public function resume(Request $request, string $listing): mixed
+    {
+        $correlationId = $this->correlationId($request);
+        $expectedVersion = (int) $request->input('expected_version', 1);
+
+        try {
+            $sessionUserId = $this->session->requireUser($request, $correlationId);
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.resume');
+            $resumed = $this->resumeListing->handle($listing, $actor, $expectedVersion, $correlationId);
+
+            if ($request->wantsJson()) {
+                return $this->success($request, ['data' => $resumed], $correlationId);
+            }
+            return back()->with('notice', 'Listing resumed! It is now active on public browse.');
+        } catch (IdentityAccessError|ListingError $error) {
+            return $this->failure($request, $error);
+        }
+    }
+
+    public function archive(Request $request, string $listing): mixed
+    {
+        $correlationId = $this->correlationId($request);
+        $expectedVersion = (int) $request->input('expected_version', 1);
+
+        try {
+            $sessionUserId = $this->session->requireUser($request, $correlationId);
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.archive');
+            $archived = $this->archiveListing->handle($listing, $actor, $expectedVersion, $correlationId);
+
+            if ($request->wantsJson()) {
+                return $this->success($request, ['data' => $archived], $correlationId);
+            }
+            return redirect()->route('listings.mine')->with('notice', 'Listing archived.');
+        } catch (IdentityAccessError|ListingError $error) {
+            return $this->failure($request, $error);
+        }
+    }
 
     public function protectedEditAttempt(Request $request, string $listing): mixed
     {
@@ -264,10 +335,23 @@ final class ListingController
         return back();
     }
 
+    public function create(Request $request): InertiaResponse
+    {
+        $correlationId = $this->correlationId($request);
+        $state = $this->sliceState->for($request);
+
+        return Inertia::render('Listings/CreatePicker', [
+            'session' => $state['session'] ?? null,
+            'readiness' => $state['readiness'] ?? null,
+            'correlationId' => $correlationId,
+        ]);
+    }
+
     public function createService(Request $request): InertiaResponse
     {
         $correlationId = $this->correlationId($request);
         $state = $this->sliceState->for($request);
+        $editingDraft = $this->resolveEditableDraft($request, 'service', $correlationId);
 
         return Inertia::render('Listings/CreateService', [
             'session' => $state['session'] ?? null,
@@ -275,6 +359,10 @@ final class ListingController
             'correlationId' => $correlationId,
             'workCatalog' => $this->workCatalog->frontend(),
             'workOptions' => $this->workCatalog->optionsFor(null, 'service'),
+            'dealChainCatalog' => $this->dealChainCatalog->frontend(),
+            'dealChainOptions' => $this->dealChainCatalog->optionsFor(null, 'service'),
+            'partnerListings' => $this->dealChainCatalog->partnerListings(),
+            'editingDraft' => $editingDraft,
         ]);
     }
 
@@ -282,6 +370,7 @@ final class ListingController
     {
         $correlationId = $this->correlationId($request);
         $state = $this->sliceState->for($request);
+        $editingDraft = $this->resolveEditableDraft($request, 'product', $correlationId);
 
         return Inertia::render('Listings/CreateProduct', [
             'session' => $state['session'] ?? null,
@@ -289,7 +378,36 @@ final class ListingController
             'correlationId' => $correlationId,
             'workCatalog' => $this->workCatalog->frontend(),
             'workOptions' => $this->workCatalog->optionsFor(null, 'product'),
+            'dealChainCatalog' => $this->dealChainCatalog->frontend(),
+            'dealChainOptions' => $this->dealChainCatalog->optionsFor(null, 'product'),
+            'partnerListings' => $this->dealChainCatalog->partnerListings(),
+            'editingDraft' => $editingDraft,
         ]);
+    }
+
+    /** @return array<string, mixed>|null */
+    private function resolveEditableDraft(Request $request, string $expectedType, string $correlationId): ?array
+    {
+        $editId = trim((string) $request->query('edit', ''));
+        if ($editId === '') {
+            return null;
+        }
+
+        $userId = $request->user() !== null ? (string) $request->user()->getAuthIdentifier() : '';
+        if ($userId === '') {
+            abort(401, 'Sign in to edit this listing draft.');
+        }
+
+        $draft = $this->ownerListings->find($editId, $userId, $correlationId);
+        if ($draft === null) {
+            abort(404, 'The requested listing draft was not found.');
+        }
+
+        if (($draft['listing_type'] ?? '') !== $expectedType) {
+            abort(400, "The listing draft is not a {$expectedType} listing.");
+        }
+
+        return $draft;
     }
 
     private function failure(Request $request, IdentityAccessError|ListingError $error): mixed

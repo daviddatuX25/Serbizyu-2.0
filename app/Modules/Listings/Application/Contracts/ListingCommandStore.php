@@ -35,5 +35,29 @@ interface ListingCommandStore
         string $correlationId,
     ): array;
 
+    /** @return array<string, mixed> */
+    public function pause(
+        string $listingId,
+        ResourceActor $actor,
+        int $expectedVersion,
+        string $correlationId,
+    ): array;
+
+    /** @return array<string, mixed> */
+    public function resume(
+        string $listingId,
+        ResourceActor $actor,
+        int $expectedVersion,
+        string $correlationId,
+    ): array;
+
+    /** @return array<string, mixed> */
+    public function archive(
+        string $listingId,
+        ResourceActor $actor,
+        int $expectedVersion,
+        string $correlationId,
+    ): array;
+
     public function recordDenied(string $listingId, ?string $actorId, string $correlationId): void;
 }
