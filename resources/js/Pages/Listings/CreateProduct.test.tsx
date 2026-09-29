@@ -217,4 +217,50 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         expect(screen.queryByText('Deal Chain Pipeline View')).toBeNull();
         expect(screen.queryByText(/Attached Partner Slots/i)).toBeNull();
     });
+
+    it('separates viewing the deal chain flow from setting it as active fulfillment', () => {
+        render(<CreateProduct />);
+
+        // Switch to standard mode
+        const standardBtn = screen.getByRole('button', { name: /^standard$/i });
+        fireEvent.click(standardBtn);
+
+        // Counter Pickup is active default
+        expect(screen.getByText('✓ Active Default')).toBeTruthy();
+
+        // Deal chain pipeline is initially collapsed
+        expect(screen.queryByText('Deal Chain Pipeline View')).toBeNull();
+
+        // Touchpoint 1: Click "View Flow" on Doorstep Delivery
+        const viewFlowBtn = screen.getByTestId('toggle-flow-combo-delivery');
+        expect(viewFlowBtn).toBeTruthy();
+        expect(viewFlowBtn.textContent).toContain('View Flow');
+        fireEvent.click(viewFlowBtn);
+
+        // The flow expands to explore without activating it
+        expect(screen.getByText('Deal Chain Pipeline View')).toBeTruthy();
+        expect(screen.getByText(/Attached Partner Slots/i)).toBeTruthy();
+        expect(screen.getByText(/Exploring flow \(Inactive\)/i)).toBeTruthy();
+
+        // Baseline Counter Pickup remains the active default!
+        expect(screen.getByText('✓ Active Default')).toBeTruthy();
+        expect(screen.queryByText('Switch to Pickup Only')).toBeNull();
+
+        // User can collapse it using "Hide Flow"
+        expect(viewFlowBtn.textContent).toContain('Hide Flow');
+        fireEvent.click(viewFlowBtn);
+        expect(screen.queryByText('Deal Chain Pipeline View')).toBeNull();
+
+        // Touchpoint 2: Click "Select as Active" to set it active
+        const activateBtn = screen.getByRole('button', { name: /Select as Active/i });
+        fireEvent.click(activateBtn);
+
+        // Now it is the active selection and the flow is expanded
+        expect(screen.getAllByText('✓ Active Selection').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getByText(/Active on listing/i)).toBeTruthy();
+        expect(screen.getByText('Deal Chain Pipeline View')).toBeTruthy();
+
+        // Counter pickup reflects that it is no longer the active default
+        expect(screen.getByRole('button', { name: /Switch to Pickup Only/i })).toBeTruthy();
+    });
 });

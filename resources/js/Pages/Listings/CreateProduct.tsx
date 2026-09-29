@@ -4,7 +4,10 @@ import type { FormDataConvertible } from '@inertiajs/core';
 import {
     ArrowLeft,
     ArrowRight,
+    ChevronDown,
+    ChevronUp,
     Eye,
+    Info,
     Package,
     Plus,
     ShieldCheck,
@@ -492,10 +495,28 @@ export default function CreateProduct({
         );
     });
     const [selectedFulfillment, setSelectedFulfillment] = useState<'pickup' | string>(
-        (editingDraft?.deal_chain_specification as any)?.selected_combo_id || 'pickup',
+        (editingDraft?.deal_chain_specification as Record<string, unknown>)?.selected_combo_id as string || 'pickup',
     );
     const [currentComboIdx, setCurrentComboIdx] = useState(0);
+    const [expandedComboIds, setExpandedComboIds] = useState<Record<string, boolean>>(() => {
+        const initialComboId = (editingDraft?.deal_chain_specification as Record<string, unknown>)?.selected_combo_id as string;
+        if (initialComboId && initialComboId !== 'pickup') {
+            return { [initialComboId]: true };
+        }
+        return {};
+    });
     const [attachModalOpen, setAttachModalOpen] = useState(false);
+
+    const isComboExpanded = (comboId: string) => {
+        return !!expandedComboIds[comboId];
+    };
+
+    const toggleComboExpansion = (comboId: string) => {
+        setExpandedComboIds((prev) => ({
+            ...prev,
+            [comboId]: !prev[comboId],
+        }));
+    };
 
     // Slot Picker Modal State
     const [slotPickerState, setSlotPickerState] = useState<{
@@ -1676,7 +1697,10 @@ export default function CreateProduct({
 
                                 {/* Baseline Counter Pickup Card */}
                                 <div
-                                    onClick={() => setSelectedFulfillment('pickup')}
+                                    onClick={() => {
+                                        setSelectedFulfillment('pickup');
+                                        setExpandedComboIds({});
+                                    }}
                                     className={`cursor-pointer rounded-2xl border p-4 transition-all ${
                                         selectedFulfillment === 'pickup'
                                             ? 'border-[#0F2F58] bg-[#F0F5FA] ring-2 ring-[#0F2F58]/20 shadow-xs'
@@ -1707,6 +1731,7 @@ export default function CreateProduct({
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setSelectedFulfillment('pickup');
+                                                setExpandedComboIds({});
                                             }}
                                             className={`cursor-pointer rounded-full px-3 py-1 text-[10px] font-extrabold transition-all ${
                                                 selectedFulfillment === 'pickup'
@@ -1747,6 +1772,7 @@ export default function CreateProduct({
                                 <div className="space-y-3">
                                     {combos.map((c, idx) => {
                                         const isSelected = selectedFulfillment === c.id;
+                                        const isExpanded = isComboExpanded(c.id);
 
                                         return (
                                             <div
@@ -1757,8 +1783,11 @@ export default function CreateProduct({
                                                         : 'border-slate-200 bg-white hover:border-slate-300'
                                                 }`}
                                             >
-                                                {/* Combo Header */}
-                                                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                                {/* Combo Header: Clicking anywhere on header (except buttons) toggles flow expansion without changing active state */}
+                                                <div
+                                                    onClick={() => toggleComboExpansion(c.id)}
+                                                    className="flex cursor-pointer items-center justify-between border-b border-slate-100 pb-3"
+                                                >
                                                     <div className="flex items-center gap-2.5">
                                                         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EBF2FA] text-[#0F2F58]">
                                                             {renderComboIcon(c.icon, 'size-4')}
@@ -1771,6 +1800,15 @@ export default function CreateProduct({
                                                                 <span className="rounded-full bg-[#0F2F58] px-2 py-0.5 text-[9px] font-extrabold text-white">
                                                                     DEAL CHAIN
                                                                 </span>
+                                                                {isSelected ? (
+                                                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800">
+                                                                        ✓ Active Selection
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500">
+                                                                        Available Option
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                             <p className="text-[10.5px] text-slate-500">
                                                                 {c.description}
@@ -1778,23 +1816,62 @@ export default function CreateProduct({
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
+                                                        {/* Touchpoint 1: View / Explore Deal Chain Flow */}
                                                         <button
                                                             type="button"
-                                                            onClick={() => {
-                                                                setSelectedFulfillment(isSelected ? 'pickup' : c.id);
-                                                                setCurrentComboIdx(idx);
+                                                            data-testid={`toggle-flow-${c.id}`}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleComboExpansion(c.id);
+                                                            }}
+                                                            className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold transition-all ${
+                                                                isExpanded
+                                                                    ? 'border-[#0F2F58]/30 bg-[#EBF2FA] text-[#0F2F58]'
+                                                                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                                                            }`}
+                                                            aria-expanded={isExpanded}
+                                                            title={isExpanded ? 'Hide Deal Chain Flow' : 'Explore Deal Chain Flow'}
+                                                        >
+                                                            <Eye className="size-3 text-[#0F2F58]" />
+                                                            <span>{isExpanded ? 'Hide Flow' : 'View Flow'}</span>
+                                                            {isExpanded ? (
+                                                                <ChevronUp className="size-3 text-slate-400" />
+                                                            ) : (
+                                                                <ChevronDown className="size-3 text-slate-400" />
+                                                            )}
+                                                        </button>
+
+                                                        {/* Touchpoint 2: Select as Active for listing */}
+                                                        <button
+                                                            type="button"
+                                                            data-testid={`toggle-active-${c.id}`}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (isSelected) {
+                                                                    setSelectedFulfillment('pickup');
+                                                                    setExpandedComboIds({});
+                                                                } else {
+                                                                    setSelectedFulfillment(c.id);
+                                                                    setCurrentComboIdx(idx);
+                                                                    setExpandedComboIds((prev) => ({ ...prev, [c.id]: true }));
+                                                                }
                                                             }}
                                                             className={`cursor-pointer rounded-full px-3 py-1 text-[10px] font-extrabold transition-all ${
                                                                 isSelected
-                                                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                                                    ? 'bg-[#0F2F58] text-white shadow-xs hover:bg-[#163e72]'
                                                                     : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
                                                             }`}
                                                         >
                                                             {isSelected ? '✓ Active Selection' : 'Select as Active'}
                                                         </button>
+
+                                                        {/* Remove Option */}
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleRemoveCombo(c.id)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleRemoveCombo(c.id);
+                                                            }}
                                                             className="cursor-pointer p-1.5 text-slate-400 hover:text-red-600 transition-colors"
                                                             title="Remove this partnered option"
                                                             aria-label="Remove option"
@@ -1804,9 +1881,37 @@ export default function CreateProduct({
                                                     </div>
                                                 </div>
 
-                                                {/* When this combo is selected: Expand the Deal Chain Pipeline and Slot details */}
-                                                {isSelected ? (
+                                                {/* When flow is expanded: Show the Deal Chain Pipeline and Slot details regardless of active state */}
+                                                {isExpanded ? (
                                                     <>
+                                                        {/* State Guidance Pill inside expanded card */}
+                                                        {isSelected ? (
+                                                            <div className="my-2.5 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-1.5 text-[11px] font-semibold text-emerald-900">
+                                                                <span>✓ Active on listing — Customers will be offered this turnkey deal chain.</span>
+                                                                <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-emerald-800">
+                                                                    Active
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="my-2.5 flex items-center justify-between rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-1.5 text-[11px] text-slate-600">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <Info className="size-3.5 text-slate-400 shrink-0" />
+                                                                    <span>Exploring flow (Inactive) — View pipeline &amp; partners without activating.</span>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setSelectedFulfillment(c.id);
+                                                                        setCurrentComboIdx(idx);
+                                                                        setExpandedComboIds((prev) => ({ ...prev, [c.id]: true }));
+                                                                    }}
+                                                                    className="cursor-pointer font-bold text-[#0F2F58] hover:underline shrink-0 ml-2"
+                                                                >
+                                                                    Select as Active →
+                                                                </button>
+                                                            </div>
+                                                        )}
+
                                                         {/* Compact DAG Canvas View */}
                                                         <div className="my-3 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3 overflow-x-auto [scrollbar-width:none]">
                                                             <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
@@ -1820,11 +1925,11 @@ export default function CreateProduct({
                                                                             Product
                                                                         </span>
                                                                         <span className="font-mono text-[9px] font-bold text-amber-900">
-                                                                            ₱{defaultVariant?.price.toFixed(0) || '180'}
+                                                                            ₱{defaultVariant?.price.toFixed(0) || '0'}
                                                                         </span>
                                                                     </div>
                                                                     <div className="truncate text-xs font-extrabold text-amber-950">
-                                                                        {title.trim() ? (title.length > 12 ? title.slice(0, 11) + '…' : title) : '35uF Cap'}
+                                                                        {title.trim() ? (title.length > 12 ? title.slice(0, 11) + '…' : title) : 'Product'}
                                                                     </div>
                                                                 </div>
 
@@ -1916,8 +2021,17 @@ export default function CreateProduct({
                                                         </div>
                                                     </>
                                                 ) : (
-                                                    <div className="pt-2 flex items-center justify-between text-[11px] text-slate-500">
-                                                        <span>Click "Select as Active" to offer this delivery relay to customers.</span>
+                                                    <div
+                                                        onClick={() => toggleComboExpansion(c.id)}
+                                                        className="cursor-pointer pt-2 flex items-center justify-between text-[11px] text-slate-500 hover:text-slate-800 transition-colors"
+                                                    >
+                                                        <span className="flex items-center gap-1.5">
+                                                            <span className="size-1.5 rounded-full bg-slate-300" />
+                                                            <span>Includes {c.slots.map((s) => s.roleType).join(' + ')} · Click to explore flow &amp; partners</span>
+                                                        </span>
+                                                        <span className="font-bold text-[#0F2F58] flex items-center gap-1">
+                                                            View Flow <ChevronDown className="size-3" />
+                                                        </span>
                                                     </div>
                                                 )}
                                             </div>
