@@ -399,11 +399,11 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         expect(within(studio).getAllByText('Barangay Centro Bicycle Runner').length).toBeGreaterThan(0);
     });
 
-    it('renders preparation lead time controls and governed A4 handoff protocol on baseline counter pickup', () => {
+    it('renders preparation lead time controls on inventory options without leaked protocol jargon', () => {
         render(<CreateProduct />);
         fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
 
-        expect(screen.getByText(/Prep Lead Time:/i)).toBeTruthy();
+        expect(screen.getByText(/Order Preparation Lead Time/i)).toBeTruthy();
         expect(screen.getByRole('button', { name: /In Stock \(Ready\)/i })).toBeTruthy();
         expect(screen.getByRole('button', { name: /1–2 Hours Prep/i })).toBeTruthy();
         expect(screen.getByRole('button', { name: /1 Day Lead Time/i })).toBeTruthy();
@@ -412,9 +412,10 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         fireEvent.click(screen.getByRole('button', { name: /1–2 Hours Prep/i }));
         expect(screen.getByRole('button', { name: /1–2 Hours Prep/i }).className).toContain('bg-[#0F2F58]');
 
-        // Protocol badge and summary
-        expect(screen.getByText('A4 Handoff')).toBeTruthy();
-        expect(screen.getByText(/Sourcing & Prep.*Counter Custody.*Photo Sign-Off/i)).toBeTruthy();
+        // Counter pickup is clean without leaked internal protocol codes
+        expect(screen.getByText('Counter Pickup at Stall')).toBeTruthy();
+        expect(screen.queryByText('A4 Handoff')).toBeNull();
+        expect(screen.queryByText(/Counter Custody/i)).toBeNull();
     });
 
     it('submits draft with canonical A4 work shape, work_catalog_code, and governed milestone stages', () => {

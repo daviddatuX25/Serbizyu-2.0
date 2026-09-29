@@ -7,6 +7,7 @@ import {
     ChevronDown,
     ChevronUp,
     Eye,
+    Info,
     Package,
     Plus,
     ShieldCheck,
@@ -1763,6 +1764,56 @@ export default function CreateProduct({
                                             </div>
                                         ))}
                                     </div>
+                                    {/* Order Preparation Lead Time */}
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
+                                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-xs font-bold text-slate-800">
+                                                        Order Preparation Lead Time
+                                                    </span>
+                                                </div>
+                                                <p className="text-[11px] text-slate-500">
+                                                    How soon is this item ready for customer pickup or courier hand-off?
+                                                </p>
+                                            </div>
+                                            <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPrepLeadTime('in_stock')}
+                                                    className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                                                        prepLeadTime === 'in_stock'
+                                                            ? 'bg-[#0F2F58] text-white shadow-xs'
+                                                            : 'text-slate-600 hover:text-slate-900'
+                                                    }`}
+                                                >
+                                                    In Stock (Ready)
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPrepLeadTime('same_day')}
+                                                    className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                                                        prepLeadTime === 'same_day'
+                                                            ? 'bg-[#0F2F58] text-white shadow-xs'
+                                                            : 'text-slate-600 hover:text-slate-900'
+                                                    }`}
+                                                >
+                                                    1–2 Hours Prep
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPrepLeadTime('next_day')}
+                                                    className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                                                        prepLeadTime === 'next_day'
+                                                            ? 'bg-[#0F2F58] text-white shadow-xs'
+                                                            : 'text-slate-600 hover:text-slate-900'
+                                                    }`}
+                                                >
+                                                    1 Day Lead Time
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {builderMode === 'guided' && (
@@ -1853,81 +1904,30 @@ export default function CreateProduct({
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex items-start gap-3">
                                             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-900">
-                                                <Store className="size-5" />
+                                                <Store className="size-5 text-amber-600" />
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <h3 className="text-xs font-extrabold text-[#0F2F58]">
-                                                        Baseline: Counter Pickup at Stall
+                                                        Counter Pickup at Stall
                                                     </h3>
                                                     <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9.5px] font-extrabold text-emerald-800">
                                                         Always Active · Free
                                                     </span>
                                                 </div>
-                                                <p className="mt-0.5 text-[11px] text-slate-600">
-                                                    Direct counter collection at <span className="font-semibold text-slate-900">{stallLocation}</span>
-                                                </p>
-                                                <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
-                                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                                                        Prep Lead Time:
-                                                    </span>
-                                                    <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs">
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setPrepLeadTime('in_stock');
-                                                            }}
-                                                            className={`cursor-pointer rounded-md px-2 py-0.5 text-[10px] font-bold transition-all ${
-                                                                prepLeadTime === 'in_stock'
-                                                                    ? 'bg-[#0F2F58] text-white shadow-2xs'
-                                                                    : 'text-slate-600 hover:text-slate-900'
-                                                            }`}
+                                                <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500">
+                                                    <span>Direct in-person pickup</span>
+                                                    {stallLocation ? (
+                                                        <span
+                                                            className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-700 cursor-help"
+                                                            title={`Collection point: ${stallLocation}`}
                                                         >
-                                                            In Stock (Ready)
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setPrepLeadTime('same_day');
-                                                            }}
-                                                            className={`cursor-pointer rounded-md px-2 py-0.5 text-[10px] font-bold transition-all ${
-                                                                prepLeadTime === 'same_day'
-                                                                    ? 'bg-[#0F2F58] text-white shadow-2xs'
-                                                                    : 'text-slate-600 hover:text-slate-900'
-                                                            }`}
-                                                        >
-                                                            1–2 Hours Prep
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setPrepLeadTime('next_day');
-                                                            }}
-                                                            className={`cursor-pointer rounded-md px-2 py-0.5 text-[10px] font-bold transition-all ${
-                                                                prepLeadTime === 'next_day'
-                                                                    ? 'bg-[#0F2F58] text-white shadow-2xs'
-                                                                    : 'text-slate-600 hover:text-slate-900'
-                                                            }`}
-                                                        >
-                                                            1 Day Lead Time
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-50/90 px-2 py-1 border border-slate-200/60 text-[10px]">
-                                                    <div className="flex items-center gap-1.5 text-slate-600">
-                                                        <span className="font-extrabold uppercase text-[8.5px] tracking-wider text-[#0F2F58]">
-                                                            Protocol:
+                                                            <Info className="size-3 text-slate-400 shrink-0" />
+                                                            <span className="truncate max-w-[150px]">{stallLocation}</span>
                                                         </span>
-                                                        <span className="font-medium text-slate-700">
-                                                            Sourcing &amp; Prep <span className="text-slate-400">➔</span> Counter Custody <span className="text-slate-400">➔</span> Photo Sign-Off
-                                                        </span>
-                                                    </div>
-                                                    <span className="rounded-full bg-emerald-50 px-1.5 py-0.2 text-[8.5px] font-bold text-emerald-800 border border-emerald-200/60">
-                                                        A4 Handoff
-                                                    </span>
+                                                    ) : (
+                                                        <span className="text-[10px] text-slate-400">(Stall location)</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -2095,23 +2095,42 @@ export default function CreateProduct({
                                                             Customize Deal Chain Nodes ({c.slots.length + 1})
                                                         </button>
                                                         {/* Compact DAG Canvas View */}
+                                                        {/* Compact Tactile Pipeline Canvas View */}
                                                         <div className="my-2 rounded-xl border border-slate-200 bg-[#F8FAFC] p-2.5 overflow-x-auto [scrollbar-width:none]">
-                                                            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                                                                Deal Chain Pipeline View
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                                                    Deal Chain Pipeline View
+                                                                </span>
+                                                                <span className="text-[9.5px] font-bold text-slate-400">
+                                                                    {c.slots.length + 1} Relay Stages
+                                                                </span>
                                                             </div>
                                                             <div className="flex items-center gap-2 min-w-max">
-                                                                {/* Product Node */}
-                                                                <div className="flex flex-col gap-0.5 rounded-lg border border-amber-200 bg-amber-50/80 px-2.5 py-1.5 shadow-2xs min-w-[95px]">
-                                                                    <div className="flex items-center justify-between gap-1">
-                                                                        <span className="rounded bg-amber-200/80 px-1 py-0.2 text-[7.5px] font-extrabold text-amber-900 uppercase">
-                                                                            Product
-                                                                        </span>
-                                                                        <span className="font-mono text-[9px] font-bold text-amber-900">
-                                                                            ₱{defaultVariant?.price.toFixed(0) || '0'}
-                                                                        </span>
+                                                                {/* Stage 1: Product Node (Your Listing) */}
+                                                                <div className="flex items-center gap-2.5 rounded-xl border border-amber-300 bg-white p-2 shadow-2xs min-w-[155px]">
+                                                                    <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-amber-50 border border-amber-200">
+                                                                        {media.items?.[0]?.url || media.cover_thumbnail_url ? (
+                                                                            <img
+                                                                                src={media.items?.[0]?.url || media.cover_thumbnail_url || ''}
+                                                                                alt={title || 'Product'}
+                                                                                className="h-full w-full object-cover"
+                                                                            />
+                                                                        ) : (
+                                                                            <Store className="size-4 text-amber-600" />
+                                                                        )}
                                                                     </div>
-                                                                    <div className="truncate text-xs font-extrabold text-amber-950">
-                                                                        {title.trim() ? (title.length > 12 ? title.slice(0, 11) + '…' : title) : 'Product'}
+                                                                    <div className="min-w-0">
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span className="rounded bg-amber-100 border border-amber-300 px-1.5 py-0.2 text-[8px] font-extrabold text-amber-900 uppercase">
+                                                                                Product
+                                                                            </span>
+                                                                            <span className="font-mono text-[9.5px] font-bold text-amber-950">
+                                                                                ₱{defaultVariant?.price.toFixed(0) || '0'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="truncate text-xs font-extrabold text-slate-900 mt-0.5 max-w-[110px]">
+                                                                            {title.trim() ? title : 'Your Product'}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
 
@@ -2119,36 +2138,53 @@ export default function CreateProduct({
                                                                 {c.slots.map((s, sIdx) => {
                                                                     const isCourier = s.roleType === 'COURIER';
                                                                     const isStore = s.roleType === 'STORE';
-                                                                    const nodeBg = isCourier
-                                                                        ? 'bg-[#E0F2FE]/70 border-sky-200 text-sky-900'
+
+                                                                    const meta = isCourier
+                                                                        ? {
+                                                                              label: 'Courier',
+                                                                              border: 'border-sky-300',
+                                                                              badge: 'bg-sky-100 border-sky-300 text-sky-900',
+                                                                              icon: <Truck className="size-4 text-sky-600" />,
+                                                                              accent: 'bg-sky-50',
+                                                                          }
                                                                         : isStore
-                                                                          ? 'bg-amber-50/80 border-amber-200 text-amber-900'
-                                                                          : 'bg-[#DCFCE7]/70 border-emerald-200 text-emerald-900';
-                                                                    const badgeBg = isCourier
-                                                                        ? 'bg-[#0284C7] text-white'
-                                                                        : isStore
-                                                                          ? 'bg-amber-600 text-white'
-                                                                          : 'bg-[#16A34A] text-white';
+                                                                          ? {
+                                                                                label: 'Store',
+                                                                                border: 'border-amber-300',
+                                                                                badge: 'bg-amber-100 border-amber-300 text-amber-900',
+                                                                                icon: <Store className="size-4 text-amber-600" />,
+                                                                                accent: 'bg-amber-50',
+                                                                            }
+                                                                          : {
+                                                                                label: 'Labor',
+                                                                                border: 'border-emerald-300',
+                                                                                badge: 'bg-emerald-100 border-emerald-300 text-emerald-900',
+                                                                                icon: <Wrench className="size-4 text-emerald-600" />,
+                                                                                accent: 'bg-emerald-50',
+                                                                            };
 
                                                                     return (
                                                                         <React.Fragment key={s.id || sIdx}>
-                                                                            <div className="flex shrink-0 items-center text-slate-300">
-                                                                                <svg width="16" height="10" viewBox="0 0 16 10" fill="none" className="shrink-0">
-                                                                                    <line x1="0" y1="5" x2="16" y2="5" stroke="#10B981" strokeWidth="1.8" strokeDasharray="3 2" />
-                                                                                </svg>
+                                                                            <div className="flex flex-col items-center px-0.5 text-slate-400 font-bold text-xs">
+                                                                                ➔
                                                                             </div>
 
-                                                                            <div className={`flex flex-col gap-0.5 rounded-lg border px-2.5 py-1.5 shadow-2xs min-w-[105px] ${nodeBg}`}>
-                                                                                <div className="flex items-center justify-between gap-1">
-                                                                                    <span className={`rounded px-1 py-0.2 text-[7.5px] font-extrabold uppercase ${badgeBg}`}>
-                                                                                        {s.roleType}
-                                                                                    </span>
-                                                                                    <span className="font-mono text-[9px] font-bold">
-                                                                                        +₱{s.fee.toFixed(0)}
-                                                                                    </span>
+                                                                            <div className={`flex items-center gap-2.5 rounded-xl border ${meta.border} bg-white p-2 shadow-2xs min-w-[160px]`}>
+                                                                                <div className={`flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ${meta.accent} border border-slate-200/80`}>
+                                                                                    {meta.icon}
                                                                                 </div>
-                                                                                <div className="truncate text-xs font-extrabold">
-                                                                                    {getShortPartnerName(s.providerName)}
+                                                                                <div className="min-w-0">
+                                                                                    <div className="flex items-center gap-1">
+                                                                                        <span className={`rounded border px-1.5 py-0.2 text-[8px] font-extrabold uppercase ${meta.badge}`}>
+                                                                                            {meta.label}
+                                                                                        </span>
+                                                                                        <span className="font-mono text-[9.5px] font-bold text-slate-700">
+                                                                                            +₱{s.fee.toFixed(0)}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div className="truncate text-xs font-extrabold text-slate-900 mt-0.5 max-w-[110px]">
+                                                                                        {getShortPartnerName(s.providerName) || `Open ${meta.label}`}
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </React.Fragment>
