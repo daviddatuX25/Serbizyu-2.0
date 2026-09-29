@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Catalogs\Application\WorkCatalog;
+use Database\Seeders\WorkCatalogSeeder;
 use App\Models\User;
 use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
 use App\Modules\Listings\Application\CreateListingDraft;
@@ -318,29 +320,44 @@ it('rejects draft creation when work shape is missing instead of inferring from 
     }
 });
 
-it('serializes capability profile family version creation without racing version numbers', function (): void {
+it('keeps supported service capability profile shapes active concurrently', function (): void {
     listingLifecyclePgsqlOrSkip();
 
     $catalog = app(GovernedCatalogService::class);
     $correlationId = (string) Str::uuid7();
+    $pins = [];
 
-    // Call ensurePublished with different shapes sequentially to simulate capability evolution
-    $pin1 = $catalog->ensurePublished('home-help', 'service', 'A1', $correlationId);
-    expect($pin1['capability_profile_family_code'])->toBe('service_listing')
-        ->and($pin1['capability_profile_business_version'])->toBeGreaterThanOrEqual(1);
+    foreach (['A1', 'A3', 'A9'] as $shape) {
+        $pins[$shape] = $catalog->ensurePublished('home-help', 'service', $shape, $correlationId);
+    }
 
-    $pin2 = $catalog->ensurePublished('home-help', 'service', 'A3', $correlationId);
-    expect($pin2['capability_profile_family_code'])->toBe('service_listing')
-        ->and($pin2['capability_profile_business_version'])->toBe($pin1['capability_profile_business_version'] + 1);
+    expect($pins['A1']['capability_profile_family_code'])->toBe('service_listing')
+        ->and($pins['A3']['capability_profile_family_code'])->toBe('service_listing_a3')
+        ->and($pins['A9']['capability_profile_family_code'])->toBe('service_listing_a9')
+        ->and($catalog->activeWorkShapesFor('home-help', 'service'))->toBe(['A1', 'A3', 'A9']);
 
-    $pin3 = $catalog->ensurePublished('home-help', 'service', 'A9', $correlationId);
-    expect($pin3['capability_profile_family_code'])->toBe('service_listing')
-        ->and($pin3['capability_profile_business_version'])->toBe($pin2['capability_profile_business_version'] + 1);
+    foreach ($pins as $shape => $pin) {
+        expect(DB::table('capability_profiles')
+            ->where('id', $pin['capability_profile_id'])
+            ->where('status', 'active')
+            ->where('work_shape', $shape)
+            ->exists())->toBeTrue();
+    }
 
-    // Call ensurePublished again with A9 (should reuse existing active A9 without bumping version)
-    $pin4 = $catalog->ensurePublished('home-help', 'service', 'A9', $correlationId);
-    expect($pin4['capability_profile_business_version'])->toBe($pin3['capability_profile_business_version'])
-        ->and($pin4['capability_profile_id'])->toBe($pin3['capability_profile_id']);
+    $beforeResolve = DB::table('capability_profiles')
+        ->whereIn('id', array_column($pins, 'capability_profile_id'))
+        ->orderBy('id')
+        ->get(['id', 'status', 'business_version'])
+        ->toArray();
+    $resolved = $catalog->resolvePublished('home-help', 'service', $correlationId, 'A3');
+    $afterResolve = DB::table('capability_profiles')
+        ->whereIn('id', array_column($pins, 'capability_profile_id'))
+        ->orderBy('id')
+        ->get(['id', 'status', 'business_version'])
+        ->toArray();
+
+    expect($resolved['capability_profile_id'])->toBe($pins['A3']['capability_profile_id'])
+        ->and($beforeResolve)->toEqual($afterResolve);
 });
 
 it('ensures fixture listing_versions pins immutable category and capability profile family and business versions', function (): void {
@@ -362,39 +379,262 @@ it('ensures fixture listing_versions pins immutable category and capability prof
     $terms = json_decode((string) $version->terms, true);
     expect($terms['work_shape'] ?? null)->toBe('A1');
 });
-it('preserves a newer active fixture profile and immutable v1 pins', function (): void {
+it('preserves fixture v1 pins while different active shapes remain readable', function (): void {
     listingLifecyclePgsqlOrSkip();
 
     $fixtures = app(FixtureRepository::class);
     $fixtures->ensure();
-
-    $newer = app(GovernedCatalogService::class)->ensurePublished(
-        'home-help',
-        'service',
-        'A3',
-        (string) Str::uuid7(),
-    );
     $historicalBefore = DB::table('capability_profiles')
         ->where('profile_family_code', 'service_listing')
         ->where('business_version', 1)
         ->first();
-
+    $versionBefore = DB::table('listing_versions')
+        ->where('id', FixtureRepository::ACTIVE_VERSION_ID)
+        ->first();
+    $catalog = app(GovernedCatalogService::class);
+    $a3 = $catalog->ensurePublished('home-help', 'service', 'A3', (string) Str::uuid7());
+    $a9 = $catalog->ensurePublished('home-help', 'service', 'A9', (string) Str::uuid7());
     $fixtures->ensure();
 
-    $activeProfiles = DB::table('capability_profiles')
-        ->where('profile_family_code', 'service_listing')
-        ->where('status', 'active')
-        ->get();
     $historicalAfter = DB::table('capability_profiles')
         ->where('profile_family_code', 'service_listing')
         ->where('business_version', 1)
         ->first();
-    $listing = DB::table('listings')->where('id', FixtureRepository::ACTIVE_LISTING_ID)->first();
+    $versionAfter = DB::table('listing_versions')
+        ->where('id', FixtureRepository::ACTIVE_VERSION_ID)
+        ->first();
+    $activeShapes = DB::table('capability_profiles')
+        ->whereIn('profile_family_code', ['service_listing', 'service_listing_a3', 'service_listing_a9'])
+        ->where('status', 'active')
+        ->orderBy('work_shape')
+        ->pluck('work_shape')
+        ->all();
 
-    expect($activeProfiles)->toHaveCount(1)
-        ->and($activeProfiles->first()->id)->toBe($newer['capability_profile_id'])
+    expect($activeShapes)->toBe(['A1', 'A3', 'A9'])
         ->and($historicalAfter->id)->toBe($historicalBefore->id)
         ->and($historicalAfter->status)->toBe($historicalBefore->status)
         ->and($historicalAfter->work_shape)->toBe($historicalBefore->work_shape)
-        ->and($listing->capability_profile_id)->toBe($newer['capability_profile_id']);
+        ->and($versionAfter->id)->toBe(FixtureRepository::ACTIVE_VERSION_ID)
+        ->and($versionAfter->capability_profile_family_code)->toBe('service_listing')
+        ->and($versionAfter->terms)->toBe($versionBefore->terms)
+        ->and((json_decode((string) $versionAfter->terms, true)['work_shape'] ?? null))->toBe('A1')
+        ->and($catalog->resolvePublished('home-help', 'service', (string) Str::uuid7(), 'A3')['capability_profile_id'])->toBe($a3['capability_profile_id'])
+        ->and($catalog->resolvePublished('home-help', 'service', (string) Str::uuid7(), 'A9')['capability_profile_id'])->toBe($a9['capability_profile_id']);
+});
+it('preserves selected Work Set terms on title-only updates and rejects a mismatched version', function (): void {
+    listingLifecyclePgsqlOrSkip();
+    app(WorkCatalogSeeder::class)->run();
+
+    $catalog = app(WorkCatalog::class);
+    $set = $catalog->publishedWorkSet('set-repairs-plumbing-leak', 1);
+    expect($set)->not->toBeNull();
+
+    $user = User::factory()->create();
+    $correlationId = (string) Str::uuid7();
+    $actor = new ResourceActor($user->id, $user->id);
+    $input = [
+        'title' => 'Tagudin plumbing leak repair',
+        'description' => 'Diagnose and repair a household water leak safely.',
+        'category_code' => 'repairs',
+        'listing_type' => 'service',
+        'work_shape' => 'A1',
+        'work_catalog_code' => 'set-repairs-plumbing-leak',
+        'work_set_version' => 1,
+        'milestone_stages' => $set['steps'],
+    ];
+
+    $created = app(CreateListingDraft::class)->handle($actor, $input, $correlationId);
+    $versionOne = DB::table('listing_versions')
+        ->where('listing_id', $created['id'])
+        ->where('version_number', 1)
+        ->first();
+    $termsV1 = json_decode((string) $versionOne->terms, true);
+
+    $updated = app(UpdateListingDraft::class)->handle(
+        (string) $created['id'],
+        $actor,
+        (int) $created['expected_version'],
+        ['title' => 'Updated plumbing repair title'],
+        $correlationId,
+    );
+    $versionTwo = DB::table('listing_versions')
+        ->where('listing_id', $created['id'])
+        ->where('version_number', 2)
+        ->first();
+    $termsV2 = json_decode((string) $versionTwo->terms, true);
+
+    expect($termsV2['work_catalog_code'])->toBe($termsV1['work_catalog_code'])
+        ->and($termsV2['work_set_version'])->toBe($termsV1['work_set_version'])
+        ->and($termsV2['milestone_stages'])->toBe($termsV1['milestone_stages'])
+        ->and($termsV2['work_specification'])->toBe($termsV1['work_specification'])
+        ->and($updated['version'])->toBe(2);
+
+    expect(fn () => app(CreateListingDraft::class)->handle(
+        $actor,
+        [...$input, 'work_set_version' => 2],
+        (string) Str::uuid7(),
+    ))->toThrow(ListingError::class);
+});
+
+it('persists listing media and deal chain specifications and preserves them across partial updates', function (): void {
+    listingLifecyclePgsqlOrSkip();
+    app(WorkCatalogSeeder::class)->run();
+
+    $user = User::factory()->create();
+    $correlationId = (string) Str::uuid7();
+    $actor = new ResourceActor($user->id, $user->id);
+
+    $mediaPayload = [
+        'cover_thumbnail_url' => '/photos/ac-clean.jpg',
+        'has_video' => true,
+        'items' => [
+            [
+                'id' => 'photo-cover-1',
+                'kind' => 'photo',
+                'url' => '/photos/ac-clean.jpg',
+                'thumbnail_url' => '/photos/ac-clean.jpg',
+                'caption' => 'Indoor split coil foam wash',
+                'mime_type' => 'image/webp',
+                'is_cover' => true,
+            ],
+            [
+                'id' => 'video-showcase-1',
+                'kind' => 'video',
+                'url' => '/videos/ac-clean-demo.mp4',
+                'thumbnail_url' => '/photos/ac-clean.jpg',
+                'caption' => '15-second pressure wash clip',
+                'mime_type' => 'video/mp4',
+                'is_cover' => false,
+            ],
+        ],
+    ];
+
+    $dealChainCombinations = [
+        [
+            'id' => 'combo-custom-1',
+            'title' => 'Custom Parts + Courier + Labor',
+            'recipeId' => 'turnkey_parts',
+            'catalogVersion' => 1,
+            'isCustom' => true,
+            'isDefault' => true,
+            'nodes' => [
+                ['role' => 'STORE', 'title' => '35uF Cap', 'sub' => '₱180', 'type' => 'store', 'listingId' => 's-1'],
+                ['role' => 'COURIER', 'title' => 'Danny Exp', 'sub' => '₱35', 'type' => 'delivery', 'listingId' => 'c-1'],
+                ['role' => 'LABOR', 'title' => 'Your Service', 'sub' => '₱450', 'type' => 'labor'],
+            ],
+        ],
+    ];
+
+    $dealChainSpecification = [
+        'based_on_recipe_code' => 'turnkey_parts',
+        'based_on_catalog_version' => 1,
+        'is_custom_variation' => true,
+        'combination_count' => 1,
+    ];
+
+    $created = app(CreateListingDraft::class)->handle($actor, [
+        'title' => 'Inverter AC Deep Clean with Video & Deal Chain',
+        'description' => 'Complete indoor and outdoor unit cleaning with photo and video proof.',
+        'category_code' => 'repairs',
+        'listing_type' => 'service',
+        'work_shape' => 'A1',
+        'work_catalog_code' => 'set-repairs-inverter-clean',
+        'work_set_version' => 1,
+        'media' => $mediaPayload,
+        'deal_chain_combinations' => $dealChainCombinations,
+        'deal_chain_specification' => $dealChainSpecification,
+    ], $correlationId);
+
+    expect($created['cover_thumbnail_url'])->toBe('/photos/ac-clean.jpg')
+        ->and($created['has_video'])->toBeTrue()
+        ->and($created['media']['items'])->toHaveCount(2)
+        ->and($created['deal_chain_combinations'])->toHaveCount(1)
+        ->and($created['deal_chain_specification']['based_on_recipe_code'])->toBe('turnkey_parts')
+        ->and($created['deal_chain_specification']['is_custom_variation'])->toBeTrue();
+
+    $updated = app(UpdateListingDraft::class)->handle(
+        (string) $created['id'],
+        $actor,
+        (int) $created['expected_version'],
+        ['title' => 'Inverter AC Deep Clean Updated Title'],
+        $correlationId,
+    );
+
+    expect($updated['cover_thumbnail_url'])->toBe('/photos/ac-clean.jpg')
+        ->and($updated['has_video'])->toBeTrue()
+        ->and($updated['media']['items'])->toHaveCount(2)
+        ->and($updated['deal_chain_combinations'])->toEqual($dealChainCombinations)
+        ->and($updated['deal_chain_specification'])->toEqual($dealChainSpecification);
+});
+
+it('persists stall_location and structured geography on product draft create and update', function (): void {
+    listingLifecyclePgsqlOrSkip();
+
+    $user = User::factory()->create();
+    $correlationId = (string) Str::uuid7();
+    $actor = new ResourceActor($user->id, $user->id);
+
+    $created = app(CreateListingDraft::class)->handle($actor, [
+        'title' => 'Tagudin Bibingka Fresh Batch',
+        'description' => 'Freshly baked native rice cake delicacy with salted egg.',
+        'category_code' => 'local-food',
+        'listing_type' => 'product',
+        'work_shape' => 'A4',
+        'stall_location' => 'Tagudin Public Market Stall #14, Poblacion',
+        'geography' => [
+            'area_code' => 'Tagudin',
+            'barangay_code' => '0102933037',
+            'barangay_name' => 'Rizal',
+            'street_address' => 'Tagudin Public Market Stall #14',
+            'coordinates' => [
+                'lat' => 16.9388,
+                'lng' => 120.4439,
+                'accuracy_m' => 8,
+                'source' => 'gps',
+                'captured_at' => '2026-09-28T12:00:00Z',
+            ],
+        ],
+    ], $correlationId);
+
+    expect($created['stall_location'])->toBe('Tagudin Public Market Stall #14, Poblacion')
+        ->and($created['geography']['barangay_code'])->toBe('0102933037')
+        ->and($created['geography']['coordinates']['lat'])->toBe(16.9388)
+        ->and($created['geography']['coordinates']['source'])->toBe('gps')
+        ->and($created['geography']['coordinates']['accuracy_m'])->toBe(8);
+
+    $row = DB::table('listings')->where('id', $created['id'])->first();
+    $geo = json_decode((string) $row->geography, true);
+    expect($geo['stall_location'])->toBe('Tagudin Public Market Stall #14, Poblacion')
+        ->and($geo['coordinates']['lat'])->toBe(16.9388)
+        ->and($geo['coordinates']['source'])->toBe('gps')
+        ->and($geo['region_code'])->toBe('0100000000')
+        ->and($geo['province_code'])->toBe('0102900000')
+        ->and($geo['municipality_code'])->toBe('0102933000');
+
+    $updated = app(UpdateListingDraft::class)->handle(
+        (string) $created['id'],
+        $actor,
+        (int) $created['expected_version'],
+        [
+            'stall_location' => 'Tagudin Commercial Center Stall #22, Rizal',
+            'geography' => [
+                'barangay_code' => '0102933037',
+                'barangay_name' => 'Rizal',
+                'coordinates' => [
+                    'lat' => 16.9412,
+                    'lng' => 120.4485,
+                    'accuracy_m' => 5,
+                    'source' => 'manual',
+                    'captured_at' => '2026-09-28T12:05:00Z',
+                ],
+            ],
+        ],
+        $correlationId,
+    );
+
+    expect($updated['stall_location'])->toBe('Tagudin Commercial Center Stall #22, Rizal')
+        ->and($updated['geography']['barangay_code'])->toBe('0102933037')
+        ->and($updated['geography']['coordinates']['lat'])->toBe(16.9412)
+        ->and($updated['geography']['coordinates']['source'])->toBe('manual')
+        ->and($updated['geography']['coordinates']['accuracy_m'])->toBe(5);
 });

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesListingGeography;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class UpdateListingDraftRequest extends FormRequest
 {
+    use ValidatesListingGeography;
     public function authorize(): bool
     {
         return true;
@@ -16,7 +18,7 @@ final class UpdateListingDraftRequest extends FormRequest
     /** @return array<string, list<string>> */
     public function rules(): array
     {
-        return [
+        return array_merge([
             'expected_version' => ['required', 'integer', 'min:1'],
             'title' => ['sometimes', 'string', 'min:3', 'max:120'],
             'description' => ['sometimes', 'string', 'min:10', 'max:4000'],
@@ -30,8 +32,13 @@ final class UpdateListingDraftRequest extends FormRequest
             'addons' => ['nullable', 'array'],
             'milestone_stages' => ['nullable', 'array'],
             'work_catalog_code' => ['nullable', 'string', 'max:120'],
+            'work_set_version' => ['nullable', 'integer', 'min:1'],
             'inclusions' => ['nullable', 'array'],
             'variants' => ['nullable', 'array'],
-        ];
+            'media' => ['nullable', 'array'],
+            'deal_chain_combinations' => ['nullable', 'array'],
+            'deal_chain_specification' => ['nullable', 'array'],
+            'stall_location' => ['nullable', 'string', 'max:255'],
+        ], $this->geographyRules());
     }
 }

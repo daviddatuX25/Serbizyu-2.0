@@ -43,6 +43,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
     public function createDraft(ResourceActor $actor, array $input, string $correlationId): array
     {
         $this->ensureStorage($correlationId);
+        $input = $this->withResolvedWorkShape($input, $correlationId);
         $this->validate($input, $correlationId);
 
         return DB::transaction(function () use ($actor, $input, $correlationId): array {
@@ -65,7 +66,24 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'category_id' => $pins['category_id'],
                 'listing_type' => (string) $input['listing_type'],
                 'status' => 'draft',
-                'geography' => json_encode(['area_code' => 'Tagudin'], JSON_THROW_ON_ERROR),
+                'geography' => json_encode(array_merge(
+                    [
+                        'area_code' => 'Tagudin',
+                        'region_code' => '0100000000',
+                        'region_name' => 'Region I (Ilocos Region)',
+                        'province_code' => '0102900000',
+                        'province_name' => 'Ilocos Sur',
+                        'municipality_code' => '0102933000',
+                        'municipality_name' => 'Tagudin',
+                        'postal_code' => '2714',
+                    ],
+                    (!empty($input['geography']) && is_array($input['geography'])) ? $input['geography'] : [],
+                    !empty($input['stall_location']) ? [
+                        'stall_location' => (string) $input['stall_location'],
+                        'address_line_1' => (string) $input['stall_location'],
+                        'street_address' => (string) $input['stall_location'],
+                    ] : []
+                ), JSON_THROW_ON_ERROR),
                 'current_version' => 1,
                 'review_status' => 'not_required',
                 'version' => 1,
@@ -118,7 +136,22 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'category_code' => (string) ($terms['category_code'] ?? ''),
                 'listing_type' => (string) $listing->listing_type,
                 'work_shape' => (string) ($terms['work_shape'] ?? ''),
+                'work_catalog_code' => $terms['work_catalog_code'] ?? null,
+                'work_set_version' => $terms['work_set_version'] ?? null,
+                'milestone_stages' => $terms['milestone_stages'] ?? null,
+                'work_specification' => $terms['work_specification'] ?? null,
+                'package_tiers' => $terms['package_tiers'] ?? null,
+                'addons' => $terms['addons'] ?? null,
+                'inclusions' => $terms['inclusions'] ?? null,
+                'variants' => $terms['variants'] ?? null,
+                'pricing_mode' => $terms['pricing_mode'] ?? null,
+                'media' => $terms['media'] ?? null,
+                'deal_chain_combinations' => $terms['deal_chain_combinations'] ?? null,
+                'deal_chain_specification' => $terms['deal_chain_specification'] ?? null,
+                'stall_location' => $terms['stall_location'] ?? null,
+                'geography' => $terms['geography'] ?? null,
             ], $input);
+            $payload = $this->withResolvedWorkShape($payload, $correlationId);
             $this->validate($payload, $correlationId);
 
             $now = now();
@@ -132,7 +165,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             );
             $this->insertVersion($listingId, $nextVersion, $actor->actorUserId, array_merge($payload, ['work_shape' => $workShape]), $correlationId, $now, $pins);
 
-            Listing::query()->where('id', $listingId)->update([
+            $updateFields = [
                 'category_id' => $pins['category_id'],
                 'capability_profile_id' => $pins['capability_profile_id'],
                 'listing_type' => (string) $payload['listing_type'],
@@ -140,7 +173,28 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'version' => $nextVersion,
                 'correlation_id' => $correlationId,
                 'updated_at' => $now,
-            ]);
+            ];
+
+            if (array_key_exists('stall_location', $payload) || array_key_exists('geography', $payload)) {
+                $currentGeo = is_array($listing->geography)
+                    ? $listing->geography
+                    : (json_decode((string) ($listing->geography ?? ''), true) ?: ['area_code' => 'Tagudin']);
+                $incomingGeo = (!empty($payload['geography']) && is_array($payload['geography'])) ? $payload['geography'] : [];
+                $stallLocation = (string) ($payload['stall_location'] ?? ($incomingGeo['stall_location'] ?? ($incomingGeo['address_line_1'] ?? '')));
+                $streetAddress = (string) ($incomingGeo['street_address'] ?? ($incomingGeo['address_line_1'] ?? $stallLocation));
+
+                $currentGeo = array_merge($currentGeo, $incomingGeo);
+                if ($stallLocation !== '') {
+                    $currentGeo['stall_location'] = $stallLocation;
+                }
+                if ($streetAddress !== '') {
+                    $currentGeo['street_address'] = $streetAddress;
+                    $currentGeo['address_line_1'] = $streetAddress;
+                }
+                $updateFields['geography'] = json_encode($currentGeo, JSON_THROW_ON_ERROR);
+            }
+
+            Listing::query()->where('id', $listingId)->update($updateFields);
 
             return $this->ownerProjection($listingId, $ownerId, $correlationId);
         });
@@ -379,6 +433,39 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         ]);
     }
 
+    /** @param array<string, mixed> $input @return array<string, mixed> */
+    private function withResolvedWorkShape(array $input, string $correlationId): array
+    {
+        $code = $input['work_catalog_code'] ?? null;
+        if (! is_string($code) || trim($code) === '') {
+            return $input;
+        }
+        $setVersion = isset($input['work_set_version']) && is_numeric($input['work_set_version'])
+            ? (int) $input['work_set_version']
+            : null;
+        $set = $this->workSpecs->publishedWorkSet(trim($code), $setVersion);
+        $listingType = strtolower(trim((string) ($input['listing_type'] ?? '')));
+        $shape = strtoupper((string) ($set['work_shape'] ?? ''));
+        $compatibleShapes = $listingType === 'service' ? ['A1', 'A3', 'A9'] : ['A4', 'A9'];
+        if ($set === null || ! in_array($listingType, (array) ($set['listing_types'] ?? []), true)
+            || ! in_array($shape, $compatibleShapes, true)) {
+            throw new ListingError(
+                'VALIDATION_FAILED',
+                'Choose a published Work Set compatible with this listing type.',
+                $correlationId,
+                fieldErrors: [
+                    'work_catalog_code' => ['The selected Work Set is unknown, retired, or incompatible with this listing type.'],
+                    'work_shape' => ['Work shape must come from a published compatible Work Set.'],
+                ],
+            );
+        }
+
+        $input['work_shape'] = (string) $set['work_shape'];
+        $input['work_set_version'] = (int) ($set['set_version'] ?? 1);
+
+        return $input;
+    }
+
     /** @param array<string, mixed> $input */
     private function validate(array $input, string $correlationId): void
     {
@@ -565,10 +652,14 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             'evidence_class' => isset($input['evidence_class']) && is_string($input['evidence_class']) && $input['evidence_class'] !== '' ? $input['evidence_class'] : null,
         ];
 
-        foreach (['package_tiers', 'addons', 'milestone_stages', 'work_specification', 'work_catalog_code', 'inclusions', 'variants', 'pricing_mode'] as $extraField) {
+        foreach (['package_tiers', 'addons', 'milestone_stages', 'work_specification', 'work_catalog_code', 'work_set_version', 'inclusions', 'variants', 'pricing_mode', 'deal_chain_combinations', 'deal_chain_specification'] as $extraField) {
             if (isset($input[$extraField]) && $input[$extraField] !== null) {
                 $terms[$extraField] = $input[$extraField];
             }
+        }
+
+        if (array_key_exists('media', $input)) {
+            $terms['media'] = $this->normalizeMedia($input['media']);
         }
 
         if (isset($input['milestone_stages']) && is_array($input['milestone_stages']) && $input['milestone_stages'] !== []) {
@@ -579,6 +670,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 listingTitle: (string) $terms['title'],
                 rawStages: $input['milestone_stages'],
                 selectedCatalogCode: isset($input['work_catalog_code']) && is_string($input['work_catalog_code']) ? $input['work_catalog_code'] : null,
+                selectedSetVersion: isset($input['work_set_version']) && is_numeric($input['work_set_version']) ? (int) $input['work_set_version'] : null,
             );
             $terms['milestone_stages'] = $resolvedWork['nodes'];
             $terms['work_specification'] = $resolvedWork;
@@ -678,7 +770,9 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
     private function mapProjection(object $row, bool $public): array
     {
         $terms = json_decode((string) $row->terms, true) ?: [];
-        $geography = json_decode((string) $row->geography, true) ?: [];
+        $geography = is_array($row->geography)
+            ? $row->geography
+            : (json_decode((string) ($row->geography ?? ''), true) ?: []);
         $capacity = json_decode((string) ($row->availability_capacity_summary ?? 'null'), true) ?: [];
         $projection = [
             'id' => (string) $row->id,
@@ -722,14 +816,33 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             $projection['milestone_stages'] = $terms['milestone_stages'];
         }
 
-        foreach (['work_catalog', 'work_specification', 'addons', 'partner_candidates'] as $catalogField) {
+        foreach (['work_catalog', 'work_specification', 'addons', 'partner_candidates', 'deal_chain_combinations', 'deal_chain_specification', 'inclusions', 'variants', 'geography'] as $catalogField) {
             if (isset($terms[$catalogField]) && is_array($terms[$catalogField])) {
                 $projection[$catalogField] = $terms[$catalogField];
             }
         }
 
-        if (isset($terms['catalog_source']) && is_string($terms['catalog_source']) && $terms['catalog_source'] !== '') {
-            $projection['catalog_source'] = $terms['catalog_source'];
+        foreach (['catalog_source', 'work_catalog_code', 'pricing_mode', 'stall_location'] as $stringField) {
+            if (isset($terms[$stringField]) && is_string($terms[$stringField]) && $terms[$stringField] !== '') {
+                $projection[$stringField] = $terms[$stringField];
+            }
+        }
+        if (isset($geography['stall_location']) && is_string($geography['stall_location']) && !isset($projection['stall_location'])) {
+            $projection['stall_location'] = $geography['stall_location'];
+        }
+        if (!isset($projection['geography']) && $geography !== []) {
+            $projection['geography'] = $geography;
+        }
+
+        if (isset($terms['work_set_version']) && is_numeric($terms['work_set_version'])) {
+            $projection['work_set_version'] = (int) $terms['work_set_version'];
+        }
+
+        $media = isset($terms['media']) && is_array($terms['media']) ? $this->normalizeMedia($terms['media']) : null;
+        $projection['cover_thumbnail_url'] = $media['cover_thumbnail_url'] ?? null;
+        $projection['has_video'] = (bool) ($media['has_video'] ?? false);
+        if ($media !== null) {
+            $projection['media'] = $media;
         }
         if ($public) {
             $projection['owner_name'] = (string) $row->owner_name;
@@ -739,6 +852,86 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         }
 
         return ($public ? ListingProjection::public($projection) : ListingProjection::owner($projection))->toArray();
+    }
+
+    /**
+     * @return array{cover_thumbnail_url: string|null, has_video: bool, items: list<array<string, mixed>>}|null
+     */
+    private function normalizeMedia(mixed $rawMedia): ?array
+    {
+        if (! is_array($rawMedia)) {
+            return null;
+        }
+
+        $rawItems = isset($rawMedia['items']) && is_array($rawMedia['items'])
+            ? $rawMedia['items']
+            : (array_is_list($rawMedia) ? $rawMedia : []);
+
+        $items = [];
+        foreach ($rawItems as $index => $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $url = trim((string) ($item['url'] ?? $item['thumbnail_url'] ?? ''));
+            if ($url === '') {
+                continue;
+            }
+            $kind = strtolower(trim((string) ($item['kind'] ?? 'photo'))) === 'video' ? 'video' : 'photo';
+            $thumbUrl = trim((string) ($item['thumbnail_url'] ?? ($kind === 'photo' ? $url : '')));
+            $items[] = [
+                'id' => trim((string) ($item['id'] ?? 'media-'.($index + 1))),
+                'kind' => $kind,
+                'url' => $url,
+                'thumbnail_url' => $thumbUrl !== '' ? $thumbUrl : null,
+                'caption' => isset($item['caption']) && is_string($item['caption']) && trim($item['caption']) !== ''
+                    ? trim($item['caption'])
+                    : null,
+                'mime_type' => isset($item['mime_type']) && is_string($item['mime_type']) && trim($item['mime_type']) !== ''
+                    ? trim($item['mime_type'])
+                    : ($kind === 'video' ? 'video/mp4' : 'image/webp'),
+                'size_bytes' => isset($item['size_bytes']) && is_numeric($item['size_bytes'])
+                    ? max(0, (int) $item['size_bytes'])
+                    : null,
+                'is_cover' => (bool) ($item['is_cover'] ?? false),
+            ];
+        }
+
+        $explicitCover = isset($rawMedia['cover_thumbnail_url']) && is_string($rawMedia['cover_thumbnail_url'])
+            ? trim($rawMedia['cover_thumbnail_url'])
+            : '';
+
+        $coverPhotoItem = null;
+        foreach ($items as $candidate) {
+            if ($candidate['kind'] === 'photo' && $candidate['is_cover']) {
+                $coverPhotoItem = $candidate;
+                break;
+            }
+        }
+        if ($coverPhotoItem === null) {
+            foreach ($items as $candidate) {
+                if ($candidate['kind'] === 'photo') {
+                    $coverPhotoItem = $candidate;
+                    break;
+                }
+            }
+        }
+
+        $coverThumbnailUrl = $explicitCover !== ''
+            ? $explicitCover
+            : ($coverPhotoItem['thumbnail_url'] ?? $coverPhotoItem['url'] ?? ($items[0]['thumbnail_url'] ?? null));
+
+        $hasVideo = (bool) ($rawMedia['has_video'] ?? false)
+            || collect($items)->contains(static fn (array $candidate): bool => $candidate['kind'] === 'video');
+
+        if ($items === [] && $coverThumbnailUrl === null && ! $hasVideo) {
+            return null;
+        }
+
+        return [
+            'cover_thumbnail_url' => $coverThumbnailUrl,
+            'has_video' => $hasVideo,
+            'items' => $items,
+        ];
     }
 
     private function persistedCorrelationId(string $correlationId): string
