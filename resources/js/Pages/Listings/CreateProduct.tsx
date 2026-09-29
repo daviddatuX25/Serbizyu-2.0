@@ -4,8 +4,6 @@ import type { FormDataConvertible } from '@inertiajs/core';
 import {
     ArrowLeft,
     ArrowRight,
-    ChevronLeft,
-    ChevronRight,
     Eye,
     Package,
     Plus,
@@ -626,15 +624,6 @@ export default function CreateProduct({
         );
     };
 
-    const toggleComboDefault = (comboId: string) => {
-        setCombos((prev) =>
-            prev.map((c) => ({
-                ...c,
-                isDefault: c.id === comboId,
-            }))
-        );
-        setSelectedFulfillment(comboId);
-    };
 
     const handleRemoveCombo = (comboId: string) => {
         setCombos((prev) => prev.filter((c) => c.id !== comboId));
@@ -1092,7 +1081,6 @@ export default function CreateProduct({
         </div>
     );
 
-    const currentCombo = combos[currentComboIdx] || combos[0];
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 pb-16">
