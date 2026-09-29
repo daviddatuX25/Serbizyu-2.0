@@ -153,11 +153,20 @@ export type ListingRecord = {
         rating: number;
         bayesian_rating?: number;
         reviews_count: number;
+        photos_count?: number;
         verified_count?: number;
         satisfaction_pct?: number;
         distribution?: Record<number, number>;
     } | null;
     reviews?: Array<Record<string, unknown>> | null;
+    photos?: ListingReviewPhoto[];
+};
+
+export type ListingReviewPhoto = {
+    url: string;
+    thumbnail_url: string;
+    label: string;
+    author: string;
 };
 
 export type WorkCatalogReference = {

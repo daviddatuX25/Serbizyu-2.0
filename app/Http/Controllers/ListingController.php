@@ -78,10 +78,12 @@ final class ListingController
 
         $reviews = $this->reviews->reviewsForListing($listing, limit: 20);
         $reviewSummary = $this->reviews->summaryForListing($listing, $activeListingDetail['category_code'] ?? null);
+        $reviewPhotos = $this->reviews->photosForListing($listing);
 
         if ($activeListingDetail !== null) {
             $activeListingDetail['reviews'] = $reviews;
             $activeListingDetail['rating_summary'] = $reviewSummary;
+            $activeListingDetail['photos'] = $reviewPhotos;
         }
         $slice = [
             ...$state,
@@ -214,6 +216,7 @@ final class ListingController
             return $this->failure($request, $error);
         }
     }
+
     public function pause(Request $request, string $listing): mixed
     {
         $correlationId = $this->correlationId($request);
@@ -227,6 +230,7 @@ final class ListingController
             if ($request->wantsJson()) {
                 return $this->success($request, ['data' => $paused], $correlationId);
             }
+
             return back()->with('notice', 'Listing paused. It is now hidden from public browse.');
         } catch (IdentityAccessError|ListingError $error) {
             return $this->failure($request, $error);
@@ -246,6 +250,7 @@ final class ListingController
             if ($request->wantsJson()) {
                 return $this->success($request, ['data' => $resumed], $correlationId);
             }
+
             return back()->with('notice', 'Listing resumed! It is now active on public browse.');
         } catch (IdentityAccessError|ListingError $error) {
             return $this->failure($request, $error);
@@ -265,6 +270,7 @@ final class ListingController
             if ($request->wantsJson()) {
                 return $this->success($request, ['data' => $archived], $correlationId);
             }
+
             return redirect()->route('listings.mine')->with('notice', 'Listing archived.');
         } catch (IdentityAccessError|ListingError $error) {
             return $this->failure($request, $error);

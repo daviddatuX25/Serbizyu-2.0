@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Schema;
 final class ListingReviewService implements ListingReviewReaderPort
 {
     private const BAYESIAN_PRIOR_WEIGHT = 5;
+
     private const BAYESIAN_CATALOG_MEAN = 4.5;
 
     public function summaryForListing(string $listingId, ?string $categoryCode = null): array
@@ -49,14 +50,77 @@ final class ListingReviewService implements ListingReviewReaderPort
 
         $satisfaction = round((($dist[4] + $dist[5]) / $count) * 100);
 
+        $photosCount = Schema::hasTable('evidence_files')
+            ? DB::table('reviews')
+                ->join('orders', 'orders.id', '=', 'reviews.order_id')
+                ->join('evidence_files', 'evidence_files.id', '=', 'reviews.eligibility_evidence_file_id')
+                ->where('orders.listing_id', $listingId)
+                ->whereNotNull('reviews.unblinded_at')
+                ->whereIn('reviews.moderation_status', ['approved', 'unblinded'])
+                ->whereNull('evidence_files.deleted_at')
+                ->where('evidence_files.scan_status', 'clean')
+                ->where('evidence_files.visibility', 'public')
+                ->where('evidence_files.media_type', 'like', 'image/%')
+                ->count('evidence_files.id')
+            : 0;
+
         return [
             'rating' => round($avg, 1),
             'bayesian_rating' => round($bayesian, 1),
             'reviews_count' => $count,
             'verified_count' => $count,
+            'photos_count' => $photosCount,
             'distribution' => $dist,
             'satisfaction_pct' => (int) $satisfaction,
         ];
+    }
+
+    public function photosForListing(string $listingId, int $limit = 20): array
+    {
+        if (! Schema::hasTable('reviews') || ! Schema::hasTable('orders') || ! Schema::hasTable('evidence_files')) {
+            return [];
+        }
+
+        $rows = DB::table('reviews')
+            ->join('orders', 'orders.id', '=', 'reviews.order_id')
+            ->join('evidence_files', 'evidence_files.id', '=', 'reviews.eligibility_evidence_file_id')
+            ->leftJoin('user_profiles', 'user_profiles.user_id', '=', 'reviews.author_user_id')
+            ->where('orders.listing_id', $listingId)
+            ->whereIn('reviews.moderation_status', ['approved', 'unblinded'])
+            ->whereNull('evidence_files.deleted_at')
+            ->where('evidence_files.scan_status', 'clean')
+            ->where('evidence_files.visibility', 'public')
+            ->where('evidence_files.media_type', 'like', 'image/%')
+            ->select([
+                'evidence_files.id',
+                'evidence_files.storage_key',
+                'evidence_files.evidence_type',
+                'reviews.created_at',
+                'user_profiles.display_name',
+            ])
+            ->orderByDesc('reviews.created_at')
+            ->limit(max(0, $limit))
+            ->get();
+
+        $photos = [];
+        foreach ($rows as $row) {
+            $url = '/photos/'.ltrim((string) $row->storage_key, '/');
+            $label = trim(str_replace(['-', '_'], ' ', pathinfo((string) $row->storage_key, PATHINFO_FILENAME)));
+
+            $photo = [
+                'id' => (string) $row->id,
+                'url' => $url,
+                'thumbnail_url' => $url,
+                'label' => $label !== '' ? ucfirst($label) : (string) $row->evidence_type,
+                'created_at' => Carbon::parse($row->created_at)->toISOString(),
+            ];
+            if (is_string($row->display_name) && $row->display_name !== '') {
+                $photo['author'] = $row->display_name;
+            }
+            $photos[] = $photo;
+        }
+
+        return $photos;
     }
 
     public function reviewsForListing(string $listingId, int $limit = 10, int $offset = 0): array
@@ -106,7 +170,7 @@ final class ListingReviewService implements ListingReviewReaderPort
             }
 
             $hasPhoto = ! empty($row->evidence_photo);
-            $photoUrl = $hasPhoto ? '/photos/' . ltrim((string) $row->evidence_photo, '/') : null;
+            $photoUrl = $hasPhoto ? '/photos/'.ltrim((string) $row->evidence_photo, '/') : null;
 
             $results[] = [
                 'id' => (string) $row->id,
@@ -176,6 +240,7 @@ final class ListingReviewService implements ListingReviewReaderPort
      *     bayesian_rating: float,
      *     reviews_count: int,
      *     verified_count: int,
+     *     photos_count: int,
      *     distribution: array{1: int, 2: int, 3: int, 4: int, 5: int},
      *     satisfaction_pct: int,
      * }
@@ -187,6 +252,7 @@ final class ListingReviewService implements ListingReviewReaderPort
             'bayesian_rating' => 4.5,
             'reviews_count' => 0,
             'verified_count' => 0,
+            'photos_count' => 0,
             'distribution' => [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0],
             'satisfaction_pct' => 100,
         ];

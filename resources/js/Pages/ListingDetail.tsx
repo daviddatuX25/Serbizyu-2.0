@@ -360,6 +360,10 @@ type ReviewItem = {
     hasPhoto?: boolean;
 };
 
+type ReviewFilter = 'all' | '5' | '4' | 'photos';
+
+const REVIEW_PAGE_SIZE = 5;
+
 const SAMPLE_REVIEWS: ReviewItem[] = [
     {
         id: 'rev-1',
@@ -367,7 +371,7 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
         barangay: 'Barangay Centro',
         timeAgo: '3 days ago',
         stars: 5,
-        packageTag: '2 Units Dual Split',
+        packageTag: 'Standard Full Package',
         quote: 'Very thorough clean. Blower fan wheel was removed and washed with alkaline chemical foam. Malamig na ulit aircon namin!',
         hasPhoto: true,
     },
@@ -379,7 +383,6 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
         stars: 5,
         packageTag: '1 Unit Standard',
         quote: 'Arrived right on time in Centro. Clean workmanship, walang kalat sa kwarto.',
-        hasPhoto: true,
     },
     {
         id: 'rev-3',
@@ -389,7 +392,6 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
         stars: 5,
         packageTag: '1 Unit Standard + Condenser',
         quote: 'Mabilis mag-troubleshoot si Kuya Ben. Pinalitan capacitor at nilinis coil.',
-        hasPhoto: false,
     },
     {
         id: 'rev-4',
@@ -397,29 +399,16 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
         barangay: 'Pudoc West',
         timeAgo: '3 weeks ago',
         stars: 4,
-        packageTag: 'Express Service',
+        packageTag: 'Express Delivery',
         quote: 'Maayos kausap at maaasahan sa mga biglaang takbo sa centro.',
-        hasPhoto: false,
     },
 ];
 
 const REVIEW_PHOTOS = [
-    {
-        label: 'Chemical coil disinfection',
-        url: '/photos/ac-clean.jpg',
-    },
-    {
-        label: 'Capacitor replacement',
-        url: '/photos/ac-capacitor.jpg',
-    },
-    {
-        label: 'Electrical circuit test',
-        url: '/photos/req-electrician.jpg',
-    },
-    {
-        label: 'Finished service handoff',
-        url: '/photos/ac-clean.jpg',
-    },
+    { label: 'Chemical coil disinfection', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=300&auto=format&fit=crop&q=80', author: 'Kuya Ben AC' },
+    { label: 'Blower wheel degreased', url: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=300&auto=format&fit=crop&q=80', author: 'Kuya Ben AC' },
+    { label: 'High pressure rinse', url: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&auto=format&fit=crop&q=80', author: 'Kuya Ben AC' },
+    { label: 'Finished installation', url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=300&auto=format&fit=crop&q=80', author: 'Kuya Ben AC' },
 ];
 
 function getCategoryPhoto(categoryCode?: string | null): string {
@@ -679,7 +668,7 @@ export default function ListingDetail(props: HomeProps) {
     const [quantity, setQuantity] = useState(1);
     // Reviews expansion & filter state
     const [reviewsExpanded, setReviewsExpanded] = useState(false);
-    const [reviewFilter, setReviewFilter] = useState<'all' | '5' | '4' | 'photos'>('all');
+    const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('all');
     const [reviewPage, setReviewPage] = useState(1);
 
     // Read query parameters and localStorage on mount & synchronize live
@@ -953,11 +942,14 @@ export default function ListingDetail(props: HomeProps) {
     };
     const ratingSummary = listing?.rating_summary;
     const incomingReviews = listing?.reviews as ReviewItem[] | undefined;
-    const hasIncomingReviews = Array.isArray(incomingReviews);
-    const reviewsList = hasIncomingReviews ? incomingReviews : SAMPLE_REVIEWS;
-    const reviewsCount = ratingSummary?.reviews_count ?? (hasIncomingReviews ? incomingReviews.length : 128);
-    const avgRating = ratingSummary?.rating ?? 4.9;
-    const satisfactionPct = ratingSummary?.satisfaction_pct ?? 98;
+    const reviewsList = incomingReviews !== undefined ? incomingReviews : SAMPLE_REVIEWS;
+    const reviewsCount = ratingSummary?.reviews_count ?? reviewsList.length;
+    const avgRating = ratingSummary?.rating ?? (reviewsCount > 0 ? 4.9 : 0);
+    const satisfactionPct = ratingSummary?.satisfaction_pct ?? (reviewsCount > 0 ? 98 : 0);
+    const rawPhotos = listing?.photos as any[] | undefined;
+    const listingPhotos = rawPhotos !== undefined ? rawPhotos : REVIEW_PHOTOS;
+    const photosCount = ratingSummary?.photos_count ?? (reviewsCount > 0 ? listingPhotos.length : 0);
+    const ratingDistribution = ratingSummary?.distribution ?? {};
 
     const featuredReview = reviewsList[0] ?? null;
     const nonFeaturedReviews = useMemo(() => {
@@ -973,6 +965,12 @@ export default function ListingDetail(props: HomeProps) {
             return true;
         });
     }, [nonFeaturedReviews, reviewFilter]);
+    const totalPages = Math.ceil(filteredExtendedReviews.length / REVIEW_PAGE_SIZE);
+    const paginatedReviews = filteredExtendedReviews.slice(
+        (reviewPage - 1) * REVIEW_PAGE_SIZE,
+        reviewPage * REVIEW_PAGE_SIZE,
+    );
+    const hasReviews = reviewsCount > 0;
     const photoUrl = getCategoryPhoto(listing?.category_code || listing?.categoryCode);
 
     if (!listing) {
@@ -1911,33 +1909,32 @@ export default function ListingDetail(props: HomeProps) {
                                         : 'No reviews yet'}
                                 </span>
                             </div>
-                            {/* Job Photos Rail from Tagudin Homes */}
-                            <div>
-                                <div className="mb-2 flex items-center gap-1.5 text-[11px] font-extrabold text-slate-500">
-                                    <Camera className="size-3.5" />
-                                    <span>Job photos from Tagudin homes &amp; stalls (18)</span>
+                            {/* Job Photos Rail */}
+                            {hasReviews && listingPhotos.length > 0 && (
+                                <div>
+                                    <div className="mb-2 flex items-center gap-1.5 text-[11px] font-extrabold text-slate-500">
+                                        <Camera className="size-3.5" />
+                                        <span>Job photos from verified orders ({photosCount})</span>
+                                    </div>
+                                    <div className="flex [scrollbar-width:none] gap-2.5 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
+                                        {listingPhotos.map((photo, index) => (
+                                            <div
+                                                key={`${photo.url}-${index}`}
+                                                className="group relative size-20 shrink-0 cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+                                                title={photo.label}
+                                            >
+                                                <img
+                                                    src={photo.thumbnail_url || photo.url}
+                                                    alt={`${photo.label} by ${photo.author}`}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    className="size-full object-cover transition-transform duration-200 group-hover:scale-108"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div className="flex [scrollbar-width:none] gap-2.5 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
-                                    {REVIEW_PHOTOS.map((ph, i) => (
-                                        <div
-                                            key={i}
-                                            className="group relative size-20 shrink-0 cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
-                                            title={ph.label}
-                                            onClick={() => alert(`Photo proof: ${ph.label}`)}
-                                        >
-                                            <img
-                                                src={ph.url}
-                                                alt={ph.label}
-                                                className="size-full object-cover transition-transform duration-200 group-hover:scale-108"
-                                                onError={(e) => {
-                                                    e.currentTarget.onerror = null;
-                                                    e.currentTarget.src = '/photos/ac-clean.jpg';
-                                                }}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            )}
 
                             {/* Featured Single Review Card (Always Visible if reviews exist) */}
                             {featuredReview ? (
@@ -1964,50 +1961,54 @@ export default function ListingDetail(props: HomeProps) {
                                         "{featuredReview.quote}"
                                     </p>
                                 </div>
-                            ) : (
+                            ) : !hasReviews ? (
                                 <div className="rounded-xl border border-dashed border-slate-200 bg-[#FAFCFB] p-6 text-center">
                                     <p className="text-xs font-bold text-slate-600">No verified reviews yet</p>
                                     <p className="mt-1 text-[11px] text-slate-400">
-                                        Customer reviews appear after verified orders are completed.
+                                        Customer reviews and milestone completion photos appear after verified orders are completed.
                                     </p>
+                                </div>
+                            ) : null}
+
+                            {/* Interactive Toggle for Extended Reviews Panel */}
+                            {hasReviews && (
+                                <div className="flex flex-col items-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => setReviewsExpanded((prev) => !prev)}
+                                        className="inline-flex cursor-pointer items-center gap-1 text-xs font-bold text-[#0F2F58] hover:underline"
+                                    >
+                                        <span>
+                                            {reviewsExpanded
+                                                ? 'Hide reviews'
+                                                : `+ View more reviews (${Math.max(0, reviewsCount - 1)} more)`}
+                                        </span>
+                                        {reviewsExpanded ? (
+                                            <ChevronUp className="size-3.5" />
+                                        ) : (
+                                            <ChevronDown className="size-3.5" />
+                                        )}
+                                    </button>
                                 </div>
                             )}
 
-                            {/* Interactive Toggle for Extended Reviews Panel */}
-                            <div className="flex flex-col items-center">
-                                <button
-                                    type="button"
-                                    onClick={() => setReviewsExpanded((prev) => !prev)}
-                                    className="inline-flex cursor-pointer items-center gap-1 text-xs font-bold text-[#0F2F58] hover:underline"
-                                >
-                                    <span>
-                                        {reviewsExpanded
-                                            ? 'Hide reviews'
-                                            : '+ View more reviews (127 more)'}
-                                    </span>
-                                    {reviewsExpanded ? (
-                                        <ChevronUp className="size-3.5" />
-                                    ) : (
-                                        <ChevronDown className="size-3.5" />
-                                    )}
-                                </button>
-                            </div>
-
                             {/* Collapsible Extended Reviews Panel */}
-                            {reviewsExpanded && (
+                            {hasReviews && reviewsExpanded && (
                                 <div className="flex flex-col gap-3 border-t border-slate-100 pt-3">
-                                    {/* Rating Filter Chips */}
                                     <div className="flex [scrollbar-width:none] gap-2 overflow-x-auto">
                                         {[
-                                            { id: 'all', label: 'All (128)' },
-                                            { id: '5', label: '★ 5 Stars (120)' },
-                                            { id: '4', label: '★ 4 Stars (6)' },
-                                            { id: 'photos', label: 'With Photos (18)' },
+                                            { id: 'all', label: `All (${reviewsCount})` },
+                                            { id: '5', label: `★ 5 Stars (${ratingDistribution[5] ?? 0})` },
+                                            { id: '4', label: `★ 4 Stars (${ratingDistribution[4] ?? 0})` },
+                                            { id: 'photos', label: `With Photos (${photosCount})` },
                                         ].map((rf) => (
                                             <button
                                                 key={rf.id}
                                                 type="button"
-                                                onClick={() => setReviewFilter(rf.id as any)}
+                                                onClick={() => {
+                                                    setReviewFilter(rf.id as ReviewFilter);
+                                                    setReviewPage(1);
+                                                }}
                                                 className={`cursor-pointer rounded-full px-3 py-1 text-[11px] font-bold transition-all ${
                                                     reviewFilter === rf.id
                                                         ? 'bg-[#0F2F58] text-white shadow-xs'
@@ -2019,9 +2020,8 @@ export default function ListingDetail(props: HomeProps) {
                                         ))}
                                     </div>
 
-                                    {/* Filtered Review List (Excludes featured review by identity) */}
                                     <div className="flex flex-col gap-2.5">
-                                        {filteredExtendedReviews.map((rev) => (
+                                        {paginatedReviews.map((rev) => (
                                             <div
                                                 key={rev.id}
                                                 className="rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs"
@@ -2054,29 +2054,29 @@ export default function ListingDetail(props: HomeProps) {
                                         ))}
                                     </div>
 
-                                    {/* Reviews Pagination Bar */}
-                                    <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
-                                        <span>Page {reviewPage} of 6</span>
-                                        <div className="flex items-center gap-1.5">
-                                            <button
-                                                type="button"
-                                                disabled={reviewPage <= 1}
-                                                onClick={() =>
-                                                    setReviewPage((p) => Math.max(1, p - 1))
-                                                }
-                                                className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 disabled:opacity-40"
-                                            >
-                                                ‹ Prev
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setReviewPage((p) => p + 1)}
-                                                className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                                            >
-                                                Next ›
-                                            </button>
+                                    {totalPages > 1 && (
+                                        <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+                                            <span>Page {reviewPage} of {totalPages}</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <button
+                                                    type="button"
+                                                    disabled={reviewPage <= 1}
+                                                    onClick={() => setReviewPage((p) => Math.max(1, p - 1))}
+                                                    className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 disabled:opacity-40"
+                                                >
+                                                    ‹ Prev
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={reviewPage >= totalPages}
+                                                    onClick={() => setReviewPage((p) => Math.min(totalPages, p + 1))}
+                                                    className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 disabled:opacity-40"
+                                                >
+                                                    Next ›
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             )}
                         </section>

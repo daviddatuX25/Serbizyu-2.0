@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -73,7 +74,7 @@ it('provides category benchmark projections on new draft preview', function (): 
         'work_shape' => 'A4',
     ])->assertCreated()->json('data');
 
-    $page = inertiaGetPreview('/my-listings/' . $listing['id'])->assertOk();
+    $page = inertiaGetPreview('/my-listings/'.$listing['id'])->assertOk();
 
     expect($page->json('component'))->toBe('Listings/OwnerPreview');
 
@@ -167,7 +168,7 @@ it('submits double-blind reviews and unblinds when both parties submit', functio
         ->and($providerReview['unblinded'])->toBeFalse();
 
     // Now authenticate as buyer
-    $this->actingAs(App\Models\User::find($buyerId));
+    $this->actingAs(User::find($buyerId));
 
     // Buyer submits review -> should unblind both!
     $buyerReview = $this->postJson("/orders/{$orderId}/reviews", [
@@ -187,4 +188,21 @@ it('submits double-blind reviews and unblinds when both parties submit', functio
         ->count();
 
     expect($unblindedCount)->toBe(2);
+});
+
+it('returns public photos from unblinded verified listing reviews', function (): void {
+    $this->seed(\Database\Seeders\ListingReviewsSeeder::class);
+
+    $listingId = FixtureRepository::ACTIVE_LISTING_ID;
+    $service = app(\App\Modules\TrustSupport\Application\ListingReviewService::class);
+    $summary = $service->summaryForListing($listingId);
+    $photos = $service->photosForListing($listingId);
+
+    expect($summary['reviews_count'])->toBe(4)
+        ->and($summary['photos_count'])->toBe(4)
+        ->and($summary['distribution'])->toBe([1 => 0, 2 => 0, 3 => 0, 4 => 1, 5 => 3])
+        ->and($photos)->toHaveCount(4)
+        ->and($photos[0]['author'])->toBe('Joel Reyes')
+        ->and($photos[0]['url'])->toBe('/photos/req-cement.jpg')
+        ->and($photos[0]['thumbnail_url'])->toBe('/photos/req-cement.jpg');
 });

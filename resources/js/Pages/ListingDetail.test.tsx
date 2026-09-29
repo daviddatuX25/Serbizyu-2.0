@@ -156,30 +156,98 @@ describe('ListingDetail Page', () => {
         expect(screen.getByRole('link', { name: /Back to Marketplace/i })).toBeTruthy();
     });
 
-    it('renders verified customer reviews suite and expands more reviews on demand', () => {
-        const { container } = render(<ListingDetail {...baseProps} />);
+    it('hides photos, filters, and pagination for listings with no reviews', () => {
+        const emptyListing: ListingRecord = {
+            ...mockListing,
+            rating_summary: {
+                rating: 0,
+                reviews_count: 0,
+                photos_count: 1,
+                distribution: {},
+            },
+            reviews: [],
+            photos: [
+                {
+                    url: '/photos/verified-job.jpg',
+                    thumbnail_url: '/photos/verified-job-thumb.jpg',
+                    label: 'Verified job photo',
+                    author: 'Maria Santos',
+                },
+            ],
+        };
+        const { container } = render(
+            <ListingDetail {...baseProps} activeListingDetail={emptyListing} />,
+        );
         const desktop = getDesktop(container as HTMLElement);
 
-        // Header and satisfaction rating
-        expect(within(desktop).getAllByText(/Customer Reviews/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/98% Satisfaction/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getByText('No verified reviews yet')).toBeTruthy();
         expect(
-            within(desktop).getAllByText(/Job photos from Tagudin homes/i).length,
-        ).toBeGreaterThan(0);
+            within(desktop).getByText(
+                'Customer reviews and milestone completion photos appear after verified orders are completed.',
+            ),
+        ).toBeTruthy();
+        expect(within(desktop).queryByText(/Job photos from verified orders/i)).toBeNull();
+        expect(within(desktop).queryByRole('button', { name: /View more reviews/i })).toBeNull();
+        expect(within(desktop).queryByText(/Page \d+ of \d+/)).toBeNull();
+        expect(within(desktop).queryByText(/All \(0\)/)).toBeNull();
+    });
 
-        // Featured review visible
-        expect(within(desktop).getAllByText(/Maria S\./i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Very thorough clean/i).length).toBeGreaterThan(0);
+    it('renders verified reviews, thumbnails, and filter counts from listing data', () => {
+        const reviews = Array.from({ length: 7 }, (_, index) => ({
+            id: `review-${index + 1}`,
+            author: index === 0 ? 'Maria S.' : `Reviewer ${index + 1}`,
+            barangay: 'Barangay Centro',
+            timeAgo: '3 days ago',
+            stars: index === 6 ? 4 : 5,
+            packageTag: 'Standard Service',
+            quote: index === 0 ? 'Very thorough clean.' : 'Verified service review.',
+            hasPhoto: index < 2,
+        }));
+        const reviewedListing: ListingRecord = {
+            ...mockListing,
+            rating_summary: {
+                rating: 4.9,
+                reviews_count: 7,
+                photos_count: 2,
+                satisfaction_pct: 92,
+                distribution: { 5: 6, 4: 1 },
+            },
+            reviews,
+            photos: [
+                {
+                    url: '/photos/verified-coil.jpg',
+                    thumbnail_url: '/photos/verified-coil-thumb.jpg',
+                    label: 'Chemical coil service',
+                    author: 'Maria Santos',
+                },
+                {
+                    url: '/photos/verified-capacitor.jpg',
+                    thumbnail_url: '/photos/verified-capacitor-thumb.jpg',
+                    label: 'Capacitor replacement',
+                    author: 'Ramil Dela Cruz',
+                },
+            ],
+        };
+        const { container } = render(
+            <ListingDetail {...baseProps} activeListingDetail={reviewedListing} />,
+        );
+        const desktop = getDesktop(container as HTMLElement);
 
-        // Click "+ View more reviews"
-        const toggleBtn = within(desktop).getByRole('button', { name: /\+ View more reviews/i });
-        fireEvent.click(toggleBtn);
+        expect(within(desktop).getByText('Job photos from verified orders (2)')).toBeTruthy();
+        const thumbnail = within(desktop).getByRole('img', {
+            name: 'Chemical coil service by Maria Santos',
+        });
+        expect(thumbnail.getAttribute('src')).toBe('/photos/verified-coil-thumb.jpg');
+        expect(thumbnail.getAttribute('loading')).toBe('lazy');
+        expect(thumbnail.getAttribute('decoding')).toBe('async');
+        expect(within(desktop).getByText('Maria S. · Barangay Centro')).toBeTruthy();
 
-        // Extended reviews with mock counts and pagination visible
-        expect(within(desktop).getByText('★ 5 Stars (120)')).toBeTruthy();
-        expect(within(desktop).getByText('With Photos (18)')).toBeTruthy();
-        expect(within(desktop).getByText('Ramil D. · Barangay Bio')).toBeTruthy();
-        expect(within(desktop).getByText('Page 1 of 6')).toBeTruthy();
+        fireEvent.click(within(desktop).getByRole('button', { name: /\+ View more reviews/i }));
+        expect(within(desktop).getByRole('button', { name: 'All (7)' })).toBeTruthy();
+        expect(within(desktop).getByRole('button', { name: '★ 5 Stars (6)' })).toBeTruthy();
+        expect(within(desktop).getByRole('button', { name: '★ 4 Stars (1)' })).toBeTruthy();
+        expect(within(desktop).getByRole('button', { name: 'With Photos (2)' })).toBeTruthy();
+        expect(within(desktop).getByText('Page 1 of 2')).toBeTruthy();
     });
 
     it('adapts headers and specifications dynamically for product listings', () => {
