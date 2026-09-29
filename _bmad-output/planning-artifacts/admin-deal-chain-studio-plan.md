@@ -21,7 +21,8 @@ Meanwhile, the mobile/listing side of the platform now has:
 
 ## 2. High-Level Architecture & Layout
 
-The Admin Deal Chain Studio will follow the proven dual-mode tabbed interface:
+### User-Friendly Relay Pipeline Design (Locked Architecture)
+Instead of an abstract 2D "n8n-style" wire canvas with floating boxes and Bezier lines, the Deal Chain Builder uses an **ordered, tactile Relay Pipeline** modeled after physical Tagudin hand-offs (`Supply / Store` → `Courier / Transit` → `Technician / Labor` → `Quality / Audit`).
 
 ```
 +---------------------------------------------------------------------------------------------------------+
@@ -32,15 +33,23 @@ The Admin Deal Chain Studio will follow the proven dual-mode tabbed interface:
 | - Left Pane: Recipe Catalog List                | - Left Pane: Live Chains Table / Filter by Status:    |
 |   * Turnkey Parts & Transit Relay               |   `sourcing`, `committed`, `in_execution`, `completed`|
 |   * Harvest & Processing Relay                  | - Search by Coordinator, Order, or Chain UUID         |
-|   * Multi-Vendor Delivery & Install             | - Right Pane: Live Relays Inspection                  |
-| - Right Pane: n8n DealChainCanvas Editor        |   * Real-time DealChainCanvas rendering actual        |
-|   * Visual Squircle Nodes by Role Family:       |     `deal_needs` and `deal_dependencies`               |
-|     `Supply`, `Transport`, `Perform`, `Verify`  |   * Live Gate Status: Waiting for Photo/OTP/Arrival   |
-|   * Visual Gate Nodes: Condition Codes & Rules  |   * Participant Invitations & Orders Table            |
-|   * Version Bump & Recipe Publish Action        |   * Emergency Bypass & Admin Override Controls        |
+|   * Multi-Vendor Delivery & Install             | - Right Pane: Live Relay Inspection                   |
+| - Right Pane: Tactile Relay Pipeline Editor     |   * Real-time Pipeline rendering actual `deal_needs`  |
+|   * High-contrast Role Icons (Store/Rider/Labor)|   * Live Gate Status: Waiting for Photo/OTP/Arrival   |
+|   * One-tap Presets & Middle Insertions [+]     |   * Participant Invitations & Orders Table            |
+|   * Instant Delete [🗑] + 5s Undo Toast         |   * Emergency Bypass & Admin Override Controls        |
+|   * Reorder [↑] [↓] & Auto-Healing Gates        |                                                       |
+|   * Candidate Search Drawer (Responsive Modal)  |                                                       |
+|   * Version Bump & Recipe Publish Action        |                                                       |
 +---------------------------------------------------------------------------------------------------------+
 ```
 
+### Core Interaction Invariants
+1. **Tactile Step Cards:** Each step is an ordered card displaying step number, high-contrast role badge/icon, assigned partner (or "Open Pool"), estimated fee, and explicit hand-off gate.
+2. **Fast Creation:** One-tap presets (`[ 🏪 Store ]`, `[ 🛵 Courier ]`, `[ 🔧 Labor ]`, `[ 🛡️ Audit ]`) and `[ + Insert Step Here ]` middle pills enable instant assembly without mandatory partner searching upfront.
+3. **Responsive Candidate Search:** Tapping "Assign Partner" opens a responsive drawer (`PartnerSelectionDrawer` standard: full-screen sheet on mobile, right slide-over on desktop) with keyword, category, and Barangay filters.
+4. **Frictionless Deletion & Auto-Healing:** Direct `[ 🗑 ]` click removes a step immediately with a 5-second undo toast. Hand-off gates automatically heal (e.g., removing a middle courier automatically transitions the gate to direct counter pickup). Minimum 2-step guardrail is strictly enforced.
+5. **True Persistence:** Edits persist to `deal_chain_catalog_versions` through a version-bumped backend admin endpoint (`POST /admin/catalogs/deal-chains/recipes/{id}/publish`), recording immutable catalog history.
 ---
 
 ## 3. Scope of Work by Phase
@@ -64,20 +73,25 @@ The Admin Deal Chain Studio will follow the proven dual-mode tabbed interface:
    ```
 
 ### Phase 2: Frontend Admin UI Refactoring (`DealChainStudio.tsx`)
-1. **Embed `DealChainCanvas`**: Replace the vertical card stack and CSS down-arrows with the interactive `DealChainCanvas` component.
+1. **Tactile Step-by-Step Relay Pipeline**:
+   - Replace abstract wire canvas and down-arrows with the high-clarity `DealChainPipelineBuilder`.
+   - High-contrast role badges (`🏪 Store / Supply`, `🛵 Courier / Transit`, `🔧 Labor / Technician`, `🛡️ Quality / Audit`).
+   - Direct, visible card actions: `[ 🗑 ]` instant delete with 5-second undo toast, `[ ↑ ]` and `[ ↓ ]` reordering.
+   - Insert middle step pills (`[ + Insert Step Here ]`) between cards.
+   - Auto-healing hand-off conditions upon step deletion/reorder.
 2. **Catalog Governance Tab**:
-   - Provide visual n8n squircle node editing for recipe archetypes.
-   - Slot editor: select Role Family (`Supply`, `Transport`, `Perform`, `Verify`), required capabilities, default budget range, and eligible categories.
-   - Gate editor: configure synchronization barrier (`all_of` vs `any_of`), condition code (`source_ready`, `delivered_to_site`, `work_completed`, `audit_cleared`), and customer/admin bypass rules.
+   - Live sync with `deal_chain_catalog_versions`.
+   - Role preset buttons for rapid 1-click step creation.
+   - Integrated partner drawer (`PartnerSelectionDrawer` standard: responsive bottom sheet on mobile, right slide-over on desktop) for optional exact provider assignment.
+   - Version bump and publish action calling `POST /admin/catalogs/deal-chains/recipes/{id}/publish`.
 3. **Live Relays Monitoring Tab**:
-   - Project real database `deal_needs` and `deal_dependencies` directly into `DealChainCanvas`.
+   - Display real database `deal_needs` and `deal_dependencies` directly in the tactile pipeline view.
    - Visual status indicators:
      - Green border / glow: Need completed / satisfied.
      - Amber pulse: Need in progress / invited.
      - Slate dashed: Need blocked by upstream dependency gate.
-   - Gate click reveals live blockage breakdown: "Waiting for Danny Express (Courier) · 1 of 2 inputs ready".
-   - Admin actions: re-invite partner, cancel chain branch, or execute emergency administrative gate unblock.
-
+   - Plain-English gate blockage description: *"Waiting for Danny Express (Courier) · 1 of 2 inputs ready"*.
+   - Admin emergency actions: re-invite partner, cancel chain branch, or execute emergency administrative gate unblock.
 ### Phase 3: Automated Tests & Verification
 1. Feature tests in `tests/Feature/Admin/DealChainCatalogTest.php`:
    - Admin can view recipe catalog.

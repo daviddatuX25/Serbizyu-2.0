@@ -51,6 +51,7 @@ final class DealChainCatalog implements DealChainRecipeCatalogPort
 
                     return [
                         'key' => (string) ($node['key'] ?? ''),
+                        'needKind' => (string) ($node['need_kind'] ?? 'service'),
                         'role' => (string) ($frontend['role'] ?? $node['key'] ?? ''),
                         'title' => (string) ($frontend['title'] ?? $node['title'] ?? ''),
                         'sub' => (string) ($frontend['sub'] ?? 'Provider agreement required'),
@@ -62,6 +63,16 @@ final class DealChainCatalog implements DealChainRecipeCatalogPort
                     ];
                 },
                 (array) ($catalog['nodes'] ?? []),
+            ));
+
+            $dependencies = array_values(array_map(
+                static fn (array $dep): array => [
+                    'predecessor' => (string) ($dep['predecessor'] ?? ''),
+                    'successor' => (string) ($dep['successor'] ?? ''),
+                    'conditionCode' => (string) ($dep['condition_code'] ?? 'source_ready'),
+                    'allowBypass' => (bool) ($dep['allow_bypass'] ?? false),
+                ],
+                (array) ($catalog['dependencies'] ?? []),
             ));
 
             return [
@@ -79,6 +90,8 @@ final class DealChainCatalog implements DealChainRecipeCatalogPort
                 'applicableListingTypes' => array_values((array) $definition['listing_types']),
                 'applicableWorkShapes' => array_values((array) $definition['work_shapes']),
                 'nodes' => $nodes,
+                'dependencies' => $dependencies,
+                'rawDefinition' => $catalog,
             ];
         }, $this->published()));
     }
