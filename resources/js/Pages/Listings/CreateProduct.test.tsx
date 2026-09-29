@@ -384,7 +384,19 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
     });
 
     it('opens Deal Chain Studio for the expanded combo with its bound partner listing', () => {
-        render(<CreateProduct />);
+        const testPartnerListings = [
+            {
+                id: 'can_cour_bicycle',
+                name: 'Barangay Centro Bicycle Runner',
+                providerName: 'Centro Eco Courier',
+                barangay: 'Poblacion Centro',
+                feeMinor: 2500,
+                role: 'courier',
+                sub: 'Eco transit ~15 mins',
+                rating: '4.8',
+            },
+        ];
+        render(<CreateProduct partnerListings={testPartnerListings} />);
         fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
         fireEvent.click(screen.getByTestId('toggle-flow-combo-delivery'));
         fireEvent.click(screen.getByTestId('customize-deal-chain-combo-delivery'));

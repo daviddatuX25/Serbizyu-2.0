@@ -355,7 +355,7 @@ describe('DealChain Studio & n8n Canvas Architecture', () => {
             expect(saved.isCustom).toBe(true);
         });
 
-        it('toggles partner assignment mode between Bound Partner and Open Role Slot', () => {
+        it('toggles partner assignment mode across Preferred Partner, Buyer Choice, and Community Open Pool', () => {
             const onSave = vi.fn();
             render(
                 <DealChainCustomizerModal
@@ -370,14 +370,16 @@ describe('DealChain Studio & n8n Canvas Architecture', () => {
                 />,
             );
 
-            const openSlotBtn = screen.getByRole('button', { name: /Open Role Slot/i });
-            fireEvent.click(openSlotBtn);
+            // Test Community Open Pool
+            const openPoolBtn = screen.getByRole('button', { name: /Community Open Pool/i });
+            fireEvent.click(openPoolBtn);
 
             const saveBtn = screen.getByRole('button', { name: /Apply Deal Chain to Listing/i });
             fireEvent.click(saveBtn);
 
             const saved: DealChainCombination = onSave.mock.calls[0][0];
             expect(saved.slots[0].isOpenSlot).toBe(true);
+            expect(saved.slots[0].assignmentMode).toBe('open_pool');
             expect(saved.slots[0].listingId).toBeUndefined();
         });
 

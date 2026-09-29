@@ -21,6 +21,7 @@ import {
     SERVICE_GUIDED_STEPS,
     type BuilderMode,
 } from '../../lib/builderGuidance';
+import { formatProviderShortName } from '../../lib/formatters';
 import TagudinLocationPicker, { type StructuredGeography } from '../../components/listings/TagudinLocationPicker';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import { CreatorPostModal } from '../../components/marketplace/CreatorPostModal';
@@ -623,16 +624,7 @@ export default function CreateService({
             setSlotPickerTarget(null);
             return;
         }
-        const shortName =
-            candidate.provider_name.includes('Danny Express')
-                ? 'Danny Exp'
-                : candidate.provider_name.includes('Centro Eco')
-                  ? 'Centro Eco'
-                  : candidate.provider_name.includes('Tagudin Hardware')
-                    ? 'Hardware'
-                    : candidate.provider_name.includes('Kuya Ben')
-                      ? 'Kuya Ben'
-                      : candidate.provider_name.slice(0, 12);
+        const shortName = formatProviderShortName(candidate.provider_name, 14);
         const priceStr = `₱${Math.round(candidate.price_minor / 100)}`;
 
         setCombinations((prev) =>

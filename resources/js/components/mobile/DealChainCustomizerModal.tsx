@@ -6,6 +6,7 @@ import {
     Plus,
     RotateCcw,
     SlidersHorizontal,
+    Sparkles,
     Store,
     Trash2,
     X,
@@ -583,10 +584,12 @@ export default function DealChainCustomizerModal({
                                             {/* Slot Sub-bar */}
                                             <div className="flex items-center justify-between border-t border-slate-100 pt-1 text-[10.5px]">
                                                 <span className="text-slate-500">
-                                                    {slot.isOpenSlot ? (
-                                                        <span className="font-bold text-amber-700">Open Slot · Buyer Chooses</span>
+                                                    {slot.assignmentMode === 'open_pool' ? (
+                                                        <span className="font-bold text-indigo-700">⚡ Community Pool · Tagudin Dispatch</span>
+                                                    ) : slot.assignmentMode === 'buyer_choice' || slot.isOpenSlot ? (
+                                                        <span className="font-bold text-amber-700">🛒 Open Slot · Buyer Chooses</span>
                                                     ) : (
-                                                        <span>Bound Partner Listing</span>
+                                                        <span>Preferred Partner Listing</span>
                                                     )}
                                                 </span>
                                                 <span className="font-mono font-bold text-emerald-800">
@@ -750,18 +753,18 @@ export default function DealChainCustomizerModal({
                                                 <label className="text-xs font-bold text-slate-800">
                                                     Partner Assignment Mode
                                                 </label>
-                                                <div className="grid grid-cols-2 gap-2">
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleUpdateSelectedSlot({ isOpenSlot: false })}
+                                                        onClick={() => handleUpdateSelectedSlot({ assignmentMode: 'preferred_partner', isOpenSlot: false })}
                                                         className={`flex cursor-pointer flex-col rounded-lg border p-2.5 text-left transition-all ${
-                                                            !selectedSlot.isOpenSlot
+                                                            selectedSlot.assignmentMode === 'preferred_partner' || (!selectedSlot.assignmentMode && !selectedSlot.isOpenSlot)
                                                                 ? 'border-[#0F2F58] bg-white shadow-2xs ring-1 ring-[#0F2F58]'
                                                                 : 'border-slate-200 bg-white/60 hover:bg-white'
                                                         }`}
                                                     >
                                                         <span className="text-[11px] font-extrabold text-[#0F2F58]">
-                                                            Bound Tagudin Partner
+                                                            Preferred Partner
                                                         </span>
                                                         <span className="mt-0.5 text-[9.5px] text-slate-500">
                                                             Pre-selected verified listing
@@ -770,23 +773,40 @@ export default function DealChainCustomizerModal({
 
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleUpdateSelectedSlot({ isOpenSlot: true, listingId: undefined })}
+                                                        onClick={() => handleUpdateSelectedSlot({ assignmentMode: 'buyer_choice', isOpenSlot: true, listingId: undefined })}
                                                         className={`flex cursor-pointer flex-col rounded-lg border p-2.5 text-left transition-all ${
-                                                            selectedSlot.isOpenSlot
+                                                            selectedSlot.assignmentMode === 'buyer_choice' || (!selectedSlot.assignmentMode && selectedSlot.isOpenSlot)
                                                                 ? 'border-[#0F2F58] bg-white shadow-2xs ring-1 ring-[#0F2F58]'
                                                                 : 'border-slate-200 bg-white/60 hover:bg-white'
                                                         }`}
                                                     >
                                                         <span className="text-[11px] font-extrabold text-amber-900">
-                                                            Open Role Slot
+                                                            Buyer's Choice
                                                         </span>
                                                         <span className="mt-0.5 text-[9.5px] text-slate-500">
                                                             Buyer chooses partner at cart
                                                         </span>
                                                     </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleUpdateSelectedSlot({ assignmentMode: 'open_pool', isOpenSlot: true, listingId: undefined })}
+                                                        className={`flex cursor-pointer flex-col rounded-lg border p-2.5 text-left transition-all ${
+                                                            selectedSlot.assignmentMode === 'open_pool'
+                                                                ? 'border-indigo-600 bg-indigo-50/50 shadow-2xs ring-1 ring-indigo-600'
+                                                                : 'border-slate-200 bg-white/60 hover:bg-white'
+                                                        }`}
+                                                    >
+                                                        <span className="text-[11px] font-extrabold text-indigo-900">
+                                                            Community Open Pool
+                                                        </span>
+                                                        <span className="mt-0.5 text-[9.5px] text-slate-500">
+                                                            Dispatched to Tagudin pool
+                                                        </span>
+                                                    </button>
                                                 </div>
 
-                                                {!selectedSlot.isOpenSlot && (
+                                                {(selectedSlot.assignmentMode === 'preferred_partner' || (!selectedSlot.assignmentMode && !selectedSlot.isOpenSlot)) && (
                                                     <div className="mt-2 flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2">
                                                         <div className="flex items-center gap-2">
                                                             {selectedSlot.coverThumbnailUrl && (
@@ -814,8 +834,14 @@ export default function DealChainCustomizerModal({
                                                         </button>
                                                     </div>
                                                 )}
-                                            </div>
 
+                                                {selectedSlot.assignmentMode === 'open_pool' && (
+                                                    <div className="mt-2 flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50/60 p-2.5 text-[11px] text-indigo-900">
+                                                        <Sparkles className="size-4 shrink-0 text-indigo-600" />
+                                                        <span>This step will be dispatched to verified Tagudin runners/technicians matching required capabilities upon payment.</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             {/* Estimated Partner Fee / Budget */}
                                             <div className="space-y-1.5">
                                                 <label className="text-xs font-bold text-slate-700">

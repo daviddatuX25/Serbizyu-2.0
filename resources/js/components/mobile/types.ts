@@ -94,6 +94,7 @@ export interface DealChainDependencyEdge {
     dependencyType: 'blocks';
     status?: 'active' | 'removed';
 }
+export type SlotAssignmentMode = 'preferred_partner' | 'open_pool' | 'buyer_choice';
 
 export interface PartnerSlot extends Partial<Pick<SlotCandidateListing, 'id' | 'title' | 'area' | 'price_minor' | 'priceMinor' | 'provider_name' | 'photo_url'>> {
     role: string;
@@ -104,6 +105,7 @@ export interface PartnerSlot extends Partial<Pick<SlotCandidateListing, 'id' | '
     feeMinor?: number;
     coverThumbnailUrl?: string;
     isOpenSlot?: boolean;
+    assignmentMode?: SlotAssignmentMode;
     tier?: number;
     predecessorIds?: string[];
     conditionCode?: string;
@@ -121,6 +123,8 @@ export interface DealChainNode extends Partial<Pick<SlotCandidateListing, 'id' |
     feeMinor?: number;
     coverThumbnailUrl?: string;
     isPrimary?: boolean;
+    isOpenSlot?: boolean;
+    assignmentMode?: SlotAssignmentMode;
     tier?: number;
     predecessorIds?: string[];
     conditionCode?: string;

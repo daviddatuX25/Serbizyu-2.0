@@ -659,7 +659,7 @@ export function DealChainPipelineBuilder({
                                                         )}
                                                     </div>
                                                     <span className="text-[10px] font-medium text-slate-500">
-                                                        Exact partner bound to step
+                                                        Preferred partner listing attached
                                                     </span>
                                                 </div>
                                                 {!readOnly && (

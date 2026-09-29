@@ -26,6 +26,7 @@ import {
     PRODUCT_GUIDED_STEPS,
     type BuilderMode,
 } from '../../lib/builderGuidance';
+import { formatProviderShortName } from '../../lib/formatters';
 import TagudinLocationPicker, { type StructuredGeography } from '../../components/listings/TagudinLocationPicker';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import { CreatorPostModal } from '../../components/marketplace/CreatorPostModal';
@@ -856,12 +857,7 @@ export default function CreateProduct({
     };
 
     const getShortPartnerName = (fullName: string) => {
-        if (fullName.includes('Danny Express')) return 'Danny Exp';
-        if (fullName.includes('Kuya Ben')) return 'Kuya Ben';
-        if (fullName.includes('Centro Eco')) return 'Centro Eco';
-        if (fullName.includes('Ate Elena')) return 'Ate Elena';
-        if (fullName.length > 13) return fullName.slice(0, 12) + '…';
-        return fullName;
+        return formatProviderShortName(fullName, 14);
     };
 
     // Active Fulfillment Info for Live Twin & Summary Card
@@ -896,9 +892,7 @@ export default function CreateProduct({
         if (activeCombo.id === 'combo-delivery' || activeCombo.title.toLowerCase().includes('doorstep')) {
             const courierSlot = activeCombo.slots.find((s) => s.roleType === 'COURIER') || activeCombo.slots[0];
             const partnerName = courierSlot
-                ? (courierSlot.providerName.includes('Danny Express')
-                    ? 'Danny Express'
-                    : courierSlot.providerName)
+                ? formatProviderShortName(courierSlot.providerName, 16, 'Courier')
                 : 'Courier';
             return {
                 title: `${feeFormatted} ${partnerName} Delivery`,
