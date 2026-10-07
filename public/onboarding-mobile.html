@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 · Progressive Onboarding &amp; Provider ID Verification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-navy: #0F2F58;
+      --brand-navy-dark: #081B33;
+      --brand-navy-light: #EBF2FA;
+      --brand-yellow: #FFC244;
+      --brand-yellow-hover: #F2BA18;
+      --brand-yellow-light: #FEF8E7;
+      --forest-900: #06362e;
+      --forest-600: #0d715f;
+      --forest-100: #c6eadc;
+      --forest-50:  #e8f7f1;
+
+      --ink: #0F172A;
+      --ink-secondary: #334155;
+      --ink-muted: #64748B;
+      --ink-subtle: #94A3B8;
+
+      --canvas: #0D1B1E;
+      --surface: #FFFFFF;
+      --line: #E2E8F0;
+      --line-subtle: #F1F5F9;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      --shadow-card: 0 4px 14px rgba(15, 47, 88, 0.06);
+      --shadow-float: 0 16px 36px rgba(15, 47, 88, 0.12);
+      --shadow-cta: 0 6px 18px rgba(255, 194, 68, 0.35);
+      --shadow-dock: 0 -4px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--canvas);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+    }
+
+    /* Reviewer banner */
+    .reviewer-banner {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #A4B8B0;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .reviewer-crumb { display: flex; align-items: center; gap: 6px; }
+    .reviewer-pill {
+      background: rgba(232, 247, 241, 0.12);
+      border: 1px solid rgba(232, 247, 241, 0.25);
+      color: #A7F3D0;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Interactive Simulator Control Bar */
+    .sim-bar {
+      width: 100%;
+      max-width: 420px;
+      background: #18282B;
+      border: 1px solid #283F42;
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: #CBD5E1;
+      font-size: 11.5px;
+    }
+    .sim-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .sim-title { font-weight: 700; color: #F8FAFC; display: flex; align-items: center; gap: 6px; }
+    .sim-badge {
+      background: var(--forest-600);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9.5px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .sim-btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
+    .sim-btn {
+      background: #24383B;
+      border: 1px solid #3B5357;
+      color: #E2E8F0;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 10.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .sim-btn:hover { background: #324B4F; }
+    .sim-btn.active { background: var(--brand-navy); border-color: var(--brand-yellow); color: white; }
+
+    /* Mobile Frame Viewport */
+    .mobile-frame {
+      width: 100%;
+      max-width: 410px;
+      min-height: 780px;
+      background: var(--surface);
+      border-radius: 36px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    /* Mobile Status Bar */
+    .status-bar {
+      height: 44px;
+      padding: 0 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    /* Wizard Navigation Header */
+    .wizard-nav {
+      padding: 10px 22px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line-subtle);
+      background: #FFFFFF;
+    }
+    .nav-left { display: flex; align-items: center; gap: 8px; }
+    .brand-mini-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: var(--brand-navy);
+      color: var(--brand-yellow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .nav-brand-title { font-size: 13px; font-weight: 800; color: var(--brand-navy); }
+
+    .btn-skip-later {
+      background: none;
+      border: 1px solid var(--line);
+      color: var(--ink-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    .btn-skip-later:hover { background: var(--line-subtle); color: var(--ink); }
+
+    /* Top Animated Progress Bar */
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: var(--line-subtle);
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0F2F58, #10B981);
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Step Sub-bar (Dots + Percent) */
+    .step-sub-bar {
+      padding: 8px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #FAFCFB;
+      border-bottom: 1px solid var(--line-subtle);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .dots-wrap { display: flex; align-items: center; gap: 5px; }
+    .step-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--line);
+      transition: all 0.25s ease;
+    }
+    .step-dot.active {
+      width: 20px;
+      border-radius: var(--radius-pill);
+      background: var(--brand-navy);
+    }
+    .step-dot.done { background: #10B981; }
+
+    .step-percent-tag {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--brand-navy);
+      background: var(--brand-navy-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Content Area */
+    .wizard-content {
+      padding: 20px 22px 95px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--brand-navy-light);
+      color: var(--brand-navy);
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      align-self: flex-start;
+    }
+    .wizard-title {
+      font-size: 21px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+    .wizard-subtitle {
+      font-size: 13px;
+      color: var(--ink-muted);
+      line-height: 1.45;
+      margin-bottom: 20px;
+    }
+
+    /* Form Fields */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .form-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ink-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .form-hint { font-size: 11px; font-weight: 500; color: var(--ink-subtle); }
+    .form-input {
+      width: 100%;
+      height: 48px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 0 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--ink);
+      background: #FAFCFB;
+      transition: all 0.15s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--brand-navy);
+      background: #FFFFFF;
+      box-shadow: 0 0 0 3px rgba(15, 47, 88, 0.08);
+    }
+    .form-select {
+      width: 100%;
+      height: 48px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 0 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--ink);
+      background: #FAFCFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center;
+      appearance: none;
+      transition: all 0.15s;
+    }
+
+    /* Role Picker Cards */
+    .role-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .role-card {
+      border: 2px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #FAFCFB;
+      transition: all 0.15s;
+    }
+    .role-card:hover { border-color: var(--brand-navy); background: #FFFFFF; }
+    .role-card.selected {
+      border-color: var(--brand-navy);
+      background: var(--brand-navy-light);
+      box-shadow: 0 2px 8px rgba(15, 47, 88, 0.08);
+    }
+    .role-radio {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--ink-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .role-card.selected .role-radio {
+      border-color: var(--brand-navy);
+      background: var(--brand-navy);
+      color: white;
+    }
+    .role-title { font-size: 13.5px; font-weight: 800; color: var(--ink); }
+    .role-desc { font-size: 11.5px; color: var(--ink-secondary); line-height: 1.4; margin-top: 2px; }
+
+    /* Government ID Upload Card Area */
+    .id-upload-zone {
+      border: 2px dashed #94A3B8;
+      border-radius: var(--radius-md);
+      padding: 18px 14px;
+      background: #F8FAFC;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .id-upload-zone:hover {
+      border-color: var(--brand-navy);
+      background: #F1F5F9;
+    }
+    .id-upload-zone.has-file {
+      border-color: #10B981;
+      border-style: solid;
+      background: #F0FDF4;
+    }
+    .upload-icon-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #E2E8F0;
+      color: var(--brand-navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .id-upload-zone.has-file .upload-icon-circle {
+      background: #DCFCE7;
+      color: #15803D;
+    }
+
+    /* Sticky Bottom Action Dock */
+    .sticky-dock {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--line);
+      padding: 12px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 20;
+    }
+    .btn-dock-primary {
+      flex: 1;
+      height: 48px;
+      background: var(--brand-yellow);
+      color: #0F172A;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: var(--shadow-cta);
+      transition: all 0.15s;
+    }
+    .btn-dock-primary:hover { background: var(--brand-yellow-hover); }
+
+    .btn-dock-back {
+      width: 48px;
+      height: 48px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-md);
+      background: white;
+      color: var(--ink-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Modal Sheet for "Continue Later" */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-sheet {
+      width: 100%;
+      background: white;
+      border-radius: 28px 28px 0 0;
+      padding: 24px 22px 32px;
+      box-shadow: var(--shadow-float);
+      transform: translateY(100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-overlay.open .modal-sheet { transform: translateY(0); }
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: #CBD5E1;
+      margin: 0 auto 16px;
+    }
+
+    /* Ready Celebration Card */
+    .ready-celebrate {
+      text-align: center;
+      padding: 30px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .celebrate-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--brand-navy);
+      color: var(--brand-yellow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      box-shadow: 0 10px 25px rgba(15, 47, 88, 0.2);
+    }
+
+    /* Tier pill tag */
+    .tier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+    .tier-badge.l3 { background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; }
+    .tier-badge.l1 { background: #EBF2FA; color: #0F2F58; border: 1px solid #BFDBFE; }
+
+    /* SVG helper */
+    .icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+</head>
+<body>
+
+  <!-- Reviewer Header -->
+  <div class="reviewer-banner">
+    <div class="reviewer-crumb">
+      <span>Serbizyu 2.0</span>
+      <span>›</span>
+      <span>Onboarding Experience</span>
+    </div>
+    <div class="reviewer-pill">Live UX Specimen</div>
+  </div>
+
+  <!-- Interactive Controls for reviewing options -->
+  <div class="sim-bar">
+    <div class="sim-row">
+      <div class="sim-title">
+        <span class="sim-badge">INTERACTIVE</span>
+        <span>Quick Step Navigator</span>
+      </div>
+      <div class="sim-btn-group">
+        <button class="sim-btn active" id="jump-1" onclick="goToStep(1)">1: Profile</button>
+        <button class="sim-btn" id="jump-2" onclick="goToStep(2)">2: Security</button>
+        <button class="sim-btn" id="jump-3" onclick="goToStep(3)">3: Path</button>
+        <button class="sim-btn" id="jump-4" onclick="goToStep(4)">4: Gov ID Step-Up</button>
+      </div>
+    </div>
+    <div class="sim-row" style="font-size: 10.5px; color: #94A3B8;">
+      <span id="explainer-hint">Select "Provider" in Step 3 to experience the Gov ID &amp; License verification step!</span>
+    </div>
+  </div>
+
+  <!-- Mobile Frame Container -->
+  <div class="mobile-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <div style="display: flex; gap: 4px; align-items: center;">
+        <svg class="icon" style="width: 14px; height: 14px;" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        <svg class="icon" style="width: 14px; height: 14px;" viewBox="0 0 24 24"><path d="M23 12h-4.5L16 19l-4-14-2.5 7H1"/></svg>
+        <svg class="icon" style="width: 18px; height: 18px;" viewBox="0 0 24 24"><rect x="2" y="7" width="16" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/></svg>
+      </div>
+    </div>
+
+    <!-- Wizard Nav Header -->
+    <div class="wizard-nav">
+      <div class="nav-left">
+        <div class="brand-mini-mark">S</div>
+        <span class="nav-brand-title">Serbizyu Tagudin</span>
+      </div>
+
+      <button type="button" class="btn-skip-later" id="btn-open-skip" onclick="openSkipModal()">
+        <span>Continue later</span>
+        <svg class="icon" style="width: 12px; height: 12px;" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+
+    <!-- Animated Progress Bar -->
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width: 25%;"></div>
+    </div>
+
+    <!-- Step Sub-bar (Dots + Percent) -->
+    <div class="step-sub-bar">
+      <div class="dots-wrap">
+        <div class="step-dot active" id="dot-1"></div>
+        <div class="step-dot" id="dot-2"></div>
+        <div class="step-dot" id="dot-3"></div>
+        <div class="step-dot" id="dot-4"></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span id="step-label-text" style="color: var(--ink-secondary);">1 of 4: Identity</span>
+        <span class="step-percent-tag" id="step-percent-text">25%</span>
+      </div>
+    </div>
+
+    <!-- Wizard Body Content -->
+    <div class="wizard-content">
+
+      <!-- STEP 1: Profile & Tagudin Location -->
+      <div id="step-1-body">
+        <div class="step-badge">
+          <svg class="icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Welcome to Tagudin</span>
+        </div>
+        <h1 class="wizard-title">What should neighbors call you?</h1>
+        <p class="wizard-subtitle">Set your local display name and neighborhood anchor so buyers and technicians know who they're talking to.</p>
+
+        <div class="form-group">
+          <label class="form-label" for="input-name">
+            <span>Your Name or Business Display</span>
+            <span class="form-hint" id="char-count">14/120</span>
+          </label>
+          <input type="text" id="input-name" class="form-input" value="Juan Dela Cruz" oninput="updateCharCount(this)" placeholder="e.g. Juan / Mang Jose's Shop">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="select-zone">
+            <span>Barangay in Tagudin</span>
+            <span class="form-hint">Governed Area</span>
+          </label>
+          <select id="select-zone" class="form-select">
+            <option value="Tagudin Centro" selected>Tagudin Centro (Poblacion)</option>
+            <option value="Tagudin">Tagudin General Area</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <span>Preferred Language</span>
+          </label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div class="role-card selected" id="lang-fil-card" onclick="selectLang('fil')" style="padding: 10px 12px; margin-bottom: 0;">
+              <div class="role-radio" style="width: 16px; height: 16px;">✓</div>
+              <span style="font-size: 13px; font-weight: 700;">Filipino / Ilocano</span>
+            </div>
+            <div class="role-card" id="lang-en-card" onclick="selectLang('en')" style="padding: 10px 12px; margin-bottom: 0;">
+              <div class="role-radio" style="width: 16px; height: 16px;"></div>
+              <span style="font-size: 13px; font-weight: 700;">English</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- STEP 2: Credential Lock (Password) -->
+      <div id="step-2-body" style="display: none;">
+        <div class="step-badge" style="background: #FEF3C7; color: #B45309;">
+          <svg class="icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Credential Lock</span>
+        </div>
+        <h1 class="wizard-title">Create your return password</h1>
+        <p class="wizard-subtitle">Set a password now so your next login is instant and free without waiting for SMS codes every time.</p>
+
+        <div class="form-group">
+          <label class="form-label" for="pass-input">
+            <span>Password</span>
+            <span class="form-hint">At least 8 characters</span>
+          </label>
+          <input type="password" id="pass-input" class="form-input" value="Password123!" placeholder="••••••••">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="confirm-pass-input">
+            <span>Confirm Password</span>
+            <span class="form-hint" style="color: #10B981; font-weight: 700;">✓ Passwords match</span>
+          </label>
+          <input type="password" id="confirm-pass-input" class="form-input" value="Password123!" placeholder="••••••••">
+        </div>
+
+        <div style="background: var(--brand-navy-light); border-radius: var(--radius-md); padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;">
+          <span style="color: var(--brand-navy); font-weight: 800;">💡</span>
+          <div style="font-size: 11.5px; color: var(--brand-navy); line-height: 1.45;">
+            <strong>Why a password?</strong> ADR-R-030 decision: Keeps platform costs low and allows you to sign in with either your phone or optional linked email from any computer.
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Choose Your Path (Buyer vs Provider) -->
+      <div id="step-3-body" style="display: none;">
+        <div class="step-badge" style="background: #F0FDF4; color: #166534;">
+          <svg class="icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Choose Your Path</span>
+        </div>
+        <h1 class="wizard-title">How will you participate?</h1>
+        <p class="wizard-subtitle">Pick your primary role today. Providers unlock listing and commercial privileges.</p>
+
+        <!-- Role Choices -->
+        <div class="role-grid">
+          <div class="role-card" id="card-buyer" onclick="chooseRole('buyer')">
+            <div class="role-radio"></div>
+            <div>
+              <div class="role-title">Citizen Buyer / Customer</div>
+              <div class="role-desc">Browse Tagudin marketplace, request services, book technicians, and buy from local stores. <strong>No Government ID needed.</strong></div>
+            </div>
+          </div>
+
+          <div class="role-card selected" id="card-provider" onclick="chooseRole('provider')">
+            <div class="role-radio">✓</div>
+            <div>
+              <div class="role-title">Service Provider or Merchant</div>
+              <div class="role-desc">Open a storefront, publish service listings, submit bids, and receive customer orders. <strong>Proceed to ID verification step.</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius-md); padding: 12px 14px; font-size: 12px; color: #92400E; line-height: 1.45;">
+          <strong>Provider Note:</strong> As a Provider, you'll be prompted for your trade specialization and Government ID or Barangay clearance to establish trust with Tagudin citizens.
+        </div>
+      </div>
+
+      <!-- STEP 4: Provider Trust & Government ID Verification Step-Up -->
+      <div id="step-4-body" style="display: none;">
+        <div class="step-badge" style="background: #FEF3C7; color: #92400E;">
+          <svg class="icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Level 3 Trust Step-Up</span>
+        </div>
+        <h1 class="wizard-title">Verify your trade &amp; identity</h1>
+        <p class="wizard-subtitle">Provide your trade category and government credentials to unlock certified badges and escrow payouts.</p>
+
+        <!-- Trade Specialization -->
+        <div class="form-group">
+          <label class="form-label" for="select-trade">
+            <span>Primary Trade Specialization</span>
+            <span class="form-hint">Governed Category</span>
+          </label>
+          <select id="select-trade" class="form-select">
+            <option value="aircon" selected>Electrical &amp; Aircon Technician</option>
+            <option value="plumbing">Plumbing &amp; Sanitary Works</option>
+            <option value="carpentry">Carpentry &amp; Home Repair</option>
+            <option value="bakery">Food, Pastries &amp; Catering</option>
+            <option value="transport">Local Transport &amp; Delivery</option>
+          </select>
+        </div>
+
+        <!-- ID Type -->
+        <div class="form-group">
+          <label class="form-label" for="select-id-type">
+            <span>Government ID Type</span>
+            <span class="form-hint">Philippine Valid ID</span>
+          </label>
+          <select id="select-id-type" class="form-select" onchange="updateIdPrompt(this.value)">
+            <option value="philsys" selected>PhilSys National ID</option>
+            <option value="drivers">LTO Driver's License</option>
+            <option value="umid">UMID (SSS / GSIS)</option>
+            <option value="tesda">TESDA NC II / PRC License</option>
+            <option value="barangay">Barangay Clearance / Mayor's Permit</option>
+          </select>
+        </div>
+
+        <!-- ID Number -->
+        <div class="form-group">
+          <label class="form-label" for="input-id-num">
+            <span id="label-id-num">PhilSys Card Number (PCN)</span>
+            <span class="form-hint">16 digits or ID number</span>
+          </label>
+          <input type="text" id="input-id-num" class="form-input" placeholder="1234-5678-9012-3456" value="1234-5678-9012-3456">
+        </div>
+
+        <!-- Photo Upload Dropzone -->
+        <div class="form-group">
+          <label class="form-label">
+            <span>Upload Photo of Front ID</span>
+            <span class="form-hint" id="upload-status" style="color: #10B981; font-weight: 700;">✓ Sample photo attached</span>
+          </label>
+
+          <div class="id-upload-zone has-file" id="id-dropzone" onclick="toggleIdFile()">
+            <div class="upload-icon-circle">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <div id="dropzone-text" style="font-size: 13px; font-weight: 700; color: #166534;">
+              philsys-juan-delacruz-front.jpg
+            </div>
+            <div style="font-size: 11px; color: #15803D; margin-top: 2px;">
+              2.4 MB · Clear color photo · Click to replace
+            </div>
+          </div>
+        </div>
+
+        <!-- Skip to Level 1 Option -->
+        <div style="text-align: center; margin-top: 4px;">
+          <button type="button" style="background: none; border: none; font-size: 11.5px; font-weight: 600; color: var(--ink-muted); text-decoration: underline; cursor: pointer;" onclick="skipIdVerification()">
+            Skip ID upload for now (Start as Phone Verified Provider)
+          </button>
+        </div>
+
+      </div>
+
+      <!-- STEP 5: Success Celebration Screen -->
+      <div id="step-5-ready" style="display: none;">
+        <div class="ready-celebrate">
+          <div class="celebrate-circle">
+            <svg class="icon" style="width: 36px; height: 36px;" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+          </div>
+          
+          <div class="tier-badge l3" id="badge-celebration">
+            <svg class="icon" style="width: 14px; height: 14px;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span id="badge-text">FORMALLY VERIFIED TRADESPERSON</span>
+          </div>
+
+          <h2 style="font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 6px;" id="ready-heading">
+            Storefront ready, Juan!
+          </h2>
+          <p style="font-size: 13px; color: var(--ink-secondary); line-height: 1.45; margin-bottom: 24px; max-width: 290px;" id="ready-body">
+            Your Tagudin electrical &amp; aircon storefront is active. Your PhilSys ID credential is on file for verified quotes.
+          </p>
+
+          <button type="button" class="btn-dock-primary" style="width: 100%;" onclick="alert('Redirecting to Create Service Listing (/listings/create/service)')">
+            <span>Publish Your First Service</span>
+            <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Sticky Bottom Navigation Dock -->
+    <div class="sticky-dock" id="bottom-dock">
+      <button type="button" class="btn-dock-back" id="btn-back" style="display: none;" onclick="prevStep()">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <button type="button" class="btn-dock-primary" id="btn-next" onclick="nextStep()">
+        <span id="dock-btn-text">Continue to Security</span>
+        <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <!-- "Continue Later" Modal Bottom Sheet -->
+    <div class="modal-overlay" id="skip-modal">
+      <div class="modal-sheet">
+        <div class="sheet-handle"></div>
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--ink); margin-bottom: 6px;">Want to look around first?</h3>
+        <p style="font-size: 13px; color: var(--ink-secondary); line-height: 1.45; margin-bottom: 20px;">
+          No problem! You can explore Tagudin listings right now. Your verified phone number is safe, and you can finish setting your password or storefront credentials anytime in your <strong>Account Settings</strong>.
+        </p>
+
+        <button type="button" class="btn-dock-primary" style="width: 100%; margin-bottom: 10px;" onclick="confirmSkip()">
+          <span>Explore Marketplace Now</span>
+          <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+        <button type="button" style="width: 100%; background: none; border: none; color: var(--ink-muted); font-size: 13px; font-weight: 700; padding: 10px; cursor: pointer;" onclick="closeSkipModal()">
+          Continue Setup (Takes 30s)
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentStep = 1;
+    let selectedRole = 'provider'; // Default to provider to make ID step immediately reachable!
+    let idUploaded = true;
+
+    function updateCharCount(input) {
+      document.getElementById('char-count').textContent = `${input.value.length}/120`;
+    }
+
+    function selectLang(lang) {
+      document.getElementById('lang-fil-card').classList.toggle('selected', lang === 'fil');
+      document.getElementById('lang-en-card').classList.toggle('selected', lang === 'en');
+      document.getElementById('lang-fil-card').querySelector('.role-radio').textContent = lang === 'fil' ? '✓' : '';
+      document.getElementById('lang-en-card').querySelector('.role-radio').textContent = lang === 'en' ? '✓' : '';
+    }
+
+    function chooseRole(role) {
+      selectedRole = role;
+      document.getElementById('card-buyer').classList.toggle('selected', role === 'buyer');
+      document.getElementById('card-provider').classList.toggle('selected', role === 'provider');
+      document.getElementById('card-buyer').querySelector('.role-radio').textContent = role === 'buyer' ? '✓' : '';
+      document.getElementById('card-provider').querySelector('.role-radio').textContent = role === 'provider' ? '✓' : '';
+
+      const nextLabel = document.getElementById('dock-btn-text');
+      if (role === 'provider') {
+        nextLabel.textContent = 'Continue to Government ID →';
+      } else {
+        nextLabel.textContent = 'Complete Setup ✓';
+      }
+    }
+
+    function updateIdPrompt(type) {
+      const label = document.getElementById('label-id-num');
+      const input = document.getElementById('input-id-num');
+      if (type === 'philsys') {
+        label.textContent = 'PhilSys Card Number (PCN)';
+        input.placeholder = '1234-5678-9012-3456';
+      } else if (type === 'drivers') {
+        label.textContent = "Driver's License Number";
+        input.placeholder = 'A01-12-345678';
+      } else if (type === 'umid') {
+        label.textContent = 'CRN / UMID Number';
+        input.placeholder = '0012-3456789-0';
+      } else if (type === 'tesda') {
+        label.textContent = 'TESDA Certificate / PRC ID';
+        input.placeholder = 'NC-II-ELEC-2024-889';
+      } else {
+        label.textContent = 'Barangay Permit / Control Number';
+        input.placeholder = 'TAG-BRGY-2026-042';
+      }
+    }
+
+    function toggleIdFile() {
+      idUploaded = !idUploaded;
+      const zone = document.getElementById('id-dropzone');
+      const text = document.getElementById('dropzone-text');
+      const status = document.getElementById('upload-status');
+
+      if (idUploaded) {
+        zone.className = 'id-upload-zone has-file';
+        text.textContent = 'philsys-juan-delacruz-front.jpg';
+        status.textContent = '✓ Sample photo attached';
+        status.style.color = '#10B981';
+      } else {
+        zone.className = 'id-upload-zone';
+        text.textContent = 'Click to photograph or upload ID (PNG, JPG, PDF)';
+        status.textContent = 'Required for Level 3 verification';
+        status.style.color = '#64748B';
+      }
+    }
+
+    function skipIdVerification() {
+      idUploaded = false;
+      goToStep(5);
+    }
+
+    function openSkipModal() {
+      document.getElementById('skip-modal').classList.add('open');
+    }
+
+    function closeSkipModal() {
+      document.getElementById('skip-modal').classList.remove('open');
+    }
+
+    function confirmSkip() {
+      closeSkipModal();
+      alert('Redirecting to Marketplace (/browse) as Citizen Buyer. Setup progress saved.');
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+      document.getElementById('step-1-body').style.display = step === 1 ? 'block' : 'none';
+      document.getElementById('step-2-body').style.display = step === 2 ? 'block' : 'none';
+      document.getElementById('step-3-body').style.display = step === 3 ? 'block' : 'none';
+      document.getElementById('step-4-body').style.display = step === 4 ? 'block' : 'none';
+      document.getElementById('step-5-ready').style.display = step === 5 ? 'block' : 'none';
+
+      // Update progress bar & dots
+      const progressFill = document.getElementById('progress-fill');
+      const dot1 = document.getElementById('dot-1');
+      const dot2 = document.getElementById('dot-2');
+      const dot3 = document.getElementById('dot-3');
+      const dot4 = document.getElementById('dot-4');
+      const stepLabel = document.getElementById('step-label-text');
+      const stepPercent = document.getElementById('step-percent-text');
+      const btnBack = document.getElementById('btn-back');
+      const dockBtnText = document.getElementById('dock-btn-text');
+      const dock = document.getElementById('bottom-dock');
+
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`jump-${i}`);
+        if (el) el.classList.toggle('active', currentStep === i);
+      }
+
+      if (step === 1) {
+        progressFill.style.width = '25%';
+        dot1.className = 'step-dot active';
+        dot2.className = 'step-dot';
+        dot3.className = 'step-dot';
+        dot4.className = 'step-dot';
+        stepLabel.textContent = '1 of 4: Identity';
+        stepPercent.textContent = '25%';
+        btnBack.style.display = 'none';
+        dockBtnText.textContent = 'Continue to Security';
+        dock.style.display = 'flex';
+      } else if (step === 2) {
+        progressFill.style.width = '50%';
+        dot1.className = 'step-dot done';
+        dot2.className = 'step-dot active';
+        dot3.className = 'step-dot';
+        dot4.className = 'step-dot';
+        stepLabel.textContent = '2 of 4: Security Lock';
+        stepPercent.textContent = '50%';
+        btnBack.style.display = 'flex';
+        dockBtnText.textContent = 'Continue to Participation';
+        dock.style.display = 'flex';
+      } else if (step === 3) {
+        progressFill.style.width = '75%';
+        dot1.className = 'step-dot done';
+        dot2.className = 'step-dot done';
+        dot3.className = 'step-dot active';
+        dot4.className = 'step-dot';
+        stepLabel.textContent = '3 of 4: Participation';
+        stepPercent.textContent = '75%';
+        btnBack.style.display = 'flex';
+        dockBtnText.textContent = selectedRole === 'provider' ? 'Continue to Government ID →' : 'Complete Setup ✓';
+        dock.style.display = 'flex';
+      } else if (step === 4) {
+        progressFill.style.width = '100%';
+        dot1.className = 'step-dot done';
+        dot2.className = 'step-dot done';
+        dot3.className = 'step-dot done';
+        dot4.className = 'step-dot active';
+        stepLabel.textContent = '4 of 4: Provider Verification';
+        stepPercent.textContent = '100%';
+        btnBack.style.display = 'flex';
+        dockBtnText.textContent = 'Submit Credentials & Launch ✓';
+        dock.style.display = 'flex';
+      } else if (step === 5) {
+        progressFill.style.width = '100%';
+        dock.style.display = 'none';
+        stepLabel.textContent = 'Account Live';
+        stepPercent.textContent = '100%';
+        dot1.className = 'step-dot done';
+        dot2.className = 'step-dot done';
+        dot3.className = 'step-dot done';
+        dot4.className = 'step-dot done';
+
+        const name = document.getElementById('input-name').value || 'Neighbor';
+        const badge = document.getElementById('badge-celebration');
+        const badgeText = document.getElementById('badge-text');
+        const heading = document.getElementById('ready-heading');
+        const body = document.getElementById('ready-body');
+
+        heading.textContent = `You are ready, ${name}!`;
+
+        if (selectedRole === 'provider') {
+          if (idUploaded) {
+            badge.className = 'tier-badge l3';
+            badgeText.textContent = 'FORMALLY VERIFIED TRADESPERSON';
+            body.textContent = 'Your PhilSys credential is saved for verified quote submissions, electrical/appliance jobs, and escrow protection.';
+          } else {
+            badge.className = 'tier-badge l1';
+            badgeText.textContent = 'PHONE VERIFIED STOREFRONT';
+            body.textContent = 'Your storefront is open for cash jobs! You can upload your Government ID anytime in Settings to unlock high-value certified trades.';
+          }
+        } else {
+          badge.className = 'tier-badge l1';
+          badgeText.textContent = 'PHONE VERIFIED CITIZEN';
+          body.textContent = 'Your Tagudin citizen account is active. You can browse local tradespeople, book repairs, and message neighbors safely.';
+        }
+      }
+    }
+
+    function nextStep() {
+      if (currentStep === 1) {
+        const name = document.getElementById('input-name').value.trim();
+        if (!name) {
+          alert('Please enter your name.');
+          return;
+        }
+        goToStep(2);
+      } else if (currentStep === 2) {
+        const pass = document.getElementById('pass-input').value;
+        const confirm = document.getElementById('confirm-pass-input').value;
+        if (!pass || pass.length < 8) {
+          alert('Password must be at least 8 characters long.');
+          return;
+        }
+        if (pass !== confirm) {
+          alert('Passwords do not match.');
+          return;
+        }
+        goToStep(3);
+      } else if (currentStep === 3) {
+        if (selectedRole === 'provider') {
+          goToStep(4); // Advance to Provider ID Step!
+        } else {
+          goToStep(5); // Complete Buyer Setup!
+        }
+      } else if (currentStep === 4) {
+        goToStep(5); // Complete Provider Setup with ID!
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        goToStep(currentStep - 1);
+      }
+    }
+  </script>
+</body>
+</html>
