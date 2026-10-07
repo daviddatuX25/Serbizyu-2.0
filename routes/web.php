@@ -16,6 +16,7 @@ use App\Http\Controllers\ListingController;
 use App\Http\Controllers\MyListingsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RequestController;
+use App\Http\Controllers\WorkEvidenceController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TelemetryController;
 use App\Http\Middleware\EnsureAuthenticated;
@@ -102,6 +103,7 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::post('/requests', [RequestController::class, 'store'])->name('requests.store');
     Route::post('/requests/{id}/quotes', [RequestController::class, 'storeQuote'])->name('requests.quotes.store');
     Route::post('/requests/{id}/quotes/{quote}/accept', [RequestController::class, 'acceptQuote'])->name('requests.quotes.accept');
+    Route::post('/requests/{id}/quotes/{quote}/counter', [RequestController::class, 'counterQuote'])->name('requests.quotes.counter');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/listings/{listing}/book', [OrderController::class, 'start'])
         ->middleware('throttle:30,1')
@@ -119,6 +121,11 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
         ->name('orders.work.signoff');
     Route::post('/orders/{order}/work-nodes/{node}', [OrderController::class, 'advanceWorkNode'])
         ->name('orders.work-nodes.advance');
+    Route::post('/orders/{order}/work-nodes/{node}/evidence', [WorkEvidenceController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('orders.work-evidence.store');
+    Route::get('/orders/{order}/work-evidence/{evidence}', [WorkEvidenceController::class, 'show'])
+        ->name('orders.work-evidence.show');
     Route::post('/orders/{order}/courier/pickup', [OrderController::class, 'courierPickup'])
         ->name('orders.courier.pickup');
     Route::post('/orders/{order}/courier/handoff', [OrderController::class, 'courierHandoff'])
@@ -196,3 +203,4 @@ Route::get('/picks', fn (DealChainCatalog $catalog) => Inertia::render('Picks', 
 ]))->name('picks');
 Route::get('/dev/mobile-kernel', fn () => Inertia::render('Dev/MobileKernelShowcase'))->name('dev.mobile-kernel');
 Route::get('/dev/true-ui-kit', fn () => Inertia::render('Dev/TrueUIKitShowcase'))->name('dev.true-ui-kit');
+Route::redirect('/dev/ui-kit', '/dev/true-ui-kit');

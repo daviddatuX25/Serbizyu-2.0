@@ -10,5 +10,7 @@ export { default as WorkNodeCustomizerModal } from './WorkNodeCustomizerModal';
 export { default as DealChainCatalogModal } from './DealChainCatalogModal';
 export { default as DealChainCustomizerModal } from './DealChainCustomizerModal';
 export { default as DealChainCanvas } from './DealChainCanvas';
+export { default as CanonicalWorkNode } from './CanonicalWorkNode';
+export { default as WorkflowsPrototypeShowcase } from './WorkflowsPrototypeShowcase';
 export * from './types';
 export * from './workNodeCatalog';
