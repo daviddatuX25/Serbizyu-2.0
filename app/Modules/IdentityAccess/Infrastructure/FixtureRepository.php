@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\IdentityAccess\Infrastructure;
 
 use App\Modules\IdentityAccess\Application\DemoFixtures;
+use App\Shared\Infrastructure\Demo\TagudinPartnerCatalog;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -314,7 +315,18 @@ final class FixtureRepository
                 'category_id' => self::CATEGORY_ID,
                 'listing_type' => 'service',
                 'status' => 'active',
-                'geography' => json_encode(['area_code' => 'Tagudin'], JSON_THROW_ON_ERROR),
+                'geography' => json_encode([
+                    'area_code' => 'Tagudin',
+                    'municipality_name' => 'Tagudin',
+                    'province_name' => 'Ilocos Sur',
+                    'barangay_name' => 'Poblacion',
+                    'barangay_code' => '0102933037',
+                    'stall_location' => 'Centro Commercial Arcade',
+                    'address_line_1' => 'Centro Commercial Arcade',
+                    'coordinates' => ['lat' => 16.9388, 'lng' => 120.4439, 'source' => 'default'],
+                    'has_pinned_coordinates' => true,
+                    'service_radius_km' => 5.0,
+                ], JSON_THROW_ON_ERROR),
                 'current_version' => 1,
                 'review_status' => 'approved',
                 'version' => 1,
@@ -323,13 +335,69 @@ final class FixtureRepository
                 'created_at' => $now,
                 'updated_at' => $now,
             ]], ['id'], ['capability_profile_id', 'status', 'review_status', 'updated_at']);
+            $terms = [
+                'title' => 'Tagudin local help',
+                'category_code' => 'local-services',
+                'listing_type' => 'service',
+                'work_shape' => 'A1',
+                'work_catalog' => [
+                    'code' => 'tagudin-local-service-a1',
+                    'shape_contract_version' => 1,
+                    'payload_schema_version' => 1,
+                    'catalog_version' => 1,
+                ],
+                'scope' => 'Fictional active public fixture',
+                'fixture_key' => 'active-tagudin-service-01',
+                'evidence_class' => 'CAPSTONE',
+                'package_tiers' => [
+                    [
+                        'id' => 'standard',
+                        'title' => 'Standard local help',
+                        'price' => 450,
+                        'sub' => 'One clearly scoped service visit',
+                        'inclusions' => ['Arrival confirmation', 'Completion handoff'],
+                    ],
+                    [
+                        'id' => 'priority',
+                        'title' => 'Priority local help',
+                        'price' => 650,
+                        'orig_price' => 700,
+                        'sub' => 'Priority scheduling request',
+                        'inclusions' => ['Priority scheduling', 'Arrival confirmation', 'Completion handoff'],
+                    ],
+                ],
+                'milestone_stages' => [
+                    ['id' => 'scope_confirmed', 'label' => 'Scope confirmed', 'state' => 'done'],
+                    ['id' => 'provider_agreement', 'label' => 'Provider agreement', 'state' => 'active'],
+                    ['id' => 'handoff', 'label' => 'Handoff evidence', 'state' => 'pending'],
+                ],
+                'catalog_source' => 'tagudin_seed',
+                'stall_location' => 'Centro Commercial Arcade',
+                'geography' => [
+                    'area_code' => 'Tagudin',
+                    'municipality_name' => 'Tagudin',
+                    'province_name' => 'Ilocos Sur',
+                    'barangay_name' => 'Poblacion',
+                    'barangay_code' => '0102933037',
+                    'stall_location' => 'Centro Commercial Arcade',
+                    'address_line_1' => 'Centro Commercial Arcade',
+                    'coordinates' => ['lat' => 16.9388, 'lng' => 120.4439, 'source' => 'default'],
+                    'has_pinned_coordinates' => true,
+                    'service_radius_km' => 5.0,
+                ],
+            ];
+            $terms['addons'] = TagudinPartnerCatalog::addonsFor([
+                'category_code' => 'local-services',
+                'listing_type' => 'service',
+            ]);
+            $terms['partner_candidates'] = TagudinPartnerCatalog::candidates();
 
             $versionRow = [
                 'id' => self::ACTIVE_VERSION_ID,
                 'listing_id' => self::ACTIVE_LISTING_ID,
                 'version_number' => 1,
                 'description' => 'Reliable local help with errands and simple household tasks in Tagudin.',
-                'terms' => json_encode(['title' => 'Tagudin local help', 'category_code' => 'local-services', 'work_shape' => 'A1', 'scope' => 'Fictional active public fixture', 'fixture_key' => 'active-tagudin-service-01', 'evidence_class' => 'CAPSTONE'], JSON_THROW_ON_ERROR),
+                'terms' => json_encode($terms, JSON_THROW_ON_ERROR),
                 'price_amount_minor' => null,
                 'currency' => null,
                 'payment_lane_availability' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),

@@ -1,16 +1,19 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Button, Field, Notice, PasswordInput } from '../../components/ui';
+import { AuthShell } from '../../components/auth/AuthShell';
+import { Field, Notice, PasswordInput, PasswordRequirements } from '../../components/ui';
 
 type ResetPasswordProps = {
     token?: string;
     email?: string;
+    returnTo?: string;
 };
 
 export default function ResetPassword(props: ResetPasswordProps) {
     const page = usePage<{ errors?: Record<string, string | string[]> }>();
     const token = props.token ?? '';
     const email = props.email ?? '';
+    const returnTo = props.returnTo || '/';
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [done, setDone] = useState(false);
@@ -28,109 +31,80 @@ export default function ResetPassword(props: ResetPasswordProps) {
 
     if (done) {
         return (
-            <main className="sz-auth-split">
-                <aside className="sz-auth-visual" aria-hidden={false}>
-                    <div className="sz-auth-visual-copy">
-                        <p className="sz-eyebrow">Tagudin · neighbors helping neighbors</p>
-                        <h2>Password updated.</h2>
-                        <p>You can now sign in using your new password.</p>
+            <AuthShell
+                title="Password reset"
+                subtitle="Your password has been changed successfully."
+                returnTo={returnTo}
+            >
+                <div className="sz-auth-stack flex flex-col gap-4">
+                    <Notice tone="success">
+                        Your password was changed. Sign in with your new password to continue.
+                    </Notice>
+                    <div className="sz-auth-footer mt-2 flex flex-col items-center gap-1.5 border-t border-slate-100 pt-4 text-center text-xs">
+                        <Link
+                            href="/auth/sign-in"
+                            className="sz-auth-quiet-link font-bold text-[#0F2F58] hover:underline"
+                        >
+                            Go to sign in →
+                        </Link>
                     </div>
-                </aside>
-                <section className="sz-auth-dock">
-                    <div className="sz-auth-card">
-                        <div className="sz-auth-brand">
-                            <strong>Serbizyu</strong>
-                            <span>Marketplace</span>
-                        </div>
-                        <div className="sz-auth-header">
-                            <h1 className="sz-display-title">Password reset</h1>
-                            <p className="sz-auth-note">
-                                Your password has been changed successfully.
-                            </p>
-                        </div>
-                        <div className="sz-auth-stack">
-                            <Notice tone="success">
-                                Your password was changed. Sign in with your new password to
-                                continue.
-                            </Notice>
-                            <div className="sz-auth-footer">
-                                <Link href="/auth/sign-in" className="sz-auth-quiet-link">
-                                    Go to sign in →
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </main>
+                </div>
+            </AuthShell>
         );
     }
 
     return (
-        <main className="sz-auth-split">
-            <aside className="sz-auth-visual" aria-hidden={false}>
-                <div className="sz-auth-visual-copy">
-                    <p className="sz-eyebrow">Tagudin · neighbors helping neighbors</p>
-                    <h2>Choose a new password.</h2>
-                    <p>This link can only be used once, and expires in 60 minutes.</p>
+        <AuthShell
+            title="Create a new password"
+            subtitle="Choose the password you’ll use the next time you sign in."
+            returnTo={returnTo}
+        >
+            <div className="sz-auth-stack flex flex-col gap-4">
+                {errorText ? <Notice tone="danger">{errorText}</Notice> : null}
+
+                <form onSubmit={submit} className="sz-stack flex flex-col gap-3">
+                    <Field label="New password">
+                        <PasswordInput
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
+                            autoComplete="new-password"
+                            aria-label="New password"
+                            required
+                        />
+                    </Field>
+                    <Field label="Confirm new password">
+                        <PasswordInput
+                            value={passwordConfirmation}
+                            onChange={(event) => setPasswordConfirmation(event.target.value)}
+                            autoComplete="new-password"
+                            aria-label="Confirm new password"
+                            required
+                        />
+                    </Field>
+                    <PasswordRequirements
+                        password={password}
+                        passwordConfirmation={passwordConfirmation}
+                        showConfirmation={Boolean(passwordConfirmation)}
+                    />
+                    <div className="sz-auth-actions mt-1">
+                        <button
+                            type="submit"
+                            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98]"
+                        >
+                            Reset password
+                        </button>
+                    </div>
+                </form>
+
+                <div className="sz-auth-footer mt-2 flex flex-col items-center gap-1.5 border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
+                    <Link
+                        href="/auth/sign-in"
+                        className="sz-auth-quiet-link font-semibold text-[#0F2F58] hover:underline"
+                    >
+                        ← Back to sign in
+                    </Link>
                 </div>
-            </aside>
-
-            <section className="sz-auth-dock">
-                <div className="sz-auth-card">
-                    <div className="sz-auth-brand">
-                        <strong>Serbizyu</strong>
-                        <span>Marketplace</span>
-                    </div>
-
-                    <div className="sz-auth-header">
-                        <h1 className="sz-display-title">Create a new password</h1>
-                        <p className="sz-auth-note">
-                            Choose the password you’ll use the next time you sign in.
-                        </p>
-                    </div>
-
-                    <div className="sz-auth-stack">
-                        {errorText ? <Notice tone="danger">{errorText}</Notice> : null}
-
-                        <form onSubmit={submit} className="sz-stack">
-                            <Field
-                                label="New password"
-                                hint="At least 8 characters, with letters and numbers"
-                            >
-                                <PasswordInput
-                                    value={password}
-                                    onChange={(event) => setPassword(event.target.value)}
-                                    autoComplete="new-password"
-                                    aria-label="New password"
-                                    required
-                                />
-                            </Field>
-                            <Field label="Confirm new password">
-                                <PasswordInput
-                                    value={passwordConfirmation}
-                                    onChange={(event) =>
-                                        setPasswordConfirmation(event.target.value)
-                                    }
-                                    autoComplete="new-password"
-                                    aria-label="Confirm new password"
-                                    required
-                                />
-                            </Field>
-                            <div className="sz-auth-actions">
-                                <Button type="submit" wide>
-                                    Reset password
-                                </Button>
-                            </div>
-                        </form>
-
-                        <div className="sz-auth-footer">
-                            <Link href="/auth/sign-in" className="sz-auth-quiet-link">
-                                ← Back to sign in
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
+            </div>
+        </AuthShell>
     );
 }

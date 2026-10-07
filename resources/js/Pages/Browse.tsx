@@ -20,6 +20,13 @@ import {
     Video,
     X,
 } from 'lucide-react';
+import {
+    DEFAULT_TAGUDIN_COORDINATES,
+    TAGUDIN_BARANGAYS_43,
+    calculateDistanceKm,
+    formatListingLocation,
+    resolveListingCoordinates,
+} from '../lib/philippineAddresses';
 import type { HomeProps, ListingRecord } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
 import { MarketplaceCard } from '../marketplace/components/MarketplaceCard';
@@ -109,7 +116,7 @@ function getPriceDisplay(listing: ListingRecord): string {
     return '₱80.00';
 }
 type PriceRange = 'all' | 'under_150' | '150_300' | '300_plus';
-type SortOption = 'recommended' | 'price_asc' | 'price_desc' | 'rating';
+type SortOption = 'recommended' | 'nearest' | 'price_asc' | 'price_desc' | 'rating';
 
 function getPriceRaw(listing: ListingRecord): number {
     const rawMinor = listing.price_amount_minor;
@@ -135,6 +142,7 @@ export default function Browse(props: HomeProps) {
     const [listingTypeFilter, setListingTypeFilter] = useState<'all' | 'service' | 'product'>(
         'all',
     );
+    const [selectedBarangay, setSelectedBarangay] = useState<string>('all');
     const [priceRangeFilter, setPriceRangeFilter] = useState<PriceRange>('all');
     const [topRatedOnly, setTopRatedOnly] = useState(false);
     const [verifiedProOnly, setVerifiedProOnly] = useState(false);
@@ -142,8 +150,11 @@ export default function Browse(props: HomeProps) {
     const [sortBy, setSortBy] = useState<SortOption>('recommended');
     const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
     const [marketplaceTab, setMarketplaceTab] = useState<'listings' | 'requests'>('listings');
-    const communityRequests = props.communityRequests || [];
-    type ActiveMobileModal = 'category' | 'type' | 'price' | 'trust' | 'sort' | null;
+    const communityRequests = useMemo(
+        () => props.communityRequests || [],
+        [props.communityRequests],
+    );
+    type ActiveMobileModal = 'category' | 'type' | 'location' | 'price' | 'trust' | 'sort' | null;
     const [activeMobileModal, setActiveMobileModal] = useState<ActiveMobileModal>(null);
     const [searchFocused, setSearchFocused] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -320,6 +331,7 @@ export default function Browse(props: HomeProps) {
         setSearchQuery('');
         setSelectedCategory('all');
         setListingTypeFilter('all');
+        setSelectedBarangay('all');
         setPriceRangeFilter('all');
         setTopRatedOnly(false);
         setVerifiedProOnly(false);
@@ -330,14 +342,61 @@ export default function Browse(props: HomeProps) {
         searchQuery.trim() !== '' ||
         selectedCategory !== 'all' ||
         listingTypeFilter !== 'all' ||
+        selectedBarangay !== 'all' ||
         priceRangeFilter !== 'all' ||
         topRatedOnly ||
         verifiedProOnly ||
         availableTodayOnly;
 
+    // Barangay Options & Counts
+    const barangayOptions = useMemo(() => {
+        const counts: Record<string, number> = {};
+        rawListings.forEach((item) => {
+            const geo = item.geography as Record<string, unknown> | null | undefined;
+            const bName =
+                (typeof geo?.barangay_name === 'string' && geo.barangay_name.trim()) ||
+                TAGUDIN_BARANGAYS_43.find((b) =>
+                    [item.area, item.locality, item.stall_location]
+                        .filter(Boolean)
+                        .some((field) =>
+                            String(field).toLowerCase().includes(b.name.toLowerCase()),
+                        ),
+                )?.name ||
+                null;
+            if (bName) {
+                counts[bName] = (counts[bName] || 0) + 1;
+            }
+        });
+
+        return TAGUDIN_BARANGAYS_43.map((b) => ({
+            name: b.name,
+            code: b.code,
+            count: counts[b.name] || 0,
+        })).sort((a, b) => {
+            if (a.count > 0 && b.count === 0) return -1;
+            if (b.count > 0 && a.count === 0) return 1;
+            return a.name.localeCompare(b.name);
+        });
+    }, [rawListings]);
+
     // Filter and Sort Pipeline
     const filteredListings = useMemo(() => {
         return rawListings
+            .map((item) => {
+                const coords = resolveListingCoordinates(item);
+                const distance_km = coords
+                    ? calculateDistanceKm(
+                          DEFAULT_TAGUDIN_COORDINATES.lat,
+                          DEFAULT_TAGUDIN_COORDINATES.lng,
+                          coords.lat,
+                          coords.lng,
+                      )
+                    : null;
+                return {
+                    ...item,
+                    distance_km,
+                };
+            })
             .filter((item) => {
                 // 1. Search Query Match
                 if (searchQuery.trim()) {
@@ -345,10 +404,22 @@ export default function Browse(props: HomeProps) {
                     const titleMatch = item.title.toLowerCase().includes(q);
                     const descMatch = (item.description || '').toLowerCase().includes(q);
                     const areaMatch = (item.area || item.locality || '').toLowerCase().includes(q);
+                    const stallMatch = (item.stall_location || '').toLowerCase().includes(q);
+                    const geo = item.geography as Record<string, unknown> | null | undefined;
+                    const bMatch = (typeof geo?.barangay_name === 'string' ? geo.barangay_name : '')
+                        .toLowerCase()
+                        .includes(q);
                     const catMatch = (item.category_code || item.categoryCode || '')
                         .toLowerCase()
                         .includes(q);
-                    if (!titleMatch && !descMatch && !areaMatch && !catMatch) {
+                    if (
+                        !titleMatch &&
+                        !descMatch &&
+                        !areaMatch &&
+                        !stallMatch &&
+                        !bMatch &&
+                        !catMatch
+                    ) {
                         return false;
                     }
                 }
@@ -369,7 +440,25 @@ export default function Browse(props: HomeProps) {
                     }
                 }
 
-                // 4. Price Budget Match
+                // 4. Barangay Location Match
+                if (selectedBarangay !== 'all') {
+                    const target = selectedBarangay.toLowerCase();
+                    const geo = item.geography as Record<string, unknown> | null | undefined;
+                    const bName = (
+                        typeof geo?.barangay_name === 'string' ? geo.barangay_name : ''
+                    ).toLowerCase();
+                    const stall = (item.stall_location || '').toLowerCase();
+                    const area = (item.area || item.locality || '').toLowerCase();
+                    if (
+                        !bName.includes(target) &&
+                        !stall.includes(target) &&
+                        !area.includes(target)
+                    ) {
+                        return false;
+                    }
+                }
+
+                // 5. Price Budget Match
                 if (priceRangeFilter !== 'all') {
                     const price = getPriceRaw(item);
                     if (priceRangeFilter === 'under_150' && price > 150) return false;
@@ -381,6 +470,11 @@ export default function Browse(props: HomeProps) {
                 return true;
             })
             .sort((a, b) => {
+                if (sortBy === 'nearest') {
+                    const distA = a.distance_km ?? 999;
+                    const distB = b.distance_km ?? 999;
+                    return distA - distB;
+                }
                 if (sortBy === 'price_asc') {
                     return getPriceRaw(a) - getPriceRaw(b);
                 }
@@ -392,7 +486,40 @@ export default function Browse(props: HomeProps) {
                 }
                 return 0; // recommended / default ordering
             });
-    }, [rawListings, searchQuery, selectedCategory, listingTypeFilter, priceRangeFilter, sortBy]);
+    }, [
+        rawListings,
+        searchQuery,
+        selectedCategory,
+        listingTypeFilter,
+        selectedBarangay,
+        priceRangeFilter,
+        sortBy,
+    ]);
+
+    const filteredRequests = useMemo(() => {
+        return communityRequests.filter((req) => {
+            if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase();
+                const titleMatch = req.title.toLowerCase().includes(q);
+                const descMatch = (req.description || '').toLowerCase().includes(q);
+                const areaMatch = (req.area || '').toLowerCase().includes(q);
+                if (!titleMatch && !descMatch && !areaMatch) {
+                    return false;
+                }
+            }
+            if (selectedBarangay !== 'all') {
+                const target = selectedBarangay.toLowerCase();
+                const area = (req.area || '').toLowerCase();
+                const b = (
+                    ((req as Record<string, unknown>).barangay as string) || ''
+                ).toLowerCase();
+                if (!area.includes(target) && !b.includes(target)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }, [communityRequests, searchQuery, selectedBarangay]);
 
     // Category Counts Map
     const categoryCounts = useMemo(() => {
@@ -416,7 +543,7 @@ export default function Browse(props: HomeProps) {
                     readiness={props.readiness}
                     activeRoute="browse"
                     picksCount={basket.reduce((sum, item) => sum + item.quantity, 0)}
-                    onPicksClick={() => setPicksOpen(true)}
+                    onPicksClick={() => setPicksOpen((prev) => !prev)}
                     actingContext={{
                         actorUserId: props.session?.userId || 'usr_guest',
                         ownerUserId: 'usr_guest',
@@ -432,7 +559,7 @@ export default function Browse(props: HomeProps) {
                         {/* =========================================================================
                             LEFT COLUMN (270px width): INDEPENDENTLY SCROLLABLE INLINE FILTER CONTROLS
                             ========================================================================= */}
-                        <aside className="sticky top-20 col-span-3 max-h-[calc(100vh-6rem)] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white p-5 shadow-xs [scrollbar-width:thin]">
+                        <aside className="sticky top-20 col-span-3 max-h-[calc(100vh-6rem)] [scrollbar-width:thin] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div className="flex items-center gap-2">
                                     <SlidersHorizontal className="size-4 text-[#0F2F58]" />
@@ -506,6 +633,42 @@ export default function Browse(props: HomeProps) {
                                             </button>
                                         );
                                     })}
+                                </div>
+                            </div>
+
+                            {/* Section: Barangay / Location */}
+                            <div className="mt-4 border-b border-slate-100 pb-4">
+                                <div className="flex items-center justify-between">
+                                    <label className="flex items-center gap-1 text-[11px] font-bold tracking-wider text-slate-500 uppercase">
+                                        <MapPin className="size-3 text-[#0F2F58]" />
+                                        Barangay
+                                    </label>
+                                    {selectedBarangay !== 'all' && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedBarangay('all')}
+                                            className="cursor-pointer text-[10px] font-bold text-amber-700 hover:underline"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="mt-2">
+                                    <select
+                                        aria-label="Filter by Barangay"
+                                        value={selectedBarangay}
+                                        onChange={(e) => setSelectedBarangay(e.target.value)}
+                                        className="w-full cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-[#0F2F58] focus:bg-white"
+                                    >
+                                        <option value="all">
+                                            All Tagudin ({rawListings.length})
+                                        </option>
+                                        {barangayOptions.map((b) => (
+                                            <option key={b.code} value={b.name}>
+                                                {b.name} {b.count > 0 ? `(${b.count})` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
 
@@ -617,65 +780,62 @@ export default function Browse(props: HomeProps) {
                             RIGHT COLUMN: LISTINGS GRID & SORT CONTROLS
                             ========================================================================= */}
                         <section className="col-span-9 flex flex-col gap-6">
-                            {/* Control Bar: Title, Count, Active Chips, Sort, Layout */}
-                            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-                                {/* Marketplace Mode Tab Switcher */}
-                                <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setMarketplaceTab('listings')}
-                                        className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-extrabold transition-all cursor-pointer ${
-                                            marketplaceTab === 'listings'
-                                                ? 'bg-[#0F2F58] text-white shadow-xs'
-                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                        }`}
-                                    >
-                                        <span>🏷️ Available Services &amp; Goods</span>
-                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                            marketplaceTab === 'listings' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                                        }`}>
-                                            {filteredListings.length}
-                                        </span>
-                                    </button>
+                            {/* Control Bar: Mode Tabs, Sort, Layout */}
+                            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    {/* Marketplace Mode Switcher */}
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setMarketplaceTab('listings')}
+                                            className={`flex cursor-pointer items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition-all ${
+                                                marketplaceTab === 'listings'
+                                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                            }`}
+                                        >
+                                            <span>🏷️ Services &amp; Goods</span>
+                                            <span
+                                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                    marketplaceTab === 'listings'
+                                                        ? 'bg-white/20 text-white'
+                                                        : 'bg-slate-200 text-slate-700'
+                                                }`}
+                                            >
+                                                {filteredListings.length}
+                                            </span>
+                                        </button>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setMarketplaceTab('requests')}
-                                        className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-extrabold transition-all cursor-pointer ${
-                                            marketplaceTab === 'requests'
-                                                ? 'bg-[#0D715F] text-white shadow-xs'
-                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                        }`}
-                                    >
-                                        <span>📢 Citizen Requests (Job Board)</span>
-                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                            marketplaceTab === 'requests' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                                        }`}>
-                                            {communityRequests.length}
-                                        </span>
-                                    </button>
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h1 className="text-lg font-extrabold text-[#0F2F58]">
-                                            {marketplaceTab === 'listings'
-                                                ? 'Verified Services & Local Products'
-                                                : 'Community Job Tenders & Requests'}
-                                        </h1>
-                                        <p className="mt-0.5 text-xs text-slate-500">
-                                            {marketplaceTab === 'listings'
-                                                ? `Showing ${filteredListings.length} active public offerings in Tagudin`
-                                                : `Showing ${communityRequests.length} open citizen requests awaiting provider bids`}
-                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setMarketplaceTab('requests')}
+                                            className={`flex cursor-pointer items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition-all ${
+                                                marketplaceTab === 'requests'
+                                                    ? 'bg-[#0D715F] text-white shadow-xs'
+                                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                            }`}
+                                        >
+                                            <span>📢 Requests</span>
+                                            <span
+                                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                    marketplaceTab === 'requests'
+                                                        ? 'bg-white/20 text-white'
+                                                        : 'bg-slate-200 text-slate-700'
+                                                }`}
+                                            >
+                                                {filteredRequests.length}
+                                            </span>
+                                        </button>
                                     </div>
 
+                                    {/* Sort & Layout Controls */}
                                     <div className="flex items-center gap-3">
                                         {/* Sort By Dropdown */}
                                         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
                                             <ArrowUpDown className="size-3.5 text-slate-400" />
                                             <span>Sort:</span>
                                             <select
+                                                aria-label="Sort marketplace offerings"
                                                 value={sortBy}
                                                 onChange={(e) =>
                                                     setSortBy(e.target.value as SortOption)
@@ -683,6 +843,7 @@ export default function Browse(props: HomeProps) {
                                                 className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2F58]"
                                             >
                                                 <option value="recommended">Recommended</option>
+                                                <option value="nearest">Nearest</option>
                                                 <option value="price_asc">
                                                     Price: Low to High
                                                 </option>
@@ -757,6 +918,19 @@ export default function Browse(props: HomeProps) {
                                                 </button>
                                             </span>
                                         )}
+                                        {selectedBarangay !== 'all' && (
+                                            <span className="flex items-center gap-1 rounded-full bg-[#EBF2FA] px-2.5 py-0.5 text-[11px] font-bold text-[#0F2F58]">
+                                                <MapPin className="size-3" />
+                                                Brgy. {selectedBarangay}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedBarangay('all')}
+                                                    className="cursor-pointer hover:text-red-600"
+                                                >
+                                                    <X className="size-3" />
+                                                </button>
+                                            </span>
+                                        )}
                                         {priceRangeFilter !== 'all' && (
                                             <span className="flex items-center gap-1 rounded-full bg-[#EBF2FA] px-2.5 py-0.5 text-[11px] font-bold text-[#0F2F58]">
                                                 {priceRangeFilter.replace('_', ' ')}
@@ -771,7 +945,7 @@ export default function Browse(props: HomeProps) {
                                         )}
                                         {searchQuery && (
                                             <span className="flex items-center gap-1 rounded-full bg-[#EBF2FA] px-2.5 py-0.5 text-[11px] font-bold text-[#0F2F58]">
-                                                "{searchQuery}"
+                                                &quot;{searchQuery}&quot;
                                                 <button
                                                     type="button"
                                                     onClick={() => setSearchQuery('')}
@@ -787,7 +961,7 @@ export default function Browse(props: HomeProps) {
 
                             {/* COMMUNITY REQUESTS BOARD VIEW */}
                             {marketplaceTab === 'requests' ? (
-                                communityRequests.length === 0 ? (
+                                filteredRequests.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
                                         <div className="flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                                             <Search className="size-6" />
@@ -796,7 +970,8 @@ export default function Browse(props: HomeProps) {
                                             No active citizen requests right now
                                         </h3>
                                         <p className="mt-1 max-w-sm text-xs text-slate-500">
-                                            Be the first citizen in Tagudin to post a job request or repair need!
+                                            Be the first citizen in Tagudin to post a job request or
+                                            repair need!
                                         </p>
                                         <Link
                                             href="/requests/create"
@@ -807,11 +982,11 @@ export default function Browse(props: HomeProps) {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        {communityRequests.map((req) => (
+                                        {filteredRequests.map((req) => (
                                             <article
                                                 key={req.id}
                                                 onClick={() => router.visit(`/requests/${req.id}`)}
-                                                className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all hover:border-[#0D715F] hover:shadow-md cursor-pointer"
+                                                className="group flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all hover:border-[#0D715F] hover:shadow-md"
                                             >
                                                 <div className="space-y-3">
                                                     <div className="flex items-center justify-between gap-2">
@@ -819,33 +994,48 @@ export default function Browse(props: HomeProps) {
                                                             <Sparkles className="size-3" />
                                                             <span>Open Tender</span>
                                                         </span>
-                                                        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full capitalize">
+                                                        <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 capitalize">
                                                             ⏱️ {req.urgency}
                                                         </span>
                                                     </div>
 
-                                                    <h3 className="text-sm font-extrabold text-[#0F2F58] group-hover:text-[#0D715F] transition-colors leading-snug">
+                                                    <h3 className="text-sm leading-snug font-extrabold text-[#0F2F58] transition-colors group-hover:text-[#0D715F]">
                                                         {req.title}
                                                     </h3>
 
-                                                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                                                        "{req.description}"
+                                                    <p className="line-clamp-2 text-xs leading-relaxed text-slate-600">
+                                                        &ldquo;{req.description}&rdquo;
                                                     </p>
+
+                                                    <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+                                                        <MapPin className="size-3 text-slate-400" />
+                                                        <span>
+                                                            {((req as Record<string, unknown>)
+                                                                .barangay as string) || req.area}
+                                                        </span>
+                                                    </div>
                                                 </div>
 
-                                                <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs mt-4">
+                                                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-xs">
                                                     <div>
                                                         <span className="text-sm font-extrabold text-[#0D715F]">
-                                                            {req.budget_amount_minor ? `₱${(req.budget_amount_minor / 100).toFixed(2)}` : 'Open Budget'}
+                                                            {req.budget_amount_minor
+                                                                ? `₱${(req.budget_amount_minor / 100).toFixed(2)}`
+                                                                : 'Open Budget'}
                                                         </span>
-                                                        <span className="block text-[10px] text-slate-400 font-medium">Estimated Budget</span>
+                                                        <span className="block text-[10px] font-medium text-slate-400">
+                                                            Estimated Budget
+                                                        </span>
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
                                                         <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700">
-                                                            {req.quotes_count} {req.quotes_count === 1 ? 'Bid' : 'Bids'}
+                                                            {req.quotes_count}{' '}
+                                                            {req.quotes_count === 1
+                                                                ? 'Bid'
+                                                                : 'Bids'}
                                                         </span>
-                                                        <span className="rounded-xl bg-[#0D715F] text-white px-3 py-1.5 text-xs font-bold group-hover:bg-[#0a574a] transition-colors">
+                                                        <span className="rounded-xl bg-[#0D715F] px-3 py-1.5 text-xs font-bold text-white transition-colors group-hover:bg-[#0a574a]">
                                                             Quote →
                                                         </span>
                                                     </div>
@@ -969,11 +1159,25 @@ export default function Browse(props: HomeProps) {
                                                                     'Tagudin Provider'}
                                                             </span>
                                                             <span>·</span>
-                                                            <span className="flex items-center gap-0.5 text-slate-500">
-                                                                <MapPin className="size-3 text-slate-400" />
-                                                                {listing.area ||
-                                                                    listing.locality ||
-                                                                    'Centro'}
+                                                            <span
+                                                                className="flex items-center gap-0.5 truncate text-slate-500"
+                                                                title={formatListingLocation(
+                                                                    listing,
+                                                                )}
+                                                            >
+                                                                <MapPin className="size-3 shrink-0 text-slate-400" />
+                                                                <span className="truncate">
+                                                                    {formatListingLocation(listing)}
+                                                                </span>
+                                                                {typeof listing.distance_km ===
+                                                                    'number' && (
+                                                                    <span className="shrink-0 text-[10px] font-bold text-emerald-700">
+                                                                        ·{' '}
+                                                                        {listing.distance_km < 0.1
+                                                                            ? '<100m'
+                                                                            : `${listing.distance_km.toFixed(1)}km`}
+                                                                    </span>
+                                                                )}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1038,11 +1242,24 @@ export default function Browse(props: HomeProps) {
                                                                 <Star className="size-3 fill-amber-500 text-amber-500" />
                                                                 4.9
                                                             </span>
-                                                            <span>{listing.area || 'Tagudin'}</span>
+                                                            <span className="flex items-center gap-0.5 text-slate-500">
+                                                                <MapPin className="size-3 text-slate-400" />
+                                                                <span>
+                                                                    {formatListingLocation(listing)}
+                                                                </span>
+                                                                {typeof listing.distance_km ===
+                                                                    'number' && (
+                                                                    <span className="text-[10px] font-bold text-emerald-700">
+                                                                        ·{' '}
+                                                                        {listing.distance_km < 0.1
+                                                                            ? '<100m'
+                                                                            : `${listing.distance_km.toFixed(1)}km`}
+                                                                    </span>
+                                                                )}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
-
                                                 <div className="flex items-center gap-4">
                                                     <button
                                                         type="button"
@@ -1197,16 +1414,20 @@ export default function Browse(props: HomeProps) {
                         <button
                             type="button"
                             onClick={() => setMarketplaceTab('listings')}
-                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-extrabold transition-all cursor-pointer ${
+                            className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-extrabold transition-all ${
                                 marketplaceTab === 'listings'
                                     ? 'bg-[#0F2F58] text-white shadow-xs'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                         >
                             <span>🏷️ Services</span>
-                            <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                                marketplaceTab === 'listings' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                            }`}>
+                            <span
+                                className={`py-0.2 rounded-full px-1.5 text-[10px] font-bold ${
+                                    marketplaceTab === 'listings'
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-slate-200 text-slate-700'
+                                }`}
+                            >
                                 {filteredListings.length}
                             </span>
                         </button>
@@ -1214,17 +1435,21 @@ export default function Browse(props: HomeProps) {
                         <button
                             type="button"
                             onClick={() => setMarketplaceTab('requests')}
-                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-extrabold transition-all cursor-pointer ${
+                            className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-extrabold transition-all ${
                                 marketplaceTab === 'requests'
                                     ? 'bg-[#0D715F] text-white shadow-xs'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                         >
                             <span>📢 Requests</span>
-                            <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                                marketplaceTab === 'requests' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                            }`}>
-                                {communityRequests.length}
+                            <span
+                                className={`py-0.2 rounded-full px-1.5 text-[10px] font-bold ${
+                                    marketplaceTab === 'requests'
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-slate-200 text-slate-700'
+                                }`}
+                            >
+                                {filteredRequests.length}
                             </span>
                         </button>
                     </div>
@@ -1271,6 +1496,25 @@ export default function Browse(props: HomeProps) {
                                     : listingTypeFilter === 'service'
                                       ? 'Services'
                                       : 'Products'}
+                            </span>
+                            <ChevronDown className="size-3 opacity-70" />
+                        </button>
+
+                        {/* Location / Barangay */}
+                        <button
+                            type="button"
+                            onClick={() => setActiveMobileModal('location')}
+                            className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-all active:scale-95 ${
+                                selectedBarangay !== 'all'
+                                    ? 'bg-[#0F2F58] text-white shadow-xs'
+                                    : 'border border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                            }`}
+                        >
+                            <MapPin className="size-3" />
+                            <span>
+                                {selectedBarangay !== 'all'
+                                    ? `Brgy. ${selectedBarangay}`
+                                    : 'All Barangays'}
                             </span>
                             <ChevronDown className="size-3 opacity-70" />
                         </button>
@@ -1348,11 +1592,13 @@ export default function Browse(props: HomeProps) {
                             <span>
                                 {sortBy === 'recommended'
                                     ? 'Sort'
-                                    : sortBy === 'price_asc'
-                                      ? '₱ Low→High'
-                                      : sortBy === 'price_desc'
-                                        ? '₱ High→Low'
-                                        : 'Rating'}
+                                    : sortBy === 'nearest'
+                                      ? '📍 Nearest'
+                                      : sortBy === 'price_asc'
+                                        ? '₱ Low→High'
+                                        : sortBy === 'price_desc'
+                                          ? '₱ High→Low'
+                                          : 'Rating'}
                             </span>
                             <ChevronDown className="size-3 opacity-70" />
                         </button>
@@ -1361,9 +1607,11 @@ export default function Browse(props: HomeProps) {
                     {/* Mobile Results Feed */}
                     <div className="flex flex-col gap-3 p-4">
                         {marketplaceTab === 'requests' ? (
-                            communityRequests.length === 0 ? (
-                                <div className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-xs text-slate-500 space-y-2">
-                                    <p className="font-bold text-[#0F2F58]">No open requests right now.</p>
+                            filteredRequests.length === 0 ? (
+                                <div className="space-y-2 rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-xs text-slate-500">
+                                    <p className="font-bold text-[#0F2F58]">
+                                        No open requests right now.
+                                    </p>
                                     <Link
                                         href="/requests/create"
                                         className="inline-block rounded-full bg-[#0D715F] px-4 py-1.5 text-xs font-bold text-white shadow-xs"
@@ -1372,43 +1620,49 @@ export default function Browse(props: HomeProps) {
                                     </Link>
                                 </div>
                             ) : (
-                                communityRequests.map((req) => (
+                                filteredRequests.map((req) => (
                                     <article
                                         key={req.id}
                                         onClick={() => router.visit(`/requests/${req.id}`)}
-                                        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition-all active:scale-[0.99] cursor-pointer space-y-2.5"
+                                        className="cursor-pointer space-y-2.5 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition-all active:scale-[0.99]"
                                     >
                                         <div className="flex items-center justify-between gap-1 text-[11px]">
                                             <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 font-bold text-[#0D715F]">
                                                 <Sparkles className="size-3" />
                                                 <span>Open Tender</span>
                                             </span>
-                                            <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full capitalize">
+                                            <span className="rounded-full bg-amber-50 px-2 py-0.5 font-bold text-amber-700 capitalize">
                                                 ⏱️ {req.urgency}
                                             </span>
                                         </div>
 
-                                        <h3 className="text-sm font-extrabold text-[#0F2F58] leading-snug">
+                                        <h3 className="text-sm leading-snug font-extrabold text-[#0F2F58]">
                                             {req.title}
                                         </h3>
 
-                                        <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                                            "{req.description}"
+                                        <p className="line-clamp-2 text-xs leading-relaxed text-slate-600">
+                                            &ldquo;{req.description}&rdquo;
                                         </p>
 
-                                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                                        <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-xs">
                                             <div>
                                                 <span className="text-sm font-black text-[#0D715F]">
-                                                    {req.budget_amount_minor ? `₱${(req.budget_amount_minor / 100).toFixed(2)}` : 'Open Budget'}
+                                                    {req.budget_amount_minor
+                                                        ? `₱${(req.budget_amount_minor / 100).toFixed(2)}`
+                                                        : 'Open Budget'}
                                                 </span>
-                                                <span className="block text-[10px] text-slate-400 font-medium">{req.area}</span>
+                                                <span className="block text-[10px] font-medium text-slate-400">
+                                                    {((req as Record<string, unknown>)
+                                                        .barangay as string) || req.area}
+                                                </span>
                                             </div>
 
                                             <div className="flex items-center gap-1.5">
                                                 <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                                                    {req.quotes_count} {req.quotes_count === 1 ? 'Bid' : 'Bids'}
+                                                    {req.quotes_count}{' '}
+                                                    {req.quotes_count === 1 ? 'Bid' : 'Bids'}
                                                 </span>
-                                                <span className="rounded-lg bg-[#0D715F] text-white px-2.5 py-1 text-xs font-bold">
+                                                <span className="rounded-lg bg-[#0D715F] px-2.5 py-1 text-xs font-bold text-white">
                                                     Quote →
                                                 </span>
                                             </div>
@@ -1420,35 +1674,36 @@ export default function Browse(props: HomeProps) {
                             <>
                                 <div className="flex items-center justify-between text-xs font-bold text-slate-500">
                                     <span>{filteredListings.length} results in Tagudin</span>
-                            {hasActiveFilters && (
-                                <button
-                                    type="button"
-                                    onClick={resetAllFilters}
-                                    className="cursor-pointer text-[#0F2F58] underline"
-                                >
-                                    Clear filters
-                                </button>
-                            )}
-                        </div>
+                                    {hasActiveFilters && (
+                                        <button
+                                            type="button"
+                                            onClick={resetAllFilters}
+                                            className="cursor-pointer text-[#0F2F58] underline"
+                                        >
+                                            Clear filters
+                                        </button>
+                                    )}
+                                </div>
 
-                        {filteredListings.length === 0 ? (
-                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500">
-                                No listings match your search.
-                            </div>
-                        ) : (
-                            filteredListings.map((item) => (
-                                <MarketplaceCard
-                                    key={item.id}
-                                    listing={item}
-                                    onSelect={(selected) =>
-                                        router.visit(`/listings/${selected.id}`)
-                                    }
-                                />
-                            ))
+                                {filteredListings.length === 0 ? (
+                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500">
+                                        No listings match your search.
+                                    </div>
+                                ) : (
+                                    filteredListings.map((item) => (
+                                        <MarketplaceCard
+                                            key={item.id}
+                                            listing={item}
+                                            distanceKm={item.distance_km}
+                                            onSelect={(selected) =>
+                                                router.visit(`/listings/${selected.id}`)
+                                            }
+                                        />
+                                    ))
+                                )}
+                            </>
                         )}
-                        </>
-                    )}
-                </div>
+                    </div>
                     {/* Bottom Navigation Bar */}
                     <BottomNavBar
                         activeTab={mobileActiveTab}
@@ -1498,18 +1753,18 @@ export default function Browse(props: HomeProps) {
                         </button>
                     ) : (
                         <div className="flex w-full flex-col gap-2">
-                            <a
+                            <Link
                                 href="/auth/sign-in"
                                 className="flex h-11 w-full items-center justify-center rounded-full bg-[#0F2F58] text-xs font-extrabold text-white shadow-md transition-colors hover:bg-[#153e74]"
                             >
                                 Sign In to Your Account
-                            </a>
-                            <a
+                            </Link>
+                            <Link
                                 href="/auth/register"
                                 className="flex h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-bold text-slate-800 transition-colors hover:bg-slate-50"
                             >
                                 Create an Account
-                            </a>
+                            </Link>
                         </div>
                     )
                 }
@@ -1571,8 +1826,8 @@ export default function Browse(props: HomeProps) {
                                 Why sign in to Serbizyu?
                             </div>
                             <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                                Tagudin's community marketplace links you directly to trusted local
-                                neighbors for aircon repairs, cleaning, delicacies, and custom
+                                Tagudin&apos;s community marketplace links you directly to trusted
+                                local neighbors for aircon repairs, cleaning, delicacies, and custom
                                 errands.
                             </p>
                             <ul className="mt-3 flex flex-col gap-2 text-xs text-slate-600">
@@ -1885,6 +2140,74 @@ export default function Browse(props: HomeProps) {
                 </div>
             </GlovoWaveModal>
 
+            {/* Mobile Location / Barangay Glovo Wave Modal */}
+            <GlovoWaveModal
+                open={activeMobileModal === 'location'}
+                onClose={() => setActiveMobileModal(null)}
+                title="Select Barangay"
+                subtitle="Filter offerings in Tagudin by neighborhood"
+                bottomSlot={
+                    <button
+                        type="button"
+                        onClick={() => setActiveMobileModal(null)}
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#0F2F58] px-4 py-3 text-sm font-bold text-white shadow-xs transition-all hover:bg-[#163e70] active:scale-[0.98]"
+                    >
+                        <span>Done</span>
+                    </button>
+                }
+            >
+                <div className="flex max-h-[55vh] flex-col gap-2 overflow-y-auto p-1">
+                    <div
+                        onClick={() => {
+                            setSelectedBarangay('all');
+                            setActiveMobileModal(null);
+                        }}
+                        className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-all ${
+                            selectedBarangay === 'all'
+                                ? 'border-[#0F2F58] bg-[#EBF2FA] font-bold text-slate-950'
+                                : 'border-slate-100 bg-[#FAFCFB] text-slate-800 hover:bg-slate-50'
+                        }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <MapPin className="size-4 text-[#0F2F58]" />
+                            <span className="text-xs font-bold">All Tagudin Barangays</span>
+                        </div>
+                        <span className="text-xs font-semibold text-slate-500">
+                            {rawListings.length}
+                        </span>
+                    </div>
+
+                    {barangayOptions.map((b) => {
+                        const isSelected = selectedBarangay === b.name;
+                        return (
+                            <div
+                                key={b.code}
+                                onClick={() => {
+                                    setSelectedBarangay(b.name);
+                                    setActiveMobileModal(null);
+                                }}
+                                className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-all ${
+                                    isSelected
+                                        ? 'border-[#0F2F58] bg-[#EBF2FA] font-bold text-slate-950'
+                                        : 'border-slate-100 bg-[#FAFCFB] text-slate-800 hover:bg-slate-50'
+                                }`}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="size-3.5 text-slate-400" />
+                                    <span className="text-xs">Brgy. {b.name}</span>
+                                </div>
+                                {b.count > 0 ? (
+                                    <span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                        {b.count}
+                                    </span>
+                                ) : (
+                                    <span className="text-[10px] text-slate-400">0</span>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </GlovoWaveModal>
             {/* Mobile Sort Glovo Wave Modal */}
             <GlovoWaveModal
                 open={activeMobileModal === 'sort'}
@@ -1908,6 +2231,11 @@ export default function Browse(props: HomeProps) {
                             id: 'recommended',
                             title: 'Recommended',
                             desc: 'Balanced by proximity in Tagudin & activity',
+                        },
+                        {
+                            id: 'nearest',
+                            title: 'Nearest to You',
+                            desc: 'Closest distance in Tagudin first',
                         },
                         {
                             id: 'rating',
@@ -1968,9 +2296,7 @@ export default function Browse(props: HomeProps) {
                 onUpdateQuantity={(id, delta) => {
                     const next = basket
                         .map((item) =>
-                            item.id === id
-                                ? { ...item, quantity: item.quantity + delta }
-                                : item,
+                            item.id === id ? { ...item, quantity: item.quantity + delta } : item,
                         )
                         .filter((item) => item.quantity > 0);
                     saveBasket(next);

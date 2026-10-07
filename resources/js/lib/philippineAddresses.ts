@@ -99,55 +99,358 @@ export const MUNICIPALITIES: PhilippineMunicipality[] = [
  * Sourced directly from Philippine Statistics Authority (PSA) Standard Geographic Codes.
  */
 export const TAGUDIN_BARANGAYS_43: PhilippineBarangay[] = [
-    { code: '0102933001', psgc_code: '0102933001', municipality_code: '0102933000', name: 'Ag-aguman', type: 'agricultural', landmark: 'Ag-aguman Elementary School' },
-    { code: '0102933002', psgc_code: '0102933002', municipality_code: '0102933000', name: 'Ambalayat', type: 'residential', landmark: 'Ambalayat Chapel & Rural Health Station' },
-    { code: '0102933003', psgc_code: '0102933003', municipality_code: '0102933000', name: 'Baracbac', type: 'agricultural', landmark: 'Baracbac Barangay Hall' },
-    { code: '0102933004', psgc_code: '0102933004', municipality_code: '0102933000', name: 'Bario-an', type: 'residential', landmark: 'Bario-an Plaza & Basketball Court' },
-    { code: '0102933005', psgc_code: '0102933005', municipality_code: '0102933000', name: 'Baritao', type: 'agricultural', landmark: 'Baritao Farm Access Road' },
-    { code: '0102933006', psgc_code: '0102933006', municipality_code: '0102933000', name: 'Becques', type: 'coastal', landmark: 'Becques Coastal Access' },
-    { code: '0102933007', psgc_code: '0102933007', municipality_code: '0102933000', name: 'Bimmanga', type: 'agricultural', landmark: 'Bimmanga Chapel' },
-    { code: '0102933008', psgc_code: '0102933008', municipality_code: '0102933000', name: 'Bio', type: 'coastal', landmark: 'Bio Beach & Fisherfolk Landing' },
-    { code: '0102933009', psgc_code: '0102933009', municipality_code: '0102933000', name: 'Bitalag', type: 'commercial', landmark: 'Bitalag McArthur Highway Junction' },
-    { code: '0102933010', psgc_code: '0102933010', municipality_code: '0102933000', name: 'Borono', type: 'agricultural', landmark: 'Borono Community Center' },
-    { code: '0102933011', psgc_code: '0102933011', municipality_code: '0102933000', name: 'Bucao East', type: 'residential', landmark: 'Bucao East Hall' },
-    { code: '0102933012', psgc_code: '0102933012', municipality_code: '0102933000', name: 'Bucao West', type: 'residential', landmark: 'Bucao West Chapel' },
-    { code: '0102933013', psgc_code: '0102933013', municipality_code: '0102933000', name: 'Cabaroan', type: 'agricultural', landmark: 'Cabaroan Irrigation Canal' },
-    { code: '0102933014', psgc_code: '0102933014', municipality_code: '0102933000', name: 'Cabugbugan', type: 'residential', landmark: 'Cabugbugan Daycare Center' },
-    { code: '0102933015', psgc_code: '0102933015', municipality_code: '0102933000', name: 'Cabulanglangan', type: 'agricultural', landmark: 'Cabulanglangan Access Trail' },
-    { code: '0102933016', psgc_code: '0102933016', municipality_code: '0102933000', name: 'Dacutan', type: 'coastal', landmark: 'Dacutan Beachfront' },
-    { code: '0102933017', psgc_code: '0102933017', municipality_code: '0102933000', name: 'Dardarat', type: 'coastal', landmark: 'Dardarat Fish Landing & Shore' },
-    { code: '0102933018', psgc_code: '0102933018', municipality_code: '0102933000', name: 'Del Pilar', type: 'commercial', landmark: 'Del Pilar Municipal Plaza & Heritage Houses' },
-    { code: '0102933019', psgc_code: '0102933019', municipality_code: '0102933000', name: 'Farola', type: 'coastal', landmark: 'Tagudin Historic Sundial & Farola Lighthouse' },
-    { code: '0102933020', psgc_code: '0102933020', municipality_code: '0102933000', name: 'Gabur', type: 'agricultural', landmark: 'Gabur Fields & Chapel' },
-    { code: '0102933021', psgc_code: '0102933021', municipality_code: '0102933000', name: 'Garitan', type: 'agricultural', landmark: 'Garitan Creek Bridge' },
-    { code: '0102933022', psgc_code: '0102933022', municipality_code: '0102933000', name: 'Jardin', type: 'residential', landmark: 'Jardin Multi-Purpose Hall' },
-    { code: '0102933023', psgc_code: '0102933023', municipality_code: '0102933000', name: 'Lacong', type: 'agricultural', landmark: 'Lacong Elementary School' },
-    { code: '0102933024', psgc_code: '0102933024', municipality_code: '0102933000', name: 'Lantag', type: 'agricultural', landmark: 'Lantag Foothills' },
-    { code: '0102933025', psgc_code: '0102933025', municipality_code: '0102933000', name: 'Las-ud', type: 'residential', landmark: 'Las-ud Chapel' },
-    { code: '0102933026', psgc_code: '0102933026', municipality_code: '0102933000', name: 'Libtong', type: 'coastal', landmark: 'Libtong Cove & Sunset Beach' },
-    { code: '0102933027', psgc_code: '0102933027', municipality_code: '0102933000', name: 'Lubnac', type: 'agricultural', landmark: 'Lubnac Barangay Center' },
-    { code: '0102933028', psgc_code: '0102933028', municipality_code: '0102933000', name: 'Magsaysay', type: 'agricultural', landmark: 'Magsaysay Upland Sector' },
-    { code: '0102933029', psgc_code: '0102933029', municipality_code: '0102933000', name: 'Malacañang', type: 'agricultural', landmark: 'Malacañang Community Hall' },
-    { code: '0102933030', psgc_code: '0102933030', municipality_code: '0102933000', name: 'Pacac', type: 'agricultural', landmark: 'Pacac Agricultural Station' },
-    { code: '0102933031', psgc_code: '0102933031', municipality_code: '0102933000', name: 'Pallogan', type: 'agricultural', landmark: 'Pallogan Chapel' },
-    { code: '0102933032', psgc_code: '0102933032', municipality_code: '0102933000', name: 'Pula', type: 'agricultural', landmark: 'Pula Farming Area' },
-    { code: '0102933033', psgc_code: '0102933033', municipality_code: '0102933000', name: 'Pudoc East', type: 'coastal', landmark: 'Pudoc East Amburayan River Mouth' },
-    { code: '0102933034', psgc_code: '0102933034', municipality_code: '0102933000', name: 'Pudoc West', type: 'coastal', landmark: 'Pudoc West Fishery & Estuary' },
-    { code: '0102933035', psgc_code: '0102933035', municipality_code: '0102933000', name: 'Quirino', type: 'commercial', landmark: 'Saint Augustine Parish & Church' },
-    { code: '0102933036', psgc_code: '0102933036', municipality_code: '0102933000', name: 'Rang-et', type: 'agricultural', landmark: 'Rang-et Community Health Post' },
-    { code: '0102933037', psgc_code: '0102933037', municipality_code: '0102933000', name: 'Rizal', type: 'commercial', landmark: 'Tagudin Public Market & Commercial District' },
-    { code: '0102933038', psgc_code: '0102933038', municipality_code: '0102933000', name: 'Salvacion', type: 'agricultural', landmark: 'Salvacion Chapel' },
-    { code: '0102933039', psgc_code: '0102933039', municipality_code: '0102933000', name: 'San Miguel', type: 'coastal', landmark: 'San Miguel Coast Guard Outpost' },
-    { code: '0102933040', psgc_code: '0102933040', municipality_code: '0102933000', name: 'Sawat', type: 'agricultural', landmark: 'Sawat Riverbank' },
-    { code: '0102933041', psgc_code: '0102933041', municipality_code: '0102933000', name: 'Tallaoen', type: 'agricultural', landmark: 'Tallaoen School' },
-    { code: '0102933042', psgc_code: '0102933042', municipality_code: '0102933000', name: 'Tampugo', type: 'residential', landmark: 'Tampugo Junction' },
-    { code: '0102933043', psgc_code: '0102933043', municipality_code: '0102933000', name: 'Tarangotong', type: 'agricultural', landmark: 'Tarangotong Upland Crossing' },
+    {
+        code: '0102933001',
+        psgc_code: '0102933001',
+        municipality_code: '0102933000',
+        name: 'Ag-aguman',
+        type: 'agricultural',
+        landmark: 'Ag-aguman Elementary School',
+    },
+    {
+        code: '0102933002',
+        psgc_code: '0102933002',
+        municipality_code: '0102933000',
+        name: 'Ambalayat',
+        type: 'residential',
+        landmark: 'Ambalayat Chapel & Rural Health Station',
+    },
+    {
+        code: '0102933003',
+        psgc_code: '0102933003',
+        municipality_code: '0102933000',
+        name: 'Baracbac',
+        type: 'agricultural',
+        landmark: 'Baracbac Barangay Hall',
+    },
+    {
+        code: '0102933004',
+        psgc_code: '0102933004',
+        municipality_code: '0102933000',
+        name: 'Bario-an',
+        type: 'residential',
+        landmark: 'Bario-an Plaza & Basketball Court',
+    },
+    {
+        code: '0102933005',
+        psgc_code: '0102933005',
+        municipality_code: '0102933000',
+        name: 'Baritao',
+        type: 'agricultural',
+        landmark: 'Baritao Farm Access Road',
+    },
+    {
+        code: '0102933006',
+        psgc_code: '0102933006',
+        municipality_code: '0102933000',
+        name: 'Becques',
+        type: 'coastal',
+        landmark: 'Becques Coastal Access',
+    },
+    {
+        code: '0102933007',
+        psgc_code: '0102933007',
+        municipality_code: '0102933000',
+        name: 'Bimmanga',
+        type: 'agricultural',
+        landmark: 'Bimmanga Chapel',
+    },
+    {
+        code: '0102933008',
+        psgc_code: '0102933008',
+        municipality_code: '0102933000',
+        name: 'Bio',
+        type: 'coastal',
+        landmark: 'Bio Beach & Fisherfolk Landing',
+    },
+    {
+        code: '0102933009',
+        psgc_code: '0102933009',
+        municipality_code: '0102933000',
+        name: 'Bitalag',
+        type: 'commercial',
+        landmark: 'Bitalag McArthur Highway Junction',
+    },
+    {
+        code: '0102933010',
+        psgc_code: '0102933010',
+        municipality_code: '0102933000',
+        name: 'Borono',
+        type: 'agricultural',
+        landmark: 'Borono Community Center',
+    },
+    {
+        code: '0102933011',
+        psgc_code: '0102933011',
+        municipality_code: '0102933000',
+        name: 'Bucao East',
+        type: 'residential',
+        landmark: 'Bucao East Hall',
+    },
+    {
+        code: '0102933012',
+        psgc_code: '0102933012',
+        municipality_code: '0102933000',
+        name: 'Bucao West',
+        type: 'residential',
+        landmark: 'Bucao West Chapel',
+    },
+    {
+        code: '0102933013',
+        psgc_code: '0102933013',
+        municipality_code: '0102933000',
+        name: 'Cabaroan',
+        type: 'agricultural',
+        landmark: 'Cabaroan Irrigation Canal',
+    },
+    {
+        code: '0102933014',
+        psgc_code: '0102933014',
+        municipality_code: '0102933000',
+        name: 'Cabugbugan',
+        type: 'residential',
+        landmark: 'Cabugbugan Daycare Center',
+    },
+    {
+        code: '0102933015',
+        psgc_code: '0102933015',
+        municipality_code: '0102933000',
+        name: 'Cabulanglangan',
+        type: 'agricultural',
+        landmark: 'Cabulanglangan Access Trail',
+    },
+    {
+        code: '0102933016',
+        psgc_code: '0102933016',
+        municipality_code: '0102933000',
+        name: 'Dacutan',
+        type: 'coastal',
+        landmark: 'Dacutan Beachfront',
+    },
+    {
+        code: '0102933017',
+        psgc_code: '0102933017',
+        municipality_code: '0102933000',
+        name: 'Dardarat',
+        type: 'coastal',
+        landmark: 'Dardarat Fish Landing & Shore',
+    },
+    {
+        code: '0102933018',
+        psgc_code: '0102933018',
+        municipality_code: '0102933000',
+        name: 'Del Pilar',
+        type: 'commercial',
+        landmark: 'Del Pilar Municipal Plaza & Heritage Houses',
+    },
+    {
+        code: '0102933019',
+        psgc_code: '0102933019',
+        municipality_code: '0102933000',
+        name: 'Farola',
+        type: 'coastal',
+        landmark: 'Tagudin Historic Sundial & Farola Lighthouse',
+    },
+    {
+        code: '0102933020',
+        psgc_code: '0102933020',
+        municipality_code: '0102933000',
+        name: 'Gabur',
+        type: 'agricultural',
+        landmark: 'Gabur Fields & Chapel',
+    },
+    {
+        code: '0102933021',
+        psgc_code: '0102933021',
+        municipality_code: '0102933000',
+        name: 'Garitan',
+        type: 'agricultural',
+        landmark: 'Garitan Creek Bridge',
+    },
+    {
+        code: '0102933022',
+        psgc_code: '0102933022',
+        municipality_code: '0102933000',
+        name: 'Jardin',
+        type: 'residential',
+        landmark: 'Jardin Multi-Purpose Hall',
+    },
+    {
+        code: '0102933023',
+        psgc_code: '0102933023',
+        municipality_code: '0102933000',
+        name: 'Lacong',
+        type: 'agricultural',
+        landmark: 'Lacong Elementary School',
+    },
+    {
+        code: '0102933024',
+        psgc_code: '0102933024',
+        municipality_code: '0102933000',
+        name: 'Lantag',
+        type: 'agricultural',
+        landmark: 'Lantag Foothills',
+    },
+    {
+        code: '0102933025',
+        psgc_code: '0102933025',
+        municipality_code: '0102933000',
+        name: 'Las-ud',
+        type: 'residential',
+        landmark: 'Las-ud Chapel',
+    },
+    {
+        code: '0102933026',
+        psgc_code: '0102933026',
+        municipality_code: '0102933000',
+        name: 'Libtong',
+        type: 'coastal',
+        landmark: 'Libtong Cove & Sunset Beach',
+    },
+    {
+        code: '0102933027',
+        psgc_code: '0102933027',
+        municipality_code: '0102933000',
+        name: 'Lubnac',
+        type: 'agricultural',
+        landmark: 'Lubnac Barangay Center',
+    },
+    {
+        code: '0102933028',
+        psgc_code: '0102933028',
+        municipality_code: '0102933000',
+        name: 'Magsaysay',
+        type: 'agricultural',
+        landmark: 'Magsaysay Upland Sector',
+    },
+    {
+        code: '0102933029',
+        psgc_code: '0102933029',
+        municipality_code: '0102933000',
+        name: 'Malacañang',
+        type: 'agricultural',
+        landmark: 'Malacañang Community Hall',
+    },
+    {
+        code: '0102933030',
+        psgc_code: '0102933030',
+        municipality_code: '0102933000',
+        name: 'Pacac',
+        type: 'agricultural',
+        landmark: 'Pacac Agricultural Station',
+    },
+    {
+        code: '0102933031',
+        psgc_code: '0102933031',
+        municipality_code: '0102933000',
+        name: 'Pallogan',
+        type: 'agricultural',
+        landmark: 'Pallogan Chapel',
+    },
+    {
+        code: '0102933032',
+        psgc_code: '0102933032',
+        municipality_code: '0102933000',
+        name: 'Pula',
+        type: 'agricultural',
+        landmark: 'Pula Farming Area',
+    },
+    {
+        code: '0102933033',
+        psgc_code: '0102933033',
+        municipality_code: '0102933000',
+        name: 'Pudoc East',
+        type: 'coastal',
+        landmark: 'Pudoc East Amburayan River Mouth',
+    },
+    {
+        code: '0102933034',
+        psgc_code: '0102933034',
+        municipality_code: '0102933000',
+        name: 'Pudoc West',
+        type: 'coastal',
+        landmark: 'Pudoc West Fishery & Estuary',
+    },
+    {
+        code: '0102933035',
+        psgc_code: '0102933035',
+        municipality_code: '0102933000',
+        name: 'Quirino',
+        type: 'commercial',
+        landmark: 'Saint Augustine Parish & Church',
+    },
+    {
+        code: '0102933036',
+        psgc_code: '0102933036',
+        municipality_code: '0102933000',
+        name: 'Rang-et',
+        type: 'agricultural',
+        landmark: 'Rang-et Community Health Post',
+    },
+    {
+        code: '0102933037',
+        psgc_code: '0102933037',
+        municipality_code: '0102933000',
+        name: 'Rizal',
+        type: 'commercial',
+        landmark: 'Tagudin Public Market & Commercial District',
+    },
+    {
+        code: '0102933038',
+        psgc_code: '0102933038',
+        municipality_code: '0102933000',
+        name: 'Salvacion',
+        type: 'agricultural',
+        landmark: 'Salvacion Chapel',
+    },
+    {
+        code: '0102933039',
+        psgc_code: '0102933039',
+        municipality_code: '0102933000',
+        name: 'San Miguel',
+        type: 'coastal',
+        landmark: 'San Miguel Coast Guard Outpost',
+    },
+    {
+        code: '0102933040',
+        psgc_code: '0102933040',
+        municipality_code: '0102933000',
+        name: 'Sawat',
+        type: 'agricultural',
+        landmark: 'Sawat Riverbank',
+    },
+    {
+        code: '0102933041',
+        psgc_code: '0102933041',
+        municipality_code: '0102933000',
+        name: 'Tallaoen',
+        type: 'agricultural',
+        landmark: 'Tallaoen School',
+    },
+    {
+        code: '0102933042',
+        psgc_code: '0102933042',
+        municipality_code: '0102933000',
+        name: 'Tampugo',
+        type: 'residential',
+        landmark: 'Tampugo Junction',
+    },
+    {
+        code: '0102933043',
+        psgc_code: '0102933043',
+        municipality_code: '0102933000',
+        name: 'Tarangotong',
+        type: 'agricultural',
+        landmark: 'Tarangotong Upland Crossing',
+    },
 ];
 
 /**
  * Builds the canonical default geography for Tagudin Centro (Rizal / Public Market).
  */
-export function buildDefaultTagudinGeography(addressLine1 = 'Tagudin Public Market, Rizal'): CanonicalGeography {
+export function buildDefaultTagudinGeography(
+    addressLine1 = 'Tagudin Public Market, Rizal',
+): CanonicalGeography {
     return {
         version: 1,
         area_code: 'tagudin-centro',
@@ -185,29 +488,76 @@ export function normalizeGeography(raw: unknown, fallbackAddress?: string): Cano
     }
 
     const obj = raw as Record<string, unknown>;
-    const coordsObj = (obj.coordinates && typeof obj.coordinates === 'object' ? obj.coordinates : {}) as Record<string, unknown>;
+    const coordsObj = (
+        obj.coordinates && typeof obj.coordinates === 'object' ? obj.coordinates : {}
+    ) as Record<string, unknown>;
 
-    const lat = typeof coordsObj.lat === 'number' && Number.isFinite(coordsObj.lat) ? coordsObj.lat : base.coordinates.lat;
-    const lng = typeof coordsObj.lng === 'number' && Number.isFinite(coordsObj.lng) ? coordsObj.lng : base.coordinates.lng;
-    const accuracy_m = typeof coordsObj.accuracy_m === 'number' && Number.isFinite(coordsObj.accuracy_m) ? coordsObj.accuracy_m : null;
-    const source: CoordinateSource = coordsObj.source === 'gps' || coordsObj.source === 'manual' ? coordsObj.source : 'default';
+    const lat =
+        typeof coordsObj.lat === 'number' && Number.isFinite(coordsObj.lat)
+            ? coordsObj.lat
+            : base.coordinates.lat;
+    const lng =
+        typeof coordsObj.lng === 'number' && Number.isFinite(coordsObj.lng)
+            ? coordsObj.lng
+            : base.coordinates.lng;
+    const accuracy_m =
+        typeof coordsObj.accuracy_m === 'number' && Number.isFinite(coordsObj.accuracy_m)
+            ? coordsObj.accuracy_m
+            : null;
+    const source: CoordinateSource =
+        coordsObj.source === 'gps' || coordsObj.source === 'manual' ? coordsObj.source : 'default';
     const captured_at = typeof coordsObj.captured_at === 'string' ? coordsObj.captured_at : null;
 
-    const bCode = typeof obj.barangay_code === 'string' && obj.barangay_code ? obj.barangay_code : base.barangay_code;
-    const matchedBarangay = TAGUDIN_BARANGAYS_43.find((b) => b.code === bCode || b.name.toLowerCase() === String(obj.barangay_name || '').toLowerCase()) || TAGUDIN_BARANGAYS_43.find((b) => b.code === base.barangay_code) || TAGUDIN_BARANGAYS_43[0];
+    const bCode =
+        typeof obj.barangay_code === 'string' && obj.barangay_code
+            ? obj.barangay_code
+            : base.barangay_code;
+    const matchedBarangay =
+        TAGUDIN_BARANGAYS_43.find(
+            (b) =>
+                b.code === bCode ||
+                b.name.toLowerCase() === String(obj.barangay_name || '').toLowerCase(),
+        ) ||
+        TAGUDIN_BARANGAYS_43.find((b) => b.code === base.barangay_code) ||
+        TAGUDIN_BARANGAYS_43[0];
 
-    const addr = typeof obj.address_line_1 === 'string' && obj.address_line_1.trim() ? obj.address_line_1.trim() : fallbackAddress || base.address_line_1;
+    const addr =
+        typeof obj.address_line_1 === 'string' && obj.address_line_1.trim()
+            ? obj.address_line_1.trim()
+            : fallbackAddress || base.address_line_1;
 
     return {
         version: 1,
-        area_code: typeof obj.area_code === 'string' && obj.area_code ? obj.area_code : base.area_code,
-        region_code: typeof obj.region_code === 'string' && obj.region_code ? obj.region_code : base.region_code,
-        region_name: typeof obj.region_name === 'string' && obj.region_name ? obj.region_name : base.region_name,
-        province_code: typeof obj.province_code === 'string' && obj.province_code ? obj.province_code : base.province_code,
-        province_name: typeof obj.province_name === 'string' && obj.province_name ? obj.province_name : base.province_name,
-        municipality_code: typeof obj.municipality_code === 'string' && obj.municipality_code ? obj.municipality_code : base.municipality_code,
-        municipality_name: typeof obj.municipality_name === 'string' && obj.municipality_name ? obj.municipality_name : base.municipality_name,
-        postal_code: typeof obj.postal_code === 'string' && obj.postal_code ? obj.postal_code : base.postal_code,
+        area_code:
+            typeof obj.area_code === 'string' && obj.area_code ? obj.area_code : base.area_code,
+        region_code:
+            typeof obj.region_code === 'string' && obj.region_code
+                ? obj.region_code
+                : base.region_code,
+        region_name:
+            typeof obj.region_name === 'string' && obj.region_name
+                ? obj.region_name
+                : base.region_name,
+        province_code:
+            typeof obj.province_code === 'string' && obj.province_code
+                ? obj.province_code
+                : base.province_code,
+        province_name:
+            typeof obj.province_name === 'string' && obj.province_name
+                ? obj.province_name
+                : base.province_name,
+        municipality_code:
+            typeof obj.municipality_code === 'string' && obj.municipality_code
+                ? obj.municipality_code
+                : base.municipality_code,
+        municipality_name:
+            typeof obj.municipality_name === 'string' && obj.municipality_name
+                ? obj.municipality_name
+                : base.municipality_name,
+        postal_code:
+            typeof obj.postal_code === 'string' && obj.postal_code
+                ? obj.postal_code
+                : base.postal_code,
         barangay_code: matchedBarangay.code,
         barangay_name: matchedBarangay.name,
         address_line_1: addr,
@@ -221,7 +571,10 @@ export function normalizeGeography(raw: unknown, fallbackAddress?: string): Cano
             captured_at,
         },
         has_pinned_coordinates: Boolean(obj.has_pinned_coordinates && source !== 'default'),
-        service_radius_km: typeof obj.service_radius_km === 'number' && Number.isFinite(obj.service_radius_km) ? obj.service_radius_km : base.service_radius_km,
+        service_radius_km:
+            typeof obj.service_radius_km === 'number' && Number.isFinite(obj.service_radius_km)
+                ? obj.service_radius_km
+                : base.service_radius_km,
     };
 }
 
@@ -238,4 +591,189 @@ export function formatPhilippineAddress(geo: CanonicalGeography): string {
     ].filter(Boolean);
 
     return parts.join(', ');
+}
+
+/**
+ * Default reference coordinates for Tagudin Centro (Poblacion / Rizal Market).
+ */
+export const DEFAULT_TAGUDIN_COORDINATES: PhilippineCoordinates = {
+    lat: 16.9388,
+    lng: 120.4439,
+    source: 'default',
+};
+
+/**
+ * Approximate centroid coordinates for Tagudin's barangays to enable distance
+ * calculation when an exact GPS pin is not stored.
+ */
+export const TAGUDIN_BARANGAY_COORDINATES: Record<string, { lat: number; lng: number }> = {
+    Rizal: { lat: 16.938, lng: 120.4438 },
+    Poblacion: { lat: 16.9388, lng: 120.444 },
+    'Del Pilar': { lat: 16.9375, lng: 120.4452 },
+    Quirino: { lat: 16.9365, lng: 120.4468 },
+    Farola: { lat: 16.934, lng: 120.438 },
+    Bio: { lat: 16.9482, lng: 120.4325 },
+    Libtong: { lat: 16.9602, lng: 120.4312 },
+    Becques: { lat: 16.953, lng: 120.4318 },
+    Dacutan: { lat: 16.942, lng: 120.433 },
+    Dardarat: { lat: 16.939, lng: 120.432 },
+    'San Miguel': { lat: 16.931, lng: 120.434 },
+    'Pudoc West': { lat: 16.92, lng: 120.435 },
+    'Pudoc East': { lat: 16.918, lng: 120.44 },
+    Bitalag: { lat: 16.928, lng: 120.4485 },
+    Ambalayat: { lat: 16.9255, lng: 120.4552 },
+    Baracbac: { lat: 16.945, lng: 120.45 },
+    'Bario-an': { lat: 16.941, lng: 120.452 },
+    Baritao: { lat: 16.932, lng: 120.458 },
+    'Bucao East': { lat: 16.943, lng: 120.46 },
+    'Bucao West': { lat: 16.942, lng: 120.456 },
+    'Ag-aguman': { lat: 16.95, lng: 120.46 },
+    Tampugo: { lat: 16.935, lng: 120.45 },
+    Tallaoen: { lat: 16.929, lng: 120.462 },
+    Bimmanga: { lat: 16.938, lng: 120.465 },
+    Borono: { lat: 16.946, lng: 120.465 },
+    Cabaroan: { lat: 16.933, lng: 120.453 },
+    Cabugbugan: { lat: 16.94, lng: 120.457 },
+    Cabulanglangan: { lat: 16.927, lng: 120.468 },
+    Gabur: { lat: 16.948, lng: 120.456 },
+    Garitan: { lat: 16.952, lng: 120.452 },
+    Jardin: { lat: 16.936, lng: 120.442 },
+    Lacong: { lat: 16.955, lng: 120.448 },
+    Lantag: { lat: 16.958, lng: 120.462 },
+    'Las-ud': { lat: 16.93, lng: 120.446 },
+    Lubnac: { lat: 16.952, lng: 120.468 },
+    Magsaysay: { lat: 16.947, lng: 120.472 },
+    Malacañang: { lat: 16.941, lng: 120.468 },
+    Pacac: { lat: 16.935, lng: 120.462 },
+    Pallogan: { lat: 16.929, lng: 120.454 },
+    Pula: { lat: 16.944, lng: 120.47 },
+    'Rang-et': { lat: 16.937, lng: 120.452 },
+    Salvacion: { lat: 16.939, lng: 120.448 },
+    Sawat: { lat: 16.949, lng: 120.464 },
+    Tarangotong: { lat: 16.956, lng: 120.475 },
+};
+
+/**
+ * Computes the Haversine distance in kilometers between two GPS coordinates.
+ */
+export function calculateDistanceKm(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+): number {
+    const R = 6371; // Earth radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    return Math.round(distance * 10) / 10;
+}
+
+/**
+ * Extracts coordinates from a listing's structured geography or resolves them via barangay lookup.
+ */
+export function resolveListingCoordinates(listing: {
+    geography?: Record<string, unknown> | null;
+    area?: string | null;
+    locality?: string | null;
+}): { lat: number; lng: number } | null {
+    const geo = listing.geography;
+    if (geo && typeof geo === 'object') {
+        const coords = geo.coordinates as Record<string, unknown> | undefined;
+        if (
+            coords &&
+            typeof coords.lat === 'number' &&
+            typeof coords.lng === 'number' &&
+            Number.isFinite(coords.lat) &&
+            Number.isFinite(coords.lng)
+        ) {
+            return { lat: coords.lat, lng: coords.lng };
+        }
+        if (
+            typeof geo.lat === 'number' &&
+            typeof geo.lng === 'number' &&
+            Number.isFinite(geo.lat) &&
+            Number.isFinite(geo.lng)
+        ) {
+            return { lat: geo.lat, lng: geo.lng };
+        }
+        const bName = typeof geo.barangay_name === 'string' ? geo.barangay_name.trim() : '';
+        if (bName && TAGUDIN_BARANGAY_COORDINATES[bName]) {
+            return TAGUDIN_BARANGAY_COORDINATES[bName];
+        }
+    }
+
+    // Fallback lookup from area / locality string (e.g. "Barangay Rizal, Tagudin" or "Rizal")
+    const candidate = [listing.area, listing.locality].filter(Boolean).join(' ');
+    for (const [name, coords] of Object.entries(TAGUDIN_BARANGAY_COORDINATES)) {
+        if (candidate.toLowerCase().includes(name.toLowerCase())) {
+            return coords;
+        }
+    }
+
+    return DEFAULT_TAGUDIN_COORDINATES;
+}
+
+/**
+ * Formats a clean, readable location label for display on listing cards.
+ * E.g. "Stall 14, Public Market · Brgy. Rizal" or "Brgy. Rizal, Tagudin" or "Tagudin Centro"
+ */
+export function formatListingLocation(listing: {
+    geography?: Record<string, unknown> | null;
+    stall_location?: string | null;
+    stallLocation?: string | null;
+    area?: string | null;
+    locality?: string | null;
+}): string {
+    const geo = listing.geography as Record<string, unknown> | null | undefined;
+    const stall =
+        (typeof listing.stall_location === 'string' && listing.stall_location.trim()) ||
+        (typeof listing.stallLocation === 'string' && listing.stallLocation.trim()) ||
+        (geo && typeof geo.stall_location === 'string' && geo.stall_location.trim()) ||
+        '';
+
+    const barangay =
+        (geo && typeof geo.barangay_name === 'string' && geo.barangay_name.trim()) || '';
+
+    if (stall && barangay) {
+        if (stall.toLowerCase().includes(barangay.toLowerCase())) {
+            return stall;
+        }
+        return `${stall} · Brgy. ${barangay}`;
+    }
+
+    if (stall) {
+        return stall;
+    }
+
+    if (barangay) {
+        return `Brgy. ${barangay}, Tagudin`;
+    }
+
+    const rawArea = listing.area || listing.locality;
+    if (rawArea && rawArea.trim()) {
+        return rawArea.trim();
+    }
+
+    return 'Tagudin';
+}
+
+/**
+ * Formats a distance number into a human-readable string (e.g., "0.4 km away").
+ */
+export function formatDistance(distanceKm: number | null | undefined): string | null {
+    if (typeof distanceKm !== 'number' || !Number.isFinite(distanceKm)) {
+        return null;
+    }
+    if (distanceKm < 0.1) {
+        return 'Within 100m';
+    }
+    return `${distanceKm.toFixed(1)} km away`;
 }

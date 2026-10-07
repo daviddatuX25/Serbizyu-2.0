@@ -116,8 +116,9 @@ export type ListingRecord = {
     stall_location?: string | null;
     stallLocation?: string | null;
     geography?: Record<string, unknown> | null;
-    ownerName?: string | null;
+    distance_km?: number | null;
     owner_name?: string | null;
+    ownerName?: string | null;
     owner?: { displayName?: string | null; display_name?: string | null } | null;
     public?: boolean;
     fixture_key?: string | null;
@@ -234,21 +235,75 @@ export type DealChainCatalogRecord = {
     }>;
 };
 
+export type WorkNodeEvidencePhoto = {
+    id: string;
+    url: string;
+    media_type: string;
+};
+
+export type WorkNodeEvidenceCandidate = {
+    id: string;
+    scan_status: string;
+    media_type: string;
+    url?: string;
+};
+
+export type WorkNodeEvidenceProjection = {
+    notes: string;
+    location: {
+        latitude: number;
+        longitude: number;
+        accuracy_m: number | null;
+        source: 'gps' | 'manual';
+        observed_at: string;
+        received_at: string;
+        landmark?: string | null;
+    } | null;
+    metric_readings: Array<{
+        value: number;
+        unit: string;
+        observed_at: string;
+        received_at: string;
+    }>;
+    checklist_completed: boolean;
+    photos: WorkNodeEvidencePhoto[];
+    pending_photo_count: number;
+};
+
 export type WorkNodeRecord = {
     id: string;
     ordinal: number;
     title: string;
     description: string;
-    node_kind: 'checkin_intake' | 'execution_proof' | 'decision_gate' | 'handoff_ready' | 'final_signoff' | string;
-    evidence_type: 'photo_required' | 'video_required' | 'meter_log' | 'receipt_upload' | 'dual_sign' | string;
+    node_kind:
+        | 'checkin_intake'
+        | 'execution_proof'
+        | 'decision_gate'
+        | 'handoff_ready'
+        | 'final_signoff'
+        | string;
+    evidence_type:
+        | 'photo_required'
+        | 'video_required'
+        | 'meter_log'
+        | 'receipt_upload'
+        | 'dual_sign'
+        | 'gps_checkin'
+        | 'none'
+        | string;
     evidence_description: string;
     control_mode: 'provider_advance' | 'customer_confirm' | 'counterparty_handoff' | string;
+    approval_method?: 'app_confirm' | 'presence_otp' | 'worker_dropoff' | 'none' | string;
+    required_proofs?: string[];
+    metric_unit?: string | null;
     mandatory: boolean;
     duration_label?: string | null;
     status?: 'active' | 'completed' | 'locked' | 'awaiting_customer_confirmation' | string;
     completed_at?: string | null;
     customer_confirmed_at?: string | null;
-    evidence_payload?: Record<string, unknown> | null;
+    evidence?: WorkNodeEvidenceProjection | null;
+    candidate_evidence?: WorkNodeEvidenceCandidate[];
+    can_confirm?: boolean;
 };
 
 export type WorkCatalogRecord = {

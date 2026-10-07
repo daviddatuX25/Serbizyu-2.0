@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Listings\Infrastructure\Demo;
 
 use App\Shared\Contracts\FixtureConstants;
+use App\Shared\Infrastructure\Demo\TagudinPartnerCatalog;
 
 /**
  * Declarative Tagudin browse supply for local/capstone demos.
@@ -25,9 +26,16 @@ use App\Shared\Contracts\FixtureConstants;
  *     scope: string,
  *     price_amount_minor: int|null,
  *     currency: string|null,
- *     capacity_summary: string,
  *     package_tiers?: list<array{id: string, title: string, price: int, orig_price?: int, sub: string, inclusions: list<string>}>,
- *     milestone_stages?: list<array{title: string, description: string}>
+ *     milestone_stages?: list<array{title: string, description: string}>,
+ *     work_catalog_code?: string,
+ *     addons?: list<array<string, mixed>>,
+ *     partner_candidates?: list<array<string, mixed>>,
+ *     catalog_source?: string,
+ *     barangay_name?: string,
+ *     barangay_code?: string,
+ *     stall_location?: string,
+ *     coordinates?: array{lat: float, lng: float}
  * }
  */
 final class TagudinBrowseCatalog
@@ -39,7 +47,7 @@ final class TagudinBrowseCatalog
      */
     public static function listings(): array
     {
-        return [
+        $rows = [
             [
                 'fixture_key' => 'active-tagudin-greeting-card-01',
                 'listing_id' => '0198a3b1-7c40-7abc-8def-5234567890b1',
@@ -53,6 +61,10 @@ final class TagudinBrowseCatalog
                 'price_amount_minor' => 8000,
                 'currency' => 'PHP',
                 'capacity_summary' => 'Capacity available this week',
+                'barangay_name' => 'Bio',
+                'barangay_code' => '0102933008',
+                'stall_location' => 'Bio Beach Craft Studio',
+                'coordinates' => ['lat' => 16.9482, 'lng' => 120.4325],
             ],
             [
                 'fixture_key' => 'active-tagudin-hem-fix-01',
@@ -67,6 +79,10 @@ final class TagudinBrowseCatalog
                 'price_amount_minor' => 12000,
                 'currency' => 'PHP',
                 'capacity_summary' => 'Same-day walk-in when open',
+                'barangay_name' => 'Rizal',
+                'barangay_code' => '0102933037',
+                'stall_location' => 'Stall 8, Tagudin Public Market',
+                'coordinates' => ['lat' => 16.9382, 'lng' => 120.4435],
             ],
             [
                 'fixture_key' => 'active-tagudin-market-errand-01',
@@ -81,6 +97,10 @@ final class TagudinBrowseCatalog
                 'price_amount_minor' => 15000,
                 'currency' => 'PHP',
                 'capacity_summary' => 'Pickup windows by agreement',
+                'barangay_name' => 'Del Pilar',
+                'barangay_code' => '0102933018',
+                'stall_location' => 'Del Pilar Heritage Plaza',
+                'coordinates' => ['lat' => 16.9375, 'lng' => 120.4452],
             ],
             [
                 'fixture_key' => 'active-tagudin-flyer-print-01',
@@ -95,6 +115,10 @@ final class TagudinBrowseCatalog
                 'price_amount_minor' => 20000,
                 'currency' => 'PHP',
                 'capacity_summary' => 'Soft proof before print',
+                'barangay_name' => 'Quirino',
+                'barangay_code' => '0102933035',
+                'stall_location' => 'St. Augustine Commercial Hub',
+                'coordinates' => ['lat' => 16.9365, 'lng' => 120.4468],
             ],
             [
                 'fixture_key' => 'active-tagudin-bibingka-01',
@@ -119,6 +143,10 @@ final class TagudinBrowseCatalog
                     ['title' => 'Fresh packaging in wilted banana leaves', 'description' => 'Stage 2 · Fresh seal packaging gate'],
                     ['title' => 'Warm insulated tray handoff at Tagudin Market', 'description' => 'Stage 3 · Stall pickup or courier dispatch'],
                 ],
+                'barangay_name' => 'Rizal',
+                'barangay_code' => '0102933037',
+                'stall_location' => 'Stall 14, Tagudin Public Market',
+                'coordinates' => ['lat' => 16.9380, 'lng' => 120.4438],
             ],
             [
                 'fixture_key' => 'active-tagudin-document-scan-01',
@@ -133,6 +161,10 @@ final class TagudinBrowseCatalog
                 'price_amount_minor' => 5000,
                 'currency' => 'PHP',
                 'capacity_summary' => 'Short sets same day when open',
+                'barangay_name' => 'Poblacion',
+                'barangay_code' => '0102933037',
+                'stall_location' => 'Municipal Center Arcade',
+                'coordinates' => ['lat' => 16.9388, 'lng' => 120.4440],
             ],
             [
                 'fixture_key' => 'active-tagudin-greens-bag-01',
@@ -147,6 +179,10 @@ final class TagudinBrowseCatalog
                 'price_amount_minor' => 9000,
                 'currency' => 'PHP',
                 'capacity_summary' => 'Market mornings when listed',
+                'barangay_name' => 'Ambalayat',
+                'barangay_code' => '0102933002',
+                'stall_location' => 'Ambalayat Farm Stand',
+                'coordinates' => ['lat' => 16.9255, 'lng' => 120.4552],
             ],
             [
                 'fixture_key' => 'active-tagudin-ac-clean-01',
@@ -172,6 +208,10 @@ final class TagudinBrowseCatalog
                     ['title' => 'Cold compressor run & amp verification', 'description' => 'Stage 3 · Amperage reading photo gate'],
                     ['title' => 'Delta temperature drop test (ΔT ≥ 12°C)', 'description' => 'Stage 4 · Probe delta photo + Citizen OTP sign-off'],
                 ],
+                'barangay_name' => 'Poblacion',
+                'barangay_code' => '0102933037',
+                'stall_location' => 'Master Tech Workshop, Centro',
+                'coordinates' => ['lat' => 16.9392, 'lng' => 120.4430],
             ],
             [
                 'fixture_key' => 'active-tagudin-courier-01',
@@ -179,13 +219,17 @@ final class TagudinBrowseCatalog
                 'version_id' => '0198a3b1-7c40-7abc-8def-6234567890b9',
                 'category_code' => 'courier',
                 'listing_type' => 'service',
-                'work_shape' => 'A2',
+                'work_shape' => 'A1',
                 'title' => 'Tagudin Express Motorcycle Delivery',
                 'description' => 'Fast doorstep pickup & delivery across Tagudin. Courier coordinates with local hardware stores, bakeries, and technician appointments.',
                 'scope' => 'Tagudin transport fixture',
                 'price_amount_minor' => 8000,
                 'currency' => 'PHP',
                 'capacity_summary' => '15-25m route windows in Centro',
+                'barangay_name' => 'Bitalag',
+                'barangay_code' => '0102933009',
+                'stall_location' => 'Bitalag McArthur Highway Station',
+                'coordinates' => ['lat' => 16.9280, 'lng' => 120.4485],
             ],
             [
                 'fixture_key' => 'active-tagudin-ac-capacitor-01',
@@ -200,6 +244,178 @@ final class TagudinBrowseCatalog
                 'price_amount_minor' => 18000,
                 'currency' => 'PHP',
                 'capacity_summary' => 'In stock at counter',
+                'barangay_name' => 'Rizal',
+                'barangay_code' => '0102933037',
+                'stall_location' => 'Tagudin Central Hardware, Rizal',
+                'coordinates' => ['lat' => 16.9378, 'lng' => 120.4442],
+            ],
+            [
+                'fixture_key' => 'active-tagudin-ac-install-01',
+                'listing_id' => '0198a3b1-7c40-7abc-8def-5234567890bb',
+                'version_id' => '0198a3b1-7c40-7abc-8def-6234567890bb',
+                'category_code' => 'repairs',
+                'listing_type' => 'service',
+                'work_shape' => 'A3',
+                'title' => 'Split AC Capacitor Installation',
+                'description' => 'Separate installation labor for a compatible AC run capacitor, including safe isolation and load verification.',
+                'scope' => 'Tagudin technician installation fixture',
+                'price_amount_minor' => 25000,
+                'currency' => 'PHP',
+                'capacity_summary' => 'Appointment windows by agreement',
+                'barangay_name' => 'Libtong',
+                'barangay_code' => '0102933026',
+                'stall_location' => 'Libtong Service Depot',
+                'coordinates' => ['lat' => 16.9602, 'lng' => 120.4312],
+            ],
+            [
+                'fixture_key' => 'active-tagudin-safety-audit-01',
+                'listing_id' => '0198a3b1-7c40-7abc-8def-5234567890bc',
+                'version_id' => '0198a3b1-7c40-7abc-8def-6234567890bc',
+                'category_code' => 'repairs',
+                'listing_type' => 'service',
+                'work_shape' => 'A3',
+                'title' => 'Home Appliance Safety Audit',
+                'description' => 'Independent thermal-load and electrical safety review after repair work reaches its readiness gate.',
+                'scope' => 'Tagudin safety audit fixture',
+                'price_amount_minor' => 15000,
+                'currency' => 'PHP',
+                'capacity_summary' => 'Scheduled audit windows',
+                'barangay_name' => 'Farola',
+                'barangay_code' => '0102933019',
+                'stall_location' => 'Farola Sundial Point',
+                'coordinates' => ['lat' => 16.9340, 'lng' => 120.4380],
+            ],
+        ];
+
+        return array_map(
+            static function (array $row): array {
+                $row['work_catalog_code'] ??= self::workCatalogCode((string) $row['work_shape']);
+                $row['package_tiers'] ??= self::defaultPackageTiers($row);
+                $row['milestone_stages'] ??= self::defaultMilestones((string) $row['work_shape']);
+                $row['addons'] ??= TagudinPartnerCatalog::addonsFor([
+                    'category_code' => (string) $row['category_code'],
+                    'listing_type' => $row['listing_type'],
+                    'fixture_key' => (string) ($row['fixture_key'] ?? ''),
+                    'title' => (string) ($row['title'] ?? ''),
+                ]);
+                $row['partner_candidates'] = TagudinPartnerCatalog::candidates();
+                $row['media'] ??= self::defaultMedia($row);
+                $row['catalog_source'] = 'tagudin_seed';
+
+                return $row;
+            },
+            $rows,
+        );
+    }
+
+    /** @return list<array{id: string, title: string, price: int, orig_price?: int, sub: string, inclusions: list<string>}> */
+    private static function defaultPackageTiers(array $row): array
+    {
+        $basePrice = max(1, (int) round(((int) ($row['price_amount_minor'] ?? 0)) / 100));
+        $fixture = preg_replace('/[^a-z0-9]+/i', '-', (string) $row['fixture_key']) ?: 'listing';
+        $kind = $row['listing_type'] === 'product' ? 'Product' : 'Service';
+
+        return [
+            [
+                'id' => 'pkg-'.$fixture.'-standard',
+                'title' => $kind.' Standard Scope',
+                'price' => $basePrice,
+                'orig_price' => (int) round($basePrice * 1.15),
+                'sub' => 'Base verified scope',
+                'inclusions' => [
+                    'Scope confirmation and handoff details',
+                    'Standard Tagudin execution or preparation',
+                    'Required evidence and completion acknowledgement',
+                ],
+            ],
+            [
+                'id' => 'pkg-'.$fixture.'-extended',
+                'title' => $kind.' Extended Scope',
+                'price' => (int) round($basePrice * 1.75),
+                'orig_price' => (int) round($basePrice * 2.05),
+                'sub' => 'Expanded capacity or priority handling',
+                'inclusions' => [
+                    'Expanded quantity or service capacity',
+                    'Additional quality review before handoff',
+                    'Priority coordination window when available',
+                ],
+            ],
+        ];
+    }
+
+    /** @return list<array{title: string, description: string}> */
+    private static function defaultMilestones(string $workShape): array
+    {
+        return match ($workShape) {
+            'A2' => [
+                ['title' => 'Pickup check-in and package count', 'description' => 'Stage 1 · Source handoff and item count gate'],
+                ['title' => 'Transit route and delivery proof', 'description' => 'Stage 2 · Route and recipient handoff gate'],
+            ],
+            'A3' => [
+                ['title' => 'Arrival check-in and safety triage', 'description' => 'Stage 1 · Location and safety gate'],
+                ['title' => 'On-site service execution', 'description' => 'Stage 2 · Before and after evidence gate'],
+                ['title' => 'Measurement and quality check', 'description' => 'Stage 3 · Instrument or checklist gate'],
+                ['title' => 'Customer sign-off', 'description' => 'Stage 4 · Completion acknowledgement gate'],
+            ],
+            'A4' => [
+                ['title' => 'Sourcing and package preparation', 'description' => 'Stage 1 · Receipt or dispatch gate'],
+                ['title' => 'Handoff and recipient confirmation', 'description' => 'Stage 2 · Count and recipient gate'],
+                ['title' => 'Condition close-out', 'description' => 'Stage 3 · Final package evidence gate'],
+            ],
+            'A9' => [
+                ['title' => 'Draft artifact upload and scan', 'description' => 'Stage 1 · Checksum and scan gate'],
+                ['title' => 'Client review and final acceptance', 'description' => 'Stage 2 · Signed acceptance gate'],
+            ],
+            default => [
+                ['title' => 'Scope confirmation and intake', 'description' => 'Stage 1 · Scope and safety gate'],
+                ['title' => 'Execution evidence', 'description' => 'Stage 2 · Required work proof gate'],
+                ['title' => 'Handoff and sign-off', 'description' => 'Stage 3 · Completion acknowledgement gate'],
+            ],
+        };
+    }
+
+    private static function workCatalogCode(string $workShape): string
+    {
+        return match ($workShape) {
+            'A1' => 'tagudin-local-service-a1',
+            'A3' => 'tagudin-onsite-service-a3',
+            'A4' => 'tagudin-product-handoff-a4',
+            'A9' => 'tagudin-digital-delivery-a9',
+            default => 'tagudin-local-service-a1',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @return array{cover_thumbnail_url: string, has_video: bool, items: list<array<string, mixed>>}
+     */
+    private static function defaultMedia(array $row): array
+    {
+        $fixtureKey = (string) ($row['fixture_key'] ?? '');
+        $categoryCode = (string) ($row['category_code'] ?? '');
+        $photoUrl = match (true) {
+            str_contains($fixtureKey, 'capacitor') => '/photos/ac-capacitor.jpg',
+            str_contains($fixtureKey, 'ac-') => '/photos/ac-clean.jpg',
+            str_contains($fixtureKey, 'safety-audit') => '/photos/req-electrician.jpg',
+            $categoryCode === 'courier' => '/photos/courier.jpg',
+            $categoryCode === 'local-food' => '/photos/bibingka.jpg',
+            in_array($categoryCode, ['print-assist', 'greeting-cards'], true) => '/photos/greeting.jpg',
+            default => '/photos/ac-clean.jpg',
+        };
+
+        return [
+            'cover_thumbnail_url' => $photoUrl,
+            'has_video' => false,
+            'items' => [
+                [
+                    'id' => 'media-'.$fixtureKey.'-cover',
+                    'kind' => 'photo',
+                    'url' => $photoUrl,
+                    'thumbnail_url' => $photoUrl,
+                    'caption' => (string) ($row['title'] ?? 'Tagudin listing photo'),
+                    'mime_type' => 'image/jpeg',
+                    'is_cover' => true,
+                ],
             ],
         ];
     }
