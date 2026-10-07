@@ -98,4 +98,69 @@ describe('DesktopGlobalNav dynamic auth state', () => {
         // Should display total quantity 3
         expect(screen.getByText('3')).toBeTruthy();
     });
+
+    it('toggles PicksDrawer open and closed on non-browse pages when clicking Picks', () => {
+        window.localStorage.setItem(
+            'serbizyu.picks',
+            JSON.stringify([
+                { id: 'item_1', title: 'AC Clean', price: 450, quantity: 2 },
+            ]),
+        );
+
+        render(<DesktopGlobalNav session={null} readiness={null} />);
+
+        // Drawer is initially closed
+        expect(screen.queryByText('Citizen Picks')).toBeNull();
+
+        // Click Picks in navbar to toggle open
+        const picksBtn = screen.getByRole('button', { name: /View citizen picks/i });
+        fireEvent.click(picksBtn);
+
+        // Drawer is now open
+        expect(screen.getByText('Citizen Picks')).toBeTruthy();
+        expect(screen.getByText('AC Clean')).toBeTruthy();
+
+        // Click close button on drawer
+        const closeBtn = screen.getByRole('button', { name: /Close drawer/i });
+        fireEvent.click(closeBtn);
+
+        expect(screen.queryByText('Citizen Picks')).toBeNull();
+    });
+
+    it('delegates to onPicksClick when explicitly provided', () => {
+        const onPicksClick = vi.fn();
+        render(<DesktopGlobalNav onPicksClick={onPicksClick} />);
+
+        const picksBtn = screen.getByRole('button', { name: /View citizen picks/i });
+        fireEvent.click(picksBtn);
+
+        expect(onPicksClick).toHaveBeenCalledTimes(1);
+        expect(screen.queryByText('Citizen Picks')).toBeNull();
+    });
+
+    it('renders unified Post CTA and opens streamlined CreatorPostModal when clicked', () => {
+        render(<DesktopGlobalNav session={null} readiness={null} />);
+
+        const postBtn = screen.getByRole('button', { name: 'Post request or create listing' });
+        expect(postBtn).toBeTruthy();
+        expect(screen.queryByText('What are you posting?')).toBeNull();
+
+        fireEvent.click(postBtn);
+
+        expect(screen.getByText('What are you posting?')).toBeTruthy();
+        expect(screen.getByText('Post a Request')).toBeTruthy();
+        expect(screen.getByText('Offer a Service')).toBeTruthy();
+        expect(screen.getByText('Sell a Product')).toBeTruthy();
+    });
+
+    it('delegates to onPostClick when explicitly provided', () => {
+        const onPostClick = vi.fn();
+        render(<DesktopGlobalNav onPostClick={onPostClick} />);
+
+        const postBtn = screen.getByRole('button', { name: 'Post request or create listing' });
+        fireEvent.click(postBtn);
+
+        expect(onPostClick).toHaveBeenCalledTimes(1);
+        expect(screen.queryByText('What are you posting?')).toBeNull();
+    });
 });
