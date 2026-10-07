@@ -1,10 +1,12 @@
 import React from 'react';
-import { Star } from 'lucide-react';
+import { Star, MapPin } from 'lucide-react';
 import type { ListingRecord } from '@/types';
+import { formatListingLocation } from '@/lib/philippineAddresses';
 interface MarketplaceCardProps {
     listing: ListingRecord;
     onSelect: (listing: ListingRecord) => void;
     onAddToCart?: (listing: ListingRecord) => void;
+    distanceKm?: number | null;
 }
 
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -17,17 +19,18 @@ const CATEGORY_IMAGES: Record<string, string> = {
     default: '/photos/ac-clean.jpg',
 };
 
-export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({
-    listing,
-    onSelect,
-}) => {
+export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ listing, onSelect }) => {
     const categoryKey = (listing.category_code || listing.categoryCode || 'default').toLowerCase();
     const photoUrl = CATEGORY_IMAGES[categoryKey] || CATEGORY_IMAGES['default'];
 
     // Convert minor price (e.g. 45000) to formatted peso string
     const rawMinor = listing.price_amount_minor;
     const priceDisplay = rawMinor ? `₱${(rawMinor / 100).toFixed(2)}` : '₱80.00';
-
+    const locationText = formatListingLocation(listing);
+    const distanceBadge =
+        typeof listing.distance_km === 'number'
+            ? `${listing.distance_km < 0.1 ? '<100m' : `${listing.distance_km.toFixed(1)}km`}`
+            : undefined;
     return (
         <article
             onClick={() => onSelect(listing)}
@@ -54,8 +57,17 @@ export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({
                             <span>4.9</span>
                         </span>
                     </div>
-                    <span className="text-[11px] font-semibold text-[#0F2F58]">
-                        {listing.area || 'Tagudin'}
+                    <span
+                        className="flex max-w-[160px] items-center gap-1 truncate text-[11px] font-semibold text-[#0F2F58]"
+                        title={locationText}
+                    >
+                        <MapPin className="size-3 shrink-0 text-[#0F2F58]/70" />
+                        <span className="truncate">{locationText}</span>
+                        {distanceBadge && (
+                            <span className="shrink-0 text-[10px] font-bold text-emerald-700">
+                                · {distanceBadge}
+                            </span>
+                        )}
                     </span>
                 </div>
             </div>

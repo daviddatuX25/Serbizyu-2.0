@@ -44,6 +44,7 @@ describe('Browse Page', () => {
             price_amount_minor: 45000,
             owner_name: 'Kuya Ben',
             area: 'Tagudin Centro',
+            geography: { barangay_name: 'Poblacion' },
             status: 'active',
         },
         {
@@ -55,6 +56,7 @@ describe('Browse Page', () => {
             price_amount_minor: 18000,
             owner_name: 'Auntie Tess',
             area: 'Tagudin Market',
+            geography: { barangay_name: 'Rizal', stall_location: 'Tagudin Market' },
             status: 'active',
         },
         {
@@ -66,6 +68,7 @@ describe('Browse Page', () => {
             price_amount_minor: 8000,
             owner_name: 'Print Hub',
             area: 'Centro',
+            geography: { barangay_name: 'Poblacion' },
             status: 'active',
         },
     ];
@@ -85,15 +88,17 @@ describe('Browse Page', () => {
 
         // Header check
         expect(within(desktop).getAllByText('SERBIZYU').length).toBeGreaterThan(0);
-        expect(within(desktop).getByText('Verified Services & Local Products')).toBeTruthy();
-        expect(
-            within(desktop).getByText('Showing 3 active public offerings in Tagudin'),
-        ).toBeTruthy();
+        const servicesTab = within(desktop).getByRole('button', { name: /🏷️ Services & Goods/i });
+        expect(within(servicesTab).getByText('3')).toBeTruthy();
 
         // Cards check
         expect(within(desktop).getByText('Inverter Split AC Deep Clean')).toBeTruthy();
         expect(within(desktop).getByText('Weekend bibingka tray')).toBeTruthy();
         expect(within(desktop).getByText('Document scan soft-copy')).toBeTruthy();
+
+        // Location tag on cards
+        expect(within(desktop).getAllByText(/Brgy. Poblacion/i).length).toBeGreaterThanOrEqual(1);
+        expect(within(desktop).getByText(/Tagudin Market · Brgy. Rizal/i)).toBeTruthy();
 
         // Check prices
         expect(within(desktop).getByText('₱450.00')).toBeTruthy();
@@ -108,13 +113,8 @@ describe('Browse Page', () => {
         const desktopSearch = within(desktop).getByPlaceholderText(/Search services/i);
         fireEvent.change(desktopSearch, { target: { value: 'bibingka' } });
 
-        // Result count updates
-        expect(
-            within(desktop).getByText('Showing 1 active public offerings in Tagudin'),
-        ).toBeTruthy();
         expect(within(desktop).getByText('Weekend bibingka tray')).toBeTruthy();
         expect(within(desktop).queryByText('Inverter Split AC Deep Clean')).toBeNull();
-
         // Active filter badge displayed
         expect(within(desktop).getByText('"bibingka"')).toBeTruthy();
     });
@@ -126,9 +126,6 @@ describe('Browse Page', () => {
         const repairsBtn = within(aside).getByRole('button', { name: /Repairs & AC/i });
         fireEvent.click(repairsBtn);
 
-        expect(
-            within(desktop).getByText('Showing 1 active public offerings in Tagudin'),
-        ).toBeTruthy();
         expect(within(desktop).getByText('Inverter Split AC Deep Clean')).toBeTruthy();
         expect(within(desktop).queryByText('Weekend bibingka tray')).toBeNull();
     });
@@ -140,9 +137,6 @@ describe('Browse Page', () => {
         const productBtn = within(desktop).getByRole('button', { name: /^product$/i });
         fireEvent.click(productBtn);
 
-        expect(
-            within(desktop).getByText('Showing 1 active public offerings in Tagudin'),
-        ).toBeTruthy();
         expect(within(desktop).getByText('Weekend bibingka tray')).toBeTruthy();
         expect(within(desktop).queryByText('Inverter Split AC Deep Clean')).toBeNull();
     });
@@ -155,9 +149,6 @@ describe('Browse Page', () => {
         fireEvent.click(under150Radio);
 
         // Document scan is 80 (<= 150)
-        expect(
-            within(desktop).getByText('Showing 1 active public offerings in Tagudin'),
-        ).toBeTruthy();
         expect(within(desktop).getByText('Document scan soft-copy')).toBeTruthy();
         expect(within(desktop).queryByText('Inverter Split AC Deep Clean')).toBeNull();
         expect(within(desktop).queryByText('Weekend bibingka tray')).toBeNull();
@@ -170,25 +161,23 @@ describe('Browse Page', () => {
         const desktopSearch = within(desktop).getByPlaceholderText(/Search services/i);
         fireEvent.change(desktopSearch, { target: { value: 'bibingka' } });
 
-        expect(
-            within(desktop).getByText('Showing 1 active public offerings in Tagudin'),
-        ).toBeTruthy();
+        expect(within(desktop).getByText('Weekend bibingka tray')).toBeTruthy();
 
         const resetBtn = within(desktop).getByRole('button', { name: /Reset/i });
         fireEvent.click(resetBtn);
 
-        expect(
-            within(desktop).getByText('Showing 3 active public offerings in Tagudin'),
-        ).toBeTruthy();
         expect(within(desktop).getByText('Inverter Split AC Deep Clean')).toBeTruthy();
         expect(within(desktop).getByText('Weekend bibingka tray')).toBeTruthy();
         expect(within(desktop).getByText('Document scan soft-copy')).toBeTruthy();
     });
 
     it('opens PicksDrawer and shows staged items when Picks button is clicked', () => {
-        window.localStorage.setItem('serbizyu.picks', JSON.stringify([
-            { id: 'item_1', title: 'Inverter Split AC Deep Clean', price: 450, quantity: 1 }
-        ]));
+        window.localStorage.setItem(
+            'serbizyu.picks',
+            JSON.stringify([
+                { id: 'item_1', title: 'Inverter Split AC Deep Clean', price: 450, quantity: 1 },
+            ]),
+        );
         const { container } = render(<Browse {...baseProps} />);
         const desktop = getDesktop(container as HTMLElement);
 
@@ -204,5 +193,32 @@ describe('Browse Page', () => {
         expect(screen.getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThanOrEqual(
             1,
         );
+    });
+
+    it('sorts listings by nearest when nearest sort option is chosen', () => {
+        const { container } = render(<Browse {...baseProps} />);
+        const desktop = getDesktop(container as HTMLElement);
+
+        const sortSelect = within(desktop).getByRole('combobox', {
+            name: 'Sort marketplace offerings',
+        });
+        expect(within(sortSelect).getByRole('option', { name: 'Nearest' })).toBeTruthy();
+
+        fireEvent.change(sortSelect, { target: { value: 'nearest' } });
+        expect((sortSelect as HTMLSelectElement).value).toBe('nearest');
+    });
+
+    it('filters listings by barangay location in sidebar', () => {
+        const { container } = render(<Browse {...baseProps} />);
+        const desktop = getDesktop(container as HTMLElement);
+
+        const barangaySelect = within(desktop).getByRole('combobox', {
+            name: 'Filter by Barangay',
+        });
+        expect(barangaySelect).toBeTruthy();
+
+        fireEvent.change(barangaySelect, { target: { value: 'Rizal' } });
+        expect(within(desktop).getByText('Weekend bibingka tray')).toBeTruthy();
+        expect(within(desktop).queryByText('Inverter Split AC Deep Clean')).toBeNull();
     });
 });
