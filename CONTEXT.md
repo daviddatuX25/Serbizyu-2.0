@@ -20,6 +20,22 @@ _Avoid_: SLA, guaranteed duration (unless explicitly governed)
 A bounded, versioned Work definition owned by a Listing, Request, Quote, or award source. Editing a copied set creates a custom specification for that source; reusability requires an explicit, separately authorized and versioned Save as template promotion.
 _Avoid_: Shared catalog variation for ordinary listing edits, mutable template
 
+**Work Node**:
+An ordered milestone step inside a Work Specification that pairs one Step Clearance Authority with zero or more optional Work Tools. It is an internal progress gate within one provider's Work, never an independent Order or Payment Obligation.
+_Avoid_: Sub-order, workflow state machine, deal chain node
+
+**Step Clearance Authority**:
+The rule governing who authorizes a Work Node to advance: the provider directly, the customer via approval, or a counterparty via physical custody handoff. It is independent of whether the provider attaches proof via Work Tools.
+_Avoid_: Proof type, evidence protocol
+
+**Counterparty Sign-Off Method**:
+The mechanism by which a customer or handoff recipient confirms a Work Node when Step Clearance Authority requires their approval: either an in-app approval tap or an in-person 4-digit OTP token.
+_Avoid_: Worker proof checkbox, customer-uploaded evidence
+
+**Work Tool**:
+A modular proof or fact adapter attached to a Work Node (`0..N`)—such as photo capture, GPS coordinate check-in, metric reading, safety checklist, or an owner-scoped external business connector—that produces candidate evidence for the step without owning step clearance or payment release.
+_Avoid_: Hardcoded proof checkbox, direct payment trigger
+
 **Listing Media & Browse Thumbnail**:
 Version-pinned visual attachments (`terms.media`) authored on a Listing draft, supporting a primary cover photo, optional gallery photos, and an optional short video. List projections (`/browse`, `/my-listings`, and Deal Chain partner pickers) expose only the compressed `cover_thumbnail_url` and `has_video` flag for fast, cacheable reads; full media items load only on detail and owner-preview views.
 _Avoid_: Category stock photo masquerading as an uploaded listing photo; shipping full media galleries in list queries

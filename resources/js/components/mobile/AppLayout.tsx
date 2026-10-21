@@ -49,27 +49,25 @@ export function AppLayout({
             {/* Acting-on-behalf banner */}
             {showBanner && (
                 <div className="flex-shrink-0 border-b border-amber-200 bg-[#FEF3C7] px-4 py-2">
-                    <p className="text-center font-[var(--sz-font-display)] text-xs font-bold text-[#92400E]">
+                    <p className="text-center text-xs font-[var(--sz-font-display)] font-bold text-[#92400E]">
                         👤 Acting on behalf of: {actingContext.ownerName}
                     </p>
                 </div>
             )}
 
             {/* Header slot */}
-            {header && <div className="flex-shrink-0 z-30">{header}</div>}
+            {header && <div className="z-30 flex-shrink-0">{header}</div>}
 
             {/* Scrollable content area */}
             <main className="flex flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
                 {isSplit ? (
-                    <div className="grid w-full grid-cols-1 lg:grid-cols-12 lg:gap-8 p-4 pb-48">
+                    <div className="grid w-full grid-cols-1 p-4 pb-48 lg:grid-cols-12 lg:gap-8">
                         {/* Form Pane (Left 58%) */}
-                        <div className="flex flex-col gap-4 lg:col-span-7">
-                            {children}
-                        </div>
+                        <div className="flex flex-col gap-4 lg:col-span-7">{children}</div>
                         {/* Live WYSIWYG Customer Preview Pane (Right 42% on desktop) */}
-                        <div className="hidden lg:col-span-5 lg:flex lg:flex-col lg:gap-4 lg:sticky lg:top-4 lg:self-start">
+                        <div className="hidden lg:sticky lg:top-4 lg:col-span-5 lg:flex lg:flex-col lg:gap-4 lg:self-start">
                             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                                <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                <div className="mb-2 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                                     Live Customer Preview (WYSIWYG)
                                 </div>
                                 {previewSlot}
@@ -77,14 +75,12 @@ export function AppLayout({
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-1 flex-col gap-4 p-4 pb-48 w-full">
-                        {children}
-                    </div>
+                    <div className="flex w-full flex-1 flex-col gap-4 p-4 pb-48">{children}</div>
                 )}
             </main>
 
             {/* Bottom dock slot */}
-            {dock && <div className="absolute bottom-0 left-0 right-0 z-40">{dock}</div>}
+            {dock && <div className="absolute right-0 bottom-0 left-0 z-40">{dock}</div>}
         </div>
     );
 }

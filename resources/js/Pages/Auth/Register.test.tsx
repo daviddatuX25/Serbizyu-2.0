@@ -43,4 +43,24 @@ describe('registration page', () => {
         expect(screen.queryByRole('status')).toBeNull();
         expect(screen.queryByRole('button', { name: 'Quick-fill test number' })).toBeNull();
     });
+
+    it('redirects back to marketplace root when Back to Marketplace link is clicked', () => {
+        render(<Register {...baseProps} />);
+
+        const backLinks = screen.getAllByRole('link', { name: /Back to Marketplace/i });
+        expect(backLinks.length).toBeGreaterThanOrEqual(2);
+        backLinks.forEach((link) => {
+            expect(link.getAttribute('href')).toBe('/');
+        });
+    });
+
+    it('keeps Back to Marketplace pointing to / even when returnTo is a protected route', () => {
+        render(<Register {...baseProps} returnTo="/my-listings" />);
+
+        const backLinks = screen.getAllByRole('link', { name: /Back to Marketplace/i });
+        expect(backLinks.length).toBeGreaterThanOrEqual(2);
+        backLinks.forEach((link) => {
+            expect(link.getAttribute('href')).toBe('/');
+        });
+    });
 });

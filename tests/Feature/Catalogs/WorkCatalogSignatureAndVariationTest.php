@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature\Catalogs;
 
 use App\Modules\Catalogs\Application\WorkCatalog;
+use Database\Seeders\WorkCatalogSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 final class WorkCatalogSignatureAndVariationTest extends TestCase
@@ -91,94 +94,123 @@ final class WorkCatalogSignatureAndVariationTest extends TestCase
         self::assertNotSame($plumbingSig, $modifiedSig);
     }
 
-    public function test_resolving_listing_work_compounds_category_variations_and_surfaces_fast_options(): void
+    public function test_published_work_sets_are_compatible_immutable_and_keep_exact_provenance(): void
     {
-        $catalog = app(WorkCatalog::class);
+        app(WorkCatalogSeeder::class)->run();
+        $catalog = new WorkCatalog;
+        $repairs = $catalog->optionsFor('repairs', 'service');
+        $courier = $catalog->optionsFor('courier', 'service');
 
-        $customStages = [
-            [
-                'id' => 'step-1',
-                'title' => 'Suction line check-in',
-                'description' => 'Check pump prime and valve state.',
-                'node_kind' => 'checkin_intake',
-                'evidence_type' => 'photo_required',
-                'control_mode' => 'provider_advance',
-                'mandatory' => true,
-            ],
-            [
-                'id' => 'step-2',
-                'title' => 'Confirm impeller part swap',
-                'description' => 'Ask customer to approve replacement impeller.',
-                'node_kind' => 'decision_gate',
-                'evidence_type' => 'dual_sign',
-                'control_mode' => 'customer_confirm',
-                'mandatory' => true,
-            ],
-            [
-                'id' => 'step-3',
-                'title' => 'Pressure gauge test',
-                'description' => 'Log PSI reading after swap.',
-                'node_kind' => 'execution_proof',
-                'evidence_type' => 'meter_log',
-                'control_mode' => 'provider_advance',
-                'mandatory' => true,
-            ],
-            [
-                'id' => 'step-4',
-                'title' => 'Final water flow sign-off',
-                'description' => 'Customer confirms steady water flow.',
-                'node_kind' => 'final_signoff',
-                'evidence_type' => 'dual_sign',
-                'control_mode' => 'customer_confirm',
-                'mandatory' => true,
-            ],
-        ];
+        self::assertContains('set-repairs-inverter-clean', array_column($repairs['recommended'], 'set_code'));
+        self::assertNotContains('set-local-services-errand', array_column($repairs['recommended'], 'set_code'));
+        self::assertSame([], $courier['recommended']);
+        self::assertNotEmpty($courier['other_archetypes']);
+        self::assertNotContains('draft', array_column([...$repairs['recommended'], ...$repairs['other_archetypes']], 'status'));
 
-        $spec1 = $catalog->resolveAndRecordListingWork(
-            workShape: 'A1',
-            categoryCode: 'plumbing',
+        $set = $catalog->publishedWorkSet('set-repairs-inverter-clean');
+        self::assertNotNull($set);
+        self::assertSame(1, $set['set_version']);
+        self::assertSame('A1', $set['work_shape']);
+
+        $before = Schema::hasTable('work_catalog_versions')
+            ? DB::table('work_catalog_versions')->orderBy('id')->pluck('definition', 'id')->all()
+            : [];
+        $specification = $catalog->resolveAndRecordListingWork(
+            workShape: 'A9',
+            categoryCode: 'repairs',
             listingType: 'service',
-            listingTitle: 'Bore-Pump Impeller Repair',
-            rawStages: $customStages,
-            selectedCatalogCode: 'tagudin-local-service-a1',
+            listingTitle: 'Inverter service',
+            rawStages: $set['steps'],
+            selectedCatalogCode: 'set-repairs-inverter-clean',
         );
 
-        self::assertTrue($spec1['is_custom_variation']);
-        self::assertSame('tagudin-local-service-a1', $spec1['based_on_catalog_code']);
-        self::assertCount(4, $spec1['nodes']);
-        self::assertSame('customer_confirm', $spec1['nodes'][1]['control_mode']);
+        self::assertSame('A1', $specification['work_shape']);
+        self::assertSame('tagudin-local-service-a1', $specification['based_on_catalog_code']);
+        self::assertSame('set-repairs-inverter-clean', $specification['based_on_set_code']);
+        self::assertSame(1, $specification['based_on_set_version']);
+        self::assertSame(1, $specification['shape_contract_version']);
+        self::assertSame(1, $specification['payload_schema_version']);
+        self::assertFalse($specification['is_custom_variation']);
 
-        // Second listing in same category with same structure compounds adoption count
-        $spec2 = $catalog->resolveAndRecordListingWork(
-            workShape: 'A1',
-            categoryCode: 'plumbing',
-            listingType: 'service',
-            listingTitle: 'Jetmatic Valve & Seal Overhaul',
-            rawStages: $customStages,
-            selectedCatalogCode: 'tagudin-local-service-a1',
-        );
-
-        self::assertSame($spec1['signature_hash'], $spec2['signature_hash']);
-
-        // Third listing in a DIFFERENT category ('electrical') with same structure attaches a new category variation under the same signature_hash
-        $spec3 = $catalog->resolveAndRecordListingWork(
+        $changedSteps = $set['steps'];
+        $changedSteps[0]['title'] .= ' modified';
+        $custom = $catalog->resolveAndRecordListingWork(
             workShape: 'A1',
             categoryCode: 'repairs',
             listingType: 'service',
-            listingTitle: 'Breaker Panel Diagnostic & Swap',
-            rawStages: $customStages,
-            selectedCatalogCode: 'tagudin-local-service-a1',
+            listingTitle: 'Customized inverter service',
+            rawStages: $changedSteps,
+            selectedCatalogCode: 'set-repairs-inverter-clean',
         );
+        self::assertTrue($custom['is_custom_variation']);
 
-        self::assertSame($spec1['signature_hash'], $spec3['signature_hash']);
+        foreach ([
+            'node_kind' => 'execution_proof',
+            'control_mode' => 'provider_advance',
+            'mandatory' => false,
+            'required_proofs' => ['gps_checkin'],
+            'approval_method' => 'presence_otp',
+        ] as $field => $value) {
+            $structuralChange = $set['steps'];
+            $structuralChange[0][$field] = $value;
+            $custom = $catalog->resolveAndRecordListingWork(
+                workShape: 'A1',
+                categoryCode: 'repairs',
+                listingType: 'service',
+                listingTitle: 'Structurally customized inverter service',
+                rawStages: $structuralChange,
+                selectedCatalogCode: 'set-repairs-inverter-clean',
+            );
+            self::assertTrue($custom['is_custom_variation'], "Changing {$field} must mark a custom variation.");
+        }
 
-        // Fast options query for 'plumbing' + 'service' surfaces the recorded variation
-        $plumbingOptions = $catalog->optionsFor('plumbing', 'service');
-        $matchingVariation = collect($plumbingOptions['recommended'])
-            ->firstWhere('signature_hash', $spec1['signature_hash']);
+        self::assertNull($catalog->publishedWorkSet('tagudin-local-service-a1'));
+        self::assertNull($catalog->publishedWorkSet('set-repairs-inverter-clean', 2));
 
-        self::assertNotNull($matchingVariation);
-        self::assertSame('plumbing', $matchingVariation['category_code']);
-        self::assertGreaterThanOrEqual(2, $matchingVariation['adopted_jobs_count']);
+        if (Schema::hasTable('work_catalog_versions')) {
+            self::assertSame($before, DB::table('work_catalog_versions')->orderBy('id')->pluck('definition', 'id')->all());
+        }
+    }
+
+    public function test_frontend_work_proofs_and_approval_fields_are_normalized_and_signed(): void
+    {
+        $catalog = app(WorkCatalog::class);
+
+        $customerApproval = $catalog->normalizeNodes([[
+            'id' => 'approval-stage',
+            'clearanceMode' => 'customer_approval',
+            'approvalMethod' => 'app_confirm',
+            'requiredProofs' => [],
+        ]])[0];
+
+        self::assertSame('customer_confirm', $customerApproval['control_mode']);
+        self::assertSame('app_confirm', $customerApproval['approval_method']);
+        self::assertSame('none', $customerApproval['evidence_type']);
+        self::assertSame([], $customerApproval['required_proofs']);
+
+        $gpsStage = $catalog->normalizeNodes([[
+            'id' => 'gps-stage',
+            'requiredProofs' => ['gps_checkin'],
+        ]])[0];
+
+        self::assertSame('gps_checkin', $gpsStage['evidence_type']);
+        self::assertSame(['gps_checkin'], $gpsStage['required_proofs']);
+
+        $base = [[
+            'node_kind' => 'execution_proof',
+            'control_mode' => 'customer_confirm',
+            'evidence_type' => 'none',
+            'required_proofs' => [],
+            'approval_method' => 'app_confirm',
+        ]];
+        $gpsProof = $base;
+        $gpsProof[0]['required_proofs'] = ['gps_checkin'];
+        $gpsProof[0]['evidence_type'] = 'gps_checkin';
+        $presenceApproval = $base;
+        $presenceApproval[0]['approval_method'] = 'presence_otp';
+
+        $baseSignature = $catalog->computeSignature('A1', $base);
+        self::assertNotSame($baseSignature, $catalog->computeSignature('A1', $gpsProof));
+        self::assertNotSame($baseSignature, $catalog->computeSignature('A1', $presenceApproval));
     }
 }

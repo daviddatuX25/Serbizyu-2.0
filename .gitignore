@@ -5,6 +5,7 @@ vendor/
 !.env.example
 public/build/
 public/hot
+public/storage
 storage/*.key
 storage/framework/cache/data/*
 .phpunit.result.cache

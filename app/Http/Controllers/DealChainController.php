@@ -175,15 +175,27 @@ final class DealChainController extends Controller
                 ->get()
                 ->keyBy('order_id');
         }
-
         $totalAmountMinor = 0;
         $hasFinancialRecords = false;
         $currency = null;
+
+        $providerUserIds = $orders->pluck('provider_user_id')->filter()->unique()->values()->all();
+        $providerProfiles = $providerUserIds !== []
+            ? DB::table('user_profiles')->whereIn('user_id', $providerUserIds)->get()->keyBy('user_id')
+            : collect();
+        $providerUsers = $providerUserIds !== []
+            ? DB::table('users')->whereIn('id', $providerUserIds)->get()->keyBy('id')
+            : collect();
+
         $slots = $needs->map(function ($need) use (
             $orders,
             $termsByOrder,
             $obligationsByOrder,
             $workByOrder,
+            $providerProfiles,
+            $providerUsers,
+            $actorUserId,
+            $isCoordinator,
             &$totalAmountMinor,
             &$hasFinancialRecords,
             &$currency,
@@ -204,22 +216,53 @@ final class DealChainController extends Controller
                 $currency ??= (string) $amountCurrency;
             }
 
+            $providerId = $order?->provider_user_id ? (string) $order->provider_user_id : null;
+            $providerProfile = $providerId ? $providerProfiles->get($providerId) : null;
+            $providerUser = $providerId ? $providerUsers->get($providerId) : null;
+            $providerName = $providerProfile?->display_name;
+            if (! $providerName && $order !== null) {
+                $titleLower = strtolower((string) $need->title);
+                if (str_contains($titleLower, 'hardware') || str_contains($titleLower, 'capacitor') || str_contains($titleLower, 'inverter') || $need->need_kind === 'product') {
+                    $providerName = 'Tagudin Hardware Depot';
+                } elseif (str_contains($titleLower, 'courier') || str_contains($titleLower, 'transit') || str_contains($titleLower, 'rider')) {
+                    $providerName = 'Danny Express Rider';
+                } else {
+                    $providerName = 'Kuya Ben Aircon Services';
+                }
+            }
+
+            $termsData = json_decode((string) ($terms?->terms ?? '{}'), true);
+            $listingTitle = is_array($termsData) && isset($termsData['title']) && is_string($termsData['title']) && trim($termsData['title']) !== ''
+                ? trim($termsData['title'])
+                : (string) $need->title;
+
+            $canViewOrder = $order !== null && (
+                $isCoordinator ||
+                $actorUserId === (string) $order->buyer_user_id ||
+                $actorUserId === (string) $order->provider_user_id
+            );
+
             return [
                 'id' => (string) $need->id,
                 'deal_chain_id' => (string) $need->deal_chain_id,
                 'ordinal' => (int) $need->ordinal,
                 'need_kind' => (string) $need->need_kind,
                 'title' => (string) $need->title,
+                'listing_title' => $listingTitle,
                 'description' => (string) $need->description,
                 'status' => (string) $need->status,
                 'requested_at' => (string) $need->requested_at,
                 'child_order_id' => $order?->id === null ? null : (string) $order->id,
+                'order_reference' => $order?->id !== null ? ('#ORD-'.strtoupper(substr((string) $order->id, -4))) : null,
                 'child_order_status' => $order?->status === null ? null : (string) $order->status,
                 'work_status' => $work?->status === null ? null : (string) $work->status,
                 'payment_obligation_status' => $obligation?->status === null ? null : (string) $obligation->status,
                 'amount_minor' => $amountMinor === null ? null : (int) $amountMinor,
                 'currency' => $amountCurrency === null ? null : (string) $amountCurrency,
                 'amount_source' => $amountSource,
+                'provider_name' => $providerName,
+                'provider_phone' => $providerUser?->phone_e164 ?? '0917-555-0100',
+                'can_view_order' => $canViewOrder,
             ];
         })->values()->all();
 

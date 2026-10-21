@@ -14,10 +14,16 @@ final class CapabilityCatalog
     /** @return array{category_id:string,capability_profile_id:string,code:string} */
     public function ensure(string $categoryCode, string $listingType, string $workShape, CorrelationId $correlationId): array
     {
-        $code = $listingType.':'.$categoryCode;
-        if (! in_array($workShape, ['A1', 'A2', 'A3', 'A4', 'A9'], true)) {
+        $defaultShape = match ($listingType) {
+            'service' => 'A1',
+            'product' => 'A4',
+            default => throw new \InvalidArgumentException('Unsupported listing type for a capability profile.'),
+        };
+        $supportedShapes = $listingType === 'service' ? ['A1', 'A3', 'A9'] : ['A4', 'A9'];
+        if (! in_array($workShape, $supportedShapes, true)) {
             throw new \InvalidArgumentException('Unsupported Work shape for a capability profile.');
         }
+        $code = $listingType.':'.$categoryCode.($workShape === $defaultShape ? '' : ':'.strtolower($workShape));
 
         return DB::transaction(function () use ($categoryCode, $listingType, $workShape, $correlationId, $code): array {
             if (DB::connection()->getDriverName() === 'pgsql') {

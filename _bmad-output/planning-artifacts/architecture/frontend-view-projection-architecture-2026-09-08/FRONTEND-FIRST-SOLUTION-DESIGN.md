@@ -269,7 +269,7 @@ type ScenarioSnapshotV1 = {
 };
 ```
 
-Do not pre-create every table from the 58-table backend schema. Add a normalized collection only when an implemented UI slice needs its identity, lifecycle, relationship, or cross-perspective consequence.
+Do not pre-create every table from the 61-table backend authority. Add or alter persistence only in the first vertical story that needs its identity, lifecycle, relationship, or cross-perspective consequence.
 
 ### 5.3 Fixture authority labels
 

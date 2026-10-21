@@ -19,15 +19,30 @@ describe('DealChainCheckoutModal', () => {
                 title: 'Turnkey Sourced Parts',
                 extraFee: 215,
                 nodes: [
-                    { role: 'STORE', title: 'Tagudin HW', sub: '₱180', type: 'store' },
-                    { role: 'COURIER', title: 'Danny Exp', sub: '₱35', type: 'delivery' },
-                    { role: 'LABOR', title: 'Kuya Ben AC', sub: 'On-Site', type: 'labor' },
+                    {
+                        role: 'STORE',
+                        title: 'Tagudin HW',
+                        sub: 'Partner quote required',
+                        type: 'store',
+                    },
+                    {
+                        role: 'COURIER',
+                        title: 'Danny Exp',
+                        sub: 'Partner quote required',
+                        type: 'delivery',
+                    },
+                    {
+                        role: 'LABOR',
+                        title: 'Kuya Ben AC',
+                        sub: 'Provider agreement required',
+                        type: 'labor',
+                    },
                 ],
             },
         },
     ];
 
-    it('renders child orders breakdown and non-cascading settlement banner', () => {
+    it('renders planned nodes and the planning boundary', () => {
         render(
             <DealChainCheckoutModal
                 open={true}
@@ -38,21 +53,17 @@ describe('DealChainCheckoutModal', () => {
             />,
         );
 
-        expect(screen.getByText('Authorize Deal Chain')).toBeTruthy();
-        expect(screen.getAllByText(/Non-Cascading Settlement/i).length).toBeGreaterThanOrEqual(1);
-
-        // Check child orders
-        expect(screen.getByText('Order #ORD-101')).toBeTruthy();
-        expect(screen.getByText('Tagudin Hardware Parts Depot')).toBeTruthy();
-        expect(screen.getByText('Order #ORD-102')).toBeTruthy();
-        expect(screen.getByText('Danny Express Motorcycle Pool')).toBeTruthy();
-        expect(screen.getByText('Order #ORD-103')).toBeTruthy();
-
-        // Check soundness banner
-        expect(screen.getByText(/Non-Cascading Settlement Protection/i)).toBeTruthy();
+        expect(screen.getByText(/Review.*Deal Chain/i)).toBeTruthy();
+        expect(screen.getByText(/3.*Nodes/i)).toBeTruthy();
+        expect(screen.getByText('Tagudin HW')).toBeTruthy();
+        expect(screen.getByText('Danny Exp')).toBeTruthy();
+        expect(screen.getByText('Kuya Ben AC')).toBeTruthy();
+        expect(
+            screen.getByText(/does not create Orders, Work, or payment obligations/i),
+        ).toBeTruthy();
     });
 
-    it('allows selecting payment method and authorizing escrow', () => {
+    it('stages the plan without selecting a payment method', () => {
         const onAuthorize = vi.fn();
 
         render(
@@ -65,14 +76,10 @@ describe('DealChainCheckoutModal', () => {
             />,
         );
 
-        // Click Tiwala Escrow payment pill
-        const escrowPill = screen.getByRole('button', { name: /Tiwala Escrow/i });
-        fireEvent.click(escrowPill);
+        expect(screen.queryByText(/Tiwala Escrow/i)).toBeNull();
+        fireEvent.click(screen.getByRole('button', { name: /Stage.*Plan/i }));
 
-        // Click Authorize button
-        const authBtn = screen.getByRole('button', { name: /Authorize Deal Chain & Escrow/i });
-        fireEvent.click(authBtn);
-
-        expect(onAuthorize).toHaveBeenCalledWith('escrow');
+        expect(onAuthorize).toHaveBeenCalledOnce();
+        expect(onAuthorize).toHaveBeenCalledWith();
     });
 });

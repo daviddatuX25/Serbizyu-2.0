@@ -21,8 +21,10 @@ interface WorkSpecificationPort
      *     evidence_type: string,
      *     evidence_description: string,
      *     control_mode: string,
-     *     mandatory: bool,
-     *     duration_label: string|null
+     *     duration_label: string|null,
+     *     required_proofs: list<string>,
+     *     approval_method: string,
+     *     metric_unit: string|null
      * }>
      */
     public function normalizeNodes(array $rawSteps, string $workShape = 'A1'): array;
@@ -39,6 +41,10 @@ interface WorkSpecificationPort
      *     work_shape: string,
      *     catalog_code: string,
      *     based_on_catalog_code: string|null,
+     *     based_on_set_code: string|null,
+     *     based_on_set_version: int|null,
+     *     shape_contract_version: int|null,
+     *     payload_schema_version: int|null,
      *     is_custom_variation: bool,
      *     category_code: string,
      *     listing_type: string,
@@ -52,6 +58,7 @@ interface WorkSpecificationPort
         string $listingTitle,
         array $rawStages,
         ?string $selectedCatalogCode = null,
+        ?int $selectedSetVersion = null,
     ): array;
 
     /**
@@ -61,6 +68,9 @@ interface WorkSpecificationPort
      * }
      */
     public function optionsFor(?string $categoryCode = null, ?string $listingType = null): array;
+
+    /** @return array<string, mixed>|null */
+    public function publishedWorkSet(string $code, ?int $setVersion = null): ?array;
 
     /**
      * @return array<string, mixed>|null

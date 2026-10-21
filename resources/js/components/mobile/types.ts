@@ -9,11 +9,31 @@ export type WorkClearanceMode = 'worker_direct' | 'customer_approval' | 'physica
 
 export type HandoffParty = 'recipient_confirm' | 'worker_dropoff';
 
+export type WorkApprovalMethod = 'app_confirm' | 'presence_otp' | 'none';
+
 export type WorkEvidenceType =
     | 'photo_proof'
+    | 'gps_checkin'
     | 'metric_reading'
-    | 'customer_otp'
-    | 'checklist_steps';
+    | 'checklist_steps'
+    | 'external_connector'
+    | 'customer_otp';
+
+export interface WorkToolDefinition {
+    toolKey: string;
+    kind: 'native' | 'external_connector';
+    label: string;
+    description: string;
+    lucideIcon: string;
+    actor: string;
+    configSchema: Record<string, unknown>;
+}
+
+export interface WorkToolBinding {
+    toolKey: string;
+    kind: 'native' | 'external_connector';
+    config?: Record<string, unknown>;
+}
 
 export type WorkInteractionType =
     | 'solo_execution'
@@ -46,6 +66,8 @@ export interface WorkStage {
     clearanceMode?: WorkClearanceMode;
     handoffParty?: HandoffParty;
     requiredProofs?: WorkEvidenceType[];
+    approvalMethod?: WorkApprovalMethod;
+    toolBindings?: WorkToolBinding[];
     metricUnit?: string;
     interactionType?: WorkInteractionType;
     evidenceProtocol?: WorkEvidenceProtocol;
@@ -60,6 +82,8 @@ export interface WorkNodePrimitive {
     clearanceMode: WorkClearanceMode;
     handoffParty?: HandoffParty;
     requiredProofs: WorkEvidenceType[];
+    approvalMethod?: WorkApprovalMethod;
+    toolBindings?: WorkToolBinding[];
     metricUnit?: string;
     evidence: string;
     color: string;

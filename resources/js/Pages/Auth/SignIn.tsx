@@ -1,15 +1,14 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { AuthShell } from '../../components/auth/AuthShell';
 import { DevOtpReceiver } from '../../components/auth/DevOtpReceiver';
+import { OtpPinInput } from '../../components/auth/OtpPinInput';
 import { Button, Field, Notice, PasswordInput, TextInput } from '../../components/ui';
 import { cn } from '../../lib/utils';
 import type { HomeProps } from '../../types';
 
-/** Placeholder — replace with a licensed Tagudin / local market asset later. */
-const AUTH_HERO_IMAGE =
-    'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80';
-
 type SignInProps = HomeProps & {
+    returnTo?: string;
     methods?: {
         phone_password?: boolean;
         email?: boolean;
@@ -44,6 +43,20 @@ function rememberPhone(phone: string): void {
 export default function SignIn(props: SignInProps) {
     const methods = props.methods ?? { phone_password: true, email: true };
     const challengePending = props.session?.status === 'challenge_pending';
+    const returnTo = props.returnTo || '/';
+    let returnPathname = '/';
+    try {
+        if (returnTo.startsWith('/')) {
+            returnPathname = returnTo.split('?')[0].split('#')[0];
+        } else {
+            returnPathname = new URL(returnTo, typeof window !== 'undefined' ? window.location.origin : 'http://localhost').pathname;
+        }
+    } catch {
+        returnPathname = returnTo;
+    }
+    const isReturningToListingBuilder =
+        returnPathname.startsWith('/listings/create/product') ||
+        returnPathname.startsWith('/listings/create/service');
 
     const [mode, setMode] = useState<SignInMode>('phone');
     const [showOtpChallenge, setShowOtpChallenge] = useState(false);
@@ -104,232 +117,238 @@ export default function SignIn(props: SignInProps) {
     );
 
     return (
-        <main className="sz-auth-split">
-            <aside className="sz-auth-visual" aria-hidden={false}>
-                <img
-                    src={AUTH_HERO_IMAGE}
-                    alt="Fresh produce at a public market — placeholder until a Tagudin local photo is added"
-                />
-                <div className="sz-auth-visual-copy">
-                    <p className="sz-eyebrow">Tagudin · neighbors helping neighbors</p>
-                    <h2>One sign-in, your way.</h2>
-                    <p>
-                        Use your phone or email password. A one-time code is available from the
-                        phone sign-in.
-                    </p>
-                </div>
-            </aside>
+        <AuthShell
+            title="Sign in"
+            subtitle="Enter your details below to sign in to your account."
+            returnTo={returnTo}
+        >
+            <div className="sz-auth-stack flex flex-col gap-4">
+                {message ? <Notice tone="success">{message}</Notice> : null}
+                {error || formError ? <Notice tone="danger">{error ?? formError}</Notice> : null}
 
-            <section className="sz-auth-dock">
-                <div className="sz-auth-card">
-                    <div className="sz-auth-brand">
-                        <strong>Serbizyu</strong>
-                        <span>Marketplace</span>
-                    </div>
-
-                    <div className="sz-auth-header">
-                        <h1 className="sz-display-title">Sign in</h1>
-                        <p className="sz-auth-note">
-                            Enter your details below to sign in to your account.
-                        </p>
-                    </div>
-
-                    <div className="sz-auth-stack">
-                        {message ? <Notice tone="success">{message}</Notice> : null}
-                        {error || formError ? (
-                            <Notice tone="danger">{error ?? formError}</Notice>
-                        ) : null}
-
-                        <div
-                            className="sz-auth-methods grid grid-cols-2 gap-1 rounded-lg border border-border bg-muted/60 p-1"
-                            role="group"
-                            aria-label="Sign-in method"
+                {/* Method Switcher Segmented Pills */}
+                <div
+                    className="sz-auth-methods grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100/80 p-1"
+                    role="group"
+                    aria-label="Sign-in method"
+                >
+                    {availableModes.map((candidate) => (
+                        <button
+                            key={candidate}
+                            type="button"
+                            aria-pressed={mode === candidate}
+                            onClick={() => selectMode(candidate)}
+                            className={cn(
+                                'min-h-9 cursor-pointer rounded-lg px-2 text-xs font-bold transition-all sm:text-sm',
+                                mode === candidate
+                                    ? 'bg-white text-[#0F2F58] shadow-xs'
+                                    : 'text-slate-500 hover:text-slate-900',
+                            )}
                         >
-                            {availableModes.map((candidate) => (
-                                <button
-                                    key={candidate}
-                                    type="button"
-                                    aria-pressed={mode === candidate}
-                                    onClick={() => selectMode(candidate)}
-                                    className={cn(
-                                        'min-h-9 rounded-md px-2 text-sm font-semibold transition-colors',
-                                        mode === candidate
-                                            ? 'bg-card text-foreground shadow-xs'
-                                            : 'text-muted-foreground hover:text-foreground',
-                                    )}
-                                >
-                                    {METHOD_LABELS[candidate]}
-                                </button>
-                            ))}
+                            {METHOD_LABELS[candidate]}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Phone OTP Challenge View */}
+                {mode === 'phone' && methods.phone_password && showOtpChallenge ? (
+                    <div className="flex flex-col gap-4">
+                        <div>
+                            <h2 className="text-base font-bold text-slate-900">
+                                Sign in via phone code
+                            </h2>
+                            <p className="mt-0.5 text-xs text-slate-500">
+                                We sent a one-time code to {phone || 'your number'}. It expires in
+                                10 minutes.
+                            </p>
                         </div>
 
-                        {mode === 'phone' && methods.phone_password && showOtpChallenge ? (
-                            <>
-                                <div>
-                                    <h2 className="text-lg font-semibold text-foreground">
-                                        Sign in via phone code
-                                    </h2>
-                                    <p className="sz-auth-note">
-                                        We sent a one-time code to {phone || 'your number'}. It
-                                        expires in 10 minutes.
-                                    </p>
-                                </div>
-                                {props.temporaryOtpPreview ? (
-                                    <DevOtpReceiver
-                                        otpPreview={props.temporaryOtpPreview}
-                                        phone={phone || props.session?.phone}
-                                        onFillCode={(receivedCode) => {
-                                            setCode(receivedCode);
-                                        }}
-                                        onResend={() => {
-                                            requestPhoneOtp();
-                                        }}
-                                    />
-                                ) : null}
-                                <form onSubmit={requestPhoneOtp} className="sz-stack">
-                                    <Field
-                                        label="Mobile number"
-                                        hint="Philippine mobile · example 09XXXXXXXXX"
-                                    >
-                                        <TextInput
-                                            value={phone}
-                                            onChange={(event) => setPhone(event.target.value)}
-                                            placeholder="09XXXXXXXXX"
-                                            autoComplete="tel"
-                                            inputMode="tel"
-                                            required
-                                        />
-                                    </Field>
-                                    <div className="sz-auth-actions">
-                                        <Button type="submit" variant="outline">
-                                            Send new code
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            onClick={() => setShowOtpChallenge(false)}
-                                        >
-                                            Use password instead
-                                        </Button>
-                                    </div>
-                                </form>
-                                <form onSubmit={verifyPhoneOtp} className="sz-stack">
-                                    <Field
-                                        label="One-time code"
-                                        hint="6 digits from your SMS or local OTP channel"
-                                    >
-                                        <TextInput
-                                            value={code}
-                                            onChange={(event) => setCode(event.target.value)}
-                                            placeholder="6-digit code"
-                                            autoComplete="one-time-code"
-                                            inputMode="numeric"
-                                            maxLength={6}
-                                            required
-                                        />
-                                    </Field>
-                                    <Button type="submit">Sign in with code</Button>
-                                </form>
-                            </>
+                        {props.temporaryOtpPreview ? (
+                            <DevOtpReceiver
+                                otpPreview={props.temporaryOtpPreview}
+                                phone={phone || props.session?.phone}
+                                onFillCode={(receivedCode) => {
+                                    setCode(receivedCode);
+                                }}
+                                onResend={() => {
+                                    requestPhoneOtp();
+                                }}
+                            />
                         ) : null}
 
-                        {mode === 'phone' && methods.phone_password && !showOtpChallenge ? (
-                            <form onSubmit={submitPhonePassword} className="sz-stack">
-                                <Field
-                                    label="Mobile number"
-                                    hint="Philippine mobile · example 09XXXXXXXXX"
-                                >
-                                    <TextInput
-                                        value={phone}
-                                        onChange={(event) => setPhone(event.target.value)}
-                                        placeholder="09XXXXXXXXX"
-                                        autoComplete="tel"
-                                        inputMode="tel"
-                                        required
-                                    />
-                                </Field>
-                                <Field label="Password">
-                                    <PasswordInput
-                                        type="password"
-                                        value={password}
-                                        onChange={(event) => setPassword(event.target.value)}
-                                        autoComplete="current-password"
-                                        aria-label="Password"
-                                        required
-                                    />
-                                </Field>
-                                <div className="text-right -mt-1">
-                                    <Link
-                                        href="/auth/password/forgot"
-                                        className="sz-auth-inline-link"
-                                    >
-                                        Forgot password?
-                                    </Link>
-                                </div>
-                                <div className="sz-auth-actions">
-                                    <Button type="submit" wide>
-                                        Sign in
-                                    </Button>
-                                </div>
-                                <button
+                        <form onSubmit={requestPhoneOtp} className="sz-stack flex flex-col gap-3">
+                            <Field label="Mobile number">
+                                <TextInput
+                                    value={phone}
+                                    onChange={(event) => setPhone(event.target.value)}
+                                    placeholder="09XXXXXXXXX"
+                                    autoComplete="tel"
+                                    inputMode="tel"
+                                    required
+                                />
+                            </Field>
+                            <div className="sz-auth-actions flex items-center gap-2">
+                                <Button type="submit" variant="outline">
+                                    Send new code
+                                </Button>
+                                <Button
                                     type="button"
-                                    className="sz-auth-otp-btn"
-                                    onClick={() => requestPhoneOtp()}
+                                    variant="ghost"
+                                    onClick={() => setShowOtpChallenge(false)}
                                 >
-                                    Use a one-time code instead
-                                </button>
-                            </form>
-                        ) : null}
+                                    Use password instead
+                                </Button>
+                            </div>
+                        </form>
 
-                        {mode === 'email' && methods.email ? (
-                            <form onSubmit={submitEmail} className="sz-stack">
-                                <Field label="Email">
-                                    <TextInput
-                                        type="email"
-                                        value={email}
-                                        onChange={(event) => setEmail(event.target.value)}
-                                        autoComplete="username"
-                                        required
-                                    />
-                                </Field>
-                                <Field label="Password">
-                                    <PasswordInput
-                                        type="password"
-                                        value={password}
-                                        onChange={(event) => setPassword(event.target.value)}
-                                        autoComplete="current-password"
-                                        aria-label="Password"
-                                        required
-                                    />
-                                </Field>
-                                <div className="text-right -mt-1">
-                                    <Link
-                                        href="/auth/password/forgot"
-                                        className="sz-auth-inline-link"
-                                    >
-                                        Forgot password?
-                                    </Link>
-                                </div>
-                                <div className="sz-auth-actions">
-                                    <Button type="submit" wide>
-                                        Sign in
-                                    </Button>
-                                </div>
-                            </form>
-                        ) : null}
+                        <form
+                            onSubmit={verifyPhoneOtp}
+                            className="sz-stack flex flex-col gap-4 border-t border-slate-100 pt-4"
+                        >
+                            <div className="flex flex-col items-center gap-2">
+                                <label className="text-xs font-semibold text-slate-700">
+                                    Enter 6-digit code
+                                </label>
+                                <OtpPinInput
+                                    value={code}
+                                    onChange={setCode}
+                                    onComplete={(completedCode) => {
+                                        setCode(completedCode);
+                                    }}
+                                    autoFocus
+                                />
+                                <p className="text-[11px] text-slate-400">
+                                    Auto-advances on typing · Paste supported
+                                </p>
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={code.length < 6}
+                                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                Sign in with code
+                            </button>
+                        </form>
+                    </div>
+                ) : null}
 
-                        <div className="sz-auth-footer">
-                            <p>
-                                New to Serbizyu?{' '}
-                                <Link href="/auth/register">Create an account</Link>
-                            </p>
-                            <Link href="/browse" className="sz-auth-quiet-link">
-                                Browse the marketplace as a guest
+                {/* Phone + Password View */}
+                {mode === 'phone' && methods.phone_password && !showOtpChallenge ? (
+                    <form onSubmit={submitPhonePassword} className="sz-stack flex flex-col gap-3">
+                        <Field label="Mobile number">
+                            <TextInput
+                                value={phone}
+                                onChange={(event) => setPhone(event.target.value)}
+                                placeholder="09XXXXXXXXX"
+                                autoComplete="tel"
+                                inputMode="tel"
+                                required
+                            />
+                        </Field>
+
+                        <Field label="Password">
+                            <PasswordInput
+                                type="password"
+                                value={password}
+                                onChange={(event) => setPassword(event.target.value)}
+                                autoComplete="current-password"
+                                aria-label="Password"
+                                required
+                            />
+                        </Field>
+
+                        <div className="-mt-1 flex justify-end">
+                            <Link
+                                href="/auth/password/forgot"
+                                className="sz-auth-inline-link text-xs font-semibold text-[#0F2F58] hover:underline"
+                            >
+                                Forgot password?
                             </Link>
                         </div>
-                    </div>
+
+                        <div className="sz-auth-actions mt-1">
+                            <button
+                                type="submit"
+                                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98]"
+                            >
+                                Sign in
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="sz-auth-otp-btn cursor-pointer py-1.5 text-center text-xs font-semibold text-slate-500 transition-colors hover:text-[#0F2F58]"
+                            onClick={() => requestPhoneOtp()}
+                        >
+                            Use a one-time code instead
+                        </button>
+                    </form>
+                ) : null}
+
+                {/* Email + Password View */}
+                {mode === 'email' && methods.email ? (
+                    <form onSubmit={submitEmail} className="sz-stack flex flex-col gap-3">
+                        <Field label="Email">
+                            <TextInput
+                                type="email"
+                                value={email}
+                                onChange={(event) => setEmail(event.target.value)}
+                                autoComplete="username"
+                                placeholder="name@example.ph"
+                                required
+                            />
+                        </Field>
+
+                        <Field label="Password">
+                            <PasswordInput
+                                type="password"
+                                value={password}
+                                onChange={(event) => setPassword(event.target.value)}
+                                autoComplete="current-password"
+                                aria-label="Password"
+                                required
+                            />
+                        </Field>
+
+                        <div className="-mt-1 flex justify-end">
+                            <Link
+                                href="/auth/password/forgot"
+                                className="sz-auth-inline-link text-xs font-semibold text-[#0F2F58] hover:underline"
+                            >
+                                Forgot password?
+                            </Link>
+                        </div>
+
+                        <div className="sz-auth-actions mt-1">
+                            <button
+                                type="submit"
+                                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] px-4 py-3 text-sm font-bold text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-[0.98]"
+                            >
+                                Sign in with email
+                            </button>
+                        </div>
+                    </form>
+                ) : null}
+
+                {/* Footer Links */}
+                <div className="sz-auth-footer mt-2 flex flex-col items-center gap-1.5 border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
+                    <p>
+                        New to Serbizyu?{' '}
+                        <Link
+                            href="/auth/register"
+                            className="font-bold text-[#0F2F58] hover:underline"
+                        >
+                            Create an account
+                        </Link>
+                    </p>
+                    <Link
+                        href={isReturningToListingBuilder ? returnTo : '/'}
+                        className="sz-auth-quiet-link font-medium text-slate-400 hover:text-slate-600"
+                    >
+                        {isReturningToListingBuilder ? 'Return to listing builder as a guest' : 'Back to Marketplace'}
+                    </Link>
                 </div>
-            </section>
-        </main>
+            </div>
+        </AuthShell>
     );
 }

@@ -14,13 +14,7 @@ interface WorkCatalogModalProps {
 
 /* ── Category chip definitions ────────────────────────────── */
 
-const CATEGORIES = [
-    { key: 'all', label: 'All Workflows' },
-    { key: 'plumbing', label: 'Plumbing' },
-    { key: 'electrical', label: 'Electrical' },
-    { key: 'appliance', label: 'Appliance' },
-    { key: 'carpentry', label: 'Carpentry' },
-] as const;
+const CATEGORIES = [{ key: 'all', label: 'All Work Sets' }] as const;
 
 /* ── Component ────────────────────────────────────────────── */
 
@@ -42,7 +36,6 @@ export default function WorkCatalogModal({
             const matchSearch =
                 !q ||
                 t.title.toLowerCase().includes(q) ||
-                t.shape.toLowerCase().includes(q) ||
                 t.description.toLowerCase().includes(q);
             return matchCategory && matchSearch;
         });
@@ -114,7 +107,7 @@ export default function WorkCatalogModal({
                                         margin: '2px 0 0',
                                     }}
                                 >
-                                    Pick a standardized workflow template for your service category
+                                    Browse published Work Sets compatible with this listing
                                 </p>
                             </div>
                             <button
@@ -172,7 +165,7 @@ export default function WorkCatalogModal({
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search workflows, stages, or shapes..."
+                                placeholder="Search Work Sets or steps..."
                                 className="outline-none"
                                 style={{
                                     border: 'none',
@@ -233,7 +226,7 @@ export default function WorkCatalogModal({
                                 margin: '2px 0 4px',
                             }}
                         >
-                            Available Work Templates
+                            Compatible Work Sets
                         </div>
                     </div>
 
@@ -295,29 +288,9 @@ export default function WorkCatalogModal({
                                             >
                                                 {t.description}
                                             </div>
-                                            <div className="flex items-center gap-2 font-mono text-[9.5px]">
-                                                <span
-                                                    className="font-bold"
-                                                    style={{ color: 'var(--forest-700, #0a574a)' }}
-                                                >
-                                                    {t.shape}
-                                                </span>
-                                                <span
-                                                    style={{ color: 'var(--ink-muted, #64748b)' }}
-                                                >
-                                                    ·
-                                                </span>
-                                                <span className="font-bold text-[#0284C7]">
-                                                    {t.stages.length} Stages
-                                                </span>
-                                                <span
-                                                    style={{ color: 'var(--ink-muted, #64748b)' }}
-                                                >
-                                                    ·
-                                                </span>
-                                                <span className="font-bold text-[#D97706]">
-                                                    {t.sla} SLA
-                                                </span>
+                                            <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                                                <span>{t.stages.length} steps</span>
+                                                {t.sla && <span>· {t.sla} target</span>}
                                             </div>
                                         </div>
                                         <span

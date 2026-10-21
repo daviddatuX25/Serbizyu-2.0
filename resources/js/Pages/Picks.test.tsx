@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { router } from '@inertiajs/react';
 import Picks from './Picks';
 import type { HomeProps } from '../types';
 
@@ -19,8 +20,13 @@ const baseProps: HomeProps = {
 };
 
 describe('Picks Page', () => {
+    beforeEach(() => {
+        vi.spyOn(router, 'visit').mockImplementation(() => {});
+    });
+
     afterEach(() => {
         cleanup();
+        vi.restoreAllMocks();
         window.localStorage.clear();
     });
 
@@ -32,7 +38,7 @@ describe('Picks Page', () => {
         expect(screen.getByRole('link', { name: 'Explore Marketplace' })).toBeTruthy();
     });
 
-    it('renders staged items and opens checkout modal without fake static orders', () => {
+    it('renders staged items and opens the planning modal without fake orders', () => {
         const mockPicks = [
             {
                 id: 'listing-1',
@@ -51,31 +57,54 @@ describe('Picks Page', () => {
 
         render(<Picks {...baseProps} />);
 
-        // Header and count: 1 + 2 = 3 items
         expect(screen.getByText(/Staged Offerings \(3\)/i)).toBeTruthy();
         expect(screen.getByText('Inverter Split AC Deep Clean (1 Unit Standard)')).toBeTruthy();
         expect(screen.getByText('Weekend bibingka tray (Family Fiesta)')).toBeTruthy();
-
-        // Subtotal: 450 + 360 = 810
         expect(screen.getAllByText('₱810.00').length).toBeGreaterThanOrEqual(1);
+        expect(screen.queryByText('Planned Deal Chain Nodes')).toBeNull();
+        expect(screen.queryByText(/Planning boundary/i)).toBeNull();
 
-        // No fake child orders when items have no deal chain attached
-        expect(screen.queryByText('Attached Deal Chain Child Orders')).toBeNull();
-        expect(screen.queryByText(/Non-Cascading Settlement Protection/i)).toBeNull();
-
-        // Click Proceed to Escrow Checkout
-        const checkoutBtn = screen.getByRole('button', { name: /Proceed to Escrow Checkout/i });
-        fireEvent.click(checkoutBtn);
-
-        // Checkout Modal opens with payment selection
-        expect(screen.getByText('Authorize Deal Chain')).toBeTruthy();
-        expect(screen.getByRole('button', { name: /Cash on Delivery/i })).toBeTruthy();
-        expect(screen.getByRole('button', { name: /GCash QR/i })).toBeTruthy();
-        expect(screen.getByRole('button', { name: /Tiwala Escrow/i })).toBeTruthy();
-        expect(screen.getByRole('button', { name: /Authorize Deal Chain & Escrow/i })).toBeTruthy();
+        fireEvent.click(screen.getByRole('button', { name: /Confirm Order & Bookings/i }));
+        expect(router.visit).toHaveBeenCalledWith('/listings/listing-1/book');
     });
 
-    it('updates quantity and recalculates escrow total', () => {
+    it('opens the coordinated chain modal when items have a deal chain attached', () => {
+        const mockPicksWithChain = [
+            {
+                id: 'listing-1',
+                title: 'Inverter Split AC Deep Clean (1 Unit Standard)',
+                price: 450,
+                quantity: 1,
+                dealChain: {
+                    recipeId: 'turnkey_parts',
+                    title: 'Turnkey Sourced Parts',
+                    extraFee: 215,
+                    nodes: [
+                        {
+                            role: 'STORE',
+                            title: 'Tagudin HW',
+                            sub: 'Partner quote required',
+                            type: 'store',
+                        },
+                        {
+                            role: 'LABOR',
+                            title: 'Kuya Ben AC',
+                            sub: 'Provider agreement required',
+                            type: 'labor',
+                        },
+                    ],
+                },
+            },
+        ];
+        window.localStorage.setItem('serbizyu.picks', JSON.stringify(mockPicksWithChain));
+        render(<Picks {...baseProps} />);
+
+        fireEvent.click(screen.getByRole('button', { name: /Review.*Chain/i }));
+        expect(screen.getByRole('heading', { name: /Review.*Chain/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /Stage.*Plan/i })).toBeTruthy();
+    });
+
+    it('updates quantity and recalculates planning estimate', () => {
         const mockPicks = [
             {
                 id: 'listing-1',
@@ -119,13 +148,15 @@ describe('Picks Page', () => {
         expect(screen.getByText('Your Picks Tray is Empty')).toBeTruthy();
     });
 
-    it('opens recipe selector, attaches Deal Chain recipe, and displays connected pipeline', () => {
+    it('opens recipe selector, attaches a Deal Chain recipe, and displays the connected pipeline', () => {
         const mockPicks = [
             {
                 id: 'listing-1',
                 title: 'Inverter Split AC Deep Clean',
                 price: 450,
                 quantity: 1,
+                category_code: 'repairs',
+                listing_type: 'service',
             },
         ];
         window.localStorage.setItem('serbizyu.picks', JSON.stringify(mockPicks));
@@ -142,13 +173,11 @@ describe('Picks Page', () => {
         // Select Turnkey Sourced Parts
         fireEvent.click(turnkeyOption);
 
-        // Deal chain attached: title, connected nodes, and Unlink displayed
-        expect(screen.getAllByText(/Turnkey Sourced Parts/i).length).toBeGreaterThanOrEqual(1);
-        expect(screen.getAllByText(/Tagudin HW/i).length).toBeGreaterThanOrEqual(1);
-        expect(screen.getAllByText(/Danny Exp/i).length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText(/All-In Parts/i).length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText(/35uF AC Run Cap/i).length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText(/Danny Express/i).length).toBeGreaterThanOrEqual(1);
         expect(screen.getByRole('button', { name: 'Unlink' })).toBeTruthy();
-        // Child orders breakdown and settlement banner now appear dynamically
-        expect(screen.getByText('Attached Deal Chain Child Orders')).toBeTruthy();
-        expect(screen.getByText(/Non-Cascading Settlement Protection/i)).toBeTruthy();
+        expect(screen.queryByText('Planned Deal Chain Nodes')).toBeNull();
+        expect(screen.queryByText(/Planning boundary/i)).toBeNull();
     });
 });

@@ -1,15 +1,30 @@
 import { Link, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ProductShell } from '../ProductShell';
 import { ListingCard, ListingCardGrid } from './ListingCard';
 import { ListingPreview } from './ListingPreview';
-import { Badge, Button, Card, CardContent, Field, Notice, Select, Textarea, TextInput } from '../ui';
+import {
+    Badge,
+    Button,
+    Card,
+    CardContent,
+    Field,
+    NativeSelect as Select,
+    Notice,
+    Textarea,
+    TextInput,
+} from '@/components/ui';
 import type { HomeProps, ListingDraft, ListingRecord, SliceSession } from '../../types';
 import './my-listings-workspace.css';
 
 type ErrorMap = Record<string, string>;
 type Action = 'listing' | 'submit' | 'logout' | null;
-type DraftInput = { title: string; description: string; category_code: string; listing_type: string };
+type DraftInput = {
+    title: string;
+    description: string;
+    category_code: string;
+    listing_type: string;
+};
 
 function ReviewBoundary({ children }: { children: string }) {
     return (
@@ -35,7 +50,7 @@ function ListingStatusList({ listings }: { listings: ListingRecord[] }) {
                     key={listing.id}
                     listing={listing}
                     variant="owner"
-                    href={listing.id ? `/listings/${listing.id}` : null}
+                    href={listing.id ? `/my-listings/${listing.id}` : null}
                 />
             ))}
         </ListingCardGrid>
@@ -59,15 +74,10 @@ function ListingWorkspace({
 }) {
     const [title, setTitle] = useState(draft?.title ?? '');
     const [description, setDescription] = useState(draft?.description ?? '');
-    const [category, setCategory] = useState(draft?.categoryCode ?? draft?.category_code ?? 'home-help');
+    const [category, setCategory] = useState(
+        draft?.categoryCode ?? draft?.category_code ?? 'home-help',
+    );
     const [type, setType] = useState(draft?.listingType ?? draft?.listing_type ?? 'service');
-
-    useEffect(() => {
-        setTitle(draft?.title ?? '');
-        setDescription(draft?.description ?? '');
-        setCategory(draft?.categoryCode ?? draft?.category_code ?? 'home-help');
-        setType(draft?.listingType ?? draft?.listing_type ?? 'service');
-    }, [draft?.id, draft?.version]);
 
     const input: DraftInput = {
         title: title.trim(),
@@ -93,7 +103,8 @@ function ListingWorkspace({
                         <p className="sz-eyebrow">Draft editor</p>
                         <h2 className="sz-section-title">Save a private draft</h2>
                         <p className="sz-copy">
-                            Title, description, category, and service/product type. Submit when ready for review.
+                            Title, description, category, and service/product type. Submit when
+                            ready for review.
                         </p>
                     </div>
                     {draft ? (
@@ -106,7 +117,11 @@ function ListingWorkspace({
                 </div>
                 <form onSubmit={save} className="sz-grid-2">
                     <div className="sz-stack">
-                        <Field label="Listing title" error={errors.title} hint="Use a clear, human title. No claims of verification.">
+                        <Field
+                            label="Listing title"
+                            error={errors.title}
+                            hint="Use a clear, human title. No claims of verification."
+                        >
                             <TextInput
                                 name="title"
                                 value={title}
@@ -156,7 +171,11 @@ function ListingWorkspace({
                                     type="button"
                                     variant="warm"
                                     onClick={onSubmit}
-                                    disabled={draft.status !== 'draft' || !title.trim() || !description.trim()}
+                                    disabled={
+                                        draft.status !== 'draft' ||
+                                        !title.trim() ||
+                                        !description.trim()
+                                    }
                                     loading={action === 'submit'}
                                 >
                                     Submit for review
@@ -190,6 +209,7 @@ export function MyListingsWorkspace({
     action,
     notice,
     onLogout,
+    standalone = false,
 }: {
     session?: SliceSession | null;
     myListings?: HomeProps['myListings'];
@@ -198,6 +218,7 @@ export function MyListingsWorkspace({
     action: Action;
     notice: string | null;
     onLogout: () => void;
+    standalone?: boolean;
 }) {
     const listings = myListings ?? [];
     const [listingNotice, setListingNotice] = useState<string | null>(null);
@@ -206,7 +227,8 @@ export function MyListingsWorkspace({
         setListingNotice(null);
         router.post('/listings', input, {
             preserveScroll: true,
-            onSuccess: () => setListingNotice('Draft created. The server projection is now authoritative.'),
+            onSuccess: () =>
+                setListingNotice('Draft created. The server projection is now authoritative.'),
         });
     };
 
@@ -219,11 +241,13 @@ export function MyListingsWorkspace({
             `/listings/${draft.id}`,
             {
                 ...input,
-                expected_version: draft.version ?? draft.expectedVersion ?? draft.expected_version ?? 1,
+                expected_version:
+                    draft.version ?? draft.expectedVersion ?? draft.expected_version ?? 1,
             },
             {
                 preserveScroll: true,
-                onSuccess: () => setListingNotice('Draft saved. Refresh or continue from the server version.'),
+                onSuccess: () =>
+                    setListingNotice('Draft saved. Refresh or continue from the server version.'),
             },
         );
     };
@@ -235,7 +259,8 @@ export function MyListingsWorkspace({
         router.post(
             `/listings/${draft.id}/submit`,
             {
-                expected_version: draft.version ?? draft.expectedVersion ?? draft.expected_version ?? 1,
+                expected_version:
+                    draft.version ?? draft.expectedVersion ?? draft.expected_version ?? 1,
                 idempotency_key: `product-slice-${draft.id}-${draft.version ?? 1}`,
             },
             {
@@ -248,74 +273,89 @@ export function MyListingsWorkspace({
         );
     };
 
+    const content = (
+        <main className="sz-page mlw">
+            <div className="mlw-hero">
+                <div>
+                    <p className="sz-eyebrow">Private workspace</p>
+                    <h1 className="sz-display-title">My Listings</h1>
+                    <p className="sz-copy mlw-lede">
+                        See every offer you own, then create or finish a draft. Server state decides
+                        what buyers can see.
+                    </p>
+                </div>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={onLogout}
+                    loading={action === 'logout'}
+                >
+                    Sign out
+                </Button>
+            </div>
+
+            <ReviewBoundary>
+                Drafts and pending review stay private. Only approved active listings appear in
+                public browse.
+            </ReviewBoundary>
+
+            {notice ? (
+                <div className="mlw-notice">
+                    <Notice tone="success">{notice}</Notice>
+                </div>
+            ) : null}
+            {listingNotice ? (
+                <div className="mlw-notice">
+                    <Notice tone="success">{listingNotice}</Notice>
+                </div>
+            ) : null}
+
+            <section className="mlw-list" aria-labelledby="mlw-list-title">
+                <div className="mlw-list-head">
+                    <div>
+                        <p className="sz-eyebrow">Server projection</p>
+                        <h2 id="mlw-list-title" className="sz-section-title">
+                            Your listings
+                        </h2>
+                    </div>
+                    <Badge tone="neutral">{listings.length} owned</Badge>
+                </div>
+                <ListingStatusList listings={listings} />
+            </section>
+
+            <div className="mlw-sticky-create">
+                <a className="sz-btn sz-btn-primary" href="#my-listings-editor">
+                    Create listing
+                </a>
+            </div>
+
+            <section className="mlw-editor-wrap">
+                <ListingWorkspace
+                    key={`${draft?.id ?? 'new'}-${draft?.version ?? 0}`}
+                    draft={draft}
+                    errors={errors}
+                    action={action}
+                    onCreate={createDraft}
+                    onSave={saveDraft}
+                    onSubmit={submitDraft}
+                />
+            </section>
+
+            <section className="mlw-browse-link">
+                <Link href="/browse" className="sz-btn sz-btn-outline">
+                    Browse active listings
+                </Link>
+            </section>
+        </main>
+    );
+
+    if (standalone) {
+        return content;
+    }
+
     return (
         <ProductShell session={session} active="listings" title="My Listings">
-            <main className="sz-page mlw">
-                <div className="mlw-hero">
-                    <div>
-                        <p className="sz-eyebrow">Private workspace</p>
-                        <h1 className="sz-display-title">My Listings</h1>
-                        <p className="sz-copy mlw-lede">
-                            See every offer you own, then create or finish a draft. Server state decides what buyers can
-                            see.
-                        </p>
-                    </div>
-                    <Button type="button" variant="ghost" onClick={onLogout} loading={action === 'logout'}>
-                        Sign out
-                    </Button>
-                </div>
-
-                <ReviewBoundary>
-                    Drafts and pending review stay private. Only approved active listings appear in public browse.
-                </ReviewBoundary>
-
-                {notice ? (
-                    <div className="mlw-notice">
-                        <Notice tone="success">{notice}</Notice>
-                    </div>
-                ) : null}
-                {listingNotice ? (
-                    <div className="mlw-notice">
-                        <Notice tone="success">{listingNotice}</Notice>
-                    </div>
-                ) : null}
-
-                <section className="mlw-list" aria-labelledby="mlw-list-title">
-                    <div className="mlw-list-head">
-                        <div>
-                            <p className="sz-eyebrow">Server projection</p>
-                            <h2 id="mlw-list-title" className="sz-section-title">
-                                Your listings
-                            </h2>
-                        </div>
-                        <Badge tone="neutral">{listings.length} owned</Badge>
-                    </div>
-                    <ListingStatusList listings={listings} />
-                </section>
-
-                <div className="mlw-sticky-create">
-                    <a className="sz-btn sz-btn-primary" href="#my-listings-editor">
-                        Create listing
-                    </a>
-                </div>
-
-                <section className="mlw-editor-wrap">
-                    <ListingWorkspace
-                        draft={draft}
-                        errors={errors}
-                        action={action}
-                        onCreate={createDraft}
-                        onSave={saveDraft}
-                        onSubmit={submitDraft}
-                    />
-                </section>
-
-                <section className="mlw-browse-link">
-                    <Link href="/browse" className="sz-btn sz-btn-outline">
-                        Browse active listings
-                    </Link>
-                </section>
-            </main>
+            {content}
         </ProductShell>
     );
 }

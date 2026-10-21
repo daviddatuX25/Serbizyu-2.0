@@ -1,13 +1,13 @@
 ---
 name: Serbizyu Frontend View Projection
 type: architecture-spine
-purpose: build-substrate
+purpose: pre-messaging-foundation-build-substrate
 altitude: feature
 paradigm: frontend ports-and-adapters with relationship-scoped view projections
-scope: Frontend-first product simulation, deterministic JSON behavior, role-safe actions, and migration from visual HTML references into React/Inertia slices
+scope: Governed Listings and Browse/cache, Request/Tender bidding, atomic Order consequences, Work and Deal-Chain catalogs/builders, deterministic scenario behavior, and migration from visual HTML references into React/Inertia slices
 status: final
 created: 2026-09-08
-updated: 2026-09-08
+updated: 2026-09-25
 binds:
   - parent:AD-1
   - parent:AD-3
@@ -32,6 +32,7 @@ binds:
   - CMJ-REQ-001..012
   - RBQ-REQ-001..011
   - APA-REQ-001..014
+  - PRD-077..084
 sources:
   - ../architecture-serbizyu-platform-2026-08-09/ARCHITECTURE-SPINE.md
   - ../../domain-state-contracts-rebuilt.md
@@ -57,7 +58,7 @@ companions:
 
 ## Design Paradigm
 
-**Frontend ports-and-adapters with relationship-scoped view projections.** React feature screens depend on purpose-specific query/intent ports and discriminated view models. Production authorization and projection run in Laravel before Inertia serialization; the browser adapter validates the resulting envelope. Only the deterministic Scenario composition projects normalized synthetic state locally. Presentation components receive facts and resolved actions, never raw authority-bearing aggregates.
+**Frontend ports-and-adapters with relationship-scoped view projections.** React feature screens depend on purpose-specific query/intent ports and discriminated view models. Production authorization and projection run in Laravel before Inertia serialization; the browser adapter validates the resulting envelope. Browse composes distinct Listing and Request projections and caches only already-authorized envelopes. Only the deterministic Scenario composition projects normalized synthetic state locally. Presentation components receive facts and resolved actions, never raw authority-bearing aggregates.
 
 ```mermaid
 flowchart LR
@@ -118,15 +119,15 @@ flowchart LR
 
 - **Binds:** session, navigation, Activity, listing, request, quote, Order, Agent, and operations screens.
 - **Prevents:** a global Buyer/Provider switch and stale role state leaking controls between resources.
-- **Rule:** Session state identifies one account and additive capabilities. Closed relationship vocabulary is `guest`, `member`, `listing_owner`, `requester`, `eligible_responder`, `bidder`, `buyer`, `provider`, `invited_partner`, `acting_agent`, `ops`, and `reviewer`. `acting_agent` augments rather than replaces a resource relationship; `reviewer` exists only in Scenario composition. Projection context carries principal account, effective Owner, resolved grant ID/version, relationship set, and access purpose separately. IdentityAccess resolves current grants. Overlapping grants never permit one principal/effective party to control both sides of agreement formation; self-award and dual-party control fail closed.
+- **Rule:** Session state identifies one account and additive capabilities. Closed relationship vocabulary is `guest`, `member`, `listing_owner`, `requester`, `eligible_responder`, `bidder`, `invited_responder`, `buyer`, `provider`, `invited_partner`, `acting_agent`, `ops`, and `reviewer`. `invited_responder` is exclusive to one Direct Invite Request; `invited_partner` is exclusive to one Deal Need. `acting_agent` augments rather than replaces a resource relationship; `reviewer` exists only in Scenario composition. Projection context carries principal account, effective Owner, resolved grant ID/version, relationship set, and access purpose separately. IdentityAccess resolves current grants. Overlapping grants never permit one principal/effective party to control both sides of agreement formation; self-award and dual-party control fail closed.
 
 ### AD-4 — A view is a policy projection, not a raw entity [ADOPTED]
 
 - **Binds:** all screen queries and props.
 - **Prevents:** hidden private fields remaining in browser memory, templates re-implementing permission policy, and request/listing CTA contamination.
 - **Rule:** Every screen query resolves:
-  `projection = f(viewer, actingContext, resourceKind, resourceState, relationship, visibilityPolicy, activationPolicy)`.
-  Production queries authorize and construct purpose-specific projections server-side before Inertia serialization; local projection applies only to synthetic Scenario data. Projection identity binds composition/environment/evidence class, access purpose, resource kind/ID, immutable source/business versions, aggregate row revision, principal, effective Owner, grant version, visibility/activation policy versions, reveal phase, and list/filter inputs. Cross-identity cache reuse is forbidden; mutation, logout, perspective/Owner/grant/policy/reset changes invalidate affected projections.
+  `projection = f(viewer, actingContext, purpose, resourceKind, resourceState, relationship, visibilityPolicy, activationPolicy, queryInputs)`.
+  Production queries authorize and construct purpose-specific projections server-side before Inertia serialization; local projection applies only to synthetic Scenario data. Projection identity binds composition/environment/evidence class, access purpose, resource kind/ID, immutable source/business versions, aggregate row revision, principal, effective Owner, grant version, visibility/activation policy versions, reveal phase, geography, locale, and normalized list/filter/sort/cursor inputs. PostgreSQL is the default Browse path. If measured evidence activates shared cache assistance, it contains only stable explicitly public/coarse fields and omits current lifecycle/visibility/eligibility, source revision, live availability, executable actions, and all viewer/invitation/grant/acting-context projections. One batched current PostgreSQL overlay verifies source revision, phase, visibility/policy qualification, capacity/availability, and activation before serialization. Invalidation/TTL are optimizations; no benefit, regression, disablement, failure, or miss uses PostgreSQL without masking separately required session/queue health.
 
 ### AD-5 — Resource kinds use discriminated view contracts [ADOPTED]
 
@@ -167,8 +168,8 @@ flowchart LR
 ### AD-11 — Vertical slices reveal product gaps [ADOPTED]
 
 - **Binds:** delivery order and OpenSpec decomposition.
-- **Prevents:** a platform-wide frontend rewrite and another disconnected screen gallery.
-- **Rule:** Implement complete resource journeys in this order: (1) Browse plus Listing/Request discrimination; (2) request detail and role-safe action projection; (3) quote/bid compose, sealed/open visibility, negotiation, and requester decision; (4) accepted Order/Work/Obligation consequence; (5) partner/Deal-Chain views; (6) operations recovery. Each slice includes cross-perspective consequence, refresh/reset, denial, stale/expiry, mobile behavior, and action-leak checks.
+- **Prevents:** a platform-wide frontend rewrite, another disconnected screen gallery, and Messaging being built on unstable commercial identity.
+- **Rule:** Implement complete resource journeys in dependency order: (1) application/operations kernel and identity/acting context; (2) governed category, Work, and Deal-Chain catalogs plus registered source-specification builders/validators; (3) Listing authoring, publication, capacity, PostgreSQL Browse discrimination/current availability, and only if measured evidence passes, optional safe cache assistance; (4) direct atomic Order formation and registered Work execution consequence; (5) Request/Tender authoring, publication, mode privacy, Open Bid compose/version/withdraw, and Direct Invite purpose projection; (6) requester compare plus atomic select/finalize; (7) Sealed close/reveal and Direct Invite Bid flows; (8) bounded Deal-Chain builder over ordinary child formation; (9) operations recovery/proof. Messaging is the next bounded capability after this sequence. Every slice includes cross-perspective consequence, refresh/reset, denial, stale/expiry, mobile behavior, and operational recovery rather than leaving them to a later technical layer.
 
 ### AD-12 — Domain uncertainty is represented explicitly [ADOPTED]
 
@@ -188,11 +189,11 @@ flowchart LR
 - **Prevents:** immutable commercial versions being confused with optimistic concurrency counters.
 - **Rule:** Every relevant projection names stable resource ID, immutable source/business version IDs, mutable aggregate row revision, envelope schema version, and policy versions separately. Expected concurrency checks use row revision only; accepted terms pin immutable source/business versions.
 
-### AD-15 — Sealed information flow is end-to-end [ADOPTED]
+### AD-15 — Tender information flow is end-to-end [ADOPTED]
 
-- **Binds:** sealed Requests/Quotes across reads, UI, operations, and telemetry.
-- **Prevents:** competitor inference through counts, ordering, timing, errors, notifications, caches, history, logs, or analytics.
-- **Rule:** Sealed classification governs purpose-specific queries, list/search/sort/aggregates, notifications, errors, support/audit/export, logs/analytics, cache/prefetch/history, and async response commit—not only fields. Context/reveal-phase changes invalidate projections; privileged access is purpose-scoped and audited; denials are non-enumerating. Sealed means application access control, not cryptographic commitment. Production remains default-deny until reveal/count/early-award/notification policy versions are promoted.
+- **Binds:** Open, Sealed, and Direct Invite Requests/Quotes across reads, UI, operations, and telemetry.
+- **Prevents:** competitor inference through counts, ordering, timing, errors, notifications, caches, history, logs, analytics, or guessed identifiers.
+- **Rule:** Open permits public-safe Request discovery and eligible participation but exposes no competitor Bid terms, identities, or public/provider count. Sealed gives a bidder only their own Bid lineage and submission result; it hides every other Bid existence signal, identity, term, timing, ordering, error, and count from requester, competitors, and public until one committed `close_bidding` transaction freezes submissions, applies the pinned reveal policy, and enters `selection_open`. Direct Invite is never public, requires the exact current invitation-derived purpose, and returns non-enumerating denials. These classifications govern list/search/sort/aggregates, notifications, errors, support/audit/export, logs/analytics, cache/prefetch/history, and async response commit—not only visible fields. Context/reveal changes invalidate projections; privileged access is purpose-scoped and audited. Sealed means application access control, not cryptographic commitment.
 
 ### AD-16 — Brownfield cutover has one owner [ADOPTED]
 
@@ -224,17 +225,35 @@ flowchart LR
 - **Prevents:** one generic editor overwriting published terms, accepted Work structure, child Order truth, or authority boundaries.
 - **Rule:** Listing, Request, and Quote authoring edit their own versioned drafts and invoke a registered shape-specific Work specification builder before agreement. Final agreement atomically creates the accepted ordinary Order and its required one-or-more same-Order Work Instances. After acceptance, shape-specific Work workspaces append guarded execution events; structure changes require an affected-party terms amendment. Deal Chain authoring edits Needs/dependencies/invitations only, never child Order/Work state. Agent surfaces reuse these interfaces under current acting grants rather than forking them.
 
-### AD-21 — Canonical Chain Archetypes & Cascading Review Invariant [ADOPTED]
+### AD-21 — PostgreSQL Browse is baseline; optional cache contains projections, never authority [ADOPTED]
 
-- **Binds:** Deal Chain Catalog, Cart staging, Order formation, and Review subsystem.
-- **Prevents:** database catalog explosion from duplicate chain definitions, and review fatigue from multi-order completions.
-- **Rule:** Chain topologies are normalized into an acyclic DAG of Need Types and dependency edges, identified by a deterministic SHA-256 fingerprint (`chain_archetypes.fingerprint` UNIQUE). Specific provider pairings are decoupled into barangay-scoped co-occurrence projections (`chain_proven_pairings`). Completed Deal Chains permit a single unified 5-star review that cascades across all child orders by default, while supporting granular per-node overrides for exceptions. Ratings simultaneously update provider listing reputations and the community archetype catalog score.
+- **Binds:** Browse, Listing/Request detail prefetch, public search, optional cache activation/invalidation, and degradation.
+- **Prevents:** cargo-cult cache deployment, private-field leakage, cross-resource key collision, stale capacity authorizing formation, and Redis availability becoming marketplace correctness.
+- **Rule:** PostgreSQL projections are the default and are measured for query plan/count, tail latency, load/saturation, and payload. Shared cache remains disabled until accountable, expiring activation names a threshold breach/resilience failure mode, target, evidence, and disable trigger and proves net benefit. If activated, it accepts only stable explicitly public/coarse, schema-validated fields; current source revision, lifecycle/visibility/eligibility, live capacity/availability, and executable actions are excluded. Keys include resource kind, projection schema, visibility/policy versions, geography, locale, normalized query/filter/sort/cursor, and data/environment class. Viewer-, invitation-, grant-, acting-context-, operations-, and sealed-pre-reveal-specific values use private request scope or no cache, never shared storage. Before serialization, one batched PostgreSQL projection query verifies every cached candidate's current source revision, phase, visibility/policy qualification, capacity/availability, and activation; disqualified entries are discarded/rebuilt. Invalidation/TTL are optimizations; no benefit, regression, disablement, failure, or miss uses PostgreSQL.
 
-### AD-22 — Work-Step Dependency Gates & Cross-Node Relay Invariant [ADOPTED]
+### AD-22 — Tender modes share one Request/Quote/Order spine [ADOPTED]
 
-- **Binds:** Work workspaces, Deal Chain execution engine, and Event Bus.
-- **Prevents:** coarse whole-order execution freezes, cross-order database lock deadlocks, and uncoordinated provider disputes.
-- **Rule:** The macro coordination graph (Deal Chain Needs & edges) is strictly decoupled from micro Work execution (internal steps owned by a single Work Instance). Internal steps are not global graph nodes. Cross-node synchronization is mediated exclusively by `work_step_dependency_gates`. A work step remains in `WAITING_FOR_DEPENDENCY` until predecessor conditions emit verified completion. Producer transactions commit only their own child Order fact + outbox; asynchronous event consumers validate the immutable graph version and mark gates `unblocked`. Explicit gate bypass (`DealChainGateBypassed`) requires verified substitute evidence. Disruption delays emit `DealChainNodeDisrupted` to park dependent steps with updated ETAs without triggering sibling order cancellations or penalties.
+- **Binds:** Request builder, Bid composer, Tender detail/comparison, Direct Invite, scheduling, and Order formation.
+- **Prevents:** a generic `bids` table, mode-specific Order systems, automatic cheapest-wins logic, and invitation acceptance forming commercial truth.
+- **Rule:** A Sourcing Tender is a Request with immutable-after-publication mode `open_tender`, `sealed_tender`, or `direct_invite`; a Bid is one immutable Quote revision within a lineage. One lineage has at most one active submitted version. Amendment supersedes; withdrawal terminalizes; selection is explicit. Every Direct Invite Quote references one exact current, unexpired `request_invitations` row for the same Request/provider/purpose; valid submission accepts that invitation, and selection/finalization locks and revalidates it. Initial activation allows one active alternative and mandatory nodes; schema/policy may later activate up to three alternatives. UI action `quote.select_and_finalize` dispatches exactly `SelectAndFinalizeBid`, whose snake-case contract identity is `select_and_finalize_bid` and whose transaction seam is `FinalizeOrderAgreement`. Selection, ordinary Order graph, award, competing-lineage consequences, audit, idempotency, and outbox commit together or none commit. No durable `contract_pending` selection authority exists.
+
+### AD-22A — Tender policy content and activation decisions have explicit identities [ADOPTED]
+
+- **Binds:** Tender publication/submission/finalization, activation metadata, operations controls, and stale recovery.
+- **Prevents:** free JSON, payment policy, or a generic feature flag becoming reverse-sourcing authority.
+- **Rule:** Exact immutable `category_versions.sourcing_policy` supplies response/limit/deadline/liquidity rules and Product ownership; all matching `capability_activations` rows supply dimensioned enable/deny evidence and Operations/rollback ownership. Publication locks both and projects the policy checksum, winning enable ID, and complete activation-decision fingerprint. Submission/finalization re-evaluate them under lock; absence, expiry, incompatible supersession, changed fingerprint, or any deny produces `capability_inactive` with no mutation.
+
+### AD-22B — Essential notice lifecycle precedes conversations [ADOPTED]
+
+- **Binds:** account/security notices, Direct Invite delivery, support recovery, activity projections, and later Messaging.
+- **Prevents:** provider delivery being mistaken for business success, stale private payload replay, and Messaging becoming a hidden prerequisite.
+- **Rule:** Source modules commit purpose-bound intents; Operations dispatches immutable-identity/content numbered attempts. Intent states are `pending`, `dispatching`, `delivery_settling`, `cancellation_requested`, `delivered`, `dead_letter`, `cancelled`; attempt states are `pending`, `sending`, `delivered`, `retryable_failed`, `permanent_failed`, `outcome_unknown`, `cancelled`. Current mandatory policy blocks cancellation while authority remains valid. Parent-first cancellation/route-success blocks new claims and settles every sending attempt by authentic result or bounded unknown-outcome evidence before parent terminalization; late authentic results append evidence without reopening effects. Dead-letter replay regenerates a new generation, source inbox acknowledgment follows committed scheduling rather than provider success, and no notice grants conversation/resource authority.
+
+### AD-23 — Governed builders author source specifications only [ADOPTED]
+
+- **Binds:** Listing, Request/Tender, Quote/Bid, Work-specification, and Deal-Chain catalog/builder interfaces.
+- **Prevents:** free-form builders inventing unsupported combinations or editing accepted execution truth.
+- **Rule:** Builders consume versioned category, capability-profile, mechanism, Work-shape, lane, safety, evidence, visibility, and activation catalogs. They expose only authorized combinations, persist resumable CAS-guarded drafts, pin exact catalog/policy/source versions at publication/submission, and emit typed source specifications. Final formation revalidates every pin. Work builders cannot append execution; Deal-Chain builders cannot mutate child Orders/Work; no builder writes Payment truth. The ambiguous `Exact Budget` label is prohibited; budget controls map exactly to `target`, `ceiling`, `range`, `estimate`, or `undisclosed`.
 
 ## Consistency Conventions
 
@@ -244,7 +263,7 @@ flowchart LR
 | Feature layout | `features/<resource>/{contracts,queries,commands,projector,components,pages}` with shared primitives under `components/ui`. |
 | View envelope | Central registry under `application/contracts`; each resource schema distinguishes envelope version, immutable source/business versions, aggregate row revision, exhaustive status/relationship/action vocabulary, omission, and unsupported-version recovery. |
 | Action dispatch | Central `ActionDispatchRegistry`; stable verb-object code maps to one owner, target, explicit command, payload/result schema, row-revision source, and invalidation set. |
-| Query/cache identity | Composition/environment/evidence, purpose, resource/version/revision, principal/effective Owner/grant version, policy/reveal versions, and all list inputs; cross-identity reuse prohibited. |
+| Query/cache identity | PostgreSQL projections are baseline. Optional cache activation records measured failure mode, target, owner, expiry, evidence, and disable trigger. If enabled, identity includes composition/environment/evidence, purpose, resource kind/version, visibility/activation/reveal versions, geography/locale, and normalized list/filter/sort/cursor; private scope also includes principal/effective Owner/grant. Shared values hold stable public/coarse fields only; one batched PostgreSQL read verifies current source revision, phase, visibility/policy qualification, capacity/availability, and activation before serialization. |
 | IDs | Opaque branded TypeScript IDs; UUIDv7-shaped deterministic fixture values where canonical entities are simulated. |
 | Money | Integer minor units plus ISO-4217 currency; formatting only in presentation. |
 | Time | ISO-8601 UTC values; deterministic Lab clock; explicit presentation timezone. |
@@ -326,8 +345,8 @@ flowchart TD
 | --- | --- | --- |
 | Browse discrimination | `features/discovery`; discovery query/projection port | AD-4–AD-6, AD-10–AD-11, AD-14–AD-18 |
 | Listing detail and booking | `features/listings`; Listings-owned query/command projection | AD-3–AD-6, AD-10, AD-14, AD-16–AD-18; parent AD-5–AD-6, AD-9 |
-| Request detail and bidding | `features/requests`, `features/quotes`; Listings-owned query/command projections | AD-3–AD-6, AD-9–AD-18; parent AD-5–AD-6 |
-| Listing/Request/Quote authoring | Separate lifecycle manager, Request builder, Quote composer, and registered Work specification builder | AD-5–AD-6, AD-14, AD-16–AD-18, AD-20; parent AD-5–AD-7 |
+| Request detail and bidding | `features/requests`, `features/quotes`; Listings-owned Request/Quote projections plus Request-owned invitation purpose | AD-3–AD-6, AD-9–AD-18, AD-21–AD-23; parent AD-5–AD-6 |
+| Listing/Request/Quote authoring | Separate lifecycle manager, Request/Tender builder, Quote/Bid composer, and registered Work specification builder consuming governed catalogs | AD-5–AD-6, AD-14, AD-16–AD-18, AD-20, AD-22–AD-23; parent AD-5–AD-7 |
 | Scenario Lab | `scenario/review`, `scenario/repository`; synthetic-only composition | AD-7–AD-10, AD-12, AD-14, AD-18–AD-19; parent AD-24 |
 | Production projection | Laravel application query/policy plus `application/adapters` envelope validator | AD-4, AD-9–AD-10, AD-14–AD-18; parent AD-12, AD-27 |
 | Agent acting-for | IdentityAccess grant query plus shared structured execution context | AD-3–AD-4, AD-6, AD-9, AD-14, AD-17; parent AD-3, AD-29 |
@@ -341,11 +360,10 @@ flowchart TD
 
 ## Deferred
 
-- Exact tender eligibility thresholds, response-rate limits, and public-versus-authenticated discovery exposure: defer until their policy versions are founder-approved; projections already represent unavailable/pending.
-- Whether an `open_tender` exposes live Bid terms to unrelated viewers remains a founder/domain decision. Current proposed policy means open participation and public-safe Request discovery, not a public price book; the safe projection omits exact competitor terms.
-- Full partner/Deal-Chain execution UI: defer until listing/request/quote/Order projections prove the ordinary bilateral path; the canonical foundation remains inherited.
-- Organization/team tenancy: defer under parent AD-22; the frontend uses one human account plus explicit acting-for grants.
-- Live connected payment, identity-document collection, provider webhooks, and production Tiwala: remain behind parent activation gates and are not enabled by scenario fidelity.
-- SSR, realtime, external search, and native shells: parent architecture owns these operational choices; none is required for the frontend discovery loop.
-- Identity/onboarding, full Quick Deal, Activity/notification, support/safety, and Admin breadth from MFAO/QDS/AOP remain outside the first projection-kernel OpenSpec. Their owner boundaries above are binding; implementation waits for dedicated vertical packets and cannot be claimed complete from the kernel.
+- Exact category-specific responder verification, safety evidence, photo, private-address, rate-limit, and deadline bounds remain governed policy inputs; absence fails closed and does not change Tender aggregates.
+- Full Deal-Chain execution UI remains activation-gated until Listing/Request/Quote/Order/Work slices prove the ordinary bilateral path; the catalog, builder, lineage, and child-isolation foundation are in the current pre-messaging sequence.
+- Organization/team tenancy remains deferred under parent AD-22; the frontend uses one human account plus explicit acting-for grants.
+- Live connected payment, identity-document collection, provider webhooks, and production Tiwala remain behind parent activation gates and are not enabled by scenario fidelity.
+- SSR, realtime, external search, and native shells remain optional adapters; PostgreSQL projection fallback is mandatory and Redis never becomes domain authority.
+- Messaging, Activity breadth, support/safety breadth, and full Admin breadth follow the pre-messaging foundation through dedicated vertical packets. Messaging consumes settled Request/Quote/Order/Work participant and privacy contracts and cannot substitute chat for structured commercial state.
 - The old `frontend/src` prototype remains read-only implementation evidence until an explicit retirement packet decides what to port or delete; no production behavior or dependency is added there.

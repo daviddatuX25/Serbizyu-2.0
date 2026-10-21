@@ -4,6 +4,7 @@ import type {
     WorkInteractionType,
     WorkEvidenceProtocol,
     WorkNodePrimitive,
+    WorkToolDefinition,
 } from './types';
 
 export interface ClearanceModeDefinition {
@@ -42,35 +43,65 @@ export interface RequiredProofDefinition {
     type: WorkEvidenceType;
     label: string;
     description: string;
-    lucideIcon: 'Camera' | 'Gauge' | 'KeyRound' | 'ListChecks';
+    lucideIcon: 'Camera' | 'Gauge' | 'MapPin' | 'ListChecks';
 }
 
-export const REQUIRED_PROOF_DEFINITIONS: RequiredProofDefinition[] = [
+export const WORK_TOOL_REGISTRY: WorkToolDefinition[] = [
     {
-        type: 'photo_proof',
+        toolKey: 'photo_proof',
+        kind: 'native',
         label: 'Photo / Video Capture',
         description: 'Time-stamped before/after photo or visual progress verification.',
         lucideIcon: 'Camera',
+        actor: 'worker',
+        configSchema: {},
     },
     {
-        type: 'metric_reading',
+        toolKey: 'gps_checkin',
+        kind: 'native',
+        label: 'GPS / Map Coordinate Pin',
+        description: 'Time-stamped device coordinates or map pin check-in at site/handoff point.',
+        lucideIcon: 'MapPin',
+        actor: 'worker',
+        configSchema: {},
+    },
+    {
+        toolKey: 'metric_reading',
+        kind: 'native',
         label: 'Metric / Measurement Reading',
         description: 'Quantitative reading entered with unit (e.g. °C delta, volts, psi, kg).',
         lucideIcon: 'Gauge',
+        actor: 'worker',
+        configSchema: {},
     },
     {
-        type: 'customer_otp',
-        label: 'Customer OTP / Digital Signature',
-        description: 'Secure 4-digit customer confirmation token or sign-off signature.',
-        lucideIcon: 'KeyRound',
-    },
-    {
-        type: 'checklist_steps',
+        toolKey: 'checklist_steps',
+        kind: 'native',
         label: 'Itemized Safety Checklist',
         description: 'Operator confirms completion of required safety or prep steps.',
         lucideIcon: 'ListChecks',
+        actor: 'worker',
+        configSchema: {},
+    },
+    {
+        toolKey: 'external_connector',
+        kind: 'external_connector',
+        label: 'External Business Connector / API',
+        description: 'Owner-scoped external site, POS, or diagnostic webhook adapter.',
+        lucideIcon: 'FileText',
+        actor: 'external_system',
+        configSchema: {},
     },
 ];
+
+export const REQUIRED_PROOF_DEFINITIONS: RequiredProofDefinition[] = WORK_TOOL_REGISTRY.filter(
+    (tool) => tool.kind === 'native',
+).map((tool) => ({
+    type: tool.toolKey as WorkEvidenceType,
+    label: tool.label,
+    description: tool.description,
+    lucideIcon: tool.lucideIcon as RequiredProofDefinition['lucideIcon'],
+}));
 
 export const WORK_NODE_CATALOG: WorkNodePrimitive[] = [
     {
@@ -79,7 +110,7 @@ export const WORK_NODE_CATALOG: WorkNodePrimitive[] = [
         desc: 'Physical arrival at customer location, safety briefing & site orientation.',
         dur: '15m',
         clearanceMode: 'worker_direct',
-        requiredProofs: ['photo_proof'],
+        requiredProofs: ['gps_checkin', 'photo_proof'],
         evidence: 'Time-stamped jobsite arrival photo or GPS check-in.',
         color: '#0D715F',
         bg: '#E8F7F1',
@@ -173,7 +204,8 @@ export const WORK_NODE_CATALOG: WorkNodePrimitive[] = [
         dur: '20m',
         clearanceMode: 'physical_handoff',
         handoffParty: 'recipient_confirm',
-        requiredProofs: ['customer_otp'],
+        approvalMethod: 'presence_otp',
+        requiredProofs: ['gps_checkin'],
         evidence: 'Customer digital OTP or receipt signature on delivery.',
         color: '#4F46E5',
         bg: '#EEF2FF',
@@ -188,7 +220,8 @@ export const WORK_NODE_CATALOG: WorkNodePrimitive[] = [
         desc: 'Client inspects results, validates satisfaction, and authorizes escrow release.',
         dur: '15m',
         clearanceMode: 'customer_approval',
-        requiredProofs: ['customer_otp'],
+        approvalMethod: 'presence_otp',
+        requiredProofs: [],
         evidence: 'Dual customer sign-off signature and digital release OTP.',
         color: '#047857',
         bg: '#D1FAE5',
@@ -198,7 +231,6 @@ export const WORK_NODE_CATALOG: WorkNodePrimitive[] = [
         evidenceProtocol: 'customer_otp',
     },
 ];
-
 // Backward-compatibility definitions for tests and older consumers
 export interface InteractionTypeDefinition {
     type: WorkInteractionType;

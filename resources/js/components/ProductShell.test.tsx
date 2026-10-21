@@ -27,9 +27,13 @@ describe('ProductShell', () => {
         expect(screen.getByRole('navigation', { name: /mobile navigation/i })).toBeTruthy();
 
         expect(screen.getAllByRole('link', { name: /^home$/i }).length).toBeGreaterThan(0);
-        expect(screen.getAllByRole('link', { name: /browse marketplace/i }).length).toBeGreaterThan(0);
+        expect(screen.getAllByRole('link', { name: /browse marketplace/i }).length).toBeGreaterThan(
+            0,
+        );
         expect(screen.getAllByRole('link', { name: /create listing/i }).length).toBeGreaterThan(0);
-        expect(screen.getAllByRole('link', { name: /my listings|mine/i }).length).toBeGreaterThan(0);
+        expect(screen.getAllByRole('link', { name: /my listings|mine/i }).length).toBeGreaterThan(
+            0,
+        );
 
         expect(screen.queryByRole('link', { name: /activity/i })).toBeNull();
         expect(screen.queryByRole('link', { name: /quick.?deal/i })).toBeNull();
@@ -61,7 +65,9 @@ describe('ProductShell', () => {
 
         const slot = container.querySelector('.sz-secondary-logo-slot');
         expect(slot).toBeTruthy();
-        expect(within(slot as HTMLElement).getByRole('link', { name: /serbizyu home/i })).toBeTruthy();
+        expect(
+            within(slot as HTMLElement).getByRole('link', { name: /serbizyu home/i }),
+        ).toBeTruthy();
         expect(screen.getByRole('button', { name: /search/i })).toBeTruthy();
     });
 

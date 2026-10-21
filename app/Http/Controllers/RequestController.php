@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Modules\Catalogs\Application\WorkCatalog;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
 use App\Modules\IdentityAccess\Application\RoleAssignmentService;
@@ -24,6 +25,7 @@ final class RequestController extends Controller
         private readonly RoleAssignmentService $roles,
         private readonly RequestDetailProjector $projector,
         private readonly TenderService $tenderService,
+        private readonly WorkCatalog $workCatalog,
     ) {}
 
     public function create(Request $request): InertiaResponse
@@ -31,10 +33,19 @@ final class RequestController extends Controller
         $correlationId = $this->correlationId($request);
         $state = $this->sliceState->for($request);
 
+        $categories = DB::table('categories')
+            ->select(['id', 'code', 'name'])
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Requests/CreateRequest', [
             'session' => $state['session'] ?? null,
             'readiness' => $state['readiness'] ?? null,
             'correlationId' => $correlationId,
+            'categories' => $categories,
+            'workCatalog' => $this->workCatalog->frontend(),
+            'workOptions' => $this->workCatalog->optionsFor(null, 'service'),
         ]);
     }
 
@@ -59,14 +70,26 @@ final class RequestController extends Controller
             'description' => ['required', 'string', 'min:10', 'max:4000'],
             'category_code' => ['required', 'string'],
             'budget_amount' => ['nullable', 'numeric', 'min:0'],
-            'urgency' => ['nullable', 'string', 'in:today,this_week,flexible'],
+            'budget_mode' => ['nullable', 'string', 'in:estimate,exact,undisclosed'],
+            'urgency' => ['nullable', 'string', 'in:today,this_week,flexible,specific'],
+            'scheduled_date' => ['nullable', 'string'],
+            'time_window' => ['nullable', 'string'],
             'preferred_fulfillment' => ['nullable', 'string'],
+            'tender_mode' => ['nullable', 'string', 'in:open_tender,sealed_tender,direct_invite'],
+            'payment_lane' => ['nullable', 'string', 'in:external_cash,bilateral_escrow'],
+            'area' => ['nullable', 'string', 'max:120'],
+            'hide_exact_address' => ['nullable', 'boolean'],
+            'requirements' => ['nullable', 'array'],
+            'requirements.*' => ['string', 'max:500'],
+            'attach_pipeline' => ['nullable', 'boolean'],
+            'pipeline' => ['nullable', 'array'],
         ]);
 
         $category = DB::table('categories')->where('code', $validated['category_code'])->first()
             ?? DB::table('categories')->first();
 
-        $budgetMinor = isset($validated['budget_amount']) && is_numeric($validated['budget_amount']) && ((float) $validated['budget_amount']) > 0
+        $isUndisclosed = ($validated['budget_mode'] ?? null) === 'undisclosed';
+        $budgetMinor = ! $isUndisclosed && isset($validated['budget_amount']) && is_numeric($validated['budget_amount']) && ((float) $validated['budget_amount']) > 0
             ? (int) round(((float) $validated['budget_amount']) * 100)
             : null;
 
@@ -83,17 +106,31 @@ final class RequestController extends Controller
             'item_list' => json_encode([
                 'title' => trim($validated['title']),
                 'preferred_fulfillment' => $validated['preferred_fulfillment'] ?? 'direct',
+                'tender_mode' => $validated['tender_mode'] ?? 'open_tender',
+                'budget_mode' => $validated['budget_mode'] ?? 'exact',
+                'payment_lane' => $validated['payment_lane'] ?? 'external_cash',
+                'requirements' => $validated['requirements'] ?? [],
+                'attach_pipeline' => (bool) ($validated['attach_pipeline'] ?? false),
+                'pipeline' => $validated['pipeline'] ?? null,
             ], JSON_THROW_ON_ERROR),
             'budget_amount_minor' => $budgetMinor,
             'budget_currency' => $budgetMinor !== null ? 'PHP' : null,
             'timing' => json_encode([
                 'urgency' => $validated['urgency'] ?? 'flexible',
-                'scheduled_for' => null,
+                'scheduled_for' => $validated['scheduled_date'] ?? null,
+                'time_window' => $validated['time_window'] ?? null,
             ], JSON_THROW_ON_ERROR),
-            'location' => json_encode(['area_code' => 'Tagudin'], JSON_THROW_ON_ERROR),
+            'location' => json_encode([
+                'area_code' => 'Tagudin',
+                'barangay' => $validated['area'] ?? 'Tagudin Centro',
+                'hide_exact_address' => (bool) ($validated['hide_exact_address'] ?? true),
+            ], JSON_THROW_ON_ERROR),
             'status' => 'published',
             'expires_at' => now()->addDays(7),
-            'privacy_preferences' => json_encode(['hide_exact_address' => true], JSON_THROW_ON_ERROR),
+            'privacy_preferences' => json_encode([
+                'hide_exact_address' => (bool) ($validated['hide_exact_address'] ?? true),
+                'tender_mode' => $validated['tender_mode'] ?? 'open_tender',
+            ], JSON_THROW_ON_ERROR),
             'safety_preferences' => json_encode(['verified_providers_only' => true], JSON_THROW_ON_ERROR),
             'deal_chain_id' => null,
             'deal_need_id' => null,
@@ -222,6 +259,51 @@ final class RequestController extends Controller
             }
 
             return redirect()->route('orders.show', $result['order_id'])->with('notice', 'Quote accepted and order created!');
+        } catch (IdentityAccessError $error) {
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'code' => (string) $error->envelope->code,
+                    'message' => $error->envelope->message,
+                    'correlation_id' => $correlationId,
+                ], $error->status, ['X-Correlation-Id' => $correlationId]);
+            }
+
+            abort($error->status, $error->envelope->message);
+        }
+    }
+
+    public function counterQuote(Request $request, string $id, string $quote): mixed
+    {
+        $correlationId = $this->correlationId($request);
+
+        try {
+            $userId = $this->session->requireUser($request, $correlationId);
+
+            $validated = $request->validate([
+                'amount_minor' => ['required', 'integer', 'min:100'],
+                'note' => ['nullable', 'string', 'max:1000'],
+                'include_hardware' => ['nullable', 'boolean'],
+            ]);
+
+            $newQuote = $this->tenderService->counterQuote(
+                $userId,
+                $id,
+                $quote,
+                [
+                    'amount_minor' => (int) $validated['amount_minor'],
+                    'note' => $validated['note'] ?? null,
+                    'include_hardware' => (bool) ($validated['include_hardware'] ?? false),
+                ],
+                $correlationId
+            );
+
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'data' => $newQuote,
+                ], 201, ['X-Correlation-Id' => $correlationId]);
+            }
+
+            return redirect()->route('requests.show', $id)->with('notice', 'Counter-offer submitted!');
         } catch (IdentityAccessError $error) {
             if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json([

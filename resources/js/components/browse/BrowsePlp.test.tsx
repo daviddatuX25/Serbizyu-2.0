@@ -42,7 +42,9 @@ describe('BrowsePlp', () => {
     it('renders Split Service card meta without redundant Active badge or Open listing CTA', () => {
         render(<BrowsePlp listings={[listing]} />);
 
-        expect(screen.getByRole('heading', { name: /browse active services in tagudin/i })).toBeTruthy();
+        expect(
+            screen.getByRole('heading', { name: /browse active services in tagudin/i }),
+        ).toBeTruthy();
         expect(screen.getByText(/local services/i)).toBeTruthy();
         expect(screen.getByText(/reliable local help for simple needs/i)).toBeTruthy();
         expect(screen.getByText(/by maya tagudin/i)).toBeTruthy();
@@ -53,7 +55,9 @@ describe('BrowsePlp', () => {
         expect(screen.queryByText(/verified/i)).toBeNull();
         expect(screen.queryByText(/new · no reviews yet/i)).toBeNull();
         expect(document.querySelector('.nav-brand.sz-secondary-logo-slot')).toBeTruthy();
-        expect(document.querySelector('.nav-brand img')?.getAttribute('src')).toContain('serbizyu-logo-long.png');
+        expect(document.querySelector('.nav-brand img')?.getAttribute('src')).toContain(
+            'serbizyu-logo-long.png',
+        );
     });
 
     it('opens the listing when the card is activated', () => {
@@ -194,9 +198,7 @@ describe('BrowsePlp', () => {
     const stubWideDesktopMedia = () => {
         // Intentionally omit (hover: hover) — live UAs often report hover:none on desktop.
         vi.stubGlobal('matchMedia', (query: string) => ({
-            matches:
-                query.includes('min-width: 900px') ||
-                query.includes('min-width: 960px'),
+            matches: query.includes('min-width: 900px') || query.includes('min-width: 960px'),
             media: query,
             onchange: null,
             addEventListener() {},
@@ -247,18 +249,24 @@ describe('BrowsePlp', () => {
         await act(async () => {
             vi.advanceTimersByTime(1299);
         });
-        expect(container.querySelector(`[data-id="${rightId}"]`)?.classList.contains('is-expanded')).toBe(false);
+        expect(
+            container.querySelector(`[data-id="${rightId}"]`)?.classList.contains('is-expanded'),
+        ).toBe(false);
         await act(async () => {
             vi.advanceTimersByTime(2);
         });
-        expect(container.querySelector(`[data-id="${rightId}"]`)?.classList.contains('is-expanded')).toBe(true);
+        expect(
+            container.querySelector(`[data-id="${rightId}"]`)?.classList.contains('is-expanded'),
+        ).toBe(true);
         // Right-column expand leads the row so the former left neighbor drops below.
         const ordered = [...container.querySelectorAll('.ptile.dwell-card')] as HTMLElement[];
         expect(ordered[0].dataset.id).toBe(rightId);
         expect(ordered[1].dataset.id).toBe(leftId);
 
         fireEvent.mouseLeave(ordered[0]);
-        expect(container.querySelector(`[data-id="${rightId}"]`)?.classList.contains('is-expanded')).toBe(true);
+        expect(
+            container.querySelector(`[data-id="${rightId}"]`)?.classList.contains('is-expanded'),
+        ).toBe(true);
 
         await act(async () => {
             fireEvent.pointerDown(document.body);
@@ -304,5 +312,4 @@ describe('BrowsePlp', () => {
         expect(card.classList.contains('is-expanded')).toBe(true);
         vi.useRealTimers();
     });
-
 });

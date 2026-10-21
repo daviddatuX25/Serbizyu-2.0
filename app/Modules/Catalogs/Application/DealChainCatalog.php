@@ -61,7 +61,7 @@ final class DealChainCatalog implements DealChainRecipeCatalogPort
                         'image' => isset($node['image']) && is_string($node['image']) ? $node['image'] : null,
                         'priceMinor' => isset($node['price_minor']) ? (int) $node['price_minor'] : null,
                         'slotRequirement' => isset($node['slot_requirement']) && is_array($node['slot_requirement']) ? $node['slot_requirement'] : null,
-                        'assignmentMode' => (string) ($node['slot_requirement']['default_assignment_mode'] ?? (!empty($node['listing_id']) ? 'preferred_partner' : 'open_pool')),
+                        'assignmentMode' => (string) ($node['slot_requirement']['default_assignment_mode'] ?? (! empty($node['listing_id']) ? 'preferred_partner' : 'open_pool')),
                     ];
                 },
                 (array) ($catalog['nodes'] ?? []),

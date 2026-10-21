@@ -10,6 +10,7 @@ export interface DealChainCarouselProps {
     onToggleDefault?: (comboId: string) => void;
     onRemoveCombo?: (comboId: string) => void;
     onAddComboClick?: () => void;
+    onCustomizeComboClick?: (comboId: string) => void;
 }
 
 /* ── Compact DAG Node ── */
@@ -63,13 +64,24 @@ function SlotBinderRow({
             onClick={() => onChangeClick(comboId, slot.type)}
             className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white px-2 py-[5px] text-left transition-colors hover:border-[#0F2F58]"
         >
-            <div>
-                <div className="text-[8.5px] font-bold text-slate-500 uppercase">{slot.role}</div>
-                <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-extrabold text-[#0F2F58]">{slot.name}</span>
-                    <span className="font-mono text-[9.5px] font-bold text-[--forest-700,#0a574a]">
-                        {slot.meta}
-                    </span>
+            <div className="flex items-center gap-2 min-w-0">
+                {slot.coverThumbnailUrl && (
+                    <img
+                        src={slot.coverThumbnailUrl}
+                        alt={slot.name}
+                        className="size-7 shrink-0 rounded-md border border-slate-200 object-cover"
+                    />
+                )}
+                <div className="min-w-0">
+                    <div className="text-[8.5px] font-bold text-slate-500 uppercase">{slot.role}</div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="truncate text-[11px] font-extrabold text-[#0F2F58]">
+                            {slot.name}
+                        </span>
+                        <span className="font-mono text-[9.5px] font-bold text-[--forest-700,#0a574a]">
+                            {slot.meta}
+                        </span>
+                    </div>
                 </div>
             </div>
             <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-[#0F2F58]">
@@ -101,11 +113,13 @@ function ComboSlide({
     onSlotChangeClick,
     onToggleDefault,
     onRemoveCombo,
+    onCustomizeComboClick,
 }: {
     combo: DealChainCombination;
     onSlotChangeClick: (comboId: string, slotType: SlotType) => void;
     onToggleDefault?: (comboId: string) => void;
     onRemoveCombo?: (comboId: string) => void;
+    onCustomizeComboClick?: (comboId: string) => void;
 }) {
     return (
         <div className="box-border min-w-full flex-[0_0_100%] snap-start">
@@ -118,11 +132,30 @@ function ComboSlide({
             >
                 {/* Top Header */}
                 <div className="mb-2 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] text-[#0F2F58]">
-                            {combo.icon && combo.icon.length <= 3 ? combo.icon : <LinkChainIcon />}
-                        </span>
-                        <span className="text-xs font-extrabold text-[#0F2F58]">{combo.title}</span>
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-[13px] text-[#0F2F58]">
+                                {combo.icon && combo.icon.length <= 3 ? combo.icon : <LinkChainIcon />}
+                            </span>
+                            <span className="text-xs font-extrabold text-[#0F2F58]">
+                                {combo.title}
+                            </span>
+                            <span
+                                className={`rounded-full px-2 py-0.5 text-[8.5px] font-extrabold uppercase ${
+                                    combo.isCustom
+                                        ? 'bg-amber-100 text-amber-900'
+                                        : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                            >
+                                {combo.isCustom ? 'Custom for this listing' : 'Deal Chain Set'}
+                            </span>
+                        </div>
+                        {combo.basedOnTitle && (
+                            <div className="mt-0.5 text-[9.5px] text-slate-500">
+                                Based on {combo.basedOnTitle}
+                                {combo.catalogVersion ? ` v${combo.catalogVersion}` : ''}
+                            </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-1.5">
                         <button
@@ -168,6 +201,18 @@ function ComboSlide({
                         ))
                     )}
                 </div>
+
+                {onCustomizeComboClick && (
+                    <div className="mt-2 border-t border-slate-200/70 pt-2">
+                        <button
+                            type="button"
+                            onClick={() => onCustomizeComboClick(combo.id)}
+                            className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-1.5 text-[10.5px] font-extrabold text-[#0F2F58] hover:border-[#0F2F58] hover:bg-[#EBF2FA]/50"
+                        >
+                            <span>Customize Deal Chain Nodes ({combo.nodes.length})</span>
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -253,6 +298,7 @@ export default function DealChainCarousel({
     onToggleDefault,
     onRemoveCombo,
     onAddComboClick,
+    onCustomizeComboClick,
 }: DealChainCarouselProps) {
     const deckRef = useRef<HTMLDivElement>(null);
 
@@ -338,6 +384,7 @@ export default function DealChainCarousel({
                             onSlotChangeClick={onSlotChangeClick}
                             onToggleDefault={onToggleDefault}
                             onRemoveCombo={onRemoveCombo}
+                            onCustomizeComboClick={onCustomizeComboClick}
                         />
                     ))}
                 </div>

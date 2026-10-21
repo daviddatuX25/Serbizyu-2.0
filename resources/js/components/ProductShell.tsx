@@ -37,14 +37,38 @@ type NavItem = {
 
 const NAV: NavItem[] = [
     { key: 'home', label: 'Home', shortLabel: 'Home', href: '/', available: true },
-    { key: 'browse', label: 'Browse marketplace', shortLabel: 'Browse', href: '/browse', available: true },
-    { key: 'create', label: 'Create listing', shortLabel: 'Create', href: CREATE_HREF, available: true },
-    { key: 'listings', label: 'My listings', shortLabel: 'Mine', href: '/my-listings', available: true },
+    {
+        key: 'browse',
+        label: 'Browse marketplace',
+        shortLabel: 'Browse',
+        href: '/browse',
+        available: true,
+    },
+    {
+        key: 'create',
+        label: 'Create listing',
+        shortLabel: 'Create',
+        href: CREATE_HREF,
+        available: true,
+    },
+    {
+        key: 'listings',
+        label: 'My listings',
+        shortLabel: 'Mine',
+        href: '/my-listings',
+        available: true,
+    },
     { key: 'requests', label: 'Requests', shortLabel: 'Requests', href: '#', available: false },
     { key: 'orders', label: 'Orders & work', shortLabel: 'Orders', href: '#', available: false },
     { key: 'messages', label: 'Messages', shortLabel: 'Messages', href: '#', available: false },
     { key: 'trust', label: 'Trust & safety', shortLabel: 'Trust', href: '#', available: false },
-    { key: 'account', label: 'Account settings', shortLabel: 'Account', href: '#', available: false },
+    {
+        key: 'account',
+        label: 'Account settings',
+        shortLabel: 'Account',
+        href: '#',
+        available: false,
+    },
     { key: 'admin', label: 'Operations', shortLabel: 'Operations', href: '#', available: false },
 ];
 function NavLink({
@@ -63,7 +87,7 @@ function NavLink({
     return (
         <Link
             href={item.href}
-            className={`${className}${active === item.key ? ' is-active' : ''}${!item.available ? ' is-disabled' : ''}`}
+            className={`${className}${active === item.key ? 'is-active' : ''}${!item.available ? 'is-disabled' : ''}`}
             aria-current={active === item.key ? 'page' : undefined}
             aria-disabled={!item.available || undefined}
             onClick={(event) => {
@@ -90,7 +114,10 @@ const ShellDrawerContext = createContext<ShellDrawerContextValue | null>(null);
  * actions here. When set, ProductShell replaces the plain mobile dock with the
  * actions ↔ nav switching drawer.
  */
-export function useRegisterShellDrawerActions(actions: ReactNode | null, deps: DependencyList): void {
+export function useRegisterShellDrawerActions(
+    actions: ReactNode | null,
+    deps: DependencyList,
+): void {
     const api = useContext(ShellDrawerContext);
 
     useEffect(() => {
@@ -157,13 +184,7 @@ function Chevron({ dir }: { dir: 'left' | 'right' }) {
 
 type DrawerPanel = 'actions' | 'nav';
 
-function SwitchingDrawer({
-    active,
-    actions,
-}: {
-    active: ProductNavKey;
-    actions: ReactNode;
-}) {
+function SwitchingDrawer({ active, actions }: { active: ProductNavKey; actions: ReactNode }) {
     const [panel, setPanel] = useState<DrawerPanel>('actions');
     const actionsOpen = panel === 'actions';
     const navOpen = panel === 'nav';
@@ -203,7 +224,10 @@ function SwitchingDrawer({
                 }
             }}
         >
-            <div className={`sz-switch-card${actionsOpen ? ' is-open' : ' is-closed'}`} data-side="actions">
+            <div
+                className={`sz-switch-card${actionsOpen ? 'is-open' : 'is-closed'}`}
+                data-side="actions"
+            >
                 <button
                     type="button"
                     className="sz-switch-handle"
@@ -216,10 +240,12 @@ function SwitchingDrawer({
                 >
                     <Chevron dir="right" />
                 </button>
-                <div className="sz-switch-panel sz-switch-panel-actions" aria-hidden={!actionsOpen}>{actions}</div>
+                <div className="sz-switch-panel sz-switch-panel-actions" aria-hidden={!actionsOpen}>
+                    {actions}
+                </div>
             </div>
 
-            <div className={`sz-switch-card${navOpen ? ' is-open' : ' is-closed'}`} data-side="nav">
+            <div className={`sz-switch-card${navOpen ? 'is-open' : 'is-closed'}`} data-side="nav">
                 <button
                     type="button"
                     className="sz-switch-handle"
@@ -229,13 +255,17 @@ function SwitchingDrawer({
                 >
                     <Chevron dir="left" />
                 </button>
-                <nav className="sz-switch-panel sz-switch-panel-nav" aria-label="Mobile navigation" aria-hidden={!navOpen}>
+                <nav
+                    className="sz-switch-panel sz-switch-panel-nav"
+                    aria-label="Mobile navigation"
+                    aria-hidden={!navOpen}
+                >
                     {NAV.map((item) => (
                         <NavLink
                             key={item.key}
                             item={item}
                             active={active}
-                            className={`sz-switch-nav-link${item.key === 'create' ? ' is-create' : ''}`}
+                            className={`sz-switch-nav-link${item.key === 'create' ? 'is-create' : ''}`}
                             onNavigate={() => setPanel('actions')}
                         >
                             <NavIcon name={item.key} />
@@ -251,7 +281,10 @@ function MobileNavigation({ active }: { active: ProductNavKey }) {
     const [open, setOpen] = useState(false);
 
     return (
-        <div className={`sz-mobile-menu${open ? ' is-open' : ''}`} data-open={open ? 'true' : 'false'}>
+        <div
+            className={`sz-mobile-menu${open ? 'is-open' : ''}`}
+            data-open={open ? 'true' : 'false'}
+        >
             <button
                 type="button"
                 className="sz-mobile-menu-trigger"
@@ -259,10 +292,16 @@ function MobileNavigation({ active }: { active: ProductNavKey }) {
                 aria-expanded={open}
                 onClick={() => setOpen((current) => !current)}
             >
-                <span className="sz-mobile-menu-trigger-icon" aria-hidden="true">☰</span>
+                <span className="sz-mobile-menu-trigger-icon" aria-hidden="true">
+                    ☰
+                </span>
                 <span>Menu</span>
             </button>
-            <nav className="sz-mobile-menu-panel" aria-label="Mobile navigation" aria-hidden={!open}>
+            <nav
+                className="sz-mobile-menu-panel"
+                aria-label="Mobile navigation"
+                aria-hidden={!open}
+            >
                 <div className="sz-mobile-menu-heading">
                     <strong>Serbizyu</strong>
                     <span>Everything in one place</span>
@@ -272,7 +311,7 @@ function MobileNavigation({ active }: { active: ProductNavKey }) {
                         key={item.key}
                         item={item}
                         active={active}
-                        className={`sz-mobile-menu-link${item.key === 'create' ? ' is-create' : ''}`}
+                        className={`sz-mobile-menu-link${item.key === 'create' ? 'is-create' : ''}`}
                         onNavigate={() => setOpen(false)}
                     >
                         <NavIcon name={item.key} />
@@ -374,7 +413,7 @@ export function ProductShell({
                                 key={item.key}
                                 item={item}
                                 active={active}
-                                className={`sz-rail-link${item.key === 'create' ? ' is-create' : ''}`}
+                                className={`sz-rail-link${item.key === 'create' ? 'is-create' : ''}`}
                             >
                                 <NavIcon name={item.key} />
                                 <span className="sz-rail-label">{item.label}</span>
@@ -382,7 +421,12 @@ export function ProductShell({
                         ))}
                         <p className="sz-rail-section-label">Coming next</p>
                         {NAV.slice(4).map((item) => (
-                            <NavLink key={item.key} item={item} active={active} className="sz-rail-link">
+                            <NavLink
+                                key={item.key}
+                                item={item}
+                                active={active}
+                                className="sz-rail-link"
+                            >
                                 <NavIcon name={item.key} />
                                 <span className="sz-rail-label">{item.label}</span>
                                 <span className="sz-rail-soon">Soon</span>
@@ -394,7 +438,6 @@ export function ProductShell({
                         <strong>{displayName ?? 'Guest workspace'}</strong>
                         <span>Tagudin pilot</span>
                     </div>
-
                 </aside>
 
                 <div className="sz-shell-canvas">

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Schema;
 final class UnblindExpiredReviewsCommand extends Command
 {
     protected $signature = 'reviews:unblind-expired';
+
     protected $description = 'Unblind sealed reviews that have passed their 72-hour double-blind window.';
 
     public function handle(AuditRecorder $audits, OutboxWriter $outbox): int

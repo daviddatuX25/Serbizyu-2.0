@@ -8,7 +8,12 @@ interface EditableStageRowProps {
     onRemove: (index: number) => void;
 }
 
-export default function EditableStageRow({ stage, index, onChange, onRemove }: EditableStageRowProps) {
+export default function EditableStageRow({
+    stage,
+    index,
+    onChange,
+    onRemove,
+}: EditableStageRowProps) {
     return (
         <div
             className="flex flex-col gap-[5px] bg-white"
@@ -21,10 +26,13 @@ export default function EditableStageRow({ stage, index, onChange, onRemove }: E
         >
             {/* Row 1: Stage badge + title input + duration pill + delete */}
             <div className="flex items-center justify-between gap-1.5">
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <div className="flex min-w-0 flex-1 items-center gap-1.5">
                     <span
-                        className="text-[8px] font-extrabold px-[5px] py-[2px] rounded shrink-0"
-                        style={{ background: stage.bg || '#E8F7F1', color: stage.color || '#0D715F' }}
+                        className="shrink-0 rounded px-[5px] py-[2px] text-[8px] font-extrabold"
+                        style={{
+                            background: stage.bg || '#E8F7F1',
+                            color: stage.color || '#0D715F',
+                        }}
                     >
                         {stage.num || String(index + 1)}
                     </span>
@@ -33,7 +41,7 @@ export default function EditableStageRow({ stage, index, onChange, onRemove }: E
                         value={stage.title}
                         onChange={(e) => onChange(index, { title: e.target.value })}
                         placeholder="Stage title..."
-                        className="flex-1 min-w-0 outline-none"
+                        className="min-w-0 flex-1 outline-none"
                         style={{
                             fontSize: '11.5px',
                             fontWeight: 700,
@@ -51,7 +59,7 @@ export default function EditableStageRow({ stage, index, onChange, onRemove }: E
                 <div className="flex items-center gap-1">
                     {/* Duration pill */}
                     <div
-                        className="flex items-center gap-[3px] shrink-0"
+                        className="flex shrink-0 items-center gap-[3px]"
                         style={{
                             background: '#FAFCFB',
                             border: '1px solid #D1D5DB',
@@ -115,8 +123,7 @@ export default function EditableStageRow({ stage, index, onChange, onRemove }: E
                         type="button"
                         onClick={() => onRemove(index)}
                         aria-label="Remove stage"
-                        className="shrink-0 flex items-center justify-center transition-colors duration-150
-                                   text-[#64748b] hover:bg-red-100 hover:text-red-600"
+                        className="flex shrink-0 items-center justify-center text-[#64748b] transition-colors duration-150 hover:bg-red-100 hover:text-red-600"
                         style={{
                             width: 24,
                             height: 26,
@@ -161,7 +168,7 @@ export default function EditableStageRow({ stage, index, onChange, onRemove }: E
                     marginTop: 2,
                 }}
             >
-                <span className="flex items-center gap-[3px] shrink-0 text-[9px] font-bold text-[#0284C7]">
+                <span className="flex shrink-0 items-center gap-[3px] text-[9px] font-bold text-[#0284C7]">
                     {/* Camera icon */}
                     <svg
                         width={10}

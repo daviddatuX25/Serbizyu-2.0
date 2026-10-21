@@ -202,11 +202,48 @@ final class MarketplaceEndToEndFlowTest extends TestCase
         $work = DB::table('work_instances')->where('order_id', $order->id)->first();
         self::assertNotNull($work, 'Work instance must be spawned upon order acceptance.');
         self::assertSame('not_started', $work->status);
-        // STEP 8: Provider marks work complete
-        $completeResponse = $this->actingAs($provider)
-            ->post("/orders/{$order->id}/work/propose-completion");
-        $completeResponse->assertRedirect();
+        $structure = [
+            'schema_version' => 1,
+            'signature_hash' => hash('sha256', 'zero-proof-marketplace-e2e'),
+            'work_shape' => 'A1',
+            'active_node_id' => 'final-signoff',
+            'active_ordinal' => 1,
+            'pending_customer_confirmation' => false,
+            'nodes' => [[
+                'id' => 'final-signoff',
+                'ordinal' => 1,
+                'title' => 'Completion sign-off',
+                'description' => 'Buyer reviews the provider declaration.',
+                'node_kind' => 'final_signoff',
+                'evidence_type' => 'dual_sign',
+                'evidence_description' => 'Buyer app confirmation.',
+                'control_mode' => 'customer_confirm',
+                'mandatory' => true,
+                'duration_label' => null,
+                'required_proofs' => [],
+                'approval_method' => 'app_confirm',
+                'metric_unit' => null,
+                'status' => 'active',
+                'completed_at' => null,
+                'completed_by_user_id' => null,
+                'evidence_payload' => null,
+                'customer_confirmed_at' => null,
+            ]],
+        ];
+        DB::table('work_instances')->where('id', $work->id)->update([
+            'status' => 'in_progress',
+            'structure' => json_encode($structure, JSON_THROW_ON_ERROR),
+            'started_at' => now(),
+            'updated_at' => now(),
+        ]);
 
+        // STEP 8: Provider proposes completion through the active final Work node.
+        $completeResponse = $this->actingAs($provider)
+            ->postJson("/orders/{$order->id}/work-nodes/final-signoff", [
+                'action' => 'propose_completion',
+                'payload' => [],
+            ]);
+        $completeResponse->assertOk();
         self::assertSame('awaiting_signoff', DB::table('work_instances')->where('order_id', $order->id)->value('status'));
 
         // STEP 9: Buyer signs off on completed work

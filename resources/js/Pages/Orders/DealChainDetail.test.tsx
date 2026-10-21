@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import DealChainDetail from './DealChainDetail';
 
@@ -8,8 +8,9 @@ const mockChain = {
     status: 'sourcing',
     title: 'Fiesta AC Overhaul',
     goal: 'Multi-party coordinated citizen delivery and labor',
-    total_budget_amount: 665,
-    currency_code: 'PHP',
+    total_budget_amount: null,
+    currency_code: null,
+    financial_state: 'pending_child_agreements',
     created_at: '2026-09-21T00:00:00Z',
 };
 
@@ -20,7 +21,7 @@ const mockSlots = [
         ordinal: 1,
         need_kind: 'product',
         title: '35uF AC Run Capacitor',
-        description: 'Counter pickup ready · Tagudin Hardware & Supply Depot',
+        description: 'Partner product need · Quantity 1 · provider agreement required',
         status: 'open',
         requested_at: '2026-09-21T00:00:00Z',
     },
@@ -30,7 +31,7 @@ const mockSlots = [
         ordinal: 2,
         need_kind: 'service',
         title: 'Danny Express Motorcycle Courier',
-        description: 'Counter to jobsite doorstep transit',
+        description: 'Partner transit need · Quantity 1 · provider agreement required',
         status: 'open',
         requested_at: '2026-09-21T00:00:00Z',
     },
@@ -40,7 +41,7 @@ const mockSlots = [
         ordinal: 3,
         need_kind: 'service',
         title: 'Inverter Split AC Deep Clean',
-        description: 'Kuya Ben AC Services on-site installation',
+        description: 'Primary listing need · Quantity 1 · provider agreement required',
         status: 'open',
         requested_at: '2026-09-21T00:00:00Z',
     },
@@ -72,51 +73,51 @@ describe('DealChainDetail Page', () => {
         cleanup();
     });
 
-    it('renders Deal Chain execution workspace with live relay and slots', () => {
+    it('renders the server-projected graph without invented financial or execution state', () => {
         render(
-            <DealChainDetail
-                chain={mockChain}
-                slots={mockSlots}
-                dependencies={mockDependencies}
-            />,
+            <DealChainDetail chain={mockChain} slots={mockSlots} dependencies={mockDependencies} />,
         );
 
         expect(screen.getAllByText(/Deal Chain #0198A3B1/i).length).toBeGreaterThanOrEqual(1);
         expect(screen.getByText('Fiesta AC Overhaul')).toBeTruthy();
-        expect(screen.getByText(/₱665.00 Total Escrow/i)).toBeTruthy();
-
-        // Slots
-        expect(screen.getByText('35uF AC Run Capacitor')).toBeTruthy();
-        expect(screen.getByText('Danny Express Motorcycle Courier')).toBeTruthy();
-        expect(screen.getByText('Inverter Split AC Deep Clean')).toBeTruthy();
-
-        // Dependencies
-        expect(screen.getByText('Part Dispatched to Courier Node')).toBeTruthy();
-        expect(screen.getByText('Transit Gating On-Site Labor')).toBeTruthy();
-
-        // Non-cascading settlement badge
-        expect(screen.getByText(/Non-Cascading Settlement Protection Active/i)).toBeTruthy();
+        expect(screen.getByText('No child terms formed')).toBeTruthy();
+        expect(screen.getAllByText('Amount pending provider terms')).toHaveLength(3);
+        expect(screen.getByText('part_ready → Slot #2')).toBeTruthy();
+        expect(screen.getByText('delivery_signed → Slot #3')).toBeTruthy();
+        expect(screen.getByText(/this chain has no parent escrow/i)).toBeTruthy();
+        expect(screen.queryByText(/Total Escrow/i)).toBeNull();
+        expect(screen.queryByText(/8m ETA/i)).toBeNull();
     });
 
-    it('toggles perspective views', () => {
+    it('renders actual child status and amount when supplied by the server', () => {
         render(
             <DealChainDetail
-                chain={mockChain}
-                slots={mockSlots}
-                dependencies={mockDependencies}
+                chain={{
+                    ...mockChain,
+                    total_budget_amount: 180,
+                    currency_code: 'PHP',
+                    financial_state: 'child_amounts_projected',
+                }}
+                slots={[
+                    {
+                        ...mockSlots[0],
+                        child_order_id: 'order-1',
+                        child_order_status: 'accepted',
+                        amount_minor: 18000,
+                        currency: 'PHP',
+                        amount_source: 'order terms',
+                    },
+                ]}
+                dependencies={[]}
+                view="worker"
+                worker="worker-1"
             />,
         );
 
-        // Click Technician perspective
-        const techBtn = screen.getByRole('button', { name: /Technician \(Gated\)/i });
-        fireEvent.click(techBtn);
-
-        expect(screen.getByText(/Technician View: Work step gated on Danny Express/i)).toBeTruthy();
-
-        // Click Courier perspective
-        const courierBtn = screen.getByRole('button', { name: /Courier \(En Route\)/i });
-        fireEvent.click(courierBtn);
-
-        expect(screen.getByText(/Courier View: Active route from Tagudin Hardware/i)).toBeTruthy();
+        expect(screen.getByText('PHP 180.00 · Derived child total')).toBeTruthy();
+        expect(screen.getByText('PHP 180.00')).toBeTruthy();
+        expect(screen.getByText('Accepted')).toBeTruthy();
+        expect(screen.getByText('Server projection for worker-1.')).toBeTruthy();
+        expect(screen.queryByText('No child Order formed')).toBeNull();
     });
 });

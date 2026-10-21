@@ -74,7 +74,7 @@ export function StepWizardHeader({
                         {title}
                     </span>
                     {draftVersion && (
-                        <span className="rounded-full bg-[#FEF3C7] px-[7px] py-[2px] text-[9.5px] font-extrabold uppercase text-[#B45309]">
+                        <span className="rounded-full bg-[#FEF3C7] px-[7px] py-[2px] text-[9.5px] font-extrabold text-[#B45309] uppercase">
                             {isDirty ? '● ' : ''}Draft · {draftVersion}
                         </span>
                     )}

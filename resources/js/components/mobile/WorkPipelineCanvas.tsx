@@ -28,8 +28,7 @@ function NodeCard({
         <button
             type="button"
             onClick={onClick}
-            className="shrink-0 flex flex-col gap-0.5 rounded-lg bg-white transition-[border-color,transform] duration-150
-                       hover:border-[#0d715f] hover:-translate-y-0.5"
+            className="flex shrink-0 flex-col gap-0.5 rounded-lg bg-white transition-[border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-[#0d715f]"
             style={{
                 width,
                 border: `1.5px solid ${borderColor}`,
@@ -40,14 +39,14 @@ function NodeCard({
         >
             <span className="flex items-center justify-between gap-1">
                 <span
-                    className="text-[7.5px] font-extrabold px-1 py-[1px] rounded"
+                    className="rounded px-1 py-[1px] text-[7.5px] font-extrabold"
                     style={{ background: stage.bg || '#E8F7F1', color: stage.color || '#0D715F' }}
                 >
                     {label ?? stage.num}
                 </span>
-                <span className="text-[8px] font-mono font-bold text-[#64748B]">{stage.dur}</span>
+                <span className="font-mono text-[8px] font-bold text-[#64748B]">{stage.dur}</span>
             </span>
-            <span className="text-[9.5px] font-extrabold text-[#0F2F58] whitespace-nowrap overflow-hidden text-ellipsis text-left">
+            <span className="overflow-hidden text-left text-[9.5px] font-extrabold text-ellipsis whitespace-nowrap text-[#0F2F58]">
                 {stage.title}
             </span>
         </button>
@@ -83,18 +82,56 @@ function DashedWire({ width = 18 }: { width?: number }) {
 
 function ForkSvg() {
     return (
-        <svg width={26} height={70} viewBox="0 0 26 70" fill="none" className="shrink-0" aria-hidden>
-            <path d="M0 35 H8 C14 35 14 17 26 17" stroke="#10B981" strokeWidth={1.8} strokeDasharray="3 2" fill="none" />
-            <path d="M0 35 H8 C14 35 14 53 26 53" stroke="#10B981" strokeWidth={1.8} strokeDasharray="3 2" fill="none" />
+        <svg
+            width={26}
+            height={70}
+            viewBox="0 0 26 70"
+            fill="none"
+            className="shrink-0"
+            aria-hidden
+        >
+            <path
+                d="M0 35 H8 C14 35 14 17 26 17"
+                stroke="#10B981"
+                strokeWidth={1.8}
+                strokeDasharray="3 2"
+                fill="none"
+            />
+            <path
+                d="M0 35 H8 C14 35 14 53 26 53"
+                stroke="#10B981"
+                strokeWidth={1.8}
+                strokeDasharray="3 2"
+                fill="none"
+            />
         </svg>
     );
 }
 
 function JoinSvg() {
     return (
-        <svg width={26} height={70} viewBox="0 0 26 70" fill="none" className="shrink-0" aria-hidden>
-            <path d="M0 17 C12 17 12 35 18 35 H26" stroke="#10B981" strokeWidth={1.8} strokeDasharray="3 2" fill="none" />
-            <path d="M0 53 C12 53 12 35 18 35 H26" stroke="#10B981" strokeWidth={1.8} strokeDasharray="3 2" fill="none" />
+        <svg
+            width={26}
+            height={70}
+            viewBox="0 0 26 70"
+            fill="none"
+            className="shrink-0"
+            aria-hidden
+        >
+            <path
+                d="M0 17 C12 17 12 35 18 35 H26"
+                stroke="#10B981"
+                strokeWidth={1.8}
+                strokeDasharray="3 2"
+                fill="none"
+            />
+            <path
+                d="M0 53 C12 53 12 35 18 35 H26"
+                stroke="#10B981"
+                strokeWidth={1.8}
+                strokeDasharray="3 2"
+                fill="none"
+            />
         </svg>
     );
 }
@@ -103,18 +140,56 @@ function JoinSvg() {
 
 function BranchForkSvg() {
     return (
-        <svg width={22} height={70} viewBox="0 0 22 70" fill="none" className="shrink-0" aria-hidden>
-            <path d="M0 35 H6 C12 35 12 17 22 17" stroke="#D97706" strokeWidth={1.8} strokeDasharray="3 2" fill="none" />
-            <path d="M0 35 H6 C12 35 12 53 22 53" stroke="#10B981" strokeWidth={1.8} strokeDasharray="3 2" fill="none" />
+        <svg
+            width={22}
+            height={70}
+            viewBox="0 0 22 70"
+            fill="none"
+            className="shrink-0"
+            aria-hidden
+        >
+            <path
+                d="M0 35 H6 C12 35 12 17 22 17"
+                stroke="#D97706"
+                strokeWidth={1.8}
+                strokeDasharray="3 2"
+                fill="none"
+            />
+            <path
+                d="M0 35 H6 C12 35 12 53 22 53"
+                stroke="#10B981"
+                strokeWidth={1.8}
+                strokeDasharray="3 2"
+                fill="none"
+            />
         </svg>
     );
 }
 
 function BranchJoinSvg() {
     return (
-        <svg width={22} height={70} viewBox="0 0 22 70" fill="none" className="shrink-0" aria-hidden>
-            <path d="M0 17 C10 17 10 35 16 35 H22" stroke="#10B981" strokeWidth={1.8} strokeDasharray="3 2" fill="none" />
-            <path d="M0 53 C10 53 10 35 16 35 H22" stroke="#10B981" strokeWidth={1.8} strokeDasharray="3 2" fill="none" />
+        <svg
+            width={22}
+            height={70}
+            viewBox="0 0 22 70"
+            fill="none"
+            className="shrink-0"
+            aria-hidden
+        >
+            <path
+                d="M0 17 C10 17 10 35 16 35 H22"
+                stroke="#10B981"
+                strokeWidth={1.8}
+                strokeDasharray="3 2"
+                fill="none"
+            />
+            <path
+                d="M0 53 C10 53 10 35 16 35 H22"
+                stroke="#10B981"
+                strokeWidth={1.8}
+                strokeDasharray="3 2"
+                fill="none"
+            />
         </svg>
     );
 }
@@ -126,7 +201,11 @@ function LinearLayout({ stages, onStageClick }: Omit<WorkPipelineCanvasProps, 'f
         <div className="flex items-center gap-1.5" style={{ minWidth: 340 }}>
             {stages.map((s, i) => (
                 <React.Fragment key={s.id}>
-                    <NodeCard stage={s} width={74} onClick={onStageClick ? () => onStageClick(s) : undefined} />
+                    <NodeCard
+                        stage={s}
+                        width={74}
+                        onClick={onStageClick ? () => onStageClick(s) : undefined}
+                    />
                     {i < stages.length - 1 && <DashedWire />}
                 </React.Fragment>
             ))}
@@ -141,15 +220,16 @@ function ParallelLayout({ stages, onStageClick }: Omit<WorkPipelineCanvasProps, 
     const s2a = stages[1];
     const s2b = stages[2];
     const s3 = stages[3];
-    if (!s1 || !s2a || !s2b || !s3) return <LinearLayout stages={stages} onStageClick={onStageClick} />;
+    if (!s1 || !s2a || !s2b || !s3)
+        return <LinearLayout stages={stages} onStageClick={onStageClick} />;
 
-    const click = (s: WorkStage) => onStageClick ? () => onStageClick(s) : undefined;
+    const click = (s: WorkStage) => (onStageClick ? () => onStageClick(s) : undefined);
 
     return (
         <div className="flex items-center gap-1" style={{ minWidth: 380 }}>
             <NodeCard stage={s1} onClick={click(s1)} />
             <ForkSvg />
-            <div className="flex flex-col gap-1.5 shrink-0">
+            <div className="flex shrink-0 flex-col gap-1.5">
                 <NodeCard
                     stage={s2a}
                     width={98}
@@ -180,9 +260,10 @@ function BranchLayout({ stages, onStageClick }: Omit<WorkPipelineCanvasProps, 'f
     const gate = stages[1];
     const s2a = stages[2];
     const s3 = stages[3];
-    if (!s1 || !gate || !s2a || !s3) return <LinearLayout stages={stages} onStageClick={onStageClick} />;
+    if (!s1 || !gate || !s2a || !s3)
+        return <LinearLayout stages={stages} onStageClick={onStageClick} />;
 
-    const click = (s: WorkStage) => onStageClick ? () => onStageClick(s) : undefined;
+    const click = (s: WorkStage) => (onStageClick ? () => onStageClick(s) : undefined);
 
     return (
         <div className="flex items-center gap-1" style={{ minWidth: 380 }}>
@@ -193,7 +274,7 @@ function BranchLayout({ stages, onStageClick }: Omit<WorkPipelineCanvasProps, 'f
             <button
                 type="button"
                 onClick={click(gate)}
-                className="shrink-0 flex flex-col items-center rounded-lg"
+                className="flex shrink-0 flex-col items-center rounded-lg"
                 style={{
                     background: '#FFFBEB',
                     border: '1.5px solid #D97706',
@@ -203,14 +284,14 @@ function BranchLayout({ stages, onStageClick }: Omit<WorkPipelineCanvasProps, 'f
                 }}
             >
                 <span className="text-[7.5px] font-extrabold text-[#B45309]">GATE</span>
-                <span className="text-[8px] font-extrabold text-[#92400E] whitespace-nowrap">
+                <span className="text-[8px] font-extrabold whitespace-nowrap text-[#92400E]">
                     {gate.title}
                 </span>
             </button>
 
             <BranchForkSvg />
 
-            <div className="flex flex-col gap-1.5 shrink-0">
+            <div className="flex shrink-0 flex-col gap-1.5">
                 {/* YES branch */}
                 <NodeCard
                     stage={s2a}
@@ -229,12 +310,12 @@ function BranchLayout({ stages, onStageClick }: Omit<WorkPipelineCanvasProps, 'f
                     }}
                 >
                     <span className="flex items-center justify-between">
-                        <span className="text-[7.5px] font-extrabold px-1 py-[1px] rounded bg-[#E8F7F1] text-[#0D715F]">
+                        <span className="rounded bg-[#E8F7F1] px-1 py-[1px] text-[7.5px] font-extrabold text-[#0D715F]">
                             NO · PASS
                         </span>
-                        <span className="text-[8px] font-mono font-bold text-[#64748B]">15m</span>
+                        <span className="font-mono text-[8px] font-bold text-[#64748B]">15m</span>
                     </span>
-                    <span className="text-[9.5px] font-extrabold text-[#0F2F58] whitespace-nowrap overflow-hidden text-ellipsis">
+                    <span className="overflow-hidden text-[9.5px] font-extrabold text-ellipsis whitespace-nowrap text-[#0F2F58]">
                         Standard Wash
                     </span>
                 </div>
@@ -248,7 +329,11 @@ function BranchLayout({ stages, onStageClick }: Omit<WorkPipelineCanvasProps, 'f
 
 /* ── Public component ─────────────────────────────────────── */
 
-export default function WorkPipelineCanvas({ stages, flowType = 'linear', onStageClick }: WorkPipelineCanvasProps) {
+export default function WorkPipelineCanvas({
+    stages,
+    flowType = 'linear',
+    onStageClick,
+}: WorkPipelineCanvasProps) {
     const Layout =
         flowType === 'parallel'
             ? ParallelLayout

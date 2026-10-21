@@ -57,11 +57,16 @@ final class AuthController
             $request->session()->forget('auth_phone_pending');
         }
 
+        if ($request->filled('return_to')) {
+            $request->session()->put('auth_return_to', (string) $request->query('return_to'));
+        }
+
         $pendingPhone = $request->session()->get('auth_phone_pending');
         $pendingPhone = is_string($pendingPhone) ? $pendingPhone : null;
         $temporaryOtpPreview = $this->temporaryOtp($pendingPhone, PhoneOtpAuthService::PURPOSE);
 
         $props = [
+            'returnTo' => (string) $request->session()->get('auth_return_to', route('home', absolute: false)),
             'session' => [
                 'status' => $request->session()->has('auth_phone_pending') ? 'challenge_pending' : 'method_picker',
                 'phone' => $pendingPhone,
@@ -91,6 +96,7 @@ final class AuthController
         $pendingPhone = is_string($pendingPhone) ? $pendingPhone : null;
         $temporaryOtpPreview = $this->temporaryOtp($pendingPhone, StartSignup::PURPOSE);
         $props = [
+            'returnTo' => (string) $request->session()->get('auth_return_to', route('home', absolute: false)),
             'session' => [
                 'status' => $request->session()->has('signup_phone_pending') ? 'challenge_pending' : 'phone_required',
                 'phone' => $pendingPhone,
@@ -143,7 +149,7 @@ final class AuthController
                 ], $correlationId);
             }
 
-            return redirect()->route('home');
+            return redirect()->route('onboarding');
         } catch (IdentityAccessError $error) {
             return $this->failure(
                 $request,
@@ -183,9 +189,9 @@ final class AuthController
                 ], $correlationId);
             }
 
-            $returnTo = $request->session()->pull('auth_return_to', route('home'));
+            $returnTo = $request->session()->pull('auth_return_to', route('home', absolute: false));
 
-            return redirect()->to(is_string($returnTo) && $returnTo !== '' ? $returnTo : route('home'));
+            return redirect()->to(is_string($returnTo) && $returnTo !== '' ? $returnTo : route('home', absolute: false));
         } catch (IdentityAccessError $error) {
             return $this->failure(
                 $request,
@@ -218,9 +224,9 @@ final class AuthController
                 ], $correlationId);
             }
 
-            $returnTo = $request->session()->pull('auth_return_to', route('home'));
+            $returnTo = $request->session()->pull('auth_return_to', route('home', absolute: false));
 
-            return redirect()->to(is_string($returnTo) && $returnTo !== '' ? $returnTo : route('home'));
+            return redirect()->to(is_string($returnTo) && $returnTo !== '' ? $returnTo : route('home', absolute: false));
         } catch (IdentityAccessError $error) {
             return $this->failure(
                 $request,
@@ -268,7 +274,38 @@ final class AuthController
             return redirect()->route('home');
         }
 
-        return Inertia::render('Auth/ForgotPassword');
+        if ($request->has('reset')) {
+            $request->session()->forget('auth_reset_phone_pending');
+            $request->session()->forget('auth_reset_phone_requested_at');
+        }
+
+        $pendingPhone = $request->session()->get('auth_reset_phone_pending');
+        $pendingPhone = is_string($pendingPhone) ? $pendingPhone : null;
+        $temporaryOtpPreview = $this->temporaryOtp($pendingPhone, RequestResetSmsOtp::PURPOSE);
+
+        $requestedAt = $request->session()->get('auth_reset_phone_requested_at');
+        $cooldownRemaining = 0;
+        if (is_int($requestedAt)) {
+            $elapsed = now()->timestamp - $requestedAt;
+            $cooldownRemaining = max(0, 60 - $elapsed);
+        }
+
+        $props = [
+            'returnTo' => (string) $request->session()->get('auth_return_to', route('home', absolute: false)),
+            'session' => [
+                'status' => $pendingPhone !== null ? 'challenge_pending' : 'method_picker',
+                'phone' => $pendingPhone,
+                'cooldown_remaining_seconds' => $cooldownRemaining,
+            ],
+            'devMode' => in_array((string) config('serbizyu.environment', config('app.env')), ['local', 'testing', 'test', 'capstone'], true)
+                && (bool) config('serbizyu.identity.browser_otp_preview', false),
+        ];
+
+        if ($temporaryOtpPreview !== null) {
+            $props['temporaryOtpPreview'] = $temporaryOtpPreview;
+        }
+
+        return Inertia::render('Auth/ForgotPassword', $props);
     }
 
     public function sendResetLink(ForgotPasswordRequest $request): mixed
@@ -303,6 +340,7 @@ final class AuthController
                 $correlationId,
             );
             $request->session()->put('auth_reset_phone_pending', $data['phone_e164']);
+            $request->session()->put('auth_reset_phone_requested_at', now()->timestamp);
 
             return $this->success($request, $data, $correlationId);
         } catch (IdentityAccessError $error) {
@@ -325,6 +363,7 @@ final class AuthController
         return Inertia::render('Auth/ResetPassword', [
             'token' => (string) $request->query('token', ''),
             'email' => (string) $request->query('email', ''),
+            'returnTo' => (string) $request->session()->get('auth_return_to', route('home', absolute: false)),
         ]);
     }
 
@@ -364,6 +403,7 @@ final class AuthController
                 $correlationId,
             );
             $request->session()->forget('auth_reset_phone_pending');
+            $request->session()->forget('auth_reset_phone_requested_at');
 
             return $this->success($request, ['status' => 'password_reset'], $correlationId);
         } catch (IdentityAccessError $error) {
@@ -411,9 +451,9 @@ final class AuthController
                 ], $correlationId);
             }
 
-            $returnTo = $request->session()->pull('auth_return_to', route('home'));
+            $returnTo = $request->session()->pull('auth_return_to', route('home', absolute: false));
 
-            return redirect()->to(is_string($returnTo) && $returnTo !== '' ? $returnTo : route('home'));
+            return redirect()->to(is_string($returnTo) && $returnTo !== '' ? $returnTo : route('home', absolute: false));
         } catch (IdentityAccessError $error) {
             return $this->failure(
                 $request,

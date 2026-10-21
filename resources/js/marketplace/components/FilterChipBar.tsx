@@ -20,7 +20,7 @@ export const FilterChipBar: React.FC<FilterChipBarProps> = ({
 }) => {
     return (
         <div
-            className="flex gap-2 overflow-x-auto bg-white px-4 pt-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex [scrollbar-width:none] gap-2 overflow-x-auto bg-white px-4 pt-3 pb-1 [&::-webkit-scrollbar]:hidden"
             aria-label="Quick Filters"
         >
             {options.map((opt) => {
@@ -32,16 +32,16 @@ export const FilterChipBar: React.FC<FilterChipBarProps> = ({
                         onClick={() => onToggleFilter(opt.id)}
                         className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold whitespace-nowrap transition-all active:scale-95 ${
                             isActive
-                                ? 'border border-[#18181B] bg-[#18181B] text-white shadow-xs'
-                                : 'border border-[#E4E4E7] bg-white text-[#18181B] hover:bg-[#F4F4F5]'
+                                ? 'border border-[#0F2F58] bg-[#0F2F58] text-white shadow-xs'
+                                : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     >
                         {opt.hasStarIcon && (
                             <Star
                                 className={`size-3.5 ${
                                     isActive
-                                        ? 'fill-white stroke-white'
-                                        : 'fill-[#D97706] stroke-[#D97706]'
+                                        ? 'fill-[#FFC244] stroke-[#FFC244]'
+                                        : 'fill-[#FFC244] stroke-[#D97706]'
                                 }`}
                             />
                         )}

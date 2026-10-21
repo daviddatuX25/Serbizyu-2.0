@@ -279,3 +279,125 @@ it('blocks self-quoting, re-acceptance, and quoting on awarded requests', functi
         'message' => 'Late quote',
     ])->assertStatus(422);
 });
+
+it('creates request with tender mode, budget semantics, governed pipeline, and protected location', function (): void {
+    $buyer = createTestBuyer('+639179999088');
+    $this->actingAs($buyer);
+
+    $response = $this->postJson('/requests', [
+        'title' => 'Repair gate valve and pressure test water line',
+        'description' => 'Water line is leaking under the kitchen sink. Need brass gate valve replacement.',
+        'category_code' => 'home-help',
+        'budget_amount' => 850,
+        'budget_mode' => 'exact',
+        'urgency' => 'specific',
+        'scheduled_date' => '2026-10-05',
+        'time_window' => 'Morning (8am - 12pm)',
+        'tender_mode' => 'sealed_tender',
+        'payment_lane' => 'bilateral_escrow',
+        'area' => 'Tagudin Centro',
+        'hide_exact_address' => true,
+        'preferred_fulfillment' => 'direct',
+        'requirements' => [
+            'Inspect water pipe joint',
+            'Replace brass valve',
+            'Pressure test',
+        ],
+        'attach_pipeline' => true,
+        'pipeline' => [
+            'template' => 'A1-Linear-3-Stage',
+            'total_sla_minutes' => 45,
+        ],
+    ])->assertStatus(201);
+
+    $requestId = $response->json('data.id');
+    expect($requestId)->toBeString();
+
+    $row = DB::table('requests')->where('id', $requestId)->first();
+    expect($row)->not->toBeNull();
+    expect($row->budget_amount_minor)->toBe(85000);
+
+    $itemList = json_decode($row->item_list, true);
+    expect($itemList['title'])->toBe('Repair gate valve and pressure test water line');
+    expect($itemList['tender_mode'])->toBe('sealed_tender');
+    expect($itemList['budget_mode'])->toBe('exact');
+    expect($itemList['payment_lane'])->toBe('bilateral_escrow');
+    expect($itemList['requirements'])->toHaveCount(3);
+    expect($itemList['attach_pipeline'])->toBeTrue();
+    expect($itemList['pipeline']['template'])->toBe('A1-Linear-3-Stage');
+
+    $timing = json_decode($row->timing, true);
+    expect($timing['urgency'])->toBe('specific');
+    expect($timing['scheduled_for'])->toBe('2026-10-05');
+    expect($timing['time_window'])->toBe('Morning (8am - 12pm)');
+
+    $location = json_decode($row->location, true);
+    expect($location['barangay'])->toBe('Tagudin Centro');
+    expect($location['hide_exact_address'])->toBeTrue();
+
+    $privacy = json_decode($row->privacy_preferences, true);
+    expect($privacy['tender_mode'])->toBe('sealed_tender');
+    expect($privacy['hide_exact_address'])->toBeTrue();
+});
+
+it('allows requester to counter-offer on a submitted quote and creates immutable superseded revision', function (): void {
+    $buyer = createTestBuyer('+639179999099');
+    $provider = createTestProvider('+639178888099');
+
+    // 1. Buyer creates request
+    $this->actingAs($buyer);
+    $requestRes = $this->postJson('/requests', [
+        'title' => 'Electrical circuit breaker diagnosis',
+        'description' => 'Breaker keeps tripping when heavy load air conditioner turns on.',
+        'category_code' => 'home-help',
+        'budget_amount' => 600,
+    ])->assertStatus(201);
+
+    $requestId = $requestRes->json('data.id');
+
+    // 2. Provider submits initial quote v1
+    $this->actingAs($provider);
+    $quoteRes = $this->postJson("/requests/{$requestId}/quotes", [
+        'amount_minor' => 50000,
+        'currency' => 'PHP',
+        'message' => 'Complete breaker diagnostic and replacement.',
+        'estimated_duration' => '2 hours',
+    ])->assertStatus(201);
+
+    $quoteId = $quoteRes->json('data.id');
+
+    // 3. Buyer submits a counter-offer
+    $this->actingAs($buyer);
+    $counterRes = $this->postJson("/requests/{$requestId}/quotes/{$quoteId}/counter", [
+        'amount_minor' => 40000,
+        'note' => 'I already bought the 20A breaker from Tagudin Hardware. Labor only.',
+        'include_hardware' => false,
+    ])->assertStatus(201);
+
+    $newQuoteId = $counterRes->json('data.id');
+    expect($newQuoteId)->toBeString();
+    expect($newQuoteId)->not->toBe($quoteId);
+    expect($counterRes->json('data.quote_version'))->toBe(2);
+    expect($counterRes->json('data.amount_minor'))->toBe(40000);
+
+    // 4. Verify in database: original quote is superseded, new quote is submitted v2
+    $oldQuote = DB::table('quotes')->where('id', $quoteId)->first();
+    expect($oldQuote->status)->toBe('superseded');
+
+    $newQuote = DB::table('quotes')->where('id', $newQuoteId)->first();
+    expect($newQuote->status)->toBe('submitted');
+    expect($newQuote->quote_version)->toBe(2);
+    expect($newQuote->amount_minor)->toBe(40000);
+
+    $newScope = json_decode($newQuote->scope, true);
+    expect($newScope['counter_by'])->toBe('requester');
+    expect($newScope['supersedes_quote_id'])->toBe($quoteId);
+    expect($newScope['counter_note'])->toContain('already bought');
+
+    // 5. Unauthorized user cannot counter
+    $stranger = User::factory()->create(['phone_e164' => '+639170000099']);
+    $this->actingAs($stranger);
+    $this->postJson("/requests/{$requestId}/quotes/{$newQuoteId}/counter", [
+        'amount_minor' => 35000,
+    ])->assertStatus(403);
+});

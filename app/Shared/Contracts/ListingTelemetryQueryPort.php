@@ -31,7 +31,7 @@ interface ListingTelemetryQueryPort
     /**
      * Batch query telemetry metrics for a list of listings (used on /my-listings scan table).
      *
-     * @param list<string> $listingIds
+     * @param  list<string>  $listingIds
      * @return array<string, array{
      *     impressions: int,
      *     views: int,

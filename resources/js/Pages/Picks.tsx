@@ -6,11 +6,7 @@ import {
     Plus,
     Minus,
     Trash2,
-    ShieldCheck,
     ArrowRight,
-    Package,
-    Truck,
-    Wrench,
     Link as LinkIcon,
     ChevronDown,
     ChevronUp,
@@ -528,92 +524,6 @@ export default function Picks(props: HomeProps) {
                                 </div>
                             </div>
 
-                            {/* Planned Deal Chain Nodes: ONLY shown when deal chains are attached */}
-                            {basket.filter((item) => Boolean(item.dealChain)).length > 0 && (
-                                <>
-                                    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                            <div>
-                                                <h2 className="text-sm font-extrabold tracking-wider text-[#0F2F58] uppercase">
-                                                    Planned Deal Chain Nodes
-                                                </h2>
-                                                <p className="mt-0.5 text-xs text-slate-500">
-                                                    Provider terms are confirmed per node after
-                                                    sourcing
-                                                </p>
-                                            </div>
-                                            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-extrabold text-blue-800 uppercase">
-                                                Planning only
-                                            </span>
-                                        </div>
-
-                                        <div className="flex flex-col gap-2.5">
-                                            {basket
-                                                .filter((item) => Boolean(item.dealChain))
-                                                .flatMap((item) =>
-                                                    item.dealChain!.nodes.map((node, nodeIdx) => (
-                                                        <div
-                                                            key={`${item.id}-${nodeIdx}`}
-                                                            className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-xs"
-                                                        >
-                                                            <div className="flex items-center gap-2.5">
-                                                                <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 text-[#0F2F58]">
-                                                                    {node.role
-                                                                        .toLowerCase()
-                                                                        .includes('store') && (
-                                                                        <Package className="size-4" />
-                                                                    )}
-                                                                    {node.role
-                                                                        .toLowerCase()
-                                                                        .includes('courier') && (
-                                                                        <Truck className="size-4" />
-                                                                    )}
-                                                                    {node.role
-                                                                        .toLowerCase()
-                                                                        .includes('labor') && (
-                                                                        <Wrench className="size-4" />
-                                                                    )}
-                                                                    {!node.role
-                                                                        .toLowerCase()
-                                                                        .includes('store') &&
-                                                                        !node.role
-                                                                            .toLowerCase()
-                                                                            .includes('courier') &&
-                                                                        !node.role
-                                                                            .toLowerCase()
-                                                                            .includes('labor') && (
-                                                                            <Package className="size-4" />
-                                                                        )}
-                                                                </div>
-                                                                <div>
-                                                                    <span className="text-[9.5px] font-bold text-slate-400 uppercase">
-                                                                        Slot #{nodeIdx + 1} ·{' '}
-                                                                        {node.role}
-                                                                    </span>
-                                                                    <div className="font-extrabold text-slate-900">
-                                                                        {node.title}
-                                                                    </div>
-                                                                    <div className="text-[10.5px] text-slate-500">
-                                                                        {item.title} ({node.sub})
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )),
-                                                )}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-2.5 rounded-2xl border border-blue-200 bg-blue-50/60 p-4 text-xs text-blue-950">
-                                        <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#0F2F58]" />
-                                        <div>
-                                            <strong>Planning boundary:</strong> no child Order, Work
-                                            record, or payment obligation is created until each Need
-                                            has an accepted provider agreement.
-                                        </div>
-                                    </div>
-                                </>
-                            )}
                         </div>
 
                         {/* RIGHT COLUMN (40%): Sticky Checkout Card */}

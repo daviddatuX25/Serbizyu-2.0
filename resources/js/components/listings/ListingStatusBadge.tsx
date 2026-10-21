@@ -1,5 +1,4 @@
-import type { BadgeTone } from '../ui';
-import { Badge } from '../ui';
+import { Badge, type BadgeTone } from '@/components/ui';
 import type { ListingLifecycle } from '../../types';
 
 const STATUS_LABELS: Record<string, string> = {

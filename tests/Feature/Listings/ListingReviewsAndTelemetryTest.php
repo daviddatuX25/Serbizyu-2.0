@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
+use App\Modules\TrustSupport\Application\ListingReviewService;
+use Database\Seeders\ListingReviewsSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
@@ -191,10 +193,10 @@ it('submits double-blind reviews and unblinds when both parties submit', functio
 });
 
 it('returns public photos from unblinded verified listing reviews', function (): void {
-    $this->seed(\Database\Seeders\ListingReviewsSeeder::class);
+    $this->seed(ListingReviewsSeeder::class);
 
     $listingId = FixtureRepository::ACTIVE_LISTING_ID;
-    $service = app(\App\Modules\TrustSupport\Application\ListingReviewService::class);
+    $service = app(ListingReviewService::class);
     $summary = $service->summaryForListing($listingId);
     $photos = $service->photosForListing($listingId);
 

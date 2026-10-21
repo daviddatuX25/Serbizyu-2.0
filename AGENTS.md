@@ -237,4 +237,14 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia React client-side patterns.
 
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs for this repo live in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: read root `CONTEXT.md` and relevant `docs/adr/` decisions. See `docs/agents/domain.md`.
+
 </laravel-boost-guidelines>

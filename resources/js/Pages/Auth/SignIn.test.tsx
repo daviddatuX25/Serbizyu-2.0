@@ -58,4 +58,36 @@ describe('unified sign-in page', () => {
             expect.objectContaining({ preserveScroll: true }),
         );
     });
+
+    it('redirects back to marketplace root when Back to Marketplace link is clicked', () => {
+        render(<SignIn {...baseProps} />);
+
+        const backLinks = screen.getAllByRole('link', { name: /Back to Marketplace/i });
+        expect(backLinks.length).toBeGreaterThanOrEqual(2);
+        backLinks.forEach((link) => {
+            expect(link.getAttribute('href')).toBe('/');
+        });
+    });
+
+    it('keeps Back to Marketplace pointing to / even when returnTo is a protected route', () => {
+        render(<SignIn {...baseProps} returnTo="/my-listings" />);
+
+        const backLinks = screen.getAllByRole('link', { name: /Back to Marketplace/i });
+        expect(backLinks.length).toBeGreaterThanOrEqual(2);
+        backLinks.forEach((link) => {
+            expect(link.getAttribute('href')).toBe('/');
+        });
+    });
+
+    it('navigates to listing builder when returning from listing builder', () => {
+        render(<SignIn {...baseProps} returnTo="/listings/create/product" />);
+
+        const backLink = screen.getByRole('link', { name: /Back to listing builder/i });
+        expect(backLink).toBeTruthy();
+        expect(backLink.getAttribute('href')).toBe('/listings/create/product');
+
+        const guestLink = screen.getByRole('link', { name: /Return to listing builder as a guest/i });
+        expect(guestLink).toBeTruthy();
+        expect(guestLink.getAttribute('href')).toBe('/listings/create/product');
+    });
 });

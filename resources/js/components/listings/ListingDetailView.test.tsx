@@ -24,7 +24,11 @@ afterEach(() => {
 });
 
 function renderDetail(ui: ReactNode) {
-    return render(<ProductShell active="browse" title="Listing detail">{ui}</ProductShell>);
+    return render(
+        <ProductShell active="browse" title="Listing detail">
+            {ui}
+        </ProductShell>,
+    );
 }
 
 const listing = {
@@ -46,7 +50,9 @@ describe('ListingDetailView', () => {
     it('renders Stitch Media dock anatomy with workflow steps and review suite', () => {
         renderDetail(<ListingDetailView listing={listing} />);
 
-        expect(screen.getByRole('heading', { name: /hand-drawn greeting card layout/i })).toBeTruthy();
+        expect(
+            screen.getByRole('heading', { name: /hand-drawn greeting card layout/i }),
+        ).toBeTruthy();
         expect(screen.getAllByText(/greeting cards/i).length).toBeGreaterThan(0);
         expect(screen.getAllByText(/a1 linear project/i).length).toBeGreaterThan(0);
         expect(screen.getByRole('heading', { name: /how this works/i })).toBeTruthy();
@@ -69,7 +75,9 @@ describe('ListingDetailView', () => {
         expect(screen.getByRole('button', { name: /^message$/i })).toBeTruthy();
         expect(screen.getByRole('button', { name: /^book$/i })).toBeTruthy();
         expect(screen.getByRole('link', { name: /visit us/i })).toBeTruthy();
-        expect(screen.getByRole('link', { name: /visit us/i }).getAttribute('href')).toContain('google.com/maps');
+        expect(screen.getByRole('link', { name: /visit us/i }).getAttribute('href')).toContain(
+            'google.com/maps',
+        );
         expect(screen.queryByText(/activity/i)).toBeNull();
         expect(screen.queryByText(/escrow/i)).toBeNull();
     });

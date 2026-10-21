@@ -7,10 +7,9 @@ import type { ComponentType } from 'react';
 
 type PageModule = { default: ComponentType<Record<string, unknown>> };
 
-const pages = import.meta.glob<PageModule>(
-    ['./Pages/**/*.tsx', '!./Pages/**/*.test.tsx'],
-    { eager: true },
-);
+const pages = import.meta.glob<PageModule>(['./Pages/**/*.tsx', '!./Pages/**/*.test.tsx'], {
+    eager: true,
+});
 
 createInertiaApp({
     resolve: (name) => {

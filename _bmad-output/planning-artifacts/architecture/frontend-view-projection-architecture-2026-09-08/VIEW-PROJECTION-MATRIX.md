@@ -1,7 +1,7 @@
 # Serbizyu View Projection Matrix
 
-Status: ARCHITECTURE COMPANION — controls frontend simulation and OpenSpec row traceability  
-Date: 2026-09-08  
+Status: ARCHITECTURE COMPANION — canonical projection/privacy and OpenSpec row traceability
+Date: 2026-09-25
 Parent: `ARCHITECTURE-SPINE.md`
 
 ## 1. Matrix rule
@@ -27,7 +27,8 @@ reviewer perspective ≠ product login
 | `REQUESTER` | Owner of addressed Request | `request.requester_user_id = viewer/acting owner`. |
 | `ELIGIBLE_RESPONDER` | Provider allowed to respond | Capability/category/area/status/activation policy passes. |
 | `BIDDER` | Provider owning one Quote lineage | Current provider/acting owner owns addressed Quote lineage. |
-| `INVITED_PARTNER` | Provider invited to one Deal Need | Current invitation targets viewer and Need. |
+| `INVITED_RESPONDER` | Provider invited to one Direct Invite Request | Current Request Invitation targets viewer and exact Request/provider/purpose. |
+| `INVITED_PARTNER` | Provider invited to one Deal Need | Current Deal Invitation targets viewer and exact Chain/Need purpose. |
 | `BUYER` | Buyer party on an Order | Immutable Order party snapshot. |
 | `PROVIDER` | Provider party on an Order/Work | Immutable Order party snapshot. |
 | `OPS` | Authorized operations viewer | Explicit operation scope and purpose. |
@@ -51,19 +52,19 @@ Projection context stores principal account, effective Owner, resolved grant ID/
 
 | Row | Resource | Relationship/state | Must show | Primary action | Must omit |
 | --- | --- | --- | --- | --- | --- |
-| `VP-BRW-001` | Listing | `GUEST`/`MEMBER`, active/public | Type, owner-safe identity, price/quote meaning, availability, area, relevant image, Work-shape summary | `listing.view` | Owner controls, request budget language, bid counts, private capacity. |
+| `VP-BRW-001` | Listing | `GUEST`/`MEMBER`, active/public | Type, owner-safe identity, price/quote meaning, current availability overlay, area, relevant image, Work-shape summary | `listing.view` | Owner controls, request budget language, bid counts, private capacity. Shared cached fields never include the availability overlay or actionability. |
 | `VP-BRW-002` | Listing | `LISTING_OWNER`/`ACTING_AGENT`, active | Same public facts plus contextual relationship | `listing.view`; management remains secondary | Buy/Book own Listing as a normal primary action. |
-| `VP-BRW-003` | Request | `GUEST`, public discovery allowed | Request type, need summary, budget meaning, area/timing, response-window state | `request.view` | Add to Picks, Book, Buy, private requester contact, response terms. |
-| `VP-BRW-004` | Request | `ELIGIBLE_RESPONDER`, open | Request-safe facts, eligibility, own-response summary if any | `request.view` | Competitor terms in sealed mode, requester management. |
-| `VP-BRW-005` | Request | `REQUESTER`, open | Own Request, response count allowed by policy, expiry/next-action summary | `request.view` or `request.review_quotes` when action is due | Submit-bid action, basket controls. |
-| `VP-BRW-006` | Any | unavailable/private/expired | Truthful status and safe alternative if discoverable | `browse.clear_filters`, `request.create`, or none | Active commercial CTA and stale price/capacity promise. |
+| `VP-BRW-003` | Request | `GUEST`, Open or approved coarse Sealed discovery | Request type, need summary, budget meaning, coarse area/timing, response-window state, mode-safe explanation | `request.view` | Add to Picks, Book, Buy, private requester contact, Bid terms/identities/counts. |
+| `VP-BRW-004` | Request | `ELIGIBLE_RESPONDER`, Open/Sealed | Request-safe facts, eligibility, own-response summary if any | `request.view` | Competitor terms, identities, counts, requester management. |
+| `VP-BRW-005` | Request | `REQUESTER`, open | Own Request, expiry/next-action summary; Open response summary only; Sealed omits all pre-close response signals | `request.view` or policy-allowed manage action | Submit-Bid action, basket controls, Sealed pre-close count/identity/terms. |
+| `VP-BRW-006` | Any | unavailable/private/expired/Direct Invite to unrelated viewer | Truthful public status and safe alternative only when discoverable; otherwise non-enumerating omission | `browse.clear_filters`, `request.create`, or none | Active commercial CTA, stale price/capacity promise, Direct Invite existence. |
 
 ## 5. Listing detail projection
 
 | Row | Relationship/state | Sections | Primary action | Secondary actions | Forbidden |
 | --- | --- | --- | --- | --- | --- |
 | `VP-LST-001` | `GUEST`, active direct-booking Listing | Listing identity, photos, scope, inclusions/exclusions, amount, availability, provider-safe trust, fulfillment choices, Work outline, safety | `auth.sign_in_to_continue` or `listing.begin_booking` ("Book Service" / "Order Now") | Add to Picks, Save, share, report/help | Request-owner controls, bids, Agent context. |
-| `VP-LST-002` | `MEMBER`, active product Listing | Same plus allowed fulfillment and exact price | `listing.begin_booking` ("Order Now") or `listing.add_to_picks` ("Add to Picks") | Save, message if enabled, report/help | `request.submit_quote`, `quote.accept`. |
+| `VP-LST-002` | `MEMBER`, active product Listing | Same plus allowed fulfillment and exact price | `listing.begin_booking` ("Order Now") or `listing.add_to_picks` ("Add to Picks") | Save, message if enabled, report/help | `request.start_quote`, `quote.select_and_finalize`. |
 | `VP-LST-003` | `MEMBER`, active service/quote Listing | Service scope, rate/quote meaning, schedule/capacity, Work shape | `listing.begin_booking` ("Book Service") or `listing.request_quote` ("Request Quote") | Add to Picks, Save, message if enabled, report/help | Product quantity cart when unsupported. |
 | `VP-LST-004` | `LISTING_OWNER`, current Listing | Public preview plus lifecycle/version/capacity meaning | State-specific `listing.manage`/`listing.resume`/`listing.submit_review` | Preview public view, duplicate/new version, archive when legal | Buy/Book own Listing, impersonate buyer. |
 | `VP-LST-005` | `ACTING_AGENT`, permitted Listing | Same resource facts, persistent acting-for banner, grant scope/expiry, attribution | Highest permitted Listing action | Request Owner approval, exit owner context | Ownership transfer, ungranted publication, money/custody actions. |
@@ -77,17 +78,18 @@ Only Listing projections may render the storefront action dock. The dock renders
 
 | Row | Relationship/state | Sections | Primary action | Secondary actions | Forbidden |
 | --- | --- | --- | --- | --- | --- |
-| `VP-REQ-001` | `GUEST`, public/open | Need, budget meaning, location precision allowed publicly, timing, response deadline, safety, visibility explanation | Sign in to respond when public response is allowed; otherwise none | Browse, report/help | Private identity/contact, response terms, review/accept controls. |
-| `VP-REQ-002` | `MEMBER`, unrelated/ineligible | Public-safe Request facts and exact ineligibility reason when safe | Complete capability/setup or browse | Save/pin/help | Quote draft creation and any private response information. |
-| `VP-REQ-003` | `ELIGIBLE_RESPONDER`, open/no own response | Full responder-safe Request facts, tender mode, deadline, source requirements | `request.start_quote` | Clarify, save, report/help | Review all bids, accept/close Request, Listing purchase controls. |
-| `VP-REQ-004` | `BIDDER`, open/current own Quote | Request facts plus own Quote status/current version and requester clarifications | `quote.revise` when mutable; otherwise appropriate waiting action | Withdraw, clarify, view history | Competitor sealed terms, accept own Quote, close Request. |
-| `VP-REQ-005` | `REQUESTER`, open/no responses | Full own Request details, publication/expiry, truthful waiting state | `request.manage` or `request.extend` when due | Edit by versioned rule, close/cancel, share/help | Submit a provider Bid to own Request; Add to Picks/Book. |
-| `VP-REQ-006` | `REQUESTER`, responses available | Own Request, response summary, safe responder facts, tender visibility | `request.review_quotes` | Clarify, manage Request, close/help | Storefront booking dock, automatic winner language. |
-| `VP-REQ-007` | `REQUESTER`, award-ready selected Quote | Exact current Quote version, source/provenance, scope, amount, schedule, parts/warranty, Work shape, lane meaning | `quote.accept` | Clarify, decline, compare, cancel | Accept stale/expired/superseded version or imply Work/payment completion. |
-| `VP-REQ-008` | Any, closed/expired/awarded | Terminal status, attributable history, resulting Order link if authorized | View resulting Order/history or create similar Request | Support/report | New responses, silent reopening, stale award. |
-| `VP-REQ-009` | `INVITED_PARTNER`, attached Need | Only invitation/Need scope, proposed exact terms, dependency context needed for decision | Accept, counter, or decline invitation according to state | Clarify, view source Listing version | Full requester bid comparison, sibling private terms, parent money. |
-| `VP-REQ-010` | `GUEST`/unrelated `MEMBER`, `open_tender` | Public-safe Request facts; optional anonymized response count only when promoted policy enables it | View/share/report or sign in to become eligible | Exact Bid amount, scope, schedule, identity, lineage, ranking, losing terms, review/accept controls. |
-| `VP-REQ-011` | `GUEST`/unrelated `MEMBER`, `sealed_tender` before reveal | Only coarse public Request metadata when discovery policy permits; sealed-state explanation without competitor signal | View/share/report or eligible-response setup | Bid existence, count unless explicitly promoted, amount, scope, schedule, provider identity, rank/hints, errors/timing that reveal participation. |
+| `VP-REQ-001` | `GUEST`, Open/public | Need, budget meaning, allowed location precision, timing, response deadline, safety, visibility explanation | Sign in to establish eligibility | Browse, report/help | Private identity/contact, Bid terms/identities/counts, review/accept controls. |
+| `VP-REQ-002` | `MEMBER`, unrelated/ineligible | Public/coarse Request facts and exact ineligibility reason only when safe | Complete capability/setup or browse | Save/help | Quote draft creation and any private response information. |
+| `VP-REQ-003` | `ELIGIBLE_RESPONDER`, Open or Sealed/no own response | Full responder-safe Request facts, Tender mode, deadline, source requirements | `request.start_quote` | Save, report/help; structured clarification follows Messaging capability | Review all Bids, accept/close Request, competitor signals, Listing purchase controls. |
+| `VP-REQ-004` | `BIDDER`, open/current own Quote | Request facts plus own Quote status/current version | `quote.revise` when mutable; otherwise waiting action | Withdraw, view history | Any competitor terms/identity/count, accept own Quote, close Request. |
+| `VP-REQ-005` | `REQUESTER`, Open/no responses | Full own Request details, publication/expiry, truthful waiting state | `request.manage` or policy-allowed deadline amendment | Close/cancel, share/help | Submit a provider Bid to own Request; Add to Picks/Book. |
+| `VP-REQ-006` | `REQUESTER`, any Tender mode in committed `selection_open` | Own Request, mode-safe response summary, comparable current Bid versions, selection deadline | `request.review_quotes` | Manage permitted selection timeline, cancel/help | Pre-close response signals/comparison, automatic winner language, stale/superseded selection, storefront dock. |
+| `VP-REQ-007` | `REQUESTER`, selection-ready Quote | Exact current Quote version, source/provenance, scope, amount, schedule, parts/warranty, Work shape, lane meaning, and exact invitation authority when Direct Invite | `quote.select_and_finalize` | Decline, compare, cancel; structured clarification follows Messaging | Select/finalize stale, expired, superseded, invitation-invalid, or incomparable version; imply Work/payment completion; durable pre-Order selection success. |
+| `VP-REQ-008` | authorized party, closed/expired/awarded | Terminal status, attributable history, resulting Order link when authorized | View resulting Order/history or create similar Request | Support/report | New responses, silent reopening, stale award. |
+| `VP-REQ-009` | `INVITED_RESPONDER`, Direct Invite | Purpose-bound invitation, Request scope, eligibility, deadline, own Bid state | Start/revise exact Bid, or decline invitation | View own history/help | Request existence to non-invitees, other invitees/Bids, invitation acceptance as Order. |
+| `VP-REQ-010` | `GUEST`/unrelated `MEMBER`, `open_tender` | Public-safe Request facts | View/share/report or sign in to establish eligibility | None | Exact Bid amount, scope, schedule, identity, lineage, ranking, count, losing terms, review/accept controls. |
+| `VP-REQ-011` | `GUEST`/unrelated `MEMBER`, `sealed_tender` before reveal | Coarse public Request metadata only when discovery policy permits; sealed explanation without participation signal | View/share/report or eligible-response setup | None | Bid existence, count, amount, scope, schedule, provider identity, rank/hints, errors/timing that reveal participation. |
+| `VP-REQ-012` | any non-invited actor, `direct_invite` | Nothing beyond uniform not-found/private recovery | Return to Browse | None | Request/invitation existence, requester, provider, deadline, status, or action. |
 
 ### Request dock invariant
 
@@ -99,10 +101,10 @@ Only Request projections may render the request action dock. It is never a baske
 | --- | --- | --- | --- | --- |
 | `VP-QTE-001` | `BIDDER`, draft | Own source Listing/Profile version, explicit overrides, scope, amount, schedule, validity, parts, warranty, Work/evidence | `quote.submit` | Competitor content, requester award controls. |
 | `VP-QTE-002` | `BIDDER`, submitted/current | Exact submitted version, status, expiry, clarification, lineage | `quote.revise` when allowed | Accept own Quote, edit immutable version in place. |
-| `VP-QTE-003` | `REQUESTER`, current/open mode | Complete current Quote and comparable facts | `quote.accept` when valid | Provider-only revision/withdraw. |
-| `VP-QTE-004` | `REQUESTER`, current/sealed before reveal policy allows | Current Quote only as permitted to Requester; sealed policy explanation | Policy-allowed review/decision action | Any field policy says remains sealed. |
-| `VP-QTE-005` | competitor `BIDDER`, sealed | Own lineage and aggregate tender status only | Own revise/withdraw action | Other bidder identity, price, narrative, ranking, count when policy hides it. |
-| `VP-QTE-006` | any authorized party, superseded/expired/withdrawn/declined | Immutable historical version and successor/current link | Open current version or return | Accept, submit, or mutate historical version. |
+| `VP-QTE-003` | `REQUESTER`, current and mode-revealed | Complete current Quote and comparable facts | `quote.select_and_finalize` when valid | Provider-only revision/withdraw; any success before the atomic Order result. |
+| `VP-QTE-004` | `REQUESTER`, Sealed before committed `selection_open` | Tender state and response deadline only; no Bid existence signal | Wait, amend only policy-safe Tender fields, or cancel | Quote rows, identities, terms, count, ordering, timing, or errors that reveal participation. |
+| `VP-QTE-005` | competitor `BIDDER`, Open or Sealed | Own lineage and aggregate Tender state only | Own revise/withdraw action | Other bidder identity, price, narrative, ranking, count. |
+| `VP-QTE-006` | any authorized party, superseded/expired/withdrawn/declined/not_selected/invalidated | Immutable historical version and successor/current/result link when owned or requester-revealed | Open current/result version or return | Accept, submit, or mutate terminal version. |
 | `VP-QTE-007` | `REQUESTER`, accepted | Accepted exact version and resulting Order link | `order.view` | Re-accept, mutate accepted terms, mark paid/completed. |
 
 Negotiation messages provide context. A material counteroffer creates a new structured Quote version. A chat message never mutates commercial terms.
@@ -154,26 +156,23 @@ These overlays apply after the base row is selected.
 Every OpenSpec slice touching these resources must test:
 
 1. Request projections never contain `listing.add_to_picks`, `listing.begin_booking`, or a storefront quantity action.
-2. Listing projections never contain `request.review_quotes`, `request.start_quote`, or `quote.accept`.
-3. Only `REQUESTER` or explicitly authorized acting-for context receives `quote.accept`.
-4. A `BIDDER` never receives acceptance of their own Quote.
-5. Sealed competitor projections and every derivative channel—counts, ordering, timing, errors, notifications, support/audit/export, logs/analytics, caches, prefetch, history, and async responses—omit or equalize protected information according to the promoted reveal policy.
-6. Projection/cache identity includes principal, effective Owner/current grant version, purpose, resource source versions/row revision, policy/reveal versions, environment/composition/evidence class, and query inputs; context changes cannot commit stale responses.
+2. Listing projections never contain `request.review_quotes`, `request.start_quote`, or `quote.select_and_finalize`.
+3. Only `REQUESTER` or explicitly authorized acting-for context receives `quote.select_and_finalize`.
+4. A `BIDDER` never receives selection/finalization of their own Quote.
+5. Open and Sealed competitor projections and every derivative channel—counts, ordering, timing, errors, notifications, support/audit/export, logs/analytics, caches, prefetch, history, and async responses—omit or equalize protected information. Sealed Requester projections do the same until committed `selection_open`.
+6. PostgreSQL is the default Browse path. If measured evidence activates shared cache assistance, identity includes resource kind, projection schema, public/coarse visibility class, policy/reveal version, environment/evidence class, geography/locale, and normalized query inputs. Shared values omit current lifecycle/visibility/eligibility, source revision, live capacity/availability, and executable actions; one batched PostgreSQL overlay verifies every candidate's current revision, phase, visibility/policy qualification, capacity/availability, and activation before serialization. No benefit, regression, disablement, failure, or miss uses PostgreSQL.
 7. Revoked/expired Agent grants remove affected actions, invalidate affected caches, and reject direct commands.
 8. Payment actions cannot advance Work; Work actions cannot settle Payment.
-9. Invitation acceptance cannot create an Order without explicit agreement formation.
+9. A Direct Invite Request Invitation cannot create an Order without an exact current Bid and atomic agreement formation; Request award revalidates that exact invitation. A Deal-Need Invitation follows its separate accepted-terms child-formation contract and does not require a Quote unless its sourcing mechanism does.
 10. Readiness facts can unlock only named downstream actions; they do not complete Work or release protected money by themselves.
 11. Reviewer composition is server/build-controlled, synthetic-only, and isolated from production navigation, session, origin, storage, APIs, cache, cookies, service worker, and imports.
 12. Disabled educational actions contain no executable target; unauthorized/private actions are omitted.
 
-## 12. Open questions represented, not guessed
+## 12. Governed policy inputs
 
-- Whether guests may discover full public Requests or only summaries.
-- Exact responder verification/capability thresholds by category.
-- Exact sealed-bid reveal window and which requester fields remain visible before close.
-- Whether a requester may award before a response window closes for each tender mode.
-- Exact decline/withdraw/reopen policies.
-- Exact notification obligations for standard-auto-bind partners.
-- Whether `open_tender` should introduce a separately approved public Bid-board projection exposing any current Bid terms. The current proposed tender contract means open participation and public-safe Request discovery—not public competitor terms—so exact Bid content remains omitted until this product decision is promoted.
+- Category-specific responder verification, capability, safety-evidence, media, precise-address, and rate-limit thresholds.
+- Policy-bounded response/selection deadline ranges and which non-material fields remain amendable after publication.
+- Whether early close is permitted for each mode; closing never auto-awards.
+- Notification timing and channels once the Messaging/notification capability begins.
 
-Until promoted policy answers exist, affected production capabilities remain fail-closed. Fixture projections use `policy_pending` or an explicitly labeled simulation-only variant. Sealed mode is application access control, not a cryptographic commitment.
+Absent policy fails closed with `policy_pending` or an explicitly labeled simulation-only variant. The product decisions are otherwise fixed: Open is public-safe Request discovery and eligible participation without competitor terms/counts; Sealed gives each bidder only their own lineage/submission result and hides every other response signal from requester, competitors, and public until committed `selection_open`; Direct Invite is non-discoverable and non-enumerating; invitation acceptance never forms an Order; Sealed is application access control, not a cryptographic commitment.

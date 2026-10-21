@@ -36,7 +36,9 @@ describe('MyListingsWorkspace', () => {
         expect(screen.getAllByRole('heading', { name: 'My Listings' }).length).toBeGreaterThan(0);
         expect(screen.getByText(/no saved listings yet/i)).toBeTruthy();
         expect(screen.getAllByRole('link', { name: /create listing/i }).length).toBeGreaterThan(0);
-        expect(screen.getAllByRole('button', { name: /create listing/i }).length).toBeGreaterThan(0);
+        expect(screen.getAllByRole('button', { name: /create listing/i }).length).toBeGreaterThan(
+            0,
+        );
         expect(screen.getByText(/review boundary/i)).toBeTruthy();
         const main = screen.getByRole('main');
         expect(within(main).queryByText(/orders/i)).toBeNull();
@@ -107,9 +109,13 @@ describe('MyListingsWorkspace', () => {
         );
 
         const createLinks = screen.getAllByRole('link', { name: /create listing/i });
-        expect(createLinks.some((link) => link.getAttribute('href') === '#my-listings-editor')).toBe(true);
+        expect(
+            createLinks.some((link) => link.getAttribute('href') === '#my-listings-editor'),
+        ).toBe(true);
         expect(screen.getAllByRole('button', { name: /save draft/i }).length).toBeGreaterThan(0);
-        expect(screen.getAllByRole('button', { name: /submit for review/i }).length).toBeGreaterThan(0);
+        expect(
+            screen.getAllByRole('button', { name: /submit for review/i }).length,
+        ).toBeGreaterThan(0);
         expect(screen.getAllByText(/buyer preview/i).length).toBeGreaterThan(0);
     });
 });

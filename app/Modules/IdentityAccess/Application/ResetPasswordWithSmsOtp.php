@@ -57,10 +57,10 @@ final class ResetPasswordWithSmsOtp
             || in_array((string) $user->status, ['suspended', 'closed', 'archived'], true)
         ) {
             throw new IdentityAccessError(
-                'ACCOUNT_UNAVAILABLE',
-                'This account is not available.',
+                'RESET_INVALID',
+                'That reset code is invalid or expired.',
                 $correlationId,
-                status: 403,
+                status: 422,
             );
         }
 

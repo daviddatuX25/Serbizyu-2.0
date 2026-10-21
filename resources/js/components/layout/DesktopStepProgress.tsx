@@ -10,13 +10,9 @@ interface DesktopStepProgressProps {
     onStepClick?: (stepId: number) => void;
 }
 
-export function DesktopStepProgress({
-    steps,
-    currentStep,
-    onStepClick,
-}: DesktopStepProgressProps) {
+export function DesktopStepProgress({ steps, currentStep, onStepClick }: DesktopStepProgressProps) {
     return (
-        <nav aria-label="Step Progress" className="hidden w-full lg:block mb-6">
+        <nav aria-label="Step Progress" className="mb-6 hidden w-full lg:block">
             <ol className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 {steps.map((step, idx) => {
                     const isCompleted = currentStep > step.id;
@@ -52,7 +48,7 @@ export function DesktopStepProgress({
                                 {/* Step Title & Subtitle */}
                                 <div className="flex flex-col">
                                     <span
-                                        className={`text-xs font-bold leading-tight ${
+                                        className={`text-xs leading-tight font-bold ${
                                             isCurrent
                                                 ? 'text-[#0F2F58]'
                                                 : isCompleted

@@ -39,6 +39,7 @@ import type {
     WorkClearanceMode,
     WorkEvidenceType,
     WorkNodePrimitive,
+    WorkApprovalMethod,
 } from './types';
 
 export interface WorkNodeCustomizerModalProps {
@@ -147,7 +148,9 @@ function resolveStageClearanceMode(stage: WorkStage, index: number, total: numbe
 }
 
 function resolveStageProofs(stage: WorkStage, index: number, total: number): WorkEvidenceType[] {
-    if (stage.requiredProofs && stage.requiredProofs.length > 0) return stage.requiredProofs;
+    if (Array.isArray(stage.requiredProofs)) {
+        return stage.requiredProofs.filter((proof) => proof !== 'customer_otp');
+    }
     const list: WorkEvidenceType[] = [];
     const text = `${stage.title} ${stage.desc} ${stage.evidence}`.toLowerCase();
 
@@ -165,6 +168,14 @@ function resolveStageProofs(stage: WorkStage, index: number, total: number): Wor
     }
 
     return list.length > 0 ? list : ['photo_proof'];
+}
+
+function resolveStageApprovalMethod(stage: WorkStage, index: number, total: number): WorkApprovalMethod {
+    if (stage.approvalMethod) return stage.approvalMethod;
+    const text = `${stage.title} ${stage.desc} ${stage.evidence}`.toLowerCase();
+    if (stage.requiredProofs?.includes('customer_otp') || text.includes('otp')) return 'presence_otp';
+    if (resolveStageClearanceMode(stage, index, total) === 'customer_approval') return 'app_confirm';
+    return 'none';
 }
 
 function renderLucideIcon(name: string, className = 'size-4') {
@@ -266,6 +277,11 @@ export default function WorkNodeCustomizerModal({
         return resolveStageClearanceMode(currentStage, selectedIndex, localStages.length);
     }, [currentStage, selectedIndex, localStages.length]);
 
+    const currentApprovalMethod = useMemo(() => {
+        if (!currentStage) return 'none';
+        return resolveStageApprovalMethod(currentStage, selectedIndex, localStages.length);
+    }, [currentStage, selectedIndex, localStages.length]);
+
     const currentProofs = useMemo(() => {
         if (!currentStage) return ['photo_proof'];
         return resolveStageProofs(currentStage, selectedIndex, localStages.length);
@@ -356,7 +372,7 @@ export default function WorkNodeCustomizerModal({
             id: newId,
             num: String(count),
             title: 'Custom Execution Step',
-            dur: '30m',
+            dur: '',
             desc: 'Describe step procedures, required equipment, and milestone instructions.',
             evidence: 'Visual progress photo or completion verification.',
             color: '#0F2F58',
@@ -452,7 +468,7 @@ export default function WorkNodeCustomizerModal({
                                     Pipeline Sequence
                                 </span>
                                 <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                                    {localStages.length} Verified Steps · {totalMinutes}m Total SLA
+                                    {localStages.length} Verified Steps{totalMinutes > 0 ? ` · ${totalMinutes}m target estimate` : ''}
                                 </span>
                             </div>
                             <div className="overflow-x-auto py-1">
@@ -681,10 +697,10 @@ export default function WorkNodeCustomizerModal({
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-bold text-slate-700">
-                                                Target Duration (SLA)
+                                                Target Duration Estimate (Optional)
                                             </label>
                                             <span className="font-mono text-[10px] font-bold text-emerald-700">
-                                                Current: {currentStage.dur}
+                                                Current: {currentStage.dur || 'Not set'}
                                             </span>
                                         </div>
 
@@ -706,6 +722,17 @@ export default function WorkNodeCustomizerModal({
                                                     </button>
                                                 );
                                             })}
+                                            <button
+                                                type="button"
+                                                onClick={() => updateCurrentStage({ dur: '' })}
+                                                className={`rounded-lg border px-2.5 py-1 text-xs font-bold transition-all ${
+                                                    currentStage.dur === ''
+                                                        ? 'border-[#0F2F58] bg-[#0F2F58] text-white shadow-xs'
+                                                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                                }`}
+                                            >
+                                                No target
+                                            </button>
 
                                             <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-[#FAFCFB] px-2 py-0.5">
                                                 <input
@@ -799,6 +826,35 @@ export default function WorkNodeCustomizerModal({
                                                             className="accent-[#0F2F58]"
                                                         />
                                                         <span>Worker Drop-off Photo (Porch / Counter)</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {currentClearanceMode === 'customer_approval' && (
+                                            <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50/50 p-2.5 space-y-1.5">
+                                                <span className="text-[11px] font-extrabold text-amber-950">
+                                                    Customer Approval Method:
+                                                </span>
+                                                <div className="flex flex-wrap gap-2 text-xs">
+                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-700">
+                                                        <input
+                                                            type="radio"
+                                                            name={`approvalMethod-${currentStage.id}`}
+                                                            checked={currentApprovalMethod === 'app_confirm'}
+                                                            onChange={() => updateCurrentStage({ approvalMethod: 'app_confirm' })}
+                                                            className="accent-[#0F2F58]"
+                                                        />
+                                                        <span>Customer Taps Approve in App</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-700">
+                                                        <input
+                                                            type="radio"
+                                                            name={`approvalMethod-${currentStage.id}`}
+                                                            checked={currentApprovalMethod === 'presence_otp'}
+                                                            onChange={() => updateCurrentStage({ approvalMethod: 'presence_otp' })}
+                                                            className="accent-[#0F2F58]"
+                                                        />
+                                                        <span>In-Person 4-Digit Customer OTP</span>
                                                     </label>
                                                 </div>
                                             </div>
@@ -950,6 +1006,34 @@ export default function WorkNodeCustomizerModal({
                                                 </span>
 
                                                 {/* Proof Inputs */}
+                                                    {currentProofs.length === 0 && (
+                                                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
+                                                            <div className="text-xs font-bold text-slate-800">
+                                                                No Worker Attachments Required
+                                                            </div>
+                                                            <span className="text-[10px] text-slate-500">
+                                                                Ready to submit step directly
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {currentProofs.includes('gps_checkin') && (
+                                                        <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-2.5 flex items-center justify-between gap-2">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <MapPin className="size-4 text-emerald-700" />
+                                                                <div>
+                                                                    <div className="text-xs font-bold text-slate-900">
+                                                                        GPS Coordinate Check-In Required
+                                                                    </div>
+                                                                    <div className="font-mono text-[10px] text-emerald-800">
+                                                                        16.9334° N, 120.4447° E (±5m)
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <span className="rounded-lg border border-emerald-300 bg-white px-2 py-1 text-[10px] font-bold text-emerald-900">
+                                                                Pin Location
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 <div className="space-y-2">
                                                     {currentProofs.includes('photo_proof') && (
                                                         <div className="rounded-xl border border-dashed border-slate-300 p-3 text-center bg-slate-50/50">
@@ -983,7 +1067,7 @@ export default function WorkNodeCustomizerModal({
                                                         </div>
                                                     )}
 
-                                                    {currentProofs.includes('customer_otp') && (
+                                                    {(currentApprovalMethod === 'presence_otp' || currentProofs.includes('customer_otp')) && (
                                                         <div className="rounded-xl border border-indigo-200 bg-indigo-50/40 p-2.5 flex items-center justify-between">
                                                             <div className="flex items-center gap-1.5">
                                                                 <KeyRound className="size-4 text-indigo-700" />
@@ -1069,8 +1153,21 @@ export default function WorkNodeCustomizerModal({
                                                                 Request Adjustment
                                                             </button>
                                                         </div>
+                                                        {currentApprovalMethod === 'presence_otp' && (
+                                                            <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 space-y-1 text-center">
+                                                                <div className="text-xs font-bold text-indigo-950">
+                                                                    Your Milestone Release OTP
+                                                                </div>
+                                                                <div className="font-mono text-xl font-extrabold text-[#0F2F58] tracking-widest">
+                                                                    8 4 2 1
+                                                                </div>
+                                                                <span className="text-[10px] text-slate-500">
+                                                                    Provide to technician only when physically satisfied with the completed task.
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                ) : currentProofs.includes('customer_otp') ? (
+                                                ) : (currentApprovalMethod === 'presence_otp' || currentProofs.includes('customer_otp')) ? (
                                                     <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 space-y-1 text-center">
                                                         <div className="text-xs font-bold text-indigo-950">
                                                             Your Milestone Release OTP

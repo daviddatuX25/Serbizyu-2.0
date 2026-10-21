@@ -5,14 +5,28 @@ import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import { BottomNavBar, type NavTabId } from '../../marketplace/components/BottomNavBar';
 import { CreatorPostModal } from '../../components/marketplace/CreatorPostModal';
 import { QuickDealScanModal } from '../../components/marketplace/QuickDealScanModal';
+export type SlotProgressState =
+    | 'completed'
+    | 'in_transit'
+    | 'counter_ready'
+    | 'on_site_prep'
+    | 'awaiting_signoff'
+    | 'partner_confirmed'
+    | 'invited'
+    | 'sourcing'
+    | 'blocked'
+    | 'replacement_needed'
+    | 'done'
+    | 'active'
+    | 'gated';
+
 interface OrderSlotItem {
     ordinal: number;
     title: string;
     provider: string;
-    status: 'done' | 'active' | 'gated';
+    status: SlotProgressState;
     status_label: string;
 }
-
 interface OrderSummaryItem {
     id: string;
     type: 'order' | 'deal_chain';
@@ -42,6 +56,33 @@ function formatPrice(minor: number, currency: string = 'PHP'): string {
     return `${currency} ${(minor / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function getSlotBadgeStyle(status: SlotProgressState | string): string {
+    switch (status) {
+        case 'completed':
+        case 'done':
+            return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+        case 'in_transit':
+            return 'bg-blue-100 text-blue-800 border border-blue-200';
+        case 'counter_ready':
+            return 'bg-sky-100 text-sky-800 border border-sky-200';
+        case 'on_site_prep':
+            return 'bg-teal-100 text-teal-800 border border-teal-200';
+        case 'awaiting_signoff':
+            return 'bg-amber-100 text-amber-800 border border-amber-200';
+        case 'partner_confirmed':
+            return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
+        case 'invited':
+            return 'bg-purple-100 text-purple-800 border border-purple-200';
+        case 'blocked':
+        case 'gated':
+            return 'bg-amber-50 text-amber-900 border border-amber-200/80';
+        case 'replacement_needed':
+            return 'bg-rose-100 text-rose-800 border border-rose-200';
+        case 'sourcing':
+        default:
+            return 'bg-slate-100 text-slate-600 border border-slate-200';
+    }
+}
 export default function OrdersIndex(props: OrdersIndexProps) {
     const [activeTab, setActiveTab] = useState<'ongoing' | 'history'>('ongoing');
     const [creatorOpen, setCreatorOpen] = useState(false);
@@ -52,14 +93,28 @@ export default function OrdersIndex(props: OrdersIndexProps) {
 
     const getStatusDisplay = (item: OrderSummaryItem) => {
         if (item.type === 'deal_chain') {
+            const hasInTransit = item.slots && item.slots.some((s) => s.status === 'in_transit');
+            const isAllCompleted =
+                item.slots &&
+                item.slots.length > 0 &&
+                item.slots.every((s) => s.status === 'completed' || s.status === 'done');
             return {
-                label: 'Sourcing Partners',
-                dotClass: 'bg-blue-500 animate-pulse',
+                label: isAllCompleted
+                    ? 'All Tasks Finished · Escrow Settled'
+                    : hasInTransit
+                      ? 'Parts in Transit · Delivery Active'
+                      : item.order_status === 'sourcing'
+                        ? 'Sourcing Partners'
+                        : 'Multi-Party Relay Active',
+                dotClass: isAllCompleted
+                    ? 'bg-emerald-500'
+                    : hasInTransit
+                      ? 'bg-blue-500 animate-pulse'
+                      : 'bg-emerald-500 animate-pulse',
                 badgeText: 'Bilateral Escrow',
                 badgeClass: 'bg-blue-50 text-blue-800 border-blue-200',
             };
         }
-
         if (item.order_status === 'pending_acceptance') {
             return {
                 label: 'Pending Acceptance · Awaiting Provider',
@@ -258,13 +313,16 @@ export default function OrdersIndex(props: OrdersIndexProps) {
                                             </span>
                                         </div>
 
-                                        {/* Slots Strip for Deal Chain (matching orders-mobile.html:542-564) */}
+                                        {/* Dynamic N-Slot Progress Strip for Deal Chain */}
                                         {item.type === 'deal_chain' && Array.isArray(item.slots) && item.slots.length > 0 && (
-                                            <div className="flex flex-col gap-1.5 rounded-xl border border-slate-100 bg-[#F8FAFC] p-3">
+                                            <div className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-[#F8FAFC] p-3">
+                                                <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                                                    {item.slots.length}-Slot Relay Workflow
+                                                </div>
                                                 {item.slots.map((s) => (
-                                                    <div key={s.ordinal} className="flex items-center justify-between text-xs">
-                                                        <div className="flex items-center gap-1.5 truncate">
-                                                            <span className="font-semibold text-slate-800">
+                                                    <div key={s.ordinal} className="flex items-center justify-between text-xs gap-2">
+                                                        <div className="flex items-center gap-1.5 min-w-0 truncate">
+                                                            <span className="font-semibold text-slate-800 shrink-0">
                                                                 {s.ordinal}. {s.title}
                                                             </span>
                                                             <span className="text-[10.5px] text-slate-400 truncate">
@@ -272,13 +330,7 @@ export default function OrdersIndex(props: OrdersIndexProps) {
                                                             </span>
                                                         </div>
                                                         <span
-                                                            className={`shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-extrabold ${
-                                                                s.status === 'done'
-                                                                    ? 'bg-emerald-100 text-emerald-800'
-                                                                    : s.status === 'active'
-                                                                      ? 'bg-amber-100 text-amber-800'
-                                                                      : 'bg-slate-100 text-slate-600'
-                                                            }`}
+                                                            className={`shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-extrabold ${getSlotBadgeStyle(s.status)}`}
                                                         >
                                                             {s.status_label}
                                                         </span>
@@ -395,31 +447,63 @@ export default function OrdersIndex(props: OrdersIndexProps) {
                             ongoingList.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="space-y-2 rounded-xl border border-slate-200 p-4 transition-colors hover:border-[#0F2F58]"
+                                    className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-[#0F2F58]"
                                 >
-                                    <div className="flex items-start justify-between">
-                                        <span className="text-xs font-bold text-slate-900">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                            {item.type === 'deal_chain' ? 'Deal Chain' : 'Order'}{' '}
+                                            #{item.id.slice(0, 8).toUpperCase()}
+                                        </div>
+                                        <h3 className="mt-0.5 text-sm font-extrabold text-slate-900">
                                             {item.title}
-                                        </span>
-                                        <span className="font-mono text-xs font-extrabold text-[#0F2F58]">
-                                            {formatPrice(item.amount_minor)}
-                                        </span>
+                                        </h3>
                                     </div>
-                                    <Link
-                                        href={
-                                            item.type === 'deal_chain'
-                                                ? `/deal-chains/${item.id}`
-                                                : `/orders/${item.id}`
-                                        }
-                                        className="text-xs font-bold text-blue-700 hover:underline"
-                                    >
-                                        Track Order →
-                                    </Link>
+                                    <span className="font-mono text-xs font-extrabold text-[#0F2F58]">
+                                        {formatPrice(item.amount_minor, item.currency)}
+                                    </span>
                                 </div>
+
+                                {/* Dynamic N-Slot Progress Strip on Desktop */}
+                                {item.type === 'deal_chain' && Array.isArray(item.slots) && item.slots.length > 0 && (
+                                    <div className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-[#F8FAFC] p-3.5">
+                                        <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                                            {item.slots.length}-Slot Relay Workflow
+                                        </div>
+                                        {item.slots.map((s) => (
+                                            <div key={s.ordinal} className="flex items-center justify-between text-xs gap-2">
+                                                <div className="flex items-center gap-1.5 min-w-0 truncate">
+                                                    <span className="font-semibold text-slate-800 shrink-0">
+                                                        {s.ordinal}. {s.title}
+                                                    </span>
+                                                    <span className="text-[10.5px] text-slate-400 truncate">
+                                                        · {s.provider}
+                                                    </span>
+                                                </div>
+                                                <span
+                                                    className={`shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-extrabold ${getSlotBadgeStyle(s.status)}`}
+                                                >
+                                                    {s.status_label}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <Link
+                                    href={
+                                        item.type === 'deal_chain'
+                                            ? `/deal-chains/${item.id}`
+                                            : `/orders/${item.id}`
+                                    }
+                                    className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline"
+                                >
+                                    <span>Track Order Details →</span>
+                                </Link>
+                            </div>
                             ))
                         )}
                     </div>
-
                     {/* History Column */}
                     <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">

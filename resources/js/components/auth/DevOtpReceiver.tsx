@@ -36,7 +36,9 @@ export function DevOtpReceiver({
     const [autoFillEnabled, setAutoFillEnabled] = useState<boolean>(true);
     const [isFilled, setIsFilled] = useState<boolean>(false);
     const [copied, setCopied] = useState<boolean>(false);
-    const [remainingSeconds, setRemainingSeconds] = useState<number>(() => otpPreview.expires_in_seconds || 600);
+    const [remainingSeconds, setRemainingSeconds] = useState<number>(
+        () => otpPreview.expires_in_seconds || 600,
+    );
 
     // Track the last filled code to prevent duplicate fills on the same code.
     const lastFilledCodeRef = useRef<string | null>(null);
@@ -99,7 +101,10 @@ export function DevOtpReceiver({
     };
 
     // Calculate countdown progress percentage
-    const progressPercent = Math.min(100, Math.max(0, ((autoFillDelaySeconds - countdown) / autoFillDelaySeconds) * 100));
+    const progressPercent = Math.min(
+        100,
+        Math.max(0, ((autoFillDelaySeconds - countdown) / autoFillDelaySeconds) * 100),
+    );
 
     return (
         <section
@@ -124,16 +129,18 @@ export function DevOtpReceiver({
                 </div>
 
                 <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <span className="text-[11px] uppercase tracking-wider">Expires:</span>
-                    <span className={`font-mono font-medium ${remainingSeconds < 60 ? 'font-bold text-destructive' : 'text-foreground'}`}>
+                    <span className="text-[11px] tracking-wider uppercase">Expires:</span>
+                    <span
+                        className={`font-mono font-medium ${remainingSeconds < 60 ? 'font-bold text-destructive' : 'text-foreground'}`}
+                    >
                         {formatSeconds(remainingSeconds)}
                     </span>
                 </div>
             </div>
 
             {/* OTP Code Display Box */}
-            <div className="my-3 flex flex-col items-center justify-center gap-2 rounded-lg border border-amber-500/20 bg-background/80 py-3 px-4 shadow-2xs">
-                <div className="text-[11px] font-medium tracking-wide uppercase text-muted-foreground">
+            <div className="my-3 flex flex-col items-center justify-center gap-2 rounded-lg border border-amber-500/20 bg-background/80 px-4 py-3 shadow-2xs">
+                <div className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
                     Simulated Verification Code
                 </div>
                 <div
@@ -155,12 +162,31 @@ export function DevOtpReceiver({
             {autoFillEnabled && !isFilled ? (
                 <div className="mb-3">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1 text-amber-800 dark:text-amber-300 font-medium">
-                            <svg className="h-3.5 w-3.5 animate-spin text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        <span className="inline-flex items-center gap-1 font-medium text-amber-800 dark:text-amber-300">
+                            <svg
+                                className="h-3.5 w-3.5 animate-spin text-amber-600 dark:text-amber-400"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                            >
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                ></circle>
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8v8H4z"
+                                ></path>
                             </svg>
-                            Auto-filling code in <strong className="font-mono text-foreground font-bold">{countdown}s</strong>...
+                            Auto-filling code in{' '}
+                            <strong className="font-mono font-bold text-foreground">
+                                {countdown}s
+                            </strong>
+                            ...
                         </span>
                         <button
                             type="button"
@@ -182,8 +208,16 @@ export function DevOtpReceiver({
             {isFilled ? (
                 <div className="mb-3 flex items-center justify-between rounded-md bg-emerald-500/10 px-2.5 py-1.5 text-xs text-emerald-800 dark:text-emerald-300">
                     <span className="inline-flex items-center gap-1.5 font-medium">
-                        <svg className="h-4 w-4 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                        <svg
+                            className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                        >
+                            <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                                clipRule="evenodd"
+                            />
                         </svg>
                         Code placed in verification input
                     </span>
@@ -229,7 +263,7 @@ export function DevOtpReceiver({
                         </button>
                     ) : null}
 
-                    <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer select-none">
+                    <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground select-none">
                         <input
                             type="checkbox"
                             checked={autoFillEnabled}

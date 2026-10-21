@@ -391,6 +391,7 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
                 providerName: 'Centro Eco Courier',
                 barangay: 'Poblacion Centro',
                 feeMinor: 2500,
+                price: 25,
                 role: 'courier',
                 sub: 'Eco transit ~15 mins',
                 rating: '4.8',

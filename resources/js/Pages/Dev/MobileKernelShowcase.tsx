@@ -74,13 +74,44 @@ export default function MobileKernelShowcase() {
             icon: '📦',
             isDefault: true,
             nodes: [
-                { role: 'STORE', title: 'Tagudin HW', sub: '₱180', type: 'store', bg: '#FEF3C7', color: '#B45309' },
-                { role: 'COURIER', title: 'Danny Exp.', sub: '₱80', type: 'delivery', bg: '#E0F2FE', color: '#0284C7' },
-                { role: 'YOU', title: 'Kuya Ben AC', sub: '₱450', type: 'labor', bg: '#E8F7F1', color: '#0D715F' },
+                {
+                    role: 'STORE',
+                    title: 'Tagudin HW',
+                    sub: '₱180',
+                    type: 'store',
+                    bg: '#FEF3C7',
+                    color: '#B45309',
+                },
+                {
+                    role: 'COURIER',
+                    title: 'Danny Exp.',
+                    sub: '₱80',
+                    type: 'delivery',
+                    bg: '#E0F2FE',
+                    color: '#0284C7',
+                },
+                {
+                    role: 'YOU',
+                    title: 'Kuya Ben AC',
+                    sub: '₱450',
+                    type: 'labor',
+                    bg: '#E8F7F1',
+                    color: '#0D715F',
+                },
             ],
             slots: [
-                { type: 'store', role: 'Hardware Store Depot', name: 'Tagudin Hardware & Supply', meta: '₱180.00 parts budget' },
-                { type: 'delivery', role: 'Parts Courier Runner', name: 'Danny Express Motorcycle Pool', meta: '₱80.00 route fee' },
+                {
+                    type: 'store',
+                    role: 'Hardware Store Depot',
+                    name: 'Tagudin Hardware & Supply',
+                    meta: '₱180.00 parts budget',
+                },
+                {
+                    type: 'delivery',
+                    role: 'Parts Courier Runner',
+                    name: 'Danny Express Motorcycle Pool',
+                    meta: '₱80.00 route fee',
+                },
             ],
         },
         {
@@ -89,11 +120,30 @@ export default function MobileKernelShowcase() {
             icon: '🛡️',
             isDefault: false,
             nodes: [
-                { role: 'YOU', title: 'Kuya Ben AC', sub: '₱450', type: 'labor', bg: '#E8F7F1', color: '#0D715F' },
-                { role: 'AUDIT', title: 'Open Slot', sub: '₱150', type: 'audit', bg: '#EDE9FE', color: '#7C3AED' },
+                {
+                    role: 'YOU',
+                    title: 'Kuya Ben AC',
+                    sub: '₱450',
+                    type: 'labor',
+                    bg: '#E8F7F1',
+                    color: '#0D715F',
+                },
+                {
+                    role: 'AUDIT',
+                    title: 'Open Slot',
+                    sub: '₱150',
+                    type: 'audit',
+                    bg: '#EDE9FE',
+                    color: '#7C3AED',
+                },
             ],
             slots: [
-                { type: 'audit', role: 'Safety Auditor Slot', name: 'Open Slot', meta: '₱150.00 audit fee' },
+                {
+                    type: 'audit',
+                    role: 'Safety Auditor Slot',
+                    name: 'Open Slot',
+                    meta: '₱150.00 audit fee',
+                },
             ],
         },
     ]);
@@ -190,7 +240,7 @@ export default function MobileKernelShowcase() {
             }}
             previewSlot={
                 <div className="flex flex-col gap-3">
-                    <div className="flex h-28 w-full items-center justify-center rounded-lg bg-emerald-100 font-[var(--sz-font-display)] text-xs font-bold text-emerald-900">
+                    <div className="flex h-28 w-full items-center justify-center rounded-lg bg-emerald-100 text-xs font-[var(--sz-font-display)] font-bold text-emerald-900">
                         📷 Inverter Split AC Cover Photo
                     </div>
                     <div className="text-sm font-extrabold text-[#0F2F58]">
@@ -218,13 +268,17 @@ export default function MobileKernelShowcase() {
                     </div>
                     <div className="flex items-center justify-between border-t border-slate-100 pt-2">
                         <span className="text-xs text-slate-500">Starting labor:</span>
-                        <span className="font-mono text-base font-extrabold text-[#0F2F58]">₱450.00</span>
+                        <span className="font-mono text-base font-extrabold text-[#0F2F58]">
+                            ₱450.00
+                        </span>
                     </div>
                 </div>
             }
             header={
                 <StepWizardHeader
-                    title={viewMode === 'advanced' ? 'All-in-One Editor' : `Step ${currentStep} of 3`}
+                    title={
+                        viewMode === 'advanced' ? 'All-in-One Editor' : `Step ${currentStep} of 3`
+                    }
                     draftVersion="v1"
                     onBack={() => {
                         if (currentStep > 1 && viewMode === 'guided') {
@@ -292,7 +346,7 @@ export default function MobileKernelShowcase() {
                     <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
                         <div className="mb-2 flex items-center justify-between">
                             <div>
-                                <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                <div className="text-xs font-extrabold tracking-wider text-[#0F2F58] uppercase">
                                     Step 1 · Scope & Work Pipeline
                                 </div>
                                 <div className="text-[10px] text-slate-500">
@@ -307,7 +361,7 @@ export default function MobileKernelShowcase() {
                         {/* Title & Description Preview */}
                         <div className="mb-3 flex flex-col gap-2 border-b border-slate-100 pb-3">
                             <div>
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                <label className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                                     Service Title
                                 </label>
                                 <input
@@ -317,7 +371,7 @@ export default function MobileKernelShowcase() {
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                <label className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                                     Description
                                 </label>
                                 <textarea
@@ -330,7 +384,9 @@ export default function MobileKernelShowcase() {
 
                         {/* Flow Type Switcher */}
                         <div className="mb-2 flex items-center justify-between">
-                            <span className="text-[10.5px] font-bold text-[#0F2F58]">DAG Topology</span>
+                            <span className="text-[10.5px] font-bold text-[#0F2F58]">
+                                DAG Topology
+                            </span>
                             <div className="flex items-center gap-1">
                                 {(['linear', 'parallel', 'branch'] as const).map((t) => (
                                     <button
@@ -359,7 +415,7 @@ export default function MobileKernelShowcase() {
                         {/* Editable Stages List */}
                         <div className="mt-3.5">
                             <div className="mb-1.5 flex items-center justify-between">
-                                <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                <span className="text-[10.5px] font-extrabold tracking-wider text-[#0F2F58] uppercase">
                                     Live Editable Stages & Evidence
                                 </span>
                                 <span className="text-[9px] font-bold text-emerald-700">
@@ -393,7 +449,7 @@ export default function MobileKernelShowcase() {
                     <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
                         <div className="mb-2 flex items-center justify-between">
                             <div>
-                                <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                <div className="text-xs font-extrabold tracking-wider text-[#0F2F58] uppercase">
                                     Step 2 · Rates & Options
                                 </div>
                                 <div className="text-[10px] text-slate-500">
@@ -408,7 +464,7 @@ export default function MobileKernelShowcase() {
                         <div className="flex flex-col gap-3">
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex-1">
-                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                    <label className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                                         Base Labor (₱)
                                     </label>
                                     <input
@@ -418,7 +474,7 @@ export default function MobileKernelShowcase() {
                                     />
                                 </div>
                                 <div className="w-36">
-                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                    <label className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                                         Pricing Model
                                     </label>
                                     <select className="mt-1 h-9 w-full rounded-lg border border-slate-300 bg-[#FAFCFB] px-2 text-xs font-bold text-slate-800 outline-none">
@@ -430,7 +486,9 @@ export default function MobileKernelShowcase() {
                             </div>
 
                             <div className="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
-                                <div className="text-xs font-bold text-[#0F2F58]">Accepted Payment Rails</div>
+                                <div className="text-xs font-bold text-[#0F2F58]">
+                                    Accepted Payment Rails
+                                </div>
                                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                                     <span className="rounded-full border border-emerald-300 bg-white px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
                                         ✓ Cash on Completion
@@ -452,14 +510,14 @@ export default function MobileKernelShowcase() {
                     <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
                         <div className="mb-2 flex items-center justify-between">
                             <div>
-                                <div className="text-xs font-extrabold uppercase tracking-wider text-[#0F2F58]">
+                                <div className="text-xs font-extrabold tracking-wider text-[#0F2F58] uppercase">
                                     Step 3 · Partnered Services
                                 </div>
                                 <div className="text-[10px] text-slate-500">
                                     Customer-selectable Deal Chain partner combinations
                                 </div>
                             </div>
-                            <span className="rounded-full border border-navy-200 bg-[#0F2F58] px-2 py-0.5 text-[8.5px] font-bold text-white">
+                            <span className="border-navy-200 rounded-full border bg-[#0F2F58] px-2 py-0.5 text-[8.5px] font-bold text-white">
                                 DEAL CHAIN
                             </span>
                         </div>
@@ -502,7 +560,7 @@ export default function MobileKernelShowcase() {
                         <input
                             type="text"
                             placeholder="Search workflows, stages, or shapes..."
-                            className="w-full rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none transition-colors focus:border-emerald-600 focus:bg-white"
+                            className="w-full rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 transition-colors outline-none focus:border-emerald-600 focus:bg-white"
                         />
                     </div>
                 }

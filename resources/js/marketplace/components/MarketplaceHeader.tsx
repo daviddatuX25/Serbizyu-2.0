@@ -55,7 +55,7 @@ export const MarketplaceHeader: React.FC<MarketplaceHeaderProps> = ({
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
                     placeholder="Search Tagudin services (e.g. AC cleaning, electrical, courier)"
-                    className="h-11 w-full rounded-full border border-transparent bg-[#F4F4F5] pr-10 pl-10 text-[13px] font-semibold text-[#18181B] outline-none transition-all placeholder:text-[#A1A1AA] focus:border-[#FFC244] focus:bg-white focus:ring-3 focus:ring-[#FFC244]/25"
+                    className="h-11 w-full rounded-full border border-transparent bg-[#F4F4F5] pr-10 pl-10 text-[13px] font-semibold text-[#18181B] transition-all outline-none placeholder:text-[#A1A1AA] focus:border-[#FFC244] focus:bg-white focus:ring-3 focus:ring-[#FFC244]/25"
                 />
                 <button
                     type="button"

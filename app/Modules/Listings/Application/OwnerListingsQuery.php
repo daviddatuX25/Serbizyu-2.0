@@ -15,4 +15,10 @@ final class OwnerListingsQuery
     {
         return $this->reader->ownerListings($ownerUserId, $correlationId);
     }
+
+    /** @return array<string, mixed>|null */
+    public function find(string $listingId, string $ownerUserId, string $correlationId): ?array
+    {
+        return $this->reader->ownerListing($listingId, $ownerUserId, $correlationId);
+    }
 }

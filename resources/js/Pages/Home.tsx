@@ -1,6 +1,5 @@
 import { Link, router } from '@inertiajs/react';
 import { useMemo, useRef, useState } from 'react';
-import ProductExperience from './ProductExperience';
 
 import type {
     DenialState,
@@ -673,7 +672,7 @@ function ListingForm({
                         </label>
                         <textarea
                             id="listing-description"
-                            className={`text-input text-area ${fieldValue(errors, 'description') ? 'input-error' : ''}`}
+                            className={`text-area text-input ${fieldValue(errors, 'description') ? 'input-error' : ''}`}
                             value={fields.description}
                             onChange={(event) => update('description', event.target.value)}
                             disabled={reviewLocked}
@@ -931,10 +930,6 @@ function Denial({
 }
 
 export default function Home(props: HomeProps) {
-    if (props.experience === 'foundation_v1') {
-        return <ProductExperience {...props} />;
-    }
-
     const appName = props.app?.name ?? 'Serbizyu';
     const runtimeEnvironment = props.runtime?.environment ?? 'local';
     const scope = props.scope ?? {

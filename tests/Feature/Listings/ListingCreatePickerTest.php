@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Listings;
 
-use Inertia\Testing\AssertableInertia as Assert;
-use Tests\TestCase;
-
 use App\Models\User;
 use App\Modules\Listings\Application\CreateListingDraft;
 use App\Shared\Application\ResourceActor;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Str;
+use Tests\TestCase;
 
 final class ListingCreatePickerTest extends TestCase
 {
@@ -29,16 +27,17 @@ final class ListingCreatePickerTest extends TestCase
         $this->assertSame('Listings/CreatePicker', $response->json('component'));
         $this->assertNotNull($response->json('props.correlationId'));
     }
+
     public function test_unauthenticated_request_with_edit_id_is_rejected_with_401(): void
     {
-        $response = $this->get('/listings/create/service?edit=' . (string) Str::uuid7());
+        $response = $this->get('/listings/create/service?edit='.(string) Str::uuid7());
         $response->assertStatus(401);
     }
 
     public function test_nonexistent_edit_id_for_authenticated_user_returns_404(): void
     {
         $user = User::factory()->create();
-        $response = $this->actingAs($user)->get('/listings/create/service?edit=' . (string) Str::uuid7());
+        $response = $this->actingAs($user)->get('/listings/create/service?edit='.(string) Str::uuid7());
         $response->assertStatus(404);
     }
 
@@ -56,7 +55,7 @@ final class ListingCreatePickerTest extends TestCase
             'work_shape' => 'A4',
         ], $correlationId);
 
-        $response = $this->actingAs($user)->get('/listings/create/service?edit=' . $created['id']);
+        $response = $this->actingAs($user)->get('/listings/create/service?edit='.$created['id']);
         $response->assertStatus(400);
     }
 
@@ -78,7 +77,7 @@ final class ListingCreatePickerTest extends TestCase
             'X-Inertia' => 'true',
             'X-Requested-With' => 'XMLHttpRequest',
             'X-Inertia-Version' => file_exists(public_path('build/manifest.json')) ? hash_file('xxh128', public_path('build/manifest.json')) : null,
-        ])->get('/listings/create/service?edit=' . $created['id']);
+        ])->get('/listings/create/service?edit='.$created['id']);
 
         $response->assertOk();
         $this->assertSame($created['id'], $response->json('props.editingDraft.id'));

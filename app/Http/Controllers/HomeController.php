@@ -10,6 +10,7 @@ use App\Modules\IdentityAccess\Application\OnboardingService;
 use App\Modules\IdentityAccess\Application\SliceStateQuery;
 use App\Modules\Listings\Application\PublicListingsQuery;
 use App\Shared\Support\EnvironmentValidator;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -22,6 +23,18 @@ final class HomeController
         private readonly OnboardingService $onboarding,
         private readonly EnvironmentValidator $environment,
     ) {}
+
+    public function showOnboarding(Request $request): InertiaResponse|RedirectResponse
+    {
+        $state = $this->sliceState->for($request);
+        $readiness = $state['readiness'] ?? [];
+
+        return Inertia::render('Auth/Onboarding', [
+            'readiness' => $readiness,
+            'session' => $state['session'] ?? null,
+            'returnTo' => (string) $request->session()->get('auth_return_to', route('home')),
+        ]);
+    }
 
     public function __invoke(Request $request): InertiaResponse
     {

@@ -22,7 +22,9 @@ import {
     type BuilderMode,
 } from '../../lib/builderGuidance';
 import { formatProviderShortName } from '../../lib/formatters';
-import TagudinLocationPicker, { type StructuredGeography } from '../../components/listings/TagudinLocationPicker';
+import TagudinLocationPicker, {
+    type StructuredGeography,
+} from '../../components/listings/TagudinLocationPicker';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import { CreatorPostModal } from '../../components/marketplace/CreatorPostModal';
 import { QuickDealScanModal } from '../../components/marketplace/QuickDealScanModal';
@@ -144,9 +146,15 @@ function isServiceBuilderDraft(value: unknown): value is ServiceBuilderDraft {
         typeof draft.newInclusion === 'string' &&
         typeof draft.selectedTemplateId === 'string' &&
         Array.isArray(draft.stages) &&
-        (draft.builderMode === undefined || draft.builderMode === 'guided' || draft.builderMode === 'standard' || draft.builderMode === 'advanced' || draft.builderMode === 'simple') &&
+        (draft.builderMode === undefined ||
+            draft.builderMode === 'guided' ||
+            draft.builderMode === 'standard' ||
+            draft.builderMode === 'advanced' ||
+            draft.builderMode === 'simple') &&
         (draft.previewTab === 'card' || draft.previewTab === 'timeline') &&
-        (draft.pricingMode === 'fixed' || draft.pricingMode === 'range' || draft.pricingMode === 'packages') &&
+        (draft.pricingMode === 'fixed' ||
+            draft.pricingMode === 'range' ||
+            draft.pricingMode === 'packages') &&
         typeof draft.fixedPrice === 'string' &&
         typeof draft.rangeMin === 'string' &&
         typeof draft.rangeMax === 'string' &&
@@ -229,7 +237,10 @@ export default function CreateService({
     editingDraft = null,
 }: CreateServiceProps) {
     const allWorkTemplates = useMemo(
-        () => [...(workOptions?.recommended ?? []), ...(workOptions?.other_archetypes ?? [])].map(toWorkTemplate),
+        () =>
+            [...(workOptions?.recommended ?? []), ...(workOptions?.other_archetypes ?? [])].map(
+                toWorkTemplate,
+            ),
         [workOptions],
     );
     const allDealChainRecipes = useMemo(
@@ -285,17 +296,24 @@ export default function CreateService({
             ),
     );
     const [inclusions, setInclusions] = useState<string[]>(
-        editingDraft?.inclusions && Array.isArray(editingDraft.inclusions) && editingDraft.inclusions.length > 0
+        editingDraft?.inclusions &&
+            Array.isArray(editingDraft.inclusions) &&
+            editingDraft.inclusions.length > 0
             ? editingDraft.inclusions
             : [],
     );
     const [newInclusion, setNewInclusion] = useState('');
     // Work Pipeline Template & Canvas state
-    const draftStages = editingDraft?.milestone_stages && Array.isArray(editingDraft.milestone_stages) && editingDraft.milestone_stages.length > 0
-        ? (editingDraft.milestone_stages as unknown as WorkStage[])
-        : (editingDraft?.milestoneStages && Array.isArray(editingDraft.milestoneStages) && editingDraft.milestoneStages.length > 0
-            ? (editingDraft.milestoneStages as unknown as WorkStage[])
-            : null);
+    const draftStages =
+        editingDraft?.milestone_stages &&
+        Array.isArray(editingDraft.milestone_stages) &&
+        editingDraft.milestone_stages.length > 0
+            ? (editingDraft.milestone_stages as unknown as WorkStage[])
+            : editingDraft?.milestoneStages &&
+                Array.isArray(editingDraft.milestoneStages) &&
+                editingDraft.milestoneStages.length > 0
+              ? (editingDraft.milestoneStages as unknown as WorkStage[])
+              : null;
     const initialTemplate =
         (editingDraft?.work_catalog_code
             ? allWorkTemplates.find((template) => template.id === editingDraft.work_catalog_code)
@@ -324,8 +342,12 @@ export default function CreateService({
             const original = selectedTemplate.stages[index];
             if (!original) return true;
             return (
-                JSON.stringify(Object.entries(stage).sort(([left], [right]) => left.localeCompare(right))) !==
-                JSON.stringify(Object.entries(original).sort(([left], [right]) => left.localeCompare(right)))
+                JSON.stringify(
+                    Object.entries(stage).sort(([left], [right]) => left.localeCompare(right)),
+                ) !==
+                JSON.stringify(
+                    Object.entries(original).sort(([left], [right]) => left.localeCompare(right)),
+                )
             );
         });
     }, [stages, selectedTemplate]);
@@ -334,16 +356,22 @@ export default function CreateService({
         (editingDraft?.pricing_mode as any) || (editingDraft?.pricingMode as any) || 'packages',
     );
     const [fixedPrice, setFixedPrice] = useState(
-        editingDraft?.price_amount_minor ? String(Math.round(editingDraft.price_amount_minor / 100)) : '',
+        editingDraft?.price_amount_minor
+            ? String(Math.round(editingDraft.price_amount_minor / 100))
+            : '',
     );
     const [rangeMin, setRangeMin] = useState('');
     const [rangeMax, setRangeMax] = useState('');
     const [packageTiers, setPackageTiers] = useState<PackageTierForm[]>(
-        editingDraft?.package_tiers && Array.isArray(editingDraft.package_tiers) && editingDraft.package_tiers.length > 0
+        editingDraft?.package_tiers &&
+            Array.isArray(editingDraft.package_tiers) &&
+            editingDraft.package_tiers.length > 0
             ? (editingDraft.package_tiers as unknown as PackageTierForm[])
-            : (editingDraft?.packageTiers && Array.isArray(editingDraft.packageTiers) && editingDraft.packageTiers.length > 0
-                ? (editingDraft.packageTiers as unknown as PackageTierForm[])
-                : [
+            : editingDraft?.packageTiers &&
+                Array.isArray(editingDraft.packageTiers) &&
+                editingDraft.packageTiers.length > 0
+              ? (editingDraft.packageTiers as unknown as PackageTierForm[])
+              : [
                     {
                         id: 'tier-1',
                         title: '',
@@ -351,126 +379,129 @@ export default function CreateService({
                         sub: '',
                         inclusions: [],
                     },
-                ]),
+                ],
     );
 
     const [addons, setAddons] = useState<AddonForm[]>(
         editingDraft?.addons && Array.isArray(editingDraft.addons) && editingDraft.addons.length > 0
             ? (editingDraft.addons as unknown as AddonForm[])
             : [
-                {
-                    id: 'addon-1',
-                    code: 'rush_priority',
-                    title: 'Fast Clean (Same-Day / Rush Priority)',
-                    description: 'Priority scheduling request for same-day completion.',
-                    price_amount_minor: 10000,
-                    partner_role: 'technician',
-                    isDefault: false,
-                },
-                {
-                    id: 'addon-2',
-                    code: 'chemical_flush',
-                    title: 'Anti-Bacterial Chemical Flush',
-                    description: 'Deep antimicrobial foaming wash & sanitize.',
-                    price_amount_minor: 15000,
-                    partner_role: 'technician',
-                    isDefault: true,
-                },
-            ],
+                  {
+                      id: 'addon-1',
+                      code: 'rush_priority',
+                      title: 'Fast Clean (Same-Day / Rush Priority)',
+                      description: 'Priority scheduling request for same-day completion.',
+                      price_amount_minor: 10000,
+                      partner_role: 'technician',
+                      isDefault: false,
+                  },
+                  {
+                      id: 'addon-2',
+                      code: 'chemical_flush',
+                      title: 'Anti-Bacterial Chemical Flush',
+                      description: 'Deep antimicrobial foaming wash & sanitize.',
+                      price_amount_minor: 15000,
+                      partner_role: 'technician',
+                      isDefault: true,
+                  },
+              ],
     );
 
     // Step 3: Deal Chain Combinations
     const [combinations, setCombinations] = useState<DealChainCombination[]>(
-        editingDraft?.deal_chain_combinations && Array.isArray(editingDraft.deal_chain_combinations) && editingDraft.deal_chain_combinations.length > 0
+        editingDraft?.deal_chain_combinations &&
+            Array.isArray(editingDraft.deal_chain_combinations) &&
+            editingDraft.deal_chain_combinations.length > 0
             ? (editingDraft.deal_chain_combinations as unknown as DealChainCombination[])
             : [
-        {
-            id: 'combo-1',
-            title: 'All-In Parts, Courier & Labor',
-            icon: 'Wrench',
-            isDefault: true,
-            nodes: [
-                {
-                    role: 'STORE',
-                    title: '35uF Cap',
-                    sub: '₱180',
-                    type: 'store',
-                    bg: '#FEF3C7',
-                    color: '#B45309',
-                },
-                {
-                    role: 'COURIER',
-                    title: 'Danny Exp',
-                    sub: '₱35',
-                    type: 'delivery',
-                    bg: '#E0F2FE',
-                    color: '#0284C7',
-                },
-                {
-                    role: 'LABOR',
-                    title: 'Your Service',
-                    sub: '₱450',
-                    type: 'labor',
-                    bg: '#ECFDF5',
-                    color: '#059669',
-                },
-            ],
-            slots: [
-                {
-                    type: 'store',
-                    role: 'Hardware Part Supplier',
-                    name: 'Tagudin Hardware Depot',
-                    meta: '₱180.00 counter pickup',
-                },
-                {
-                    type: 'delivery',
-                    role: 'Doorstep Courier Runner',
-                    name: 'Danny Express Motorcycle Pool',
-                    meta: '₱35.00 route fee',
-                },
-            ],
-        },
-        {
-            id: 'combo-2',
-            title: 'Doorstep Courier Transit Only',
-            icon: 'Truck',
-            isDefault: false,
-            nodes: [
-                {
-                    role: 'STORE',
-                    title: 'Pickup',
-                    sub: 'Counter',
-                    type: 'store',
-                    bg: '#FEF3C7',
-                    color: '#B45309',
-                },
-                {
-                    role: 'COURIER',
-                    title: 'Danny Exp',
-                    sub: '₱35',
-                    type: 'delivery',
-                    bg: '#E0F2FE',
-                    color: '#0284C7',
-                },
-                {
-                    role: 'LABOR',
-                    title: 'Your Service',
-                    sub: '₱450',
-                    type: 'labor',
-                    bg: '#ECFDF5',
-                    color: '#059669',
-                },
-            ],
-            slots: [
-                {
-                    type: 'delivery',
-                    role: 'Doorstep Courier Runner',
-                    name: 'Danny Express Motorcycle Pool',
-                    meta: '₱35.00 route fee',
-                },
-            ],
-        },
-    ]);
+                  {
+                      id: 'combo-1',
+                      title: 'All-In Parts, Courier & Labor',
+                      icon: 'Wrench',
+                      isDefault: true,
+                      nodes: [
+                          {
+                              role: 'STORE',
+                              title: '35uF Cap',
+                              sub: '₱180',
+                              type: 'store',
+                              bg: '#FEF3C7',
+                              color: '#B45309',
+                          },
+                          {
+                              role: 'COURIER',
+                              title: 'Danny Exp',
+                              sub: '₱35',
+                              type: 'delivery',
+                              bg: '#E0F2FE',
+                              color: '#0284C7',
+                          },
+                          {
+                              role: 'LABOR',
+                              title: 'Your Service',
+                              sub: '₱450',
+                              type: 'labor',
+                              bg: '#ECFDF5',
+                              color: '#059669',
+                          },
+                      ],
+                      slots: [
+                          {
+                              type: 'store',
+                              role: 'Hardware Part Supplier',
+                              name: 'Tagudin Hardware Depot',
+                              meta: '₱180.00 counter pickup',
+                          },
+                          {
+                              type: 'delivery',
+                              role: 'Doorstep Courier Runner',
+                              name: 'Danny Express Motorcycle Pool',
+                              meta: '₱35.00 route fee',
+                          },
+                      ],
+                  },
+                  {
+                      id: 'combo-2',
+                      title: 'Doorstep Courier Transit Only',
+                      icon: 'Truck',
+                      isDefault: false,
+                      nodes: [
+                          {
+                              role: 'STORE',
+                              title: 'Pickup',
+                              sub: 'Counter',
+                              type: 'store',
+                              bg: '#FEF3C7',
+                              color: '#B45309',
+                          },
+                          {
+                              role: 'COURIER',
+                              title: 'Danny Exp',
+                              sub: '₱35',
+                              type: 'delivery',
+                              bg: '#E0F2FE',
+                              color: '#0284C7',
+                          },
+                          {
+                              role: 'LABOR',
+                              title: 'Your Service',
+                              sub: '₱450',
+                              type: 'labor',
+                              bg: '#ECFDF5',
+                              color: '#059669',
+                          },
+                      ],
+                      slots: [
+                          {
+                              type: 'delivery',
+                              role: 'Doorstep Courier Runner',
+                              name: 'Danny Express Motorcycle Pool',
+                              meta: '₱35.00 route fee',
+                          },
+                      ],
+                  },
+              ],
+    );
 
     const [activeComboIndex, setActiveComboIndex] = useState(0);
     const [attachChainModalOpen, setAttachChainModalOpen] = useState(false);
@@ -800,7 +831,12 @@ export default function CreateService({
         const newCombo: DealChainCombination = {
             id: `combo-${recipe.recipeId}-${Date.now()}`,
             title: recipe.title,
-            icon: recipe.pattern === 'delivery' ? 'Truck' : recipe.pattern === 'audit' ? 'ShieldCheck' : 'Wrench',
+            icon:
+                recipe.pattern === 'delivery'
+                    ? 'Truck'
+                    : recipe.pattern === 'audit'
+                      ? 'ShieldCheck'
+                      : 'Wrench',
             isDefault: combinations.length === 0,
             recipeId: recipe.recipeId,
             catalogVersion: recipe.catalogVersion || 1,
@@ -861,7 +897,10 @@ export default function CreateService({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (allWorkTemplates.length === 0 || !selectedTemplate.id) {
-            setFormErrors({ work_catalog_code: 'No compatible published work set is available for this service.' });
+            setFormErrors({
+                work_catalog_code:
+                    'No compatible published work set is available for this service.',
+            });
             return;
         }
         if (!isAuthenticated) {
@@ -874,7 +913,6 @@ export default function CreateService({
             description.trim().length >= 10
                 ? description.trim()
                 : `${title.trim()} — Professional ${category} service in Tagudin, Ilocos Sur. Governed under ${selectedTemplate.title} with photo milestone evidence.`;
-
 
         const payload: Record<string, FormDataConvertible> = {
             title: title.trim(),
@@ -911,6 +949,12 @@ export default function CreateService({
                 step: idx + 1,
                 dur: s.dur,
                 evidence: s.evidence,
+                ...(s.evidenceType !== undefined ? { evidence_type: s.evidenceType } : {}),
+                ...(s.clearanceMode !== undefined ? { clearance_mode: s.clearanceMode } : {}),
+                ...(s.approvalMethod !== undefined ? { approval_method: s.approvalMethod } : {}),
+                ...(s.handoffParty !== undefined ? { handoff_party: s.handoffParty } : {}),
+                ...(Array.isArray(s.requiredProofs) ? { required_proofs: s.requiredProofs } : {}),
+                ...(s.metricUnit !== undefined ? { metric_unit: s.metricUnit } : {}),
             })),
             media: media as unknown as FormDataConvertible,
             deal_chain_combinations: combinations as unknown as FormDataConvertible,
@@ -983,7 +1027,7 @@ export default function CreateService({
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                     <div>
-                        <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#0F2F58] uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 text-xs font-extrabold tracking-wider text-[#0F2F58] uppercase">
                             <Eye className="size-3.5 text-emerald-600" />
                             <span>Live Listing Preview</span>
                         </div>
@@ -992,7 +1036,7 @@ export default function CreateService({
                         </p>
                     </div>
                 </div>
-                <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200/80">
+                <div className="flex rounded-xl border border-slate-200/80 bg-slate-100 p-1">
                     <button
                         type="button"
                         onClick={() => setPreviewTab('card')}
@@ -1036,11 +1080,11 @@ export default function CreateService({
                                 />
                             )}
                             <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                                <span className="rounded-full bg-[#0F2F58]/90 px-2.5 py-1 text-[10px] font-extrabold text-white backdrop-blur uppercase">
+                                <span className="rounded-full bg-[#0F2F58]/90 px-2.5 py-1 text-[10px] font-extrabold text-white uppercase backdrop-blur">
                                     Service Offering
                                 </span>
                                 {media.has_video && (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/90 px-2.5 py-1 text-[10px] font-extrabold text-white backdrop-blur uppercase">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/90 px-2.5 py-1 text-[10px] font-extrabold text-white uppercase backdrop-blur">
                                         <Video className="size-3 text-[#FFC72C]" />
                                         <span>Video</span>
                                     </span>
@@ -1051,10 +1095,12 @@ export default function CreateService({
                             </div>
                         </div>
 
-                        <div className="p-4 space-y-2.5">
+                        <div className="space-y-2.5 p-4">
                             <div className="flex items-center justify-between text-[11px] text-slate-500">
                                 <span>Tagudin Centro · Municipal Verified</span>
-                                <span className="font-semibold text-emerald-700">0% Platform Fee</span>
+                                <span className="font-semibold text-emerald-700">
+                                    0% Platform Fee
+                                </span>
                             </div>
 
                             <h3 className="line-clamp-2 text-sm font-extrabold text-[#0F2F58]">
@@ -1067,28 +1113,35 @@ export default function CreateService({
                                         {pricingMode === 'packages' ? 'Starting at' : 'Agreed Rate'}
                                     </span>
                                     <div className="font-mono text-base font-extrabold text-[#0F2F58]">
-                                        ₱{(effectivePriceMinor / 100).toLocaleString('en-PH', {
+                                        ₱
+                                        {(effectivePriceMinor / 100).toLocaleString('en-PH', {
                                             minimumFractionDigits: 2,
                                             maximumFractionDigits: 2,
                                         })}
                                     </div>
                                 </div>
-                                {selectedTemplate.sla && <span className="text-[11px] font-bold text-slate-500">{selectedTemplate.sla} target</span>}
+                                {selectedTemplate.sla && (
+                                    <span className="text-[11px] font-bold text-slate-500">
+                                        {selectedTemplate.sla} target
+                                    </span>
+                                )}
                             </div>
 
                             {inclusions.length > 0 && (
                                 <div className="space-y-1.5 border-t border-slate-100 pt-2">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                                         Included Deliverables
                                     </span>
                                     <div className="flex flex-wrap gap-1">
                                         {inclusions.slice(0, 3).map((inc, i) => (
                                             <span
                                                 key={i}
-                                                className="inline-flex items-center gap-1 rounded-md bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 border border-slate-200/60"
+                                                className="inline-flex items-center gap-1 rounded-md border border-slate-200/60 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
                                             >
                                                 <Check className="size-2.5 text-emerald-600" />
-                                                <span className="truncate max-w-[140px]">{inc}</span>
+                                                <span className="max-w-[140px] truncate">
+                                                    {inc}
+                                                </span>
                                             </span>
                                         ))}
                                         {inclusions.length > 3 && (
@@ -1102,13 +1155,14 @@ export default function CreateService({
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-[11px] text-emerald-900 space-y-1">
+                    <div className="space-y-1 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-[11px] text-emerald-900">
                         <div className="flex items-center gap-1.5 font-bold">
                             <ShieldCheck className="size-3.5 text-emerald-700" />
                             <span>Tagudin Public Escrow Guarantee</span>
                         </div>
                         <p className="text-[10.5px] leading-relaxed text-emerald-800/90">
-                            Buyers see 0% municipal fees and guaranteed fund protection until milestone completion.
+                            Buyers see 0% municipal fees and guaranteed fund protection until
+                            milestone completion.
                         </p>
                     </div>
                 </div>
@@ -1117,9 +1171,9 @@ export default function CreateService({
             {/* TAB 2: Order Execution Gates Timeline Preview */}
             {previewTab === 'timeline' && (
                 <div className="space-y-3">
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs space-y-1">
+                    <div className="space-y-1 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
                         <div className="flex items-center justify-between">
-                            <span className="font-extrabold text-[#0F2F58] uppercase text-[10.5px]">
+                            <span className="text-[10.5px] font-extrabold text-[#0F2F58] uppercase">
                                 Governed Work Contract
                             </span>
                         </div>
@@ -1146,7 +1200,7 @@ export default function CreateService({
                             return (
                                 <div
                                     key={stage.id || idx}
-                                    className="rounded-xl border border-slate-200/90 bg-white p-3 shadow-2xs space-y-1.5 transition-all hover:border-[#0F2F58]/30"
+                                    className="space-y-1.5 rounded-xl border border-slate-200/90 bg-white p-3 shadow-2xs transition-all hover:border-[#0F2F58]/30"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -1157,17 +1211,23 @@ export default function CreateService({
                                                 {stage.title}
                                             </span>
                                         </div>
-                                        <span className={`rounded-md border px-1.5 py-0.5 text-[9px] font-extrabold uppercase ${badgeStyle}`}>
+                                        <span
+                                            className={`rounded-md border px-1.5 py-0.5 text-[9px] font-extrabold uppercase ${badgeStyle}`}
+                                        >
                                             {gateLabel}
                                         </span>
                                     </div>
 
-                                    <p className="text-[11px] text-slate-500 line-clamp-2 pl-7">
+                                    <p className="line-clamp-2 pl-7 text-[11px] text-slate-500">
                                         {stage.desc || 'Operational milestone task.'}
                                     </p>
 
                                     <div className="flex items-center justify-between border-t border-slate-100 pt-1.5 pl-7 text-[10px] text-slate-400">
-                                        {stage.dur && <span className="font-semibold text-slate-600">{stage.dur} target estimate</span>}
+                                        {stage.dur && (
+                                            <span className="font-semibold text-slate-600">
+                                                {stage.dur} target estimate
+                                            </span>
+                                        )}
                                         <span className="font-semibold text-emerald-700">
                                             📷 {stage.evidence || 'Photo verified'}
                                         </span>
@@ -1177,10 +1237,11 @@ export default function CreateService({
                         })}
                     </div>
 
-                    <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-[11px] text-amber-900 space-y-1">
+                    <div className="space-y-1 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-[11px] text-amber-900">
                         <span className="font-bold">🔒 Escrow Release Mechanism</span>
                         <p className="text-[10.5px] leading-relaxed text-amber-800">
-                            Customer payment is deposited in escrow upon order creation and safely released upon completion of Gate {stages.length}.
+                            Customer payment is deposited in escrow upon order creation and safely
+                            released upon completion of Gate {stages.length}.
                         </p>
                     </div>
                 </div>
@@ -1192,63 +1253,82 @@ export default function CreateService({
         return (
             <div className="min-h-screen bg-[#F8FAFC] p-6">
                 <main className="mx-auto mt-16 max-w-xl rounded-2xl border border-amber-200 bg-white p-6 text-center shadow-sm">
-                    <h1 className="text-lg font-extrabold text-slate-900">No compatible work set is available</h1>
+                    <h1 className="text-lg font-extrabold text-slate-900">
+                        No compatible work set is available
+                    </h1>
                     <p className="mt-2 text-sm text-slate-600">
-                        A published work set compatible with service listings is required before you can create or save this draft.
+                        A published work set compatible with service listings is required before you
+                        can create or save this draft.
                     </p>
-                    <Link href="/browse" className="mt-5 inline-flex rounded-xl bg-[#0F2F58] px-4 py-2.5 text-sm font-bold text-white">Return to Browse</Link>
+                    <Link
+                        href="/browse"
+                        className="mt-5 inline-flex rounded-xl bg-[#0F2F58] px-4 py-2.5 text-sm font-bold text-white"
+                    >
+                        Return to Browse
+                    </Link>
                 </main>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 pb-16">
+        <div className="min-h-screen bg-[#F8FAFC] pb-16 font-['Plus_Jakarta_Sans',sans-serif] text-slate-900">
             <DesktopGlobalNav activeRoute="create_listing" />
 
-            <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:py-6 space-y-6">
+            <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-4 sm:px-6 lg:py-6">
                 {/* Top Studio Control Bar */}
                 {/* Compact 1-Row Sticky Header */}
                 <header
                     data-testid="builder-header"
-                    className="sticky top-0 z-30 flex items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/95 px-4 py-2.5 shadow-xs backdrop-blur-md"
+                    className="sticky top-0 z-30 grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-2 rounded-2xl border border-slate-200/80 bg-white/95 px-3.5 py-2.5 shadow-xs backdrop-blur-md sm:flex sm:flex-row sm:items-center sm:gap-3 sm:px-4"
                 >
-                    {/* Left: Change Type + Title + Step indicator */}
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    {/* Left: Change Type + Title */}
+                    <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 sm:gap-2.5">
                         <Link
                             href="/listings/create"
-                            className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 cursor-pointer"
+                            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
                             title="Change Type"
                         >
                             <ArrowLeft className="size-4" />
                         </Link>
-                        <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs sm:text-sm font-extrabold text-[#0F2F58] shrink-0">
-                                    Service Listing
-                                </span>
-                                {builderMode === 'guided' ? (
-                                    <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-900">
-                                        Step {step} of 7 · {SERVICE_GUIDED_STEPS[step - 1]?.shortTitle}
-                                    </span>
-                                ) : (
-                                    <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                                        Standard Form
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+                        <span className="shrink-0 text-xs font-extrabold text-[#0F2F58] sm:text-sm">
+                            Service Listing
+                        </span>
                     </div>
+
+                    {/* Step indicator pill */}
+                    <div className="col-start-1 row-start-2 flex min-w-0 items-center">
+                        {builderMode === 'guided' ? (
+                            <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-900">
+                                Step {step} of 7 · {SERVICE_GUIDED_STEPS[step - 1]?.shortTitle}
+                            </span>
+                        ) : (
+                            <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                Standard Form
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Mobile Preview Button in Top Header */}
+                    <button
+                        type="button"
+                        onClick={() => setMobilePreviewOpen(true)}
+                        className="col-start-2 row-start-1 flex shrink-0 cursor-pointer items-center gap-1.5 justify-self-end rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 sm:hidden"
+                        title="Preview Live Customer View"
+                    >
+                        <Eye className="size-3.5 text-emerald-600" />
+                        <span>Preview</span>
+                    </button>
 
                     {/* Right: Mode Switcher */}
                     <div
-                        className="flex shrink-0 items-center gap-1 rounded-xl border border-slate-200/70 bg-slate-100 p-0.5"
+                        className="col-start-2 row-start-2 flex shrink-0 items-center gap-1 justify-self-end rounded-xl border border-slate-200/70 bg-slate-100 p-0.5 sm:ml-auto"
                         data-testid="builder-mode-switcher"
                     >
                         <button
                             type="button"
                             onClick={() => setBuilderMode('guided')}
-                            className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                            className={`flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition-all sm:px-2.5 ${
                                 builderMode === 'guided'
                                     ? 'bg-white text-[#0F2F58] shadow-xs'
                                     : 'text-slate-600 hover:text-slate-900'
@@ -1260,7 +1340,7 @@ export default function CreateService({
                         <button
                             type="button"
                             onClick={() => setBuilderMode('standard')}
-                            className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                            className={`flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition-all sm:px-2.5 ${
                                 builderMode === 'standard'
                                     ? 'bg-[#0F2F58] text-white shadow-xs'
                                     : 'text-slate-600 hover:text-slate-900'
@@ -1270,22 +1350,11 @@ export default function CreateService({
                             <span>Standard</span>
                         </button>
                     </div>
-
-                    {/* Mobile Preview Button in Top Header */}
-                    <button
-                        type="button"
-                        onClick={() => setMobilePreviewOpen(true)}
-                        className="sm:hidden flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 cursor-pointer shrink-0"
-                        title="Preview Live Customer View"
-                    >
-                        <Eye className="size-3.5 text-emerald-600" />
-                        <span>Preview</span>
-                    </button>
                 </header>
 
                 {/* Guided Mode Slim Progress Bar */}
                 {builderMode === 'guided' && (
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-slate-200/70 -mt-3">
+                    <div className="-mt-3 h-1 w-full overflow-hidden rounded-full bg-slate-200/70">
                         <div
                             className="h-full bg-[#0F2F58] transition-all duration-300 ease-out"
                             style={{ width: `${(step / 7) * 100}%` }}
@@ -1294,238 +1363,294 @@ export default function CreateService({
                 )}
 
                 {/* Responsive 2-Column Grid */}
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
+                <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
                     {/* LEFT COLUMN: Form Studio (Cols 1-7) */}
-                    <main className="rounded-2xl border border-slate-200/80 bg-white p-5 lg:col-span-7 lg:p-7 shadow-xs space-y-6">
+                    <main className="space-y-6 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs lg:col-span-7 lg:p-7">
                         <form onSubmit={handleSubmit} className="space-y-6">
-                        {(builderMode === 'standard' || step === 1) && (
-                            <div className="space-y-4">
-                                {builderMode === 'guided' ? (
-                                    <div>
-                                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
-                                            {SERVICE_GUIDED_STEPS[0].guidedTitle}
-                                        </h2>
-                                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-                                            {SERVICE_GUIDED_STEPS[0].guidedDescription}
+                            {(builderMode === 'standard' || step === 1) && (
+                                <div className="space-y-4">
+                                    {builderMode === 'guided' ? (
+                                        <div>
+                                            <h2 className="text-base font-extrabold text-slate-900 sm:text-lg">
+                                                {SERVICE_GUIDED_STEPS[0].guidedTitle}
+                                            </h2>
+                                            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                                                {SERVICE_GUIDED_STEPS[0].guidedDescription}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                            <h2 className="text-sm font-extrabold tracking-wider text-slate-900 uppercase">
+                                                Trade Scope &amp; Craft
+                                            </h2>
+                                        </div>
+                                    )}
+
+                                    {formErrors.title && (
+                                        <p className="text-xs font-bold text-red-600">
+                                            {formErrors.title}
                                         </p>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-900">
-                                            Trade Scope &amp; Craft
-                                        </h2>
-                                    </div>
-                                )}
+                                    )}
 
-                                {formErrors.title && (
-                                    <p className="text-xs font-bold text-red-600">{formErrors.title}</p>
-                                )}
-
-                                {/* Service Title */}
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold text-slate-700">
-                                            Service Title
-                                        </label>
-                                        {builderMode === 'standard' && (
-                                            <FieldGuide
-                                                guidance={SERVICE_FIELD_GUIDANCE.title.guidance}
-                                                mode="standard"
-                                            />
-                                        )}
+                                    {/* Service Title */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-bold text-slate-700">
+                                                Service Title
+                                            </label>
+                                            {builderMode === 'standard' && (
+                                                <FieldGuide
+                                                    guidance={SERVICE_FIELD_GUIDANCE.title.guidance}
+                                                    mode="standard"
+                                                />
+                                            )}
+                                        </div>
+                                        <input
+                                            type="text"
+                                            data-testid="service-title-input"
+                                            value={title}
+                                            onChange={(e) => setTitle(e.target.value)}
+                                            placeholder={
+                                                builderMode === 'guided'
+                                                    ? 'e.g. Inverter Split AC Deep Clean, Bread Catering, or Pipe Repair'
+                                                    : ''
+                                            }
+                                            required
+                                            className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
+                                        />
                                     </div>
-                                    <input
-                                        type="text"
-                                        data-testid="service-title-input"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        placeholder={builderMode === 'guided' ? 'e.g. Inverter Split AC Deep Clean, Bread Catering, or Pipe Repair' : ''}
-                                        required
-                                        className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
-                                    />
-                                </div>
 
-                                {/* Trade Category */}
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center justify-between">
-                                        <label htmlFor="trade-category" className="text-xs font-bold text-slate-700">
-                                            Trade Category
-                                        </label>
-                                        {builderMode === 'standard' && (
-                                            <FieldGuide
-                                                guidance={SERVICE_FIELD_GUIDANCE.category.guidance}
-                                                mode="standard"
-                                            />
-                                        )}
-                                    </div>
-                                    <select
-                                        id="trade-category"
-                                        value={category}
-                                        onChange={(e) => {
-                                            const nextCategory = e.target.value;
-                                            setCategory(nextCategory);
-                                            setMedia((prev) => {
-                                                if (!prev.cover_thumbnail_url?.startsWith('/photos/')) {
-                                                    return prev;
-                                                }
-                                                const nextDefault = defaultMediaForCategory(nextCategory);
-                                                const existingVideos = prev.items.filter(
-                                                    (item) => item.kind === 'video',
+                                    {/* Trade Category */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <label
+                                                htmlFor="trade-category"
+                                                className="text-xs font-bold text-slate-700"
+                                            >
+                                                Trade Category
+                                            </label>
+                                            {builderMode === 'standard' && (
+                                                <FieldGuide
+                                                    guidance={
+                                                        SERVICE_FIELD_GUIDANCE.category.guidance
+                                                    }
+                                                    mode="standard"
+                                                />
+                                            )}
+                                        </div>
+                                        <select
+                                            id="trade-category"
+                                            value={category}
+                                            onChange={(e) => {
+                                                const nextCategory = e.target.value;
+                                                setCategory(nextCategory);
+                                                setMedia((prev) => {
+                                                    if (
+                                                        !prev.cover_thumbnail_url?.startsWith(
+                                                            '/photos/',
+                                                        )
+                                                    ) {
+                                                        return prev;
+                                                    }
+                                                    const nextDefault =
+                                                        defaultMediaForCategory(nextCategory);
+                                                    const existingVideos = prev.items.filter(
+                                                        (item) => item.kind === 'video',
+                                                    );
+                                                    return {
+                                                        ...nextDefault,
+                                                        has_video: existingVideos.length > 0,
+                                                        items: [
+                                                            ...nextDefault.items,
+                                                            ...existingVideos,
+                                                        ],
+                                                    };
+                                                });
+                                                const firstMatch = allWorkTemplates.find(
+                                                    (template) =>
+                                                        template.categoryCodes?.includes(
+                                                            nextCategory,
+                                                        ),
                                                 );
-                                                return {
-                                                    ...nextDefault,
-                                                    has_video: existingVideos.length > 0,
-                                                    items: [...nextDefault.items, ...existingVideos],
-                                                };
-                                            });
-                                            const firstMatch = allWorkTemplates.find((template) =>
-                                                template.categoryCodes?.includes(nextCategory),
-                                            );
-                                            setSelectedTemplate(firstMatch ?? EMPTY_WORK_TEMPLATE);
-                                            setStages(firstMatch?.stages ?? []);
-                                        }}
-                                        className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
-                                    >
-                                        <option value="" disabled>Select trade category...</option>
-                                        <option value="repairs">Repairs &amp; Appliance Care</option>
-                                        <option value="home-cleaning">Cleaning &amp; Home Help</option>
-                                        <option value="courier">Courier &amp; Delivery</option>
-                                        <option value="print-assist">Document &amp; Print Assistance</option>
-                                        <option value="local-services">Errands &amp; General Local Services</option>
-                                        <option value="greeting-cards">Handmade Cards &amp; Crafts</option>
-                                    </select>
-                                </div>
+                                                setSelectedTemplate(
+                                                    firstMatch ?? EMPTY_WORK_TEMPLATE,
+                                                );
+                                                setStages(firstMatch?.stages ?? []);
+                                            }}
+                                            className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
+                                        >
+                                            <option value="" disabled>
+                                                Select trade category...
+                                            </option>
+                                            <option value="repairs">
+                                                Repairs &amp; Appliance Care
+                                            </option>
+                                            <option value="home-cleaning">
+                                                Cleaning &amp; Home Help
+                                            </option>
+                                            <option value="courier">Courier &amp; Delivery</option>
+                                            <option value="print-assist">
+                                                Document &amp; Print Assistance
+                                            </option>
+                                            <option value="local-services">
+                                                Errands &amp; General Local Services
+                                            </option>
+                                            <option value="greeting-cards">
+                                                Handmade Cards &amp; Crafts
+                                            </option>
+                                        </select>
+                                    </div>
 
-                                {/* Detailed Description */}
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center justify-between">
-                                        <label htmlFor="service-description" className="text-xs font-bold text-slate-700">
-                                            Detailed Description
-                                        </label>
-                                        {builderMode === 'standard' && (
+                                    {/* Detailed Description */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <label
+                                                htmlFor="service-description"
+                                                className="text-xs font-bold text-slate-700"
+                                            >
+                                                Detailed Description
+                                            </label>
+                                            {builderMode === 'standard' && (
+                                                <FieldGuide
+                                                    guidance={
+                                                        SERVICE_FIELD_GUIDANCE.description.guidance
+                                                    }
+                                                    mode="standard"
+                                                />
+                                            )}
+                                        </div>
+                                        <textarea
+                                            id="service-description"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            rows={3}
+                                            placeholder={
+                                                builderMode === 'guided'
+                                                    ? 'Mention trade certifications, experience, or what clients should prepare before arrival...'
+                                                    : ''
+                                            }
+                                            className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
+                                        />
+                                    </div>
+
+                                    {builderMode === 'guided' && (
+                                        <button
+                                            type="button"
+                                            disabled={!title.trim()}
+                                            onClick={() => setStep(2)}
+                                            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs transition-colors hover:bg-[#e6b327] disabled:opacity-50"
+                                        >
+                                            <span>Continue to Visual Proof</span>
+                                            <ArrowRight className="size-3.5" />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* STEP 2: Visual Proof & Media */}
+                            {(builderMode === 'standard' || step === 2) && (
+                                <div
+                                    className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}
+                                >
+                                    {builderMode === 'guided' ? (
+                                        <div>
+                                            <h2 className="text-base font-extrabold text-slate-900 sm:text-lg">
+                                                {SERVICE_GUIDED_STEPS[1].guidedTitle}
+                                            </h2>
+                                            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                                                {SERVICE_GUIDED_STEPS[1].guidedDescription}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                            <label className="text-xs font-bold tracking-wider text-slate-900 uppercase">
+                                                Media Attachments
+                                            </label>
                                             <FieldGuide
-                                                guidance={SERVICE_FIELD_GUIDANCE.description.guidance}
+                                                guidance={SERVICE_FIELD_GUIDANCE.media.guidance}
                                                 mode="standard"
                                             />
-                                        )}
-                                    </div>
-                                    <textarea
-                                        id="service-description"
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        rows={3}
-                                        placeholder={builderMode === 'guided' ? 'Mention trade certifications, experience, or what clients should prepare before arrival...' : ''}
-                                        className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 text-xs font-semibold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
+                                        </div>
+                                    )}
+
+                                    <ListingMediaPicker
+                                        media={media}
+                                        categoryCode={category}
+                                        listingType="service"
+                                        onChange={setMedia}
                                     />
+
+                                    {builderMode === 'guided' && (
+                                        <div className="flex gap-2.5 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep(1)}
+                                                className="shrink-0 cursor-pointer rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 sm:px-5"
+                                            >
+                                                Back
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep(3)}
+                                                className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327]"
+                                            >
+                                                Continue to Work Plan
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
+                            )}
 
-                                {builderMode === 'guided' && (
-                                    <button
-                                        type="button"
-                                        disabled={!title.trim()}
-                                        onClick={() => setStep(2)}
-                                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs transition-colors hover:bg-[#e6b327] disabled:opacity-50"
-                                    >
-                                        <span>Continue to Visual Proof</span>
-                                        <ArrowRight className="size-3.5" />
-                                    </button>
-                                )}
-                            </div>
-                        )}
-
-                        {/* STEP 2: Visual Proof & Media */}
-                        {(builderMode === 'standard' || step === 2) && (
-                            <div className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
-                                {builderMode === 'guided' ? (
-                                    <div>
-                                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
-                                            {SERVICE_GUIDED_STEPS[1].guidedTitle}
-                                        </h2>
-                                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-                                            {SERVICE_GUIDED_STEPS[1].guidedDescription}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                                            Media Attachments
-                                        </label>
-                                        <FieldGuide
-                                            guidance={SERVICE_FIELD_GUIDANCE.media.guidance}
-                                            mode="standard"
-                                        />
-                                    </div>
-                                )}
-
-                                <ListingMediaPicker
-                                    media={media}
-                                    categoryCode={category}
-                                    listingType="service"
-                                    onChange={setMedia}
-                                />
-
-                                {builderMode === 'guided' && (
-                                    <div className="flex gap-2.5 pt-2">
+                            {/* STEP 3: Work Execution Plan */}
+                            {(builderMode === 'standard' || step === 3) && (
+                                <section
+                                    className={`space-y-3.5 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}
+                                >
+                                    {builderMode === 'guided' ? (
+                                        <div>
+                                            <h2 className="text-base font-extrabold text-slate-900 sm:text-lg">
+                                                {SERVICE_GUIDED_STEPS[2].guidedTitle}
+                                            </h2>
+                                            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                                                {SERVICE_GUIDED_STEPS[2].guidedDescription}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                            <h3 className="text-xs font-bold tracking-wider text-slate-900 uppercase">
+                                                Work Execution Plan
+                                            </h3>
+                                            <FieldGuide
+                                                guidance={SERVICE_FIELD_GUIDANCE.workPlan.guidance}
+                                                mode="standard"
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+                                        <span className="text-xs font-bold text-slate-700">
+                                            Choose Reusable Work Workflow
+                                        </span>
                                         <button
                                             type="button"
-                                            onClick={() => setStep(1)}
-                                            className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                            onClick={() => setWorkModalOpen(true)}
+                                            className="self-start rounded-lg border border-[#0F2F58] px-3 py-1.5 text-xs font-bold text-[#0F2F58] hover:bg-[#EBF2FA] sm:self-auto"
                                         >
-                                            Back
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep(3)}
-                                            className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327]"
-                                        >
-                                            Continue to Work Plan
+                                            Browse All Compatible Sets
                                         </button>
                                     </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* STEP 3: Work Execution Plan */}
-                        {(builderMode === 'standard' || step === 3) && (
-                            <section className={`space-y-3.5 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
-                                {builderMode === 'guided' ? (
-                                    <div>
-                                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
-                                            {SERVICE_GUIDED_STEPS[2].guidedTitle}
-                                        </h2>
-                                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-                                            {SERVICE_GUIDED_STEPS[2].guidedDescription}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                                            Work Execution Plan
-                                        </h3>
-                                        <FieldGuide
-                                            guidance={SERVICE_FIELD_GUIDANCE.workPlan.guidance}
-                                            mode="standard"
-                                        />
-                                    </div>
-                                )}
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-slate-700">Choose Reusable Work Workflow</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => setWorkModalOpen(true)}
-                                        className="rounded-lg border border-[#0F2F58] px-3 py-1.5 text-xs font-bold text-[#0F2F58] hover:bg-[#EBF2FA]"
-                                    >
-                                        Browse All Compatible Sets
-                                    </button>
-                                </div>
 
                                     {suggestedWorkTemplates.length === 0 ? (
                                         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
                                             <p className="text-sm font-bold text-amber-950">
-                                                No category-specific work sets for {category === 'courier' ? 'Courier & Delivery' : category} yet
+                                                No category-specific work sets for{' '}
+                                                {category === 'courier'
+                                                    ? 'Courier & Delivery'
+                                                    : category}{' '}
+                                                yet
                                             </p>
                                             <p className="mt-1 text-xs text-amber-900">
-                                                Browse compatible service work sets to choose a workflow for this listing.
+                                                Browse compatible service work sets to choose a
+                                                workflow for this listing.
                                             </p>
                                             <button
                                                 type="button"
@@ -1551,14 +1676,18 @@ export default function CreateService({
                                                         }`}
                                                     >
                                                         <div className="flex items-start justify-between gap-2">
-                                                            <span className="text-xs font-extrabold text-slate-900">{tmpl.title}</span>
+                                                            <span className="text-xs font-extrabold text-slate-900">
+                                                                {tmpl.title}
+                                                            </span>
                                                             {tmpl.sla && (
                                                                 <span className="shrink-0 text-[10px] font-semibold text-slate-500">
                                                                     {tmpl.sla} target
-                                                                 </span>
+                                                                </span>
                                                             )}
                                                         </div>
-                                                        <p className="mt-1 text-[10.5px] text-slate-500">{tmpl.description}</p>
+                                                        <p className="mt-1 text-[10.5px] text-slate-500">
+                                                            {tmpl.description}
+                                                        </p>
                                                         <div className="mt-2 border-t border-slate-100 pt-2 text-[10px] text-slate-500">
                                                             {tmpl.stages.length} steps
                                                         </div>
@@ -1587,15 +1716,22 @@ export default function CreateService({
                                                                         : 'bg-emerald-100 text-emerald-800'
                                                                 }`}
                                                             >
-                                                                {isCustomizedFromTemplate ? 'Custom for this listing' : 'Published Work Set'}
+                                                                {isCustomizedFromTemplate
+                                                                    ? 'Custom for this listing'
+                                                                    : 'Published Work Set'}
                                                             </span>
                                                             {isCustomizedFromTemplate && (
                                                                 <span className="text-[10px] text-slate-500">
-                                                                    Based on {selectedTemplate.title}
-                                                                    {selectedTemplate.setVersion ? ` v${selectedTemplate.setVersion}` : ''}
+                                                                    Based on{' '}
+                                                                    {selectedTemplate.title}
+                                                                    {selectedTemplate.setVersion
+                                                                        ? ` v${selectedTemplate.setVersion}`
+                                                                        : ''}
                                                                 </span>
                                                             )}
-                                                            <span className="text-[10px] text-slate-500">{stages.length} steps</span>
+                                                            <span className="text-[10px] text-slate-500">
+                                                                {stages.length} steps
+                                                            </span>
                                                             {selectedTemplate.sla && (
                                                                 <span className="text-[10px] font-semibold text-slate-500">
                                                                     · {selectedTemplate.sla} target
@@ -1610,7 +1746,9 @@ export default function CreateService({
                                                     className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#0F2F58] px-3.5 py-2 text-xs font-extrabold text-white shadow-2xs hover:bg-[#153e74]"
                                                 >
                                                     <Sliders className="size-3.5 text-[#FFC72C]" />
-                                                    <span>Customize Work Steps ({stages.length})</span>
+                                                    <span>
+                                                        Customize Work Steps ({stages.length})
+                                                    </span>
                                                 </button>
                                             </div>
 
@@ -1619,56 +1757,62 @@ export default function CreateService({
                                                 <WorkPipelineCanvas
                                                     stages={stages}
                                                     flowType={selectedTemplate.flowType}
-                                                    onStageClick={() => setCustomizerModalOpen(true)}
+                                                    onStageClick={() =>
+                                                        setCustomizerModalOpen(true)
+                                                    }
                                                 />
                                             </div>
                                         </div>
                                     )}
-                                {builderMode === 'guided' && (
-                                    <div className="flex gap-2.5 pt-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep(2)}
-                                            className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                                        >
-                                            Back
-                                        </button>
-                                        <button
-                                            type="button"
-                                            disabled={!selectedTemplate.id}
-                                            onClick={() => setStep(4)}
-                                            className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327] disabled:opacity-50"
-                                        >
-                                            Continue to Deliverables
-                                        </button>
-                                    </div>
-                                )}
-                            </section>
-                        )}
+                                    {builderMode === 'guided' && (
+                                        <div className="flex gap-2.5 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep(2)}
+                                                className="shrink-0 cursor-pointer rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 sm:px-5"
+                                            >
+                                                Back
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={!selectedTemplate.id}
+                                                onClick={() => setStep(4)}
+                                                className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327] disabled:opacity-50"
+                                            >
+                                                Continue to Deliverables
+                                            </button>
+                                        </div>
+                                    )}
+                                </section>
+                            )}
 
-                        {/* STEP 4: Deliverables Checklist */}
-                        {(builderMode === 'standard' || step === 4) && (
-                            <div className={`space-y-3 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
-                                {builderMode === 'guided' ? (
-                                    <div>
-                                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
-                                            {SERVICE_GUIDED_STEPS[3].guidedTitle}
-                                        </h2>
-                                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-                                            {SERVICE_GUIDED_STEPS[3].guidedDescription}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                                            Deliverables Checklist ({inclusions.length})
-                                        </label>
-                                        <FieldGuide
-                                            guidance={SERVICE_FIELD_GUIDANCE.inclusions.guidance}
-                                            mode="standard"
-                                        />
-                                    </div>
-                                )}
+                            {/* STEP 4: Deliverables Checklist */}
+                            {(builderMode === 'standard' || step === 4) && (
+                                <div
+                                    className={`space-y-3 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}
+                                >
+                                    {builderMode === 'guided' ? (
+                                        <div>
+                                            <h2 className="text-base font-extrabold text-slate-900 sm:text-lg">
+                                                {SERVICE_GUIDED_STEPS[3].guidedTitle}
+                                            </h2>
+                                            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                                                {SERVICE_GUIDED_STEPS[3].guidedDescription}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                            <label className="text-xs font-bold tracking-wider text-slate-900 uppercase">
+                                                Deliverables Checklist ({inclusions.length})
+                                            </label>
+                                            <FieldGuide
+                                                guidance={
+                                                    SERVICE_FIELD_GUIDANCE.inclusions.guidance
+                                                }
+                                                mode="standard"
+                                            />
+                                        </div>
+                                    )}
 
                                     {inclusions.length === 0 ? (
                                         <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center">
@@ -1676,7 +1820,9 @@ export default function CreateService({
                                                 No deliverables added yet.
                                             </p>
                                             <p className="mt-0.5 text-[11px] text-slate-400">
-                                                Add what you physically perform for clients (e.g. Site Inspection, Labor, Parts Cleaning, or Handover).
+                                                Add what you physically perform for clients (e.g.
+                                                Site Inspection, Labor, Parts Cleaning, or
+                                                Handover).
                                             </p>
                                         </div>
                                     ) : (
@@ -1687,7 +1833,9 @@ export default function CreateService({
                                                     className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-[#FAFCFB] p-2.5 text-xs font-semibold text-slate-800"
                                                 >
                                                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                                                        <span className="font-extrabold text-emerald-700">✓</span>
+                                                        <span className="font-extrabold text-emerald-700">
+                                                            ✓
+                                                        </span>
                                                         <span className="truncate">{item}</span>
                                                     </div>
                                                     <button
@@ -1725,528 +1873,588 @@ export default function CreateService({
                                             <Plus className="mr-1 size-3.5" /> Add
                                         </button>
                                     </div>
-                                {builderMode === 'guided' && (
-                                    <div className="flex gap-2.5 pt-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep(3)}
-                                            className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                                        >
-                                            Back
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep(5)}
-                                            className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327]"
-                                        >
-                                            Continue to Base Location
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* STEP 5: Service Base & Dispatch Location */}
-                        {(builderMode === 'standard' || step === 5) && (
-                            <div className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
-                                {builderMode === 'guided' ? (
-                                    <div>
-                                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
-                                            {SERVICE_GUIDED_STEPS[4].guidedTitle}
-                                        </h2>
-                                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-                                            {SERVICE_GUIDED_STEPS[4].guidedDescription}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                                            Service Base &amp; Dispatch Location
-                                        </span>
-                                        <FieldGuide
-                                            guidance={SERVICE_FIELD_GUIDANCE.geography.guidance}
-                                            mode="standard"
-                                        />
-                                    </div>
-                                )}
-
-                                <TagudinLocationPicker
-                                    value={geography}
-                                    initialAddress="Tagudin Centro, Poblacion"
-                                    locationLabel={builderMode === 'guided' ? 'Service Base Barangay' : 'Service Base & Dispatch Location'}
-                                    addressPlaceholder="e.g. Master Tech Workshop, Rizal, Tagudin"
-                                    onChange={setGeography}
-                                />
-
-
-                                {builderMode === 'guided' && (
-                                    <div className="flex gap-2.5 pt-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep(4)}
-                                            className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                                        >
-                                            Back
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep(6)}
-                                            className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327]"
-                                        >
-                                            Continue to Pricing
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                    {/* STEP 6: Pricing & Rates */}
-                    {(builderMode === 'standard' || step === 6) && (
-                        <div className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
-                            {builderMode === 'guided' ? (
-                                <div>
-                                    <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
-                                        {SERVICE_GUIDED_STEPS[5].guidedTitle}
-                                    </h2>
-                                    <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-                                        {SERVICE_GUIDED_STEPS[5].guidedDescription}
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                                        Pricing Model &amp; Rates
-                                    </label>
-                                    <FieldGuide
-                                        guidance={SERVICE_FIELD_GUIDANCE.pricing.guidance}
-                                        mode="standard"
-                                    />
-                                </div>
-                            )}
-
-                                {/* Pricing Mode Switcher */}
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold text-slate-700">
-                                            {builderMode === 'guided'
-                                                ? SERVICE_FIELD_GUIDANCE.pricing.guidedLabel
-                                                : SERVICE_FIELD_GUIDANCE.pricing.advancedLabel}
-                                        </label>
-                                        <FieldGuide
-                                            guidance={SERVICE_FIELD_GUIDANCE.pricing.guidance}
-                                            mode={builderMode}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setPricingMode('fixed')}
-                                        className={`rounded-xl border py-2 text-center text-xs font-bold transition-all ${
-                                            pricingMode === 'fixed'
-                                                ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58]'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                                        }`}
-                                    >
-                                        Fixed Rate
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setPricingMode('range')}
-                                        className={`rounded-xl border py-2 text-center text-xs font-bold transition-all ${
-                                            pricingMode === 'range'
-                                                ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58]'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                                        }`}
-                                    >
-                                        Price Range
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setPricingMode('packages')}
-                                        className={`rounded-xl border py-2 text-center text-xs font-bold transition-all ${
-                                            pricingMode === 'packages'
-                                                ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58]'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                                        }`}
-                                    >
-                                        Package Tiers
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Pricing Inputs */}
-                            {pricingMode === 'fixed' && (
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-700">
-                                        Standard Rate (PHP)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={fixedPrice}
-                                        onChange={(e) => setFixedPrice(e.target.value)}
-                                        placeholder="e.g. 450"
-                                        min="0"
-                                        className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 font-mono text-sm font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
-                                    />
-                                </div>
-                            )}
-
-                            {pricingMode === 'range' && (
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-slate-700">
-                                            Min Rate (₱)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={rangeMin}
-                                            onChange={(e) => setRangeMin(e.target.value)}
-                                            placeholder="e.g. 350"
-                                            className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 font-mono text-sm font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-slate-700">
-                                            Max Rate (₱)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={rangeMax}
-                                            onChange={(e) => setRangeMax(e.target.value)}
-                                            placeholder="e.g. 700"
-                                            className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 font-mono text-sm font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            {pricingMode === 'packages' && (
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold text-slate-700">
-                                            Package Tiers ({packageTiers.length})
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onClick={addTier}
-                                            className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-extrabold text-[#0F2F58] hover:underline"
-                                        >
-                                            <Plus className="size-3" /> Add Tier
-                                        </button>
-                                    </div>
-
-                                    <div className="flex flex-col gap-2.5">
-                                        {packageTiers.map((tier, idx) => (
-                                            <div
-                                                key={tier.id || idx}
-                                                className="space-y-2 rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 shadow-2xs"
+                                    {builderMode === 'guided' && (
+                                        <div className="flex gap-2.5 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep(3)}
+                                                className="shrink-0 cursor-pointer rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 sm:px-5"
                                             >
-                                                <div className="flex items-center justify-between gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={tier.title}
-                                                        onChange={(e) =>
-                                                            updateTier(idx, 'title', e.target.value)
-                                                        }
-                                                        placeholder="Tier name (e.g. Basic, Standard, Full Day)..."
-                                                        className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
-                                                    />
-                                                    <div className="flex shrink-0 items-center gap-1">
-                                                        <span className="text-xs font-bold text-slate-500">
-                                                            ₱
-                                                        </span>
+                                                Back
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep(5)}
+                                                className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327]"
+                                            >
+                                                Continue to Base Location
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* STEP 5: Service Base & Dispatch Location */}
+                            {(builderMode === 'standard' || step === 5) && (
+                                <div
+                                    className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}
+                                >
+                                    {builderMode === 'guided' ? (
+                                        <div>
+                                            <h2 className="text-base font-extrabold text-slate-900 sm:text-lg">
+                                                {SERVICE_GUIDED_STEPS[4].guidedTitle}
+                                            </h2>
+                                            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                                                {SERVICE_GUIDED_STEPS[4].guidedDescription}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                            <span className="text-xs font-bold tracking-wider text-slate-900 uppercase">
+                                                Service Base &amp; Dispatch Location
+                                            </span>
+                                            <FieldGuide
+                                                guidance={SERVICE_FIELD_GUIDANCE.geography.guidance}
+                                                mode="standard"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <TagudinLocationPicker
+                                        value={geography}
+                                        initialAddress="Tagudin Centro, Poblacion"
+                                        locationLabel={
+                                            builderMode === 'guided'
+                                                ? 'Service Base Barangay'
+                                                : 'Service Base & Dispatch Location'
+                                        }
+                                        addressPlaceholder="e.g. Master Tech Workshop, Rizal, Tagudin"
+                                        onChange={setGeography}
+                                    />
+
+                                    {builderMode === 'guided' && (
+                                        <div className="flex gap-2.5 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep(4)}
+                                                className="shrink-0 cursor-pointer rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 sm:px-5"
+                                            >
+                                                Back
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep(6)}
+                                                className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327]"
+                                            >
+                                                Continue to Pricing
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* STEP 6: Pricing & Rates */}
+                            {(builderMode === 'standard' || step === 6) && (
+                                <div
+                                    className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}
+                                >
+                                    {builderMode === 'guided' ? (
+                                        <div>
+                                            <h2 className="text-base font-extrabold text-slate-900 sm:text-lg">
+                                                {SERVICE_GUIDED_STEPS[5].guidedTitle}
+                                            </h2>
+                                            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                                                {SERVICE_GUIDED_STEPS[5].guidedDescription}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                            <label className="text-xs font-bold tracking-wider text-slate-900 uppercase">
+                                                Pricing Model &amp; Rates
+                                            </label>
+                                            <FieldGuide
+                                                guidance={SERVICE_FIELD_GUIDANCE.pricing.guidance}
+                                                mode="standard"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Pricing Mode Switcher */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-bold text-slate-700">
+                                                {builderMode === 'guided'
+                                                    ? SERVICE_FIELD_GUIDANCE.pricing.guidedLabel
+                                                    : SERVICE_FIELD_GUIDANCE.pricing.advancedLabel}
+                                            </label>
+                                            <FieldGuide
+                                                guidance={SERVICE_FIELD_GUIDANCE.pricing.guidance}
+                                                mode={builderMode}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPricingMode('fixed')}
+                                                className={`rounded-xl border px-1 py-2 text-center text-[11px] font-bold transition-all sm:px-2 sm:text-xs ${
+                                                    pricingMode === 'fixed'
+                                                        ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58]'
+                                                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                                                }`}
+                                            >
+                                                Fixed Rate
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPricingMode('range')}
+                                                className={`rounded-xl border px-1 py-2 text-center text-[11px] font-bold transition-all sm:px-2 sm:text-xs ${
+                                                    pricingMode === 'range'
+                                                        ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58]'
+                                                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                                                }`}
+                                            >
+                                                Price Range
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPricingMode('packages')}
+                                                className={`rounded-xl border px-1 py-2 text-center text-[11px] font-bold transition-all sm:px-2 sm:text-xs ${
+                                                    pricingMode === 'packages'
+                                                        ? 'border-[#0F2F58] bg-[#EBF2FA] text-[#0F2F58]'
+                                                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                                                }`}
+                                            >
+                                                Package Tiers
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Pricing Inputs */}
+                                    {pricingMode === 'fixed' && (
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-slate-700">
+                                                Standard Rate (PHP)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={fixedPrice}
+                                                onChange={(e) => setFixedPrice(e.target.value)}
+                                                placeholder="e.g. 450"
+                                                min="0"
+                                                className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 font-mono text-sm font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {pricingMode === 'range' && (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-slate-700">
+                                                    Min Rate (₱)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    value={rangeMin}
+                                                    onChange={(e) => setRangeMin(e.target.value)}
+                                                    placeholder="e.g. 350"
+                                                    className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 font-mono text-sm font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-slate-700">
+                                                    Max Rate (₱)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    value={rangeMax}
+                                                    onChange={(e) => setRangeMax(e.target.value)}
+                                                    placeholder="e.g. 700"
+                                                    className="w-full rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2.5 font-mono text-sm font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {pricingMode === 'packages' && (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-xs font-bold text-slate-700">
+                                                    Package Tiers ({packageTiers.length})
+                                                </label>
+                                                <button
+                                                    type="button"
+                                                    onClick={addTier}
+                                                    className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-extrabold text-[#0F2F58] hover:underline"
+                                                >
+                                                    <Plus className="size-3" /> Add Tier
+                                                </button>
+                                            </div>
+
+                                            <div className="flex flex-col gap-2.5">
+                                                {packageTiers.map((tier, idx) => (
+                                                    <div
+                                                        key={tier.id || idx}
+                                                        className="space-y-2 rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 shadow-2xs"
+                                                    >
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <input
+                                                                type="text"
+                                                                value={tier.title}
+                                                                onChange={(e) =>
+                                                                    updateTier(
+                                                                        idx,
+                                                                        'title',
+                                                                        e.target.value,
+                                                                    )
+                                                                }
+                                                                placeholder="Tier name (e.g. Basic, Standard, Full Day)..."
+                                                                className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
+                                                            />
+                                                            <div className="flex shrink-0 items-center gap-1">
+                                                                <span className="text-xs font-bold text-slate-500">
+                                                                    ₱
+                                                                </span>
+                                                                <input
+                                                                    type="number"
+                                                                    value={
+                                                                        tier.price === 0
+                                                                            ? ''
+                                                                            : tier.price
+                                                                    }
+                                                                    onChange={(e) =>
+                                                                        updateTier(
+                                                                            idx,
+                                                                            'price',
+                                                                            e.target.value === ''
+                                                                                ? 0
+                                                                                : parseFloat(
+                                                                                      e.target
+                                                                                          .value,
+                                                                                  ) || 0,
+                                                                        )
+                                                                    }
+                                                                    placeholder="0.00"
+                                                                    className="w-20 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right font-mono text-xs font-extrabold text-[#0F2F58] outline-none focus:border-[#0F2F58]"
+                                                                />
+                                                            </div>
+                                                            {packageTiers.length > 1 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeTier(idx)}
+                                                                    className="cursor-pointer p-1 text-slate-400 hover:text-red-600"
+                                                                    aria-label="Remove tier"
+                                                                >
+                                                                    <Trash2 className="size-3.5" />
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                         <input
-                                                            type="number"
-                                                            value={tier.price === 0 ? '' : tier.price}
+                                                            type="text"
+                                                            value={tier.sub}
                                                             onChange={(e) =>
                                                                 updateTier(
                                                                     idx,
-                                                                    'price',
-                                                                    e.target.value === '' ? 0 : parseFloat(e.target.value) || 0,
+                                                                    'sub',
+                                                                    e.target.value,
                                                                 )
                                                             }
-                                                            placeholder="0.00"
-                                                            className="w-20 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right font-mono text-xs font-extrabold text-[#0F2F58] outline-none focus:border-[#0F2F58]"
+                                                            placeholder="Tier scope or inclusions (e.g. 2 hours labor, photo sign-off)..."
+                                                            className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600 outline-none focus:border-[#0F2F58]"
                                                         />
                                                     </div>
-                                                    {packageTiers.length > 1 && (
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Optional Customer Add-ons */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-bold text-slate-700">
+                                                Optional Customer Add-ons ({addons.length})
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={addAddon}
+                                                className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-extrabold text-[#0F2F58] hover:underline"
+                                            >
+                                                <Plus className="size-3" /> Add Add-on
+                                            </button>
+                                        </div>
+
+                                        <div className="flex flex-col gap-2.5">
+                                            {addons.map((addon, idx) => (
+                                                <div
+                                                    key={addon.id || idx}
+                                                    className="space-y-2 rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 shadow-2xs"
+                                                >
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <input
+                                                            type="text"
+                                                            value={addon.title}
+                                                            onChange={(e) =>
+                                                                updateAddon(
+                                                                    idx,
+                                                                    'title',
+                                                                    e.target.value,
+                                                                )
+                                                            }
+                                                            placeholder="Add-on title..."
+                                                            className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2F58]"
+                                                        />
+                                                        <div className="flex shrink-0 items-center gap-1">
+                                                            <span className="text-[10.5px] font-extrabold text-emerald-700">
+                                                                +₱
+                                                            </span>
+                                                            <input
+                                                                type="number"
+                                                                value={
+                                                                    addon.price_amount_minor / 100
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateAddon(
+                                                                        idx,
+                                                                        'price_amount_minor',
+                                                                        Math.round(
+                                                                            (parseFloat(
+                                                                                e.target.value,
+                                                                            ) || 0) * 100,
+                                                                        ),
+                                                                    )
+                                                                }
+                                                                className="w-18 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right font-mono text-xs font-extrabold text-[#0F2F58] outline-none focus:border-[#0F2F58]"
+                                                            />
+                                                        </div>
                                                         <button
                                                             type="button"
-                                                            onClick={() => removeTier(idx)}
+                                                            onClick={() => removeAddon(idx)}
                                                             className="cursor-pointer p-1 text-slate-400 hover:text-red-600"
-                                                            aria-label="Remove tier"
+                                                            aria-label="Remove addon"
                                                         >
                                                             <Trash2 className="size-3.5" />
                                                         </button>
-                                                    )}
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    value={tier.sub}
-                                                    onChange={(e) =>
-                                                        updateTier(idx, 'sub', e.target.value)
-                                                    }
-                                                    placeholder="Tier scope or inclusions (e.g. 2 hours labor, photo sign-off)..."
-                                                    className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600 outline-none focus:border-[#0F2F58]"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Optional Customer Add-ons */}
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold text-slate-700">
-                                        Optional Customer Add-ons ({addons.length})
-                                    </label>
-                                    <button
-                                        type="button"
-                                        onClick={addAddon}
-                                        className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-extrabold text-[#0F2F58] hover:underline"
-                                    >
-                                        <Plus className="size-3" /> Add Add-on
-                                    </button>
-                                </div>
-
-                                <div className="flex flex-col gap-2.5">
-                                    {addons.map((addon, idx) => (
-                                        <div
-                                            key={addon.id || idx}
-                                            className="space-y-2 rounded-xl border border-slate-200 bg-[#FAFCFB] p-3 shadow-2xs"
-                                        >
-                                            <div className="flex items-center justify-between gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={addon.title}
-                                                    onChange={(e) =>
-                                                        updateAddon(idx, 'title', e.target.value)
-                                                    }
-                                                    placeholder="Add-on title..."
-                                                    className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2F58]"
-                                                />
-                                                <div className="flex shrink-0 items-center gap-1">
-                                                    <span className="text-[10.5px] font-extrabold text-emerald-700">
-                                                        +₱
-                                                    </span>
+                                                    </div>
                                                     <input
-                                                        type="number"
-                                                        value={addon.price_amount_minor / 100}
+                                                        type="text"
+                                                        value={addon.description}
                                                         onChange={(e) =>
                                                             updateAddon(
                                                                 idx,
-                                                                'price_amount_minor',
-                                                                Math.round(
-                                                                    (parseFloat(e.target.value) ||
-                                                                        0) * 100,
-                                                                ),
+                                                                'description',
+                                                                e.target.value,
                                                             )
                                                         }
-                                                        className="w-18 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right font-mono text-xs font-extrabold text-[#0F2F58] outline-none focus:border-[#0F2F58]"
+                                                        placeholder="Add-on scope description..."
+                                                        className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600 outline-none focus:border-[#0F2F58]"
                                                     />
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeAddon(idx)}
-                                                    className="cursor-pointer p-1 text-slate-400 hover:text-red-600"
-                                                    aria-label="Remove addon"
-                                                >
-                                                    <Trash2 className="size-3.5" />
-                                                </button>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={addon.description}
-                                                onChange={(e) =>
-                                                    updateAddon(idx, 'description', e.target.value)
-                                                }
-                                                placeholder="Add-on scope description..."
-                                                className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600 outline-none focus:border-[#0F2F58]"
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {builderMode === 'guided' && (
+                                        <div className="flex gap-2.5 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep(5)}
+                                                className="shrink-0 cursor-pointer rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 sm:px-5"
+                                            >
+                                                Back
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={pricingMode === 'fixed' && !fixedPrice}
+                                                onClick={() => setStep(7)}
+                                                className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327] disabled:opacity-50"
+                                            >
+                                                Continue to Partners
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* STEP 7: Partner Extensions & Review */}
+                            {(builderMode === 'standard' || step === 7) && (
+                                <div
+                                    className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}
+                                >
+                                    {builderMode === 'guided' ? (
+                                        <div>
+                                            <h2 className="text-base font-extrabold text-slate-900 sm:text-lg">
+                                                {SERVICE_GUIDED_STEPS[6].guidedTitle}
+                                            </h2>
+                                            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                                                {SERVICE_GUIDED_STEPS[6].guidedDescription}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                            <label className="text-xs font-bold tracking-wider text-slate-900 uppercase">
+                                                Partnered Deal Chains &amp; Summary
+                                            </label>
+                                            <FieldGuide
+                                                guidance={SERVICE_FIELD_GUIDANCE.dealChain.guidance}
+                                                mode="standard"
                                             />
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {builderMode === 'guided' && (
-                                <div className="flex gap-2.5 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(5)}
-                                        className="flex-1 cursor-pointer rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                                    >
-                                        Back
-                                    </button>
-                                    <button
-                                        type="button"
-                                        disabled={pricingMode === 'fixed' && !fixedPrice}
-                                        onClick={() => setStep(7)}
-                                        className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327] disabled:opacity-50"
-                                    >
-                                        Continue to Partners
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* STEP 7: Partner Extensions & Review */}
-                    {(builderMode === 'standard' || step === 7) && (
-                        <div className={`space-y-4 ${builderMode === 'standard' ? 'border-t border-slate-200/80 pt-5' : ''}`}>
-                            {builderMode === 'guided' ? (
-                                <div>
-                                    <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
-                                        {SERVICE_GUIDED_STEPS[6].guidedTitle}
-                                    </h2>
-                                    <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-                                        {SERVICE_GUIDED_STEPS[6].guidedDescription}
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                                        Partnered Deal Chains &amp; Summary
-                                    </label>
-                                    <FieldGuide
-                                        guidance={SERVICE_FIELD_GUIDANCE.dealChain.guidance}
-                                        mode="standard"
-                                    />
-                                </div>
-                            )}
-                            {!isAuthenticated && (
-                                <div
-                                    data-testid="guest-save-notice"
-                                    role="status"
-                                    className="rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-3 text-xs text-blue-950"
-                                >
-                                    Sign in is required to save. Your work will be restored when you return.
-                                </div>
-                            )}
-
-                            {draftRestored && (
-                                <div
-                                    data-testid="draft-restored-notice"
-                                    role="status"
-                                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-xs font-semibold text-emerald-950"
-                                >
-                                    {isAuthenticated
-                                        ? 'Draft restored. Select Save Private Draft to create it.'
-                                        : 'Draft restored. Sign in to save it.'}
-                                </div>
-                            )}
-
-                            {formErrors.form && (
-                                <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-semibold text-red-800">
-                                    {formErrors.form}
-                                </div>
-                            )}
-
-                            {/* Section 3: Partnered Options & Deal Chain Carousel matching listing-service-editor.html:2010-2058 */}
-                            <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                                    <div>
-                                        <div className="text-[11px] font-extrabold tracking-wider text-[#0F2F58] uppercase">
-                                            Partnered Options
+                                    )}
+                                    {!isAuthenticated && (
+                                        <div
+                                            data-testid="guest-save-notice"
+                                            role="status"
+                                            className="rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-3 text-xs text-blue-950"
+                                        >
+                                            Sign in is required to save. Your work will be restored
+                                            when you return.
                                         </div>
-                                        <div className="text-[9.5px] text-slate-500">
-                                            Customer-selectable Deal Chain combinations
+                                    )}
+
+                                    {draftRestored && (
+                                        <div
+                                            data-testid="draft-restored-notice"
+                                            role="status"
+                                            className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-xs font-semibold text-emerald-950"
+                                        >
+                                            {isAuthenticated
+                                                ? 'Draft restored. Select Save Private Draft to create it.'
+                                                : 'Draft restored. Sign in to save it.'}
+                                        </div>
+                                    )}
+
+                                    {formErrors.form && (
+                                        <div
+                                            role="alert"
+                                            className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-semibold text-red-800"
+                                        >
+                                            {formErrors.form}
+                                        </div>
+                                    )}
+
+                                    {/* Section 3: Partnered Options & Deal Chain Carousel matching listing-service-editor.html:2010-2058 */}
+                                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                            <div>
+                                                <div className="text-[11px] font-extrabold tracking-wider text-[#0F2F58] uppercase">
+                                                    Partnered Options
+                                                </div>
+                                                <div className="text-[9.5px] text-slate-500">
+                                                    Customer-selectable Deal Chain combinations
+                                                </div>
+                                            </div>
+                                            <span className="rounded-full bg-[#0F2F58] px-2 py-0.5 text-[9px] font-extrabold text-white uppercase">
+                                                Deal Chain
+                                            </span>
+                                        </div>
+
+                                        <DealChainCarousel
+                                            combinations={combinations}
+                                            activeIndex={activeComboIndex}
+                                            onIndexChange={setActiveComboIndex}
+                                            onSlotChangeClick={(comboId, slotType) =>
+                                                setSlotPickerTarget({ comboId, slotType })
+                                            }
+                                            onToggleDefault={handleToggleComboDefault}
+                                            onRemoveCombo={handleRemoveCombo}
+                                            onAddComboClick={() => setAttachChainModalOpen(true)}
+                                            onCustomizeComboClick={(comboId) => {
+                                                setCustomizingComboId(comboId);
+                                                setDealChainStudioOpen(true);
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Summary Review Card */}
+                                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-[#FAFCFB] p-4 shadow-xs">
+                                        <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                                            <span className="rounded-full bg-[#EBF2FA] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0F2F58] uppercase">
+                                                {category}
+                                            </span>
+                                            <span className="font-mono text-base font-extrabold text-[#0F2F58]">
+                                                ₱{(effectivePriceMinor / 100).toFixed(2)}
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-sm font-extrabold text-slate-900">
+                                                {title}
+                                            </h3>
+                                            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                                                {description ||
+                                                    'Governed Tagudin trade service offering.'}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 pt-1 text-[11px] font-semibold text-amber-800">
+                                            <ShieldCheck className="size-4 shrink-0 text-amber-700" />
+                                            <span>
+                                                Saved as a private draft; review submission is a
+                                                separate step.
+                                            </span>
                                         </div>
                                     </div>
-                                    <span className="rounded-full bg-[#0F2F58] px-2 py-0.5 text-[9px] font-extrabold text-white uppercase">
-                                        Deal Chain
-                                    </span>
-                                </div>
 
-                                <DealChainCarousel
-                                    combinations={combinations}
-                                    activeIndex={activeComboIndex}
-                                    onIndexChange={setActiveComboIndex}
-                                    onSlotChangeClick={(comboId, slotType) =>
-                                        setSlotPickerTarget({ comboId, slotType })
-                                    }
-                                    onToggleDefault={handleToggleComboDefault}
-                                    onRemoveCombo={handleRemoveCombo}
-                                    onAddComboClick={() => setAttachChainModalOpen(true)}
-                                    onCustomizeComboClick={(comboId) => {
-                                        setCustomizingComboId(comboId);
-                                        setDealChainStudioOpen(true);
-                                    }}
-                                />
-                            </div>
-
-                            {/* Summary Review Card */}
-                            <div className="space-y-3 rounded-2xl border border-slate-200 bg-[#FAFCFB] p-4 shadow-xs">
-                                <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
-                                    <span className="rounded-full bg-[#EBF2FA] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0F2F58] uppercase">
-                                        {category}
-                                    </span>
-                                    <span className="font-mono text-base font-extrabold text-[#0F2F58]">
-                                        ₱{(effectivePriceMinor / 100).toFixed(2)}
-                                    </span>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-sm font-extrabold text-slate-900">
-                                        {title}
-                                    </h3>
-                                    <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                                        {description || 'Governed Tagudin trade service offering.'}
-                                    </p>
-                                </div>
-
-                                <div className="flex items-center gap-2 pt-1 text-[11px] font-semibold text-amber-800">
-                                    <ShieldCheck className="size-4 shrink-0 text-amber-700" />
-                                    <span>
-                                        Saved as a private draft; review submission is a separate
-                                        step.
-                                    </span>
-                                </div>
-                            </div>
-
-                            {builderMode === 'guided' ? (
-                                <div className="flex gap-2.5 pt-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(6)}
-                                        className="cursor-pointer rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                                    >
-                                        Back
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting || !title.trim()}
-                                        className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#0F2F58] py-3 text-xs font-bold text-white shadow-xs hover:bg-[#153e74] disabled:opacity-50"
-                                    >
-                                        {isSubmitting ? 'Saving listing...' : isAuthenticated ? 'Publish Service Listing' : 'Sign in to Publish'}
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="sticky bottom-4 z-20 flex items-center justify-between rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-xl backdrop-blur-md">
-                                    <div>
-                                        <span className="text-xs font-extrabold text-[#0F2F58]">Standard All-in-One Form</span>
-                                        <p className="text-[11px] text-slate-500">All sections visible · Ready to save</p>
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting || !title.trim() || !selectedTemplate.id}
-                                        className="cursor-pointer rounded-xl bg-[#0F2F58] px-6 py-3 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74] disabled:opacity-50"
-                                    >
-                                        {isSubmitting ? 'Saving draft...' : isAuthenticated ? 'Save Private Draft' : 'Sign in to Save Draft'}
-                                    </button>
+                                    {builderMode === 'guided' ? (
+                                        <div className="flex gap-2.5 pt-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep(6)}
+                                                className="cursor-pointer rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                            >
+                                                Back
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                disabled={isSubmitting || !title.trim()}
+                                                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#0F2F58] py-3 text-xs font-bold text-white shadow-xs hover:bg-[#153e74] disabled:opacity-50"
+                                            >
+                                                {isSubmitting
+                                                    ? 'Saving listing...'
+                                                    : isAuthenticated
+                                                      ? 'Publish Service Listing'
+                                                      : 'Sign in to Publish'}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="sticky bottom-4 z-20 flex flex-col gap-3 rounded-2xl border border-slate-200/90 bg-white/95 p-3.5 shadow-xl backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                                            <div>
+                                                <span className="text-xs font-extrabold text-[#0F2F58]">
+                                                    Standard All-in-One Form
+                                                </span>
+                                                <p className="text-[11px] text-slate-500">
+                                                    All sections visible · Ready to save
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="submit"
+                                                disabled={
+                                                    isSubmitting ||
+                                                    !title.trim() ||
+                                                    !selectedTemplate.id
+                                                }
+                                                className="w-full cursor-pointer rounded-xl bg-[#0F2F58] px-6 py-3 text-center text-xs font-extrabold text-white shadow-md hover:bg-[#153e74] disabled:opacity-50 sm:w-auto"
+                                            >
+                                                {isSubmitting
+                                                    ? 'Saving draft...'
+                                                    : isAuthenticated
+                                                      ? 'Save Private Draft'
+                                                      : 'Sign in to Save Draft'}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                        </div>
-                    )}
-                    </form>
+                        </form>
                         {/* Bottom Mode Switcher for Mobile & Desktop */}
                         {/* Bottom Mode Switcher for Mobile only */}
-                        <div className="sm:hidden flex justify-center border-t border-slate-100 pt-3 pb-1">
+                        <div className="flex justify-center border-t border-slate-100 pt-3 pb-1 sm:hidden">
                             <button
                                 type="button"
                                 data-testid="bottom-mode-switcher-btn"
-                                onClick={() => setBuilderMode((m) => (m === 'guided' ? 'standard' : 'guided'))}
-                                className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
+                                onClick={() =>
+                                    setBuilderMode((m) => (m === 'guided' ? 'standard' : 'guided'))
+                                }
+                                className="inline-flex cursor-pointer items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
                             >
                                 <span>⚡</span>
                                 <span>
@@ -2264,24 +2472,23 @@ export default function CreateService({
                     </aside>
                 </div>
 
-
                 {/* Mobile Customer Twin Modal Sheet */}
                 {mobilePreviewOpen && (
                     <div className="fixed inset-0 z-50 flex items-end bg-slate-900/60 backdrop-blur-xs lg:hidden">
                         <div className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl">
-                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                                <span className="font-extrabold text-[#0F2F58] text-sm">Live Listing Preview</span>
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                <span className="text-sm font-extrabold text-[#0F2F58]">
+                                    Live Listing Preview
+                                </span>
                                 <button
                                     type="button"
                                     onClick={() => setMobilePreviewOpen(false)}
-                                    className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+                                    className="cursor-pointer rounded-full p-1 text-slate-400 hover:text-slate-700"
                                 >
                                     <X className="size-5" />
                                 </button>
                             </div>
-                            <div className="pt-3">
-                                {renderCustomerLiveTwin()}
-                            </div>
+                            <div className="pt-3">{renderCustomerLiveTwin()}</div>
                         </div>
                     </div>
                 )}
@@ -2321,7 +2528,9 @@ export default function CreateService({
                     open={Boolean(slotPickerTarget)}
                     onClose={() => setSlotPickerTarget(null)}
                     role={slotPickerTarget?.slotType || 'store'}
-                    candidates={slotCandidateListings.length > 0 ? slotCandidateListings : undefined}
+                    candidates={
+                        slotCandidateListings.length > 0 ? slotCandidateListings : undefined
+                    }
                     onSelectCandidate={handleSwapSlot}
                     onSelectOpenSlot={handleSelectOpenSlot}
                 />
@@ -2353,7 +2562,7 @@ export default function CreateService({
                     }}
                     combination={
                         customizingComboId
-                            ? combinations.find((c) => c.id === customizingComboId) ?? null
+                            ? (combinations.find((c) => c.id === customizingComboId) ?? null)
                             : null
                     }
                     primaryListingTitle={title}

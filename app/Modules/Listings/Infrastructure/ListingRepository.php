@@ -77,8 +77,8 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                         'municipality_name' => 'Tagudin',
                         'postal_code' => '2714',
                     ],
-                    (!empty($input['geography']) && is_array($input['geography'])) ? $input['geography'] : [],
-                    !empty($input['stall_location']) ? [
+                    (! empty($input['geography']) && is_array($input['geography'])) ? $input['geography'] : [],
+                    ! empty($input['stall_location']) ? [
                         'stall_location' => (string) $input['stall_location'],
                         'address_line_1' => (string) $input['stall_location'],
                         'street_address' => (string) $input['stall_location'],
@@ -179,7 +179,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 $currentGeo = is_array($listing->geography)
                     ? $listing->geography
                     : (json_decode((string) ($listing->geography ?? ''), true) ?: ['area_code' => 'Tagudin']);
-                $incomingGeo = (!empty($payload['geography']) && is_array($payload['geography'])) ? $payload['geography'] : [];
+                $incomingGeo = (! empty($payload['geography']) && is_array($payload['geography'])) ? $payload['geography'] : [];
                 $stallLocation = (string) ($payload['stall_location'] ?? ($incomingGeo['stall_location'] ?? ($incomingGeo['address_line_1'] ?? '')));
                 $streetAddress = (string) ($incomingGeo['street_address'] ?? ($incomingGeo['address_line_1'] ?? $stallLocation));
 
@@ -303,6 +303,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'inclusions' => $terms['inclusions'] ?? null,
                 'variants' => $terms['variants'] ?? null,
                 'pricing_mode' => $terms['pricing_mode'] ?? null,
+                'price_amount_minor' => $current->price_amount_minor,
                 'currency' => $current->currency,
             ]), $correlationId, $now, $pins);
 
@@ -348,6 +349,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             return $response;
         });
     }
+
     public function pause(
         string $listingId,
         ResourceActor $actor,
@@ -940,10 +942,10 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 $projection[$stringField] = $terms[$stringField];
             }
         }
-        if (isset($geography['stall_location']) && is_string($geography['stall_location']) && !isset($projection['stall_location'])) {
+        if (isset($geography['stall_location']) && is_string($geography['stall_location']) && ! isset($projection['stall_location'])) {
             $projection['stall_location'] = $geography['stall_location'];
         }
-        if (!isset($projection['geography']) && $geography !== []) {
+        if (! isset($projection['geography']) && $geography !== []) {
             $projection['geography'] = $geography;
         }
 

@@ -10,12 +10,16 @@ describe('PicksDrawer', () => {
             title: 'Inverter Split AC Deep Clean',
             price: 450,
             quantity: 1,
+            category_code: 'repairs',
+            listing_type: 'service',
         },
         {
             id: 'item-2',
             title: 'Weekend bibingka tray',
             price: 180,
             quantity: 2,
+            category_code: 'local-food',
+            listing_type: 'product',
         },
     ];
 
@@ -25,14 +29,31 @@ describe('PicksDrawer', () => {
             title: 'Inverter Split AC Deep Clean',
             price: 665,
             quantity: 1,
+            category_code: 'repairs',
+            listing_type: 'service',
             dealChain: {
                 recipeId: 'turnkey_parts',
                 title: 'Turnkey Sourced Parts',
                 extraFee: 215,
                 nodes: [
-                    { role: 'STORE', title: 'Tagudin Hardware & Supply Depot', sub: 'Part inventory', type: 'store' },
-                    { role: 'COURIER', title: 'Danny Express Motorcycle Pool', sub: 'Transit', type: 'delivery' },
-                    { role: 'LABOR', title: 'Kuya Ben Aircon Services', sub: 'Execution', type: 'labor' },
+                    {
+                        role: 'STORE',
+                        title: 'Tagudin Hardware & Supply Depot',
+                        sub: 'Partner quote required',
+                        type: 'store',
+                    },
+                    {
+                        role: 'COURIER',
+                        title: 'Danny Express Motorcycle Pool',
+                        sub: 'Partner quote required',
+                        type: 'delivery',
+                    },
+                    {
+                        role: 'LABOR',
+                        title: 'Kuya Ben Aircon Services',
+                        sub: 'Provider agreement required',
+                        type: 'labor',
+                    },
                 ],
             },
         },
@@ -74,7 +95,7 @@ describe('PicksDrawer', () => {
         expect(screen.getByRole('button', { name: 'Explore Marketplace' })).toBeTruthy();
     });
 
-    it('renders standalone items without fake deal chain section', () => {
+    it('renders standalone items without a planned chain section', () => {
         render(
             <PicksDrawer
                 open={true}
@@ -86,24 +107,16 @@ describe('PicksDrawer', () => {
             />,
         );
 
-        // Check header count: 1 + 2 = 3 items
-        expect(screen.getByText(/3 items staged for escrow/i)).toBeTruthy();
-
-        // Check item titles
+        expect(screen.getByText(/3 items staged for review/i)).toBeTruthy();
         expect(screen.getByText('Inverter Split AC Deep Clean')).toBeTruthy();
         expect(screen.getByText('Weekend bibingka tray')).toBeTruthy();
-
-        // Check prices: 450 + (180 * 2) = 450 + 360 = 810
         expect(screen.getAllByText('₱450.00').length).toBeGreaterThanOrEqual(1);
         expect(screen.getAllByText('₱180.00').length).toBeGreaterThanOrEqual(1);
         expect(screen.getAllByText('₱810.00').length).toBeGreaterThanOrEqual(1);
-
-        // Protection banner should NOT be present when no deal chains are attached
-        expect(screen.queryByText(/Attached Deal Chain Child Orders/i)).toBeNull();
-        expect(screen.queryByText(/Non-Cascading Settlement Protection/i)).toBeNull();
+        expect(screen.queryByText(/Planned Deal Chain Nodes/i)).toBeNull();
     });
 
-    it('renders child orders and settlement protection when deal chain is attached', () => {
+    it('renders attached deal chain pipeline on item card and omits redundant planned nodes section', () => {
         render(
             <PicksDrawer
                 open={true}
@@ -115,10 +128,16 @@ describe('PicksDrawer', () => {
             />,
         );
 
-        expect(screen.getByText(/Attached Deal Chain Child Orders/i)).toBeTruthy();
-        expect(screen.getByText(/Non-Cascading Settlement Protection/i)).toBeTruthy();
-        expect(screen.getAllByText('Tagudin Hardware & Supply Depot').length).toBeGreaterThanOrEqual(1);
-        expect(screen.getAllByText('Danny Express Motorcycle Pool').length).toBeGreaterThanOrEqual(1);
+        expect(screen.queryByText(/Planned Deal Chain Nodes/i)).toBeNull();
+        expect(screen.queryByText(/Planning projection only/i)).toBeNull();
+        expect(screen.getByText('Turnkey Sourced Parts')).toBeTruthy();
+        expect(screen.getByText('3 Planned')).toBeTruthy();
+        expect(
+            screen.getAllByText('Tagudin Hardware & Supply Depot').length,
+        ).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('Danny Express Motorcycle Pool').length).toBeGreaterThanOrEqual(
+            1,
+        );
         expect(screen.getAllByText('Kuya Ben Aircon Services').length).toBeGreaterThanOrEqual(1);
     });
 
@@ -137,17 +156,10 @@ describe('PicksDrawer', () => {
             />,
         );
 
-        // Click "+ Attach Deal Chain" on item 1
-        const attachButtons = screen.getAllByText(/\+ Attach Deal Chain/i);
-        fireEvent.click(attachButtons[0]);
+        fireEvent.click(screen.getAllByText(/\+ Attach Deal Chain/i)[0]);
 
-        // Bundle & Chain Services Modal opens
         expect(screen.getByText('Bundle & Chain Services')).toBeTruthy();
-        const turnkeyOption = screen.getByText(/All-In Parts/i);
-        expect(turnkeyOption).toBeTruthy();
-
-        // Click Turnkey recipe
-        fireEvent.click(turnkeyOption);
+        fireEvent.click(screen.getByText(/All-In Parts/i));
         expect(onAttachDealChain).toHaveBeenCalledWith('item-1', 'turnkey_parts');
     });
 
@@ -166,20 +178,17 @@ describe('PicksDrawer', () => {
             />,
         );
 
-        const incButtons = screen.getAllByRole('button', { name: 'Increase quantity' });
-        fireEvent.click(incButtons[0]);
+        fireEvent.click(screen.getAllByRole('button', { name: 'Increase quantity' })[0]);
         expect(onUpdateQuantity).toHaveBeenCalledWith('item-1', 1);
 
-        const decButtons = screen.getAllByRole('button', { name: 'Decrease quantity' });
-        fireEvent.click(decButtons[0]);
+        fireEvent.click(screen.getAllByRole('button', { name: 'Decrease quantity' })[0]);
         expect(onUpdateQuantity).toHaveBeenCalledWith('item-1', -1);
 
-        const removeButtons = screen.getAllByRole('button', { name: 'Remove item' });
-        fireEvent.click(removeButtons[1]);
+        fireEvent.click(screen.getAllByRole('button', { name: 'Remove item' })[1]);
         expect(onRemoveItem).toHaveBeenCalledWith('item-2');
     });
 
-    it('handles close and checkout actions', () => {
+    it('handles close and plan review actions', () => {
         const onClose = vi.fn();
         const onCheckout = vi.fn();
 
@@ -194,12 +203,10 @@ describe('PicksDrawer', () => {
             />,
         );
 
-        const closeBtn = screen.getByRole('button', { name: 'Close drawer' });
-        fireEvent.click(closeBtn);
+        fireEvent.click(screen.getByRole('button', { name: 'Close drawer' }));
         expect(onClose).toHaveBeenCalled();
 
-        const checkoutBtn = screen.getByRole('button', { name: /Proceed to Escrow Checkout/i });
-        fireEvent.click(checkoutBtn);
+        fireEvent.click(screen.getByRole('button', { name: /Confirm|Review/i }));
         expect(onCheckout).toHaveBeenCalled();
     });
 });

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Architecture;
 
-use App\Modules\IdentityAccess\Module;
+use App\Modules\Catalogs\Module as CatalogsModule;
+use App\Modules\IdentityAccess\Module as IdentityAccessModule;
+use App\Modules\Listings\Module;
 use App\Shared\Contracts\ModuleContract;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -38,8 +40,9 @@ final class ModuleDependencyTest extends TestCase
     public static function moduleProvider(): array
     {
         return [
-            'identity/access' => [Module::class],
-            'listings' => [\App\Modules\Listings\Module::class],
+            'identity/access' => [IdentityAccessModule::class],
+            'catalogs' => [CatalogsModule::class],
+            'listings' => [Module::class],
             'orders/work' => [\App\Modules\OrdersWork\Module::class],
             'payment obligations' => [\App\Modules\PaymentObligations\Module::class],
             'trust/support' => [\App\Modules\TrustSupport\Module::class],

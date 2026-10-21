@@ -104,7 +104,10 @@ export function PartnerSelectionDrawer({
     if (!open || !role) return null;
 
     return (
-        <div className="fixed inset-0 z-50 overflow-hidden" style={{ overscrollBehavior: 'contain' }}>
+        <div
+            className="fixed inset-0 z-50 overflow-hidden"
+            style={{ overscrollBehavior: 'contain' }}
+        >
             {/* Backdrop */}
             <div
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
@@ -113,8 +116,8 @@ export function PartnerSelectionDrawer({
             />
 
             {/* Slide-over Drawer from the right */}
-            <div className="fixed inset-0 lg:inset-y-0 lg:left-auto lg:right-0 flex w-full lg:max-w-lg z-50">
-                <div className="w-full h-full bg-white shadow-2xl flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif] overscroll-contain">
+            <div className="fixed inset-0 z-50 flex w-full lg:inset-y-0 lg:right-0 lg:left-auto lg:max-w-lg">
+                <div className="flex h-full w-full flex-col justify-between overscroll-contain bg-white font-['Plus_Jakarta_Sans',sans-serif] shadow-2xl">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3.5 sm:px-6">
                         <div className="flex items-center gap-2.5">
@@ -122,7 +125,7 @@ export function PartnerSelectionDrawer({
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex size-8 lg:hidden items-center justify-center rounded-full text-slate-700 hover:bg-slate-100 cursor-pointer"
+                                className="flex size-8 cursor-pointer items-center justify-center rounded-full text-slate-700 hover:bg-slate-100 lg:hidden"
                                 aria-label="Back"
                             >
                                 <ArrowLeft className="size-5" />
@@ -136,7 +139,7 @@ export function PartnerSelectionDrawer({
                             </div>
 
                             <div>
-                                <h2 className="text-sm sm:text-base font-extrabold text-[#0F2F58]">
+                                <h2 className="text-sm font-extrabold text-[#0F2F58] sm:text-base">
                                     {title}
                                 </h2>
                                 <p className="text-[11px] text-slate-500">
@@ -149,7 +152,7 @@ export function PartnerSelectionDrawer({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="hidden lg:flex size-8 cursor-pointer items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                            className="hidden size-8 cursor-pointer items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 lg:flex"
                             aria-label="Close drawer"
                         >
                             <X className="size-5" />
@@ -157,7 +160,7 @@ export function PartnerSelectionDrawer({
                     </div>
 
                     {/* Filter & Search Bar */}
-                    <div className="border-b border-slate-100 px-4 py-3 sm:px-6 bg-slate-50/70 space-y-2.5">
+                    <div className="space-y-2.5 border-b border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-6">
                         <div className="relative">
                             <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-slate-400" />
                             <input
@@ -165,16 +168,16 @@ export function PartnerSelectionDrawer({
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder={`Search verified ${role}s by name or specialty...`}
-                                className="h-9 w-full rounded-full border border-slate-200 bg-white pr-4 pl-9 text-xs text-slate-900 outline-none focus:border-[#0F2F58] shadow-xs"
+                                className="h-9 w-full rounded-full border border-slate-200 bg-white pr-4 pl-9 text-xs text-slate-900 shadow-xs outline-none focus:border-[#0F2F58]"
                             />
                         </div>
 
                         {/* Role-specific Filter Chips */}
-                        <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
+                        <div className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto">
                             <button
                                 type="button"
                                 onClick={() => setCategoryFilter('all')}
-                                className={`rounded-full px-3 py-1 text-[10.5px] font-bold cursor-pointer transition-colors ${
+                                className={`cursor-pointer rounded-full px-3 py-1 text-[10.5px] font-bold transition-colors ${
                                     categoryFilter === 'all'
                                         ? 'bg-[#0F2F58] text-white shadow-xs'
                                         : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -188,7 +191,7 @@ export function PartnerSelectionDrawer({
                                     <button
                                         type="button"
                                         onClick={() => setCategoryFilter('depot')}
-                                        className={`rounded-full px-3 py-1 text-[10.5px] font-bold cursor-pointer transition-colors ${
+                                        className={`cursor-pointer rounded-full px-3 py-1 text-[10.5px] font-bold transition-colors ${
                                             categoryFilter === 'depot'
                                                 ? 'bg-[#0F2F58] text-white shadow-xs'
                                                 : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -199,7 +202,7 @@ export function PartnerSelectionDrawer({
                                     <button
                                         type="button"
                                         onClick={() => setCategoryFilter('oem')}
-                                        className={`rounded-full px-3 py-1 text-[10.5px] font-bold cursor-pointer transition-colors ${
+                                        className={`cursor-pointer rounded-full px-3 py-1 text-[10.5px] font-bold transition-colors ${
                                             categoryFilter === 'oem'
                                                 ? 'bg-[#0F2F58] text-white shadow-xs'
                                                 : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -215,7 +218,7 @@ export function PartnerSelectionDrawer({
                                     <button
                                         type="button"
                                         onClick={() => setCategoryFilter('motorcycle')}
-                                        className={`rounded-full px-3 py-1 text-[10.5px] font-bold cursor-pointer transition-colors ${
+                                        className={`cursor-pointer rounded-full px-3 py-1 text-[10.5px] font-bold transition-colors ${
                                             categoryFilter === 'motorcycle'
                                                 ? 'bg-[#0F2F58] text-white shadow-xs'
                                                 : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -226,7 +229,7 @@ export function PartnerSelectionDrawer({
                                     <button
                                         type="button"
                                         onClick={() => setCategoryFilter('tricycle')}
-                                        className={`rounded-full px-3 py-1 text-[10.5px] font-bold cursor-pointer transition-colors ${
+                                        className={`cursor-pointer rounded-full px-3 py-1 text-[10.5px] font-bold transition-colors ${
                                             categoryFilter === 'tricycle'
                                                 ? 'bg-[#0F2F58] text-white shadow-xs'
                                                 : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -242,7 +245,7 @@ export function PartnerSelectionDrawer({
                                     <button
                                         type="button"
                                         onClick={() => setCategoryFilter('hvac')}
-                                        className={`rounded-full px-3 py-1 text-[10.5px] font-bold cursor-pointer transition-colors ${
+                                        className={`cursor-pointer rounded-full px-3 py-1 text-[10.5px] font-bold transition-colors ${
                                             categoryFilter === 'hvac'
                                                 ? 'bg-[#0F2F58] text-white shadow-xs'
                                                 : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -253,7 +256,7 @@ export function PartnerSelectionDrawer({
                                     <button
                                         type="button"
                                         onClick={() => setCategoryFilter('electrician')}
-                                        className={`rounded-full px-3 py-1 text-[10.5px] font-bold cursor-pointer transition-colors ${
+                                        className={`cursor-pointer rounded-full px-3 py-1 text-[10.5px] font-bold transition-colors ${
                                             categoryFilter === 'electrician'
                                                 ? 'bg-[#0F2F58] text-white shadow-xs'
                                                 : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -267,10 +270,11 @@ export function PartnerSelectionDrawer({
                     </div>
 
                     {/* Scrollable Body: Partner List */}
-                    <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 space-y-3">
+                    <div className="flex-1 space-y-3 overflow-y-auto px-4 py-5 sm:px-6">
                         {filteredCandidates.length === 0 ? (
                             <div className="py-12 text-center text-xs text-slate-500">
-                                No verified {role}s match &ldquo;{search}&rdquo;. Try another search term.
+                                No verified {role}s match &ldquo;{search}&rdquo;. Try another search
+                                term.
                             </div>
                         ) : (
                             filteredCandidates.map((cand) => {
@@ -285,15 +289,31 @@ export function PartnerSelectionDrawer({
                                         className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
                                             isSelected
                                                 ? 'border-[#0F2F58] bg-[#F8FAFD] shadow-xs ring-1 ring-[#0F2F58]'
-                                                : 'border-slate-200 bg-white hover:border-[#0F2F58]/50 hover:bg-slate-50/80 shadow-xs'
+                                                : 'border-slate-200 bg-white shadow-xs hover:border-[#0F2F58]/50 hover:bg-slate-50/80'
                                         }`}
                                     >
                                         <div className="flex items-start gap-3">
-                                            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-[#0F2F58] font-bold mt-0.5">
-                                                {cand.icon === 'truck' && <Truck className="size-4.5" />}
-                                                {cand.icon === 'labor' && <Wrench className="size-4.5" />}
-                                                {cand.icon === 'store' && <Store className="size-4.5" />}
-                                                {cand.icon === 'audit' && <FileCheck className="size-4.5" />}
+                                            <div className="relative mt-0.5 size-11 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-2xs">
+                                                <img
+                                                    src={
+                                                        cand.role === 'store'
+                                                            ? '/photos/ac-capacitor.jpg'
+                                                            : cand.role === 'courier'
+                                                              ? '/photos/courier.jpg'
+                                                              : cand.role === 'technician'
+                                                                ? '/photos/ac-clean.jpg'
+                                                                : '/photos/req-electrician.jpg'
+                                                    }
+                                                    alt={cand.name}
+                                                    className="size-full object-cover"
+                                                    onError={(e) => {
+                                                        e.currentTarget.onerror = null;
+                                                        e.currentTarget.src = '/photos/ac-clean.jpg';
+                                                    }}
+                                                />
+                                                <span className="absolute bottom-0 inset-x-0 bg-slate-900/80 text-[7px] font-extrabold text-white text-center uppercase py-0.2">
+                                                    {cand.role}
+                                                </span>
                                             </div>
 
                                             <div>
@@ -308,10 +328,10 @@ export function PartnerSelectionDrawer({
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="text-[11px] text-slate-500 mt-0.5">
+                                                <div className="mt-0.5 text-[11px] text-slate-500">
                                                     {cand.sub}
                                                 </div>
-                                                <div className="mt-1.5 flex items-center gap-2 text-[10px] text-slate-400 font-medium">
+                                                <div className="mt-1.5 flex items-center gap-2 text-[10px] font-medium text-slate-400">
                                                     <span className="inline-flex items-center gap-1 text-emerald-700">
                                                         <ShieldCheck className="size-3" />
                                                         Verified Tagudin Partner
@@ -320,13 +340,13 @@ export function PartnerSelectionDrawer({
                                             </div>
                                         </div>
 
-                                        <div className="text-right shrink-0 ml-3">
+                                        <div className="ml-3 shrink-0 text-right">
                                             <div className="font-mono text-xs font-extrabold text-[#0F2F58]">
                                                 ₱{cand.fee.toFixed(2)}
                                             </div>
                                             <button
                                                 type="button"
-                                                className={`mt-2 rounded-full px-3 py-1 text-[10px] font-extrabold cursor-pointer transition-colors ${
+                                                className={`mt-2 cursor-pointer rounded-full px-3 py-1 text-[10px] font-extrabold transition-colors ${
                                                     isSelected
                                                         ? 'bg-[#0F2F58] text-white'
                                                         : 'border border-slate-300 bg-white text-slate-700 hover:bg-[#EBF2FA] hover:text-[#0F2F58]'
@@ -346,7 +366,8 @@ export function PartnerSelectionDrawer({
                         <div className="flex items-center gap-2 text-[11px] text-slate-500">
                             <ShieldCheck className="size-4 shrink-0 text-[#0F2F58]" />
                             <span>
-                                Partner slot changes maintain <strong>Non-Cascading Settlement</strong> and independent child order escrow.
+                                Partner slot changes preserve independent provider agreements and
+                                later child-order boundaries.
                             </span>
                         </div>
                     </div>

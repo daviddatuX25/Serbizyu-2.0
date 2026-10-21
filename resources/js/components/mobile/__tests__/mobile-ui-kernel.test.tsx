@@ -922,6 +922,70 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             expect(saved[0].clearanceMode).toBe('customer_approval');
             expect(saved[0].requiredProofs).toContain('metric_reading');
         });
+        it('saves zero required proofs and shows the worker can submit directly', () => {
+            const onSave = vi.fn();
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            fireEvent.click(screen.getByRole('checkbox', { name: /Photo \/ Video Capture/i }));
+            fireEvent.click(screen.getByRole('checkbox', { name: /Itemized Safety Checklist/i }));
+            fireEvent.click(screen.getByRole('button', { name: /Live Order Simulator/i }));
+            expect(screen.getByText('No Worker Attachments Required')).toBeDefined();
+            expect(screen.getByText('Ready to submit step directly')).toBeDefined();
+
+            fireEvent.click(screen.getByRole('button', { name: /Apply Workflow to Listing/i }));
+            const saved: WorkStage[] = onSave.mock.calls[0][0];
+            expect(saved[0].requiredProofs).toEqual([]);
+        });
+
+        it('shows presence OTP in both simulator perspectives for customer approval', () => {
+            const onSave = vi.fn();
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            const approvalCards = screen.getAllByText('Customer Approval Required');
+            fireEvent.click(approvalCards[approvalCards.length - 1]);
+            fireEvent.click(screen.getByRole('radio', { name: /In-Person 4-Digit Customer OTP/i }));
+            fireEvent.click(screen.getByRole('button', { name: /Live Order Simulator/i }));
+            expect(screen.getByText('Customer 4-Digit OTP')).toBeDefined();
+
+            fireEvent.click(screen.getByRole('button', { name: /Customer View/i }));
+            expect(screen.getByText('Your Milestone Release OTP')).toBeDefined();
+            expect(screen.getByText('8 4 2 1')).toBeDefined();
+
+            fireEvent.click(screen.getByRole('button', { name: /Apply Workflow to Listing/i }));
+            const saved: WorkStage[] = onSave.mock.calls[0][0];
+            expect(saved[0].approvalMethod).toBe('presence_otp');
+        });
+
+        it('saves GPS coordinate check-in as a required proof', () => {
+            const onSave = vi.fn();
+            render(
+                <WorkNodeCustomizerModal
+                    open={true}
+                    onClose={vi.fn()}
+                    stages={initialStages}
+                    onSave={onSave}
+                />,
+            );
+
+            fireEvent.click(screen.getByRole('checkbox', { name: /GPS \/ Map Coordinate Pin/i }));
+            fireEvent.click(screen.getByRole('button', { name: /Apply Workflow to Listing/i }));
+            const saved: WorkStage[] = onSave.mock.calls[0][0];
+            expect(saved[0].requiredProofs).toContain('gps_checkin');
+        });
     });
 
     describe('SlotListingPickerModal — Role Normalization & State Sync Regression', () => {

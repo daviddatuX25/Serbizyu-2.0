@@ -169,6 +169,115 @@ final class TenderService
     }
 
     /**
+     * @param array{
+     *     amount_minor: int,
+     *     note?: string|null,
+     *     include_hardware?: bool
+     * } $input
+     * @return array<string, mixed>
+     */
+    public function counterQuote(string $userId, string $requestId, string $quoteId, array $input, string $correlationId): array
+    {
+        return DB::transaction(function () use ($userId, $requestId, $quoteId, $input, $correlationId): array {
+            $request = DB::table('requests')
+                ->where('id', $requestId)
+                ->lockForUpdate()
+                ->first();
+
+            if ($request === null) {
+                throw new IdentityAccessError('REQUEST_NOT_FOUND', 'The requested tender could not be found.', $correlationId, status: 404);
+            }
+
+            if (! in_array((string) $request->status, ['published', 'sourcing', 'quoted'], true)) {
+                throw new IdentityAccessError('REQUEST_NOT_OPEN', 'This request is no longer accepting quote negotiations.', $correlationId, status: 422);
+            }
+
+            $quote = DB::table('quotes')
+                ->where('id', $quoteId)
+                ->where('request_id', $requestId)
+                ->lockForUpdate()
+                ->first();
+
+            if ($quote === null) {
+                throw new IdentityAccessError('QUOTE_NOT_FOUND', 'The quote could not be found.', $correlationId, status: 404);
+            }
+
+            $isRequester = (string) $request->requester_user_id === $userId;
+            $isQuotingProvider = (string) $quote->provider_user_id === $userId;
+
+            if (! $isRequester && ! $isQuotingProvider) {
+                throw new IdentityAccessError('AUTHORIZATION_DENIED', 'Only the requester or the quoting provider can negotiate this quote.', $correlationId, status: 403);
+            }
+
+            if ((string) $quote->status !== 'submitted') {
+                throw new IdentityAccessError('INVALID_STATE', 'Only submitted quotes can be countered.', $correlationId, status: 422);
+            }
+
+            $now = now();
+            // 1. Mark current quote as superseded
+            DB::table('quotes')
+                ->where('id', $quoteId)
+                ->update([
+                    'status' => 'superseded',
+                    'version' => ((int) $quote->version) + 1,
+                    'correlation_id' => $correlationId,
+                    'updated_at' => $now,
+                ]);
+
+            // 2. Create new immutable quote revision
+            $newQuoteId = (string) Str::uuid7();
+            $newVersion = ((int) $quote->quote_version) + 1;
+            $amountMinor = max(100, (int) $input['amount_minor']);
+
+            $existingScope = is_string($quote->scope) ? json_decode($quote->scope, true) : (array) $quote->scope;
+            $updatedScope = array_merge(is_array($existingScope) ? $existingScope : [], [
+                'counter_by' => $isRequester ? 'requester' : 'provider',
+                'counter_note' => $input['note'] ?? null,
+                'include_hardware' => (bool) ($input['include_hardware'] ?? false),
+                'supersedes_quote_id' => $quoteId,
+            ]);
+
+            DB::table('quotes')->insert([
+                'id' => $newQuoteId,
+                'request_id' => $requestId,
+                'listing_id' => $quote->listing_id,
+                'provider_user_id' => $quote->provider_user_id,
+                'quote_version' => $newVersion,
+                'amount_minor' => $amountMinor,
+                'currency' => $quote->currency,
+                'amount_components' => json_encode([
+                    'base_fee' => $amountMinor,
+                    'include_hardware' => (bool) ($input['include_hardware'] ?? false),
+                ], JSON_THROW_ON_ERROR),
+                'scope' => json_encode($updatedScope, JSON_THROW_ON_ERROR),
+                'inclusions' => $quote->inclusions ?? '[]',
+                'exclusions' => $quote->exclusions ?? '[]',
+                'work_shape' => $quote->work_shape,
+                'payment_lane_options' => $quote->payment_lane_options ?? json_encode(['external_cash']),
+                'status' => 'submitted',
+                'expires_at' => $quote->expires_at ?? now()->addDays(7),
+                'deal_chain_id' => null,
+                'deal_need_id' => null,
+                'version' => 1,
+                'correlation_id' => $correlationId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            return [
+                'id' => $newQuoteId,
+                'request_id' => $requestId,
+                'provider_user_id' => (string) $quote->provider_user_id,
+                'quote_version' => $newVersion,
+                'amount_minor' => $amountMinor,
+                'currency' => $quote->currency,
+                'status' => 'submitted',
+                'supersedes_quote_id' => $quoteId,
+            ];
+        });
+    }
+
+    /**
      * @return array{order_id: string, quote_id: string}
      */
     public function acceptQuote(string $userId, string $requestId, string $quoteId, string $correlationId): array

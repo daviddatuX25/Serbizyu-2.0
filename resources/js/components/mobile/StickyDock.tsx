@@ -16,7 +16,10 @@ interface IndicatorDotsProps {
 
 function IndicatorDots({ total, activeIndex, onDotClick }: IndicatorDotsProps) {
     return (
-        <div className="flex items-center justify-center gap-[7px] pb-2 pt-1" aria-label="Step progress">
+        <div
+            className="flex items-center justify-center gap-[7px] pt-1 pb-2"
+            aria-label="Step progress"
+        >
             {Array.from({ length: total }, (_, i) => {
                 const isActive = i === activeIndex;
                 const isCompleted = i < activeIndex;
@@ -30,9 +33,7 @@ function IndicatorDots({ total, activeIndex, onDotClick }: IndicatorDotsProps) {
                         onClick={() => isCompleted && onDotClick?.(i)}
                         className={cn(
                             'h-2 rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
-                            isActive
-                                ? 'w-[26px] bg-[var(--sz-forest-600)]'
-                                : 'w-2 bg-[#E2E8F0]',
+                            isActive ? 'w-[26px] bg-[var(--sz-forest-600)]' : 'w-2 bg-[#E2E8F0]',
                             isCompleted && 'cursor-pointer bg-[var(--sz-forest-300)]',
                             !isCompleted && !isActive && 'cursor-default',
                         )}
@@ -142,7 +143,7 @@ export function StickyDock({
     return (
         <footer
             className={cn(
-                'flex w-full flex-col gap-1.5 border-t border-slate-200 px-[18px] pb-[18px] pt-2.5',
+                'flex w-full flex-col gap-1.5 border-t border-slate-200 px-[18px] pt-2.5 pb-[18px]',
                 className,
             )}
             style={{
@@ -171,7 +172,7 @@ export function StickyDock({
                     disabled={primaryDisabled}
                     onClick={onPrimaryAction}
                     className={cn(
-                        'inline-flex h-[46px] flex-1 max-w-[200px] items-center justify-center gap-1.5 rounded-full px-5 text-[13.5px] font-extrabold text-white shadow-[0_3px_12px_rgba(13,113,95,0.3)] transition-colors',
+                        'inline-flex h-[46px] max-w-[200px] flex-1 items-center justify-center gap-1.5 rounded-full px-5 text-[13.5px] font-extrabold text-white shadow-[0_3px_12px_rgba(13,113,95,0.3)] transition-colors',
                         'bg-[var(--sz-forest-600)] hover:bg-[#0A5A4C] active:bg-[#084a3e]',
                         'disabled:pointer-events-none disabled:opacity-50',
                         !secondaryContent && 'ml-auto',

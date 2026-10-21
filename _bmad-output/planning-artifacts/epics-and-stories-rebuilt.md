@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Epics, Stories, and Delivery Plan
 
-Status: CANONICAL DELIVERY PLAN — founder-approved 2026-07-31; initiative extension accepted 2026-08-09; only individually hardened stories are implementation-ready
+Status: SUPERSEDED DELIVERY HISTORY — superseded 2026-09-25 by `epics.md` and `master-delivery-plan.md`; no story or 58-table gate here authorizes implementation
 BMAD phase: Phase 3 — Implementation planning
 Depends on:
 
@@ -17,7 +17,7 @@ Depends on:
 - `docs/planning-hardening/08-runtime-stack-and-environment-contract.md`
 - `docs/planning-hardening/09-development-standards-and-bmad-openspec-contract.md`
 
-This replaces the historical epics/stories plan. Stories below are implementation candidates; only a story with its complete LLD/OpenSpec and passing readiness gate is cleared to build.
+This preserves the 2026-07-31/2026-08-09 delivery history. The current canonical epic/story authority is `_bmad-output/planning-artifacts/epics.md`; the dependency graph and pre-messaging boundary are `_bmad-output/planning-artifacts/master-delivery-plan.md`.
 
 ## 1. Delivery rules
 

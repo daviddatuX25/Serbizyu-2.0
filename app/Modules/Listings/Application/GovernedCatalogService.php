@@ -50,7 +50,7 @@ final class GovernedCatalogService
     /**
      * @return CatalogPins
      */
-    public function resolvePublished(string $categoryCode, string $listingType, string $correlationId): array
+    public function resolvePublished(string $categoryCode, string $listingType, string $correlationId, ?string $workShape = null): array
     {
         $category = DB::table('categories')->where('code', $categoryCode)->where('status', 'active')->first();
         if ($category === null) {
@@ -82,14 +82,27 @@ final class GovernedCatalogService
             );
         }
 
-        $family = $this->profileFamilyForListingType($listingType);
+        $activeShapes = $this->activeWorkShapesFor($categoryCode, $listingType);
+        $workShape ??= $activeShapes[0] ?? null;
+        if ($workShape === null || ! in_array($workShape, $activeShapes, true)) {
+            throw new ListingError(
+                'CATEGORY_NOT_PUBLISHED',
+                'That listing type is not available yet.',
+                $correlationId,
+                status: 422,
+                fieldErrors: ['listing_type' => ['Choose an active capability profile.']],
+            );
+        }
+
         $profile = DB::table('capability_profiles')
-            ->where('profile_family_code', $family)
+            ->where('profile_family_code', $this->profileFamilyFor($listingType, $workShape))
+            ->where('listing_type', $listingType)
+            ->where('work_shape', $workShape)
             ->where('status', 'active')
             ->orderByDesc('business_version')
             ->first();
 
-        if ($profile === null || ! in_array((string) $profile->work_shape, ['A1', 'A3', 'A4', 'A9'], true)) {
+        if ($profile === null) {
             throw new ListingError(
                 'CATEGORY_NOT_PUBLISHED',
                 'That listing type is not available yet.',
@@ -107,6 +120,47 @@ final class GovernedCatalogService
             'capability_profile_business_version' => (int) $profile->business_version,
             'code' => (string) $profile->code,
         ];
+    }
+
+    /**
+     * Resolve the active Work Shapes available for a published category and listing type.
+     *
+     * @return list<string>
+     */
+    public function activeWorkShapesFor(string $categoryCode, string $listingType): array
+    {
+        $category = DB::table('categories')
+            ->where('code', trim($categoryCode))
+            ->where('status', 'active')
+            ->first();
+        if ($category === null || ! Schema::hasTable('category_versions')) {
+            return [];
+        }
+
+        $published = DB::table('category_versions')
+            ->where('category_id', $category->id)
+            ->where('status', 'published')
+            ->exists();
+        if (! $published) {
+            return [];
+        }
+
+        $shapes = $this->supportedWorkShapes($listingType);
+
+        return DB::table('capability_profiles')
+            ->where('listing_type', $listingType)
+            ->where('status', 'active')
+            ->whereIn('profile_family_code', array_map(
+                fn (string $shape): string => $this->profileFamilyFor($listingType, $shape),
+                $shapes,
+            ))
+            ->whereIn('work_shape', $shapes)
+            ->orderByRaw("CASE work_shape WHEN 'A1' THEN 1 WHEN 'A4' THEN 1 WHEN 'A3' THEN 2 WHEN 'A9' THEN 3 ELSE 4 END")
+            ->pluck('work_shape')
+            ->map(static fn (mixed $shape): string => (string) $shape)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function ensureCategory(string $code, string $correlationId, mixed $now): string
@@ -203,10 +257,7 @@ final class GovernedCatalogService
      */
     private function ensureActiveCapabilityProfile(string $listingType, string $workShape, string $correlationId, mixed $now): array
     {
-        $family = $this->profileFamilyForListingType($listingType);
-        if (! in_array($workShape, ['A1', 'A3', 'A4', 'A9'], true)) {
-            throw new \InvalidArgumentException('Unsupported Work shape for a governed capability profile.');
-        }
+        $family = $this->profileFamilyFor($listingType, $workShape);
 
         if (DB::connection()->getDriverName() === 'pgsql') {
             DB::statement('SELECT pg_advisory_xact_lock(hashtext(?))', ['capability_profile_family:'.$family]);
@@ -273,11 +324,28 @@ final class GovernedCatalogService
         ];
     }
 
-    private function profileFamilyForListingType(string $listingType): string
+    private function profileFamilyFor(string $listingType, string $workShape): string
+    {
+        if (! in_array($workShape, $this->supportedWorkShapes($listingType), true)) {
+            throw new \InvalidArgumentException('Unsupported Work shape for a governed capability profile.');
+        }
+
+        return match ([$listingType, $workShape]) {
+            ['service', 'A1'] => 'service_listing',
+            ['service', 'A3'] => 'service_listing_a3',
+            ['service', 'A9'] => 'service_listing_a9',
+            ['product', 'A4'] => 'product_listing',
+            ['product', 'A9'] => 'product_listing_a9',
+            default => throw new \InvalidArgumentException('Unsupported Work shape for a governed capability profile.'),
+        };
+    }
+
+    /** @return list<string> */
+    private function supportedWorkShapes(string $listingType): array
     {
         return match ($listingType) {
-            'service' => 'service_listing',
-            'product' => 'product_listing',
+            'service' => ['A1', 'A3', 'A9'],
+            'product' => ['A4', 'A9'],
             default => throw new \InvalidArgumentException('Unsupported listing type for a governed capability profile.'),
         };
     }

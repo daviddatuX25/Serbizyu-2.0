@@ -78,6 +78,8 @@ Every major creator and composition interface defaults to a **Guided Step-by-Ste
 | **25** | `profile-mobile.html` | Public / Neighbors | `Pages/Users/Show.tsx`<br>`GET /users/{id}` | Trust & Reputation | Complete |
 | **26** | `agent-today.html` | Barangay Delegate / Agent | `Pages/Agent/Today.tsx`<br>`GET /agent/today` | Neighborhood Mesh | Complete |
 | **27** | `account-settings-mobile.html` | Authenticated User | `Pages/Account/Settings.tsx`<br>`GET /account/settings` | User Account | Complete |
+| **28** | `auth-recovery-mobile.html` | Authenticated / Recovering User | `Pages/Auth/ForgotPassword.tsx`<br>`GET /auth/password/forgot` | Identity & Recovery | Complete |
+| **29** | `onboarding-mobile.html` | New Citizen / Storefront Provider | `Pages/MyListings.tsx`<br>`GET /my-listings` (Onboarding Drawer) | Storefront & Identity | Complete |
 
 ---
 

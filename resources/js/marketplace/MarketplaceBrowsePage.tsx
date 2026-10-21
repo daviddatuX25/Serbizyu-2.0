@@ -50,14 +50,23 @@ export const MarketplaceBrowsePage: React.FC<MarketplaceBrowseProps> = ({
     const handleAddToCart = (item: ListingRecord) => {
         const rawMinor = item.price_amount_minor;
         const price = rawMinor ? rawMinor / 100 : 80;
+        const listingContext = {
+            category_code: item.category_code ?? item.categoryCode ?? null,
+            listing_type: item.listing_type ?? item.listingType ?? null,
+            work_shape: item.work_shape ?? item.workShape ?? null,
+        };
+
         setBasket((prev) => {
             const existing = prev.find((b) => b.id === item.id);
             if (existing) {
                 return prev.map((b) =>
-                    b.id === item.id ? { ...b, quantity: b.quantity + 1 } : b,
+                    b.id === item.id ? { ...b, ...listingContext, quantity: b.quantity + 1 } : b,
                 );
             }
-            return [...prev, { id: item.id, title: item.title, price, quantity: 1 }];
+            return [
+                ...prev,
+                { id: item.id, title: item.title, price, quantity: 1, ...listingContext },
+            ];
         });
 
         if (onAddToCart) {
@@ -115,7 +124,11 @@ export const MarketplaceBrowsePage: React.FC<MarketplaceBrowseProps> = ({
                 />
 
                 {/* Spend Threshold Fee Tracker */}
-                <FeeThresholdTracker currentTotal={basketTotal} thresholdAmount={500} savingsAmount={45} />
+                <FeeThresholdTracker
+                    currentTotal={basketTotal}
+                    thresholdAmount={500}
+                    savingsAmount={45}
+                />
 
                 {/* Quick Filter Chips */}
                 <FilterChipBar
@@ -137,7 +150,9 @@ export const MarketplaceBrowsePage: React.FC<MarketplaceBrowseProps> = ({
 
                     {filteredListings.length === 0 ? (
                         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#E4E4E7] bg-white p-8 text-center">
-                            <p className="text-[14px] font-bold text-[#18181B]">No services found</p>
+                            <p className="text-[14px] font-bold text-[#18181B]">
+                                No services found
+                            </p>
                             <p className="mt-1 text-[12px] text-[#71717A]">
                                 Try clearing search keywords or switching category filters.
                             </p>

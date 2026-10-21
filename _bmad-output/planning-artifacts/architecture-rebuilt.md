@@ -68,9 +68,13 @@ Does not own listing business state, money, or Agent consent history beyond auth
 
 Owns Agent grants, scopes, notices, revocations, and action attribution.
 
-### Product Catalog and Taxonomy
+### Listings and Marketplace Sources
 
-Owns categories, capability profiles, listings, versions, capacity, requests, and quotes.
+Owns categories, capability profiles, Listings/versions/capacity, Requests/Tender phases, Quotes/Bid revision state, Request Invitations, publication, eligibility, and purpose projections.
+ 
+### Catalogs
+
+Owns immutable published Work and Deal-Chain authoring accelerators only. It never owns accepted Work, child Orders, runtime Deal state, or commercial formation.
 
 ### Deal Coordination
 
@@ -80,7 +84,7 @@ The module exposes a small command/read seam: create/update Chain, add/reorder/r
 
 It must not create a parent Payment Obligation, pooled balance, automatic split, parent-wide refund/cancellation cascade, or child-liability reassignment. Child Order formation is handed to Order Management through an explicit child-agreement command; the resulting Order remains independently authoritative.
 
-Foundation dependency: `deal_chains`, `deal_needs`, `deal_dependencies`, and `deal_invitations`, plus nullable lineage on existing Request/Quote/Order records, are required schema headroom before E0-S2 under the schema contract. Their planning presence is not migration/catalog proof and does not enable a user-facing feature. The later bounded coordination story and pilot activation review remain separate gates.
+Foundation dependency: `deal_chains`, `deal_needs`, `deal_dependencies`, and `deal_invitations`, plus nullable lineage on existing Request/Quote/Order records, are canonical D0 schema headroom and are migrated/verified by their first consuming stories. Planning presence is not migration/catalog proof and does not enable a user-facing feature. The bounded coordination story and pilot activation remain separate gates.
 
 ### Order Management
 
@@ -499,7 +503,8 @@ The architecture is ready for epics/build planning only when:
 ### 16.1 Brownfield topology
 
 - `IdentityAccess`: users, OTP, profile, roles, identity review, delegation, consent.
-- `Listings`: category/profile business versions, listings/versions, capacity/reservations, requests, quotes.
+- `Listings`: category/profile business versions, listings/versions, capacity/reservations, requests, Request Invitations, and quotes.
+- `Catalogs`: immutable published Work and Deal-Chain authoring accelerators; never accepted Work, child Order, or runtime execution authority.
 - `OrdersWork`: proposal/final Order formation, parties/terms, A1/A3/A4/A9 Work/events.
 - `PaymentObligations`: one-lane Obligations, provider events/ports, balanced ledger, refund/reversal/release, reconciliation.
 - `TrustSupport`: evidence, disputes, holds, safety, conversations/messages/notifications, support.
@@ -533,7 +538,38 @@ AI uses the same application ports and exact single-use approval for confirmatio
 
 ### 16.6 Architecture extension gate
 
-- Canonical authorities cite the same PRD/domain/schema/ADR/UX/story identifiers and 58-table inventory.
-- Each train OpenSpec uses `PROGRAM-IMPLEMENTATION-PLAN.md` §6 and contains executable transaction, constraint, event-order, security, operations, UX, verification, activation, and rollback contracts.
+- Canonical authorities cite the same PRD/domain/schema/ADR/UX/story identifiers and 61-table inventory.
+- Each vertical OpenSpec uses `master-delivery-plan.md` §§7–7.1 and contains executable ownership/invariant, transaction/concurrency/idempotency, constraint, event-order, security/privacy, dependency-failure, query/index/performance, observability, operations, UX/accessibility, verification, activation, deployment, recovery, rollback, and complexity-rejection contracts.
 - Connected UI is not complete on Pest evidence alone; browser paths plus target-user comprehension/accessibility/low-data UAT are required.
 - Xendit/Tiwala stay sandbox-only until a current G6 activation record and independent approvals exist.
+
+## 17. Accepted pre-messaging foundation extension — 2026-09-25
+
+### 17.1 Listings ownership and Tender boundary
+
+`Listings` owns governed category/profile/Listing/Request/Quote authoring, Request Invitations, publication, Tender scheduling/phases, Bid lineage, eligibility, and purpose projections. `Catalogs` owns immutable published Work and Deal-Chain authoring versions only. A Sourcing Tender remains a Request; a Bid remains a versioned Quote. Open, Sealed, and Direct Invite differ only in discovery, participation, and information-flow policy. They do not introduce mode-specific Order, Work, or Payment systems.
+
+### 17.2 Browse and cache
+
+Browse queries compose distinct Listing and Request projections over PostgreSQL by default. Shared cache is an optional adapter activated only after measured query-plan/count, p95/p99 latency, load/saturation, payload, or resilience evidence names a failure mode, target, accountable owner, expiry, and disable trigger and proves net benefit. When activated, it contains only stable public/coarse fields keyed by resource kind, projection schema, policy/reveal version, geography, locale, normalized filters/sort/cursor, environment, and public visibility class; it omits current source revision, lifecycle/visibility/eligibility, live capacity/availability, and executable actions. Before serialization, one batched PostgreSQL projection read verifies every cached candidate's current revision, phase, visibility/policy qualification, capacity/availability, and activation, discarding or rebuilding disqualified entries before presenting active supply or actions. Viewer-, Agent-grant-, invitation-, sealed-pre-reveal-, or Operations-purpose projections never enter shared cache. Invalidation/TTL are optimizations; no benefit, regression, disablement, failure, or miss uses PostgreSQL.
+
+### 17.3 Tender privacy and formation
+
+- Open: public-safe Request discovery and eligible participation; no competitor Bid terms, identities, rankings, or public/provider counts.
+- Sealed: a bidder sees only their own lineage and submission result; every other Bid existence signal, count, identity, content, ordering, timing, or distinguishing error is hidden from requester, competitors, and public until one committed `close_bidding` transaction freezes submissions and enters `selection_open`.
+- Direct Invite: no public discovery; the exact current, unexpired, accepted Request Invitation and authenticated invited-provider purpose are locked and revalidated through award; unauthorized identifiers are non-enumerating.
+- Publication for every mode locks the exact active `category_versions` sourcing-policy content/checksum and every matching `capability_activations` decision. The category version is the sole response/rate/expiry/liquidity-rule authority and names Product ownership; activation rows are the sole dimensioned enable/deny authority and name Operations/rollback ownership, evidence, approval, and effective range. The Request stores the winning activation ID and complete decision fingerprint; publication, submission, and finalization re-evaluate under lock and fail closed on absence, expiry, incompatible supersession, or any deny. Payment `policy_versions` and free JSON are never sourcing authority.
+- Quote revision status is exhaustive: `draft`, `submitted`, `superseded`, `withdrawn`, `declined`, `expired`, `accepted`, `not_selected`, `invalidated`; `ineligible` and `stale` are derived current disqualifications. Only `submitted` is selectable, and `accepted`/`not_selected` commit only with successful all-or-none award/Order formation. Requester disposition requires current reveal-policy access to the exact revision; Sealed permits it only in committed `selection_open`, and direct unauthorized/unrevealed identifiers receive uniform no-effect denial.
+- Closing never awards automatically. UI action `quote.select_and_finalize` dispatches `SelectAndFinalizeBid` (`select_and_finalize_bid`), which locks the Tender, exact current Quote revision, applicable invitation, capacity, parties, and policies, then invokes `FinalizeOrderAgreement`. Selection, award, ordinary Order graph, `not_selected` competing-lineage consequences, audit, idempotency, and outbox commit together or none commit; no durable `contract_pending` authority exists.
+
+### 17.4 Catalog and builder boundary
+
+Listing, Request/Tender, Quote/Bid, Work-specification, and Deal-Chain builders consume immutable governed catalog/policy versions and emit typed versioned source specifications. `Catalogs` publishes optional authoring accelerators; OrdersWork's registered shape contracts remain the formation/runtime authority. Templates accelerate authoring only. Builders cannot edit accepted Order terms, committed reservations, Work execution, Payment truth, or child aggregate state. Deal-Chain customer activation remains gated, but catalog/builder/lineage/child-isolation foundation follows ordinary formation stability in the pre-messaging sequence.
+
+### 17.5 Essential notices before Messaging
+
+Operations owns the pre-Messaging notification intent/delivery transport; source modules own only transaction-bound intents. Intent states are exactly `pending`, `dispatching`, `delivery_settling`, `cancellation_requested`, `delivered`, `dead_letter`, `cancelled`; attempt states are `pending`, `sending`, `delivered`, `retryable_failed`, `permanent_failed`, `outcome_unknown`, `cancelled`. Current mandatory policy blocks cancellation while recipient/purpose authority remains valid. Parent-first locking persists cancellation or route success, cancels pending attempts, and blocks every new claim/retry/route. Already-sending attempts reconcile authentic results or a bounded lease/deadline to explicit unknown-outcome evidence without provider I/O inside a transaction; when none remain, the parent deterministically becomes delivered/cancelled. Late authentic results append evidence without reopening routing or business effects. Dead-letter replay regenerates current content into a new generation. Provider delivery/acknowledgment never acknowledges or rolls back source business truth and grants no conversation/resource authority.
+
+### 17.6 Delivery boundary
+
+The dependency sequence is application/operations kernel → identity/acting context and essential notices → governed category, Work, and Deal-Chain catalogs plus their source-specification builders/validators → Listings/capacity/PostgreSQL Browse plus optional measured cache → sole atomic direct Order formation and Work execution consequence → Request/Tender authoring and Open Bids → atomic comparison/award → Sealed and Direct Invite → Deal-Chain builder/isolated child formation → operations proof. Messaging begins next and consumes, rather than redefines, the resulting participant, privacy, lineage, audit, notification-intent/delivery, and projection contracts.

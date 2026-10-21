@@ -78,6 +78,52 @@ it('projects owner my listings with review_status on the List Dock route', funct
         ->and($owned['title'] ?? null)->toBe('Market errand help');
 });
 
+it('projects seeded active AC listings for Kuya Ben on my-listings', function (): void {
+    $this->seed(\Database\Seeders\DealChainExecutionSeeder::class);
+    $this->authenticateWithPhone('+639171111001');
+
+    $page = inertiaGetMyListings('/my-listings')->assertOk();
+
+    $myListings = $page->json('props.slice.myListings')
+        ?? $page->json('props.myListings')
+        ?? [];
+
+    expect($myListings)->toBeArray()->toHaveCount(3);
+    $titles = collect($myListings)->pluck('title')->all();
+    expect($titles)->toContain('Inverter Split AC Deep Clean & Checkup')
+        ->and($titles)->toContain('Split AC Capacitor Installation')
+        ->and($titles)->toContain('Home Appliance Safety Audit');
+});
+
+it('redirects an owner from a private public URL to the private listing preview', function (): void {
+    $this->authenticateProvider();
+
+    $created = $this->postJson('/listings', [
+        'title' => 'Private repair draft',
+        'description' => 'A repair listing that has not been submitted for review.',
+        'category_code' => 'repairs',
+        'listing_type' => 'service',
+        'work_shape' => 'A1',
+    ])->assertCreated()->json('data');
+
+    $this->get('/listings/'.$created['id'])
+        ->assertRedirect(route('listings.preview', ['listing' => $created['id']]));
+
+    inertiaGetMyListings('/my-listings/'.$created['id'])
+        ->assertOk()
+        ->assertJsonPath('component', 'Listings/OwnerPreview')
+        ->assertJsonPath('props.listing.id', $created['id'])
+        ->assertJsonPath('props.listing.status', 'draft')
+        ->assertJsonPath('props.listing.public', false);
+});
+
+it('does not disclose another owners listing through the private preview', function (): void {
+    $this->authenticateProvider();
+
+    $this->get('/my-listings/'.FixtureRepository::ACTIVE_LISTING_ID)
+        ->assertNotFound();
+});
+
 it('keeps submitted listings private on my-listings projection and out of browse', function (): void {
     $this->authenticateProvider();
 

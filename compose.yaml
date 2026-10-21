@@ -93,6 +93,8 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    volumes:
+      - .:/var/www/html
 
   web:
     build:
@@ -111,6 +113,9 @@ services:
       retries: 12
       start_period: 10s
     restart: unless-stopped
+    volumes:
+      - ./public:/var/www/html/public:ro
+      - ./docs/design-kit:/var/www/html/docs/design-kit:ro
 
 volumes:
   postgres-data:

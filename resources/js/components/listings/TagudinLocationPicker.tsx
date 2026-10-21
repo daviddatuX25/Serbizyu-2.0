@@ -1,12 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import {
-    MapPin,
-    Compass,
-    Check,
-    Navigation,
-    Loader2,
-    AlertCircle,
-} from 'lucide-react';
+import { MapPin, Compass, Check, Navigation, Loader2, AlertCircle } from 'lucide-react';
 import {
     REGIONS,
     TAGUDIN_BARANGAYS_43,
@@ -40,15 +33,25 @@ export default function TagudinLocationPicker({
 }: TagudinLocationPickerProps) {
     const initialGeo = useMemo(() => normalizeGeography(value, initialAddress), []);
 
-    const [selectedProvinceCode, setSelectedProvinceCode] = useState<string>(initialGeo.province_code);
-    const [selectedMunicipalityCode, setSelectedMunicipalityCode] = useState<string>(initialGeo.municipality_code);
-    const [selectedBarangayCode, setSelectedBarangayCode] = useState<string>(initialGeo.barangay_code);
+    const [selectedProvinceCode, setSelectedProvinceCode] = useState<string>(
+        initialGeo.province_code,
+    );
+    const [selectedMunicipalityCode, setSelectedMunicipalityCode] = useState<string>(
+        initialGeo.municipality_code,
+    );
+    const [selectedBarangayCode, setSelectedBarangayCode] = useState<string>(
+        initialGeo.barangay_code,
+    );
     const [coordinates, setCoordinates] = useState<PhilippineCoordinates>(initialGeo.coordinates);
     const [addressLine1, setAddressLine1] = useState<string>(initialGeo.address_line_1);
-    const [hasPinnedCoordinates, setHasPinnedCoordinates] = useState<boolean>(initialGeo.has_pinned_coordinates);
+    const [hasPinnedCoordinates, setHasPinnedCoordinates] = useState<boolean>(
+        initialGeo.has_pinned_coordinates,
+    );
 
     // Geolocation API State
-    const [gpsStatus, setGpsStatus] = useState<'idle' | 'requesting' | 'locked' | 'error' | 'denied'>('idle');
+    const [gpsStatus, setGpsStatus] = useState<
+        'idle' | 'requesting' | 'locked' | 'error' | 'denied'
+    >('idle');
     const [gpsMessage, setGpsMessage] = useState<string | null>(null);
 
     const availableMunicipalities = useMemo(() => {
@@ -65,10 +68,14 @@ export default function TagudinLocationPicker({
             provinceCode = selectedProvinceCode,
             municipalityCode = selectedMunicipalityCode,
         ) => {
-            const matchedBarangay = TAGUDIN_BARANGAYS_43.find((b) => b.code === barangayCode) || TAGUDIN_BARANGAYS_43[0];
+            const matchedBarangay =
+                TAGUDIN_BARANGAYS_43.find((b) => b.code === barangayCode) ||
+                TAGUDIN_BARANGAYS_43[0];
             const matchedProvince = PROVINCES.find((p) => p.code === provinceCode) || PROVINCES[0];
-            const matchedMunicipality = MUNICIPALITIES.find((m) => m.code === municipalityCode) || MUNICIPALITIES[0];
-            const matchedRegion = REGIONS.find((r) => r.code === matchedProvince.region_code) || REGIONS[0];
+            const matchedMunicipality =
+                MUNICIPALITIES.find((m) => m.code === municipalityCode) || MUNICIPALITIES[0];
+            const matchedRegion =
+                REGIONS.find((r) => r.code === matchedProvince.region_code) || REGIONS[0];
 
             const updated: CanonicalGeography = {
                 version: 1,
@@ -125,9 +132,10 @@ export default function TagudinLocationPicker({
             isPinned = false;
         }
 
-        const newAddr = addressLine1 && (addressLine1.includes('Stall') || addressLine1.includes('Shop'))
-            ? addressLine1
-            : `${b.landmark}, ${b.name}`;
+        const newAddr =
+            addressLine1 && (addressLine1.includes('Stall') || addressLine1.includes('Shop'))
+                ? addressLine1
+                : `${b.landmark}, ${b.name}`;
         setAddressLine1(newAddr);
         emitChange(nextCoords, b.code, newAddr, isPinned);
     };
@@ -201,7 +209,10 @@ export default function TagudinLocationPicker({
     };
 
     return (
-        <div data-testid="tagudin-location-picker" className="space-y-4 rounded-2xl border border-slate-200/90 bg-[#FAFCFB] p-4 shadow-2xs">
+        <div
+            data-testid="tagudin-location-picker"
+            className="space-y-4 rounded-2xl border border-slate-200/90 bg-[#FAFCFB] p-4 shadow-2xs"
+        >
             {/* Header Title & GPS Hardware Action */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2">
@@ -216,12 +227,12 @@ export default function TagudinLocationPicker({
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                     <button
                         type="button"
                         onClick={handleDetectCurrentLocation}
                         disabled={gpsStatus === 'requesting'}
-                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-[11px] font-extrabold text-white shadow-2xs hover:bg-emerald-700 disabled:opacity-50"
+                        className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-[11px] font-extrabold text-white shadow-2xs hover:bg-emerald-700 disabled:opacity-50"
                         title="Use device GPS antenna to detect exact coordinates"
                     >
                         {gpsStatus === 'requesting' ? (
@@ -232,7 +243,7 @@ export default function TagudinLocationPicker({
                         <span>Detect Current GPS Location</span>
                     </button>
 
-                    <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-mono font-bold text-slate-700 shadow-2xs">
+                    <div className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-slate-700 shadow-2xs">
                         <Compass className="size-3.5 text-[#0F2F58]" />
                         <span>
                             {coordinates.lat.toFixed(4)}° N, {coordinates.lng.toFixed(4)}° E
@@ -246,16 +257,16 @@ export default function TagudinLocationPicker({
                 <div
                     className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold ${
                         gpsStatus === 'locked'
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            ? 'border border-emerald-200 bg-emerald-50 text-emerald-800'
                             : gpsStatus === 'denied' || gpsStatus === 'error'
-                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                            : 'bg-blue-50 text-blue-800 border border-blue-200'
+                              ? 'border border-amber-200 bg-amber-50 text-amber-800'
+                              : 'border border-blue-200 bg-blue-50 text-blue-800'
                     }`}
                 >
                     {gpsStatus === 'locked' ? (
-                        <Check className="size-3.5 text-emerald-600 shrink-0" />
+                        <Check className="size-3.5 shrink-0 text-emerald-600" />
                     ) : (
-                        <AlertCircle className="size-3.5 text-amber-600 shrink-0" />
+                        <AlertCircle className="size-3.5 shrink-0 text-amber-600" />
                     )}
                     <span>{gpsMessage}</span>
                 </div>
@@ -265,16 +276,28 @@ export default function TagudinLocationPicker({
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3">
                 {/* 1. Province */}
                 <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Province</label>
+                    <label className="text-[10px] font-extrabold tracking-wider text-slate-500 uppercase">
+                        Province
+                    </label>
                     <select
                         value={selectedProvinceCode}
                         onChange={(e) => {
                             const nextProv = e.target.value;
                             setSelectedProvinceCode(nextProv);
-                            const valid = MUNICIPALITIES.filter((m) => m.province_code === nextProv);
-                            const nextMuni = valid.length > 0 ? valid[0].code : selectedMunicipalityCode;
+                            const valid = MUNICIPALITIES.filter(
+                                (m) => m.province_code === nextProv,
+                            );
+                            const nextMuni =
+                                valid.length > 0 ? valid[0].code : selectedMunicipalityCode;
                             setSelectedMunicipalityCode(nextMuni);
-                            emitChange(coordinates, selectedBarangayCode, addressLine1, hasPinnedCoordinates, nextProv, nextMuni);
+                            emitChange(
+                                coordinates,
+                                selectedBarangayCode,
+                                addressLine1,
+                                hasPinnedCoordinates,
+                                nextProv,
+                                nextMuni,
+                            );
                         }}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2F58]"
                     >
@@ -288,12 +311,21 @@ export default function TagudinLocationPicker({
 
                 {/* 2. City / Municipality */}
                 <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">City / Municipality</label>
+                    <label className="text-[10px] font-extrabold tracking-wider text-slate-500 uppercase">
+                        City / Municipality
+                    </label>
                     <select
                         value={selectedMunicipalityCode}
                         onChange={(e) => {
                             setSelectedMunicipalityCode(e.target.value);
-                            emitChange(coordinates, selectedBarangayCode, addressLine1, hasPinnedCoordinates, selectedProvinceCode, e.target.value);
+                            emitChange(
+                                coordinates,
+                                selectedBarangayCode,
+                                addressLine1,
+                                hasPinnedCoordinates,
+                                selectedProvinceCode,
+                                e.target.value,
+                            );
                         }}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2F58]"
                     >
@@ -307,13 +339,15 @@ export default function TagudinLocationPicker({
 
                 {/* 3. Barangay Dropdown (43 PSA PSGC Barangays) */}
                 <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                    <label className="text-[10px] font-extrabold tracking-wider text-slate-500 uppercase">
                         Barangay ({TAGUDIN_BARANGAYS_43.length} PSA PSGC)
                     </label>
                     <select
                         value={selectedBarangayCode}
                         onChange={(e) => {
-                            const found = TAGUDIN_BARANGAYS_43.find((b) => b.code === e.target.value);
+                            const found = TAGUDIN_BARANGAYS_43.find(
+                                (b) => b.code === e.target.value,
+                            );
                             if (found) handleSelectBarangay(found);
                         }}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2F58]"
@@ -330,8 +364,12 @@ export default function TagudinLocationPicker({
             {/* 4. Address Line 1 (Street / Stall / House / Building) */}
             <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-slate-700">Address Line 1 (Street / Stall / Building Name)</label>
-                    <span className="text-[10px] text-slate-400">Physical collection &amp; dispatch point</span>
+                    <label className="text-[11px] font-bold text-slate-700">
+                        Address Line 1 (Street / Stall / Building Name)
+                    </label>
+                    <span className="text-[10px] text-slate-400">
+                        Physical collection &amp; dispatch point
+                    </span>
                 </div>
                 <input
                     type="text"

@@ -14,7 +14,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
 }) => {
     return (
         <nav
-            className="flex gap-2 overflow-x-auto border-b border-[#F4F4F5] bg-white px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex [scrollbar-width:none] gap-2 overflow-x-auto border-b border-[#F4F4F5] bg-white px-4 py-3 [&::-webkit-scrollbar]:hidden"
             aria-label="Category Filters"
         >
             {categories.map((cat) => {

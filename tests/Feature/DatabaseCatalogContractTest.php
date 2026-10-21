@@ -104,6 +104,7 @@ final class DatabaseCatalogContractTest extends TestCase
             'command_approvals',
             'consent_grants',
             'conversations',
+            'deal_chain_catalog_versions',
             'deal_chains',
             'deal_dependencies',
             'deal_invitations',
@@ -152,6 +153,7 @@ final class DatabaseCatalogContractTest extends TestCase
             't4_work_migration_audits',
             'user_profiles',
             'users',
+            'work_catalog_versions',
             'work_events',
             'work_instances',
         ];

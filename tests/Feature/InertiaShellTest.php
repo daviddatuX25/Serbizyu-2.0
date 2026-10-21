@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 final class InertiaShellTest extends TestCase
 {
-    public function test_laravel_renders_the_foundation_inertia_page_with_safe_props(): void
+    public function test_laravel_renders_the_connected_browse_page_with_catalog_props(): void
     {
         config()->set('inertia.pages.paths', [resource_path('js/Pages')]);
 
@@ -21,12 +21,12 @@ final class InertiaShellTest extends TestCase
 
         $response->assertOk()
             ->assertHeader('X-Correlation-Id', '0198a3b1-7c40-7abc-8def-f234567890ab')
-            ->assertJsonPath('component', 'Home')
+            ->assertJsonPath('component', 'Browse')
             ->assertJsonPath('props.app.name', config('app.name'))
-            ->assertJsonPath('props.app.stage', 'foundation_slice')
+            ->assertJsonPath('props.app.stage', 'connected_slice')
             ->assertJsonPath('props.correlationId', '0198a3b1-7c40-7abc-8def-f234567890ab')
-            ->assertJsonPath('props.scope.productFeatures', false)
-            ->assertJsonPath('props.scope.externalProviders', false)
-            ->assertJsonPath('props.scope.schemaMigrations', false);
+            ->assertJsonPath('props.pageMode', 'browse');
+
+        self::assertCount(4, $response->json('props.dealChainCatalog'));
     }
 }

@@ -9,7 +9,7 @@ use App\Shared\Application\KernelException;
 final class TrustSupportError extends KernelException
 {
     /**
-     * @param array<string, list<string>> $fieldErrors
+     * @param  array<string, list<string>>  $fieldErrors
      */
     public function __construct(
         string $code,

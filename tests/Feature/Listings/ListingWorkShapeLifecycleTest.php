@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Modules\Catalogs\Application\WorkCatalog;
-use Database\Seeders\WorkCatalogSeeder;
 use App\Models\User;
+use App\Modules\Catalogs\Application\WorkCatalog;
 use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
 use App\Modules\Listings\Application\CreateListingDraft;
 use App\Modules\Listings\Application\GovernedCatalogService;
@@ -12,6 +11,7 @@ use App\Modules\Listings\Application\ListingError;
 use App\Modules\Listings\Application\SubmitListing;
 use App\Modules\Listings\Application\UpdateListingDraft;
 use App\Shared\Application\ResourceActor;
+use Database\Seeders\WorkCatalogSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;

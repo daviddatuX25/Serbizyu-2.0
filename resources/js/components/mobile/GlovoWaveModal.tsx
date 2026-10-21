@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
-/* ── Props ── */
 export interface GlovoWaveModalProps {
     open?: boolean;
     isOpen?: boolean;
@@ -15,14 +15,13 @@ export interface GlovoWaveModalProps {
     bottomSlot?: React.ReactNode;
 }
 
-/* ── Close Circle Button ── */
 function CloseCircle({ onClick }: { onClick: () => void }) {
     return (
         <button
             type="button"
             onClick={onClick}
             aria-label="Close"
-            className="flex h-8 w-8 min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-gray-100 text-gray-900 transition-colors hover:bg-gray-200"
+            className="flex h-8 min-h-[44px] w-8 min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-gray-100 text-gray-900 transition-colors hover:bg-gray-200"
         >
             <svg
                 width="14"
@@ -38,11 +37,11 @@ function CloseCircle({ onClick }: { onClick: () => void }) {
     );
 }
 
-/* ── Wave Cap SVG ── */
 function WaveCap() {
     return (
         <svg
-            className="block w-full shrink-0"
+            aria-hidden="true"
+            className="glovo-wave-cap block w-full shrink-0 sm:hidden"
             style={{ height: 34, marginBottom: -1 }}
             viewBox="0 0 390 34"
             preserveAspectRatio="none"
@@ -55,13 +54,13 @@ function WaveCap() {
     );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   GlovoWaveModal
-   - Bottom slide-up sheet on mobile (<640px)
-   - Centered modal on desktop (≥640px)
-   - Asymmetrical organic wave cap SVG
-   - Pinned header, scrollable body, pinned bottom action
-   ═══════════════════════════════════════════════════════════════════════════ */
+/**
+ * Responsive modal primitive for marketplace workflows.
+ *
+ * Mobile uses the locked Glovo wave bottom sheet. Desktop uses a centered,
+ * bounded modal. The portal keeps nested marketplace drawers from clipping or
+ * stacking above the popup.
+ */
 export default function GlovoWaveModal({
     open,
     isOpen,
@@ -74,108 +73,77 @@ export default function GlovoWaveModal({
 }: GlovoWaveModalProps) {
     const isModalOpen = open ?? isOpen ?? false;
     const modalContentRef = useRef<HTMLDivElement>(null);
+    const titleId = useId();
 
-    /* ── Close on Escape ── */
     useEffect(() => {
         if (!isModalOpen) return;
-        const handleKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
+
+        const handleKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onClose();
         };
+
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
         document.addEventListener('keydown', handleKey);
-        return () => document.removeEventListener('keydown', handleKey);
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            document.removeEventListener('keydown', handleKey);
+        };
     }, [isModalOpen, onClose]);
 
-    /* ── Lock body scroll when open ── */
-    useEffect(() => {
-        if (!isModalOpen) return;
-        const prev = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = prev;
-        };
-    }, [isModalOpen]);
-
-    /* ── Click backdrop to close ── */
     const handleBackdropClick = useCallback(
-        (e: React.MouseEvent) => {
-            if (e.target === e.currentTarget) onClose();
+        (event: React.MouseEvent<HTMLDivElement>) => {
+            if (event.target === event.currentTarget) onClose();
         },
         [onClose],
     );
 
-    /* ── Prevent content click from propagating to backdrop ── */
-    const stopProp = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
+    const stopPropagation = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        event.stopPropagation();
     }, []);
 
     if (!isModalOpen) return null;
 
-    return (
+    const dialog = (
         <div
             role="dialog"
             aria-modal="true"
-            aria-label={title}
+            aria-labelledby={titleId}
+            data-modal-state="open"
             onClick={handleBackdropClick}
-            className={`fixed inset-0 z-50 transition-opacity duration-250 ease-out ${
-                open
-                    ? 'pointer-events-auto opacity-100'
-                    : 'pointer-events-none opacity-0'
-            }`}
-            style={{
-                background: 'rgba(11, 19, 43, 0.65)',
-                backdropFilter: 'blur(4px)',
-                WebkitBackdropFilter: 'blur(4px)',
-            }}
+            className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/65 p-0 opacity-100 backdrop-blur-xs transition-opacity duration-200 sm:items-center sm:p-6"
         >
-            {/* ── Mobile: bottom-anchored sheet | Desktop: centered modal ── */}
             <div
-                className={`
-                    flex flex-col
-                    transition-transform duration-300
-                    /* Mobile: bottom sheet */
-                    fixed inset-x-0 bottom-0
-                    max-h-[88vh] w-full
-                    /* Desktop ≥640px: centered modal */
-                    sm:static sm:inset-auto
-                    sm:mx-auto sm:my-auto sm:mt-[5vh]
-                    sm:max-w-xl sm:max-h-[85vh]
-                    sm:rounded-t-none
-                    ${open ? 'translate-y-0' : 'translate-y-full sm:translate-y-8 sm:opacity-0'}
-                `}
-                style={{
-                    transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                }}
-                onClick={stopProp}
+                data-modal-surface="true"
+                onClick={stopPropagation}
+                className="flex max-h-[88vh] w-full translate-y-0 flex-col overflow-hidden bg-transparent transition-transform duration-300 sm:max-h-[85vh] sm:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:shadow-2xl"
+                style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
             >
-                {/* ── Wave Cap ── */}
                 <WaveCap />
 
-                {/* ── Modal Content Shell ── */}
                 <div
                     ref={modalContentRef}
-                    className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white px-[18px] pb-4 pt-1"
+                    className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white px-[18px] pt-1 pb-4 sm:rounded-2xl sm:px-6 sm:pt-5"
                 >
-                    {/* ── Pinned Fixed Header ── */}
-                    <div className="shrink-0 pb-1.5">
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="shrink-0 border-b border-slate-100 pb-3">
+                        <div className="flex items-center justify-between gap-4">
                             <div className="min-w-0 flex-1">
-                                <h3 className="m-0 text-lg font-extrabold text-gray-900">
+                                <h3
+                                    id={titleId}
+                                    className="m-0 text-lg font-extrabold text-gray-900"
+                                >
                                     {title}
                                 </h3>
                                 {subtitle && (
-                                    <p className="mt-0.5 text-[10px] text-slate-500">
-                                        {subtitle}
-                                    </p>
+                                    <p className="mt-0.5 text-[10px] text-slate-500">{subtitle}</p>
                                 )}
                             </div>
                             <CloseCircle onClick={onClose} />
                         </div>
-                        {headerSlot && (
-                            <div className="mt-1.5">{headerSlot}</div>
-                        )}
+                        {headerSlot && <div className="mt-1.5">{headerSlot}</div>}
                     </div>
 
-                    {/* ── Scrollable Body ── */}
                     <div
                         className="flex-1 overflow-y-auto overscroll-contain"
                         style={{ scrollbarWidth: 'thin' }}
@@ -183,21 +151,24 @@ export default function GlovoWaveModal({
                         {children}
                     </div>
 
-                    {/* ── Pinned Bottom Action Slot ── */}
                     {bottomSlot && (
-                        <div className="shrink-0 border-t border-slate-200 bg-white pt-2.5">
+                        <div
+                            className="shrink-0 border-t border-slate-200 bg-white pt-2.5"
+                            style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+                        >
                             {bottomSlot}
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* WebKit thin scrollbar */}
             <style>{`
-                .overflow-y-auto::-webkit-scrollbar { width: 4px; }
-                .overflow-y-auto::-webkit-scrollbar-track { background: transparent; }
-                .overflow-y-auto::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+                [data-modal-surface] .overflow-y-auto::-webkit-scrollbar { width: 4px; }
+                [data-modal-surface] .overflow-y-auto::-webkit-scrollbar-track { background: transparent; }
+                [data-modal-surface] .overflow-y-auto::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
             `}</style>
         </div>
     );
+
+    return typeof document === 'undefined' ? dialog : createPortal(dialog, document.body);
 }

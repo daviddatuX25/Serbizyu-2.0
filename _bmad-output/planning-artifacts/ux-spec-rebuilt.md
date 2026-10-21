@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt UX Specification and Traceability Contract
 
-Status: CANONICAL PLANNING AUTHORITY — founder-approved 2026-07-31; initiative extension accepted 2026-08-09; implementation/live-money gates remain separate
+Status: CANONICAL PLANNING AUTHORITY — founder-approved 2026-07-31; initiative extension accepted 2026-08-09; Request/Tender and pre-messaging foundation reconciled 2026-09-25; implementation/live-money gates remain separate
 BMAD phase: Phase 2 — Planning / UX and interaction contract
 Depends on:
 
@@ -13,7 +13,7 @@ Depends on:
 
 This document defines user-facing behavior and journey coverage. It does not replace domain/state, payment, schema, or architecture contracts.
 
-Deal-Chaining foundation note: the four-table coordination foundation is not a user-facing feature and creates no navigation or pilot-screen commitment. `UX-024` is a later, separately gated coordination story that may consume the approved foundation only after the ordinary Request/Quote/Order/Work spine and its activation evidence are ready.
+Deal-Chaining customer activation remains separately gated. The current pre-messaging foundation does include its governed catalog, builder, Request/Quote reuse, relational lineage, dependency validation, and child-isolation surfaces after the ordinary Listing/Request/Quote/Order/Work path is proven.
 
 ## 1. UX principles
 
@@ -40,7 +40,9 @@ The interface uses these canonical labels:
 - Product Request
 - Direct Booking
 - Quote Request
-- Reverse Bidding
+- Public Bidding
+- Sealed Bidding
+- Direct Invite
 - Agent Assistance
 - Work
 - Payment Obligation
@@ -57,6 +59,11 @@ The interface uses these canonical labels:
 - Completed
 - On hold
 - Needs support
+- Target budget
+- Budget limit
+- Budget range
+- Need an estimate
+- Keep budget private
 
 Avoid unqualified labels such as:
 
@@ -65,7 +72,10 @@ Avoid unqualified labels such as:
 - Verified payment when only a screenshot exists
 - Trusted provider when only an account exists
 - Paid equals completed
-- Agent owns this
+- Exact Budget
+- Public bids when only participation is open
+- Sealed guarantee or cryptographic sealing
+- Invitation accepted equals Order
 
 ## 3. Information architecture
 
@@ -73,21 +83,25 @@ Avoid unqualified labels such as:
 
 - Home/discovery
 - Category-family browsing
+- Unified Browse with visibly distinct Listing and Request cards
 - Search/filter
 - Listing details
+- Public/coarse Request details for Open and policy-approved Sealed discovery
 - Provider/Owner trust and safety summary
-- Request creation
+- Request/Tender creation
 - Help and language/accessibility guidance
 
 ### Authenticated user areas
 
-- My listings
-- My requests
+- My listings and Listing builder
+- My requests and Tender builder
+- My Bids/Quotes
 - My Orders
-- Work progress
+- Work specification builder and Work progress
+- Deal-Chain catalog/builder when activated for the foundation cohort
 - Payment Obligations
 - Evidence
-- Messages/notifications
+- Messages/notifications (next bounded capability after the pre-messaging foundation)
 - Reviews
 - Support/disputes
 - Consent and Agent access
@@ -141,6 +155,11 @@ Avoid unqualified labels such as:
 | UX-029 | Connected apps and AI handoff | Owner, Operations checker, Admin | account integrations; exact AI approval | PRD-065–067, PRD-072–073 | CONDITIONAL / C,S |
 | UX-030 | Operations, activation, and recovery | Admin/Operator, Operations checker | ordered consumers; activation; recovery | PRD-052–059, PRD-068–073, PRD-075 | COMMITTED / C,T,S |
 | UX-031 | Mandatory cross-surface state contract | all actors | every connected interface | PRD-060, PRD-075 | COMMITTED / C,T,S |
+| UX-032 | Unified Browse with distinct Listing/Request projections and safe cache degradation | Guest, Buyer, Provider | public/coarse discovery | PRD-013, PRD-082–083 | COMMITTED / C,T,S |
+| UX-033 | Request/Tender builder, Open Bid versioning, comparison, and atomic award | Requester, Provider, Agent | Open Tender; ordinary Order | PRD-018–019, PRD-063, PRD-077–081, PRD-084 | COMMITTED / C,T,S |
+| UX-034 | Sealed and Direct Invite participation/privacy | Requester, invited/eligible Provider, Agent, Operations | Sealed/Direct Invite; ordinary Order | PRD-077–080 | CONDITIONAL / C,T,S |
+| UX-035 | Governed Work catalog and Work-specification builder | Listing/Request author, Provider, Agent | A1/A3/A4/A9 | PRD-024–030, PRD-064, PRD-084 | COMMITTED / C,T,S |
+| UX-036 | Deal-Chain catalog and builder foundation over isolated child formation | Coordinator, Agent, invited Provider, Operations | Deal Needs/dependencies/invitations; child Orders | PRD-022, PRD-076, PRD-084 | CONDITIONAL / S,F |
 
 No committed PRD journey may be removed from UX to make the build appear smaller. It may be moved to `PILOT-CONDITIONAL` only through an activation decision.
 
@@ -441,7 +460,7 @@ Notifications must identify:
 - Deadline/expiry if relevant
 - Safe support route
 
-Delivery failure must create a retry/support state, not silently discard a critical notice.
+Delivery failure must create a retry/support state, not silently discard a critical notice. Support surfaces distinguish `delivery_settling`, `cancellation_requested`, delivered, and cancelled; show whether provider attempts remain in flight or have `outcome_unknown`; preserve actual/late delivery that could not be recalled; and never label source business state successful because a notice was delivered.
 
 ### UX-020 — Low-literacy/low-data access
 
@@ -548,7 +567,7 @@ The following index is the minimum traceability bridge. Detailed screen/componen
 | PRD-017 | UX-004/005 Direct Booking action |
 | PRD-018, PRD-019, PRD-020 | UX-006/007 request, quote, response, and Quick Deal conditional surfaces |
 | PRD-021 | Non-visual activation/deferred records; UX-020 safe offline boundary; no pilot screen promise |
-| PRD-022 | UX-024 bounded coordination lab; foundation is committed, functionality is later, and pilot activation is separately gated |
+| PRD-022 | UX-024/036 bounded coordination catalog, builder, lineage, child isolation, and separately gated customer activation |
 | PRD-023 | UX-003 Agent attribution; UX-004/005 Agent-created listing |
 | PRD-024, PRD-025, PRD-026, PRD-027, PRD-028, PRD-029, PRD-030, PRD-031 | UX-008 A1; UX-009 A3; UX-010 A4; UX-011 A9; UX-016 completion |
 | PRD-032, PRD-033, PRD-034 | UX-012 External Cash; Payment Obligation summary |
@@ -569,32 +588,37 @@ The following index is the minimum traceability bridge. Detailed screen/componen
 | PRD-068, PRD-069, PRD-072, PRD-073 | UX-030 operations, ordered recovery, activation, and maker/checker |
 | PRD-070, PRD-071, PRD-074 | UX-028 financial/evidence/provider sandbox truth |
 | PRD-075 | UX-031 cross-surface state/error/recovery/accessibility contract |
-| PRD-076 | UX-024 same-Chain lineage, replacement, and child isolation |
+| PRD-076 | UX-024/036 same-Chain lineage, replacement, catalog/builder, and child isolation |
+| PRD-077, PRD-078 | UX-033 Request/Tender builder, immutable Bid lineage, explicit selection, and atomic award |
+| PRD-079, PRD-080 | UX-034 Open/Sealed/Direct Invite privacy, invitation, alternatives, and disclosure |
+| PRD-081 | UX-033 canonical budget controls and confirmation |
+| PRD-082, PRD-083 | UX-032 discriminated Browse and safe cache degradation |
+| PRD-084 | UX-033/035/036 governed Request, Work, and Deal-Chain builders |
 
 ## 10. UX acceptance gate
 
 The rebuilt UX is ready for domain/story planning only when:
 
-- All 31 journey IDs have a defined owner and status.
-- All 76 PRD requirements have at least one UX target or are explicitly non-visual.
-- A1/A3/A4/A9 each have a complete journey.
+- All 36 journey IDs have a defined owner and status.
+- All 84 PRD requirements have at least one UX target or are explicitly non-visual.
+- A1/A3/A4/A9 each have a complete journey and governed builder path.
 - Cash, External Digital Proof, Direct Digital sandbox, and Tiwala sandbox are visibly distinct.
 - Payment and Work completion are visibly separate.
 - Agent consent and attribution are visible.
-- Low-literacy, low-data, safety, privacy, and support flows are included.
-- Conditional/deferred paths are not represented as pilot promises; the Deal-Chaining foundation is represented without implying pilot activation.
-- Old mockups are classified as historical or regenerated.
-- Founder approval is recorded before UX becomes authoritative.
+- Open, Sealed, and Direct Invite visibility is explicit across fields, counts, timing, errors, cache, and recovery.
+- Listing and Request remain visibly distinct in unified Browse and degrade safely without cache authority.
+- Conditional/deferred paths are not represented as pilot promises; Deal-Chain catalog/builder foundation does not imply customer activation.
+- Messaging is explicitly sequenced next and cannot substitute for structured Request/Bid/Order/Work state.
 
 Next planning output: domain/state contracts and a canonical schema decision artifact.
 ### UX-024 — Bounded Deal-Chaining coordination lab and activation boundary
 
-This is a later user-facing journey contract, not an initial-pilot navigation commitment. The experience may be implemented only after the ordinary Request/Quote/Order/Work spine and the approved foundation contract are stable, and only behind a separate activation flag.
+This journey has two gates. The governed catalog/builder/lineage foundation follows ordinary Request/Quote/Order/Work stability in the current pre-messaging sequence. Customer navigation and complete coordination execution remain separately activated.
 
 Screens/states:
 
 - Chain purpose/coordinator and persistent “coordination only” explanation
-- Ordered Need slots with `open`, `sourcing`, `invited`, `quoted`, `accepted`, `in progress`, `blocked`, `completed`, `failed`, `cancelled`, and `replacement needed` meaning
+- Ordered Need slots with `open`, `sourcing`, `invited`, `quoted`, `partner confirmed` (invitation response only), `in progress` (child Order formed), `blocked`, `completed`, `failed`, `cancelled`, and `replacement needed` meaning
 - Need-specific Request/Quote entry and invitation scope/expiry/response
 - Same-chain dependency display with blocked transition explanation; cycles and self-edges show a recoverable validation error
 - Child-Order link showing independent parties, terms, Work, payment evidence, disputes, and cancellation
@@ -610,7 +634,7 @@ Rules:
 
 ## 11. Accepted initiative UX extension — 2026-08-09
 
-These journeys are canonical contracts, not permission to add unfinished navigation. `PROGRAM-IMPLEMENTATION-PLAN.md` §9 supplies the initiative-wide state/error/recovery matrix; each train LLD expands the relevant row before permanent UI.
+These journeys are canonical contracts, not permission to add unfinished navigation. `master-delivery-plan.md` §§7–7.1 supply the initiative-wide packet acceptance and engineering review contract; each vertical LLD/OpenSpec expands every applicable state/error/recovery row before permanent UI.
 
 ### UX-025 — Strict mobile signup and multi-method sign-in
 
@@ -661,3 +685,79 @@ Amended 2026-08-10 (`hybrid-browser-auth-phone-step-up`, ADR-R-030).
 Every connected surface defines: actor and acting-for identity; authoritative object/version; one primary and bounded secondary actions; field/state visibility; loading/skeleton, empty, permission-denied, validation, stale conflict, offline/network, degraded dependency, retry/idempotent success, and support/escalation; URL/deep-link and leave/resume behavior; focus order, error summary, live-region announcement, keyboard/touch/contrast/no-color-only semantics; low-data/no-image alternative; analytics evidence class; browser scenario and target-user UAT.
 
 Interface completion requires the user to understand **who may act, what will change, what will not change, whether money/protection is real or sandbox, and the next safe recovery action**. An HTTP/Pest success alone cannot satisfy this contract.
+
+## 12. Accepted pre-messaging experience extension — 2026-09-25
+
+### UX-032 — Unified PostgreSQL Browse, distinct resources, and optional cache degradation
+
+One Browse feed may interleave `ListingCardView` and `RequestCardView`, but each card must identify its resource kind through label, information hierarchy, destination, action vocabulary, and analytics identity. Users see the same contract whether the optional cache is disabled, active, missed, degraded, or rolled back.
+
+- Listing cards show provider-owned supply and price/quote meaning. PostgreSQL is the default. If measured evidence activates cache assistance, one batched PostgreSQL read verifies each cached candidate's current source revision, lifecycle/visibility qualification, capacity/availability, and activation before the server emits current availability or actions; disqualified entries disappear or rebuild.
+- Request cards show citizen-owned demand, budget semantics, timing, Tender mode-safe explanation, and Request actions only after current PostgreSQL qualification.
+- Direct Invite never appears. Open Request cards never expose Bid terms, identities, rankings, or counts. Sealed cards expose no participation signal.
+- Loading preserves the feed frame; empty explains active filters; unavailable removes commercial CTAs. Cache disabled/failure/miss/no-benefit/regression uses current database-backed projections without changing URLs or copy. Required session/queue failure is separate.
+- If cache is active, shared fields never contain current lifecycle/visibility/eligibility, source revision, live availability, or executable actions and cannot advertise active supply or authorize publication, Bid submission, reservation, selection, or formation. Operations can see baseline/target, hit/miss, overlay cost, tail latency, errors, expiry, and disable state; users are not told that cache success equals data freshness.
+
+### UX-033 — Request/Tender builder and Open bidding
+
+The Request builder is a resumable, server-validated flow:
+
+1. Need type and governed category/capability.
+2. Outcome, current condition, deliverables, constraints, exclusions, and expected evidence.
+3. Product item list or shape-specific Work specification where required.
+4. Budget using exactly one label/value mapping: Target budget/`target`, Budget limit/`ceiling`, Budget range/`range`, Need an estimate/`estimate`, Keep budget private/`undisclosed`.
+5. Coarse location, protected precise location, desired Work window, safety/media controls.
+6. Public Bidding, Sealed Bidding, or Direct Invite; response and selection timelines are separate from Work timing.
+7. Review of visibility, eligibility, payment-lane options, exact pinned versions, and publication consequences.
+
+Draft, validation-pending, media-pending, stale-conflict, publishable, scheduled, and published states preserve user input and identify the next safe action. Mode is immutable after publication.
+
+For Open bidding, an eligible provider creates a draft Bid, reviews source/catalog versions, enters exact structured scope/lines/amount/schedule/validity/Work/lane terms, and submits one immutable Quote version. Revision shows a diff and creates a successor; withdrawal is explicit and does not erase history. Competitor information is never shown.
+
+When one committed close/reveal transition enters `selection_open`—or earlier only through that same governed close command where policy permits—the requester compares current eligible versions, selects deliberately, and confirms exact consequences. UI action `quote.select_and_finalize` dispatches exactly `SelectAndFinalizeBid` (`select_and_finalize_bid`), which locks and revalidates the Tender, exact Bid revision, applicable invitation, capacity, parties, and policies and invokes `FinalizeOrderAgreement`. It either commits selection, complete ordinary Order/Work/Obligation/reservation graph, award, competing-Bid consequences, audit, idempotency, and outbox and routes to the Order, or commits none of them and returns a stale/eligibility/capacity/invitation/policy conflict with preserved comparison state.
+
+### UX-034 — Sealed and Direct Invite
+
+Sealed publication starts from a validated draft/schedule and pins the current response-eligibility, anti-spam, expiry/selection, liquidity, privacy, and activation policy before entering `open`; absent or failed evidence leaves the Request unpublished.
+
+Before Sealed `selection_open`:
+
+- requester sees Tender state and deadline, not Bid existence, count, identity, timing, ordering, errors, or content;
+- each bidder sees only the Request and their own lineage;
+- public and competitors receive no participation signal through lists, detail, notifications, support exports, caches, or telemetry.
+
+One server-confirmed `close_bidding` transaction freezes submissions, applies the pinned reveal policy, and enters `selection_open`, which unlocks the requester comparison projection. “Sealed” copy states that Serbizyu keeps responses private until that transition; it never claims cryptographic sealing.
+
+Direct Invite:
+
+Direct Invite publication atomically pins mode/deadlines/policy, creates at least one exact current invitation, opens the Request, and commits audit/outbox/notice intents—or commits none.
+
+- is absent from public Browse/search and produces a uniform private/not-found recovery for non-invitees;
+- shows an invited provider only the exact current purpose-bound invitation, Request scope, deadline, eligibility, and their own Bid;
+- allows decline or exact Bid submission; valid submission accepts that invitation, but invitation acceptance alone never creates a Bid or Order;
+- disables submission immediately on synchronous expiry/revocation and revalidates the exact invitation during atomic finalization;
+- initially supports one active alternative and mandatory nodes only.
+
+### UX-035 — Governed Work catalog and builder
+
+The governed Work catalog, resolver, and source-specification builder/validator are available before any Listing, Request, Quote, or award path that requires Work. The author selects a listing category and an activated capability profile. The Work Catalog presents published, versioned sets compatible with the category, listing type, capability profile, and supported mechanisms as suggestions first; **Browse all** exposes other published sets only when they remain compatible. Set titles and descriptions explain the work they seed. A selected set binds its activated Work shape (A1, A3, A4, or A9) internally; the author does not choose or see shape codes. Selecting a set copies that exact immutable version and provenance into a source-owned Work specification draft. Templates prefill bounded, visibly editable specifications but never become runtime authority. Optional duration labels are provider targets, not guaranteed SLAs; show them only when supplied by the set or author, and do not fabricate missing durations. Category eligibility comes from the governed catalog definition and is not broadened by listing submissions.
+ 
+Missing category matches are stated clearly, with **Browse all** offered. If no compatible set exists after browsing, required Work authoring/submission remains blocked; the system must not invent a set or silently default a shape. Edits—including changing or removing nodes—create a custom Work specification owned by the current source while preserving the selected set/version as provenance. Source authoring never mutates a published catalog version; reusability requires a separately authorized, versioned **Save as template** promotion. Accepted Work structure is displayed read-only in the Order/Work workspace; execution actions append state/events and never reopen the authoring builder.
+
+
+### UX-036 — Deal-Chain catalog and builder foundation
+
+The Deal-Chain builder operates after ordinary formation is stable:
+
+- choose a governed chain/template starting point or start blank;
+- add ordered Needs with required category/capability/Work specifications;
+- add same-chain dependency edges with immediate cycle/error explanation;
+- source each Need through Request/Quote or a Need-specific invitation;
+- review derived readiness without implying parent payment, pooled liability, or sibling completion;
+- move each finalized Need through the ordinary final-agreement confirmation into one isolated child Order and only then show it as `in progress`.
+
+The catalog is an authoring accelerator, not a new financial or Order authority. Customer navigation remains activation-gated.
+
+### Messaging handoff
+
+Messaging is deliberately next. Until that capability lands, foundational screens use structured fields, state transitions, and support/recovery routes; they must not fake chat or encode material counters in free text. Messaging must later bind conversation membership and disclosure to these exact Request, invitation, Quote lineage, Order, Work, participant, acting-context, privacy, retention, audit, and notification-intent contracts.

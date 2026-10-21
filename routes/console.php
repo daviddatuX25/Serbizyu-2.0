@@ -129,6 +129,7 @@ Artisan::command('serbizyu:seed-tagudin-requests', function () {
 
     if ($juan === null || $rosa === null) {
         $this->error('Run serbizyu:seed-test-account first.');
+
         return 1;
     }
 
@@ -245,5 +246,6 @@ Artisan::command('serbizyu:seed-tagudin-requests', function () {
     );
 
     $this->info('✓ Seeded 4 Tagudin community requests and active quotes successfully!');
+
     return 0;
 })->purpose('Seed rich Tagudin citizen requests and bidding quotes for QA testing');

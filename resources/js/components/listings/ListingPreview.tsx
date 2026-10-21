@@ -1,5 +1,5 @@
 import type { ListingRecord } from '../../types';
-import { Notice } from '../ui';
+import { Notice } from '@/components/ui';
 import { ListingCard } from './ListingCard';
 
 export function ListingPreview({

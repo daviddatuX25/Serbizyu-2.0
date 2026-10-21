@@ -22,37 +22,59 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
         label: 'Greeting cards',
         barangayPreview: 'Tagudin Centro',
         fulfillmentPreview: 'Request · Soft proof · Pickup',
-        previewPhotos: ['https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=78', 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=900&q=78', 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=900&q=78'],
+        previewPhotos: [
+            'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=78',
+            'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=900&q=78',
+            'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=900&q=78',
+        ],
     },
     repairs: {
         label: 'Repairs',
         barangayPreview: 'Barangay Pudoc West',
         fulfillmentPreview: 'Request · Walk-in · Done',
-        previewPhotos: ['https://images.unsplash.com/photo-1581092918056-0c4c5acdfb82?auto=format&fit=crop&w=900&q=78', 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=78'],
+        previewPhotos: [
+            'https://images.unsplash.com/photo-1581092918056-0c4c5acdfb82?auto=format&fit=crop&w=900&q=78',
+            'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=78',
+        ],
     },
     'local-services': {
         label: 'Local services',
         barangayPreview: 'Tagudin Public Market',
         fulfillmentPreview: 'Request · Meet · Hand-off',
-        previewPhotos: ['https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=78', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=78', 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=78'],
+        previewPhotos: [
+            'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=78',
+            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=78',
+            'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=78',
+        ],
     },
     'print-assist': {
         label: 'Print assist',
         barangayPreview: 'Tagudin Centro',
         fulfillmentPreview: 'Request · Soft proof · Print',
-        previewPhotos: ['https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=900&q=78', 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=78'],
+        previewPhotos: [
+            'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=900&q=78',
+            'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=78',
+        ],
     },
     'local-food': {
         label: 'Local food',
         barangayPreview: 'Tagudin Market stall',
         fulfillmentPreview: 'Reserve · Ready · Pickup',
-        previewPhotos: ['https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=78', 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=78', 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=900&q=78'],
+        previewPhotos: [
+            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=78',
+            'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=78',
+            'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=900&q=78',
+        ],
     },
     'local-help': {
         label: 'Local help',
         barangayPreview: 'Tagudin Centro',
         fulfillmentPreview: 'Request · Confirm · Meet',
-        previewPhotos: ['https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=78', 'https://images.unsplash.com/photo-1581092918056-0c4c5acdfb82?auto=format&fit=crop&w=900&q=78', 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=78'],
+        previewPhotos: [
+            'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=78',
+            'https://images.unsplash.com/photo-1581092918056-0c4c5acdfb82?auto=format&fit=crop&w=900&q=78',
+            'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=78',
+        ],
     },
 };
 
@@ -247,7 +269,6 @@ function formatPrice(listing: ListingRecord): string | null {
     return formatMoney(minor, currency);
 }
 
-
 function hashSeed(value: string): number {
     let hash = 0;
     for (let i = 0; i < value.length; i += 1) {
@@ -295,7 +316,10 @@ function TwinMeta({ listing }: { listing: ListingRecord }) {
     const place = listingBarangay(listing);
 
     return (
-        <div className="twin-meta" title="Preview until ratings, orders, and geo project from backend">
+        <div
+            className="twin-meta"
+            title="Preview until ratings, orders, and geo project from backend"
+        >
             <span className="meta-rating">
                 <span className="star-ico" aria-hidden="true">
                     {Ico.star}
@@ -380,7 +404,8 @@ function MediaRail({
         const onScroll = () => {
             window.cancelAnimationFrame(frame);
             frame = window.requestAnimationFrame(() => {
-                const width = Math.round(rail.getBoundingClientRect().width) || rail.clientWidth || 1;
+                const width =
+                    Math.round(rail.getBoundingClientRect().width) || rail.clientWidth || 1;
                 const index = Math.round(rail.scrollLeft / width);
                 const next = Math.max(0, Math.min(photos.length - 1, index));
                 activeRef.current = next;
@@ -396,8 +421,7 @@ function MediaRail({
         };
 
         rail.addEventListener('scroll', onScroll, { passive: true });
-        const ro =
-            typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null;
+        const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null;
         ro?.observe(rail);
         onResize();
 
@@ -515,7 +539,7 @@ function MediaRail({
             <span className="tag tag-category">{listingCategoryLabel(listing)}</span>
             <button
                 type="button"
-                className={`pin-btn${pinned ? ' is-on' : ''}`}
+                className={`pin-btn ${pinned ? 'is-on' : ''}`}
                 aria-pressed={pinned}
                 aria-label={pinned ? 'Unpin listing' : 'Pin listing'}
                 onClick={(e) => {
@@ -526,12 +550,17 @@ function MediaRail({
                 {Ico.pin}
             </button>
             {expanded && photos.length > 1 ? (
-                <div className="media-dots" data-media-dots role="group" aria-label="Listing photos">
+                <div
+                    className="media-dots"
+                    data-media-dots
+                    role="group"
+                    aria-label="Listing photos"
+                >
                     {photos.map((_, index) => (
                         <button
                             key={`${listing.id}-dot-${index}`}
                             type="button"
-                            className={`media-dot${index === active ? ' is-on' : ''}`}
+                            className={`media-dot ${index === active ? 'is-on' : ''}`}
                             aria-label={`Show photo ${index + 1} of ${photos.length}`}
                             aria-current={index === active ? 'true' : undefined}
                             onClick={(e) => {
@@ -776,7 +805,9 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
         const hoverMq =
             typeof window.matchMedia === 'function' ? window.matchMedia('(hover: hover)') : null;
         const multiColMq =
-            typeof window.matchMedia === 'function' ? window.matchMedia('(min-width: 900px)') : null;
+            typeof window.matchMedia === 'function'
+                ? window.matchMedia('(min-width: 900px)')
+                : null;
         const reduceMotion = matchesMedia('(prefers-reduced-motion: reduce)', false);
         const cards = [...root.querySelectorAll<HTMLElement>('.ptile.dwell-card')];
         const timers = new WeakMap<HTMLElement, { hover?: number; collapse?: number }>();
@@ -793,7 +824,9 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                 return true;
             }
             // Wide layout + fine pointer OR any mouseenter path available.
-            return matchesMedia('(pointer: fine)', false) || matchesMedia('(min-width: 900px)', false);
+            return (
+                matchesMedia('(pointer: fine)', false) || matchesMedia('(min-width: 900px)', false)
+            );
         };
         const multiCol = () => multiColMq?.matches ?? false;
         /** IO/scroll expand is single-column touch only. */
@@ -922,7 +955,10 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                 return;
             }
             // Sheets/menus live outside the card; don't collapse for those.
-            if (target instanceof Element && target.closest('.sheet, .sheet-backdrop, .sort-menu')) {
+            if (
+                target instanceof Element &&
+                target.closest('.sheet, .sheet-backdrop, .sort-menu')
+            ) {
                 return;
             }
             collapseNow(expanded);
@@ -1122,11 +1158,17 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
 
     return (
         <section ref={rootRef} className={rootClass} aria-labelledby="browse-title">
-            <div className={`stickybar${stuck ? ' is-stuck' : ''}`}>
+            <div className={`stickybar ${stuck ? 'is-stuck' : ''}`}>
                 <div className="sticky-inner">
                     <div className="nav-brand sz-secondary-logo-slot">
                         <Link className="brand-mark" href="/" aria-label="Serbizyu home">
-                            <img src={LOGO_SRC} alt="Serbizyu" width={184} height={51} decoding="async" />
+                            <img
+                                src={LOGO_SRC}
+                                alt="Serbizyu"
+                                width={184}
+                                height={51}
+                                decoding="async"
+                            />
                         </Link>
                     </div>
 
@@ -1141,7 +1183,7 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                             />
                             <button
                                 type="button"
-                                className={`btn-tool${filterOpen ? ' is-on' : ''}`}
+                                className={`btn-tool ${filterOpen ? 'is-on' : ''}`}
                                 onClick={() => setFilterOpen(true)}
                             >
                                 {Ico.filter}
@@ -1162,7 +1204,7 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                             <div className="view-seg" role="group" aria-label="Browse layout">
                                 <button
                                     type="button"
-                                    className={`seg${view === 'cards' ? ' is-on' : ''}`}
+                                    className={`seg ${view === 'cards' ? 'is-on' : ''}`}
                                     aria-pressed={view === 'cards'}
                                     title="Cards"
                                     onClick={() => setViewMode('cards')}
@@ -1172,7 +1214,7 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                                 </button>
                                 <button
                                     type="button"
-                                    className={`seg${view === 'list' ? ' is-on' : ''}`}
+                                    className={`seg ${view === 'list' ? 'is-on' : ''}`}
                                     aria-pressed={view === 'list'}
                                     title="List"
                                     onClick={() => setViewMode('list')}
@@ -1182,23 +1224,26 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                                 </button>
                             </div>
                             <span className="tools-meta">
-                                <strong>{filtered.length}</strong> · <span>{sort.replace(' first', '')}</span>
+                                <strong>{filtered.length}</strong> ·{' '}
+                                <span>{sort.replace(' first', '')}</span>
                             </span>
                             {sortOpen ? (
                                 <div className="sort-menu is-open" role="menu">
-                                    {(['Newest first', 'Title A–Z', 'Title Z–A'] as SortMode[]).map((option) => (
-                                        <button
-                                            key={option}
-                                            type="button"
-                                            className={sort === option ? 'is-on' : ''}
-                                            onClick={() => {
-                                                setSort(option);
-                                                setSortOpen(false);
-                                            }}
-                                        >
-                                            {option}
-                                        </button>
-                                    ))}
+                                    {(['Newest first', 'Title A–Z', 'Title Z–A'] as SortMode[]).map(
+                                        (option) => (
+                                            <button
+                                                key={option}
+                                                type="button"
+                                                className={sort === option ? 'is-on' : ''}
+                                                onClick={() => {
+                                                    setSort(option);
+                                                    setSortOpen(false);
+                                                }}
+                                            >
+                                                {option}
+                                            </button>
+                                        ),
+                                    )}
                                 </div>
                             ) : null}
                         </div>
@@ -1222,7 +1267,9 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                             className="nav-toggle"
                             aria-expanded={navOpen}
                             aria-controls="browse-nav-panel"
-                            aria-label={navOpen ? 'Close search and filters' : 'Open search and filters'}
+                            aria-label={
+                                navOpen ? 'Close search and filters' : 'Open search and filters'
+                            }
                             onClick={() => setNavOpen((v) => !v)}
                         >
                             <span className="nav-toggle-open" aria-hidden="true">
@@ -1237,7 +1284,7 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
             </div>
 
             <div
-                className={`rec-rail${recPaused ? ' is-paused' : ''}`}
+                className={`rec-rail ${recPaused ? 'is-paused' : ''}`}
                 aria-live="polite"
                 onMouseEnter={() => setRecPaused(true)}
                 onMouseLeave={() => setRecPaused(false)}
@@ -1255,7 +1302,7 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                             <button
                                 key={REC_SETS[n].kicker}
                                 type="button"
-                                className={`dot${n === recIndex ? ' is-on' : ''}`}
+                                className={`dot ${n === recIndex ? 'is-on' : ''}`}
                                 aria-label={`Show ${REC_SETS[n].kicker}`}
                                 onClick={() => setRecIndex(n)}
                             />
@@ -1269,7 +1316,7 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                                 <button
                                     key={item}
                                     type="button"
-                                    className={`chip rec${activeRec === item ? ' is-on' : ''}`}
+                                    className={`chip rec ${activeRec === item ? 'is-on' : ''}`}
                                     onClick={() => applyRec(item)}
                                 >
                                     {item}
@@ -1286,105 +1333,123 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                         <p className="eyebrow">Buyer view · public supply</p>
                         <h1 id="browse-title">Browse active services in Tagudin</h1>
                         <p className="muted">
-                            Only server-approved active listings appear here. Drafts and pending review stay private.
+                            Only server-approved active listings appear here. Drafts and pending
+                            review stay private.
                         </p>
                     </header>
-
 
                     {filtered.length === 0 ? (
                         <div className="empty-panel" role="status">
                             <strong>No active public listings match.</strong>
                             <p className="muted" style={{ marginTop: '0.35rem' }}>
-                                Clear search or filters, or return after review approval publishes more supply.
+                                Clear search or filters, or return after review approval publishes
+                                more supply.
                             </p>
                         </div>
                     ) : view === 'list' ? (
-                            <div className="plist">
-                                {filtered.map((listing) => (
-                                    <article
-                                        key={listing.id}
-                                        className="prow"
-                                        aria-label={listing.title}
-                                        data-id={listing.id}
-                                        role="link"
-                                        tabIndex={0}
-                                        onClick={() => onCardActivate(listing)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                onCardActivate(listing);
+                        <div className="plist">
+                            {filtered.map((listing) => (
+                                <article
+                                    key={listing.id}
+                                    className="prow"
+                                    aria-label={listing.title}
+                                    data-id={listing.id}
+                                    role="link"
+                                    tabIndex={0}
+                                    onClick={() => onCardActivate(listing)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            onCardActivate(listing);
+                                        }
+                                    }}
+                                >
+                                    <div className="th">
+                                        <div className="ph-fallback" aria-hidden="true">
+                                            {initial(listing)}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3>{listing.title}</h3>
+                                        <p>{subtitle(listing)}</p>
+                                        <p className="punchline">{punchline(listing)}</p>
+                                        <p className="owner-copy">
+                                            By {ownerLabel(listing) || 'Local provider'}
+                                        </p>
+                                        <TwinMeta listing={listing} />
+                                    </div>
+                                    <div className="end">
+                                        <span className="meta-line">
+                                            {formatPrice(listing) ?? '—'}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            className={`pin-btn text ${pins.has(listing.id) ? 'is-on' : ''}`}
+                                            aria-pressed={pins.has(listing.id)}
+                                            aria-label={
+                                                pins.has(listing.id)
+                                                    ? 'Unpin listing'
+                                                    : 'Pin listing'
                                             }
-                                        }}
-                                    >
-                                        <div className="th">
-                                            <div className="ph-fallback" aria-hidden="true">
-                                                {initial(listing)}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h3>{listing.title}</h3>
-                                            <p>{subtitle(listing)}</p>
-                                            <p className="punchline">{punchline(listing)}</p>
-                                            <p className="owner-copy">By {ownerLabel(listing) || 'Local provider'}</p>
-                                            <TwinMeta listing={listing} />
-                                        </div>
-                                        <div className="end">
-                                            <span className="meta-line">{formatPrice(listing) ?? '—'}</span>
-                                            <button
-                                                type="button"
-                                                className={`pin-btn text${pins.has(listing.id) ? ' is-on' : ''}`}
-                                                aria-pressed={pins.has(listing.id)}
-                                                aria-label={pins.has(listing.id) ? 'Unpin listing' : 'Pin listing'}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    togglePin(listing.id);
-                                                }}
-                                            >
-                                                {Ico.pin}
-                                                <span>Pin</span>
-                                            </button>
-                                        </div>
-                                    </article>
-                                ))}
-                            </div>
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                togglePin(listing.id);
+                                            }}
+                                        >
+                                            {Ico.pin}
+                                            <span>Pin</span>
+                                        </button>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
                     ) : (
-                            <div className="pgrid cols-4">
-                                {gridListings.map((listing) => (
-                                    <article
-                                        key={listing.id}
-                                        className={`ptile dwell-card${expandedId === listing.id ? ' is-expanded' : ''}`}
-                                        aria-label={listing.title}
-                                        data-id={listing.id}
-                                        role="link"
-                                        tabIndex={0}
-                                        onMouseEnter={(e) => onCardHoverStart(listing.id, e)}
-                                        onPointerMove={(e) => onCardPointerMove(listing.id, e)}
-                                        onMouseLeave={() => onCardHoverEnd(listing.id)}
-                                        onClick={() => onCardActivate(listing)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                onCardActivate(listing);
-                                            }
-                                        }}
-                                    >
-                                        <MediaRail
-                                            listing={listing}
-                                            pinned={pins.has(listing.id)}
-                                            onTogglePin={() => togglePin(listing.id)}
-                                        />
-                                        <CardBody listing={listing} />
-                                    </article>
-                                ))}
-                            </div>
+                        <div className="pgrid cols-4">
+                            {gridListings.map((listing) => (
+                                <article
+                                    key={listing.id}
+                                    className={`ptile dwell-card ${expandedId === listing.id ? 'is-expanded' : ''}`}
+                                    aria-label={listing.title}
+                                    data-id={listing.id}
+                                    role="link"
+                                    tabIndex={0}
+                                    onMouseEnter={(e) => onCardHoverStart(listing.id, e)}
+                                    onPointerMove={(e) => onCardPointerMove(listing.id, e)}
+                                    onMouseLeave={() => onCardHoverEnd(listing.id)}
+                                    onClick={() => onCardActivate(listing)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            onCardActivate(listing);
+                                        }
+                                    }}
+                                >
+                                    <MediaRail
+                                        listing={listing}
+                                        pinned={pins.has(listing.id)}
+                                        onTogglePin={() => togglePin(listing.id)}
+                                    />
+                                    <CardBody listing={listing} />
+                                </article>
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>
 
             {filterOpen ? (
                 <>
-                    <div className="sheet-backdrop is-open" onClick={() => setFilterOpen(false)} aria-hidden="true" />
-                    <div className="sheet is-open" role="dialog" aria-label="Filters" aria-modal="true">
+                    <div
+                        className="sheet-backdrop is-open"
+                        onClick={() => setFilterOpen(false)}
+                        aria-hidden="true"
+                    />
+                    <div
+                        className="sheet is-open"
+                        role="dialog"
+                        aria-label="Filters"
+                        aria-modal="true"
+                    >
                         <h2>Filters</h2>
                         <div className="group">
                             <strong>Listing type</strong>
@@ -1399,7 +1464,7 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                                     <button
                                         key={value}
                                         type="button"
-                                        className={`chip${typeFilter === value ? ' is-on' : ''}`}
+                                        className={`chip ${typeFilter === value ? 'is-on' : ''}`}
                                         onClick={() => setTypeFilter(value)}
                                     >
                                         {label}
@@ -1412,7 +1477,7 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                             <div className="chips">
                                 <button
                                     type="button"
-                                    className={`chip${categoryFilter === 'all' ? ' is-on' : ''}`}
+                                    className={`chip ${categoryFilter === 'all' ? 'is-on' : ''}`}
                                     onClick={() => setCategoryFilter('all')}
                                 >
                                     All categories
@@ -1422,7 +1487,7 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                                         key={code}
                                         type="button"
                                         data-category={code}
-                                        className={`chip${categoryFilter === code ? ' is-on' : ''}`}
+                                        className={`chip ${categoryFilter === code ? 'is-on' : ''}`}
                                         onClick={() => setCategoryFilter(code)}
                                     >
                                         {label}
@@ -1435,14 +1500,14 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                             <div className="chips">
                                 <button
                                     type="button"
-                                    className={`chip${tagudinOnly ? ' is-on' : ''}`}
+                                    className={`chip ${tagudinOnly ? 'is-on' : ''}`}
                                     onClick={() => setTagudinOnly(true)}
                                 >
                                     Tagudin
                                 </button>
                                 <button
                                     type="button"
-                                    className={`chip${!tagudinOnly ? ' is-on' : ''}`}
+                                    className={`chip ${!tagudinOnly ? 'is-on' : ''}`}
                                     onClick={() => setTagudinOnly(false)}
                                 >
                                     All areas
@@ -1461,7 +1526,11 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                             >
                                 Reset
                             </button>
-                            <button type="button" className="btn btn-primary" onClick={() => setFilterOpen(false)}>
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => setFilterOpen(false)}
+                            >
                                 Apply filters
                             </button>
                         </div>
@@ -1471,22 +1540,37 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
 
             {pinOpen ? (
                 <>
-                    <div className="sheet-backdrop is-open" onClick={() => setPinOpen(false)} aria-hidden="true" />
-                    <div className="sheet pin-sheet is-open" role="dialog" aria-label="Pinned listings" aria-modal="true">
+                    <div
+                        className="sheet-backdrop is-open"
+                        onClick={() => setPinOpen(false)}
+                        aria-hidden="true"
+                    />
+                    <div
+                        className="sheet pin-sheet is-open"
+                        role="dialog"
+                        aria-label="Pinned listings"
+                        aria-modal="true"
+                    >
                         <h2>Pinned listings</h2>
                         <p className="muted" style={{ marginTop: '-0.35rem' }}>
                             Local shortlist while you browse. Not a cart — no checkout implied.
                         </p>
                         <div className="pin-list">
                             {pinnedListings.length === 0 ? (
-                                <p className="muted">No pins yet. Pin listings from the grid or list.</p>
+                                <p className="muted">
+                                    No pins yet. Pin listings from the grid or list.
+                                </p>
                             ) : (
                                 pinnedListings.map((listing) => (
                                     <div key={listing.id} className="pin-row">
                                         <div
                                             className="ph-fallback"
                                             aria-hidden="true"
-                                            style={{ width: '3.2rem', height: '3.2rem', borderRadius: 8 }}
+                                            style={{
+                                                width: '3.2rem',
+                                                height: '3.2rem',
+                                                borderRadius: 8,
+                                            }}
                                         >
                                             {initial(listing)}
                                         </div>
@@ -1502,17 +1586,24 @@ export function BrowsePlp({ listings }: { listings: ListingRecord[] }) {
                             )}
                         </div>
                         <div className="actions">
-                            <button type="button" className="btn btn-ghost" onClick={() => setPins(new Set())}>
+                            <button
+                                type="button"
+                                className="btn btn-ghost"
+                                onClick={() => setPins(new Set())}
+                            >
                                 Clear pins
                             </button>
-                            <button type="button" className="btn btn-primary" onClick={() => setPinOpen(false)}>
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => setPinOpen(false)}
+                            >
                                 Done
                             </button>
                         </div>
                     </div>
                 </>
             ) : null}
-
         </section>
     );
 }

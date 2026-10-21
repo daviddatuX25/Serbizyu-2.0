@@ -324,3 +324,150 @@ export const PRODUCT_FIELD_GUIDANCE: Record<string, FieldDefinition> = {
         },
     },
 };
+
+export const REQUEST_GUIDED_STEPS: StepDefinition[] = [
+    {
+        step: 1,
+        shortTitle: 'Need & Category',
+        guidedTitle: 'What do you need help with?',
+        guidedDescription:
+            'Describe the task, repair, or errand clearly so qualified local providers and specialists can understand your problem.',
+        standardTitle: 'Request Identity & Category',
+    },
+    {
+        step: 2,
+        shortTitle: 'Scope & Pipeline',
+        guidedTitle: 'Detail the scope and required work steps',
+        guidedDescription:
+            'List specific tasks to complete, or attach a governed catalog pipeline with SLA and milestone evidence requirements.',
+        standardTitle: 'Scope & Governed Pipeline',
+    },
+    {
+        step: 3,
+        shortTitle: 'Schedule & Location',
+        guidedTitle: 'When and where should the work take place?',
+        guidedDescription:
+            'Select your preferred timing and barangay. Exact address is kept protected and only revealed to your chosen provider.',
+        standardTitle: 'Location & Execution Window',
+    },
+    {
+        step: 4,
+        shortTitle: 'Budget & Tender Rules',
+        guidedTitle: 'Set your budget and bidding rules',
+        guidedDescription:
+            'Choose your budget expectations and tender privacy mode: Open Tender for visible activity or Sealed Bidding for confidential quotes.',
+        standardTitle: 'Budget Semantics & Tender Rules',
+    },
+    {
+        step: 5,
+        shortTitle: 'Fulfillment & Review',
+        guidedTitle: 'Review your request and publish',
+        guidedDescription:
+            'Check your terms, select delivery or courier preferences, and post your request to local providers.',
+        standardTitle: 'Fulfillment & Final Review',
+    },
+];
+
+export const REQUEST_FIELD_GUIDANCE: Record<string, FieldDefinition> = {
+    title: {
+        id: 'title',
+        guidedLabel: 'What do you want to call your request?',
+        advancedLabel: 'Request Title',
+        placeholder: 'e.g. Repair water line in kitchen and replace gate valve',
+        guidance: {
+            id: 'title',
+            question: 'How should I summarize my request?',
+            answer: 'State the exact problem and primary object or location (e.g. "Kitchen pipe leak and valve replacement"). Specific titles attract experienced technicians faster.',
+            example: 'Repair water line in kitchen and replace gate valve before weekend',
+        },
+    },
+    category: {
+        id: 'category',
+        guidedLabel: 'Which category best matches this job?',
+        advancedLabel: 'Category',
+        guidance: {
+            id: 'category',
+            question: 'Why does category matter?',
+            answer: 'It determines which local Tagudin specialists are notified and whether governed work milestone templates can be attached.',
+            example: 'Plumbing & Water, Electrical, Carpentry, Errands & Delivery',
+        },
+    },
+    description: {
+        id: 'description',
+        guidedLabel: 'Describe what needs to be done in detail',
+        advancedLabel: 'Task Description & Condition',
+        placeholder: 'Describe current symptoms, materials needed, access limitations, or specific instructions...',
+        guidance: {
+            id: 'description',
+            question: 'What should I include in the task description?',
+            answer: 'Mention what is happening, what materials you already have, what needs to be replaced, and any house or gate access rules.',
+            example: 'Main gate valve is leaking under the sink. We already shut off main water. Need technician to bring new 1/2-inch brass ball valve.',
+        },
+    },
+    pipeline: {
+        id: 'pipeline',
+        guidedLabel: 'Attach Governed Work Pipeline',
+        advancedLabel: 'Governed Workflow & SLA Gates',
+        guidance: {
+            id: 'pipeline',
+            question: 'What is a governed work pipeline?',
+            answer: 'A structured sequence of milestones with defined durations and evidence gates (e.g. before/after photo, pressure test sign-off). This protects both you and the provider.',
+            example: 'A1 Linear: 1. Diagnosis (15m) → 2. Valve Repair (25m) → 3. Pressure Test Sign-off (15m)',
+        },
+    },
+    timing: {
+        id: 'timing',
+        guidedLabel: 'When do you need this completed?',
+        advancedLabel: 'Execution Timing Window',
+        guidance: {
+            id: 'timing',
+            question: 'How does timing affect quotes?',
+            answer: 'Urgent requests alert nearby available providers immediately. Flexible schedules give you more competitive bids over a wider window.',
+            example: 'Urgent (Today), Flexible this week, or Specific Date & Time Window',
+        },
+    },
+    location: {
+        id: 'location',
+        guidedLabel: 'Where is the job location?',
+        advancedLabel: 'Barangay & Address Privacy',
+        guidance: {
+            id: 'location',
+            question: 'Will everyone see my exact house address?',
+            answer: 'No. Only your barangay (e.g. Tagudin Centro) is visible during bidding. Your exact house coordinates and street address are only revealed to the provider you choose to award.',
+            example: 'Barangay Centro, Tagudin · Coarse area only',
+        },
+    },
+    budget: {
+        id: 'budget',
+        guidedLabel: 'What is your budget expectation?',
+        advancedLabel: 'Budget Semantics',
+        guidance: {
+            id: 'budget',
+            question: 'Which budget mode should I choose?',
+            answer: '"Need Estimate" lets providers propose based on inspection. "Exact Budget" signals a firm maximum. "Undisclosed" keeps your budget private for unbiased competitive bidding.',
+            example: 'Need Estimate (~₱500) or Exact Budget (₱850.00)',
+        },
+    },
+    tenderMode: {
+        id: 'tenderMode',
+        guidedLabel: 'How should providers bid?',
+        advancedLabel: 'Tender Privacy Mode',
+        guidance: {
+            id: 'tenderMode',
+            question: 'What is the difference between Open Tender and Sealed Bidding?',
+            answer: 'In Open Tender, providers see that other bids have been submitted and can submit competitive proposals. In Sealed Bidding, quotes are blind/sealed until review opens, preventing race-to-the-bottom undercutting.',
+            example: 'Open Tender (Active comparison) vs Sealed Bidding (Blind proposals)',
+        },
+    },
+    fulfillment: {
+        id: 'fulfillment',
+        guidedLabel: 'Fulfillment & Logistics Preference',
+        advancedLabel: 'Fulfillment Preference',
+        guidance: {
+            id: 'fulfillment',
+            question: 'Can I request delivery or courier assistance?',
+            answer: 'Yes. If your job requires picking up parts or materials from market hardware stores, providers can bundle courier transit directly into their bid.',
+            example: 'Direct On-Site Service or Courier Runner Sourcing',
+        },
+    },
+};

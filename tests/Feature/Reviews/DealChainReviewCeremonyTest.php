@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -37,6 +38,7 @@ function createTestUser(string $phone = '+639171234888'): string
         'created_at' => now(),
         'updated_at' => now(),
     ]);
+
     return $id;
 }
 
@@ -297,7 +299,7 @@ it('unblinds child orders pairwise independently without unblinding siblings', f
     expect(DB::table('reviews')->where('deal_chain_id', $dealChainId)->where('moderation_status', 'sealed')->count())->toBe(2);
 
     // 2. Courier provider reviews the buyer with non-numeric Citizen Reliability
-    $this->actingAs(App\Models\User::find($courierProvider));
+    $this->actingAs(User::find($courierProvider));
 
     $this->postJson("/orders/{$courierOrder}/reviews", [
         'attribute_chips' => ['cash_ready_on_site', 'respectful_communication'],

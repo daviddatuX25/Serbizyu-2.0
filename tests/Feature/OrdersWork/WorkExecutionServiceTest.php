@@ -28,7 +28,8 @@ final class WorkExecutionServiceTest extends TestCase
                         'ordinal' => 1,
                         'title' => 'Intake Triage',
                         'node_kind' => 'checkin_intake',
-                        'evidence_type' => 'photo_required',
+                        'evidence_type' => 'none',
+                        'required_proofs' => [],
                         'control_mode' => 'provider_advance',
                         'mandatory' => true,
                     ],
@@ -122,7 +123,8 @@ final class WorkExecutionServiceTest extends TestCase
                         'ordinal' => 1,
                         'title' => 'Diagnostic Intake',
                         'node_kind' => 'checkin_intake',
-                        'evidence_type' => 'photo_required',
+                        'evidence_type' => 'none',
+                        'required_proofs' => [],
                         'control_mode' => 'provider_advance',
                         'mandatory' => true,
                     ],
@@ -131,9 +133,11 @@ final class WorkExecutionServiceTest extends TestCase
                         'ordinal' => 2,
                         'title' => 'Part Replacement Gate',
                         'node_kind' => 'decision_gate',
-                        'evidence_type' => 'dual_sign',
+                        'evidence_type' => 'none',
                         'control_mode' => 'customer_confirm',
                         'mandatory' => true,
+                        'required_proofs' => [],
+                        'approval_method' => 'app_confirm',
                     ],
                     [
                         'id' => 'step-3',
@@ -183,9 +187,7 @@ final class WorkExecutionServiceTest extends TestCase
         ]);
 
         // Step 1: Provider completes step 1 (checkin_intake) -> Work becomes in_progress, step 2 unlocked
-        $res1 = $service->advanceNode($orderId, $providerId, 'step-1', 'complete_step', [
-            'photo_url' => '/photos/intake.jpg',
-        ]);
+        $res1 = $service->advanceNode($orderId, $providerId, 'step-1', 'complete_step');
 
         self::assertSame('in_progress', $res1['work_status']);
         self::assertSame('completed', $res1['structure']['nodes'][0]['status']);
@@ -193,12 +195,10 @@ final class WorkExecutionServiceTest extends TestCase
         self::assertSame('step-2', $res1['structure']['active_node_id']);
 
         // Step 2a: Provider requests confirmation on step 2 (decision_gate) -> pauses order for customer
-        $res2 = $service->advanceNode($orderId, $providerId, 'step-2', 'request_confirmation', [
-            'part_name' => '35uF Capacitor',
-        ]);
-
+        $res2 = $service->advanceNode($orderId, $providerId, 'step-2', 'request_confirmation', []);
         self::assertTrue($res2['structure']['pending_customer_confirmation']);
         self::assertSame('awaiting_customer_confirmation', $res2['structure']['nodes'][1]['status']);
+        self::assertSame([], $res2['structure']['nodes'][1]['evidence_payload']);
 
         // Step 2b: Customer confirms gate -> unlocks step 3 for provider
         $res3 = $service->advanceNode($orderId, $buyerId, 'step-2', 'confirm_gate');

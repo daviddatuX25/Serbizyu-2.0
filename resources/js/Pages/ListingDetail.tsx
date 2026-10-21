@@ -1012,7 +1012,7 @@ export default function ListingDetail(props: HomeProps) {
                 readiness={props.readiness}
                 activeRoute="browse"
                 picksCount={basket.reduce((sum, item) => sum + item.quantity, 0)}
-                onPicksClick={() => setPicksOpen(true)}
+                onPicksClick={() => setPicksOpen((prev) => !prev)}
                 actingContext={{
                     actorUserId: props.session?.userId || 'usr_guest',
                     ownerUserId: 'usr_guest',

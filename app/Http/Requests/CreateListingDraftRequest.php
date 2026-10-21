@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
 use App\Http\Requests\Concerns\ValidatesListingGeography;
+use Illuminate\Foundation\Http\FormRequest;
 
 final class CreateListingDraftRequest extends FormRequest
 {
     use ValidatesListingGeography;
+
     public function authorize(): bool
     {
         return true;

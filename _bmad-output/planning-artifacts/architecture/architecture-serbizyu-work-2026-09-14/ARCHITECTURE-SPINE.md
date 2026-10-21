@@ -227,7 +227,7 @@ Source lineage is not accepted as a generic polymorphic tuple alone. Each source
 
 ### WAD-6 — Authoring, formation, and execution are separate sessions [ADOPTED]
 
-1. **Authoring:** begin blank by default or explicitly copy a template; edit a source-owned specification draft; validate against the current pinned capability profile.
+1. **Authoring:** create a source-owned specification draft blank only where the active capability supplies an explicit shape-binding path, or by copying an exact compatible template version. For the governed Work catalog journey in UX-035, no compatible Work Set blocks authoring; blank authoring is not an implicit fallback. Validate against the current pinned capability profile.
 2. **Agreement:** expose normalized promises, exclusions, evidence, safety, schedule/capacity effects, and commercial terms to all required parties; acceptance pins exact versions and hashes.
 3. **Formation:** call the sole finalizer with typed source, Work, obligation, capacity, acceptance, version, and idempotency inputs.
 4. **Execution:** operate only on accepted Work Instances and append-only events; do not read mutable templates or drafts.

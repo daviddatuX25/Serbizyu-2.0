@@ -12,6 +12,7 @@ use App\Modules\OrdersWork\Application\FinalizeOrderAgreement;
 use App\Modules\OrdersWork\Application\OrderError;
 use App\Modules\OrdersWork\Application\SubmitOrderProposal;
 use App\Modules\OrdersWork\Application\WorkExecutionService;
+use App\Modules\OrdersWork\Application\WorkNodeEvidenceService;
 use App\Shared\Contracts\OrderListingSourcePort;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,7 @@ final class OrderController extends Controller
         private readonly FinalizeOrderAgreement $finalize,
         private readonly OrderListingSourcePort $listingSource,
         private readonly WorkExecutionService $workExecution,
+        private readonly WorkNodeEvidenceService $workEvidence,
     ) {}
 
     public function index(Request $request): mixed
@@ -381,24 +383,27 @@ final class OrderController extends Controller
                 ->where('status', 'active')
                 ->first();
 
-            $isDevMode = in_array((string) config('app.env'), ['local', 'testing'], true);
-            if (! $isDevMode && $actorUserId !== $buyerId && $actorUserId !== $providerId && $partyRow === null) {
+            $isChainCoordinator = false;
+            $chainRecord = null;
+            if ($row->deal_chain_id !== null) {
+                $chainRecord = DB::table('deal_chains')->where('id', $row->deal_chain_id)->first();
+                if ($chainRecord !== null && (string) $chainRecord->coordinator_user_id === $actorUserId) {
+                    $isChainCoordinator = true;
+                }
+            }
+
+            if (! $isChainCoordinator && $actorUserId !== $buyerId && $actorUserId !== $providerId && $partyRow === null) {
                 throw new OrderError('AUTHORIZATION_DENIED', 'You are not authorized to view this order.', $correlationId, status: 403);
             }
-            // Lock single truthful perspective derived from the authenticated participant's actual role on this order
-            $actorPerspective = $actorUserId === $buyerId
+
+            // Lock single truthful perspective derived strictly from the authenticated participant's actual role on this order
+            $actorPerspective = ($actorUserId === $buyerId || $isChainCoordinator)
                 ? 'customer'
                 : ($actorUserId === $providerId
                     ? 'provider'
                     : (($partyRow?->party_type === 'courier' || str_contains((string) ($partyRow?->responsibility ?? ''), 'courier'))
                         ? 'courier'
                         : 'customer'));
-
-            // Allow perspective override for dev inspection
-            $requestedRole = $request->query('as');
-            if (is_string($requestedRole) && in_array($requestedRole, ['customer', 'provider', 'courier'], true)) {
-                $actorPerspective = $requestedRole;
-            }
             // Read accepted terms snapshot for accurate agreed title and terms
             $terms = DB::table('order_terms_snapshots')->where('order_id', $order)->orderBy('snapshot_version')->first();
             $termsData = json_decode((string) ($terms?->terms ?? '{}'), true);
@@ -416,9 +421,61 @@ final class OrderController extends Controller
             }
 
             $providerProfile = DB::table('user_profiles')->where('user_id', $providerId)->first();
+            $providerUser = DB::table('users')->where('id', $providerId)->first();
             $buyerProfile = DB::table('user_profiles')->where('user_id', $buyerId)->first();
+            $buyerUser = DB::table('users')->where('id', $buyerId)->first();
+
+            $counterpartyProfile = null;
+            $counterpartyUser = null;
+            if ($actorUserId === $buyerId) {
+                $counterpartyProfile = $providerProfile;
+                $counterpartyUser = $providerUser;
+            } elseif ($actorUserId === $providerId || $partyRow !== null) {
+                $counterpartyProfile = $buyerProfile;
+                $counterpartyUser = $buyerUser;
+            }
+            $counterpartyName = $counterpartyProfile?->display_name;
+            $counterpartyPhone = $counterpartyUser?->phone_e164;
+
             $work = DB::table('work_instances')->where('order_id', $order)->first();
             $obligation = DB::table('payment_obligations')->where('order_id', $order)->first();
+
+            $workProjection = $this->workExecution->projectForOrder($work, $terms);
+            $canViewWorkEvidence = $actorUserId === $buyerId || $actorUserId === $providerId;
+            if ($workProjection !== null && is_array($workProjection['nodes'] ?? null)) {
+                $workProjection['nodes'] = $this->workEvidence->projectNodes(
+                    orderId: (string) $row->id,
+                    workInstanceId: (string) $work->id,
+                    actorUserId: $actorUserId,
+                    nodes: $workProjection['nodes'],
+                    canViewSubmittedEvidence: $canViewWorkEvidence,
+                    canManageEvidence: $actorUserId === $providerId,
+                );
+            }
+            $isOrderBuyer = $actorUserId === $buyerId;
+            $canSignoff = false;
+            if (
+                $isOrderBuyer
+                && ($workProjection['status'] ?? null) === 'awaiting_signoff'
+                && is_array($workProjection['nodes'] ?? null)
+            ) {
+                foreach ($workProjection['nodes'] as $workNode) {
+                    if (! is_array($workNode) || ($workNode['node_kind'] ?? null) !== 'final_signoff') {
+                        continue;
+                    }
+                    $requiredProofs = (array) ($workNode['required_proofs'] ?? []);
+                    $nodeEvidence = is_array($workNode['evidence'] ?? null) ? $workNode['evidence'] : [];
+                    $photoProofReady = ! in_array('photo_proof', $requiredProofs, true)
+                        || (
+                            count((array) ($nodeEvidence['photos'] ?? [])) > 0
+                            && (int) ($nodeEvidence['pending_photo_count'] ?? 0) === 0
+                        );
+                    $canSignoff = ($workNode['status'] ?? null) === 'awaiting_customer_confirmation'
+                        && ($workNode['approval_method'] ?? 'app_confirm') === 'app_confirm'
+                        && $photoProofReady;
+                    break;
+                }
+            }
             $buyerParty = DB::table('order_parties')
                 ->where('order_id', $order)
                 ->where('party_type', 'buyer')
@@ -570,26 +627,63 @@ final class OrderController extends Controller
                 }
             }
 
+            $biddingLineage = null;
+            if ($row->origin === 'request' || $row->request_id !== null) {
+                $originRequest = $row->request_id !== null ? DB::table('requests')->where('id', $row->request_id)->first() : null;
+                if ($originRequest !== null) {
+                    $reqItemList = json_decode((string) ($originRequest->item_list ?? '{}'), true);
+                    $reqTitle = is_array($reqItemList) && isset($reqItemList['title']) ? (string) $reqItemList['title'] : 'Citizen Request';
+                    $tenderMode = is_array($reqItemList) && isset($reqItemList['tender_mode']) ? (string) $reqItemList['tender_mode'] : 'open_tender';
+                    $winningQuote = $row->quote_id !== null ? DB::table('quotes')->where('id', $row->quote_id)->first() : null;
+                    $competingCount = DB::table('quotes')->where('request_id', $originRequest->id)->count();
+
+                    $biddingLineage = [
+                        'request_id' => (string) $originRequest->id,
+                        'request_ref' => '#REQ-'.substr((string) $originRequest->id, 0, 8),
+                        'request_title' => $reqTitle,
+                        'tender_mode' => $tenderMode,
+                        'quote_id' => $winningQuote !== null ? (string) $winningQuote->id : null,
+                        'quote_ref' => $winningQuote !== null ? '#QTE-'.substr((string) $winningQuote->id, 0, 8) : null,
+                        'quote_version' => $winningQuote !== null ? (int) $winningQuote->quote_version : 1,
+                        'winning_amount_minor' => $winningQuote !== null ? (int) $winningQuote->amount_minor : null,
+                        'total_quotes_received' => $competingCount,
+                        'is_sealed' => $tenderMode === 'sealed_tender',
+                    ];
+                }
+            }
+
             return Inertia::render('Orders/Show', [
                 'correlationId' => $correlationId,
                 'notice' => $request->session()->get('notice'),
                 'actor_perspective' => $actorPerspective,
                 'order' => [
                     'id' => (string) $row->id,
+                    'request_id' => $row->request_id ? (string) $row->request_id : null,
+                    'quote_id' => $row->quote_id ? (string) $row->quote_id : null,
+                    'bidding_lineage' => $biddingLineage,
                     'status' => (string) $row->status,
                     'version' => (int) $row->version,
                     'listing_id' => (string) $row->listing_id,
+                    'deal_chain_id' => $row->deal_chain_id ? (string) $row->deal_chain_id : null,
+                    'deal_chain_title' => $chainRecord?->title ?? null,
+                    'deal_chain_ref' => $row->deal_chain_id ? ('#DC-'.strtoupper(substr((string) $row->deal_chain_id, -3))) : null,
                     'buyer_user_id' => $buyerId,
                     'provider_user_id' => $providerId,
                     'mechanism' => (string) $row->mechanism,
                     'origin' => (string) $row->origin,
                     'geography' => $row->geography,
                     'proposal' => $proposal,
+                    'is_order_buyer' => $isOrderBuyer,
+                    'can_signoff' => $canSignoff,
+                    'can_view_work_evidence' => $canViewWorkEvidence,
                     'can_finalize' => (string) $row->status === 'pending_acceptance'
                         && ($actorUserId === $buyerId || $actorUserId === $providerId),
                     'actor_role' => $actorPerspective === 'customer' ? 'buyer' : ($actorPerspective === 'provider' ? 'provider' : 'courier'),
                     'customer_name' => (string) ($buyerProfile?->display_name ?? 'Maria Santos'),
-                    'provider_name' => (string) ($providerProfile?->display_name ?? 'Kuya Ben AC'),
+                    'provider_name' => (string) ($providerProfile?->display_name ?? 'Kuya Ben AC Services'),
+                    'counterparty_name' => is_string($counterpartyName) ? $counterpartyName : null,
+                    'counterparty_phone' => is_string($counterpartyPhone) ? $counterpartyPhone : null,
+                    'can_contact' => is_string($counterpartyName) && is_string($counterpartyPhone) && $counterpartyPhone !== '',
                     'listing_title' => $listingTitle,
                     'service_address' => 'Purok 4, Barangay Centro, Tagudin, Ilocos Sur',
                     'landmark' => 'Near Barangay Health Center · Blue Gate',
@@ -602,7 +696,7 @@ final class OrderController extends Controller
                     'accepted_by_user_id' => (string) $terms->accepted_by_user_id,
                     'accepted_at' => (string) $terms->accepted_at,
                 ],
-                'work' => $this->workExecution->projectForOrder($work, $terms),
+                'work' => $workProjection,
                 'obligation' => $obligation === null ? null : [
                     'id' => (string) $obligation->id,
                     'status' => (string) $obligation->status,
@@ -650,75 +744,51 @@ final class OrderController extends Controller
         $correlationId = $this->correlationId($request);
 
         try {
-            $userId = $this->session->requireUser($request, $correlationId);
-
+            $actorUserId = $this->session->requireUser($request, $correlationId);
             $orderRow = DB::table('orders')->where('id', $order)->first();
             if ($orderRow === null) {
-                throw new OrderError('ORDER_NOT_FOUND', 'Order not found.', $correlationId, status: 404);
+                throw new OrderError('ORDER_NOT_FOUND', 'The order could not be found.', $correlationId, status: 404);
             }
-
-            if ((string) $orderRow->provider_user_id !== $userId) {
+            if ((string) $orderRow->provider_user_id !== $actorUserId) {
                 throw new OrderError('AUTHORIZATION_DENIED', 'Only the assigned provider can propose completion.', $correlationId, status: 403);
             }
 
-            DB::transaction(function () use ($orderRow, $userId, $correlationId): void {
-                $now = now();
-                $work = DB::table('work_instances')->where('order_id', $orderRow->id)->lockForUpdate()->first();
-                $prevWorkStatus = (string) ($work?->status ?? 'in_progress');
-
-                if ($work !== null) {
-                    DB::table('work_instances')->where('id', $work->id)->update([
-                        'status' => 'awaiting_signoff',
-                        'completion_proposed_at' => $now,
-                        'updated_at' => $now,
-                    ]);
-
-                    if (Schema::hasTable('work_events')) {
-                        DB::table('work_events')->insert([
-                            'id' => (string) Str::uuid7(),
-                            'work_instance_id' => $work->id,
-                            'previous_status' => $prevWorkStatus,
-                            'new_status' => 'awaiting_signoff',
-                            'event_type' => 'work.provider.propose_completion',
-                            'event_version' => 1,
-                            'actor_user_id' => $userId,
-                            'evidence_file_id' => null,
-                            'payload' => json_encode(['action' => 'propose_completion', 'proposed_at' => $now->toIso8601String()], JSON_THROW_ON_ERROR),
-                            'payload_version' => 1,
-                            'idempotency_key' => 'propose_comp_'.substr($correlationId, 0, 12).'_'.Str::random(6),
-                            'correlation_id' => $correlationId,
-                            'occurred_at' => $now,
-                            'effective_at' => $now,
-                            'created_at' => $now,
-                        ]);
-                    }
+            $work = DB::table('work_instances')->where('order_id', $order)->first();
+            $structure = $work === null ? null : json_decode((string) $work->structure, true);
+            $finalNode = null;
+            foreach ((array) ($structure['nodes'] ?? []) as $candidate) {
+                if (is_array($candidate) && ($candidate['node_kind'] ?? null) === 'final_signoff') {
+                    $finalNode = $candidate;
+                    break;
                 }
+            }
+            if (! is_array($finalNode) || ! is_string($finalNode['id'] ?? null)) {
+                throw new OrderError('WORK_NOT_FOUND', 'No active final sign-off node exists for this Work.', $correlationId, status: 409);
+            }
 
-                if (Schema::hasTable('audit_events')) {
-                    DB::table('audit_events')->insert([
-                        'id' => (string) Str::uuid7(),
-                        'actor_user_id' => $userId,
-                        'acting_for_user_id' => null,
-                        'action' => 'work.provider.propose_completion',
-                        'target_type' => 'order',
-                        'target_id' => $orderRow->id,
-                        'order_id' => $orderRow->id,
-                        'previous_value_summary' => json_encode(['work_status' => $prevWorkStatus]),
-                        'new_value_summary' => json_encode(['work_status' => 'awaiting_signoff']),
-                        'reason' => 'Provider proposed work completion for customer review',
-                        'command_name' => 'ProposeWorkCompletionCommand',
-                        'correlation_id' => $correlationId,
-                        'occurred_at' => $now,
-                        'created_at' => $now,
-                    ]);
-                }
-            });
+            $payload = $request->input('payload', []);
+            if (! is_array($payload)) {
+                throw new OrderError('INVALID_WORK_EVIDENCE', 'Work evidence must be submitted as a structured payload.', $correlationId, status: 422);
+            }
+            if ($payload === [] && $request->has('notes')) {
+                $payload['notes'] = $request->input('notes');
+            }
+
+            $this->workExecution->advanceNode(
+                orderId: $order,
+                actorUserId: $actorUserId,
+                nodeId: $finalNode['id'],
+                action: 'propose_completion',
+                payload: $payload,
+                correlationId: $correlationId,
+            );
 
             return redirect()->back()->with('notice', 'Work completion proposed. Customer has been notified for sign-off.');
         } catch (IdentityAccessError|OrderError $error) {
             return $this->failure($request, $error);
         }
     }
+
 
     public function advanceWorkNode(Request $request, string $order, string $node): mixed
     {
@@ -727,8 +797,16 @@ final class OrderController extends Controller
         try {
             $actorUserId = $this->session->requireUser($request, $correlationId);
             $action = (string) $request->input('action', 'complete_step');
+            if ($action === 'signoff_completion') {
+                throw new OrderError('INVALID_ACTION', 'Use the Order sign-off action so payment and Work history remain atomic.', $correlationId, status: 409);
+            }
+
             $rawPayload = $request->input('payload', []);
-            $payload = is_string($rawPayload) ? (json_decode($rawPayload, true) ?: []) : (array) $rawPayload;
+            $payload = is_string($rawPayload) ? json_decode($rawPayload, true) : $rawPayload;
+            if (! is_array($payload)) {
+                throw new OrderError('INVALID_WORK_EVIDENCE', 'Work evidence must be submitted as a structured payload.', $correlationId, status: 422);
+            }
+
             $result = $this->workExecution->advanceNode(
                 orderId: $order,
                 actorUserId: $actorUserId,
@@ -748,6 +826,8 @@ final class OrderController extends Controller
         }
     }
 
+
+
     public function signoffWork(Request $request, string $order): mixed
     {
         $correlationId = $this->correlationId($request);
@@ -764,36 +844,85 @@ final class OrderController extends Controller
             }
 
             DB::transaction(function () use ($orderRow, $userId, $correlationId): void {
+                $lockedOrder = DB::table('orders')->where('id', $orderRow->id)->lockForUpdate()->first();
+                if ($lockedOrder === null || (string) $lockedOrder->buyer_user_id !== $userId) {
+                    throw new OrderError('AUTHORIZATION_DENIED', 'Only the buyer can sign off work completion.', $correlationId, status: 403);
+                }
+
                 $now = now();
-                $work = DB::table('work_instances')->where('order_id', $orderRow->id)->lockForUpdate()->first();
-                $prevWorkStatus = (string) ($work?->status ?? 'awaiting_signoff');
+                $work = DB::table('work_instances')->where('order_id', $lockedOrder->id)->lockForUpdate()->first();
+                if ($work === null || (string) $work->status !== 'awaiting_signoff') {
+                    throw new OrderError('INVALID_STATE', 'Work is not awaiting customer sign-off.', $correlationId, status: 409);
+                }
 
-                if ($work !== null) {
-                    DB::table('work_instances')->where('id', $work->id)->update([
-                        'status' => 'completed',
-                        'completed_at' => $now,
-                        'updated_at' => $now,
-                    ]);
-
-                    if (Schema::hasTable('work_events')) {
-                        DB::table('work_events')->insert([
-                            'id' => (string) Str::uuid7(),
-                            'work_instance_id' => $work->id,
-                            'previous_status' => $prevWorkStatus,
-                            'new_status' => 'completed',
-                            'event_type' => 'work.customer.signoff',
-                            'event_version' => 1,
-                            'actor_user_id' => $userId,
-                            'evidence_file_id' => null,
-                            'payload' => json_encode(['action' => 'signoff_work', 'approved_at' => $now->toIso8601String()], JSON_THROW_ON_ERROR),
-                            'payload_version' => 1,
-                            'idempotency_key' => 'work_signoff_'.substr($correlationId, 0, 12).'_'.Str::random(6),
-                            'correlation_id' => $correlationId,
-                            'occurred_at' => $now,
-                            'effective_at' => $now,
-                            'created_at' => $now,
-                        ]);
+                $structure = json_decode((string) $work->structure, true);
+                $nodes = is_array($structure['nodes'] ?? null) ? $structure['nodes'] : [];
+                $finalNodeIndex = null;
+                foreach ($nodes as $index => $node) {
+                    if (is_array($node) && ($node['node_kind'] ?? null) === 'final_signoff') {
+                        $finalNodeIndex = $index;
+                        break;
                     }
+                }
+                if ($finalNodeIndex === null || ($nodes[$finalNodeIndex]['status'] ?? null) !== 'awaiting_customer_confirmation') {
+                    throw new OrderError('INVALID_STATE', 'The final Work node is not awaiting customer sign-off.', $correlationId, status: 409);
+                }
+                $finalNode = $nodes[$finalNodeIndex];
+                if (($finalNode['approval_method'] ?? 'app_confirm') !== 'app_confirm') {
+                    throw new OrderError('CONFIRMATION_METHOD_UNAVAILABLE', 'This Work requires an in-person confirmation method.', $correlationId, status: 409);
+                }
+
+                $evidencePayload = is_array($finalNode['evidence_payload'] ?? null) ? $finalNode['evidence_payload'] : [];
+                $evidenceFileIds = array_values(array_filter(
+                    (array) ($evidencePayload['evidence_file_ids'] ?? []),
+                    static fn (mixed $id): bool => is_string($id),
+                ));
+                if (in_array('photo_proof', (array) ($finalNode['required_proofs'] ?? []), true)) {
+                    $this->workEvidence->assertAvailablePhotoEvidence(
+                        workInstanceId: (string) $work->id,
+                        nodeId: (string) $finalNode['id'],
+                        actorUserId: (string) $lockedOrder->provider_user_id,
+                        evidenceFileIds: $evidenceFileIds,
+                        correlationId: $correlationId,
+                    );
+                }
+
+                $prevWorkStatus = (string) $work->status;
+                $nodes[$finalNodeIndex]['status'] = 'completed';
+                $nodes[$finalNodeIndex]['customer_confirmed_at'] = $now->toIso8601String();
+                $structure['nodes'] = $nodes;
+                $structure['pending_customer_confirmation'] = false;
+
+                DB::table('work_instances')->where('id', $work->id)->update([
+                    'status' => 'completed',
+                    'structure' => json_encode($structure, JSON_THROW_ON_ERROR),
+                    'completed_at' => $now,
+                    'updated_at' => $now,
+                ]);
+
+                if (Schema::hasTable('work_events')) {
+                    DB::table('work_events')->insert([
+                        'id' => (string) Str::uuid7(),
+                        'work_instance_id' => $work->id,
+                        'previous_status' => $prevWorkStatus,
+                        'new_status' => 'completed',
+                        'event_type' => 'work.node.signoff_completion',
+                        'event_version' => 1,
+                        'actor_user_id' => $userId,
+                        'evidence_file_id' => $evidenceFileIds[0] ?? null,
+                        'payload' => json_encode([
+                            'node_id' => (string) $finalNode['id'],
+                            'action' => 'signoff_completion',
+                            'evidence_file_ids' => $evidenceFileIds,
+                            'approved_at' => $now->toIso8601String(),
+                        ], JSON_THROW_ON_ERROR),
+                        'payload_version' => 1,
+                        'idempotency_key' => 'work_signoff_'.substr($correlationId, 0, 12).'_'.Str::random(6),
+                        'correlation_id' => $correlationId,
+                        'occurred_at' => $now,
+                        'effective_at' => $now,
+                        'created_at' => $now,
+                    ]);
                 }
 
                 DB::table('orders')->where('id', $orderRow->id)->update([

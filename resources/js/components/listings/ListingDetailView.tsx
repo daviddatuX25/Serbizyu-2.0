@@ -2,7 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import type { DenialState, ListingRecord } from '../../types';
 import { useRegisterShellDrawerActions } from '../ProductShell';
-import { Button, Notice } from '../ui';
+import { Button, Notice } from '@/components/ui';
 import './listing-detail.css';
 
 const PIN_STORAGE_KEY = 'serbizyu.browse.pins';
@@ -45,7 +45,8 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
             },
             {
                 title: 'Approve soft proof',
-                description: 'One revision is included. We lock the layout after you approve the soft proof.',
+                description:
+                    'One revision is included. We lock the layout after you approve the soft proof.',
             },
             {
                 title: 'Pickup at Centro',
@@ -353,7 +354,7 @@ function hashId(id: string): number {
 }
 
 function previewRating(listing: ListingRecord): number {
-    return 4.2 + hashId(listing.id) % 70 / 100;
+    return 4.2 + (hashId(listing.id) % 70) / 100;
 }
 
 function previewOrders(listing: ListingRecord): number {
@@ -452,7 +453,10 @@ function ProtectedAttempt({ listingId }: { listingId: string }) {
     return (
         <div className="ldv-seam">
             <strong>Protected owner action</strong>
-            <p>This intentional test path should deny a public viewer without exposing protected fields.</p>
+            <p>
+                This intentional test path should deny a public viewer without exposing protected
+                fields.
+            </p>
             <Button
                 type="button"
                 variant="outline"
@@ -472,11 +476,24 @@ function ProtectedAttempt({ listingId }: { listingId: string }) {
                                     if (key === 'correlation_id' || key === 'correlationId') {
                                         return [];
                                     }
-                                    return [String(Array.isArray(value) ? value[0] ?? '' : value ?? '')].filter(Boolean);
+                                    return [
+                                        String(
+                                            Array.isArray(value) ? (value[0] ?? '') : (value ?? ''),
+                                        ),
+                                    ].filter(Boolean);
                                 });
-                                setError(messages.join(' ') || 'That action is not available without permission.');
+                                setError(
+                                    messages.join(' ') ||
+                                        'That action is not available without permission.',
+                                );
                                 const raw = bag.correlation_id ?? bag.correlationId;
-                                setCorrelationId(Array.isArray(raw) ? String(raw[0] ?? '') : raw ? String(raw) : null);
+                                setCorrelationId(
+                                    Array.isArray(raw)
+                                        ? String(raw[0] ?? '')
+                                        : raw
+                                          ? String(raw)
+                                          : null,
+                                );
                             },
                             onFinish: () => setBusy(false),
                         },
@@ -504,7 +521,9 @@ function WorkflowSteps({ steps }: { steps: WorkflowStep[] }) {
                 const long = step.description.length > STEP_DESC_SHORT;
                 const open = openIndex === index;
                 const shown =
-                    long && !open ? `${step.description.slice(0, STEP_DESC_SHORT).trimEnd()}…` : step.description;
+                    long && !open
+                        ? `${step.description.slice(0, STEP_DESC_SHORT).trimEnd()}…`
+                        : step.description;
 
                 return (
                     <li key={`${step.title}-${index}`}>
@@ -519,7 +538,9 @@ function WorkflowSteps({ steps }: { steps: WorkflowStep[] }) {
                                     onClick={() => setOpenIndex(open ? null : index)}
                                 >
                                     {shown}
-                                    <span className="ldv-step-more">{open ? 'Show less' : 'Read more'}</span>
+                                    <span className="ldv-step-more">
+                                        {open ? 'Show less' : 'Read more'}
+                                    </span>
                                 </button>
                             ) : (
                                 <span className="ldv-step-desc">{step.description}</span>
@@ -581,7 +602,9 @@ function ReviewSuite({ reviews }: { reviews: SampleReview[] }) {
         setActive((prev) => (prev + delta + reviews.length) % reviews.length);
     };
 
-    const order = [0, 1, 2].map((offset) => reviews[(active + offset) % reviews.length]).filter(Boolean);
+    const order = [0, 1, 2]
+        .map((offset) => reviews[(active + offset) % reviews.length])
+        .filter(Boolean);
 
     return (
         <div className="ldv-review-suite">
@@ -608,7 +631,7 @@ function ReviewSuite({ reviews }: { reviews: SampleReview[] }) {
                 {order.map((review, depth) => (
                     <article
                         key={`${review.id}-${depth}`}
-                        className={`ldv-review-card depth-${depth}${depth === 0 ? ' is-front' : ''}`}
+                        className={`ldv-review-card depth-${depth}${depth === 0 ? 'is-front' : ''}`}
                         aria-hidden={depth !== 0}
                     >
                         <div className="ldv-review-stars" aria-label={`${review.stars} of 5 stars`}>
@@ -640,7 +663,7 @@ function ReviewSuite({ reviews }: { reviews: SampleReview[] }) {
                             type="button"
                             role="listitem"
                             data-review-index={index < reviews.length ? realIndex : undefined}
-                            className={`ldv-review-chip${realIndex === active && index < reviews.length ? ' is-on' : ''}`}
+                            className={`ldv-review-chip${realIndex === active && index < reviews.length ? 'is-on' : ''}`}
                             aria-pressed={realIndex === active && index < reviews.length}
                             onClick={() => setActive(realIndex)}
                         >
@@ -732,7 +755,7 @@ export function ListingDetailView({
             <div className="sz-switch-actions" role="group" aria-label="Listing actions">
                 <button
                     type="button"
-                    className={`sz-switch-act sz-switch-act-pin${pinned ? ' is-on' : ''}`}
+                    className={`sz-switch-act sz-switch-act-pin${pinned ? 'is-on' : ''}`}
                     aria-pressed={pinned}
                     aria-label={pinned ? 'Saved to your pins' : 'Pin this listing'}
                     onClick={togglePin}
@@ -822,7 +845,11 @@ export function ListingDetailView({
             </Link>
 
             <div className="ldv-grid">
-                <div className="ldv-media" data-media-stage title="Preview media until listing photos project">
+                <div
+                    className="ldv-media"
+                    data-media-stage
+                    title="Preview media until listing photos project"
+                >
                     <div
                         ref={railRef}
                         className="ldv-media-rail"
@@ -832,8 +859,14 @@ export function ListingDetailView({
                         aria-label={`Photos for ${listing.title}`}
                         onScroll={(event) => {
                             const rail = event.currentTarget;
-                            const width = Math.round(rail.getBoundingClientRect().width) || rail.clientWidth || 1;
-                            const next = Math.max(0, Math.min(photos.length - 1, Math.round(rail.scrollLeft / width)));
+                            const width =
+                                Math.round(rail.getBoundingClientRect().width) ||
+                                rail.clientWidth ||
+                                1;
+                            const next = Math.max(
+                                0,
+                                Math.min(photos.length - 1, Math.round(rail.scrollLeft / width)),
+                            );
                             if (next !== photoIndex) {
                                 setPhotoIndex(next);
                             }
@@ -878,9 +911,14 @@ export function ListingDetailView({
                         {listingType(listing)} · {area(listing)}
                     </p>
                     <h1 className="ldv-title">{listing.title}</h1>
-                    <p className="ldv-punch">{listing.description?.trim() || 'No description yet.'}</p>
+                    <p className="ldv-punch">
+                        {listing.description?.trim() || 'No description yet.'}
+                    </p>
 
-                    <div className="ldv-provider" title="Provider account totals — preview until aggregated stats project from backend">
+                    <div
+                        className="ldv-provider"
+                        title="Provider account totals — preview until aggregated stats project from backend"
+                    >
                         <div className="ldv-ava" aria-hidden="true">
                             {owner.slice(0, 1).toUpperCase()}
                         </div>
@@ -888,7 +926,10 @@ export function ListingDetailView({
                             <strong>{owner}</strong>
                             <span>Local provider · Tagudin pilot</span>
                         </div>
-                        <dl className="ldv-provider-totals" aria-label="Provider account totals across all listings">
+                        <dl
+                            className="ldv-provider-totals"
+                            aria-label="Provider account totals across all listings"
+                        >
                             <div>
                                 <dt>Provider rating</dt>
                                 <dd>
@@ -927,10 +968,14 @@ export function ListingDetailView({
                         <div className="ldv-place-copy">
                             <strong>{place}</strong>
                             <span>
-                                {formatDistance(meters)} away · {placeIsProjected ? 'listed area' : 'agreed public point'}
+                                {formatDistance(meters)} away ·{' '}
+                                {placeIsProjected ? 'listed area' : 'agreed public point'}
                             </span>
                         </div>
-                        <span className="ldv-place-listing" title="This listing's own reviews (separate from provider totals)">
+                        <span
+                            className="ldv-place-listing"
+                            title="This listing's own reviews (separate from provider totals)"
+                        >
                             {rating.toFixed(1)} ★ · {orders} orders here
                         </span>
                         <a
@@ -976,19 +1021,23 @@ export function ListingDetailView({
                         <span className="ldv-shape">{meta.workShapePreview}</span>
                     </div>
                     <p className="ldv-section-lede">
-                        Provider workflow titles and short descriptions — preview until the Work template projects from
-                        the server.
+                        Provider workflow titles and short descriptions — preview until the Work
+                        template projects from the server.
                     </p>
                     <WorkflowSteps steps={steps} />
                 </section>
 
-                <section className="ldv-section ldv-section-reviews" aria-labelledby="ldv-reviews-title">
+                <section
+                    className="ldv-section ldv-section-reviews"
+                    aria-labelledby="ldv-reviews-title"
+                >
                     <div className="ldv-section-head">
                         <h2 id="ldv-reviews-title">Reviews</h2>
                         <span className="ldv-shape">Sample</span>
                     </div>
                     <p className="ldv-section-lede">
-                        Sample suite for layout. Live reviews need completed-work eligibility on the server.
+                        Sample suite for layout. Live reviews need completed-work eligibility on the
+                        server.
                     </p>
                     <ReviewSuite reviews={SAMPLE_REVIEWS} />
                 </section>
@@ -1002,7 +1051,8 @@ export function ListingDetailView({
                         <strong>Needs attention</strong>
                         <p>{denial.message}</p>
                         <p>
-                            {denial.recovery ?? 'Return to browse or refresh for the latest server state.'}
+                            {denial.recovery ??
+                                'Return to browse or refresh for the latest server state.'}
                         </p>
                         {denialRef ? (
                             <p className="ldv-ref">
@@ -1013,8 +1063,9 @@ export function ListingDetailView({
                 ) : null}
 
                 <p className="ldv-preview-note">
-                    Photos, scores, distance, workflow copy, and reviews are UI preview until projected from the server.
-                    Buy / Message live in the shell switching drawer for offer listings and stay gated until those capabilities are live.
+                    Photos, scores, distance, workflow copy, and reviews are UI preview until
+                    projected from the server. Buy / Message live in the shell switching drawer for
+                    offer listings and stay gated until those capabilities are live.
                 </p>
             </div>
         </div>

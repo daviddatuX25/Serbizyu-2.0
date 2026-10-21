@@ -423,3 +423,228 @@ a.tk-listing:hover {
 .sz-scroll-y::-webkit-scrollbar {
   width: 6px;
 }
+
+/* ==========================================================================
+   Quick Deal & Universal Resolver Kit — Emil Kowalski & Glovo Invariants
+   ========================================================================== */
+
+:root {
+  --qd-navy: #0F2F58;
+  --qd-navy-dark: #091E38;
+  --qd-navy-light: #EBF2FA;
+  --qd-gold: #FFC244;
+  --qd-gold-light: #FEF3C7;
+  --qd-gold-dark: #D97706;
+  --qd-teal: #0D715F;
+  --qd-teal-light: #E8F7F1;
+  --qd-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --qd-ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Elevated Quick Deal FAB */
+.tk-qd-fab {
+  width: 54px;
+  height: 54px;
+  background: var(--qd-navy);
+  color: var(--qd-gold);
+  border: 3.5px solid #FFFFFF;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(15, 47, 88, 0.38);
+  cursor: pointer;
+  transition: transform 160ms var(--qd-ease-out);
+}
+.tk-qd-fab:active {
+  transform: scale(0.93);
+}
+
+/* Glovo Organic Asymmetrical Wave Drawer (.ai/rules/ui-kit.md) */
+.tk-glovo-drawer-wrapper {
+  width: 100%;
+  max-width: 420px;
+  background: transparent !important;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.tk-glovo-wave-cap {
+  width: 100%;
+  height: 34px;
+  margin-bottom: -1px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.tk-glovo-drawer-content {
+  background: #FFFFFF;
+  padding: 12px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Reticle & Viewfinder Specimen */
+.tk-qd-reticle-box {
+  width: 100%;
+  max-width: 320px;
+  height: 200px;
+  background: #0F172A;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tk-qd-laser {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: var(--qd-gold);
+  box-shadow: 0 0 12px 2px var(--qd-gold);
+  animation: qdLaser 2.2s ease-in-out infinite alternate;
+}
+@keyframes qdLaser {
+  0% { top: 20px; opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { top: 175px; opacity: 0.3; }
+}
+
+/* Dynamic Bidding Stepper Tiles */
+.tk-qd-tile {
+  background: #FFFFFF;
+  border: 1.5px solid var(--tk-line);
+  border-radius: var(--tk-radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 160ms var(--qd-ease-out), border-color 160ms ease;
+}
+.tk-qd-tile:active {
+  transform: scale(0.97);
+}
+.tk-qd-tile.selected {
+  border-color: #0F2F58;
+  background: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(15, 47, 88, 0.08);
+}
+
+/* Stepper Incrementer Controls */
+.tk-qd-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--tk-surface-2);
+  padding: 3px;
+  border-radius: 10px;
+}
+.tk-qd-step-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #FFFFFF;
+  color: var(--qd-navy);
+  font-weight: 800;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: transform 120ms var(--qd-ease-out);
+}
+.tk-qd-step-btn:active {
+  transform: scale(0.92);
+}
+
+/* Sealed Deal Receipt */
+.tk-qd-receipt-card {
+  background: #FFFFFF;
+  border: 2px dashed var(--tk-line-strong);
+  border-radius: var(--tk-radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ==========================================================================
+   Device Viewport Harbors & Tablet Dual-Pane Workstation Specimen
+   ========================================================================== */
+
+.tk-device-harbor {
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  background: #F8FAFC;
+  border: 1.5px solid var(--tk-line-strong);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 14px 34px -10px rgba(15, 47, 88, 0.16);
+  display: flex;
+  flex-direction: column;
+}
+
+.tk-tablet-harbor {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  background: #F8FAFC;
+  border: 1.5px solid var(--tk-line-strong);
+  border-radius: 26px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px -12px rgba(15, 47, 88, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.tk-harbor-bar {
+  height: 32px;
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--tk-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--tk-ink-muted);
+  flex-shrink: 0;
+}
+
+.tk-harbor-dot-group {
+  display: flex;
+  gap: 5px;
+}
+.tk-harbor-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #CBD5E1;
+}
+
+/* Dual-Pane Tablet Grid */
+.tk-dual-workstation {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  padding: 16px;
+  background: #F8FAFC;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .tk-dual-workstation {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,8 +1,11 @@
 ---
 name: Serbizyu Platform Implementation Program
-status: accepted-implementation-program
+status: superseded-2026-09-25
 created: 2026-08-09
 architecture: ARCHITECTURE-SPINE.md
+superseded_by:
+  - ../../epics.md
+  - ../../master-delivery-plan.md
 audience:
   - founder
   - senior engineers
@@ -11,6 +14,8 @@ audience:
 ---
 
 # Serbizyu Platform Implementation Program
+> **Historical only.** This 2026-08-09 train graph and its 58-table gates are superseded by the canonical 61-table authority, `_bmad-output/planning-artifacts/epics.md`, and `_bmad-output/planning-artifacts/master-delivery-plan.md`. It cannot authorize implementation, ordering, or readiness.
+
 
 ## 1. Program outcome
 

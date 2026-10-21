@@ -1,38 +1,38 @@
 <?php
 
 namespace App\Providers;
+
 use App\Modules\Catalogs\Application\DealChainCatalog;
 use App\Modules\Catalogs\Application\WorkCatalog;
+use App\Modules\DealCoordination\Application\DealNeedOrderLinkService;
+use App\Modules\IdentityAccess\Application\ConsentActingForAuthorizer;
 use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryChannel;
 use App\Modules\IdentityAccess\Application\Contracts\OtpDeliveryInspector;
-use App\Modules\IdentityAccess\Application\ConsentActingForAuthorizer;
 use App\Modules\IdentityAccess\Application\DemoFixtureService;
 use App\Modules\IdentityAccess\Infrastructure\Auth\DisabledOAuthLoginPort;
 use App\Modules\IdentityAccess\Infrastructure\Notifications\FakeOtpDelivery;
 use App\Modules\IdentityAccess\Infrastructure\Notifications\LogOtpDelivery;
-use App\Modules\IdentityAccess\Infrastructure\Notifications\MailpitNotificationChannel;
 use App\Modules\Listings\Application\Contracts\ListingCommandStore;
 use App\Modules\Listings\Application\Contracts\PublicListingReader;
 use App\Modules\Listings\Application\OrderCapacityAdapter;
 use App\Modules\Listings\Application\OrderListingSourceAdapter;
-use App\Modules\DealCoordination\Application\DealNeedOrderLinkService;
 use App\Modules\Listings\Infrastructure\ListingRepository;
 use App\Modules\OrdersWork\Application\DefaultWorkContractRegistry;
 use App\Modules\OrdersWork\Application\FormDealNeedChildOrder;
 use App\Modules\OrdersWork\Application\WorkContractRegistry;
-use App\Modules\TrustSupport\Application\ListingReviewService;
 use App\Modules\PaymentObligations\Application\OrderPaymentObligationAdapter;
+use App\Modules\TrustSupport\Application\ListingReviewService;
 use App\Shared\Contracts\ActingForAuthorizer;
 use App\Shared\Contracts\ChildOrderFormationPort;
-use App\Shared\Contracts\DealNeedOrderLinkPort;
 use App\Shared\Contracts\DealChainRecipeCatalogPort;
+use App\Shared\Contracts\DealNeedOrderLinkPort;
 use App\Shared\Contracts\FixtureManager;
+use App\Shared\Contracts\ListingReviewReaderPort;
+use App\Shared\Contracts\ListingTelemetryQueryPort;
 use App\Shared\Contracts\OAuthLoginPort;
 use App\Shared\Contracts\OrderCapacityPort;
 use App\Shared\Contracts\OrderListingSourcePort;
 use App\Shared\Contracts\OrderPaymentObligationPort;
-use App\Shared\Contracts\ListingReviewReaderPort;
-use App\Shared\Contracts\ListingTelemetryQueryPort;
 use App\Shared\Contracts\OwnerListingReader;
 use App\Shared\Contracts\WorkSpecificationPort;
 use App\Shared\Infrastructure\Telemetry\ListingTelemetryService;
@@ -90,8 +90,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $appUrl = (string) config('app.url', '');
-        if (str_starts_with($appUrl, 'https://')) {
+        $isNgrok = (isset($_SERVER['HTTP_HOST']) && str_contains((string) $_SERVER['HTTP_HOST'], 'ngrok'))
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+        if (str_starts_with($appUrl, 'https://') || $isNgrok) {
             URL::forceScheme('https');
+            $_SERVER['HTTPS'] = 'on';
+            if ($this->app->bound('request')) {
+                $this->app->make('request')->server->set('HTTPS', 'on');
+            }
         }
 
         if ((bool) config('serbizyu.validate_on_boot', true)) {

@@ -10,6 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
 final class UpdateListingDraftRequest extends FormRequest
 {
     use ValidatesListingGeography;
+
     public function authorize(): bool
     {
         return true;

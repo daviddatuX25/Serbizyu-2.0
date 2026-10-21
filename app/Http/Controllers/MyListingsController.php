@@ -38,6 +38,7 @@ final class MyListingsController
 
         $enrichedMyListings = array_map(function (array $listing) use ($telemetryMap, $reviewSummaries): array {
             $id = (string) ($listing['id'] ?? '');
+
             return [
                 ...$listing,
                 'telemetry' => $telemetryMap[$id] ?? null,

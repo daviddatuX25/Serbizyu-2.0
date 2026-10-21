@@ -1,6 +1,6 @@
 # Serbizyu 2.0 — Rebuilt Domain and State Contracts
 
-Status: CANONICAL DOMAIN/STATE AUTHORITY — founder-approved 2026-07-31; initiative extension accepted 2026-08-09; implementation/live-money gates remain separate
+Status: CANONICAL DOMAIN/STATE AUTHORITY — founder-approved 2026-07-31; initiative extension accepted 2026-08-09; Request/Tender foundation reconciled 2026-09-25; implementation/live-money gates remain separate
 BMAD phase: Phase 3 — Domain/state design
 Depends on:
 
@@ -186,7 +186,7 @@ The bounded model is the approved foundation contract. The later user-facing coo
 
 ### DealNeed states
 
-`draft`, `open`, `sourcing`, `invited`, `quoted`, `accepted`, `in_progress`, `blocked`, `completed`, `failed`, `cancelled`, `replacement_needed`, `superseded`
+`draft`, `open`, `sourcing`, `invited`, `quoted`, `partner_confirmed`, `in_progress`, `blocked`, `completed`, `failed`, `cancelled`, `replacement_needed`, `superseded`
 
 | From | Command/event | To | Guard/effect |
 |---|---|---|---|
@@ -194,8 +194,8 @@ The bounded model is the approved foundation contract. The later user-facing coo
 | open | `publish_need_request` | sourcing | creates/links existing Request; no new bidding primitive |
 | sourcing | `send_invitation` | invited | invitation targets this Need and is idempotent |
 | sourcing/invited | `record_quote` | quoted | existing Quote is valid and unexpired |
-| invited | `accept_invitation` | accepted | invite response is current, authorized, and idempotent; **no Order is created** |
-| quoted/accepted | `form_child_order` | in_progress | explicit terms/party acceptance creates or links one ordinary child Order |
+| invited | `accept_invitation` | partner_confirmed | invite response is current, authorized, and idempotent; **no Order or commercial agreement is created** |
+| quoted/partner_confirmed | `form_child_order` | in_progress | explicit terms/party acceptance creates or links one ordinary child Order atomically |
 | in_progress | `complete_need` | completed | child Work completion and Order guards remain authoritative |
 | any nonterminal | `mark_need_failed` | failed | actor/reason/recovery recorded; no sibling auto-cascade |
 | any nonterminal | `request_need_cancel` | cancelled | explicit Need/child Order impact handling; history retained |
@@ -213,7 +213,7 @@ The bounded model is the approved foundation contract. The later user-facing coo
 
 `draft`, `sent`, `viewed`, `accepted`, `declined`, `expired`, `revoked`, `superseded`, `cancelled`.
 
-`send_invitation` requires a current Need and explicit invitation scope. `accept_invitation`, `decline_invitation`, `revoke_invitation`, and expiry are actor-attributed and version/idempotency guarded. Acceptance records the response and may advance Need sourcing state, but child Order formation is a separate command with a separate idempotency boundary.
+`send_invitation` requires a current Need and explicit invitation scope. `accept_invitation`, `decline_invitation`, `revoke_invitation`, and expiry are actor-attributed and version/idempotency guarded. Acceptance records the invitation response and may move the Need to `partner_confirmed`, but creates no agreement; child Order formation is a separate command with a separate idempotency boundary. Every `in_progress` or later execution state is Order-backed.
 
 ## 2.15 Deal-Chaining invariants, partial completion, and recovery
 
@@ -695,7 +695,7 @@ Authenticated client derives one owner and immutable granted-scope version. Auth
 ### 16.6 Activation and exact approval
 
 - Activation identity is the tuple of capability/version and explicit environment, cohort, geography, owner, category/profile version, mechanism, Work shape, lane/provider, and client dimensions. `NULL` means wildcard. Every current matching `disabled` record is an absolute deny and no narrower enable may override it. Only when zero denies match may at least one current matching enable authorize; the most specific enable (greatest number of bound dimensions, then latest effective time/ID) supplies attribution. Absence defaults deny for conditional/live-money effects.
-- Effective ranges are UTC half-open `[effective_at, expires_at)`; one fingerprint cannot have overlapping current ranges. Supersession is lock-serialized, append-only, and every queued/adapter irreversible effect re-evaluates immediately before mutation.
+- Effective ranges are UTC half-open `[effective_at, expires_at)`; one fingerprint cannot overlap. Temporal cutover is one lock-serialized transaction: lock the current same-fingerprint row, verify expected `row_version`, choose one UTC cutover instant, set only the prior row's `expires_at`/closure metadata to that instant, then insert the immutable successor with `effective_at` equal to that instant and `supersedes_id` pointing to the prior row. Decision, dimensions, evidence, approvals, and original effective time never mutate; failed closure/insert rolls back both. Every queued/adapter irreversible effect re-evaluates immediately before mutation.
 - Disablement blocks new starts and irreversible forward effects but preserves reads, support, reconciliation, refund/reversal, evidence/holds, and safe completion/cancellation.
 - Exact approval states are `pending → approved → consumed` or `expired|revoked`. Approval binds initiator, approver, client, command, normalized payload hash, targets/versions/scopes, amount/currency where relevant, policy, evidence/reason, expiry, and idempotency.
 - Approval consumption and command effect are one transaction. Maker/checker policy rejects self-approval; emergency override has a distinct scope, alert, expiry, audit, and review.
@@ -721,6 +721,134 @@ Authenticated client derives one owner and immutable granted-scope version. Auth
 
 ### 16.9 Extension acceptance gate
 
-- PRD-060–076, canonical 58-table schema, ADR-R-030–040, architecture spine AD-1–29, UX-025–031, and owning epic stories use the same names, states, versions, ownership, and gates.
+- PRD-060–084, canonical 61-table schema, ADR-R-030–042, architecture spine, UX projections, and owning epic stories use the same names, states, versions, ownership, and gates.
 - Every transition has actor/client, authorization, source/target versions, event, transaction boundary, failure/no-effect behavior, recovery, and activation.
 - PostgreSQL examples prove reservation, lineage, accepted-child, per-currency ledger, inbox-order, owner/client, approval-consumption, and active-dimension constraints before each implementation train starts.
+
+## 17. Accepted Request, Tender, Browse, cache, and builder extension — 2026-09-25
+
+This section is canonical for PRD-077–084 and supersedes any downstream claim that Open bidding exposes competitor terms, that Sealed bidding exposes a pre-close count, that Direct Invite is publicly discoverable, or that Listings and Requests share one aggregate/card contract.
+
+### 17.1 Aggregate ownership
+
+- A **Request** is buyer/citizen-owned demand. A **Sourcing Tender** is a Request whose formation mechanism is reverse bidding and whose immutable-after-publication mode is `open_tender`, `sealed_tender`, or `direct_invite`.
+- A **Bid** is presentation vocabulary for a versioned Quote lineage. No Bid aggregate or table exists.
+- A Request owns its need/scope, governed category and capability versions, budget semantics, field-level visibility, timing, response and selection deadlines, eligibility/policy snapshot, Tender phase, selected Quote reference, and close/expiry reason.
+- A Request does not own provider Work, accepted commercial terms, Payment Obligations, child execution, or payment truth.
+- A Request Invitation is a purpose-bound child of one Direct Invite Request. It owns inviter, invited provider, state, expiry, response, acting-for attribution, and revocation history. Acceptance records intent only; an exact Bid and final agreement remain mandatory.
+
+### 17.2 Tender modes and projections
+
+| Mode | Discovery | Pre-close Bid visibility | Participation |
+|---|---|---|---|
+| `open_tender` | Public-safe Request projection may appear in Browse. | Requester sees own Tender state; providers and public viewers see no competitor terms, identities, or counts. | Any currently eligible provider may submit. |
+| `sealed_tender` | Approved coarse Request discovery may appear without competitor signals. | A bidder receives only their own Bid lineage and submission result. Every other Bid existence signal, identity, term, timing, ordering, error, and count is hidden from requester, competitors, and public until committed `selection_open`. | Any currently eligible provider may submit. |
+| `direct_invite` | Never public or generally discoverable; guessed identifiers are non-enumerating. | Only requester, the exact invited responder, scoped Agent, and authorized Operations receive purpose projections. | A current invitation is required. |
+
+`sealed_tender` is application-level confidentiality. It makes no cryptographic commitment.
+
+### 17.3 Tender lifecycle
+
+Tender phases are:
+
+`draft`, `scheduled`, `open`, `paused`, `selection_open`, `awarded`, `unfulfilled`, `cancelled`, `archived`.
+
+| From | Command/event | To | Guard/effect |
+|---|---|---|---|
+| draft | `schedule_tender` | scheduled | Publish validation passes; mode, policy, response deadline, and selection deadline are pinned. |
+| draft/scheduled | `publish_tender` | open | Category/profile active; scope, budget, safety, media, geography, mode policy, anti-spam controls, and response/liquidity activation gate valid. Direct Invite atomically creates at least one current invitation before opening and queues only purpose-safe notice intents. |
+| open | `pause_tender` | paused | Requester/Operations authority; existing Bid history retained; no new submissions. |
+| paused | `resume_tender` | open | Deadline/policy remains valid; resume is audited and notified. |
+| open/paused | `close_bidding` | selection_open | One transaction freezes submissions, pins/increments the reveal-policy version, applies the mode's reveal policy, invalidates affected projection identities, appends audit, and publishes the committed close/reveal event. No winner is selected. |
+| selection_open | `select_and_finalize_bid` | awarded | One Order-owned transaction locks Tender, exact Quote revision, exact Direct Invite where applicable, capacity, parties, and policies; revalidates all facts; records selection; creates the full ordinary Order graph; marks awarded; moves competing submitted revisions to `not_selected` only after success; and commits audit, idempotency result, and outbox—or writes none of those effects. |
+| open/paused/selection_open | `mark_unfulfilled` | unfulfilled | No valid selection by policy deadline; history retained and re-request may create new lineage. |
+| any nonterminal | `cancel_tender` | cancelled | Authorized reason; no silent child/financial cascade. |
+| awarded/unfulfilled/cancelled | `archive_tender` | archived | Retention and dispute/support policy permit archival. |
+
+There is no durable `contract_pending` or independently committed selected-Bid authority. Response and selection deadlines are UTC, policy-bounded, separately meaningful, and never Work deadlines. Extending selection does not reopen submissions.
+
+### 17.4 Quote/Bid revision state machine, lineage, and alternatives
+
+Persisted Quote revision states are exactly:
+
+`draft`, `submitted`, `superseded`, `withdrawn`, `declined`, `expired`, `accepted`, `not_selected`, `invalidated`.
+
+`ineligible` and `stale` are current command/projection disqualifications, not persisted revision states; they are re-evaluated from actor, source, invitation, policy, activation, schedule, capacity, and version facts on every submission, comparison, and finalization.
+
+| From | Command/event | To | Guard/effect |
+|---|---|---|---|
+| draft | `submit_quote` | submitted | Request is open, deadline/current eligibility/policy/activation pass, exact source versions pin, and Direct Invite atomically accepts the same current invitation. |
+| submitted | `revise_quote` | superseded (old) + submitted (new) | One transaction locks lineage/current revision, inserts immutable `revision_no + 1`, links `supersedes_quote_id`, and leaves exactly one submitted revision. |
+| submitted | `withdraw_quote` | withdrawn | Provider/authorized Agent before close; lineage terminalizes and later participation requires a new lineage only if policy permits. |
+| submitted | `decline_quote` | declined | Requester or policy-authorized source disposition only when the current mode/reveal policy authorizes that actor to read and disposition the exact revision; Sealed requires committed `selection_open`. Direct requests against an unrevealed or unauthorized identifier receive uniform no-effect denial. Reason and a phase-safe privacy-safe notice intent commit together. |
+| submitted | `expire_quote` | expired | Validity/deadline elapsed; synchronous guards apply even before scheduler persistence. |
+| submitted | `invalidate_quote` | invalidated | Permanent source/invitation/policy disqualification with attributable reason; transient ineligibility/staleness remains derived and writes nothing. |
+| submitted | `select_and_finalize_bid` | accepted | Exact revision and every formation guard pass; status change occurs only inside the all-or-none ordinary Order/award transaction. |
+| competing submitted | successful `select_and_finalize_bid` | not_selected | Same transaction applies competing-lineage consequences only after complete Order formation succeeds. |
+
+All states except `draft` and `submitted` are terminal for that revision. No Quote may transition out of `accepted`; `accepted` means the exact immutable source of a successfully formed Order, never a durable pre-Order selection. One provider/request/alternative identity has one immutable `bid_lineage_id` and monotonic `revision_no`; a partial unique constraint permits at most one `submitted` revision per lineage. Initial exposure permits one active alternative per provider and mandatory nodes only. Policy supports a maximum of three alternatives, but values above one remain activation-disabled until comparison UX and abuse evidence pass. Selection is explicit; price/ranking assistance cannot choose or finalize a winner. Losing terms remain private and outside requester/winner award disclosure is status-only.
+
+### 17.4.1 Reverse-bidding activation and abuse gate
+
+`category_versions` is the sole versioned content authority for sourcing rules: per-mechanism response eligibility, submission/revision/alternative limits, duplicate/replay rules, expiry/selection behavior, liquidity evidence thresholds, and accountable Product owner. `capability_activations` is the sole dimensioned enable/deny authority and binds the exact category-policy version, accountable Operations/rollback owners, evidence/approval references, effective range, and environment/cohort/geography/category/profile/mechanism dimensions. Publication locks both authorities, stores their IDs/checksum/decision fingerprint on the Request, and re-evaluates all matching activation rows before commit. Submission and finalization lock the Request and pinned policy, re-evaluate current matching activations, and reject an expired/superseded/incompatible policy or any applicable deny; they never infer policy from free JSON or payment `policy_versions`.
+
+Open, Sealed, and Direct Invite publication and submission therefore fail closed unless the pinned current sourcing policy and current dimensioned activation pass response eligibility, bounded per-actor/per-Owner/per-Request submission and revision limits, duplicate/replay controls, expiry/selection handling, and a geography/category/mechanism liquidity decision. Liquidity evidence uses classified genuine supply, eligible responder reachability, response/fill rates, and support capacity; synthetic/sandbox activity cannot satisfy it. Exact thresholds are policy values selected before activation, observable through rate/error/duration and funnel metrics, and independently disableable by dimension. Absence, expiry, failed evidence, an incompatible supersession, or an applicable deny blocks publication/new participation while preserving safe read, withdrawal, expiry, support, and recovery.
+
+### 17.5 Budget vocabulary
+
+`budget_semantics` is exactly one of:
+
+- `target` — desired amount; variances permitted and explained;
+- `ceiling` — hard maximum unless the Request is revised;
+- `range` — lower and upper target with explicit out-of-range acknowledgment;
+- `estimate` — requester seeks estimation; accepted terms still contain an exact amount;
+- `undisclosed` — provider-facing budget withheld where mode policy permits.
+
+All amounts use integer minor units and explicit currency. Builder labels map one-to-one to these values; `Exact Budget` is not canonical vocabulary.
+
+### 17.6 Browse and cache invariants
+
+- Browse is a PostgreSQL query/projection composition over distinct `ListingCardView` and `RequestCardView` contracts. It never merges Listing and Request aggregate identity.
+- Every route, filter, action, and analytics event carries a resource-kind discriminant. PostgreSQL query plans, query count, p95/p99 latency, payload, and saturation are measured before any shared discovery cache is activated.
+- Shared cache is an optional adapter, disabled by default until a versioned activation records the bottleneck/resilience failure mode, baseline and target, accountable owner, expiry, rollback/disable trigger, and evidence that overlay plus cache operations provide net benefit.
+- When activated, shared cache values contain only stable, already-authorized public/coarse projection fields. They omit live lifecycle/visibility/eligibility facts, source revision, capacity/availability claims, and executable actions; viewer-, invitation-, grant-, acting-context-, Operations-, and sealed-pre-reveal-specific projections never enter shared cache.
+- On every cache-assisted Browse read, one batched PostgreSQL projection query verifies each candidate's current source revision, lifecycle phase, visibility/policy qualification, capacity/availability, and activation. The server discards or rebuilds an entry that no longer qualifies before serialization and only then emits active-supply claims or actions. Cache values are never aggregates or authorization evidence, and a hit cannot authorize a command.
+- Cache identity includes resource kind, projection schema version, policy version, geography, locale, normalized query/filter/sort/cursor, and public visibility class. Committed invalidation and bounded TTL are optimizations. Hit/miss ratio, regeneration/overlay cost, tail latency, errors, and database effect are observed; no net benefit or any privacy/freshness regression disables the adapter. Disabled/failure/miss always uses PostgreSQL. Required session/queue Redis health remains separate.
+
+### 17.7 Builder boundaries
+
+Listing, Request/Tender, Work-specification, and Deal-Chain builders:
+
+1. consume governed category, capability-profile, mechanism, Work-shape, lane, safety, evidence, and visibility catalogs;
+2. expose only combinations allowed for the current actor and activation dimensions;
+3. persist resumable version-checked drafts and identify stale conflicts explicitly;
+4. pin exact source/catalog/policy versions at publication;
+5. emit typed source specifications consumed by the final-agreement resolver;
+6. never mutate accepted Order terms, committed reservations, Work execution events, Payment Obligations, or child truth.
+
+### 17.8 Essential notification intent and delivery state machines
+
+Essential notices exist before Messaging and never create a conversation. A notification intent is one recipient/purpose/source-event contract with exact content-template/locale/policy versions, privacy class, mandatory/preference decision, route-success rule, deduplication key, and source correlation. Persisted intent states are exactly:
+
+`pending`, `dispatching`, `delivery_settling`, `cancellation_requested`, `delivered`, `dead_letter`, `cancelled`.
+
+| From | Command/event | To | Guard/effect |
+|---|---|---|---|
+| pending | `dispatch_notification` | dispatching | Lock intent; reauthorize recipient/purpose; resolve mandatory override/preferences and approved channels; generate privacy-safe content; increment generation; create first immutable channel attempts and audit in one transaction. |
+| pending | `cancel_notification` | cancelled | Lock intent. Cancellation is allowed only when current recipient/purpose authority is lost, or an authorized cancellation targets a currently nonmandatory notice; current mandatory policy otherwise denies with no effect. No attempt may be claimed or created. |
+| dispatching | `cancel_notification` | cancellation_requested or cancelled | Apply the same current authority/mandatory-policy guard. Lock intent before attempts; persist `cancellation_requested_at`; cancel every `pending` attempt and prohibit new claims/retries/routes. If no attempt is `sending`, terminalize `cancelled`; otherwise commit `cancellation_requested` without waiting on a provider. |
+| dispatching | `record_route_success` | delivery_settling or delivered | An authentic deduplicated delivered result satisfies the pinned route-success rule. Lock intent/attempts, record `first_delivered_at`, cancel every `pending` attempt, and prohibit new claims/retries/routes. If an attempt remains `sending`, commit `delivery_settling`; otherwise terminalize `delivered`. |
+| dispatching | `exhaust_notification_delivery` | dead_letter | Every approved route is permanently failed, `outcome_unknown`, or its bounded retry budget is exhausted; retain bounded reasons and expose attributable support recovery. |
+| delivery_settling | `reconcile_in_flight_delivery` | delivery_settling or delivered | Record one already-sending attempt's authentic terminal result or bounded unknown-outcome disposition. No new effect starts. When none remains `sending`, terminalize `delivered`. |
+| cancellation_requested | `reconcile_in_flight_delivery` | cancellation_requested or cancelled | Record one already-sending attempt's authentic terminal result or bounded unknown-outcome disposition. Never claim/retry/create another attempt. When none remains `sending`, terminalize `cancelled`; `first_delivered_at` may coexist with cancelled status to report delivery that could not be recalled. |
+| dead_letter | `replay_notification` | pending | Authorized support action with reason/idempotency key reauthorizes purpose/recipient, regenerates/redacts current content, and starts a new generation; stale body/provider payload is never replayed. |
+
+Each `notification_deliveries` row is one immutable-identity/content `(notification, generation, channel, attempt_no)` attempt with mutable lifecycle/evidence. States are exactly `pending`, `sending`, `delivered`, `retryable_failed`, `permanent_failed`, `outcome_unknown`, `cancelled`; legal transitions are `pending→sending|cancelled` and `sending→delivered|retryable_failed|permanent_failed|outcome_unknown|cancelled`. Claim, cancellation, route success, and reconciliation lock parent intent then attempt. Claim requires `dispatching`; cancellation or route success holding the parent lock prevents all later claims/retries/routes. A sending lease/response deadline is bounded. After expiry, an authorized reconciler queries the provider when supported; if no authentic outcome can be established, it atomically marks `outcome_unknown`, records uncertainty/reconciliation evidence, and advances the parent settlement. No database transaction waits on a provider.
+
+A later authentic callback/result for an `outcome_unknown` attempt appends deduplicated late-result evidence and may set parent `first_delivered_at`, but does not change attempt/parent status, reopen routing, acknowledge source business success, or trigger another effect. Retryable failure creates a next numbered attempt only while the parent remains `dispatching` and budget/authorization permit. Recipient acknowledgment is optional, separate, idempotent evidence and never business-event success.
+
+The source-event consumer acknowledges only after the notification intent and initial dispatch scheduling commit with its inbox/checkpoint; external provider success is not part of the source business transaction. Delivery failure never rolls back or acknowledges the source business event. Workers use ordered inbox/outbox semantics, bounded execution, safe shutdown, due-retry/dead-letter indexes, and privacy-safe telemetry. No intent, attempt, error, support view, or timing difference grants resource/conversation authority or reveals private existence.
+
+### 17.9 Pre-messaging boundary
+
+The current implementation sequence closes after governed Listings/discovery/cache, Request/Tender bidding, atomic Order formation, Work catalogs/builders, and bounded Deal-Chain catalogs/builders are proven. Messaging is the next capability. It consumes settled actor, participant, privacy, aggregate-lineage, audit, notification-intent/delivery, and projection contracts; it cannot substitute unstructured chat for missing Request scope, Bid terms, invitation response, agreement, or Work state.

@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Serbizyu 2.0 — Quick Deal & Universal Resolver</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #0F2F58;          /* Serbizyu Navy */
+      --color-primary-hover: #091E38;
+      --color-brand-yellow: #FFC244;     /* Serbizyu Warm Gold */
+      --color-accent-teal: #0D715F;      /* Serbizyu Teal */
+      --color-canvas: #070B14;           /* Immersive Studio Void */
+      --color-shell-bg: #FFFFFF;
+      --color-surface: #FFFFFF;
+      --color-surface-subtle: #F8FAFC;
+      --color-ink: #0F172A;
+      --color-ink-secondary: #475569;
+      --color-ink-muted: #94A3B8;
+      --color-border: #E2E8F0;
+      --color-border-subtle: #F1F5F9;
+      --radius-pill: 9999px;
+      --radius-card: 18px;
+      --radius-sm: 12px;
+      --shadow-subtle: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-float: 0 25px 60px -15px rgba(0, 0, 0, 0.65);
+      --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: var(--font-display);
+      background: var(--color-canvas);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px 64px;
+      overflow-x: hidden;
+    }
+
+    /* Top Studio Context Bar */
+    .studio-header {
+      width: 100%;
+      max-width: 1080px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #94A3B8;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .studio-crumb { display: flex; align-items: center; gap: 8px; }
+    .studio-badge {
+      background: rgba(255, 194, 68, 0.12);
+      border: 1px solid rgba(255, 194, 68, 0.28);
+      color: #FFC244;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* Floating Studio Toolbar (Outside Product Frame) */
+    .studio-toolbar {
+      width: 100%;
+      max-width: 1080px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 8px 14px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .toolbar-group { display: flex; align-items: center; gap: 6px; }
+    .toolbar-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748B; margin-right: 4px; letter-spacing: 0.05em; }
+    
+    .toolbar-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #E2E8F0;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 160ms var(--ease-out);
+    }
+    .toolbar-btn:active { transform: scale(0.96); }
+    .toolbar-btn.active {
+      background: #FFC244;
+      border-color: #FFC244;
+      color: #0F2F58;
+      box-shadow: 0 2px 8px rgba(255, 194, 68, 0.35);
+    }
+
+    /* Floating Scenario Drawer Button */
+    .scenario-fab-pill {
+      background: #0F2F58;
+      border: 1.5px solid rgba(255, 194, 68, 0.4);
+      color: #FFC244;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      transition: transform 160ms var(--ease-out);
+    }
+    .scenario-fab-pill:active { transform: scale(0.95); }
+
+    /* Device Enclosure Stage */
+    .stage-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      position: relative;
+    }
+
+    /* Authentic Phone Shell (Clean, Zero Dev Clutter Inside) */
+    .device-shell {
+      width: 100%;
+      background: var(--color-shell-bg);
+      border: 8px solid #1E293B;
+      box-shadow: var(--shadow-float);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: max-width 0.35s var(--ease-spring), height 0.35s var(--ease-spring), border-radius 0.35s ease;
+    }
+
+    .device-shell.mode-phone {
+      max-width: 400px;
+      height: 820px;
+      border-radius: 44px;
+    }
+    .device-shell.mode-tablet {
+      max-width: 820px;
+      height: 720px;
+      border-radius: 34px;
+    }
+    .device-shell.mode-desktop {
+      max-width: 1060px;
+      height: 760px;
+      border-radius: 26px;
+    }
+
+    /* Phone Top Bar */
+    .shell-status-bar {
+      height: 44px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-ink);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .island-capsule {
+      height: 22px;
+      background: #0F172A;
+      border-radius: var(--radius-pill);
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .capsule-dot { width: 6px; height: 6px; border-radius: 50%; background: #10B981; }
+
+    /* Clean App Header */
+    .shell-app-header {
+      background: #FFFFFF;
+      padding: 10px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .brand-eyebrow { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--color-accent-teal); letter-spacing: 0.06em; }
+    .brand-title { font-size: 19px; font-weight: 800; color: var(--color-primary); letter-spacing: -0.02em; }
+    .cash-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #FEF3C7;
+      border: 1px solid #FDE68A;
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 700;
+      color: #92400E;
+    }
+
+    /* Main Scrollable Canvas */
+    .shell-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px 84px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Dual-Pane Layout on Tablets & Desktops */
+    .layout-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      height: 100%;
+    }
+    .mode-tablet .layout-grid,
+    .mode-desktop .layout-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+    .mode-desktop .layout-grid {
+      grid-template-columns: 420px 1fr;
+      gap: 28px;
+    }
+
+    .pane-optical, .pane-bidding {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+    }
+
+    /* Segment Mode Switcher */
+    .segment-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #F1F5F9;
+      padding: 4px;
+      border-radius: 14px;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .segment-tab {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      border-radius: 11px;
+      border: none;
+      background: transparent;
+      color: var(--color-ink-secondary);
+      cursor: pointer;
+      transition: transform 140ms var(--ease-out), background 160ms ease;
+    }
+    .segment-tab:active { transform: scale(0.97); }
+    .segment-tab.active {
+      background: #0F2F58;
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(15, 47, 88, 0.22);
+    }
+
+    /* Pristine Viewfinder (Pure Reticle, Zero Clutter) */
+    .viewfinder-hero {
+      background: #0B1120;
+      border-radius: 24px;
+      height: 290px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 30px -8px rgba(11, 17, 32, 0.45);
+    }
+    .viewfinder-reticle {
+      width: 175px;
+      height: 175px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .reticle-corner {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-color: #FFC244;
+      border-style: solid;
+    }
+    .corner-tl { top: 0; left: 0; border-width: 3.5px 0 0 3.5px; border-radius: 7px 0 0 0; }
+    .corner-tr { top: 0; right: 0; border-width: 3.5px 3.5px 0 0; border-radius: 0 7px 0 0; }
+    .corner-bl { bottom: 0; left: 0; border-width: 0 0 3.5px 3.5px; border-radius: 0 0 0 7px; }
+    .corner-br { bottom: 0; right: 0; border-width: 0 3.5px 3.5px 0; border-radius: 0 0 7px 0; }
+    
+    .laser-beam {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      height: 2px;
+      background: #FFC244;
+      box-shadow: 0 0 14px 2px #FFC244;
+      animation: laserSweep 2.2s ease-in-out infinite alternate;
+    }
+    @keyframes laserSweep {
+      0% { top: 15px; opacity: 0.2; }
+      50% { opacity: 1; }
+      100% { top: 158px; opacity: 0.2; }
+    }
+
+    .viewfinder-footer-hint {
+      position: absolute;
+      bottom: 14px;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.65);
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    /* Citizen & Provider QR Presenter Canvas */
+    .presenter-card {
+      background: #FFFFFF;
+      border-radius: 24px;
+      border: 1.5px solid var(--color-border);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: var(--shadow-subtle);
+    }
+    .qr-canvas-box {
+      width: 210px;
+      height: 210px;
+      border-radius: 18px;
+      border: 3px solid #0F2F58;
+      background: #FFFFFF;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 14px 0 10px;
+      box-shadow: 0 8px 24px -6px rgba(15, 47, 88, 0.15);
+    }
+    .fountain-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0F2F58;
+      color: #FFC244;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+    }
+
+    /* Spot-Bidding Stepper Hero */
+    .anchor-hero {
+      background: #F8FAFC;
+      border: 1.5px solid var(--color-border);
+      border-radius: 18px;
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .anchor-title { font-size: 15px; font-weight: 800; color: #0F2F58; letter-spacing: -0.01em; }
+    .anchor-subtitle { font-size: 11.5px; color: #64748B; margin-top: 1px; }
+
+    .price-headline-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 4px 0;
+    }
+    .price-digits { font-family: var(--font-mono); font-size: 32px; font-weight: 800; color: #0F2F58; letter-spacing: -0.03em; }
+    .diff-pill {
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: #DCFCE7;
+      color: #166534;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Line-Item Stepper Rows */
+    .stepper-tile {
+      background: #FFFFFF;
+      border: 1.5px solid var(--color-border);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 150ms ease, transform 140ms var(--ease-out);
+    }
+    .stepper-tile:active { transform: scale(0.98); }
+    .stepper-tile.selected { border-color: #0F2F58; background: #FFFFFF; }
+
+    .stepper-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #F1F5F9;
+      padding: 3px;
+      border-radius: 10px;
+    }
+    .btn-step {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: #FFFFFF;
+      color: #0F2F58;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: transform 120ms var(--ease-out);
+    }
+    .btn-step:active { transform: scale(0.92); }
+    .step-digits { font-family: var(--font-mono); font-size: 13.5px; font-weight: 700; min-width: 58px; text-align: center; }
+
+    /* Tactile CTAs */
+    .btn-primary {
+      background: #0F2F58;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 15px;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(15, 47, 88, 0.28);
+      transition: transform 140ms var(--ease-out);
+    }
+    .btn-primary:active { transform: scale(0.97); }
+
+    .btn-success {
+      background: #15803D;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 15px;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(21, 128, 61, 0.3);
+      transition: transform 140ms var(--ease-out);
+    }
+    .btn-success:active { transform: scale(0.97); }
+
+    /* Minimalist Sealed Receipt */
+    .receipt-card {
+      background: #FFFFFF;
+      border: 2px dashed #CBD5E1;
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    /* Bottom Dock (Mobile Only) */
+    .bottom-dock {
+      height: 64px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 10px;
+      z-index: 40;
+      position: relative;
+    }
+    .dock-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: #64748B;
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .dock-tab.active { color: #0F2F58; }
+
+    .center-fab {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 54px;
+      height: 54px;
+      background: #0F2F58;
+      border: 3.5px solid #FFFFFF;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #FFC244;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(15, 47, 88, 0.38);
+      z-index: 50;
+      transition: transform 160ms var(--ease-out);
+    }
+    .center-fab:active { transform: translateX(-50%) scale(0.93); }
+
+    .mode-tablet .bottom-dock,
+    .mode-desktop .bottom-dock {
+      display: none;
+    }
+
+    /* External Scenario Inspector Drawer (Outside Product UI) */
+    .inspector-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .inspector-overlay.open { display: flex; }
+    .inspector-modal {
+      width: 100%;
+      max-width: 440px;
+      background: #0F172A;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 22px;
+      padding: 20px;
+      color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+    .inspector-chip {
+      background: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 140ms ease;
+    }
+    .inspector-chip:hover { border-color: #FFC244; background: #243248; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Studio Header -->
+  <div class="studio-header">
+    <div class="studio-crumb">
+      <span>Serbizyu Design System</span>
+      <span>›</span>
+      <span class="studio-badge">Quick Deal Adaptive Workstation</span>
+    </div>
+    <a href="browse-mobile.html" style="color: #FFC244; text-decoration: none; font-weight: 700;">← Back to Marketplace</a>
+  </div>
+
+  <!-- Studio Toolbar (Controls Form-Factor, Network & Scenarios OUTSIDE the Screen) -->
+  <div class="studio-toolbar">
+    <!-- Viewport Chooser -->
+    <div class="toolbar-group">
+      <span class="toolbar-label">Viewport:</span>
+      <button class="toolbar-btn active" id="btn-vp-phone" onclick="setViewportMode('phone')">📱 Phone (390px)</button>
+      <button class="toolbar-btn" id="btn-vp-tablet" onclick="setViewportMode('tablet')">📟 Tablet Kiosk (820px)</button>
+      <button class="toolbar-btn" id="btn-vp-desktop" onclick="setViewportMode('desktop')">🖥️ Desktop POS (1060px)</button>
+    </div>
+
+    <!-- Perspective & Scenario Injector -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn active" id="btn-actor" onclick="toggleActor()">👤 Maria (Buyer)</button>
+      <button class="toolbar-btn active" id="btn-net" onclick="toggleNetwork()">📶 4G Online</button>
+      <button class="scenario-fab-pill" onclick="openInspector()">⚡ Scenarios / Decoders</button>
+    </div>
+  </div>
+
+  <!-- Product Stage Container -->
+  <div class="stage-wrapper">
+    <div class="device-shell mode-phone" id="product-shell">
+      
+      <!-- Top Native Status Bar -->
+      <div class="shell-status-bar">
+        <span>9:41</span>
+        <div class="island-capsule"><div class="capsule-dot"></div><span style="font-size:10.5px; color:#A7F3D0; font-weight:800;">DATA MULE ACTIVE</span></div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span id="net-label" style="font-size:11px; font-weight:700;">4G</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 18h12M6 14h12M6 10h12M6 6h12"/></svg>
+        </div>
+      </div>
+
+      <!-- App Header -->
+      <div class="shell-app-header">
+        <div>
+          <div class="brand-eyebrow" id="app-eyebrow">Universal QR Resolver</div>
+          <h1 class="brand-title" id="app-main-title">Quick Deal Terminal</h1>
+        </div>
+        <div class="cash-indicator" id="settlement-indicator">
+          <span>💵</span>
+          <span>External Cash</span>
+        </div>
+      </div>
+
+      <!-- Scrollable Product Workspace -->
+      <div class="shell-content">
+        
+        <div class="layout-grid">
+          
+          <!-- Optical Pane (Scanner & Presenter) -->
+          <div class="pane-optical">
+            
+            <div class="segment-switch">
+              <button class="segment-tab active" id="tab-scan" onclick="switchMode('scan')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                <span>Scan Optical QR</span>
+              </button>
+              <button class="segment-tab" id="tab-present" onclick="switchMode('present')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01M17 7h.01M7 17h.01M17 17h.01"/></svg>
+                <span>My Citizen QR</span>
+              </button>
+            </div>
+
+            <!-- Viewfinder Subview (Zero Clutter) -->
+            <div id="subview-scan" style="display:flex; flex-direction:column; gap:12px;">
+              <div class="viewfinder-hero">
+                <div class="viewfinder-reticle">
+                  <div class="reticle-corner corner-tl"></div>
+                  <div class="reticle-corner corner-tr"></div>
+                  <div class="reticle-corner corner-bl"></div>
+                  <div class="reticle-corner corner-br"></div>
+                  <div class="laser-beam"></div>
+                  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                </div>
+                <div class="viewfinder-footer-hint">Align any Serbizyu QR code within frame</div>
+              </div>
+            </div>
+
+            <!-- Presenter Subview -->
+            <div id="subview-present" style="display:none; flex-direction:column; gap:12px;">
+              <div class="presenter-card">
+                <div style="font-size:11px; font-weight:800; color:#0F2F58; text-transform:uppercase; letter-spacing:0.04em;" id="presenter-tag">Citizen Identity Badge</div>
+                <h3 style="font-size:16px; font-weight:800; color:#0F172A; margin-top:2px;" id="presenter-owner">Maria Santos</h3>
+                
+                <div class="qr-canvas-box">
+                  <svg viewBox="0 0 100 100" fill="#0F2F58" style="width:100%; height:100%;">
+                    <rect x="5" y="5" width="25" height="25" rx="4" fill="none" stroke="#0F2F58" stroke-width="6"/>
+                    <rect x="11" y="11" width="13" height="13" rx="2" fill="#0F2F58"/>
+                    <rect x="70" y="5" width="25" height="25" rx="4" fill="none" stroke="#0F2F58" stroke-width="6"/>
+                    <rect x="76" y="11" width="13" height="13" rx="2" fill="#0F2F58"/>
+                    <rect x="5" y="70" width="25" height="25" rx="4" fill="none" stroke="#0F2F58" stroke-width="6"/>
+                    <rect x="11" y="76" width="13" height="13" rx="2" fill="#0F2F58"/>
+                    <rect x="36" y="10" width="6" height="6" rx="1"/><rect x="46" y="10" width="6" height="6" rx="1"/>
+                    <rect x="36" y="24" width="6" height="6" rx="1"/><rect x="46" y="32" width="6" height="6" rx="1"/>
+                    <rect x="10" y="36" width="6" height="6" rx="1"/><rect x="24" y="46" width="6" height="6" rx="1"/>
+                    <rect x="70" y="36" width="6" height="6" rx="1"/><rect x="36" y="46" width="6" height="6" rx="1"/>
+                    <rect x="56" y="46" width="6" height="6" rx="1"/><rect x="36" y="70" width="6" height="6" rx="1"/>
+                    <rect x="46" y="70" width="6" height="6" rx="1"/><rect x="70" y="70" width="6" height="6" rx="1"/>
+                    <rect x="84" y="84" width="6" height="6" rx="1"/>
+                  </svg>
+                </div>
+
+                <div class="fountain-badge">
+                  <span style="display:inline-block; width:6px; height:6px; background:#FFC244; border-radius:50%;"></span>
+                  <span id="fountain-status">Frame 1 of 4 · Looping @ 3.5 FPS</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bidding & Commercial Ledger Pane -->
+          <div class="pane-bidding">
+            
+            <!-- Phase 1: Decoded Multi-Listing Catalog -->
+            <div id="view-catalog" style="display:none; flex-direction:column; gap:10px;">
+              <div class="anchor-hero" style="background:#0F2F58; color:#FFFFFF; border:none;">
+                <div>
+                  <div style="font-size:10.5px; font-weight:800; color:#FFC244; text-transform:uppercase;">Tatay Ben's Aircon Repair</div>
+                  <div style="font-size:14px; font-weight:700; margin-top:2px;">Select Anchor Service</div>
+                </div>
+                <button onclick="resetFlow()" style="background:rgba(255,255,255,0.15); border:none; color:#FFFFFF; border-radius:8px; padding:4px 8px; font-size:11px; cursor:pointer;">✕</button>
+              </div>
+
+              <div class="stepper-tile" onclick="startDeal('AC Deep Chemical Wash', 500)">
+                <div>
+                  <div style="font-size:13px; font-weight:700;">AC Deep Chemical Wash</div>
+                  <div style="font-size:11px; color:#64748B;">Indoor blower wheel &amp; coil</div>
+                </div>
+                <strong style="font-family:var(--font-mono); font-size:14px; color:#0F2F58;">₱500</strong>
+              </div>
+
+              <div class="stepper-tile" onclick="startDeal('Fan Capacitor Replacement', 350)">
+                <div>
+                  <div style="font-size:13px; font-weight:700;">Fan Capacitor Replacement</div>
+                  <div style="font-size:11px; color:#64748B;">Run capacitor replacement</div>
+                </div>
+                <strong style="font-family:var(--font-mono); font-size:14px; color:#0F2F58;">₱350</strong>
+              </div>
+
+              <div class="stepper-tile" onclick="startDeal('Freon R32 Recharge', 1200)">
+                <div>
+                  <div style="font-size:13px; font-weight:700;">Freon R32 Recharge</div>
+                  <div style="font-size:11px; color:#64748B;">Pressure test &amp; complete fill</div>
+                </div>
+                <strong style="font-family:var(--font-mono); font-size:14px; color:#0F2F58;">₱1,200</strong>
+              </div>
+            </div>
+
+            <!-- Phase 2: Active Spot-Bidding Stepper -->
+            <div id="view-negotiation" style="display:flex; flex-direction:column; gap:14px;">
+              <div class="anchor-hero">
+                <div>
+                  <div class="anchor-title" id="deal-title">AC Deep Chemical Wash</div>
+                  <div class="anchor-subtitle">Tatay Ben · Tagudin Centro</div>
+                </div>
+                <button onclick="resetFlow()" style="background:transparent; border:1px solid #CBD5E1; color:#64748B; border-radius:8px; padding:4px 8px; font-size:11px; font-weight:700; cursor:pointer;">Change</button>
+              </div>
+
+              <div class="price-headline-box">
+                <span class="price-digits" id="total-price-display">₱750</span>
+                <span class="diff-pill" id="diff-pill">+₱250 (+50%)</span>
+              </div>
+
+              <!-- Line Items Breakdown (Zero Parenthesis Clutter) -->
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <!-- Labor -->
+                <div class="stepper-tile">
+                  <div>
+                    <div style="font-size:13px; font-weight:700;">Cleaning Labor</div>
+                    <div style="font-size:11px; color:#64748B;">Indoor &amp; outdoor wash</div>
+                  </div>
+                  <div class="stepper-controls">
+                    <button class="btn-step" onclick="adjustLabor(-50)">-</button>
+                    <span class="step-digits" id="labor-amount">₱450</span>
+                    <button class="btn-step" onclick="adjustLabor(50)">+</button>
+                  </div>
+                </div>
+
+                <!-- Part Add-on -->
+                <div class="stepper-tile selected" id="row-cap" onclick="togglePart('cap')">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <input type="checkbox" id="chk-cap" checked style="accent-color:#0F2F58; pointer-events:none;">
+                    <div>
+                      <div style="font-size:13px; font-weight:700;">35μF Run Capacitor</div>
+                      <div style="font-size:11px; color:#64748B;">Technician-supplied part</div>
+                    </div>
+                  </div>
+                  <strong style="font-size:13px; color:#0F2F58;">+₱300</strong>
+                </div>
+
+                <!-- Urgency Add-on -->
+                <div class="stepper-tile" id="row-rush" onclick="togglePart('rush')">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <input type="checkbox" id="chk-rush" style="accent-color:#0F2F58; pointer-events:none;">
+                    <div>
+                      <div style="font-size:13px; font-weight:700;">Evening Spot Rush</div>
+                      <div style="font-size:11px; color:#64748B;">Arrival within 45 mins</div>
+                    </div>
+                  </div>
+                  <strong style="font-size:13px; color:#0F2F58;">+₱100</strong>
+                </div>
+              </div>
+
+              <!-- Primary Verbs -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px;">
+                <button class="btn-primary" onclick="showOfferQR()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                  <span>Present QR</span>
+                </button>
+                <button class="btn-success" onclick="dualConfirm()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>Dual Confirm</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Phase 3: Sealed Receipt -->
+            <div id="view-receipt" style="display:none; flex-direction:column; gap:12px;">
+              <div class="receipt-card">
+                <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px dashed #CBD5E1; padding-bottom:10px;">
+                  <div>
+                    <span style="font-size:10.5px; font-weight:800; color:#64748B;">RECEIPT SEALED</span>
+                    <div style="font-size:26px; font-weight:800; color:#0F2F58; font-family:var(--font-mono);" id="receipt-total">₱750</div>
+                  </div>
+                  <span style="font-size:10px; font-weight:800; background:#DCFCE7; color:#15803D; padding:3px 8px; border-radius:9999px;">✓ Dual Signed</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;">
+                  <div><span style="font-size:10px; color:#94A3B8; text-transform:uppercase;">Customer</span><div style="font-weight:700;">Maria Santos</div></div>
+                  <div><span style="font-size:10px; color:#94A3B8; text-transform:uppercase;">Provider</span><div style="font-weight:700;">Tatay Ben</div></div>
+                  <div><span style="font-size:10px; color:#94A3B8; text-transform:uppercase;">Service</span><div style="font-weight:700;">AC Deep Cleaning</div></div>
+                  <div><span style="font-size:10px; color:#94A3B8; text-transform:uppercase;">Settlement</span><div style="font-weight:700; color:#15803D;">External Cash</div></div>
+                </div>
+
+                <div style="font-size:11px; color:#64748B; background:#F8FAFC; padding:8px 10px; border-radius:10px;">
+                  🟢 Stored in phone outbox. Syncs automatically when 4G reconnects.
+                </div>
+              </div>
+
+              <a href="deal-chain-active.html" class="btn-primary" style="text-decoration:none; background:#0D715F;">
+                <span>Need a Courier or Part Runner? Add Step →</span>
+              </a>
+
+              <button onclick="resetFlow()" style="background:transparent; border:1px solid #CBD5E1; color:#64748B; font-size:12px; font-weight:700; padding:10px; border-radius:12px; cursor:pointer;">
+                ← Start Fresh Negotiation
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Native Bottom Navigation (Mobile Only) -->
+      <nav class="bottom-dock">
+        <a href="browse-mobile.html" class="dock-tab">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Explore</span>
+        </a>
+        <a href="request-service-builder.html" class="dock-tab">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <span>Post</span>
+        </a>
+        <div class="center-fab" onclick="resetFlow()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/>
+            <path d="M21 16h-3a2 2 0 0 0-2 2v3M21 21v.01M12 7v3a2 2 0 0 1-2 2H7M3 12h.01M12 3h.01M12 16v.01M16 12h1M21 12v.01M12 21v-1"/>
+          </svg>
+        </div>
+        <a href="orders-mobile.html" class="dock-tab">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          <span>Orders</span>
+        </a>
+        <a href="profile-mobile.html" class="dock-tab">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Profile</span>
+        </a>
+      </nav>
+
+    </div>
+  </div>
+
+  <!-- External Scenario Inspector Drawer (Outside Product UI) -->
+  <div class="inspector-overlay" id="inspector-modal" onclick="closeInspector(event)">
+    <div class="inspector-modal" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="font-size:16px; font-weight:800; color:#FFC244;">⚡ Decoder Scenario Injector</h3>
+          <p style="font-size:11.5px; color:#94A3B8;">Simulate optical token captures without polluting the product screen.</p>
+        </div>
+        <button onclick="closeInspector()" style="background:#334155; border:none; color:#FFFFFF; border-radius:8px; padding:6px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div class="inspector-chip" onclick="triggerScenario('USR')">
+        <div>
+          <strong style="font-size:13px;">🪪 Scan Tatay Ben's Stall Badge</strong>
+          <div style="font-size:11px; color:#94A3B8;">serbizyu:usr:v1 · Unpacks 3-service catalog</div>
+        </div>
+        <span style="font-size:10px; font-weight:800; background:#0F2F58; color:#FFC244; padding:3px 8px; border-radius:6px;">USR CAT</span>
+      </div>
+
+      <div class="inspector-chip" onclick="triggerScenario('LST')">
+        <div>
+          <strong style="font-size:13px;">❄️ Direct AC Deep Wash Listing</strong>
+          <div style="font-size:11px; color:#94A3B8;">serbizyu:lst:v1 · Pinned Version 3 Anchor</div>
+        </div>
+        <span style="font-size:10px; font-weight:800; background:#0F2F58; color:#FFC244; padding:3px 8px; border-radius:6px;">LST</span>
+      </div>
+
+      <div class="inspector-chip" onclick="triggerScenario('QDO')">
+        <div>
+          <strong style="font-size:13px;">🤝 Counter-Offer Frame (₱750)</strong>
+          <div style="font-size:11px; color:#94A3B8;">serbizyu:qdo:v1 · Labor ₱450 + Cap ₱300</div>
+        </div>
+        <span style="font-size:10px; font-weight:800; background:#0F2F58; color:#FFC244; padding:3px 8px; border-radius:6px;">QDO</span>
+      </div>
+
+      <div class="inspector-chip" onclick="triggerScenario('QDR')">
+        <div>
+          <strong style="font-size:13px;">🧾 Sealed Cash Receipt</strong>
+          <div style="font-size:11px; color:#94A3B8;">serbizyu:qdr:v1 · Dual P-256 Signed</div>
+        </div>
+        <span style="font-size:10px; font-weight:800; background:#0F2F58; color:#FFC244; padding:3px 8px; border-radius:6px;">QDR</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentActor = 'buyer';
+    let isOnline = true;
+    let baseLabor = 450;
+    let partCapSelected = true;
+    let partRushSelected = false;
+    let currentTotal = 750;
+
+    function setViewportMode(mode) {
+      const shell = document.getElementById('product-shell');
+      shell.classList.remove('mode-phone', 'mode-tablet', 'mode-desktop');
+      shell.classList.add(`mode-${mode}`);
+
+      document.getElementById('btn-vp-phone').classList.toggle('active', mode === 'phone');
+      document.getElementById('btn-vp-tablet').classList.toggle('active', mode === 'tablet');
+      document.getElementById('btn-vp-desktop').classList.toggle('active', mode === 'desktop');
+    }
+
+    function toggleActor() {
+      currentActor = currentActor === 'buyer' ? 'provider' : 'buyer';
+      const btn = document.getElementById('btn-actor');
+      if (currentActor === 'provider') {
+        btn.textContent = "🛠️ Tatay Ben (Provider)";
+        document.getElementById('presenter-tag').textContent = "Tatay Ben's Stall Badge (HVAC)";
+        document.getElementById('presenter-owner').textContent = "Tatay Ben's Aircon Repair";
+        document.getElementById('fountain-status').textContent = "Streaming 3 Services · Frame 1/4";
+      } else {
+        btn.textContent = "👤 Maria (Buyer)";
+        document.getElementById('presenter-tag').textContent = "Citizen Identity Badge";
+        document.getElementById('presenter-owner').textContent = "Maria Santos";
+        document.getElementById('fountain-status').textContent = "Citizen Key · Frame 1/2";
+      }
+    }
+
+    function toggleNetwork() {
+      isOnline = !isOnline;
+      const btn = document.getElementById('btn-net');
+      btn.textContent = isOnline ? '📶 4G Online' : '📵 Air-Gapped';
+      document.getElementById('net-label').textContent = isOnline ? '4G' : 'OFF';
+      document.getElementById('settlement-indicator').innerHTML = isOnline 
+        ? '<span>⚡</span><span>Connected</span>' 
+        : '<span>💵</span><span>External Cash</span>';
+    }
+
+    function switchMode(mode) {
+      document.getElementById('tab-scan').classList.toggle('active', mode === 'scan');
+      document.getElementById('tab-present').classList.toggle('active', mode === 'present');
+      document.getElementById('subview-scan').style.display = mode === 'scan' ? 'flex' : 'none';
+      document.getElementById('subview-present').style.display = mode === 'present' ? 'flex' : 'none';
+    }
+
+    function openInspector() {
+      document.getElementById('inspector-modal').classList.add('open');
+    }
+    function closeInspector() {
+      document.getElementById('inspector-modal').classList.remove('open');
+    }
+
+    function triggerScenario(type) {
+      closeInspector();
+      if (type === 'USR') {
+        document.getElementById('view-catalog').style.display = 'flex';
+        document.getElementById('view-negotiation').style.display = 'none';
+        document.getElementById('view-receipt').style.display = 'none';
+      } else if (type === 'LST') {
+        startDeal('AC Deep Chemical Wash', 500);
+      } else if (type === 'QDO') {
+        startDeal('AC Deep Chemical Wash', 500);
+        recalcTotal();
+      } else if (type === 'QDR') {
+        dualConfirm();
+      }
+    }
+
+    function startDeal(title, basePrice) {
+      document.getElementById('view-catalog').style.display = 'none';
+      document.getElementById('view-negotiation').style.display = 'flex';
+      document.getElementById('view-receipt').style.display = 'none';
+      document.getElementById('deal-title').textContent = title;
+      recalcTotal();
+    }
+
+    function resetFlow() {
+      document.getElementById('view-catalog').style.display = 'none';
+      document.getElementById('view-negotiation').style.display = 'flex';
+      document.getElementById('view-receipt').style.display = 'none';
+      switchMode('scan');
+    }
+
+    function adjustLabor(delta) {
+      baseLabor = Math.max(100, baseLabor + delta);
+      document.getElementById('labor-amount').textContent = `₱${baseLabor}`;
+      recalcTotal();
+    }
+
+    function togglePart(part) {
+      if (part === 'cap') {
+        partCapSelected = !partCapSelected;
+        document.getElementById('chk-cap').checked = partCapSelected;
+        document.getElementById('row-cap').classList.toggle('selected', partCapSelected);
+      } else if (part === 'rush') {
+        partRushSelected = !partRushSelected;
+        document.getElementById('chk-rush').checked = partRushSelected;
+        document.getElementById('row-rush').classList.toggle('selected', partRushSelected);
+      }
+      recalcTotal();
+    }
+
+    function recalcTotal() {
+      currentTotal = baseLabor + (partCapSelected ? 300 : 0) + (partRushSelected ? 100 : 0);
+      document.getElementById('total-price-display').textContent = `₱${currentTotal}`;
+      document.getElementById('receipt-total').textContent = `₱${currentTotal}`;
+
+      const diff = currentTotal - 500;
+      const pct = Math.round((diff / 500) * 100);
+      const pill = document.getElementById('diff-pill');
+      if (diff >= 0) {
+        pill.textContent = `+₱${diff} (+${pct}%)`;
+        pill.style.background = '#DCFCE7';
+        pill.style.color = '#166534';
+      } else {
+        pill.textContent = `₱${diff} (${pct}%)`;
+        pill.style.background = '#FEF3C7';
+        pill.style.color = '#92400E';
+      }
+    }
+
+    function showOfferQR() {
+      switchMode('present');
+      document.getElementById('fountain-status').textContent = `QDO Offer ₱${currentTotal} · Round 2`;
+    }
+
+    function dualConfirm() {
+      document.getElementById('view-catalog').style.display = 'none';
+      document.getElementById('view-negotiation').style.display = 'none';
+      document.getElementById('view-receipt').style.display = 'flex';
+    }
+  </script>
+</body>
+</html>

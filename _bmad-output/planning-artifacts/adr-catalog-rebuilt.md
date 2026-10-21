@@ -187,11 +187,11 @@ Consequences: future expansion requires activation records and does not require 
 
 ## ADR-R-020 — Canonical schema inventory
 
-Status: Accepted; extended 2026-08-09
+Status: Superseded 2026-09-25 by ADR-R-042
 
-Decision: The canonical schema authority is the observed 47-table migrated baseline plus eleven approved initiative additions, for 58 planning tables. It includes bounded Deal-Chaining, real phone OTP, immutable category versions, capacity reservations, owner-scoped integrations, ordered inbox, dimensioned activation, and exact approvals; no pooled finance/custody/offline authority is implied.
+Historical decision: the 2026-08-09 authority was the observed 47-table migrated baseline plus eleven approved initiative additions, for 58 planning tables. It included bounded Deal-Chaining, real phone OTP, immutable category versions, capacity reservations, owner-scoped integrations, ordered inbox, dimensioned activation, and exact approvals; no pooled finance/custody/offline authority was implied.
 
-Consequences: ERD, migration order, retention, catalog tests, and implementation constraints derive only from `canonical-schema-rebuilt.md`. The old 30/31/38/39/42/46 claims are superseded; any further table requires an accepted schema decision.
+Consequences: retained only as decision history. Active ERD, migration order, retention, catalog tests, and implementation constraints derive from `canonical-schema-rebuilt.md` and ADR-R-042's 61-table inventory. The old 30/31/38/39/42/46/58 claims are superseded; any further table requires an accepted schema decision.
 
 ## ADR-R-021 — Event/outbox consistency
 
@@ -271,7 +271,7 @@ Decision:
 4. `DealInvitation` targets one Need and records purpose, scope, expiry, response, actor/acting-for context, revocation, version, idempotency, audit, and outbox causality. Acceptance does not create an Order.
 5. Accepted Needs form or link ordinary independent child Orders. Child Orders retain their own parties, immutable terms, Work, evidence, Payment Obligations, disputes, cancellation, liability, and history.
 6. Parent roll-up is derived. Child failures, cancellation, replacement, disputes, refunds, and payment events do not automatically cascade across siblings or the parent.
-7. The four foundation tables and nullable lineage columns are required before E0-S2. The bounded user-facing capability is a later story; pilot activation requires its own authorization, recovery, operations, browser, and founder gate.
+7. The four foundation tables and nullable lineage columns are reconciled in canonical D0 before their first consuming Deal-Chain story. The bounded user-facing capability and pilot activation retain separate authorization, recovery, operations, browser, and founder gates.
 8. This ADR is the authority propagated to the canonical schema/domain, architecture, PRD, UX, delivery plan, integration matrix, and the deferred-feature OpenSpec gate; conflicting historical rejection wording is superseded only for this bounded foundation decision.
 
 Consequences: the architecture must isolate Deal Coordination from Commerce/Order, use composite same-chain FKs and partial uniqueness, enforce dependency cycle prevention, and expose actor/expected-version/idempotency/audit/outbox context. Historical rich Deal-Chaining specifications remain evidence only. The foundation does not authorize pooled custody, automatic splitting, automatic liability reassignment, offline cryptographic authority, or parent-wide guarantees.
@@ -365,7 +365,7 @@ Decision: Confirmation-required AI and privileged actions use short-lived single
 
 Consequences: model output/general consent/stale confirmation are never authority; approval consumption is atomic with effect; self-approval fails. Single-human accounts can operate safely without organization tenancy, while elevated credential authority is independently checked. Emergency override remains separately scoped/alerted/audited/reviewed.
 
-Activation precedence is fail-closed: any current matching deny is absolute, including a broader incident/provider/lane deny; a narrower enable cannot override it. Enablement requires at least one current match and zero matching denies, with deterministic specificity used only for attribution. Same-fingerprint effective ranges cannot overlap and queued effects recheck before mutation.
+Activation precedence is fail-closed: any current matching deny is absolute, including a broader incident/provider/lane deny; a narrower enable cannot override it. Enablement requires at least one current match and zero matching denies, with deterministic specificity used only for attribution. Same-fingerprint effective ranges cannot overlap. Supersession uses one lock/version-serialized temporal cutover that closes only the prior validity at the successor's effective instant before inserting the immutable successor; decision/evidence history remains immutable and queued effects recheck before mutation.
 
 ## ADR-R-039 — Locked runtime and environment envelope
 
@@ -375,13 +375,45 @@ Decision: Nginx→PHP-FPM, PostgreSQL, Redis, queue worker, scheduler, and priva
 
 Consequences: every process has health/failure ownership. Local/test, capstone sandbox, genuine pilot, and production secrets/data/metrics are separated; migration/backfill/restore/promotion/disable evidence precedes activation.
 
-## ADR-R-040 — Canonical 58-table initiative extension
+## ADR-R-040 — Historical 58-table initiative extension
 
-Status: Accepted 2026-08-09
+Status: Superseded 2026-09-25 by ADR-R-041 and ADR-R-042
 
-Decision: Reconcile the observed 47-table baseline including `auth_otps`, then add the eleven tables and existing-table constraints specified by canonical schema §2.2. The approved target is 58.
+Decision: This record preserved the 2026-08-09 checkpoint that reconciled the observed 47-table baseline and eleven then-approved additions. It is no longer an active table-count authority.
 
-Consequences: no related migration starts from the old 46-table catalog. The ERD, inventory, retention, migration order, rollback, and PostgreSQL catalog/constraint tests must agree before T1/T2 implementation.
+Consequences: implementation uses the current canonical schema inventory; `58` is retained only as decision history.
+
+## ADR-R-041 — Request/Tender modes, private Bid projections, and Request Invitations
+
+Status: Accepted 2026-09-25
+
+Decision: A Sourcing Tender remains a Request and a Bid remains a versioned Quote lineage. Open permits public-safe Request discovery and eligible participation without competitor terms or public/provider counts. Sealed gives a bidder only their own Bid lineage/submission result and hides every other Bid existence signal, identity, content, count, ordering, timing, and error from requester, competitors, and public until one committed close/reveal transition enters `selection_open`. Direct Invite is non-discoverable and non-enumerating and uses one exact Request-owned `request_invitations` row for the same Request/provider/purpose; submission accepts it, but invitation acceptance never substitutes for an exact Bid or final agreement. UI action `quote.select_and_finalize` dispatches `SelectAndFinalizeBid` (`select_and_finalize_bid`) and converges on the sole ordinary `FinalizeOrderAgreement` transaction with no durable pre-Order selection success.
+
+Consequences: no generic `bids` table, composite Listing, tender-level payment, automatic cheapest-wins award, or cryptographic-sealing claim is introduced. Browse composes distinct PostgreSQL Listing and Request projections. Shared cache is conditionally activated only after measured net-benefit evidence; if enabled it stores only stable public/coarse fields, excludes current lifecycle/visibility/source revision/live availability/actions, and uses one batched PostgreSQL qualification overlay before serialization. Invalidation remains an optimization and disable/failure returns to PostgreSQL. Listing, Request/Tender, Work, and Deal-Chain builders consume governed catalogs and author versioned source specifications without editing accepted Order/Work truth. Messaging is the next bounded capability after this foundation.
+
+## ADR-R-042 — Canonical 61-table inventory and catalog ownership
+
+Status: Accepted 2026-09-25
+
+Decision: The active authority is the observed 47-table baseline plus fourteen extension tables: the prior eleven initiative additions, `request_invitations`, and the already-migrated `work_catalog_versions` and `deal_chain_catalog_versions`. `Catalogs` owns the latter two as immutable authoring accelerators; OrdersWork and DealCoordination retain formation and runtime authority.
+
+Consequences: the canonical inventory is 61 tables. Migration/catalog/constraint evidence must reconcile the two existing catalog tables rather than recreate or ignore them. Work catalog/resolver/source-specification builder/validator is available before any Listing, Request, Quote, or award path that requires a Work specification; Deal-Chain catalog/builder precedes customer-facing chain authoring.
+
+## ADR-R-043 — Reverse-sourcing policy composition has two explicit authorities
+
+Status: Accepted 2026-09-25
+
+Decision: Immutable `category_versions.sourcing_policy` is the sole content authority for mechanism eligibility, limits, replay rules, deadlines, liquidity evidence thresholds, and Product ownership. History-preserving `capability_activations` uses immutable decision/evidence content plus lock-serialized temporal validity cutover as the sole dimensioned enable/deny authority for evidence, approvals, effective range, Operations/rollback ownership, and environment/cohort/geography/category-version/profile-version/mechanism dimensions. A publish transaction locks the exact category version and all matching activations, stores checksum, winning enable ID, and complete decision fingerprint on the Request; submission/finalization lock and re-evaluate them. Any deny, absence, expiry, incompatible supersession, or fingerprint change fails closed.
+
+Consequences: no implementation may infer sourcing rules from free JSON, payment `policy_versions`, or one unversioned feature flag. Category version and activation candidate-key FKs, checksums, lock order, audit, indexes, and stale/deny behavior belong in the first-consuming packet. Threshold values remain governed evidence-backed policy, not architecture constants.
+
+## ADR-R-044 — Essential notices are a bounded pre-Messaging transport
+
+Status: Accepted 2026-09-25
+
+Decision: Operations owns notification intents and immutable-identity/content channel attempts; source modules write transaction-bound intents only. Intent states are `pending`, `dispatching`, `delivery_settling`, `cancellation_requested`, `delivered`, `dead_letter`, `cancelled`; attempt states add explicit `outcome_unknown` to bounded delivery/failure states. Current mandatory policy prevents cancellation while recipient/purpose authority remains valid. Parent-first cancellation or route success cancels pending attempts and forbids new claims/retries/routes; already-sending attempts reconcile authentic results or bounded unknown outcomes without holding a transaction across provider I/O. The parent terminalizes only after no attempt remains sending. Late authentic results append evidence but never reopen routing or business effects. Dead-letter replay regenerates a new generation; source inbox acknowledgment follows committed scheduling, never provider success.
+
+Consequences: delivery cannot roll back or acknowledge source business truth. Delivered/cancelled intents preserve actual or unknown in-flight evidence without overstating cancellation-before-send. Provider callbacks/results deduplicate; optional recipient acknowledgment and privacy-safe errors/timing grant neither resource nor conversation authority. Direct Invite may consume this transport before Messaging.
 
 ## ADR approval gate
 

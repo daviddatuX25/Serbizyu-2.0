@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Modules\OrdersWork\Application\WorkExecutionService;
 use App\Shared\Infrastructure\Demo\DealChainExecutionFixtures as Fix;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
@@ -13,8 +14,11 @@ use Illuminate\Support\Str;
 
 final class DealChainExecutionSeeder extends Seeder
 {
-    public function run(): void
+    private WorkExecutionService $workExecution;
+
+    public function run(WorkExecutionService $workExecution): void
     {
+        $this->workExecution = $workExecution;
         $environment = (string) config('serbizyu.environment', config('app.env', 'local'));
         if (! in_array($environment, ['local', 'test', 'testing', 'capstone', 'team', 'training'], true)) {
             return;
@@ -94,10 +98,15 @@ final class DealChainExecutionSeeder extends Seeder
             );
 
             foreach ($u['roles'] as $roleCode) {
-                DB::table('role_assignments')->updateOrInsert(
-                    ['user_id' => $userId, 'role_code' => $roleCode],
-                    [
+                $existingRole = DB::table('role_assignments')
+                    ->where('user_id', $userId)
+                    ->where('role_code', $roleCode)
+                    ->first();
+                if ($existingRole === null) {
+                    DB::table('role_assignments')->insert([
                         'id' => (string) Str::uuid7(),
+                        'user_id' => $userId,
+                        'role_code' => $roleCode,
                         'granted_by_user_id' => $userId,
                         'status' => 'active',
                         'effective_at' => $now,
@@ -106,8 +115,8 @@ final class DealChainExecutionSeeder extends Seeder
                         'correlation_id' => $correlationId,
                         'created_at' => $now,
                         'updated_at' => $now,
-                    ]
-                );
+                    ]);
+                }
             }
         }
 
@@ -115,6 +124,13 @@ final class DealChainExecutionSeeder extends Seeder
         $storeId = $userMap[Fix::STORE_PHONE];
         $courierId = $userMap[Fix::COURIER_PHONE];
         $techId = $userMap[Fix::TECH_PHONE];
+
+        // Ensure Kuya Ben owns the AC service listings so /my-listings displays his active offerings
+        DB::table('listings')->whereIn('id', [
+            Fix::LISTING_AC_CLEAN,
+            Fix::LISTING_AC_CAPACITOR_INSTALLATION,
+            Fix::LISTING_AC_SAFETY_AUDIT,
+        ])->update(['owner_user_id' => $techId]);
 
         // 2. Active Ongoing Coordinated Deal Chain (#DC-892)
         DB::table('deal_chains')->updateOrInsert(
@@ -301,8 +317,170 @@ final class DealChainExecutionSeeder extends Seeder
             correlationId: $correlationId,
         );
 
-        // 7. Standalone Ongoing Orders
-        // Standalone Direct Order 1: Pending Acceptance
+        // Child Order 3: Technician Labor (Kuya Ben, Gated by Transit in #DC-892)
+        $this->seedOrderWithTerms(
+            orderId: Fix::ORDER_ID_LABOR,
+            origin: 'deal_chain',
+            dealChainId: Fix::CHAIN_ID_ONGOING,
+            dealNeedId: Fix::NEED_ID_LABOR,
+            buyerId: $buyerId,
+            providerId: $techId,
+            listingId: Fix::LISTING_AC_CLEAN,
+            title: 'Inverter Split AC Deep Clean & Checkup',
+            amountMinor: 45000,
+            status: 'accepted',
+            workStatus: 'in_progress',
+            workShape: 'A1',
+            now: $now->subMinutes(25),
+            correlationId: $correlationId,
+        );
+
+        // Coordinated Deal Chain for Tech Persona (#DC-414: Workshop Solar Inverter Setup)
+        DB::table('deal_chains')->updateOrInsert(
+            ['id' => Fix::CHAIN_ID_TECH_DEMO],
+            [
+                'coordinator_user_id' => $techId,
+                'status' => 'in_progress',
+                'title' => 'Workshop Solar Inverter Setup · Deal Chain #DC-414',
+                'goal' => 'Component procurement, logistics, and technical grid-tie integration',
+                'payload_version' => 1,
+                'version' => 1,
+                'correlation_id' => $correlationId,
+                'created_at' => $now->subHours(3),
+                'updated_at' => $now,
+            ]
+        );
+
+        $techChainNeeds = [
+            [
+                'id' => '0198a3b1-7c40-7abc-8def-4eed00000001',
+                'ordinal' => 1,
+                'need_kind' => 'product',
+                'title' => 'Solar Hybrid Inverter 3.5kVA',
+                'description' => 'Tested hardware from Tagudin Depot',
+                'status' => 'completed',
+            ],
+            [
+                'id' => '0198a3b1-7c40-7abc-8def-4eed00000002',
+                'ordinal' => 2,
+                'need_kind' => 'service',
+                'title' => 'Flatbed Heavy Transit to Workshop',
+                'description' => 'Motorcycle or Multicab delivery to Barangay Centro',
+                'status' => 'in_progress',
+            ],
+            [
+                'id' => '0198a3b1-7c40-7abc-8def-4eed00000003',
+                'ordinal' => 3,
+                'need_kind' => 'service',
+                'title' => 'Grid-Tie Breaker & Earthing Labor',
+                'description' => 'Licensed master trade installation labor',
+                'status' => 'invited',
+            ],
+        ];
+
+        foreach ($techChainNeeds as $tn) {
+            DB::table('deal_needs')->updateOrInsert(
+                ['id' => $tn['id']],
+                [
+                    'deal_chain_id' => Fix::CHAIN_ID_TECH_DEMO,
+                    'ordinal' => $tn['ordinal'],
+                    'need_kind' => $tn['need_kind'],
+                    'title' => $tn['title'],
+                    'description' => $tn['description'],
+                    'status' => $tn['status'],
+                    'requested_at' => $now->subHours(3),
+                    'version' => 1,
+                    'correlation_id' => $correlationId,
+                    'created_at' => $now->subHours(3),
+                    'updated_at' => $now,
+                ]
+            );
+        }
+
+        DB::table('deal_dependencies')->updateOrInsert(
+            ['deal_chain_id' => Fix::CHAIN_ID_TECH_DEMO, 'predecessor_need_id' => '0198a3b1-7c40-7abc-8def-4eed00000001', 'successor_need_id' => '0198a3b1-7c40-7abc-8def-4eed00000002'],
+            [
+                'id' => '0198a3b1-7c40-7abc-8def-4deb00000001',
+                'dependency_type' => 'blocks',
+                'status' => 'active',
+                'condition_code' => 'part_ready',
+                'created_by_user_id' => $techId,
+                'version' => 1,
+                'correlation_id' => $correlationId,
+                'created_at' => $now->subHours(3),
+                'updated_at' => $now,
+            ]
+        );
+        DB::table('deal_dependencies')->updateOrInsert(
+            ['deal_chain_id' => Fix::CHAIN_ID_TECH_DEMO, 'predecessor_need_id' => '0198a3b1-7c40-7abc-8def-4eed00000002', 'successor_need_id' => '0198a3b1-7c40-7abc-8def-4eed00000003'],
+            [
+                'id' => '0198a3b1-7c40-7abc-8def-4deb00000002',
+                'dependency_type' => 'blocks',
+                'status' => 'active',
+                'condition_code' => 'delivery_signed',
+                'created_by_user_id' => $techId,
+                'version' => 1,
+                'correlation_id' => $correlationId,
+                'created_at' => $now->subHours(3),
+                'updated_at' => $now,
+            ]
+        );
+
+        // Child Order for Solar Supply
+        $this->seedOrderWithTerms(
+            orderId: '0198a3b1-7c40-7abc-8def-4ede00000001',
+            origin: 'deal_chain',
+            dealChainId: Fix::CHAIN_ID_TECH_DEMO,
+            dealNeedId: '0198a3b1-7c40-7abc-8def-4eed00000001',
+            buyerId: $techId,
+            providerId: $storeId,
+            listingId: Fix::LISTING_AC_CAPACITOR,
+            title: 'Solar Hybrid Inverter 3.5kVA',
+            amountMinor: 18000,
+            status: 'accepted',
+            workStatus: 'completed',
+            workShape: 'A4',
+            now: $now->subHours(2),
+            correlationId: $correlationId,
+        );
+
+        // Child Order for Flatbed Transit
+        $this->seedOrderWithTerms(
+            orderId: '0198a3b1-7c40-7abc-8def-4ede00000002',
+            origin: 'deal_chain',
+            dealChainId: Fix::CHAIN_ID_TECH_DEMO,
+            dealNeedId: '0198a3b1-7c40-7abc-8def-4eed00000002',
+            buyerId: $techId,
+            providerId: $courierId,
+            listingId: Fix::LISTING_COURIER,
+            title: 'Flatbed Heavy Transit to Workshop',
+            amountMinor: 3500,
+            status: 'accepted',
+            workStatus: 'in_progress',
+            workShape: 'A2',
+            now: $now->subMinutes(20),
+            correlationId: $correlationId,
+        );
+
+        // Standalone Customer Direct Order for Kuya Ben (Ordering Bibingka from Bakery)
+        $this->seedOrderWithTerms(
+            orderId: '0198a3b1-7c40-7abc-8def-4ede00000777',
+            origin: 'listing',
+            dealChainId: null,
+            dealNeedId: null,
+            buyerId: $techId,
+            providerId: $storeId,
+            listingId: Fix::LISTING_BIBINGKA,
+            title: 'Weekend bibingka tray (Fresh Batch)',
+            amountMinor: 16000,
+            status: 'accepted',
+            workStatus: 'in_progress',
+            workShape: 'A4',
+            now: $now->subMinutes(40),
+            correlationId: $correlationId,
+        );
+
+        // 7. Standalone Ongoing Orders for Maria (Buyer Persona)
         $this->seedOrderWithTerms(
             orderId: Fix::ORDER_ID_PENDING_DIRECT,
             origin: 'listing',
@@ -327,17 +505,16 @@ final class DealChainExecutionSeeder extends Seeder
             dealChainId: null,
             dealNeedId: null,
             buyerId: $buyerId,
-            providerId: $storeId,
-            listingId: Fix::LISTING_BIBINGKA,
-            title: 'Weekend bibingka tray (Box of 6)',
-            amountMinor: 16000,
+            providerId: $techId,
+            listingId: Fix::LISTING_AC_CLEAN,
+            title: 'Inverter Split AC Emergency Service',
+            amountMinor: 25000,
             status: 'accepted',
             workStatus: 'awaiting_signoff',
-            workShape: 'A4',
+            workShape: 'A1',
             now: $now->subHours(3),
             correlationId: $correlationId,
         );
-
         // 8. Historical Completed Orders
         $this->seedOrderWithTerms(
             orderId: Fix::ORDER_ID_HIST_1,
@@ -428,10 +605,15 @@ final class DealChainExecutionSeeder extends Seeder
             ]
         );
 
+        $existingBuyerParty = DB::table('order_parties')
+            ->where('order_id', $orderId)
+            ->where('party_type', 'buyer')
+            ->first();
         DB::table('order_parties')->updateOrInsert(
-            ['order_id' => $orderId, 'user_id' => $buyerId, 'party_type' => 'buyer'],
+            ['order_id' => $orderId, 'party_type' => 'buyer'],
             [
-                'id' => (string) Str::uuid7(),
+                'id' => $existingBuyerParty ? (string) $existingBuyerParty->id : (string) Str::uuid7(),
+                'user_id' => $buyerId,
                 'responsibility' => 'primary',
                 'scope' => json_encode(['role' => 'buyer'], JSON_THROW_ON_ERROR),
                 'status' => 'active',
@@ -443,10 +625,15 @@ final class DealChainExecutionSeeder extends Seeder
             ]
         );
 
+        $existingProviderParty = DB::table('order_parties')
+            ->where('order_id', $orderId)
+            ->where('party_type', 'provider')
+            ->first();
         DB::table('order_parties')->updateOrInsert(
-            ['order_id' => $orderId, 'user_id' => $providerId, 'party_type' => 'provider'],
+            ['order_id' => $orderId, 'party_type' => 'provider'],
             [
-                'id' => (string) Str::uuid7(),
+                'id' => $existingProviderParty ? (string) $existingProviderParty->id : (string) Str::uuid7(),
+                'user_id' => $providerId,
                 'responsibility' => 'primary',
                 'scope' => json_encode(['role' => 'provider'], JSON_THROW_ON_ERROR),
                 'status' => 'active',
@@ -457,7 +644,6 @@ final class DealChainExecutionSeeder extends Seeder
                 'updated_at' => $now,
             ]
         );
-
         if ($status !== 'pending_acceptance') {
             $listingVersion = DB::table('listing_versions')->where('listing_id', $listingId)->orderByDesc('version_number')->first();
             $versionId = $listingVersion ? (string) $listingVersion->id : null;
@@ -485,8 +671,10 @@ final class DealChainExecutionSeeder extends Seeder
                 ]
             );
 
-            $workId = (string) Str::uuid7();
+            $existingWork = DB::table('work_instances')->where('order_id', $orderId)->first();
+            $workId = $existingWork ? (string) $existingWork->id : (string) Str::uuid7();
             if ($workShape !== null) {
+                $workStructure = $this->seedWorkStructure($workShape, $workStatus, $now);
                 DB::table('work_instances')->updateOrInsert(
                     ['order_id' => $orderId],
                     [
@@ -500,7 +688,7 @@ final class DealChainExecutionSeeder extends Seeder
                         'started_at' => $workStatus !== 'not_started' ? $now : null,
                         'completion_proposed_at' => $workStatus === 'awaiting_signoff' ? $now : null,
                         'completed_at' => $workStatus === 'completed' ? $now : null,
-                        'structure' => json_encode(['stages' => []], JSON_THROW_ON_ERROR),
+                        'structure' => json_encode($workStructure, JSON_THROW_ON_ERROR),
                         'structure_payload_version' => 1,
                         'correlation_id' => $correlationId,
                         'version' => 1,
@@ -510,10 +698,12 @@ final class DealChainExecutionSeeder extends Seeder
                 );
             }
 
+            $existingObligation = DB::table('payment_obligations')->where('order_id', $orderId)->first();
+            $obligationId = $existingObligation ? (string) $existingObligation->id : (string) Str::uuid7();
             DB::table('payment_obligations')->updateOrInsert(
                 ['order_id' => $orderId],
                 [
-                    'id' => (string) Str::uuid7(),
+                    'id' => $obligationId,
                     'work_instance_id' => $workId,
                     'purpose' => 'primary_consideration',
                     'amount_minor' => $amountMinor,
@@ -533,5 +723,44 @@ final class DealChainExecutionSeeder extends Seeder
                 ]
             );
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function seedWorkStructure(string $workShape, ?string $workStatus, CarbonImmutable $now): array
+    {
+        $structure = $this->workExecution->initializeStructure([], $workShape);
+        $nodes = $structure['nodes'];
+
+        if ($workStatus === 'awaiting_signoff' && $nodes !== []) {
+            $finalIndex = count($nodes) - 1;
+            foreach ($nodes as $index => &$node) {
+                if ($index < $finalIndex) {
+                    $node['status'] = 'completed';
+                    $node['completed_at'] = $now->subMinutes(count($nodes) - $index)->toIso8601String();
+                } else {
+                    $node['status'] = 'awaiting_customer_confirmation';
+                    $node['evidence_payload'] = [
+                        'notes' => 'Fixture Work completed; awaiting the buyer review.',
+                    ];
+                }
+            }
+            unset($node);
+            $structure['pending_customer_confirmation'] = true;
+            $structure['active_node_id'] = $nodes[$finalIndex]['id'];
+            $structure['active_ordinal'] = $nodes[$finalIndex]['ordinal'];
+        } elseif ($workStatus === 'completed') {
+            foreach ($nodes as &$node) {
+                $node['status'] = 'completed';
+                $node['completed_at'] = $now->toIso8601String();
+            }
+            unset($node);
+            $structure['pending_customer_confirmation'] = false;
+        }
+
+        $structure['nodes'] = $nodes;
+
+        return $structure;
     }
 }

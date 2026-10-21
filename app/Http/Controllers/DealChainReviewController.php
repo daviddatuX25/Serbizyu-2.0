@@ -68,7 +68,7 @@ final class DealChainReviewController
 
             $msg = $unblindedCount === $total
                 ? "All {$total} deal chain reviews are now published!"
-                : "Reviews submitted! {$unblindedCount} revealed, " . ($total - $unblindedCount) . ' sealed for 72 hours.';
+                : "Reviews submitted! {$unblindedCount} revealed, ".($total - $unblindedCount).' sealed for 72 hours.';
 
             return back()->with('notice', $msg);
         } catch (TrustSupportError $e) {

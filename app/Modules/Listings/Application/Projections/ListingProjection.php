@@ -82,15 +82,26 @@ final readonly class ListingProjection
             $projection['milestone_stages'] = $attributes['milestone_stages'];
         }
 
-        foreach (['work_catalog', 'work_specification', 'addons', 'partner_candidates'] as $catalogField) {
+        foreach (['work_catalog', 'work_specification', 'addons', 'partner_candidates', 'deal_chain_combinations', 'deal_chain_specification', 'media', 'inclusions', 'variants', 'geography'] as $catalogField) {
             if (array_key_exists($catalogField, $attributes) && is_array($attributes[$catalogField])) {
                 $projection[$catalogField] = $attributes[$catalogField];
             }
         }
 
-        if (array_key_exists('catalog_source', $attributes) && is_string($attributes['catalog_source'])) {
-            $projection['catalog_source'] = $attributes['catalog_source'];
+        foreach (['catalog_source', 'work_catalog_code', 'pricing_mode', 'stall_location'] as $stringField) {
+            if (array_key_exists($stringField, $attributes) && is_string($attributes[$stringField])) {
+                $projection[$stringField] = $attributes[$stringField];
+            }
         }
+
+        if (array_key_exists('work_set_version', $attributes) && is_numeric($attributes['work_set_version'])) {
+            $projection['work_set_version'] = (int) $attributes['work_set_version'];
+        }
+
+        $projection['cover_thumbnail_url'] = isset($attributes['cover_thumbnail_url']) && is_string($attributes['cover_thumbnail_url']) && $attributes['cover_thumbnail_url'] !== ''
+            ? $attributes['cover_thumbnail_url']
+            : null;
+        $projection['has_video'] = (bool) ($attributes['has_video'] ?? false);
         if ($public) {
             $projection['owner_name'] = (string) $attributes['owner_name'];
             $projection['owner'] = [
