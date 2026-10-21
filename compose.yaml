@@ -32,7 +32,7 @@ services:
   mailpit:
     image: axllent/mailpit:v1.27.8
     ports:
-      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+      - "0.0.0.0:${MAILPIT_UI_PORT:-8025}:8025"
     healthcheck:
       test: ["CMD", "/mailpit", "readyz"]
       interval: 5s
