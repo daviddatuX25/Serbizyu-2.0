@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Serbizyu final kit · Foundations</title>
+  <link rel="stylesheet" href="final-kit.css">
+  <style>
+    .type-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 4px 16px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--border); }
+    .type-row:first-of-type { border-top: 0; }
+    .type-row code { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-foreground); }
+    .rules { margin: 0; padding-left: 18px; font-size: 13.5px; }
+    .rules li { margin: 5px 0; }
+    .rules.dont li::marker { color: var(--attention); }
+    .rules.do li::marker { color: var(--done); }
+  </style>
+</head>
+<body>
+  <header class="fk-head"><div class="fk-head-inner">
+    <a class="fk-brand" href="final-kit.html"><img src="../assets/brand/serbizyu-long-navy-opt.png" alt="Serbizyu"><span>Final UI kit</span></a>
+    <nav class="fk-nav" aria-label="Final kit pages">
+      <a href="final-kit.html" aria-current="page">Foundations</a>
+      <a href="final-requests-quotes.html">Listings &amp; requests</a>
+      <a href="final-orders-stock.html">Orders &amp; stock</a>
+      <a href="final-payments.html">Payments</a>
+      <a href="final-scheduling-work.html">Scheduling &amp; Work</a>
+      <a href="final-deal-chain.html">Deal Chain</a>
+      <a href="final-work-tools.html">Work tools</a>
+      <a href="final-notifications-messages.html">Notifications &amp; messages</a>
+      <a href="admin-workspace-kit.html">Admin</a>
+    </nav>
+  </div></header>
+
+  <div class="fk-intro">
+    <div>
+      <span class="fk-badge"><svg class="ic sm" aria-hidden="true"><use href="final-icons.svg#i-lock"/></svg>Static kit · fixture data</span>
+      <h1>One marketplace, one way of showing what is true.</h1>
+    </div>
+    <p>Every customer, merchant, provider, coordinator and staff screen uses these tokens, the same six state tones and the same components. Domain pages show each state in this language.</p>
+  </div>
+
+  <nav class="fk-toc" aria-label="On this page">
+    <a href="#pages">Kit pages <b>9</b></a>
+    <a href="#colour">Colour</a>
+    <a href="#states">State language <b>6</b></a>
+    <a href="#truth">Truth rails</a>
+    <a href="#components">Components</a>
+    <a href="#screens">Screen states <b>6</b></a>
+    <a href="#rules">Rules</a>
+  </nav>
+
+  <!-- Pages -->
+  <section class="fk-section" id="pages" aria-labelledby="pages-title">
+    <div class="fk-section-head"><h2 id="pages-title">Kit pages</h2><p>Each page restyles earlier samples and atlas states into this system and adds the missing states.</p></div>
+    <div class="page-cards">
+      <a class="page-card" href="final-requests-quotes.html"><h3><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-file-text"/></svg>Listings &amp; requests</h3><p>Rich Listing Detail variants, Work specs and Deal Chain combos, plus Request tenders, Quote Composer and counter-offers.</p><span class="count">12 states</span></a>
+      <a class="page-card" href="final-orders-stock.html"><h3><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-receipt"/></svg>Orders &amp; stock</h3><p>Order queues for each actor, acceptance, conflicts, amendments, cancellation, stock movements and adjustments.</p><span class="count">17 states</span></a>
+      <a class="page-card" href="final-payments.html"><h3><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-cash"/></svg>Payments</h3><p>Obligations, cash and P2P declarations, acknowledgements, holds, unknown outcomes and money history.</p><span class="count">15 states</span></a>
+      <a class="page-card" href="final-scheduling-work.html"><h3><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-calendar"/></svg>Scheduling &amp; Work</h3><p>Appointment capacity, reschedules, no-shows, then Work execution across A1, A3, A4 and A9.</p><span class="count">17 states</span></a>
+      <a class="page-card" href="final-deal-chain.html"><h3><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-link"/></svg>Deal Chain</h3><p>Named combinations, agreements, gated handoffs, sibling isolation, replacement and partner views.</p><span class="count">14 states</span></a>
+      <a class="page-card" href="final-work-tools.html"><h3><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-camera"/></svg>Work tools</h3><p>Timestamped photo, GPS check-in, readings, checklists, video, files, signatures, OTP, drop-off codes.</p><span class="count">13 tools · 22 states</span></a>
+      <a class="page-card" href="final-notifications-messages.html"><h3><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-bell"/></svg>Notifications &amp; messages</h3><p>Turn-taking notification inbox plus persisted 1:1 Order, Agent Acting-For, Deal Chain relay and Case threads.</p><span class="count">10 states</span></a>
+      <a class="page-card" href="admin-workspace-kit.html"><h3><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-shield"/></svg>Admin workspace</h3><p>Staff Inbox and Order workspace on the same tokens, desktop-first.</p><span class="count">2 screens · 5 states</span></a>
+    </div>
+  </section>
+
+  <!-- Colour -->
+  <section class="fk-section" id="colour" aria-labelledby="colour-title">
+    <div class="fk-section-head"><h2 id="colour-title">Colour</h2><p>Brand colours give structure and emphasis. State colours carry meaning. One token source: the light theme in <code>resources/css/app.css</code>.</p></div>
+    <div class="swatches">
+      <div class="swatch"><i style="background:#0f2f58"></i><div><strong>Navy</strong><small>Structure, primary action, links</small><code>--primary #0f2f58</code></div></div>
+      <div class="swatch"><i style="background:#ffffff"></i><div><strong>White</strong><small>Cards, sheets, phone surfaces</small><code>--card #ffffff</code></div></div>
+      <div class="swatch"><i style="background:#f8fafc"></i><div><strong>Canvas</strong><small>Page background</small><code>--background #f8fafc</code></div></div>
+      <div class="swatch"><i style="background:#ffc244"></i><div><strong>Mango</strong><small>Your turn now, selected, counts</small><code>--mango #ffc244</code></div></div>
+      <div class="swatch"><i style="background:#ebf2fa"></i><div><strong>Navy wash</strong><small>Selected surface, info</small><code>--accent #ebf2fa</code></div></div>
+      <div class="swatch"><i style="background:#e2e8f0"></i><div><strong>Line</strong><small>Borders, dividers</small><code>--border #e2e8f0</code></div></div>
+      <div class="swatch"><i style="background:#0f172a"></i><div><strong>Ink</strong><small>Body text</small><code>--foreground #0f172a</code></div></div>
+      <div class="swatch"><i style="background:#526177"></i><div><strong>Muted ink</strong><small>Secondary text, 4.5:1 on white</small><code>--muted-foreground</code></div></div>
+    </div>
+    <div class="panel-grid" style="margin-top:14px">
+      <div class="panel">
+        <h3>Type</h3>
+        <p>Plus Jakarta Sans for headings, amounts and buttons. Source Sans 3 for reading. JetBrains Mono for references.</p>
+        <div class="type-row"><code>Display 30</code><span class="money xl">₱1,110</span></div>
+        <div class="type-row"><code>Heading 16</code><h3 style="font-size:16px">Aircon repair for Maria Santos</h3></div>
+        <div class="type-row"><code>Body 15</code><span>Payment stays not due until Work is accepted.</span></div>
+        <div class="type-row"><code>Reference</code><span class="ref">ORD-2714 · OBL-1048</span></div>
+      </div>
+      <div class="panel">
+        <h3>Mango, used once</h3>
+        <p>One "your turn now" emphasis per screen. Never a status, never decoration.</p>
+        <div class="notice next"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-alert"/></svg><div><strong>Your turn: confirm cooling</strong><p>Kuya Ben reported the test complete at 2:10 PM.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- State language -->
+  <section class="fk-section" id="states" aria-labelledby="states-title">
+    <div class="fk-section-head"><h2 id="states-title">State language</h2><p>Six tones, identical in every domain. Every important status pairs an icon with a label; color only reinforces meaning. Waiting names who acts next.</p></div>
+    <table class="state-table">
+      <thead><tr><th scope="col">Tone</th><th scope="col">Means</th><th scope="col">Examples across domains</th></tr></thead>
+      <tbody>
+        <tr><td><span class="chip done"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-check"/></svg>Done</span></td><td>Recorded fact, complete</td><td><span class="row-wrap"><span class="chip done">Accepted</span><span class="chip done">Handed over</span><span class="chip done">₱180 confirmed</span><span class="chip done">Checked in</span></span></td></tr>
+        <tr><td><span class="chip waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-clock"/></svg>Waiting</span></td><td>Waiting on a named actor</td><td><span class="row-wrap"><span class="chip waiting">Waiting on Kuya Ben</span><span class="chip waiting">Waiting on Maria</span><span class="chip waiting">Waiting on Lola's Bibingka</span></span></td></tr>
+        <tr><td><span class="chip attention"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-alert"/></svg>Attention</span></td><td>Held, concern, failed, recovery needed</td><td><span class="row-wrap"><span class="chip attention">Amounts disagree</span><span class="chip attention">Case open</span><span class="chip attention">Proof unreadable</span><span class="chip attention">Outcome unknown</span></span></td></tr>
+        <tr><td><span class="chip info"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-info"/></svg>Info</span></td><td>Neutral current fact, not yet due</td><td><span class="row-wrap"><span class="chip info">Not due</span><span class="chip info">Scheduled Tue 1:00 PM</span><span class="chip info">In transit</span><span class="chip info">Catalogued</span></span></td></tr>
+        <tr><td><span class="chip settled">Settled</span></td><td>Historic, superseded, unavailable</td><td><span class="row-wrap"><span class="chip settled">Withdrawn</span><span class="chip settled">Replaced</span><span class="chip settled">Version 1</span><span class="chip settled">Past</span></span></td></tr>
+        <tr><td><span class="chip proposed">Proposed</span></td><td>Not agreed, not live, or policy undecided</td><td><span class="row-wrap"><span class="chip proposed">Proposed change</span><span class="chip proposed">Proposed policy</span><span class="chip proposed">Proposed tool</span></span></td></tr>
+      </tbody>
+    </table>
+    <div class="panel-grid" style="margin-top:14px">
+      <div class="panel">
+        <h3>Notices</h3>
+        <p>Same tones, sentence-level.</p>
+        <div class="stack">
+          <div class="notice waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-clock"/></svg><div><strong>Waiting on Kuya Ben</strong><p>He has not acknowledged your ₱850 cash report.</p></div></div>
+          <div class="notice attention"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-pause"/></svg><div><strong>Only OBL-1088 is held</strong><p>Your other obligations are unaffected.</p></div></div>
+          <div class="notice info"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-info"/></svg><div><strong>Payment not due yet</strong><p>Due when you accept the Work.</p></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Never claim more than is known</h3>
+        <p>Unknown outcomes stay unresolved.</p>
+        <div class="stack">
+          <div class="notice attention"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-alert"/></svg><div><strong>Outcome unknown</strong><p>Maya sandbox has not confirmed. Do not pay again.</p></div></div>
+          <div class="notice settled"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-history"/></svg><div><strong>Danny Express withdrew</strong><p>The earlier delivery agreement stays in history.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Truth rails -->
+  <section class="fk-section" id="truth" aria-labelledby="truth-title">
+    <div class="fk-section-head"><h2 id="truth-title">Truth rails</h2><p>Agreement, Work, Payment, Stock and Case each keep their own state. Never merge them into one badge.</p></div>
+    <div class="panel-grid">
+      <div class="panel">
+        <h3>Service order</h3>
+        <p>Three rails: the default for participants.</p>
+        <div class="truth">
+          <div class="done"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-handshake"/></svg>Agreement</span><strong>Accepted</strong><small>Terms v2</small></div>
+          <div class="waiting"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-wrench"/></svg>Work</span><strong>Waiting on Maria</strong><small>3 of 4 steps recorded</small></div>
+          <div class="info"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-cash"/></svg>Payment</span><strong>Not due</strong><small>₱850 cash</small></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>With a case</h3>
+        <p>Four rails when a case or hold exists.</p>
+        <div class="truth four">
+          <div class="done"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-handshake"/></svg>Agreement</span><strong>Accepted</strong><small>Terms v2</small></div>
+          <div class="attention"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-wrench"/></svg>Work</span><strong>Concern open</strong><small>Completion not accepted</small></div>
+          <div class="info"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-cash"/></svg>Payment</span><strong>Not due</strong><small>₱850 cash</small></div>
+          <div class="attention"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-flag"/></svg>Case</span><strong>Open</strong><small>CASE-0412</small></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Product order</h3>
+        <p>Stock replaces Work for A4 handoffs.</p>
+        <div class="truth">
+          <div class="done"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-handshake"/></svg>Agreement</span><strong>Accepted</strong><small>4 bags</small></div>
+          <div class="info"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-box"/></svg>Stock</span><strong>Committed</strong><small>Held at counter</small></div>
+          <div class="waiting"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-truck"/></svg>Handoff</span><strong>Waiting on Maria</strong><small>Pickup at the counter</small></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Components -->
+  <section class="fk-section" id="components" aria-labelledby="components-title">
+    <div class="fk-section-head"><h2 id="components-title">Components</h2><p>All are inert specimens. Live screens use the matching shadcn components with these tokens.</p></div>
+    <div class="panel-grid">
+      <div class="panel">
+        <h3>Buttons</h3>
+        <p>One primary action per screen. Approval needs are labelled before the click.</p>
+        <div class="stack">
+          <button type="button" class="btn primary" disabled>Confirm cooling</button>
+          <button type="button" class="btn" disabled>Report a concern</button>
+          <button type="button" class="btn quiet" disabled>View agreement</button>
+          <button type="button" class="btn danger" disabled>Decline order</button>
+          <button type="button" class="btn" disabled><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-lock"/></svg>Hold this order<span class="tag">Needs approval</span></button>
+          <button type="button" class="btn is-unavailable" disabled>Retry delivery<span class="tag">Pending backend</span></button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Inputs</h3>
+        <p>44 px targets, visible focus, inline errors.</p>
+        <div class="stack">
+          <div class="field"><span class="label">Amount paid</span><div class="input focus num">₱850</div></div>
+          <div class="field"><span class="label">GCash reference</span><div class="input invalid num">1029 38</div><span class="field-error">Enter all 13 digits.</span></div>
+          <div class="split"><span class="label">Bags</span><span class="stepper"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-minus"/></svg></span><strong>4</strong><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-plus"/></svg></span></span></div>
+          <div class="seg" role="tablist" aria-label="Order views"><span role="tab" aria-selected="true">Needs action<b>3</b></span><span role="tab" aria-selected="false">Active</span><span role="tab" aria-selected="false">Done</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Rows and amounts</h3>
+        <p>People first, reference second, state last.</p>
+        <div class="card">
+          <div class="row"><span class="avatar"><img src="../photos/ac-clean.jpg" alt=""></span><div><strong>Kuya Ben</strong><small><span class="ref">ORD-2714</span> · Fit and test</small></div><div class="end"><span class="money num">₱850</span><span class="chip info">Not due</span></div></div>
+          <div class="row"><span class="avatar"><img src="../photos/courier.jpg" alt=""></span><div><strong>Danny Express</strong><small><span class="ref">ORD-2711</span> · Delivery</small></div><div class="end"><span class="money num">₱80</span><span class="chip done">Confirmed</span></div></div>
+          <div class="row"><span class="avatar">MS</span><div><strong>Maria Santos</strong><small>Customer · Direct</small></div><div class="end"><span class="chip settled">Phone verified</span></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Steps and history</h3>
+        <p>Work steps and timelines share marks.</p>
+        <ol class="steps">
+          <li><span class="mark done"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-check"/></svg></span><div><strong>Arrived on site</strong><small>GPS check-in</small></div><time>1:04 PM</time></li>
+          <li><span class="mark current">2</span><div><strong>Fit capacitor</strong><small>Photo required</small></div><time>Target 30 min</time></li>
+          <li><span class="mark">3</span><div><strong>Cooling test</strong><small>Delta-T reading</small></div><time>Target 20 min</time></li>
+        </ol>
+      </div>
+      <div class="panel">
+        <h3>Deal Chain identity</h3>
+        <p>Named combination with loose overlapping thumbnails.</p>
+        <div class="split" style="justify-content:flex-start;gap:12px">
+          <div class="cluster mini" aria-hidden="true"><figure class="c1"><img src="../photos/ac-capacitor.jpg" alt=""></figure><figure class="c2"><img src="../photos/courier.jpg" alt=""></figure><figure class="c3"><img src="../photos/ac-clean.jpg" alt=""></figure></div>
+          <div><strong class="card-title" style="color:var(--primary);font-size:17px">Cool Again</strong><div class="hint">3 independent orders · ₱1,110</div></div>
+        </div>
+        <div class="handoff"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-arrow"/></svg><strong>Part ready</strong> enables courier pickup</div>
+        <div class="handoff gated"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-arrow"/></svg><strong>Received on site</strong> enables technician</div>
+      </div>
+      <div class="panel">
+        <h3>Evidence</h3>
+        <p>Every capture carries time, place and step.</p>
+        <div class="capture"><img src="../photos/ac-capacitor.jpg" alt="Fitted capacitor"><span class="stamp"><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-clock"/></svg>Oct 21 · 1:38 PM</span><span><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-pin"/></svg>16.9375 N 120.4436 E</span><span>Capacitor fitted</span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Shared screen states -->
+  <section class="fk-section" id="screens" aria-labelledby="screens-title">
+    <div class="fk-section-head"><h2 id="screens-title">Screen states</h2><p>Every list and record handles these. The locked wave sheet is the only bottom-sheet pattern.</p></div>
+    <div class="specs">
+      <figure class="spec" id="screen-empty">
+        <div class="phone short">
+          <div class="status"><span>9:41</span><span>Orders</span></div>
+          <header class="app-top"><h3 class="grow">Orders<small>Tagudin Hardware</small></h3></header>
+          <div class="app-body">
+            <div class="seg" role="tablist" aria-label="Order views"><span role="tab" aria-selected="true">Needs action</span><span role="tab" aria-selected="false">Active</span><span role="tab" aria-selected="false">Done</span></div>
+            <div class="card card-pad stack" style="align-items:center;text-align:center;padding:28px 18px">
+              <span class="icon-tile settled"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-check-circle"/></svg></span>
+              <strong class="card-title">Nothing needs you</strong>
+              <p class="hint">2 active orders are waiting on buyers.</p>
+              <button type="button" class="btn sm" disabled>Show active</button>
+            </div>
+          </div>
+        </div>
+        <figcaption><strong>Empty</strong><span class="who">Merchant · explains absence and offers one next path.</span></figcaption>
+      </figure>
+
+      <figure class="spec" id="screen-loading">
+        <div class="phone short">
+          <div class="status"><span>9:41</span><span class="ref">#ORD-2714</span></div>
+          <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Order<small>Loading current view</small></h3></header>
+          <div class="app-body">
+            <div class="skeleton" aria-label="Loading order"><i class="block"></i><i></i><i class="w70"></i><i class="block"></i><i class="w45"></i></div>
+          </div>
+          <div class="dock"><button type="button" class="btn primary block is-unavailable" disabled>Actions appear when loaded</button></div>
+        </div>
+        <figcaption><strong>Loading</strong><span class="who">Participant · layout holds; no action before the current view arrives.</span></figcaption>
+      </figure>
+
+      <figure class="spec" id="screen-stale">
+        <div class="phone short">
+          <div class="status"><span>9:41</span><span class="ref">#ORD-2714</span></div>
+          <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Aircon repair<small>Kuya Ben</small></h3></header>
+          <div class="app-body">
+            <div class="notice waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-refresh"/></svg><div><strong>This order changed</strong><p>Kuya Ben added evidence at 2:58 PM. Refresh before you respond.</p></div></div>
+            <div class="truth">
+              <div class="done"><span>Agreement</span><strong>Accepted</strong></div>
+              <div class="settled"><span>Work</span><strong>Out of date</strong></div>
+              <div class="info"><span>Payment</span><strong>Not due</strong></div>
+            </div>
+          </div>
+          <div class="dock"><button type="button" class="btn primary block" disabled><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-refresh"/></svg>Refresh</button></div>
+        </div>
+        <figcaption><strong>Stale</strong><span class="who">Customer · newer record exists; the old view cannot act.</span></figcaption>
+      </figure>
+
+      <figure class="spec" id="screen-restricted">
+        <div class="phone short">
+          <div class="status"><span>9:41</span><span class="ref">#CASE-0412</span></div>
+          <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Evidence<small>Case review</small></h3></header>
+          <div class="app-body">
+            <div class="card card-pad stack" style="align-items:center;text-align:center;padding:28px 18px">
+              <span class="icon-tile settled"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-lock"/></svg></span>
+              <strong class="card-title">Only case parties can open these files</strong>
+              <p class="hint">3 photos · added Oct 21. File names and times stay visible.</p>
+            </div>
+          </div>
+        </div>
+        <figcaption><strong>Restricted</strong><span class="who">Viewer without access · metadata visible, files closed.</span></figcaption>
+      </figure>
+
+      <figure class="spec" id="screen-offline">
+        <div class="phone short">
+          <div class="status"><span>9:41</span><span>No signal</span></div>
+          <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Fit capacitor<small>Step 2 of 4</small></h3></header>
+          <div class="app-body">
+            <div class="notice settled"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-wifi-off"/></svg><div><strong>Offline</strong><p>Photos are kept on this phone. Nothing is submitted until you reconnect.</p></div></div>
+            <div class="card"><div class="queue-item"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-image"/></svg><span style="flex:1">Capacitor photo</span><span class="chip settled">Not sent</span></div><div class="queue-item"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-gauge"/></svg><span style="flex:1">Amp reading 4.2 A</span><span class="chip settled">Not sent</span></div></div>
+          </div>
+          <div class="dock"><button type="button" class="btn primary block is-unavailable" disabled>Submit step when online</button></div>
+        </div>
+        <figcaption><strong>Offline</strong><span class="who">Provider · captures queue locally, never shown as submitted.</span><span class="proposed">Proposed behaviour</span></figcaption>
+      </figure>
+
+      <figure class="spec" id="screen-sheet">
+        <div class="phone short">
+          <div class="status"><span>9:41</span><span class="ref">#ORD-2714</span></div>
+          <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Aircon repair<small>Kuya Ben</small></h3></header>
+          <div class="app-body">
+            <div class="skeleton"><i class="block"></i><i></i><i class="w70"></i></div>
+          </div>
+          <div class="sheet-backdrop open">
+            <div class="glovo-drawer-sheet">
+              <svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none"><path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path></svg>
+              <div class="drawer-content-box">
+                <div class="drawer-title"><div><h4>Add to this step</h4><p>Required: one photo.</p></div><span class="icon-btn"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-x"/></svg></span></div>
+                <div class="drawer-option-card on"><span class="icon-tile"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-camera"/></svg></span><div><strong>Photo</strong><small>Timestamped, required</small></div></div>
+                <div class="drawer-option-card"><span class="icon-tile"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-gauge"/></svg></span><div><strong>Reading</strong><small>Amp draw</small></div></div>
+                <div class="drawer-option-card"><span class="icon-tile"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-file-text"/></svg></span><div><strong>Note</strong><small>Optional</small></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption><strong>Wave sheet</strong><span class="who">Locked pattern · transparent wrapper, asymmetric cap, white tiles.</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Rules -->
+  <section class="fk-section" id="rules" aria-labelledby="rules-title">
+    <div class="fk-section-head"><h2 id="rules-title">Rules</h2><p>What every page in this kit follows.</p></div>
+    <div class="panel-grid">
+      <div class="panel">
+        <h3>Always</h3>
+        <ul class="rules do">
+          <li>Name who acts next in every waiting state.</li>
+          <li>Keep Agreement, Work, Payment, Stock and Case on separate rails.</li>
+          <li>Show each Deal Chain child with its own Work and payment.</li>
+          <li>Label proposed policy and proposed tools where they appear.</li>
+          <li>Give evidence a time, place, step and author.</li>
+          <li>Use the locked wave sheet for every bottom sheet.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Never</h3>
+        <ul class="rules dont">
+          <li>Show a wallet balance or platform custody for external cash or P2P.</li>
+          <li>Pool payment across Deal Chain children.</li>
+          <li>Turn an unknown payment outcome into success or a pay-again prompt.</li>
+          <li>Present a target duration as a guarantee.</li>
+          <li>Invent refund, fee or deadline rules.</li>
+          <li>Use mango as a status colour.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <p class="fk-boundary">Static kit. Fixture people, references and amounts are illustrative and shared across pages. Buttons and tabs are inert. It supersedes the forest/cream Commerce State Atlas and earlier mobile samples as visual direction; it does not change routes, permissions, payments or backend behaviour.</p>
+</body>
+</html>

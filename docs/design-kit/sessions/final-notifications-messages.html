@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Serbizyu final kit · Notifications &amp; Messages</title>
+<link rel="stylesheet" href="final-kit.css">
+</head>
+<body>
+<header class="fk-head"><div class="fk-head-inner">
+  <a class="fk-brand" href="final-kit.html"><img src="../assets/brand/serbizyu-long-navy-opt.png" alt="Serbizyu"><span>Final UI kit</span></a>
+  <nav class="fk-nav" aria-label="Final kit pages">
+    <a href="final-kit.html">Foundations</a>
+    <a href="final-requests-quotes.html">Listings &amp; requests</a>
+    <a href="final-orders-stock.html">Orders &amp; stock</a>
+    <a href="final-payments.html">Payments</a>
+    <a href="final-scheduling-work.html">Scheduling &amp; Work</a>
+    <a href="final-deal-chain.html">Deal Chain</a>
+    <a href="final-work-tools.html">Work tools</a>
+    <a href="final-notifications-messages.html" aria-current="page">Notifications &amp; messages</a>
+    <a href="admin-workspace-kit.html">Admin</a>
+  </nav>
+</div></header>
+
+<div class="fk-intro">
+  <div>
+    <span class="fk-badge"><svg class="ic sm" aria-hidden="true"><use href="final-icons.svg#i-lock"/></svg>Static kit · fixture data</span>
+    <h1>Notifications &amp; scoped messages</h1>
+  </div>
+  <p>Turn-taking alerts come from real domain events, and every conversation is bound to an Order, Deal Chain handoff relay, or Support Case—preserving Acting-For attribution and sibling privacy.</p>
+</div>
+
+<nav class="fk-toc" aria-label="On this page">
+  <a href="#notifications">Actionable notifications <b>4</b></a>
+  <a href="#conversations">Scoped conversations <b>6</b></a>
+</nav>
+
+<section class="fk-section" id="notifications">
+  <div class="fk-section-head">
+    <h2>Actionable notifications</h2>
+    <p>Backed by the notifications and outbox_messages tables. Separate "Needs your action" turn-taking triggers from informational updates.</p>
+  </div>
+  <div class="specs">
+    <figure class="spec" id="notif-customer-turn">
+      <div class="phone"><div class="status"><span>2:18</span><span>Maria Santos</span></div>
+        <header class="app-top"><h3 class="grow">Notifications<small>2 need your action</small></h3><span class="chip info">Mark read</span></header>
+        <div class="app-body">
+          <div class="seg"><span aria-selected="true">Needs action <b>2</b></span><span>Updates <b>4</b></span></div>
+          <div class="card">
+            <div class="row notif-unread"><span class="icon-tile waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-camera"/></svg></span><div><strong>Approve Step 2 photo proof</strong><small>ORD-2714 · Kuya Ben uploaded coil wash photo</small></div><div class="end"><span class="chip waiting">Maria · review</span></div></div>
+            <div class="row notif-unread"><span class="icon-tile waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-file-text"/></svg></span><div><strong>2 new quotes on Breaker diagnostic</strong><small>REQ-6234 · Mang Jose ₱380, Ramon ₱350</small></div><div class="end"><span class="chip waiting">Compare</span></div></div>
+            <div class="row"><span class="icon-tile done"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-truck"/></svg></span><div><strong>Capacitor handed to Danny Express</strong><small>Cool Again · ORD-2710 → ORD-2711</small></div><div class="end"><span class="chip done">11:20 AM</span></div></div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Open ORD-2714 review</button></div>
+      </div>
+      <figcaption><strong>Customer · Your-turn inbox</strong><span class="who">Customer · groups pending Work sign-offs and incoming quotes ahead of informational updates.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="notif-provider-turn">
+      <div class="phone"><div class="status"><span>2:22</span><span>Kuya Ben</span></div>
+        <header class="app-top"><h3 class="grow">Notifications<small>3 need your action</small></h3></header>
+        <div class="app-body">
+          <div class="seg"><span aria-selected="true">Needs action <b>3</b></span><span>Updates</span></div>
+          <div class="card">
+            <div class="row notif-unread"><span class="icon-tile waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-cash"/></svg></span><div><strong>Acknowledge cash report (₱850)</strong><small>OBL-1048 · Maria Santos reported cash paid</small></div><div class="end"><span class="chip waiting">Confirm</span></div></div>
+            <div class="row notif-unread"><span class="icon-tile info"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-handshake"/></svg></span><div><strong>Deal Chain slot invitation</strong><small>Cool Again · Fit + test · ₱850</small></div><div class="end"><span class="chip waiting">Respond</span></div></div>
+            <div class="row notif-unread"><span class="icon-tile done"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-check"/></svg></span><div><strong>Predecessor cleared: part on site</strong><small>ORD-2711 delivered · ORD-2714 unlocked</small></div><div class="end"><span class="chip info">Start Work</span></div></div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Acknowledge OBL-1048</button></div>
+      </div>
+      <figcaption><strong>Provider · Payment ack, invitations &amp; unlocks</strong><span class="who">Provider · surfaces cash acknowledgement, Deal Chain invitations and predecessor clearance events.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="notif-merchant-stock-alert">
+      <div class="phone"><div class="status"><span>8:26</span><span>Tagudin Hardware</span></div>
+        <header class="app-top"><h3 class="grow">Merchant alerts<small>Orders &amp; stock ledger</small></h3></header>
+        <div class="app-body">
+          <div class="card">
+            <div class="row notif-unread"><span class="icon-tile attention"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-alert"/></svg></span><div><strong>Short stock against held orders</strong><small>Holcim Excel 40 kg · 2 counted vs 3 held</small></div><div class="end"><span class="chip attention">Review holds</span></div></div>
+            <div class="row notif-unread"><span class="icon-tile waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-box"/></svg></span><div><strong>New order request: 4 × Holcim 40 kg</strong><small>ORD-2722 · Maria Santos · pickup 8:00 AM</small></div><div class="end"><span class="chip waiting">Accept / counter</span></div></div>
+            <div class="row"><span class="icon-tile"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-qr"/></svg></span><div><strong>Danny Express arriving for pickup</strong><small>ORD-2710 · 35µF capacitor counter handoff</small></div><div class="end"><span class="chip info">Ready</span></div></div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn danger block" disabled>Review affected holds</button></div>
+      </div>
+      <figcaption><strong>Merchant · Stock conflict &amp; order queue alerts</strong><span class="who">Merchant · links directly to recount conflicts and incoming order proposals without silent auto-cancellation.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="notif-empty-settled">
+      <div class="phone"><div class="status"><span>5:10</span><span>Maria Santos</span></div>
+        <header class="app-top"><h3 class="grow">Notifications<small>All caught up</small></h3></header>
+        <div class="app-body">
+          <div class="seg"><span aria-selected="true">Needs action <b>0</b></span><span>Updates <b>6</b></span></div>
+          <div class="notice done"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-check-circle"/></svg><div><strong>Nothing waiting on you</strong><p>No pending approvals, quote decisions or payment confirmations require your response right now.</p></div></div>
+          <div class="card">
+            <div class="row"><span class="icon-tile settled"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-receipt"/></svg></span><div><strong>OBL-1041 settled (₱180)</strong><small>Tagudin Hardware acknowledged receipt</small></div><div class="end"><span class="chip settled">Settled</span></div></div>
+          </div>
+        </div>
+      </div>
+      <figcaption><strong>Empty action queue</strong><span class="who">Any participant · calm zero-action state with historical receipts preserved under Updates.</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fk-section" id="conversations">
+  <div class="fk-section-head">
+    <h2>Scoped conversations</h2>
+    <p>Backed by conversations and messages tables (idempotency_key, attachment_evidence_file_id, audit_metadata). Replaces all local setTimeout chat simulations.</p>
+  </div>
+  <div class="specs">
+    <figure class="spec" id="msg-order-thread">
+      <div class="phone"><div class="status"><span>2:14</span><span class="ref">ORD-2714</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Order messages<small>Kuya Ben · AC Fit + Test</small></h3></header>
+        <div class="app-body">
+          <div class="msg-list">
+            <div class="msg-sys"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-check"/></svg><span>Order ORD-2714 accepted · Scope pinned (₱850)</span></div>
+            <div class="msg"><div class="msg-meta"><strong>Kuya Ben</strong><span>1:48 PM</span></div>Good afternoon! Danny dropped off the 35µF capacitor. Heading to Pob. Este now.</div>
+            <div class="msg self"><div class="msg-meta"><strong>Maria Santos</strong><span>1:51 PM</span></div>Thank you! Brown gate beside the sari-sari store. Indoor unit is on the 2nd floor.</div>
+            <div class="msg"><div class="msg-meta"><strong>Kuya Ben</strong><span>2:12 PM</span></div>Arrived at gate and isolated the breaker. Uploading Step 1 photo proof in Work rail.</div>
+          </div>
+        </div>
+        <div class="dock">
+          <div class="composer"><div class="input placeholder">Message about ORD-2714…</div><button type="button" class="btn primary sm" disabled><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-send"/></svg>Send</button></div>
+        </div>
+      </div>
+      <figcaption><strong>1:1 Order conversation</strong><span class="who">Buyer &amp; provider · persisted in conversations (order_id) with system timeline markers; chat never substitutes for Work sign-off.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="msg-agent-acting-for">
+      <div class="phone"><div class="status"><span>2:20</span><span class="ref">ORD-2722</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Order messages<small>Maria Santos · 4 × Holcim 40 kg</small></h3></header>
+        <div class="acting-banner"><span>Acting on behalf of: <strong>Tagudin Hardware</strong></span><span class="chip info">Agent · Carlo</span></div>
+        <div class="app-body">
+          <div class="msg-list">
+            <div class="msg"><div class="msg-meta"><strong>Maria Santos</strong><span>9:43 AM</span></div>Can my tricycle driver pick up the 4 bags at 8:00 AM tomorrow?</div>
+            <div class="msg self"><div class="msg-meta"><strong>Carlo · for Tagudin Hardware</strong><span>9:46 AM</span></div>Yes, 4 bags are held at Stall Counter B. Please share the pickup drop-off code with your driver.</div>
+          </div>
+          <div class="notice settled"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-shield"/></svg><div><strong>Strict attribution recorded</strong><p>audit_metadata stores actor_id (Carlo) and owner_id (Tagudin Hardware). Agents never collect funds.</p></div></div>
+        </div>
+        <div class="dock">
+          <div class="composer"><div class="input placeholder">Reply for Tagudin Hardware…</div><button type="button" class="btn primary sm" disabled><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-send"/></svg>Send</button></div>
+        </div>
+      </div>
+      <figcaption><strong>Agent intermediary · Acting-For attribution</strong><span class="who">Delegated agent · pinned ActingContext banner and dual actor/owner attribution on every message.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="msg-attachment-evidence">
+      <div class="phone"><div class="status"><span>1:55</span><span class="ref">ORD-2711</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Delivery messages<small>Danny Express · Pob. Este</small></h3></header>
+        <div class="app-body">
+          <div class="msg-list">
+            <div class="msg self"><div class="msg-meta"><strong>Maria Santos</strong><span>1:52 PM</span></div>Here is our gate landmark on Rizal St. Ext:</div>
+            <div class="file"><span class="icon-tile done"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-image"/></svg></span><div><strong>gate-landmark.jpg</strong><small>1.1 MB · Scan clean · Attached to message</small></div><span class="chip done">Clean</span></div>
+            <div class="msg"><div class="msg-meta"><strong>Danny Express</strong><span>1:54 PM</span></div>Got it, 3 minutes away!</div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn block" disabled><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-camera"/></svg>Attach photo or message</button></div>
+      </div>
+      <figcaption><strong>Message attachment · private evidence_files</strong><span class="who">Participant · uses attachment_evidence_file_id with scan status; private to conversation participants.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="msg-deal-chain-relay">
+      <div class="phone"><div class="status"><span>11:24</span><span class="ref">DC-892</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Handoff relay<small>Cool Again · 4 participants</small></h3></header>
+        <div class="app-body">
+          <div class="notice info"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-lock"/></svg><div><strong>Handoff coordination only</strong><p>Partner prices and payment statuses are private to each order and never appear in this room.</p></div></div>
+          <div class="msg-list">
+            <div class="msg-sys"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-box"/></svg><span>Tagudin Hardware marked 35µF capacitor Prepared (11:05 AM)</span></div>
+            <div class="msg"><div class="msg-meta"><strong>Danny Express · Courier</strong><span>11:18 AM</span></div>At Tagudin Hardware counter now for pickup.</div>
+            <div class="msg-sys"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-handshake"/></svg><span>Counter handoff confirmed → In transit to Maria Santos (11:20 AM)</span></div>
+            <div class="msg"><div class="msg-meta"><strong>Kuya Ben · Service</strong><span>11:23 AM</span></div>Thanks Danny—I will head over once Maria confirms doorstep receipt.</div>
+          </div>
+        </div>
+        <div class="dock">
+          <div class="composer"><div class="input placeholder">Post handoff update…</div><button type="button" class="btn primary sm" disabled><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-send"/></svg>Send</button></div>
+        </div>
+      </div>
+      <figcaption><strong>Deal Chain handoff relay</strong><span class="who">Chain participants · shares readiness and transit milestones while redacting sibling commercial terms.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="msg-case-dispute-thread">
+      <div class="phone"><div class="status"><span>4:12</span><span class="ref">CASE-0412</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Case messages<small>OBL-1088 · Cash amount mismatch</small></h3></header>
+        <div class="app-body">
+          <div class="notice attention"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-alert"/></svg><div><strong>Scoped to OBL-1088 only</strong><p>Maria reported ₱650 paid; Kuya Ben reported ₱500 received. Sibling orders remain unaffected.</p></div></div>
+          <div class="msg-list">
+            <div class="msg"><div class="msg-meta"><strong>Maria Santos · Buyer</strong><span>3:52 PM</span></div>I handed ₱500 + ₱150 at the gate after the fan check.</div>
+            <div class="msg"><div class="msg-meta"><strong>Kuya Ben · Provider</strong><span>3:58 PM</span></div>Only one ₱500 bill was handed over; attaching my log note.</div>
+            <div class="msg-sys"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-shield"/></svg><span>Admin Desk (Officer Santos): Reviewing evidence. Platform acts as evidentiary custodian only.</span></div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Add case statement or photo</button></div>
+      </div>
+      <figcaption><strong>Support &amp; dispute case thread</strong><span class="who">Buyer, provider &amp; L4 staff · tamper-evident record compatible with RA 7160 Barangay Lupon handoff packet.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="msg-closed-readonly">
+      <div class="phone"><div class="status"><span>4:50</span><span class="ref">ORD-2698</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Order messages<small>Closed · Read-only archive</small></h3></header>
+        <div class="app-body">
+          <div class="msg-list">
+            <div class="msg"><div class="msg-meta"><strong>Tagudin Hardware</strong><span>Yesterday</span></div>2 × PVC elbows packed at counter.</div>
+            <div class="msg self"><div class="msg-meta"><strong>Maria Santos</strong><span>Yesterday</span></div>Picked up and paid ₱120 cash. Thank you!</div>
+            <div class="msg-sys"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-lock"/></svg><span>Order completed &amp; OBL-1040 settled · Conversation archived</span></div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn is-unavailable block" disabled>Thread closed · Open case if needed</button></div>
+      </div>
+      <figcaption><strong>Archived order conversation</strong><span class="who">Participant · completed orders lock free-form chat while preserving history and support escalation.</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<p class="fk-boundary">Static fixtures only. Notifications and conversations reflect the existing Postgres schema (notifications, conversations, messages, outbox_messages); buttons are disabled specimens.</p>
+</body>
+</html>

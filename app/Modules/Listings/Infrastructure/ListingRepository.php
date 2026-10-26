@@ -9,6 +9,7 @@ use App\Modules\Listings\Application\Contracts\PublicListingReader;
 use App\Modules\Listings\Application\GovernedCatalogService;
 use App\Modules\Listings\Application\ListingError;
 use App\Modules\Listings\Application\Projections\ListingProjection;
+use App\Modules\Listings\Application\StockLedgerService;
 use App\Modules\Listings\Domain\ListingRules;
 use App\Modules\Listings\Infrastructure\Models\Listing;
 use App\Shared\Application\AuditRecorder;
@@ -34,6 +35,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         private readonly ActingForAuthorizer $actingFor,
         private readonly GovernedCatalogService $catalog,
         private readonly WorkSpecificationPort $workSpecs,
+        private readonly StockLedgerService $stock,
     ) {}
 
     /**
@@ -47,7 +49,8 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         $this->validate($input, $correlationId);
 
         return DB::transaction(function () use ($actor, $input, $correlationId): array {
-            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.create');
+            $listingId = (string) Str::uuid7();
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.create', null);
             $ownerId = $actor->resourceOwnerId;
             $now = now();
             $workShape = trim((string) $input['work_shape']);
@@ -113,13 +116,15 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         $this->ensureStorage($correlationId);
 
         return DB::transaction(function () use ($listingId, $actor, $expectedVersion, $input, $correlationId): array {
-            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.update');
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.update', $listingId);
             $ownerId = $actor->resourceOwnerId;
             $listing = Listing::query()->where('id', $listingId)->lockForUpdate()->first();
             $this->assertOwnerAndVersion($listing, $listingId, $ownerId, $expectedVersion, $correlationId);
-            if ((string) $listing->status !== 'draft') {
-                throw new ListingError('INVALID_STATE', 'Only a draft listing can be edited.', $correlationId, status: 409);
+            if (! in_array((string) $listing->status, ['draft', 'rejected'], true)) {
+                throw new ListingError('INVALID_STATE', 'Only a draft or rejected listing can be edited.', $correlationId, status: 409);
             }
+
+            $isRejectedRevision = (string) $listing->status === 'rejected';
 
             $current = DB::table('listing_versions')
                 ->where('listing_id', $listingId)
@@ -138,6 +143,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'work_shape' => (string) ($terms['work_shape'] ?? ''),
                 'work_catalog_code' => $terms['work_catalog_code'] ?? null,
                 'work_set_version' => $terms['work_set_version'] ?? null,
+                'prep_lead_time' => $terms['prep_lead_time'] ?? null,
                 'milestone_stages' => $terms['milestone_stages'] ?? null,
                 'work_specification' => $terms['work_specification'] ?? null,
                 'package_tiers' => $terms['package_tiers'] ?? null,
@@ -174,6 +180,10 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'correlation_id' => $correlationId,
                 'updated_at' => $now,
             ];
+            if ($isRejectedRevision) {
+                $updateFields['status'] = 'draft';
+                $updateFields['review_status'] = 'not_required';
+            }
 
             if (array_key_exists('stall_location', $payload) || array_key_exists('geography', $payload)) {
                 $currentGeo = is_array($listing->geography)
@@ -219,7 +229,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         }
 
         return DB::transaction(function () use ($listingId, $actor, $expectedVersion, $idempotencyKey, $correlationId): array {
-            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.submit');
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.submit', $listingId);
             $ownerId = $actor->resourceOwnerId;
             $listing = Listing::query()->where('id', $listingId)->lockForUpdate()->first();
             if ($listing === null) {
@@ -289,20 +299,12 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 $workShape,
                 $correlationId,
             );
-            $this->insertVersion($listingId, $nextVersion, $actor->actorUserId, array_merge([
+            $this->insertVersion($listingId, $nextVersion, $actor->actorUserId, array_merge($terms, [
                 'title' => (string) ($terms['title'] ?? ''),
                 'description' => (string) $current->description,
                 'category_code' => (string) ($terms['category_code'] ?? ''),
                 'listing_type' => (string) $listing->listing_type,
                 'work_shape' => $workShape,
-                'package_tiers' => $terms['package_tiers'] ?? null,
-                'addons' => $terms['addons'] ?? null,
-                'milestone_stages' => $terms['milestone_stages'] ?? null,
-                'work_specification' => $terms['work_specification'] ?? null,
-                'work_catalog_code' => $terms['work_catalog_code'] ?? null,
-                'inclusions' => $terms['inclusions'] ?? null,
-                'variants' => $terms['variants'] ?? null,
-                'pricing_mode' => $terms['pricing_mode'] ?? null,
                 'price_amount_minor' => $current->price_amount_minor,
                 'currency' => $current->currency,
             ]), $correlationId, $now, $pins);
@@ -350,6 +352,43 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         });
     }
 
+    /** @return list<array<string, mixed>> */
+    public function provisionPublishedProductStock(string $listingId, string $ownerUserId, string $correlationId): array
+    {
+        return DB::transaction(function () use ($listingId, $ownerUserId, $correlationId): array {
+            $listing = DB::table('listings')
+                ->where('id', $listingId)
+                ->lockForUpdate()
+                ->first();
+            if ($listing === null || (string) $listing->owner_user_id !== $ownerUserId) {
+                throw new ListingError('LISTING_NOT_FOUND', 'The listing could not be found.', $correlationId, status: 404);
+            }
+            if ((string) $listing->listing_type !== 'product'
+                || (string) $listing->status !== 'active'
+                || (string) $listing->review_status !== 'approved') {
+                return [];
+            }
+
+            $version = DB::table('listing_versions')
+                ->where('listing_id', $listingId)
+                ->where('version_number', (int) $listing->current_version)
+                ->first();
+            if ($version === null) {
+                throw new ListingError('LISTING_NOT_FOUND', 'The published listing version could not be found.', $correlationId, status: 404);
+            }
+
+            $terms = is_array($version->terms) ? $version->terms : (json_decode((string) $version->terms, true) ?: []);
+
+            return $this->stock->provisionVariants(
+                listingId: $listingId,
+                listingVersionId: (string) $version->id,
+                ownerUserId: $ownerUserId,
+                variants: is_array($terms['variants'] ?? null) ? $terms['variants'] : [],
+                correlationId: $correlationId,
+            );
+        });
+    }
+
     public function pause(
         string $listingId,
         ResourceActor $actor,
@@ -357,7 +396,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         string $correlationId,
     ): array {
         return DB::transaction(function () use ($listingId, $actor, $expectedVersion, $correlationId): array {
-            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.pause');
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.pause', $listingId);
             $ownerId = $actor->resourceOwnerId;
             $listing = DB::table('listings')->where('id', $listingId)->lockForUpdate()->first();
             $this->assertOwnerAndVersion($listing, $listingId, $ownerId, $expectedVersion, $correlationId);
@@ -396,7 +435,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         string $correlationId,
     ): array {
         return DB::transaction(function () use ($listingId, $actor, $expectedVersion, $correlationId): array {
-            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.resume');
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.resume', $listingId);
             $ownerId = $actor->resourceOwnerId;
             $listing = DB::table('listings')->where('id', $listingId)->lockForUpdate()->first();
             $this->assertOwnerAndVersion($listing, $listingId, $ownerId, $expectedVersion, $correlationId);
@@ -435,7 +474,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         string $correlationId,
     ): array {
         return DB::transaction(function () use ($listingId, $actor, $expectedVersion, $correlationId): array {
-            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.archive');
+            $this->assertActingForIfNeeded($actor, $correlationId, 'listing.archive', $listingId);
             $ownerId = $actor->resourceOwnerId;
             $listing = DB::table('listings')->where('id', $listingId)->lockForUpdate()->first();
             $this->assertOwnerAndVersion($listing, $listingId, $ownerId, $expectedVersion, $correlationId);
@@ -516,7 +555,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
 
         $row = $this->publicQuery()->where('listings.id', $listingId)->first();
 
-        return $row === null ? null : $this->mapProjection($row, true);
+        return $row === null ? null : $this->mapProjection($row, true, true);
     }
 
     public function recordDenied(string $listingId, ?string $actorId, string $correlationId): void
@@ -689,7 +728,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             ->all();
     }
 
-    private function assertActingForIfNeeded(ResourceActor $actor, string $correlationId, string $requiredAction): void
+    private function assertActingForIfNeeded(ResourceActor $actor, string $correlationId, string $requiredAction, ?string $resourceId): void
     {
         if (! $actor->isActingFor() || $actor->consentGrantId === null) {
             return;
@@ -702,6 +741,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 grantorUserId: $actor->resourceOwnerId,
                 correlationId: $correlationId,
                 resourceType: 'listing',
+                resourceId: $resourceId,
                 requiredAction: $requiredAction,
             );
         } catch (KernelException $error) {
@@ -767,7 +807,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             'evidence_class' => isset($input['evidence_class']) && is_string($input['evidence_class']) && $input['evidence_class'] !== '' ? $input['evidence_class'] : null,
         ];
 
-        foreach (['package_tiers', 'addons', 'milestone_stages', 'work_specification', 'work_catalog_code', 'work_set_version', 'inclusions', 'variants', 'pricing_mode', 'deal_chain_combinations', 'deal_chain_specification'] as $extraField) {
+        foreach (['package_tiers', 'addons', 'milestone_stages', 'work_specification', 'work_catalog_code', 'work_set_version', 'prep_lead_time', 'inclusions', 'variants', 'pricing_mode', 'deal_chain_combinations', 'deal_chain_specification'] as $extraField) {
             if (isset($input[$extraField]) && $input[$extraField] !== null) {
                 $terms[$extraField] = $input[$extraField];
             }
@@ -777,16 +817,30 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             $terms['media'] = $this->normalizeMedia($input['media']);
         }
 
-        if (isset($input['milestone_stages']) && is_array($input['milestone_stages']) && $input['milestone_stages'] !== []) {
-            $resolvedWork = $this->workSpecs->resolveAndRecordListingWork(
-                workShape: (string) ($terms['work_shape'] ?? 'A1'),
-                categoryCode: (string) $terms['category_code'],
-                listingType: (string) ($input['listing_type'] ?? 'service'),
-                listingTitle: (string) $terms['title'],
-                rawStages: $input['milestone_stages'],
-                selectedCatalogCode: isset($input['work_catalog_code']) && is_string($input['work_catalog_code']) ? $input['work_catalog_code'] : null,
-                selectedSetVersion: isset($input['work_set_version']) && is_numeric($input['work_set_version']) ? (int) $input['work_set_version'] : null,
-            );
+        $rawStages = is_array($input['milestone_stages'] ?? null) ? $input['milestone_stages'] : [];
+        $selectedCatalogCode = $input['work_catalog_code'] ?? $terms['work_catalog_code'] ?? null;
+        $selectedSetVersion = $input['work_set_version'] ?? $terms['work_set_version'] ?? null;
+        $workShape = strtoupper(trim((string) ($terms['work_shape'] ?? '')));
+        if ($rawStages !== [] || is_string($selectedCatalogCode) || ($workShape !== '' && $workShape !== 'A4')) {
+            try {
+                $resolvedWork = $this->workSpecs->resolveAndRecordListingWork(
+                    workShape: $workShape ?: 'A1',
+                    categoryCode: (string) $terms['category_code'],
+                    listingType: (string) ($input['listing_type'] ?? 'service'),
+                    listingTitle: (string) $terms['title'],
+                    rawStages: $rawStages,
+                    selectedCatalogCode: is_string($selectedCatalogCode) ? $selectedCatalogCode : null,
+                    selectedSetVersion: is_numeric($selectedSetVersion) ? (int) $selectedSetVersion : null,
+                );
+            } catch (\InvalidArgumentException $error) {
+                throw new ListingError(
+                    'INVALID_WORK_SPECIFICATION',
+                    'Work nodes need valid authored checklist and measurement requirements.',
+                    $correlationId,
+                    status: 422,
+                    fieldErrors: ['milestone_stages' => [$error->getMessage()]],
+                );
+            }
             $terms['milestone_stages'] = $resolvedWork['nodes'];
             $terms['work_specification'] = $resolvedWork;
         }
@@ -874,6 +928,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 'listing_versions.price_amount_minor',
                 'listing_versions.currency',
                 'listing_versions.availability_capacity_summary',
+                'listing_versions.id as listing_version_id',
                 'categories.code as category_code',
                 'user_profiles.display_name as owner_name',
                 'user_profiles.service_area_display as owner_area',
@@ -882,7 +937,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
     }
 
     /** @return array<string, mixed> */
-    private function mapProjection(object $row, bool $public): array
+    private function mapProjection(object $row, bool $public, bool $includeVariantAvailability = false): array
     {
         $terms = json_decode((string) $row->terms, true) ?: [];
         $geography = is_array($row->geography)
@@ -904,6 +959,9 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             'area' => $geography['area_code'] ?? ($row->owner_area ?? 'Tagudin'),
             'public' => $public,
         ];
+        if ($public) {
+            $projection['listing_version_id'] = (string) ($row->listing_version_id ?? '');
+        }
         if (isset($terms['work_shape']) && is_string($terms['work_shape']) && $terms['work_shape'] !== '') {
             $projection['work_shape'] = $terms['work_shape'];
         }
@@ -931,13 +989,24 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
             $projection['milestone_stages'] = $terms['milestone_stages'];
         }
 
-        foreach (['work_catalog', 'work_specification', 'addons', 'partner_candidates', 'deal_chain_combinations', 'deal_chain_specification', 'inclusions', 'variants', 'geography'] as $catalogField) {
+        foreach (['work_catalog', 'work_specification', 'addons', 'partner_candidates', 'deal_chain_combinations', 'deal_chain_specification', 'inclusions', 'geography'] as $catalogField) {
             if (isset($terms[$catalogField]) && is_array($terms[$catalogField])) {
                 $projection[$catalogField] = $terms[$catalogField];
             }
         }
+        if (isset($terms['variants']) && is_array($terms['variants'])) {
+            $variants = $terms['variants'];
+            if ($public && $includeVariantAvailability) {
+                $variants = $this->projectVariantAvailability(
+                    (string) $row->id,
+                    (string) ($row->listing_version_id ?? ''),
+                    $variants,
+                );
+            }
+            $projection['variants'] = $variants;
+        }
 
-        foreach (['catalog_source', 'work_catalog_code', 'pricing_mode', 'stall_location'] as $stringField) {
+        foreach (['catalog_source', 'work_catalog_code', 'pricing_mode', 'prep_lead_time', 'stall_location'] as $stringField) {
             if (isset($terms[$stringField]) && is_string($terms[$stringField]) && $terms[$stringField] !== '') {
                 $projection[$stringField] = $terms[$stringField];
             }
@@ -967,6 +1036,84 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
         }
 
         return ($public ? ListingProjection::public($projection) : ListingProjection::owner($projection))->toArray();
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $variants
+     * @return list<array<string, mixed>>
+     */
+    private function projectVariantAvailability(string $listingId, string $listingVersionId, array $variants): array
+    {
+        if ($listingVersionId === '' || ! Schema::hasTable('listing_capacity') || ! Schema::hasColumn('listing_capacity', 'resource_key')) {
+            return $variants;
+        }
+
+        $variantIds = [];
+        foreach ($variants as $variant) {
+            if (is_array($variant) && is_string($variant['id'] ?? null)) {
+                $variantIds[] = $variant['id'];
+            }
+        }
+        if ($variantIds === []) {
+            return $variants;
+        }
+
+        $capacities = DB::table('listing_capacity')
+            ->where('listing_id', $listingId)
+            ->where('listing_version_id', $listingVersionId)
+            ->where('capacity_type', 'quantity')
+            ->whereIn('resource_key', $variantIds)
+            ->get()
+            ->keyBy('resource_key');
+        $reservations = collect();
+        if ($capacities->isNotEmpty() && Schema::hasTable('listing_capacity_reservations')) {
+            $reservations = DB::table('listing_capacity_reservations')
+                ->whereIn('listing_capacity_id', $capacities->pluck('id'))
+                ->whereIn('status', ['held', 'committed', 'fulfilled'])
+                ->get()
+                ->groupBy('listing_capacity_id');
+        }
+
+        return array_map(function (array $variant) use ($capacities, $reservations): array {
+            $variantId = $variant['id'] ?? null;
+            $bucket = is_string($variantId) ? $capacities->get($variantId) : null;
+            if ($bucket === null) {
+                return $variant;
+            }
+
+            $onHand = (int) ($bucket->quantity ?? 0);
+            $held = 0;
+            $committedUnfulfilled = 0;
+            foreach ($reservations->get($bucket->id, []) as $reservation) {
+                $quantity = (int) $reservation->quantity;
+                if ($reservation->status === 'held') {
+                    $held += $quantity;
+                } elseif (in_array($reservation->status, ['committed', 'fulfilled'], true)) {
+                    $fulfilled = property_exists($reservation, 'fulfilled_quantity') ? (int) $reservation->fulfilled_quantity : 0;
+                    $released = property_exists($reservation, 'released_quantity') ? (int) $reservation->released_quantity : 0;
+                    $committedUnfulfilled += max(0, $quantity - $fulfilled - $released);
+                }
+            }
+            $available = $onHand - $held - $committedUnfulfilled;
+            $manualStatus = (string) ($bucket->availability_status ?? '');
+            $policy = (string) ($bucket->stock_policy ?? '');
+            $status = $available < 0
+                ? 'shortage'
+                : ($available <= 0
+                    ? 'out_of_stock'
+                    : (($manualStatus === 'paused' || $policy === 'paused') ? 'paused' : 'open'));
+
+            $variant['resource_key'] = (string) $bucket->resource_key;
+            $variant['availability'] = [
+                'on_hand' => $onHand,
+                'held' => $held,
+                'committed_unfulfilled' => $committedUnfulfilled,
+                'available' => $available,
+                'availability_status' => $status,
+            ];
+
+            return $variant;
+        }, array_values(array_filter($variants, 'is_array')));
     }
 
     /**

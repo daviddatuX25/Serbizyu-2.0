@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Concerns\ValidatesWorkSpecificationStages;
 use App\Modules\Catalogs\Application\WorkCatalog;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
@@ -11,6 +12,7 @@ use App\Modules\IdentityAccess\Application\RoleAssignmentService;
 use App\Modules\IdentityAccess\Application\SliceStateQuery;
 use App\Modules\Tenders\Application\RequestDetailProjector;
 use App\Modules\Tenders\Application\TenderService;
+use App\Shared\Application\KernelException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -19,6 +21,8 @@ use Inertia\Response as InertiaResponse;
 
 final class RequestController extends Controller
 {
+    use ValidatesWorkSpecificationStages;
+
     public function __construct(
         private readonly CurrentSession $session,
         private readonly SliceStateQuery $sliceState,
@@ -83,6 +87,10 @@ final class RequestController extends Controller
             'requirements.*' => ['string', 'max:500'],
             'attach_pipeline' => ['nullable', 'boolean'],
             'pipeline' => ['nullable', 'array'],
+            'pipeline.template' => ['nullable', 'string', 'max:120'],
+            'pipeline.work_shape' => ['nullable', 'string', 'in:A1,A3,A4,A9'],
+            'pipeline.catalog_code' => ['nullable', 'string', 'max:120'],
+            ...$this->workStageRules('pipeline.stages'),
         ]);
 
         $category = DB::table('categories')->where('code', $validated['category_code'])->first()
@@ -179,6 +187,7 @@ final class RequestController extends Controller
         return Inertia::render('Requests/Show', [
             'request' => $projection['request'],
             'quotes' => $projection['quotes'],
+            'my_listings' => $projection['my_listings'],
             'viewer_role' => $projection['viewer_role'],
             'actions' => $projection['actions'],
             'session' => $projection['session'],
@@ -202,7 +211,12 @@ final class RequestController extends Controller
                 'estimated_duration' => ['nullable', 'string', 'max:100'],
                 'work_shape' => ['nullable', 'string', 'in:A1,A3,A4,A9'],
                 'listing_id' => ['nullable', 'string', 'uuid'],
-                'idempotency_key' => ['nullable', 'string', 'max:128'],
+                'listing_version_id' => ['nullable', 'string', 'uuid'],
+                'variant_id' => ['nullable', 'string', 'max:120'],
+                'quantity' => ['nullable', 'integer', 'min:1', 'max:999'],
+                'appointment_duration_minutes' => ['nullable', 'integer', 'min:1', 'max:480'],
+                ...$this->workStageRules('milestone_stages'),
+                ...$this->workStageRules('stages'),
             ]);
 
             $amountMinor = isset($validated['amount_minor'])
@@ -219,7 +233,11 @@ final class RequestController extends Controller
                     'estimated_duration' => $validated['estimated_duration'] ?? null,
                     'work_shape' => $validated['work_shape'] ?? 'A1',
                     'listing_id' => $validated['listing_id'] ?? null,
-                    'idempotency_key' => $validated['idempotency_key'] ?? null,
+                    'listing_version_id' => $validated['listing_version_id'] ?? null,
+                    'variant_id' => $validated['variant_id'] ?? null,
+                    'quantity' => $validated['quantity'] ?? null,
+                    'appointment_duration_minutes' => $validated['appointment_duration_minutes'] ?? null,
+                    'milestone_stages' => $validated['milestone_stages'] ?? $validated['stages'] ?? null,
                 ],
                 $correlationId
             );
@@ -231,7 +249,7 @@ final class RequestController extends Controller
             }
 
             return redirect()->route('requests.show', $id)->with('notice', 'Your quote has been submitted!');
-        } catch (IdentityAccessError $error) {
+        } catch (IdentityAccessError|KernelException $error) {
             if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'code' => (string) $error->envelope->code,
@@ -250,8 +268,18 @@ final class RequestController extends Controller
 
         try {
             $userId = $this->session->requireUser($request, $correlationId);
-            $result = $this->tenderService->acceptQuote($userId, $id, $quote, $correlationId);
-
+            $appointment = $request->validate([
+                'appointment_reservation_id' => ['nullable', 'uuid'],
+                'quote_version' => ['required_with:appointment_reservation_id', 'integer', 'min:1'],
+            ]);
+            $result = $this->tenderService->acceptQuote(
+                $userId,
+                $id,
+                $quote,
+                $correlationId,
+                isset($appointment['appointment_reservation_id']) ? (string) $appointment['appointment_reservation_id'] : null,
+                isset($appointment['quote_version']) ? (int) $appointment['quote_version'] : null,
+            );
             if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'data' => $result,
@@ -259,7 +287,7 @@ final class RequestController extends Controller
             }
 
             return redirect()->route('orders.show', $result['order_id'])->with('notice', 'Quote accepted and order created!');
-        } catch (IdentityAccessError $error) {
+        } catch (IdentityAccessError|KernelException $error) {
             if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'code' => (string) $error->envelope->code,
@@ -304,7 +332,7 @@ final class RequestController extends Controller
             }
 
             return redirect()->route('requests.show', $id)->with('notice', 'Counter-offer submitted!');
-        } catch (IdentityAccessError $error) {
+        } catch (IdentityAccessError|KernelException $error) {
             if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'code' => (string) $error->envelope->code,

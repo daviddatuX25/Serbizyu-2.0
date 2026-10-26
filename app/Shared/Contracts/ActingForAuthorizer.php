@@ -7,7 +7,7 @@ namespace App\Shared\Contracts;
 interface ActingForAuthorizer
 {
     /**
-     * Mutation-time recheck that grantee may act for grantor under an active consent.
+     * Mutation-time recheck of exact resource type, nullable resource ID, and action in a write transaction.
      *
      * @throws \RuntimeException module/shared authorization errors mapped by callers
      */
@@ -16,7 +16,8 @@ interface ActingForAuthorizer
         string $granteeUserId,
         string $grantorUserId,
         string $correlationId,
-        ?string $resourceType = null,
-        ?string $requiredAction = null,
+        string $resourceType,
+        ?string $resourceId,
+        string $requiredAction,
     ): void;
 }

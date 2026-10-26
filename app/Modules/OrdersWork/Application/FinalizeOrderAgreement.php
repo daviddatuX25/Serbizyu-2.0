@@ -9,9 +9,13 @@ use App\Shared\Application\AuditRecorder;
 use App\Shared\Application\IdempotencyGuard;
 use App\Shared\Application\KernelException;
 use App\Shared\Application\OutboxWriter;
+use App\Shared\Contracts\AdministrativeHoldReaderPort;
 use App\Shared\Contracts\OrderCapacityPort;
 use App\Shared\Contracts\OrderListingSourcePort;
 use App\Shared\Contracts\OrderPaymentObligationPort;
+use App\Shared\Application\NotificationIntent;
+use App\Shared\Contracts\NotificationAttention;
+use App\Shared\Contracts\NotificationsPort;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -27,6 +31,8 @@ final class FinalizeOrderAgreement
         private readonly WorkContractRegistry $workRegistry,
         private readonly OrderPaymentObligationPort $payments,
         private readonly WorkExecutionService $workExecution,
+        private readonly NotificationsPort $notifications,
+        private readonly AdministrativeHoldReaderPort $administrativeHolds,
     ) {}
 
     /**
@@ -98,6 +104,15 @@ final class FinalizeOrderAgreement
             if ($preReplay !== null && $preReplay->isReplay) {
                 return is_array($preReplay->replayPayload) ? $preReplay->replayPayload : [];
             }
+            $currentProposal = $orderSnapshot->current_proposal_id !== null
+                ? DB::table('order_proposals')->where('id', $orderSnapshot->current_proposal_id)->first()
+                : null;
+            if ($currentProposal === null || (string) $currentProposal->status !== 'proposed') {
+                throw new OrderError('INVALID_PROPOSAL', 'There is no current proposal awaiting acceptance.', $correlationId, status: 409);
+            }
+            if ((string) $currentProposal->proposed_by_user_id === $actorUserId) {
+                throw new OrderError('COUNTERPARTY_REQUIRED', 'Only the counterparty to the current proposal can accept it.', $correlationId, status: 403);
+            }
 
             $buyerParties = DB::table('order_parties')
                 ->where('order_id', $orderId)
@@ -119,7 +134,10 @@ final class FinalizeOrderAgreement
                 throw new OrderError('INVALID_PROPOSAL', 'Order proposal is missing or invalid.', $correlationId, status: 422);
             }
 
-            $proposal = $partyScope['proposal'];
+            $proposal = json_decode((string) $currentProposal->scope, true);
+            if (! is_array($proposal)) {
+                throw new OrderError('INVALID_PROPOSAL', 'Current proposal terms are invalid.', $correlationId, status: 422);
+            }
 
             if (! isset($proposal['amount_minor']) || ! is_int($proposal['amount_minor']) || $proposal['amount_minor'] < 0) {
                 throw new OrderError('INVALID_PROPOSAL', 'Proposal amount_minor must be a non-negative integer.', $correlationId, status: 422);
@@ -141,7 +159,20 @@ final class FinalizeOrderAgreement
             $currency = $proposal['currency'];
             $quantity = $proposal['quantity'];
             $proposalListingVersionId = $proposal['listing_version_id'];
+            $unitAmountMinor = $proposal['unit_amount_minor'] ?? null;
+            if ($unitAmountMinor !== null && ! is_int($unitAmountMinor)) {
+                throw new OrderError('INVALID_PROPOSAL', 'Proposal unit_amount_minor must be an integer or null.', $correlationId, status: 422);
+            }
+            if (is_int($unitAmountMinor) && $amountMinor !== $unitAmountMinor * $quantity) {
+                throw new OrderError('INVALID_PROPOSAL', 'Proposal total does not match its unit price and quantity.', $correlationId, status: 422);
+            }
             $proposalListingVersionNumber = $proposal['listing_version_number'];
+            $variantId = isset($proposal['variant_id']) && is_string($proposal['variant_id']) ? $proposal['variant_id'] : null;
+            $packageId = isset($proposal['package_id']) && is_string($proposal['package_id']) ? $proposal['package_id'] : null;
+            $addonIds = $proposal['addon_ids'] ?? [];
+            if (! is_array($addonIds) || array_filter($addonIds, static fn (mixed $id): bool => ! is_string($id)) !== []) {
+                throw new OrderError('INVALID_PROPOSAL', 'Proposal addon_ids must be a list of strings.', $correlationId, status: 422);
+            }
             $heldReservationId = $this->normalizeCapacityReservationId($proposal['capacity_reservation_id'] ?? null);
 
             $source = $this->listings->lockActiveApproved($listingId);
@@ -165,14 +196,57 @@ final class FinalizeOrderAgreement
                     retryable: true,
                 );
             }
+            $sourceTerms = is_array($source['terms'] ?? null) ? $source['terms'] : [];
+            $selected = null;
+            $selectionField = $variantId !== null ? 'variants' : ($packageId !== null ? 'package_tiers' : null);
+            $selectionId = $variantId ?? $packageId;
+            if ($selectionField !== null && $selectionId !== null) {
+                foreach (($sourceTerms[$selectionField] ?? []) as $option) {
+                    if (is_array($option) && (string) ($option['id'] ?? '') === $selectionId) {
+                        $selected = $option;
+                        break;
+                    }
+                }
+                if ($selected === null) {
+                    throw new OrderError('VERSION_CONFLICT', 'The selected listing option is no longer available.', $correlationId, status: 409, retryable: true);
+                }
+            }
+            $addonTotalMinor = 0;
+            foreach ($addonIds as $addonId) {
+                $addon = null;
+                foreach (($sourceTerms['addons'] ?? []) as $candidate) {
+                    if (is_array($candidate) && (string) ($candidate['id'] ?? '') === $addonId) {
+                        $addon = $candidate;
+                        break;
+                    }
+                }
+                if ($addon === null || ($addon['status'] ?? 'available') !== 'available') {
+                    throw new OrderError('VERSION_CONFLICT', 'A selected seller add-on is no longer available.', $correlationId, status: 409, retryable: true);
+                }
+                $role = strtolower((string) ($addon['partner_role'] ?? ''));
+                $code = strtolower((string) ($addon['code'] ?? ''));
+                if (in_array($role, ['store', 'courier', 'auditor'], true) || in_array($code, ['turnkey_parts', 'safety_audit', 'courier_delivery', 'product_install'], true)) {
+                    throw new OrderError('INVALID_PROPOSAL', 'Partner slots are not listing add-ons.', $correlationId, status: 422);
+                }
+                $addonTotalMinor += (int) ($addon['price_amount_minor'] ?? 0);
+            }
+            $currentBaseAmount = $selected !== null
+                ? (isset($selected['price_amount_minor']) ? (int) $selected['price_amount_minor'] : (int) round((float) ($selected['price'] ?? 0) * 100))
+                : (int) ($source['price_amount_minor'] ?? 0);
+            if ((string) $currentProposal->kind === 'initial' && $unitAmountMinor !== $currentBaseAmount + $addonTotalMinor) {
+                throw new OrderError('INVALID_PROPOSAL', 'The proposed unit price no longer matches the selected listing scope.', $correlationId, status: 409, retryable: true);
+            }
 
-            $workShape = (string) ($source['work_shape'] ?? '');
+            $workShape = (string) ($proposal['work_shape'] ?? $source['work_shape'] ?? '');
+            $workSpecification = $proposal['work_specification'] ?? ($source['work_specification'] ?? null);
+            $workStages = (array) ($proposal['milestone_stages'] ?? ($source['milestone_stages'] ?? []));
             try {
-                $workContract = $this->workRegistry->resolveForWork(
-                    shapeCode: $workShape,
-                    shapeContractVersion: 1,
-                    payloadSchemaVersion: 1,
-                    correlationId: $correlationId,
+                $workContract = WorkContractSelector::resolve(
+                    $this->workRegistry,
+                    $workShape,
+                    is_array($workSpecification) ? $workSpecification : null,
+                    $workStages,
+                    $correlationId,
                 );
             } catch (WorkContractError $error) {
                 throw new OrderError(
@@ -184,6 +258,11 @@ final class FinalizeOrderAgreement
                     retryable: $error->envelope->retryable,
                 );
             }
+            $workSpecification = is_array($workSpecification) ? $workSpecification : [];
+            $workSpecification['shape_contract_version'] = $workContract->shapeContractVersion;
+            $workSpecification['payload_schema_version'] = $workContract->payloadSchemaVersion;
+            $workSpecification['nodes'] ??= $workStages;
+            $source['work_specification'] = $workSpecification;
 
             try {
                 $capacityReservation = $this->capacity->commitForOrder(
@@ -192,6 +271,7 @@ final class FinalizeOrderAgreement
                     orderId: $orderId,
                     quantity: $quantity,
                     commandScope: 'order.finalize.capacity:'.$orderId,
+                    resourceKey: (string) ($proposal['resource_key'] ?? ''),
                     idempotencyKey: $idempotencyKey,
                     correlationId: $correlationId,
                     heldReservationId: $heldReservationId,
@@ -217,6 +297,9 @@ final class FinalizeOrderAgreement
             ) {
                 throw new OrderError('VERSION_CONFLICT', 'This order changed. Refresh before finalizing.', $correlationId, status: 409, retryable: true);
             }
+            if ($this->administrativeHolds->hasActiveHold('order', $orderId)) {
+                throw new OrderError('ADMINISTRATIVE_HOLD_ACTIVE', 'This Order agreement has an active administrative hold.', $correlationId, status: 409);
+            }
             if ((int) $order->version !== $expectedOrderVersion) {
                 throw new OrderError(
                     'VERSION_CONFLICT',
@@ -226,8 +309,8 @@ final class FinalizeOrderAgreement
                     retryable: true,
                 );
             }
-            if ((string) $order->status !== 'pending_acceptance') {
-                throw new OrderError('INVALID_STATE', 'Only a pending proposal can be finalized.', $correlationId, status: 409);
+            if ((string) $order->status !== 'proposed') {
+                throw new OrderError('INVALID_STATE', 'Only a proposed order can be accepted.', $correlationId, status: 409);
             }
 
             $lockedBuyerParties = DB::table('order_parties')
@@ -246,16 +329,20 @@ final class FinalizeOrderAgreement
                 throw new OrderError('VERSION_CONFLICT', 'Order buyer party changed. Refresh before finalizing.', $correlationId, status: 409, retryable: true);
             }
 
-            $lockedPartyScope = json_decode((string) ($lockedBuyerParty->scope ?? '{}'), true);
-            $lockedProposal = (is_array($lockedPartyScope) && isset($lockedPartyScope['proposal']) && is_array($lockedPartyScope['proposal']))
-                ? $lockedPartyScope['proposal']
+            $lockedProposalRecord = DB::table('order_proposals')
+                ->where('id', $order->current_proposal_id)
+                ->lockForUpdate()
+                ->first();
+            $lockedProposal = $lockedProposalRecord !== null
+                ? json_decode((string) $lockedProposalRecord->scope, true)
                 : null;
-
-            $lockedHeldReservationId = is_array($lockedProposal)
-                ? $this->normalizeCapacityReservationId($lockedProposal['capacity_reservation_id'] ?? null)
-                : null;
+            $lockedHeldReservationId = $this->normalizeCapacityReservationId($lockedProposalRecord?->capacity_reservation_id ?? null);
             if (
-                $lockedProposal === null
+                $lockedProposalRecord === null
+                || (string) $lockedProposalRecord->status !== 'proposed'
+                || (string) $order->current_proposal_id !== (string) $currentProposal->id
+                || ! is_array($lockedProposal)
+                || ! hash_equals((string) $currentProposal->terms_hash, (string) $lockedProposalRecord->terms_hash)
                 || (int) ($lockedProposal['amount_minor'] ?? -1) !== $amountMinor
                 || (string) ($lockedProposal['currency'] ?? '') !== $currency
                 || (int) ($lockedProposal['quantity'] ?? -1) !== $quantity
@@ -263,15 +350,14 @@ final class FinalizeOrderAgreement
                 || (int) ($lockedProposal['listing_version_number'] ?? -1) !== $proposalListingVersionNumber
                 || $lockedHeldReservationId !== $heldReservationId
             ) {
-                throw new OrderError('VERSION_CONFLICT', 'This proposal changed. Refresh and re-propose before finalizing.', $correlationId, status: 409, retryable: true);
+                throw new OrderError('VERSION_CONFLICT', 'This proposal changed. Refresh and re-propose before accepting.', $correlationId, status: 409, retryable: true);
             }
             $selectedLane = (string) ($lockedProposal['lane'] ?? 'external_cash');
-            $allowedLanes = ['external_cash', 'external_digital_proof', 'direct_digital', 'tiwala_protected_digital'];
+            $allowedLanes = ['external_cash', 'p2p_transfer', 'protected_digital'];
             if (! in_array($selectedLane, $allowedLanes, true)) {
                 throw new OrderError(
                     'UNSUPPORTED_PAYMENT_LANE',
                     "Selected payment lane [{$selectedLane}] is not supported.",
-                    $correlationId,
                     status: 422,
                 );
             }
@@ -294,26 +380,40 @@ final class FinalizeOrderAgreement
 
             $now = now();
             $nextVersion = ((int) $order->version) + 1;
-
-            DB::table('orders')->where('id', $orderId)->update([
-                'status' => 'accepted',
-                'version' => $nextVersion,
-                'correlation_id' => $correlationId,
-                'updated_at' => $now,
-            ]);
-
+            $termsSnapshotId = (string) Str::uuid7();
+            $termsScope = [
+                'title' => trim((string) ($proposal['title'] ?? $source['title'])),
+                'description' => (string) ($proposal['description'] ?? $source['description']),
+                'category_code' => (string) ($proposal['category_code'] ?? $source['category_code']),
+                'listing_type' => (string) ($proposal['listing_type'] ?? $source['listing_type']),
+                'quantity' => $quantity,
+                'variant_id' => $variantId,
+                'resource_key' => $proposal['resource_key'] ?? null,
+                'package_id' => $packageId,
+                'deal_chain_combination_id' => $proposal['deal_chain_combination_id'] ?? null,
+                'addon_ids' => $addonIds,
+                'unit_amount_minor' => $unitAmountMinor,
+                'items' => [[
+                    'variant_id' => $variantId,
+                    'resource_key' => $proposal['resource_key'] ?? null,
+                    'package_id' => $packageId,
+                    'quantity' => $quantity,
+                    'unit_amount_minor' => $unitAmountMinor,
+                    'amount_minor' => $amountMinor,
+                ]],
+                'lane' => $selectedLane,
+                'slot' => $proposal['slot'] ?? null,
+                'note' => $proposal['note'] ?? null,
+                'work_specification' => $workSpecification,
+                'milestone_stages' => $workStages,
+            ];
             DB::table('order_terms_snapshots')->insert([
-                'id' => (string) Str::uuid7(),
+                'id' => $termsSnapshotId,
                 'order_id' => $orderId,
                 'snapshot_version' => 1,
                 'source_listing_version_id' => $source['listing_version_id'],
                 'source_quote_id' => null,
-                'scope' => json_encode([
-                    'title' => $source['title'],
-                    'description' => $source['description'],
-                    'category_code' => $source['category_code'],
-                    'listing_type' => $source['listing_type'],
-                ], JSON_THROW_ON_ERROR),
+                'scope' => json_encode($termsScope, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
                 'scope_payload_version' => 1,
                 'amount_minor' => $amountMinor,
                 'currency' => $currency,
@@ -329,7 +429,21 @@ final class FinalizeOrderAgreement
                 'correlation_id' => $correlationId,
                 'created_at' => $now,
             ]);
-            $structure = $this->workExecution->initializeStructure($source, $workContract->shapeCode);
+            DB::table('order_proposals')->where('id', $currentProposal->id)->update([
+                'status' => 'accepted',
+                'responded_by_user_id' => $actorUserId,
+                'responded_at' => $now,
+                'updated_at' => $now,
+            ]);
+            DB::table('orders')->where('id', $orderId)->update([
+                'status' => 'accepted',
+                'current_terms_snapshot_id' => $termsSnapshotId,
+                'accepted_at' => $now,
+                'version' => $nextVersion,
+                'correlation_id' => $correlationId,
+                'updated_at' => $now,
+            ]);
+            $structure = $this->workExecution->initializeStructure($source, $workContract->shapeCode, $correlationId);
             $workId = (string) Str::uuid7();
             DB::table('work_instances')->insert([
                 'id' => $workId,
@@ -352,6 +466,21 @@ final class FinalizeOrderAgreement
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
+            $appointmentReservationId = $lockedProposalRecord->appointment_reservation_id ?? null;
+            if ($workContract->shapeCode === 'A3' && is_string($appointmentReservationId) && $appointmentReservationId !== '') {
+                $appointment = $this->capacity->commitAppointmentForOrder(
+                    reservationId: $appointmentReservationId,
+                    orderId: $orderId,
+                    workInstanceId: $workId,
+                    actorUserId: $actorUserId,
+                    correlationId: $correlationId,
+                );
+                DB::table('work_instances')->where('id', $workId)->update([
+                    'status' => 'scheduled',
+                    'scheduled_at' => $appointment['starts_at'],
+                    'updated_at' => $now,
+                ]);
+            }
             $obligationId = $this->payments->createPrimary(
                 orderId: $orderId,
                 workInstanceId: $workId,
@@ -387,7 +516,7 @@ final class FinalizeOrderAgreement
                 idempotencyKeyId: (string) $reservation->row->id,
                 commandName: 'FinalizeOrderAgreement',
                 expectedVersion: $expectedOrderVersion,
-                previous: ['status' => 'pending_acceptance', 'version' => $expectedOrderVersion],
+                previous: ['status' => 'proposed', 'version' => $expectedOrderVersion],
                 next: $response,
                 reason: 'Order agreement finalized',
                 orderId: $orderId,
@@ -401,6 +530,20 @@ final class FinalizeOrderAgreement
                 correlationId: $correlationId,
                 auditEventId: $auditId,
             );
+            $recipientUserId = (string) $currentProposal->proposed_by_user_id;
+            $this->notifications->recordIntent(new NotificationIntent(
+                recipientUserId: $recipientUserId,
+                eventSourceType: 'order',
+                eventSourceId: $orderId,
+                eventType: 'order.accepted',
+                attention: NotificationAttention::Updates,
+                title: 'Your Order proposal was accepted',
+                body: 'Review the current Order.',
+                actionUrl: route('orders.show', ['order' => $orderId], false),
+                idempotencyKey: 'order.accepted:'.$orderId.':v'.$nextVersion.':'.$recipientUserId,
+                correlationId: $correlationId,
+            ));
+
             $this->idempotency->succeed(
                 row: $reservation->row,
                 responsePayload: $response,
@@ -427,6 +570,7 @@ final class FinalizeOrderAgreement
     {
         foreach ([
             'orders',
+            'order_proposals',
             'order_parties',
             'order_terms_snapshots',
             'work_instances',

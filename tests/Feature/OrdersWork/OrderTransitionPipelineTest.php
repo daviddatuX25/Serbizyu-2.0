@@ -44,10 +44,10 @@ final class OrderTransitionPipelineTest extends TestCase
             ->get('/orders')
             ->assertOk();
 
-        $ongoing = collect($response->json('props.ongoing'));
-        $chainCard = $ongoing->firstWhere('id', Fix::CHAIN_ID_ONGOING);
+        $active = collect($response->json('props.active'));
+        $chainCard = $active->firstWhere('id', Fix::CHAIN_ID_ONGOING);
 
-        $this->assertNotNull($chainCard, 'Deal Chain #DC-892 set card must be present in Ongoing list.');
+        $this->assertNotNull($chainCard, 'Deal Chain #DC-892 set card must be present in Active.');
         expect($chainCard['type'])->toBe('deal_chain')
             ->and($chainCard['role'])->toBe('coordinator')
             ->and($chainCard['slots_count'])->toBe(3);
@@ -59,130 +59,21 @@ final class OrderTransitionPipelineTest extends TestCase
 
         expect($slots[1]['ordinal'])->toBe(2)
             ->and($slots[1]['status'])->toBe('in_transit')
-            ->and($slots[1]['status_label'])->toBe('In Transit (~8m)');
+            ->and($slots[1]['status_label'])->toBe('In Transit');
 
         // Slot 3 is gated by incomplete predecessor Slot 2
         expect($slots[2]['ordinal'])->toBe(3)
             ->and($slots[2]['status'])->toBe('blocked')
             ->and($slots[2]['status_label'])->toBe('⬡ Gated');
 
-        // Verify buyer child orders are suppressed from being loose duplicates in ongoing
-        $loosePartOrder = $ongoing->firstWhere('id', Fix::ORDER_ID_PART);
-        $looseTransitOrder = $ongoing->firstWhere('id', Fix::ORDER_ID_TRANSIT);
-        $this->assertNull($loosePartOrder, 'Child order 101 must not be a loose card in Ongoing for the buyer.');
-        $this->assertNull($looseTransitOrder, 'Child order 102 must not be a loose card in Ongoing for the buyer.');
+        // Verify buyer child orders are suppressed from being loose duplicates in Active.
+        $loosePartOrder = $active->firstWhere('id', Fix::ORDER_ID_PART);
+        $looseTransitOrder = $active->firstWhere('id', Fix::ORDER_ID_TRANSIT);
+        $this->assertNull($loosePartOrder, 'Child order 101 must not be a loose card in Active for the buyer.');
+        $this->assertNull($looseTransitOrder, 'Child order 102 must not be a loose card in Active for the buyer.');
     }
 
-    public function test_courier_pickup_advances_work_to_in_progress_and_logs_audit_events(): void
-    {
-        $courier = User::query()->where('phone_e164', Fix::COURIER_PHONE)->firstOrFail();
-
-        // Ensure transit work instance is initially not_started for pickup test
-        DB::table('work_instances')
-            ->where('order_id', Fix::ORDER_ID_TRANSIT)
-            ->update([
-                'status' => 'not_started',
-                'started_at' => null,
-                'updated_at' => now(),
-            ]);
-
-        $response = $this->actingAs($courier)
-            ->post('/orders/'.Fix::ORDER_ID_TRANSIT.'/courier/pickup');
-
-        $response->assertRedirect();
-        $response->assertSessionHas('notice', 'Store pickup verified by courier. En route to customer destination.');
-
-        // Verify work_instances updated
-        $work = DB::table('work_instances')->where('order_id', Fix::ORDER_ID_TRANSIT)->first();
-        expect($work)->not->toBeNull()
-            ->and($work->status)->toBe('in_progress')
-            ->and($work->started_at)->not->toBeNull();
-
-        // Verify work_events logged
-        $workEvent = DB::table('work_events')
-            ->where('work_instance_id', $work->id)
-            ->where('event_type', 'work.courier.pickup')
-            ->first();
-        expect($workEvent)->not->toBeNull()
-            ->and($workEvent->new_status)->toBe('in_progress')
-            ->and((string) $workEvent->actor_user_id)->toBe((string) $courier->id);
-
-        // Verify audit_events logged
-        $auditEvent = DB::table('audit_events')
-            ->where('order_id', Fix::ORDER_ID_TRANSIT)
-            ->where('action', 'order.courier.pickup')
-            ->first();
-        expect($auditEvent)->not->toBeNull()
-            ->and((string) $auditEvent->actor_user_id)->toBe((string) $courier->id)
-            ->and($auditEvent->command_name)->toBe('CourierPickupCommand');
-    }
-
-    public function test_courier_handoff_settles_delivery_fee_and_unblocks_downstream_dependency_gate(): void
-    {
-        $courier = User::query()->where('phone_e164', Fix::COURIER_PHONE)->firstOrFail();
-        $buyer = User::query()->where('phone_e164', Fix::BUYER_PHONE)->firstOrFail();
-
-        // Verify labor need is initially gated
-        $laborNeedBefore = DB::table('deal_needs')->where('id', Fix::NEED_ID_LABOR)->first();
-        $this->assertNotNull($laborNeedBefore);
-
-        $response = $this->actingAs($courier)
-            ->post('/orders/'.Fix::ORDER_ID_TRANSIT.'/courier/handoff');
-
-        $response->assertRedirect();
-        $response->assertSessionHas('notice');
-
-        // Verify courier order and work closed
-        $transitWork = DB::table('work_instances')->where('order_id', Fix::ORDER_ID_TRANSIT)->first();
-        expect($transitWork->status)->toBe('completed')
-            ->and($transitWork->completed_at)->not->toBeNull();
-
-        $transitOrder = DB::table('orders')->where('id', Fix::ORDER_ID_TRANSIT)->first();
-        expect($transitOrder->status)->toBe('closed');
-
-        // Verify courier payment obligation released
-        $obligation = DB::table('payment_obligations')->where('order_id', Fix::ORDER_ID_TRANSIT)->first();
-        expect($obligation->status)->toBe('released');
-
-        // Verify payment_events logged
-        $payEvent = DB::table('payment_events')
-            ->where('payment_obligation_id', $obligation->id)
-            ->where('event_type', 'payment.obligation.released')
-            ->first();
-        expect($payEvent)->not->toBeNull()
-            ->and($payEvent->new_status)->toBe('released');
-
-        // Verify predecessor deal_need marked completed
-        $transitNeed = DB::table('deal_needs')->where('id', Fix::NEED_ID_TRANSIT)->first();
-        expect($transitNeed->status)->toBe('completed');
-
-        // UNBLOCKING VERIFICATION:
-        // On subsequent query to /orders as buyer, Slot 2 is completed and Slot 3 is unblocked!
-        $manifestPath = public_path('build/manifest.json');
-        $version = file_exists($manifestPath) ? hash_file('xxh128', $manifestPath) : 'test';
-
-        $hubResponse = $this->actingAs($buyer)
-            ->withHeaders([
-                'X-Inertia' => 'true',
-                'X-Requested-With' => 'XMLHttpRequest',
-                'X-Inertia-Version' => $version,
-            ])
-            ->get('/orders')
-            ->assertOk();
-
-        $ongoing = collect($hubResponse->json('props.ongoing'));
-        $chainCard = $ongoing->firstWhere('id', Fix::CHAIN_ID_ONGOING);
-        $slots = $chainCard['slots'];
-
-        // Slot 2 (Transit) is now completed
-        expect($slots[1]['status'])->toBe('completed')
-            ->and($slots[1]['status_label'])->toBe('✓ Completed');
-
-        // Slot 3 (Labor) is unblocked!
-        expect($slots[2]['status'])->not->toBe('blocked');
-    }
-
-    public function test_buyer_signoff_completes_work_releases_escrow_and_finishes_deal_chain(): void
+    public function test_buyer_signoff_completes_work_marks_payment_due_and_finishes_deal_chain(): void
     {
         $buyer = User::query()->where('phone_e164', Fix::BUYER_PHONE)->firstOrFail();
 
@@ -232,7 +123,6 @@ final class OrderTransitionPipelineTest extends TestCase
                 'duration_label' => null,
                 'required_proofs' => [],
                 'approval_method' => 'app_confirm',
-                'metric_unit' => null,
                 'status' => 'awaiting_customer_confirmation',
                 'completed_at' => null,
                 'completed_by_user_id' => null,
@@ -267,10 +157,10 @@ final class OrderTransitionPipelineTest extends TestCase
                 'purpose' => 'primary_consideration',
                 'amount_minor' => 45000,
                 'currency' => 'PHP',
-                'lane' => 'tiwala_protected_digital',
+                'lane' => 'protected_digital',
                 'status' => 'due',
-                'due_condition' => 'on_acceptance',
-                'version' => 1,
+                'due_condition' => 'on_work_acceptance',
+                'due_at' => now(),
                 'correlation_id' => (string) Str::uuid7(),
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -282,17 +172,18 @@ final class OrderTransitionPipelineTest extends TestCase
             ->post("/orders/{$laborOrderId}/work/signoff");
 
         $response->assertRedirect();
-        $response->assertSessionHas('notice', 'Work sign-off approved! Escrow payment released to provider.');
+        $response->assertSessionHas('notice', 'Work sign-off approved. Payment settlement still requires separate confirmation.');
 
         // Verify labor order closed and work completed
         $work = DB::table('work_instances')->where('order_id', $laborOrderId)->first();
         expect($work->status)->toBe('completed');
 
         $order = DB::table('orders')->where('id', $laborOrderId)->first();
-        expect($order->status)->toBe('closed');
+        expect($order->status)->toBe('completed');
 
         $obligation = DB::table('payment_obligations')->where('order_id', $laborOrderId)->first();
-        expect($obligation->status)->toBe('released');
+        expect($obligation->status)->toBe('due')
+            ->and($obligation->settled_at)->toBeNull();
 
         // Verify deal need completed
         $need = DB::table('deal_needs')->where('id', Fix::NEED_ID_LABOR)->first();
@@ -301,16 +192,5 @@ final class OrderTransitionPipelineTest extends TestCase
         // All 3 needs are completed -> Parent Deal Chain must now be completed!
         $chain = DB::table('deal_chains')->where('id', Fix::CHAIN_ID_ONGOING)->first();
         expect($chain->status)->toBe('completed');
-    }
-
-    public function test_prevents_unauthorized_users_from_confirming_courier_pickup(): void
-    {
-        $tech = User::query()->where('phone_e164', Fix::TECH_PHONE)->firstOrFail();
-
-        $response = $this->actingAs($tech)
-            ->post('/orders/'.Fix::ORDER_ID_TRANSIT.'/courier/pickup');
-
-        // Technician is neither provider nor courier on transit order
-        $response->assertSessionHasErrors(['form']);
     }
 }

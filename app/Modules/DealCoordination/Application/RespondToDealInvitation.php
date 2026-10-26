@@ -50,37 +50,6 @@ final class RespondToDealInvitation
             );
         }
 
-        $scope = 'deal_invitation.respond:'.$actorUserId.':'.$invitationId;
-        $fingerprint = [
-            'operation' => 'deal_invitation.respond',
-            'invitation_id' => $invitationId,
-            'decision' => $decision,
-            'expected_invitation_version' => $expectedInvitationVersion,
-            'response_note' => $responseNote,
-        ];
-
-        try {
-            $reservation = $this->idempotency->begin(
-                scope: $scope,
-                key: $idempotencyKey,
-                fingerprint: $fingerprint,
-                correlationId: $correlationId,
-                actorUserId: $actorUserId,
-            );
-        } catch (KernelException $error) {
-            throw new DealCoordinationError(
-                $error->envelope->code,
-                $error->getMessage(),
-                $correlationId,
-                status: $error->status,
-            );
-        }
-
-        if ($reservation->isReplay) {
-            /** @var array{invitation_id: string, deal_need_id: string, status: string, need_status: string, version: int} */
-            return is_array($reservation->replayPayload) ? $reservation->replayPayload : [];
-        }
-
         return DB::transaction(function () use (
             $actorUserId,
             $invitationId,
@@ -89,7 +58,6 @@ final class RespondToDealInvitation
             $idempotencyKey,
             $correlationId,
             $responseNote,
-            $reservation,
         ): array {
             $invitation = DB::table('deal_invitations')
                 ->where('id', $invitationId)
@@ -114,6 +82,37 @@ final class RespondToDealInvitation
                 );
             }
 
+            $scope = 'deal_invitation.respond:'.$actorUserId.':'.$invitationId;
+            $fingerprint = [
+                'operation' => 'deal_invitation.respond',
+                'invitation_id' => $invitationId,
+                'decision' => $decision,
+                'expected_invitation_version' => $expectedInvitationVersion,
+                'response_note' => $responseNote,
+            ];
+
+            try {
+                $reservation = $this->idempotency->begin(
+                    scope: $scope,
+                    key: $idempotencyKey,
+                    fingerprint: $fingerprint,
+                    correlationId: $correlationId,
+                    actorUserId: $actorUserId,
+                );
+            } catch (KernelException $error) {
+                throw new DealCoordinationError(
+                    $error->envelope->code,
+                    $error->getMessage(),
+                    $correlationId,
+                    status: $error->status,
+                );
+            }
+
+            if ($reservation->isReplay) {
+                /** @var array{invitation_id: string, deal_need_id: string, status: string, need_status: string, version: int} */
+                return is_array($reservation->replayPayload) ? $reservation->replayPayload : [];
+            }
+
             if ((int) $invitation->version !== $expectedInvitationVersion) {
                 throw new DealCoordinationError(
                     'VERSION_CONFLICT',
@@ -133,7 +132,7 @@ final class RespondToDealInvitation
                 );
             }
 
-            if (now()->greaterThan($invitation->expires_at)) {
+            if (now()->greaterThanOrEqualTo($invitation->expires_at)) {
                 throw new DealCoordinationError(
                     'INVITATION_EXPIRED',
                     'This deal invitation has expired.',
@@ -141,7 +140,6 @@ final class RespondToDealInvitation
                     status: 410,
                 );
             }
-
             $dealNeedId = (string) $invitation->deal_need_id;
             $need = DB::table('deal_needs')
                 ->where('id', $dealNeedId)
@@ -154,6 +152,15 @@ final class RespondToDealInvitation
                     'The referenced deal need could not be found.',
                     $correlationId,
                     status: 404,
+                );
+            }
+
+            if (! in_array((string) $need->status, ['open', 'invited'], true)) {
+                throw new DealCoordinationError(
+                    'INVALID_INVITATION_STATE',
+                    'This invitation no longer targets a current open need.',
+                    $correlationId,
+                    status: 409,
                 );
             }
 
@@ -177,12 +184,12 @@ final class RespondToDealInvitation
                 DB::table('deal_needs')
                     ->where('id', $dealNeedId)
                     ->update([
-                        'status' => 'accepted',
+                        'status' => 'awaiting_customer_confirmation',
                         'version' => $newNeedVersion,
                         'updated_at' => $now,
                     ]);
 
-                $needStatus = 'accepted';
+                $needStatus = 'awaiting_customer_confirmation';
                 $invitationStatus = 'accepted';
             } else {
                 DB::table('deal_invitations')

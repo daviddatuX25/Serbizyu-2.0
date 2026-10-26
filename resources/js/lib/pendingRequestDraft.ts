@@ -1,15 +1,12 @@
 import type { BuilderMode } from './builderGuidance';
+import type { WorkStage } from '../components/mobile/types';
 
 export const REQUEST_DRAFT_STORAGE_KEY = 'serbizyu.pending-request.v1';
 
-export interface RequestPipelineStage {
-    id: string;
+export type RequestPipelineStage = Omit<WorkStage, 'dur'> & {
     step: number;
-    title: string;
-    dur: number;
-    desc: string;
-    evidence: string;
-}
+    dur: number | string;
+};
 
 export interface RequestBuilderDraft {
     version: 1;

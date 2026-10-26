@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\User;
 use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
 use App\Modules\TrustSupport\Application\ListingReviewService;
 use Database\Seeders\ListingReviewsSeeder;
@@ -10,9 +9,9 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
 use Tests\Support\AuthenticatesWithPhoneOtp;
+use Tests\Support\CreatesSettledDealChainReview;
 
-uses(DatabaseTransactions::class, AuthenticatesWithPhoneOtp::class);
-
+uses(DatabaseTransactions::class, AuthenticatesWithPhoneOtp::class, CreatesSettledDealChainReview::class);
 beforeEach(function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
         $this->markTestSkipped('PostgreSQL baseline required.');
@@ -127,39 +126,10 @@ it('supports pause and resume lifecycle transitions for active listings', functi
 });
 
 it('submits double-blind reviews and unblinds when both parties submit', function (): void {
-    $provider = $this->authenticateProvider();
+    $fixture = $this->createSettledReviewableStandaloneOrder();
+    $orderId = $fixture['order_id'];
 
-    // Create completed order
-    $orderId = (string) Str::uuid7();
-    $buyerId = (string) Str::uuid7();
-
-    DB::table('users')->insert([
-        'id' => $buyerId,
-        'phone_e164' => '+639171234599',
-        'status' => 'active',
-        'primary_access_tier' => 'L1',
-        'locale' => 'en',
-        'timezone' => 'Asia/Manila',
-        'version' => 1,
-        'correlation_id' => $orderId,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-
-    DB::table('orders')->insert([
-        'id' => $orderId,
-        'origin' => 'direct',
-        'mechanism' => 'fixed',
-        'buyer_user_id' => $buyerId,
-        'provider_user_id' => $provider,
-        'status' => 'closed',
-        'correlation_id' => $orderId,
-        'version' => 1,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-
-    // Provider submits review first
+    $this->actingAs($fixture['provider']);
     $providerReview = $this->postJson("/orders/{$orderId}/reviews", [
         'rating' => 5,
         'attribute_chips' => ['cash_ready_on_site', 'respectful_communication'],
@@ -169,10 +139,7 @@ it('submits double-blind reviews and unblinds when both parties submit', functio
     expect($providerReview['status'])->toBe('sealed')
         ->and($providerReview['unblinded'])->toBeFalse();
 
-    // Now authenticate as buyer
-    $this->actingAs(User::find($buyerId));
-
-    // Buyer submits review -> should unblind both!
+    $this->actingAs($fixture['buyer']);
     $buyerReview = $this->postJson("/orders/{$orderId}/reviews", [
         'rating' => 5,
         'attribute_chips' => ['on_time', 'clean_workspace'],
@@ -180,31 +147,29 @@ it('submits double-blind reviews and unblinds when both parties submit', functio
     ])->assertCreated()->json('data');
 
     expect($buyerReview['status'])->toBe('approved')
-        ->and($buyerReview['unblinded'])->toBeTrue();
-
-    // Both reviews in DB are now approved and unblinded
-    $unblindedCount = DB::table('reviews')
-        ->where('order_id', $orderId)
-        ->where('moderation_status', 'approved')
-        ->whereNotNull('unblinded_at')
-        ->count();
-
-    expect($unblindedCount)->toBe(2);
+        ->and($buyerReview['unblinded'])->toBeTrue()
+        ->and(DB::table('reviews')
+            ->where('order_id', $orderId)
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('unblinded_at')
+            ->count())->toBe(2);
 });
 
-it('returns public photos from unblinded verified listing reviews', function (): void {
+it('does not resurrect snapshotless demo Orders or publish unverified seeded reviews', function (): void {
+    $this->seed(ListingReviewsSeeder::class);
     $this->seed(ListingReviewsSeeder::class);
 
+    $orderIds = collect(range(1, 4))
+        ->map(fn (int $sequence): string => '0198a3b1-7c40-7abc-8def-0f01000000'.sprintf('%02d', $sequence))
+        ->all();
     $listingId = FixtureRepository::ACTIVE_LISTING_ID;
     $service = app(ListingReviewService::class);
     $summary = $service->summaryForListing($listingId);
     $photos = $service->photosForListing($listingId);
 
-    expect($summary['reviews_count'])->toBe(4)
-        ->and($summary['photos_count'])->toBe(4)
-        ->and($summary['distribution'])->toBe([1 => 0, 2 => 0, 3 => 0, 4 => 1, 5 => 3])
-        ->and($photos)->toHaveCount(4)
-        ->and($photos[0]['author'])->toBe('Joel Reyes')
-        ->and($photos[0]['url'])->toBe('/photos/req-cement.jpg')
-        ->and($photos[0]['thumbnail_url'])->toBe('/photos/req-cement.jpg');
+    expect($summary['reviews_count'])->toBe(0)
+        ->and($summary['photos_count'])->toBe(0)
+        ->and($photos)->toBe([])
+        ->and(DB::table('orders')->whereIn('id', $orderIds)->whereNull('current_terms_snapshot_id')->whereNotIn('status', ['cancelled'])->count())->toBe(0)
+        ->and(DB::table('reviews')->whereIn('order_id', $orderIds)->count())->toBe(0);
 });

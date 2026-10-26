@@ -10,6 +10,67 @@ use JsonException;
 
 final class InboxConsumer
 {
+    public function acknowledge(string $consumer, string $sourceEventId): void
+    {
+        DB::table('inbox_messages')
+            ->where('consumer', $consumer)
+            ->where('source_event_id', $sourceEventId)
+            ->update(['status' => 'processed', 'processed_at' => now(), 'updated_at' => now()]);
+    }
+
+    public function parkUnsupported(
+        string $consumer,
+        string $sourceEventId,
+        string $aggregateType,
+        string $aggregateId,
+        int $aggregateVersion,
+        int $aggregateSequence,
+        array $payload,
+        string $correlationId,
+        int $contractVersion,
+    ): void {
+        try {
+            $this->record($consumer, $sourceEventId, $aggregateType, $aggregateId, $aggregateVersion, $aggregateSequence, $payload, $correlationId, $contractVersion, $contractVersion, 0);
+        } catch (KernelException) {
+            // Unsupported records remain durable in inbox with an explicit state.
+        }
+    }
+
+    /**
+     * Record an inbound event for ordered consumption.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public function handle(
+        string $consumer,
+        string $sourceEventId,
+        string $aggregateType,
+        string $aggregateId,
+        int $aggregateVersion,
+        int $aggregateSequence,
+        array $payload,
+        string $correlationId,
+        int $eventContractVersion = 1,
+        int $payloadContractVersion = 1,
+        int $supportedEventContractVersion = 1,
+    ): string {
+        return DB::transaction(function () use ($consumer, $sourceEventId, $aggregateType, $aggregateId, $aggregateVersion, $aggregateSequence, $payload, $correlationId, $eventContractVersion, $payloadContractVersion, $supportedEventContractVersion): string {
+            return $this->record(
+                $consumer,
+                $sourceEventId,
+                $aggregateType,
+                $aggregateId,
+                $aggregateVersion,
+                $aggregateSequence,
+                $payload,
+                $correlationId,
+                $eventContractVersion,
+                $payloadContractVersion,
+                $supportedEventContractVersion,
+            );
+        });
+    }
+
     /**
      * Record an inbound event for ordered consumption.
      *
@@ -60,7 +121,7 @@ final class InboxConsumer
             ->where('consumer', $consumer)
             ->where('aggregate_type', $aggregateType)
             ->where('aggregate_id', $aggregateId)
-            ->whereIn('status', ['processed', 'processing', 'received'])
+            ->whereIn('status', ['processed', 'processing', 'received', 'unsupported'])
             ->max('aggregate_sequence') ?? 0);
 
         $expectedNext = $maxProcessed + 1;

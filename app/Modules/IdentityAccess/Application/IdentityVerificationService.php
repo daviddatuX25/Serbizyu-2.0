@@ -6,6 +6,7 @@ namespace App\Modules\IdentityAccess\Application;
 
 use App\Shared\Application\ActorContext;
 use App\Shared\Application\AuditRecorder;
+use App\Shared\Contracts\StaffAccessPort;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -58,7 +59,7 @@ final class IdentityVerificationService
 
     public function __construct(
         private readonly IdentityVerificationGate $gate,
-        private readonly RoleAssignmentService $roles,
+        private readonly StaffAccessPort $staffAccess,
         private readonly AuditRecorder $auditRecorder,
     ) {}
 
@@ -237,7 +238,7 @@ final class IdentityVerificationService
         string $correlationId,
     ): array {
         // Enforce administrator role
-        if (! $this->roles->hasActive($reviewerUserId, 'admin')) {
+        if (! $this->staffAccess->canAccessStaff($reviewerUserId)) {
             throw new IdentityAccessError(
                 'AUTHORIZATION_DENIED',
                 'Reviewing verifications requires administrator authorization.',
@@ -476,7 +477,7 @@ final class IdentityVerificationService
         }
 
         $isOwner = $evidence->owner_user_id === $requestingUserId;
-        $isAdmin = $this->roles->hasActive($requestingUserId, 'admin');
+        $isAdmin = $this->staffAccess->canAccessStaff($requestingUserId);
 
         if (! $isOwner && ! $isAdmin) {
             throw new IdentityAccessError(
@@ -535,7 +536,7 @@ final class IdentityVerificationService
         }
 
         $isOwner = $evidence->owner_user_id === $requestingUserId;
-        $isAdmin = $this->roles->hasActive($requestingUserId, 'admin');
+        $isAdmin = $this->staffAccess->canAccessStaff($requestingUserId);
 
         if (! $isOwner && ! $isAdmin) {
             throw new IdentityAccessError(
@@ -592,7 +593,7 @@ final class IdentityVerificationService
         string $placedByUserId,
         string $correlationId,
     ): string {
-        if (! $this->roles->hasActive($placedByUserId, 'admin')) {
+        if (! $this->staffAccess->canAccessStaff($placedByUserId)) {
             throw new IdentityAccessError(
                 'AUTHORIZATION_DENIED',
                 'Placing retention holds requires administrator authorization.',
@@ -645,7 +646,7 @@ final class IdentityVerificationService
         string $releasedByUserId,
         string $correlationId,
     ): void {
-        if (! $this->roles->hasActive($releasedByUserId, 'admin')) {
+        if (! $this->staffAccess->canAccessStaff($releasedByUserId)) {
             throw new IdentityAccessError(
                 'AUTHORIZATION_DENIED',
                 'Releasing retention holds requires administrator authorization.',

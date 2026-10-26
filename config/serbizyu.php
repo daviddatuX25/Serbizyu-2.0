@@ -35,6 +35,9 @@ return [
             FILTER_VALIDATE_BOOL
         ),
     ],
+    'scheduling' => [
+        'slot_hold_minutes' => (int) env('SERBIZYU_SLOT_HOLD_MINUTES', 10),
+    ],
     'approved_live_environments' => ['pilot', 'production-connected'],
     'live_modes' => ['live', 'connected', 'production'],
     'health' => [

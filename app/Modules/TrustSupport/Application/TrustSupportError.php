@@ -19,7 +19,6 @@ final class TrustSupportError extends KernelException
         array $fieldErrors = [],
     ) {
         parent::__construct(
-            module: 'trust-support',
             code: $code,
             message: $message,
             correlationId: $correlationId,

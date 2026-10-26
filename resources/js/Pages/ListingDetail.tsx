@@ -4,7 +4,6 @@ import {
     ArrowLeft,
     Star,
     MapPin,
-    ShieldCheck,
     Heart,
     Plus,
     Minus,
@@ -18,56 +17,14 @@ import {
     Check,
     Sparkles,
 } from 'lucide-react';
-import type { HomeProps, ListingAddonRecord, PartnerCandidateRecord } from '../types';
+import type { HomeProps, ListingRecord } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
 import { PicksDrawer } from '../components/marketplace/PicksDrawer';
-import { PartnerSelectionDrawer } from '../components/marketplace/PartnerSelectionDrawer';
+import { listingBookingUrl, readPicksBasket, savePicksBasket } from '../marketplace/booking';
 import { DealChainCheckoutModal } from '../components/marketplace/DealChainCheckoutModal';
+import type { BasketItem, PublishedDealChainRecipeId, SlotCandidateListing } from '../marketplace/types';
 import { indexDealChainRecipes } from '../marketplace/dealChainRecipes';
 import type { DealChainRecipeDefinition } from '../marketplace/dealChainRecipes';
-import type {
-    BasketItem,
-    PublishedDealChainRecipeId,
-    SlotCandidateListing,
-} from '../marketplace/types';
-// Category Images
-const CATEGORY_IMAGES: Record<string, string> = {
-    repairs: '/photos/ac-clean.jpg',
-    'home-cleaning': '/photos/req-electrician.jpg',
-    courier: '/photos/courier.jpg',
-    'local-food': '/photos/bibingka.jpg',
-    'print-assist': '/photos/greeting.jpg',
-    'greeting-cards': '/photos/greeting.jpg',
-    'local-services': '/photos/ac-clean.jpg',
-    default: '/photos/ac-clean.jpg',
-};
-const DEFAULT_SERVICE_ADDONS: ListingAddonRecord[] = [
-    {
-        id: 'addon-rush-priority',
-        code: 'rush_priority',
-        title: 'Fast Clean (Same-Day / Rush Priority)',
-        description: 'Priority scheduling request for the independent provider agreement.',
-        price_amount_minor: 10000,
-        currency: 'PHP',
-        partner_role: 'technician',
-        partner_fixture_keys: [],
-        status: 'available',
-        settlement_mode: 'independent_provider_agreement',
-    },
-    {
-        id: 'addon-chemical-flush',
-        code: 'chemical_flush',
-        title: 'Anti-Bacterial Chemical Flush (Deep Ozone Clean)',
-        description: 'Additional diagnostic and cleaning scope proposed for provider acceptance.',
-        price_amount_minor: 15000,
-        currency: 'PHP',
-        partner_role: 'technician',
-        partner_fixture_keys: [],
-        status: 'available',
-        settlement_mode: 'independent_provider_agreement',
-    },
-];
-
 export type PackageTier = {
     id: string;
     title: string;
@@ -75,280 +32,34 @@ export type PackageTier = {
     origPrice?: number;
     sub: string;
     inclusions: string[];
+    variantId?: string;
+    available?: number | null;
+    availabilityStatus?: string | null;
+    kind: 'variant' | 'package' | 'base';
+    isDefault?: boolean;
 };
 
-const CATEGORY_PACKAGES: Record<string, PackageTier[]> = {
-    repairs: [
-        {
-            id: 'pkg-1',
-            title: '1 Unit Standard',
-            price: 450,
-            origPrice: 550,
-            sub: 'Deep coil & drain clean',
-            inclusions: [
-                'On-site breaker isolation & diagnostic status check',
-                'Evaporator coil alkaline chemical foam disinfection',
-                'Blower fan wheel disassembly and grease flush',
-                'Dual-probe delta temperature test (ΔT ≥ 12°C)',
-            ],
-        },
-        {
-            id: 'pkg-2',
-            title: '2 Units Dual Split',
-            price: 850,
-            origPrice: 1100,
-            sub: 'Save ₱50 bundle',
-            inclusions: [
-                'Complete service on two indoor units',
-                'Outdoor condensing unit pressure flush & fin inspection',
-                'Freon operating pressure calibration test',
-                'Full photographic milestone sign-off',
-            ],
-        },
-        {
-            id: 'pkg-3',
-            title: '3 Units Full Home',
-            price: 1200,
-            origPrice: 1650,
-            sub: 'Save ₱150 package',
-            inclusions: [
-                'Complete service on three indoor units + outdoor units',
-                'Anti-bacterial ozone air duct sanitization',
-                'Priority same-day completion guarantee',
-                'Customer OTP handover & digital service warranty',
-            ],
-        },
-    ],
-    'local-food': [
-        {
-            id: 'pkg-food-1',
-            title: 'Solo Snack Box',
-            price: 80,
-            origPrice: 95,
-            sub: '2 pcs warm bibingka',
-            inclusions: [
-                'Fresh morning batch steaming in clay oven',
-                'Wrapped in organic wilted banana leaves',
-                'Includes signature coconut latik dip cup',
-            ],
-        },
-        {
-            id: 'pkg-food-2',
-            title: 'Family Fiesta Tray',
-            price: 180,
-            origPrice: 220,
-            sub: '6 pcs sharing tray',
-            inclusions: [
-                'Six freshly baked banana-leaf bibingka cakes',
-                'Generous toasted coconut shreds & salted egg toppings',
-                'Insulated thermal box keeping warm for 2 hours',
-            ],
-        },
-        {
-            id: 'pkg-food-3',
-            title: 'Party Jumbo Crate',
-            price: 350,
-            origPrice: 420,
-            sub: '12 pcs party set',
-            inclusions: [
-                'Twelve specialty bibingka cakes',
-                'Custom greeting ribbon & festive tag',
-                'Bulk condiment jars & biodegradable serving ware',
-            ],
-        },
-    ],
-    'print-assist': [
-        {
-            id: 'pkg-print-1',
-            title: 'Single Document Proof',
-            price: 80,
-            origPrice: 100,
-            sub: 'Soft proof + 1 copy',
-            inclusions: [
-                'Resolution & color calibration check',
-                'Digital PDF soft-copy export',
-                'Initial print sample inspection',
-            ],
-        },
-        {
-            id: 'pkg-print-2',
-            title: 'Standard Batch (10)',
-            price: 250,
-            origPrice: 320,
-            sub: '10 high-grade copies',
-            inclusions: [
-                'Full layout optimization and soft-proof email',
-                'High-speed digital color laser reproduction',
-                'Protective moisture-sealed envelope packaging',
-            ],
-        },
-        {
-            id: 'pkg-print-3',
-            title: 'Commercial Bulk (50+)',
-            price: 850,
-            origPrice: 1100,
-            sub: 'Commercial package',
-            inclusions: [
-                'Complete multi-page booklet or flyer batch',
-                'Precision guillotine trimming & folding',
-                'Direct courier handoff in Tagudin',
-            ],
-        },
-    ],
-    default: [
-        {
-            id: 'pkg-def-1',
-            title: 'Standard Scope',
-            price: 120,
-            origPrice: 150,
-            sub: 'Base verified task',
-            inclusions: [
-                'Initial task briefing & scope alignment',
-                'Standard execution by verified Tagudin citizen',
-                'Photo proof and milestone completion verification',
-            ],
-        },
-        {
-            id: 'pkg-def-2',
-            title: 'Extended Package',
-            price: 240,
-            origPrice: 300,
-            sub: 'Double capacity scope',
-            inclusions: [
-                'Complete task execution with extra care',
-                'Quality review guarantee & assistance',
-                'Direct courier or transport inclusion',
-            ],
-        },
-    ],
-};
 
-// Partner Candidate Definition for Substitution
-export type PartnerCandidate = {
+type DealChainCombination = {
     id: string;
-    role: 'courier' | 'technician' | 'store' | 'auditor';
-    name: string;
-    sub: string;
-    fee: number;
-    category: string;
-    icon: 'truck' | 'labor' | 'store' | 'audit';
-    image?: string;
+    title: string;
+    isDefault: boolean;
+    nodes: Array<Record<string, unknown>>;
 };
 
-export function getPartnerImage(candidate?: PartnerCandidate | null): string {
-    if (!candidate) return '/photos/ac-clean.jpg';
-    if (candidate.image) return candidate.image;
-    if (candidate.role === 'store') return '/photos/ac-capacitor.jpg';
-    if (candidate.role === 'courier') return '/photos/courier.jpg';
-    if (candidate.role === 'technician') return '/photos/ac-clean.jpg';
-    if (candidate.role === 'auditor') return '/photos/req-electrician.jpg';
-    return '/photos/ac-clean.jpg';
+function listingDealChainCombinations(listing?: ListingRecord | null): DealChainCombination[] {
+    return (listing?.deal_chain_combinations ?? []).flatMap((raw) => {
+        if (typeof raw.id !== 'string' || typeof raw.title !== 'string') return [];
+        return [{
+            id: raw.id,
+            title: raw.title,
+            isDefault: raw.isDefault === true || raw.is_default === true,
+            nodes: Array.isArray(raw.nodes)
+                ? raw.nodes.filter((node): node is Record<string, unknown> => typeof node === 'object' && node !== null && !Array.isArray(node))
+                : [],
+        }];
+    });
 }
-export const PARTNER_CATALOG: Record<
-    'courier' | 'technician' | 'store' | 'auditor',
-    PartnerCandidate[]
-> = {
-    courier: [
-        {
-            id: 'c-1',
-            role: 'courier',
-            name: 'Danny Express Motorcycle Pool',
-            sub: 'Fast 15–25m · Insulated box · Centro & all barangays',
-            fee: 35,
-            category: 'motorcycle',
-            icon: 'truck',
-        },
-        {
-            id: 'c-2',
-            role: 'courier',
-            name: 'Kuya Danny Tricycle Cargo',
-            sub: 'Heavy / Bulky cargo sidecar · All Tagudin',
-            fee: 60,
-            category: 'tricycle',
-            icon: 'truck',
-        },
-        {
-            id: 'c-3',
-            role: 'courier',
-            name: 'Barangay Centro Bicycle Runner',
-            sub: 'Local Poblacion Centro eco delivery',
-            fee: 25,
-            category: 'bicycle',
-            icon: 'truck',
-        },
-    ],
-    technician: [
-        {
-            id: 't-1',
-            role: 'technician',
-            name: 'Kuya Ben Aircon Services',
-            sub: 'Certified AC & Refrigeration Technician',
-            fee: 250,
-            category: 'hvac',
-            icon: 'labor',
-        },
-        {
-            id: 't-2',
-            role: 'technician',
-            name: 'Mark Electrical & HVAC Services',
-            sub: 'Licensed Master Electrician · Power isolation',
-            fee: 280,
-            category: 'electrician',
-            icon: 'labor',
-        },
-        {
-            id: 't-3',
-            role: 'technician',
-            name: 'Tagudin Trade Repair Guild',
-            sub: 'Multi-trade contractor team',
-            fee: 220,
-            category: 'guild',
-            icon: 'labor',
-        },
-    ],
-    store: [
-        {
-            id: 's-1',
-            role: 'store',
-            name: 'Tagudin Hardware & Supply Depot',
-            sub: 'Direct counter lane · Genuine parts guarantee',
-            fee: 180,
-            category: 'depot',
-            icon: 'store',
-        },
-        {
-            id: 's-2',
-            role: 'store',
-            name: 'Centro Electrical & Aircon Depot',
-            sub: 'Original OEM capacitors and chemical foam',
-            fee: 195,
-            category: 'oem',
-            icon: 'store',
-        },
-    ],
-    auditor: [
-        {
-            id: 'a-1',
-            role: 'auditor',
-            name: 'Safety Check (Master Electrician)',
-            sub: 'Safety certificate & thermal load inspection',
-            fee: 150,
-            category: 'electrician',
-            icon: 'audit',
-        },
-        {
-            id: 'a-2',
-            role: 'auditor',
-            name: 'Tagudin Safety & Electrical Audit Guild',
-            sub: 'Complete municipal electrical audit certificate',
-            fee: 160,
-            category: 'guild',
-            icon: 'audit',
-        },
-    ],
-};
-
-// Verified Customer Reviews
 type ReviewItem = {
     id: string;
     author: string;
@@ -405,257 +116,167 @@ const SAMPLE_REVIEWS: ReviewItem[] = [
 ];
 
 const REVIEW_PHOTOS = [
-    { label: 'Chemical coil disinfection', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=300&auto=format&fit=crop&q=80', author: 'Kuya Ben AC' },
-    { label: 'Blower wheel degreased', url: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=300&auto=format&fit=crop&q=80', author: 'Kuya Ben AC' },
-    { label: 'High pressure rinse', url: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&auto=format&fit=crop&q=80', author: 'Kuya Ben AC' },
-    { label: 'Finished installation', url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=300&auto=format&fit=crop&q=80', author: 'Kuya Ben AC' },
+    {
+        label: 'Chemical coil disinfection',
+        url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=300&auto=format&fit=crop&q=80',
+        author: 'Kuya Ben AC',
+    },
+    {
+        label: 'Blower wheel degreased',
+        url: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=300&auto=format&fit=crop&q=80',
+        author: 'Kuya Ben AC',
+    },
+    {
+        label: 'High pressure rinse',
+        url: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&auto=format&fit=crop&q=80',
+        author: 'Kuya Ben AC',
+    },
+    {
+        label: 'Finished installation',
+        url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=300&auto=format&fit=crop&q=80',
+        author: 'Kuya Ben AC',
+    },
 ];
 
-function getCategoryPhoto(categoryCode?: string | null): string {
-    const code = (categoryCode || 'default').toLowerCase();
-    return CATEGORY_IMAGES[code] || CATEGORY_IMAGES.default;
-}
 
-function getCategoryPackages(categoryCode?: string | null): PackageTier[] {
-    const code = (categoryCode || 'default').toLowerCase();
-    return CATEGORY_PACKAGES[code] || CATEGORY_PACKAGES.default;
-}
-function partnerCatalogFromRecords(
-    records?: PartnerCandidateRecord[],
-): Record<PartnerCandidate['role'], PartnerCandidate[]> {
-    if (!records || records.length === 0) {
-        return PARTNER_CATALOG;
-    }
-
-    const catalog: Record<PartnerCandidate['role'], PartnerCandidate[]> = {
-        courier: [],
-        technician: [],
-        store: [],
-        auditor: [],
-    };
-
-    records.forEach((record) => {
-        catalog[record.role].push({
-            id: record.id,
-            role: record.role,
-            name: record.name,
-            sub: record.sub,
-            fee: record.fee_amount_minor / 100,
-            category: record.category,
-            icon: record.icon,
-        });
-    });
-
-    (Object.keys(catalog) as PartnerCandidate['role'][]).forEach((role) => {
-        if (catalog[role].length === 0) {
-            catalog[role] = PARTNER_CATALOG[role];
-        }
-    });
-
-    return catalog;
-}
 
 export default function ListingDetail(props: HomeProps) {
     const listing = props.activeListingDetail;
     const dealChainRecipes = useMemo(
-        () =>
-            indexDealChainRecipes(
-                props.dealChainCatalog as DealChainRecipeDefinition[] | undefined,
-            ),
+        () => indexDealChainRecipes(props.dealChainCatalog as DealChainRecipeDefinition[] | undefined),
         [props.dealChainCatalog],
     );
-    const partnerCatalog = useMemo(
-        () => partnerCatalogFromRecords(listing?.partner_candidates),
-        [listing?.partner_candidates],
-    );
+    const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+    const dealChainCombinations = useMemo(() => listingDealChainCombinations(listing), [listing]);
+    const [selectedCombinationId, setSelectedCombinationId] = useState<string | null>(null);
+    const selectedCombination = dealChainCombinations.find((combination) => combination.id === selectedCombinationId) ?? null;
     const isService = (listing?.listing_type || listing?.listingType) !== 'product';
-    const addonPrices = useMemo(
-        () =>
-            Object.fromEntries(
-                (listing?.addons ?? []).map((addon) => [
-                    addon.code,
-                    addon.price_amount_minor / 100,
-                ]),
-            ) as Record<string, number>,
-        [listing?.addons],
-    );
-
-    // Direct service addons (excluding partner fulfillment scope relays)
-    const directAddons = useMemo(() => {
-        const raw =
-            listing?.addons !== undefined
-                ? (listing.addons ?? [])
-                : isService
-                  ? DEFAULT_SERVICE_ADDONS
-                  : [];
-        return raw.filter((addon) => {
-            const role = addon.partner_role?.toLowerCase();
-            const code = addon.code?.toLowerCase();
-            return (
-                role !== 'store' &&
-                role !== 'courier' &&
-                role !== 'auditor' &&
-                code !== 'turnkey_parts' &&
-                code !== 'safety_audit' &&
-                code !== 'courier_delivery' &&
-                code !== 'product_install'
-            );
-        });
-    }, [listing?.addons, isService]);
-
+    const directAddons = useMemo(() => (listing?.addons ?? []).filter((addon) => {
+        const role = addon.partner_role?.toLowerCase();
+        const code = addon.code?.toLowerCase();
+        return addon.status === 'available' &&
+            role !== 'store' &&
+            role !== 'courier' &&
+            role !== 'auditor' &&
+            code !== 'turnkey_parts' &&
+            code !== 'safety_audit' &&
+            code !== 'courier_delivery' &&
+            code !== 'product_install';
+    }), [listing?.addons]);
     const [selectedAddonCodes, setSelectedAddonCodes] = useState<string[]>([]);
-
     const toggleAddon = (code: string) => {
-        setSelectedAddonCodes((prev) =>
-            prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
+        setSelectedAddonCodes((previous) =>
+            previous.includes(code) ? previous.filter((item) => item !== code) : [...previous, code],
         );
     };
 
-    // Available packages for this listing (prioritizing server-projected listing.package_tiers)
+    // Public offer options are authored by the seller; no category-generated packages.
     const packages = useMemo<PackageTier[]>(() => {
-        if (listing?.package_tiers && listing.package_tiers.length > 0) {
-            return listing.package_tiers.map((t) => ({
-                id: t.id,
-                title: t.title,
-                price: t.price,
-                origPrice: t.orig_price ?? t.origPrice,
-                sub: t.sub,
-                inclusions: t.inclusions,
+        if (!listing) return [];
+        if ((listing.listing_type || listing.listingType) === 'product') {
+            return (listing.variants ?? []).flatMap((raw) => {
+                const variant = raw as Record<string, unknown>;
+                if (typeof variant.id !== 'string') return [];
+                const price = typeof variant.price_amount_minor === 'number'
+                    ? variant.price_amount_minor / 100
+                    : typeof variant.price === 'number' ? variant.price : null;
+                if (price === null) return [];
+                const availability = typeof variant.availability === 'object' && variant.availability !== null
+                    ? variant.availability as Record<string, unknown>
+                    : null;
+                return [{
+                    id: variant.id,
+                    variantId: variant.id,
+                    title: String(variant.name ?? variant.title ?? variant.id),
+                    price,
+                    sub: typeof availability?.available === 'number'
+                        ? `${availability.available} available`
+                        : 'Availability unavailable',
+                    inclusions: Array.isArray(variant.inclusions)
+                        ? variant.inclusions.filter((item): item is string => typeof item === 'string')
+                        : [],
+                    available: typeof availability?.available === 'number' ? availability.available : null,
+                    availabilityStatus: typeof availability?.availability_status === 'string' ? availability.availability_status : null,
+                    isDefault: variant.is_default === true || variant.isDefault === true,
+                    kind: 'variant' as const,
+                }];
+            });
+        }
+        const tiers = listing.package_tiers ?? listing.packageTiers ?? [];
+        if (tiers.length > 0) {
+            return tiers.map((tier) => ({
+                id: tier.id,
+                title: tier.title,
+                price: tier.price,
+                origPrice: tier.orig_price ?? tier.origPrice,
+                sub: tier.sub,
+                inclusions: tier.inclusions ?? [],
+                isDefault: (tier as unknown as Record<string, unknown>).is_default === true || (tier as unknown as Record<string, unknown>).isDefault === true,
+                kind: 'package' as const,
             }));
         }
-        return getCategoryPackages(listing?.category_code || listing?.categoryCode);
-    }, [listing?.package_tiers, listing?.category_code, listing?.categoryCode]);
-
-    // Selected package tier state
+        if (typeof listing.price_amount_minor === 'number') {
+            return [{
+                id: listing.id,
+                title: listing.title,
+                price: listing.price_amount_minor / 100,
+                sub: '',
+                inclusions: listing.inclusions ?? [],
+                kind: 'base',
+            }];
+        }
+        return [];
+    }, [listing]);
     const [selectedPackageIndex, setSelectedPackageIndex] = useState(0);
-    const activePackage = packages[selectedPackageIndex] ||
-        packages[0] || {
-            id: 'pkg-default',
-            title: 'Standard Package',
-            price: 450,
-            sub: 'Base scope',
-            inclusions: ['Standard verified task execution'],
-        };
+    useEffect(() => {
+        const available = (option: PackageTier) =>
+            option.kind !== 'variant' ||
+            (typeof option.available === 'number' && option.available > 0 && !['out_of_stock', 'paused', 'shortage'].includes(option.availabilityStatus ?? ''));
+        const defaultIndex = packages.findIndex((option) => option.isDefault && available(option));
+        const availableIndex = packages.findIndex(available);
+        setSelectedPackageIndex(defaultIndex >= 0 ? defaultIndex : Math.max(0, availableIndex));
+    }, [packages]);
+    useEffect(() => setQuantity(1), [selectedPackageIndex, listing?.id]);
+    const activePackage = packages[selectedPackageIndex] ?? {
+        id: '',
+        title: listing?.title ?? '',
+        price: 0,
+        sub: '',
+        inclusions: [],
+        kind: 'base' as const,
+    };
+    const selectedOptionUnavailable =
+        (activePackage.kind === 'variant' &&
+            (typeof activePackage.available !== 'number' ||
+                activePackage.available <= 0 ||
+                ['out_of_stock', 'paused', 'shortage'].includes(activePackage.availabilityStatus ?? ''))) ||
+        (packages.length === 0 && activePackage.price <= 0);
+    const quantityLimit = activePackage.kind === 'variant' && typeof activePackage.available === 'number'
+        ? activePackage.available
+        : Number.MAX_SAFE_INTEGER;
 
-    const [serviceScope, setServiceScope] = useState<'direct' | 'turnkey' | 'audit'>('direct');
-    const [productScope, setProductScope] = useState<'pickup' | 'delivery' | 'installation'>(
-        'pickup',
-    );
 
     // Server-projected milestone stages (with truthful fallback based on listing work_shape)
     // Server-projected milestone stages (service execution pipeline)
-    const milestoneStages = useMemo(() => {
-        const raw = listing?.milestone_stages || listing?.milestoneStages;
-        if (Array.isArray(raw) && raw.length > 0) {
-            return raw.map((s, idx) => ({
-                id: s.id || `stage-${idx + 1}`,
-                step: idx + 1,
-                title: s.title || s.label || s.id?.replace(/_/g, ' ') || `Step ${idx + 1}`,
-                description:
-                    s.description ||
-                    s.sub ||
-                    (idx === 0
-                        ? 'Scope confirmed & provider agreement established'
-                        : idx === 1
-                          ? 'Active work execution & on-site delivery'
-                          : 'Final milestone inspection & photographic handoff'),
-            }));
-        }
-        if (isService) {
-            return [
-                {
-                    id: 'scope_confirmed',
-                    step: 1,
-                    title: 'Scope Confirmed & Provider Agreement',
-                    description: 'Bilateral agreement confirmed between citizen and verified Tagudin provider.',
-                },
-                {
-                    id: 'execution_gate',
-                    step: 2,
-                    title: 'On-Site Execution & Labor Delivery',
-                    description: 'Active service execution following municipal quality standards.',
-                },
-                {
-                    id: 'handoff_proof',
-                    step: 3,
-                    title: 'Photo Milestone Evidence & Sign-Off',
-                    description: 'Photo proof required before bilateral escrow release.',
-                },
-            ];
-        }
-        // Canonical Product Handoff Protocol (A4)
-        if (productScope === 'pickup') {
-            return [
-                {
-                    id: 'sourcing_prep',
-                    step: 1,
-                    title: 'Sourcing & Package Preparation',
-                    description: 'Merchant verifies stock count, item condition, and prepares package.',
-                },
-                {
-                    id: 'counter_handoff',
-                    step: 2,
-                    title: 'Counter Collection & Verification',
-                    description: 'Buyer inspects item at stall counter and signs receipt slip or QR.',
-                },
-                {
-                    id: 'condition_close',
-                    step: 3,
-                    title: 'Condition Close-Out & Release',
-                    description: 'Dual confirmation records successful handoff before final escrow release.',
-                },
-            ];
-        }
-        return [
-            {
-                id: 'store_prep',
-                step: 1,
-                title: 'Store Sourcing & Dispatch Packaging',
-                description: 'Merchant commits inventory and prepares package for courier pickup.',
-            },
-            {
-                id: 'courier_relay',
-                step: 2,
-                title: 'Courier Custody & Transit Relay',
-                description: 'Independently contracted courier verifies package condition and transports.',
-            },
-            {
-                id: 'doorstep_proof',
-                step: 3,
-                title: 'Doorstep Arrival & Photo Confirmation',
-                description: 'Photographed proof of delivery and recipient confirmation at destination.',
-            },
-        ];
-    }, [listing?.milestone_stages, listing?.milestoneStages, isService, productScope]);
-
-
-    // Selected active partners in each slot
-    const [currentCourier, setCurrentCourier] = useState<PartnerCandidate>(
-        () => partnerCatalog.courier[0] ?? PARTNER_CATALOG.courier[0],
-    );
-    const [currentTech, setCurrentTech] = useState<PartnerCandidate>(
-        () => partnerCatalog.technician[0] ?? PARTNER_CATALOG.technician[0],
-    );
-    const [currentStore, setCurrentStore] = useState<PartnerCandidate>(
-        () => partnerCatalog.store[0] ?? PARTNER_CATALOG.store[0],
-    );
-    const [currentAudit, setCurrentAudit] = useState<PartnerCandidate>(
-        () => partnerCatalog.auditor[0] ?? PARTNER_CATALOG.auditor[0],
-    );
-    useEffect(() => {
-        setCurrentCourier(partnerCatalog.courier[0] ?? PARTNER_CATALOG.courier[0]);
-        setCurrentTech(partnerCatalog.technician[0] ?? PARTNER_CATALOG.technician[0]);
-        setCurrentStore(partnerCatalog.store[0] ?? PARTNER_CATALOG.store[0]);
-        setCurrentAudit(partnerCatalog.auditor[0] ?? PARTNER_CATALOG.auditor[0]);
-    }, [partnerCatalog]);
-
-    // Partner Substitution Modal State
-    // Partner Substitution Drawer State
-    const [subModalRole, setSubModalRole] = useState<
-        'courier' | 'technician' | 'store' | 'auditor' | null
-    >(null);
-    // Collapsible Customizer Option Toggles (Fast Clean & Chemical Flush)
-    const [customizerOpen, setCustomizerOpen] = useState(false);
+    const workSpecificationNodes = useMemo(() => {
+        const nodes = listing?.work_specification?.nodes;
+        return Array.isArray(nodes)
+            ? nodes.filter((node): node is Record<string, unknown> => typeof node === 'object' && node !== null && !Array.isArray(node))
+            : [];
+    }, [listing?.work_specification]);
+    const milestoneStages = useMemo(() => workSpecificationNodes
+        .map((node, index) => ({
+            id: typeof node.id === 'string' ? node.id : `node-${index + 1}`,
+            step: typeof node.ordinal === 'number' ? node.ordinal : index + 1,
+            title: typeof node.title === 'string' ? node.title : '',
+            description: typeof node.description === 'string' ? node.description : '',
+            duration: node.duration_label ?? node.durationLabel ?? node.target_duration_minutes ?? node.target_duration,
+            requiredProofs: (Array.isArray(node.required_proofs) ? node.required_proofs : Array.isArray(node.requiredProofs) ? node.requiredProofs : [])
+                .map((proof) => typeof proof === 'string' ? proof : String(proof)),
+            clearance: node.control_mode ?? node.clearance_mode ?? node.clearanceMode ?? (typeof node.clearance === 'object' && node.clearance !== null ? (node.clearance as Record<string, unknown>).mode : null),
+            approval: node.approval_method ?? node.approvalMethod,
+        }))
+        .sort((a, b) => a.step - b.step), [workSpecificationNodes]);
     const [pipelineExpanded, setPipelineExpanded] = useState(false);
     // Contextual Deal Chain Slot URL param (?chain_slot=)
     const [chainSlotContext, setChainSlotContext] = useState<string | null>(null);
@@ -663,7 +284,6 @@ export default function ListingDetail(props: HomeProps) {
     // Picks / Basket state
     const [basket, setBasket] = useState<BasketItem[]>([]);
     const [picksOpen, setPicksOpen] = useState(false);
-    const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
     const [quantity, setQuantity] = useState(1);
     // Reviews expansion & filter state
@@ -673,6 +293,9 @@ export default function ListingDetail(props: HomeProps) {
 
     // Read query parameters and localStorage on mount & synchronize live
     useEffect(() => {
+        const defaultCombination = dealChainCombinations.find((combination) => combination.isDefault);
+        setSelectedAddonCodes([]);
+        setSelectedCombinationId(defaultCombination?.id ?? dealChainCombinations[0]?.id ?? null);
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
             const slot = params.get('chain_slot');
@@ -683,12 +306,7 @@ export default function ListingDetail(props: HomeProps) {
 
         const syncBasket = () => {
             try {
-                const storedBasket = localStorage.getItem('serbizyu.picks');
-                if (storedBasket) {
-                    setBasket(JSON.parse(storedBasket));
-                } else {
-                    setBasket([]);
-                }
+                setBasket(readPicksBasket(localStorage));
             } catch {
                 // ignore
             }
@@ -714,12 +332,12 @@ export default function ListingDetail(props: HomeProps) {
             window.removeEventListener('storage', syncBasket);
             window.removeEventListener('serbizyu:picks-updated', syncBasket);
         };
-    }, [listing?.id]);
+    }, [listing?.id, dealChainCombinations]);
 
     const saveBasket = (newBasket: BasketItem[]) => {
         setBasket(newBasket);
         try {
-            localStorage.setItem('serbizyu.picks', JSON.stringify(newBasket));
+            savePicksBasket(localStorage, newBasket);
             window.dispatchEvent(new Event('serbizyu:picks-updated'));
         } catch {
             // ignore
@@ -743,143 +361,92 @@ export default function ListingDetail(props: HomeProps) {
         });
     };
 
-    // Calculate Partner Scope Add-on Price
-    const scopeAddonFee = useMemo(() => {
-        if (isService) {
-            if (serviceScope === 'turnkey') {
-                return addonPrices.turnkey_parts ?? currentStore.fee + currentCourier.fee;
-            }
-            if (serviceScope === 'audit') {
-                return addonPrices.safety_audit ?? currentAudit.fee;
-            }
-            return 0;
-        }
-        if (productScope === 'delivery') {
-            return addonPrices.courier_delivery ?? currentCourier.fee;
-        }
-        if (productScope === 'installation') {
-            return addonPrices.product_install ?? currentCourier.fee + currentTech.fee;
-        }
-        return 0;
-    }, [
-        addonPrices,
-        isService,
-        serviceScope,
-        productScope,
-        currentStore.fee,
-        currentCourier.fee,
-        currentAudit.fee,
-        currentTech.fee,
-    ]);
-
-    // Customizer speed & enhancement fees derived from dynamically selected addons
-    const customizerFee = useMemo(() => {
-        return directAddons
-            .filter(
-                (addon) =>
-                    selectedAddonCodes.includes(addon.code) ||
-                    selectedAddonCodes.includes(addon.id),
-            )
-            .reduce((sum, addon) => sum + addon.price_amount_minor / 100, 0);
-    }, [directAddons, selectedAddonCodes]);
-    // Final Unit Price & Total Calculation
-    const unitPrice = (activePackage?.price || 450) + scopeAddonFee + customizerFee;
+    const selectedAddons = directAddons.filter((addon) =>
+        selectedAddonCodes.includes(addon.code) || selectedAddonCodes.includes(addon.id),
+    );
+    const addonIds = selectedAddons.map((addon) => addon.id);
+    const customizerFee = selectedAddons.reduce((sum, addon) => sum + addon.price_amount_minor / 100, 0);
+    const unitPrice = activePackage.price + customizerFee;
     const calculatedTotal = unitPrice * quantity;
-
-    // Direct Booking action (Separate from Add to Picks!)
     const handleDirectAction = () => {
-        if (chainSlotContext) {
-            alert(
-                `Staged into Deal Chain Slot [${chainSlotContext}] for ₱${calculatedTotal.toFixed(2)}`,
-            );
-            return;
-        }
-        const startUrl =
-            props.booking?.start_url || (listing ? `/listings/${listing.id}/book` : '/browse');
-        router.visit(startUrl);
+        if (!listing || selectedOptionUnavailable) return;
+        const startUrl = props.booking?.start_url || `/listings/${listing.id}/book`;
+        const url = new URL(startUrl, window.location.origin);
+        if (activePackage.kind === 'variant') url.searchParams.set('variant_id', activePackage.variantId ?? activePackage.id);
+        if (activePackage.kind === 'package') url.searchParams.set('package_id', activePackage.id);
+        url.searchParams.set('quantity', String(quantity));
+        if (listing.listing_version_id) url.searchParams.set('listing_version_id', listing.listing_version_id);
+        addonIds.forEach((id) => url.searchParams.append('addon_ids[]', id));
+        if (selectedCombination) url.searchParams.set('deal_chain_combination_id', selectedCombination.id);
+        if (chainSlotContext) url.searchParams.set('chain_slot', chainSlotContext);
+        router.visit(`${url.pathname}${url.search}`);
     };
 
-    // Secondary Add to Picks action (mutates local storage and opens drawer)
     const handleAddToPicks = () => {
-        if (!listing) return;
-
-        const existing = basket.find((b) => b.id === listing.id);
+        if (!listing || selectedOptionUnavailable) return;
+        const variantId = activePackage.kind === 'variant' ? activePackage.variantId ?? activePackage.id : null;
+        const packageId = activePackage.kind === 'package' ? activePackage.id : null;
+        const itemId = `${listing.id}:${variantId ?? packageId ?? 'base'}:${selectedCombination?.id ?? ''}:${addonIds.join(',')}`;
         const listingContext = {
+            listing_id: listing.id,
+            listing_version_id: listing.listing_version_id ?? null,
+            variant_id: variantId,
+            package_id: packageId,
+            addon_ids: addonIds,
+            addon_titles: selectedAddons.map((addon) => addon.title),
+            deal_chain_combination_id: selectedCombination?.id ?? null,
+            deal_chain_title: selectedCombination?.title ?? null,
+            variant_available: activePackage.kind === 'variant' ? activePackage.available : null,
             category_code: listing.category_code ?? listing.categoryCode ?? null,
             listing_type: listing.listing_type ?? listing.listingType ?? null,
             work_shape: listing.work_shape ?? listing.workShape ?? null,
         };
-        const selectedAddonTitles = directAddons
-            .filter(
-                (a) =>
-                    selectedAddonCodes.includes(a.code) ||
-                    selectedAddonCodes.includes(a.id),
-            )
-            .map((a) => a.title);
-        const packageLabel = activePackage.title;
-        const addonLabel =
-            selectedAddonTitles.length > 0 ? ` + ${selectedAddonTitles.join(', ')}` : '';
-        const itemTitle = `${listing.title} (${packageLabel}${addonLabel})`;
-
-        let updated: BasketItem[];
-        if (existing) {
-            updated = basket.map((b) =>
-                b.id === listing.id
-                    ? {
-                          ...b,
-                          ...listingContext,
-                          quantity: b.quantity + quantity,
-                          price: unitPrice,
-                          title: itemTitle,
-                      }
-                    : b,
-            );
-        } else {
-            updated = [
-                ...basket,
-                {
-                    id: listing.id,
-                    title: itemTitle,
-                    price: unitPrice,
-                    quantity,
+        const existing = basket.find((item) => item.id === itemId);
+        const addonLabel = selectedAddons.length ? ` + ${selectedAddons.map((addon) => addon.title).join(', ')}` : '';
+        const title = `${listing.title} · ${activePackage.title}${addonLabel}`;
+        const updated = existing
+            ? basket.map((item) => item.id === itemId
+                ? {
+                    ...item,
                     ...listingContext,
-                },
-            ];
-        }
-
+                    quantity: Math.min(activePackage.kind === 'variant' ? quantityLimit : Number.MAX_SAFE_INTEGER, item.quantity + quantity),
+                    price: unitPrice,
+                    title,
+                }
+                : item)
+            : [...basket, {
+                id: itemId,
+                title,
+                price: unitPrice,
+                quantity,
+                ...listingContext,
+            }];
         saveBasket(updated);
         setPicksOpen(true);
     };
     const handleAttachDealChain = (itemId: string, recipeId: PublishedDealChainRecipeId | null) => {
         const recipe = recipeId ? dealChainRecipes[recipeId] : null;
-        const updated = basket.map((item) => {
+        saveBasket(basket.map((item) => {
             if (item.id !== itemId) return item;
-            const currentAddon = item.dealChain?.extraFee || 0;
-            const newAddon = recipe?.extraFee || 0;
-            const newPrice = item.price - currentAddon + newAddon;
+            const priorFee = item.dealChain?.extraFee ?? 0;
+            const nextFee = recipe?.extraFee ?? 0;
             return {
                 ...item,
-                price: newPrice,
+                price: item.price - priorFee + nextFee,
                 dealChain: recipe || undefined,
             };
-        });
-        saveBasket(updated);
+        }));
     };
-    const handleSwapSlotCandidate = (
-        itemId: string,
-        nodeIndex: number,
-        candidate: SlotCandidateListing,
-    ) => {
-        const next = basket.map((item) => {
-            if (item.id !== itemId || !item.dealChain) return item;
-            const updatedNodes = [...item.dealChain.nodes];
-            const oldNode = updatedNodes[nodeIndex];
-            const oldPrice = oldNode.priceMinor ?? (oldNode.type === 'store' ? 18000 : 8000);
-            const newPrice = candidate.price_minor;
-            const priceDiff = (newPrice - oldPrice) / 100;
 
-            updatedNodes[nodeIndex] = {
-                ...oldNode,
+    const handleSwapSlotCandidate = (itemId: string, nodeIndex: number, candidate: SlotCandidateListing) => {
+        saveBasket(basket.map((item) => {
+            if (item.id !== itemId || !item.dealChain) return item;
+            const nodes = [...item.dealChain.nodes];
+            const previous = nodes[nodeIndex];
+            if (typeof previous.priceMinor !== 'number') return item;
+            const priceDiff = (candidate.price_minor - previous.priceMinor) / 100;
+            nodes[nodeIndex] = {
+                ...previous,
                 id: candidate.id,
                 title: candidate.title,
                 sub: candidate.provider_name,
@@ -887,58 +454,39 @@ export default function ListingDetail(props: HomeProps) {
                 providerId: candidate.provider_user_id,
                 priceMinor: candidate.price_minor,
             };
-
             return {
                 ...item,
                 price: item.price + priceDiff,
                 dealChain: {
                     ...item.dealChain,
                     extraFee: Math.max(0, item.dealChain.extraFee + priceDiff),
-                    nodes: updatedNodes,
+                    nodes,
                 },
             };
-        });
-        saveBasket(next);
+        }));
     };
 
     const handleAuthorizeDealChain = () => {
         setCheckoutModalOpen(false);
-        router.post(
-            '/deal-chains/authorize',
-            {
-                items: basket.map((b) => ({
-                    id: b.id,
-                    quantity: b.quantity,
-                    deal_chain: b.dealChain?.recipeId || null,
-                    slot_overrides: b.dealChain?.nodes
-                        ? Object.fromEntries(
-                              b.dealChain.nodes
-                                  .filter((n) => n.listingId)
-                                  .map((n) => [
-                                      n.type,
-                                      {
-                                          listing_id: n.listingId,
-                                          provider_user_id: n.providerId,
-                                          price_minor: n.priceMinor,
-                                      },
-                                  ]),
-                          )
-                        : null,
-                })),
-            },
-            {
-                onSuccess: () => {
-                    saveBasket([]);
-                },
-            },
-        );
-    };
-    const handleSelectCandidate = (candidate: PartnerCandidate) => {
-        if (candidate.role === 'courier') setCurrentCourier(candidate);
-        if (candidate.role === 'technician') setCurrentTech(candidate);
-        if (candidate.role === 'store') setCurrentStore(candidate);
-        if (candidate.role === 'auditor') setCurrentAudit(candidate);
-        setSubModalRole(null);
+        router.post('/deal-chains/authorize', {
+            items: basket.map((item) => ({
+                id: item.listing_id,
+                listing_version_id: item.listing_version_id,
+                variant_id: item.variant_id,
+                package_id: item.package_id,
+                addon_ids: item.addon_ids ?? [],
+                deal_chain_combination_id: item.deal_chain_combination_id,
+                quantity: item.quantity,
+                deal_chain: item.dealChain?.recipeId || null,
+                slot_overrides: item.dealChain?.nodes
+                    ? Object.fromEntries(item.dealChain.nodes
+                        .filter((node) => node.listingId)
+                        .map((node) => [node.key, { listing_id: node.listingId }]))
+                    : null,
+            })),
+        }, {
+            onSuccess: () => saveBasket([]),
+        });
     };
     const ratingSummary = listing?.rating_summary;
     const incomingReviews = listing?.reviews as ReviewItem[] | undefined;
@@ -948,7 +496,8 @@ export default function ListingDetail(props: HomeProps) {
     const satisfactionPct = ratingSummary?.satisfaction_pct ?? (reviewsCount > 0 ? 98 : 0);
     const rawPhotos = listing?.photos as any[] | undefined;
     const listingPhotos = rawPhotos !== undefined ? rawPhotos : REVIEW_PHOTOS;
-    const photosCount = ratingSummary?.photos_count ?? (reviewsCount > 0 ? listingPhotos.length : 0);
+    const photosCount =
+        ratingSummary?.photos_count ?? (reviewsCount > 0 ? listingPhotos.length : 0);
     const ratingDistribution = ratingSummary?.distribution ?? {};
 
     const featuredReview = reviewsList[0] ?? null;
@@ -971,7 +520,7 @@ export default function ListingDetail(props: HomeProps) {
         reviewPage * REVIEW_PAGE_SIZE,
     );
     const hasReviews = reviewsCount > 0;
-    const photoUrl = getCategoryPhoto(listing?.category_code || listing?.categoryCode);
+    const photoUrl = listing?.media?.cover_thumbnail_url ?? listing?.cover_thumbnail_url ?? null;
 
     if (!listing) {
         return (
@@ -1097,15 +646,13 @@ export default function ListingDetail(props: HomeProps) {
                     <div className="flex flex-col gap-5 lg:col-span-7">
                         {/* 1. Hero Image Container (Clean, without messy text overlays) */}
                         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xs">
-                            <img
-                                src={photoUrl}
-                                alt={listing.title}
-                                className="size-full object-cover"
-                                onError={(e) => {
-                                    e.currentTarget.onerror = null;
-                                    e.currentTarget.src = '/photos/ac-clean.jpg';
-                                }}
-                            />
+                            {photoUrl ? (
+                                <img src={photoUrl} alt={listing.title} className="size-full object-cover" />
+                            ) : (
+                                <div className="flex size-full items-center justify-center text-xs font-semibold text-slate-500">
+                                    No listing image
+                                </div>
+                            )}
                             <button
                                 type="button"
                                 onClick={togglePin}
@@ -1120,13 +667,10 @@ export default function ListingDetail(props: HomeProps) {
 
                         {/* 2. Main Title, Price Line & Rating Row Card (Exact Mock Hierarchy) */}
                         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                            {/* Promo / Category Badge */}
+                            {/* Category Badge */}
                             <div className="flex items-center gap-2">
                                 <span className="rounded-full bg-[#EBF2FA] px-3 py-0.5 text-[11px] font-extrabold tracking-wide text-[#0F2F58] uppercase">
                                     {isService ? 'Verified Service' : 'Verified Local Product'}
-                                </span>
-                                <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-bold text-amber-800">
-                                    -18% Tagudin Launch Promo
                                 </span>
                             </div>
 
@@ -1136,19 +680,25 @@ export default function ListingDetail(props: HomeProps) {
                             </h1>
 
                             {/* Price Line (Big Price + Strikethrough + Unit Label) */}
-                            <div className="flex items-baseline gap-2.5 pt-0.5">
-                                <span className="font-mono text-2xl font-extrabold text-[#0F2F58] sm:text-3xl">
-                                    ₱{unitPrice.toFixed(2)}
-                                </span>
-                                {activePackage.origPrice && (
-                                    <span className="font-mono text-sm text-slate-400 line-through">
-                                        ₱{activePackage.origPrice.toFixed(2)}
+                            {packages.length > 0 ? (
+                                <div className="flex items-baseline gap-2.5 pt-0.5">
+                                    <span className="font-mono text-2xl font-extrabold text-[#0F2F58] sm:text-3xl">
+                                        ₱{unitPrice.toFixed(2)}
                                     </span>
-                                )}
-                                <span className="text-xs font-semibold text-slate-500">
-                                    {isService ? '/ service unit' : '/ item package'}
-                                </span>
-                            </div>
+                                    {activePackage.origPrice && (
+                                        <span className="font-mono text-sm text-slate-400 line-through">
+                                            ₱{activePackage.origPrice.toFixed(2)}
+                                        </span>
+                                    )}
+                                    <span className="text-xs font-semibold text-slate-500">
+                                        {isService ? '/ service unit' : '/ item'}
+                                    </span>
+                                </div>
+                            ) : (
+                                <p className="text-sm font-semibold text-amber-800">
+                                    No seller-authored variants or price are available.
+                                </p>
+                            )}
 
                             {/* Rating Row (Directly Below Price, Matching Mock) */}
                             <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
@@ -1167,8 +717,9 @@ export default function ListingDetail(props: HomeProps) {
                             </div>
                             {/* Description */}
                             <p className="text-xs leading-relaxed text-slate-700 sm:text-sm">
-                                {listing.description ||
-                                    'Standard verified offering in Tagudin, Ilocos Sur. Backed by municipal escrow protection and photo milestone evidence.'}
+                                {listing.description ? (
+                                    listing.description
+                                ) : null}
                             </p>
 
                             {/* Provider Box with Chat Button */}
@@ -1213,27 +764,29 @@ export default function ListingDetail(props: HomeProps) {
                             <div className="mb-3 flex items-baseline justify-between">
                                 <div>
                                     <h2 className="text-sm font-extrabold tracking-wider text-[#0F2F58] uppercase">
-                                        Choose Package Tier
+                                        {isService ? 'Choose service package' : 'Choose product variant'}
                                     </h2>
                                     <p className="mt-0.5 text-xs text-slate-500">
-                                        Select service scope or batch size
+                                        {isService ? 'Seller-authored offer and price' : 'Seller variants with current availability'}
                                     </p>
                                 </div>
                                 <span className="text-[11px] font-bold text-[#0F2F58]">
-                                    {packages.length} Tiers Available
+                                    {packages.length} {isService ? 'Offers' : 'Variants'}
                                 </span>
                             </div>
 
                             {/* Horizontal 1-Row Scrollable Package Cards Rail */}
-                            <div className="flex gap-2.5 overflow-x-auto pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-1 px-1">
+                            <div className="-mx-1 flex [scrollbar-width:none] gap-2.5 overflow-x-auto px-1 pb-1.5 [&::-webkit-scrollbar]:hidden">
                                 {packages.map((pkg, idx) => {
                                     const isSelected = selectedPackageIndex === idx;
                                     return (
                                         <button
                                             key={pkg.id}
                                             type="button"
-                                            onClick={() => setSelectedPackageIndex(idx)}
-                                            className={`flex shrink-0 w-[210px] sm:w-[230px] cursor-pointer flex-col justify-between rounded-xl border p-3 text-left transition-all ${
+                                            aria-pressed={isSelected}
+                                            disabled={pkg.kind === 'variant' && (typeof pkg.available !== 'number' || pkg.available <= 0 || ['out_of_stock', 'paused', 'shortage'].includes(pkg.availabilityStatus ?? ''))}
+                                            onClick={() => { setSelectedPackageIndex(idx); setQuantity(1); }}
+                                            className={`flex w-[210px] shrink-0 cursor-pointer flex-col justify-between rounded-xl border p-3 text-left transition-all sm:w-[230px] disabled:cursor-not-allowed disabled:opacity-50 ${
                                                 isSelected
                                                     ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs ring-1 ring-[#0F2F58]/25'
                                                     : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
@@ -1241,12 +794,12 @@ export default function ListingDetail(props: HomeProps) {
                                         >
                                             <div className="flex w-full items-center justify-between gap-1">
                                                 <span
-                                                    className={`text-xs font-extrabold truncate ${isSelected ? 'text-[#0F2F58]' : 'text-slate-900'}`}
+                                                    className={`truncate text-xs font-extrabold ${isSelected ? 'text-[#0F2F58]' : 'text-slate-900'}`}
                                                 >
                                                     {pkg.title}
                                                 </span>
                                                 {isSelected && (
-                                                    <Check className="size-3.5 text-[#0F2F58] shrink-0" />
+                                                    <Check className="size-3.5 shrink-0 text-[#0F2F58]" />
                                                 )}
                                             </div>
                                             <div className="mt-1 flex items-baseline justify-between gap-1.5">
@@ -1266,9 +819,14 @@ export default function ListingDetail(props: HomeProps) {
                                     );
                                 })}
                             </div>
+                            {packages.length === 0 && (
+                                <p role="status" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                                    {isService ? 'This listing has no published price.' : 'This listing has no published product variants.'}
+                                </p>
+                            )}
 
-                            {/* Inclusions Checklist for Selected Tier */}
-                            <div className="mt-4 border-t border-slate-100 pt-3">
+                            {packages.length > 0 && (
+                                <div className="mt-4 border-t border-slate-100 pt-3">
                                 <div className="mb-2 text-[11px] font-extrabold tracking-wider text-slate-500 uppercase">
                                     Included in {activePackage.title}:
                                 </div>
@@ -1286,70 +844,37 @@ export default function ListingDetail(props: HomeProps) {
                                     ))}
                                 </div>
                             </div>
+                            )}
 
-                            {/* Collapsible Options Customizer Link */}
-                            {directAddons.length > 0 && (
-                                <div className="mt-4 border-t border-slate-100 pt-3">
-                                    <div className="flex flex-col items-center">
-                                        <button
-                                            type="button"
-                                            onClick={() => setCustomizerOpen((prev) => !prev)}
-                                            className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-bold text-[#0F2F58] hover:underline"
-                                        >
-                                            <span>Customize service speed &amp; add-ons ({directAddons.length} available)</span>
-                                            {customizerOpen ? (
-                                                <ChevronUp className="size-3.5" />
-                                            ) : (
-                                                <ChevronDown className="size-3.5" />
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    {/* Collapsible Options Panel (Dynamic from listing.addons) */}
-                                    {customizerOpen && (
-                                        <div className="mt-3 flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                                            {directAddons.map((addon) => {
-                                                const identifier = addon.code || addon.id;
-                                                const isSelected = selectedAddonCodes.includes(identifier);
-                                                const price = (addon.price_amount_minor / 100).toFixed(2);
-
-                                                return (
-                                                    <label
-                                                        key={identifier}
-                                                        className={`flex cursor-pointer items-start justify-between rounded-lg border p-2.5 transition-colors ${
-                                                            isSelected
-                                                                 ? 'border-[#0F2F58] bg-[#EBF2FA]'
-                                                                : 'border-slate-200 bg-white hover:border-slate-300'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-start gap-2.5">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={isSelected}
-                                                                onChange={() => toggleAddon(identifier)}
-                                                                className="mt-0.5 size-4 rounded accent-[#0F2F58]"
-                                                            />
-                                                            <div>
-                                                                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                                                                    <Sparkles className="size-3.5 text-[#0F2F58]" />
-                                                                    <span>{addon.title}</span>
-                                                                </div>
-                                                                {addon.description && (
-                                                                    <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
-                                                                        {addon.description}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <span className="font-mono text-xs font-extrabold text-[#0F2F58] shrink-0 ml-3">
-                                                            +₱{price}
-                                                        </span>
-                                                    </label>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
+                            {isService && packages.length > 0 && directAddons.length > 0 && (
+                                <fieldset className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-3">
+                                    <legend className="mb-2 text-[11px] font-extrabold tracking-wider text-slate-500 uppercase">
+                                        Seller add-ons
+                                    </legend>
+                                    {directAddons.map((addon) => {
+                                        const identifier = addon.code || addon.id;
+                                        const checked = selectedAddonCodes.includes(identifier);
+                                        return (
+                                            <label key={addon.id} className="flex items-start justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3">
+                                                <span className="flex items-start gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={() => toggleAddon(identifier)}
+                                                        className="mt-0.5 size-4 accent-[#0F2F58]"
+                                                    />
+                                                    <span>
+                                                        <span className="block text-xs font-bold text-slate-800">{addon.title}</span>
+                                                        {addon.description ? <span className="mt-0.5 block text-[11px] text-slate-500">{addon.description}</span> : null}
+                                                    </span>
+                                                </span>
+                                                <span className="shrink-0 font-mono text-xs font-extrabold text-[#0F2F58]">
+                                                    +₱{(addon.price_amount_minor / 100).toFixed(2)}
+                                                </span>
+                                            </label>
+                                        );
+                                    })}
+                                </fieldset>
                             )}
                         </div>
 
@@ -1359,42 +884,47 @@ export default function ListingDetail(props: HomeProps) {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h2 className="text-sm font-extrabold tracking-wider text-[#0F2F58] uppercase">
-                                            {isService ? 'Work Execution Pipeline' : 'Fulfillment & Handoff Protocol'}
+                                            Work Specification
                                         </h2>
                                         <p className="mt-0.5 text-xs text-slate-500">
-                                            {isService
-                                                ? `${milestoneStages.length} verified craft milestones tracked by T4 Work engine`
-                                                : `${milestoneStages.length} custody & dispatch gates protected by verified handoff`}
+                                            {milestoneStages.length} authored steps with proof and clearance details
                                         </p>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setPipelineExpanded((prev) => !prev)}
-                                        className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-[#0F2F58] hover:bg-slate-200 transition-colors"
+                                        className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-[#0F2F58] transition-colors hover:bg-slate-200"
                                     >
                                         <span>{pipelineExpanded ? 'Collapse' : 'Details'}</span>
-                                        <ChevronDown className={`size-3.5 transition-transform duration-200 ${pipelineExpanded ? 'rotate-180' : ''}`} />
+                                        <ChevronDown
+                                            className={`size-3.5 transition-transform duration-200 ${pipelineExpanded ? 'rotate-180' : ''}`}
+                                        />
                                     </button>
                                 </div>
 
                                 {/* Compact Stepper Row (Always visible summary) */}
                                 <div
                                     onClick={() => setPipelineExpanded((prev) => !prev)}
-                                    className="mt-3.5 flex cursor-pointer items-center gap-1.5 overflow-x-auto rounded-xl border border-slate-100 bg-[#F8FAFC] p-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden transition-colors hover:border-slate-200"
+                                    className="mt-3.5 flex cursor-pointer [scrollbar-width:none] items-center gap-1.5 overflow-x-auto rounded-xl border border-slate-100 bg-[#F8FAFC] p-2.5 transition-colors hover:border-slate-200 [&::-webkit-scrollbar]:hidden"
                                     title="Click to view stage details"
                                 >
                                     {milestoneStages.map((stage, idx) => (
-                                        <div key={idx} className="flex items-center gap-1.5 shrink-0">
+                                        <div
+                                            key={idx}
+                                            className="flex shrink-0 items-center gap-1.5"
+                                        >
                                             <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 shadow-2xs">
                                                 <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#0F2F58]/10 text-[10px] font-extrabold text-[#0F2F58]">
                                                     {stage.step || idx + 1}
                                                 </div>
-                                                <span className="text-[11px] font-extrabold text-slate-800 whitespace-nowrap">
+                                                <span className="text-[11px] font-extrabold whitespace-nowrap text-slate-800">
                                                     {stage.title}
                                                 </span>
                                             </div>
                                             {idx < milestoneStages.length - 1 && (
-                                                <span className="text-slate-300 font-bold text-xs px-0.5">→</span>
+                                                <span className="px-0.5 text-xs font-bold text-slate-300">
+                                                    →
+                                                </span>
                                             )}
                                         </div>
                                     ))}
@@ -1423,6 +953,28 @@ export default function ListingDetail(props: HomeProps) {
                                                     <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
                                                         {stage.description}
                                                     </p>
+                                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                                        {stage.duration !== null && stage.duration !== undefined && stage.duration !== '' ? (
+                                                            <span className="rounded-full bg-[#EBF2FA] px-2 py-1 text-[10px] font-bold text-[#0F2F58]">
+                                                                Target duration: {typeof stage.duration === 'number' ? `${stage.duration} min` : String(stage.duration)}
+                                                            </span>
+                                                        ) : null}
+                                                        {stage.requiredProofs.map((proof, proofIndex) => (
+                                                            <span key={`${proof}-${proofIndex}`} className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600">
+                                                                Required proof: {proof.replace(/_/g, ' ')}
+                                                            </span>
+                                                        ))}
+                                                        {stage.clearance ? (
+                                                            <span className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600">
+                                                                Clearance: {String(stage.clearance).replace(/_/g, ' ')}
+                                                            </span>
+                                                        ) : null}
+                                                        {stage.approval !== null && stage.approval !== undefined && stage.approval !== '' ? (
+                                                            <span className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600">
+                                                                Approval: {String(stage.approval).replace(/_/g, ' ')}
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -1432,469 +984,54 @@ export default function ListingDetail(props: HomeProps) {
                         )}
 
                         {/* 4. Deal Chain Fulfillment Scope Presets & Custom Partner Substitution */}
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                            <div className="mb-3 flex items-baseline justify-between">
-                                <div>
+                        {dealChainCombinations.length > 0 && (
+                            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                                <div className="mb-3">
                                     <h2 className="text-sm font-extrabold tracking-wider text-[#0F2F58] uppercase">
-                                        Select Fulfillment Scope
+                                        Saved Deal Chain combinations
                                     </h2>
-                                    <p className="mt-0.5 text-xs text-slate-500">
-                                        Partner other verified Tagudin listings
+                                    <p className="mt-1 text-xs text-slate-500">
+                                        Partner slots saved with this listing.
                                     </p>
                                 </div>
-                                <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
-                                    Deal Chain
-                                </span>
-                            </div>
-
-                            {/* Scope Presets Carousel */}
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                {isService ? (
-                                    <>
+                                <div className="flex flex-col gap-2">
+                                    {dealChainCombinations.map((combination) => (
                                         <button
+                                            key={combination.id}
                                             type="button"
-                                            onClick={() => setServiceScope('direct')}
-                                            className={`flex cursor-pointer flex-col rounded-xl border p-3.5 text-left transition-all ${
-                                                serviceScope === 'direct'
-                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
-                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
+                                            aria-pressed={selectedCombinationId === combination.id}
+                                            onClick={() => setSelectedCombinationId(combination.id)}
+                                            className={`rounded-xl border p-3 text-left ${
+                                                selectedCombinationId === combination.id
+                                                    ? 'border-[#0F2F58] bg-[#EBF2FA]'
+                                                    : 'border-slate-200 bg-white'
                                             }`}
                                         >
-                                            <div className="flex w-full items-center justify-between">
-                                                <span className="text-xs font-extrabold text-[#0F2F58]">
-                                                    Labor Only
-                                                </span>
-                                                {serviceScope === 'direct' && (
-                                                    <Check className="size-3.5 text-[#0F2F58]" />
-                                                )}
-                                            </div>
-                                            <div className="mt-1 font-mono text-sm font-extrabold text-emerald-700">
-                                                Included
-                                            </div>
-                                            <div className="mt-0.5 text-[10px] text-slate-500">
-                                                Direct provider service
-                                            </div>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setServiceScope('turnkey')}
-                                            className={`flex cursor-pointer flex-col rounded-xl border p-3.5 text-left transition-all ${
-                                                serviceScope === 'turnkey'
-                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
-                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
-                                            }`}
-                                        >
-                                            <div className="flex w-full items-center justify-between">
-                                                <span className="text-xs font-extrabold text-[#0F2F58]">
-                                                    Turnkey Parts
-                                                </span>
-                                                {serviceScope === 'turnkey' && (
-                                                    <Check className="size-3.5 text-[#0F2F58]" />
-                                                )}
-                                            </div>
-                                            <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
-                                                +₱
-                                                {(
-                                                    addonPrices.turnkey_parts ??
-                                                    currentStore.fee + currentCourier.fee
-                                                ).toFixed(2)}
-                                            </div>
-                                            <div className="mt-0.5 text-[10px] text-slate-500">
-                                                Store + Courier delivery
-                                            </div>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setServiceScope('audit')}
-                                            className={`flex cursor-pointer flex-col rounded-xl border p-3.5 text-left transition-all ${
-                                                serviceScope === 'audit'
-                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
-                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
-                                            }`}
-                                        >
-                                            <div className="flex w-full items-center justify-between">
-                                                <span className="text-xs font-extrabold text-[#0F2F58]">
-                                                    Safety Audit
-                                                </span>
-                                                {serviceScope === 'audit' && (
-                                                    <Check className="size-3.5 text-[#0F2F58]" />
-                                                )}
-                                            </div>
-                                            <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
-                                                +₱
-                                                {(
-                                                    addonPrices.safety_audit ?? currentAudit.fee
-                                                ).toFixed(2)}
-                                            </div>
-                                            <div className="mt-0.5 text-[10px] text-slate-500">
-                                                Municipal safety certificate
-                                            </div>
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <button
-                                            type="button"
-                                            onClick={() => setProductScope('pickup')}
-                                            className={`flex cursor-pointer flex-col rounded-xl border p-3.5 text-left transition-all ${
-                                                productScope === 'pickup'
-                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
-                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
-                                            }`}
-                                        >
-                                            <div className="flex w-full items-center justify-between">
-                                                <span className="text-xs font-extrabold text-[#0F2F58]">
-                                                    In-Store Pickup
-                                                </span>
-                                                {productScope === 'pickup' && (
-                                                    <Check className="size-3.5 text-[#0F2F58]" />
-                                                )}
-                                            </div>
-                                            <div className="mt-1 font-mono text-sm font-extrabold text-emerald-700">
-                                                Free
-                                            </div>
-                                            <div className="mt-0.5 text-[10px] text-slate-500">
-                                                Ready at stall counter
-                                            </div>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setProductScope('delivery')}
-                                            className={`flex cursor-pointer flex-col rounded-xl border p-3.5 text-left transition-all ${
-                                                productScope === 'delivery'
-                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
-                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
-                                            }`}
-                                        >
-                                            <div className="flex w-full items-center justify-between">
-                                                <span className="text-xs font-extrabold text-[#0F2F58]">
-                                                    Doorstep Delivery
-                                                </span>
-                                                {productScope === 'delivery' && (
-                                                    <Check className="size-3.5 text-[#0F2F58]" />
-                                                )}
-                                            </div>
-                                            <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
-                                                +₱
-                                                {(
-                                                    addonPrices.courier_delivery ??
-                                                    currentCourier.fee
-                                                ).toFixed(2)}
-                                            </div>
-                                            <div className="mt-0.5 text-[10px] text-slate-500">
-                                                {currentCourier.name.split(' ')[0]}
-                                            </div>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setProductScope('installation')}
-                                            className={`flex cursor-pointer flex-col rounded-xl border p-3.5 text-left transition-all ${
-                                                productScope === 'installation'
-                                                    ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
-                                                    : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
-                                            }`}
-                                        >
-                                            <div className="flex w-full items-center justify-between">
-                                                <span className="text-xs font-extrabold text-[#0F2F58]">
-                                                    Installation Labor
-                                                </span>
-                                                {productScope === 'installation' && (
-                                                    <Check className="size-3.5 text-[#0F2F58]" />
-                                                )}
-                                            </div>
-                                            <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
-                                                +₱
-                                                {(
-                                                    addonPrices.product_install ??
-                                                    currentCourier.fee + currentTech.fee
-                                                ).toFixed(2)}
-                                            </div>
-                                            <div className="mt-0.5 text-[10px] text-slate-500">
-                                                Rider + Certified Tech
-                                            </div>
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Connected Deal Chain Flow & Live Pipeline Diagram (Visible when chain active) */}
-                            {((isService && serviceScope !== 'direct') ||
-                                (!isService && productScope !== 'pickup')) && (
-                                <div className="mt-4 border-t border-slate-100 pt-4">
-                                    <div className="mb-2.5 flex items-center justify-between">
-                                        <span className="text-xs font-extrabold tracking-wider text-[#0F2F58] uppercase">
-                                            Connected Deal Chain Flow
-                                        </span>
-                                        <span className="text-[11px] font-bold text-emerald-700">
-                                            Multi-Party Pipeline
-                                        </span>
-                                    </div>
-
-                                    {/* Horizontal Animated Deal Chain Pipeline */}
-                                    <div className="flex [scrollbar-width:none] items-center gap-1.5 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                        {/* Node 1 */}
-                                        <div className="flex min-w-[95px] flex-col items-center rounded-xl border border-slate-200 bg-white p-2 text-center shadow-xs">
-                                            <div className="relative mb-1 size-10 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-2xs">
-                                                <img
-                                                    src={getPartnerImage(currentStore)}
-                                                    alt={currentStore.name}
-                                                    className="size-full object-cover"
-                                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/photos/ac-capacitor.jpg'; }}
-                                                />
-                                                <span className="absolute bottom-0 right-0 rounded-tl bg-amber-500 px-1 text-[7px] font-extrabold text-white">
-                                                    STORE
-                                                </span>
-                                            </div>
-                                            <div className="w-full truncate text-[10px] font-extrabold text-slate-800">
-                                                {isService
-                                                    ? currentStore.name.split(' ')[0]
-                                                    : 'Tagudin Stall'}
-                                            </div>
-                                            <div className="text-[8.5px] font-bold text-[#0F2F58]">
-                                                {isService
-                                                    ? `₱${currentStore.fee.toFixed(0)}`
-                                                    : 'Ready'}
-                                            </div>
-                                        </div>
-
-                                        {/* Wire 1 */}
-                                        <div className="flex flex-col items-center justify-center px-1">
-                                            <svg
-                                                className="h-3 w-6 text-[#0F2F58]"
-                                                viewBox="0 0 28 12"
-                                            >
-                                                <line
-                                                    x1="0"
-                                                    y1="6"
-                                                    x2="28"
-                                                    y2="6"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                    strokeDasharray="4 4"
-                                                />
-                                            </svg>
-                                            <span className="text-[8px] font-bold text-emerald-700 uppercase">
-                                                Transit
+                                            <span className="block text-sm font-extrabold text-slate-900">
+                                                {combination.title}
                                             </span>
-                                        </div>
-
-                                        {/* Node 2 */}
-                                        <div className="flex min-w-[95px] flex-col items-center rounded-xl border border-slate-200 bg-white p-2 text-center shadow-xs">
-                                            <div className="relative mb-1 size-10 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-2xs">
-                                                <img
-                                                    src={getPartnerImage(currentCourier)}
-                                                    alt={currentCourier.name}
-                                                    className="size-full object-cover"
-                                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/photos/courier.jpg'; }}
-                                                />
-                                                <span className="absolute bottom-0 right-0 rounded-tl bg-sky-500 px-1 text-[7px] font-extrabold text-white">
-                                                    RIDER
+                                            {selectedCombinationId === combination.id && (
+                                                <span className="mt-2 flex flex-col gap-1.5">
+                                                    {combination.nodes.map((node, index) => (
+                                                        <span
+                                                            key={String(node.id ?? node.role ?? index)}
+                                                            className="flex items-center justify-between gap-3 border-t border-slate-200/70 pt-1.5 text-xs"
+                                                        >
+                                                            <span className="font-semibold text-slate-700">
+                                                                {String(node.title ?? node.role ?? node.type ?? 'Partner slot')}
+                                                            </span>
+                                                            <span className="text-slate-500">
+                                                                {String(node.sub ?? node.partner_name ?? (node.listingId || node.listing_id ? 'Linked listing' : 'Open partner slot'))}
+                                                            </span>
+                                                        </span>
+                                                    ))}
                                                 </span>
-                                            </div>
-                                            <div className="w-full truncate text-[10px] font-extrabold text-slate-800">
-                                                {currentCourier.name.split(' ')[0]}
-                                            </div>
-                                            <div className="text-[8.5px] font-bold text-[#0F2F58]">
-                                                ₱{currentCourier.fee.toFixed(0)}
-                                            </div>
-                                        </div>
-
-                                        {/* Wire 2 */}
-                                        <div className="flex flex-col items-center justify-center px-1">
-                                            <svg
-                                                className="h-3 w-6 text-[#0F2F58]"
-                                                viewBox="0 0 28 12"
-                                            >
-                                                <line
-                                                    x1="0"
-                                                    y1="6"
-                                                    x2="28"
-                                                    y2="6"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                    strokeDasharray="4 4"
-                                                />
-                                            </svg>
-                                            <span className="text-[8px] font-bold text-emerald-700 uppercase">
-                                                On-Site
-                                            </span>
-                                        </div>
-
-                                        {/* Node 3 */}
-                                        <div className="flex min-w-[95px] flex-col items-center rounded-xl border border-slate-200 bg-white p-2 text-center shadow-xs">
-                                            <div className="relative mb-1 size-10 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-2xs">
-                                                <img
-                                                    src={isService ? '/photos/ac-clean.jpg' : getPartnerImage(currentTech)}
-                                                    alt={isService ? 'Labor' : 'Customer'}
-                                                    className="size-full object-cover"
-                                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/photos/ac-clean.jpg'; }}
-                                                />
-                                                <span className="absolute bottom-0 right-0 rounded-tl bg-emerald-600 px-1 text-[7px] font-extrabold text-white">
-                                                    {isService ? 'LABOR' : 'DEST'}
-                                                </span>
-                                            </div>
-                                            <div className="w-full truncate text-[10px] font-extrabold text-slate-800">
-                                                {isService
-                                                    ? 'Kuya Ben'
-                                                    : productScope === 'installation'
-                                                      ? currentTech.name.split(' ')[0]
-                                                      : 'You'}
-                                            </div>
-                                            <div className="text-[8.5px] font-bold text-[#0F2F58]">
-                                                {isService
-                                                    ? `₱${activePackage.price.toFixed(0)}`
-                                                    : 'Delivered'}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Partner Custom Slot Banners with [Change ▾] buttons */}
-                                    <div className="mt-3 flex flex-col gap-2">
-                                        {/* Store Slot Banner (Turnkey mode) */}
-                                        {isService && serviceScope === 'turnkey' && (
-                                            <div className="flex items-center justify-between rounded-xl border border-[#0F2F58]/20 bg-[#F8FAFD] p-3 shadow-xs">
-                                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                    <div className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-2xs">
-                                                        <img
-                                                            src={getPartnerImage(currentStore)}
-                                                            alt={currentStore.name}
-                                                            className="size-full object-cover"
-                                                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/photos/ac-capacitor.jpg'; }}
-                                                        />
-                                                        <span className="absolute bottom-0 inset-x-0 bg-amber-600/90 text-[7.5px] font-extrabold text-white text-center uppercase py-0.2">
-                                                            Store
-                                                        </span>
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="text-xs font-extrabold text-slate-900 truncate">
-                                                            {currentStore.name}
-                                                        </div>
-                                                        <div className="text-[10px] text-slate-500 line-clamp-1">
-                                                            {currentStore.sub}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSubModalRole('store')}
-                                                    className="shrink-0 cursor-pointer rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[10.5px] font-extrabold text-[#0F2F58] shadow-xs hover:bg-[#EBF2FA] ml-2"
-                                                >
-                                                    Change Store ▾
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {/* Courier Slot Banner */}
-                                        {((isService && serviceScope === 'turnkey') ||
-                                            (!isService && productScope !== 'pickup')) && (
-                                            <div className="flex items-center justify-between rounded-xl border border-[#0F2F58]/20 bg-[#F8FAFD] p-3 shadow-xs">
-                                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                    <div className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-2xs">
-                                                        <img
-                                                            src={getPartnerImage(currentCourier)}
-                                                            alt={currentCourier.name}
-                                                            className="size-full object-cover"
-                                                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/photos/courier.jpg'; }}
-                                                        />
-                                                        <span className="absolute bottom-0 inset-x-0 bg-sky-600/90 text-[7.5px] font-extrabold text-white text-center uppercase py-0.2">
-                                                            Courier
-                                                        </span>
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="text-xs font-extrabold text-slate-900 truncate">
-                                                            {currentCourier.name}
-                                                        </div>
-                                                        <div className="text-[10px] text-slate-500 line-clamp-1">
-                                                            {currentCourier.sub}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSubModalRole('courier')}
-                                                    className="shrink-0 cursor-pointer rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[10.5px] font-extrabold text-[#0F2F58] shadow-xs hover:bg-[#EBF2FA] ml-2"
-                                                >
-                                                    Change Courier ▾
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {/* Technician Slot Banner (Product installation mode) */}
-                                        {!isService && productScope === 'installation' && (
-                                            <div className="flex items-center justify-between rounded-xl border border-[#0F2F58]/20 bg-[#F8FAFD] p-3 shadow-xs">
-                                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                    <div className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-2xs">
-                                                        <img
-                                                            src={getPartnerImage(currentTech)}
-                                                            alt={currentTech.name}
-                                                            className="size-full object-cover"
-                                                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/photos/ac-clean.jpg'; }}
-                                                        />
-                                                        <span className="absolute bottom-0 inset-x-0 bg-emerald-600/90 text-[7.5px] font-extrabold text-white text-center uppercase py-0.2">
-                                                            Labor
-                                                        </span>
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="text-xs font-extrabold text-slate-900 truncate">
-                                                            {currentTech.name}
-                                                        </div>
-                                                        <div className="text-[10px] text-slate-500 line-clamp-1">
-                                                            {currentTech.sub}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSubModalRole('technician')}
-                                                    className="shrink-0 cursor-pointer rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[10.5px] font-extrabold text-[#0F2F58] shadow-xs hover:bg-[#EBF2FA] ml-2"
-                                                >
-                                                    Change Technician ▾
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {/* Safety Auditor Slot Banner (Service audit mode) */}
-                                        {isService && serviceScope === 'audit' && (
-                                            <div className="flex items-center justify-between rounded-xl border border-[#0F2F58]/20 bg-[#F8FAFD] p-3 shadow-xs">
-                                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                    <div className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-2xs">
-                                                        <img
-                                                            src={getPartnerImage(currentAudit)}
-                                                            alt={currentAudit.name}
-                                                            className="size-full object-cover"
-                                                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/photos/req-electrician.jpg'; }}
-                                                        />
-                                                        <span className="absolute bottom-0 inset-x-0 bg-purple-600/90 text-[7.5px] font-extrabold text-white text-center uppercase py-0.2">
-                                                            Audit
-                                                        </span>
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="text-xs font-extrabold text-slate-900 truncate">
-                                                            {currentAudit.name}
-                                                        </div>
-                                                        <div className="text-[10px] text-slate-500 line-clamp-1">
-                                                            {currentAudit.sub}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSubModalRole('auditor')}
-                                                    className="shrink-0 cursor-pointer rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[10.5px] font-extrabold text-[#0F2F58] shadow-xs hover:bg-[#EBF2FA] ml-2"
-                                                >
-                                                    Change Auditor ▾
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
+                                            )}
+                                        </button>
+                                    ))}
                                 </div>
-                            )}
-                        </div>
-
+                            </section>
+                        )}
                         {/* 5. Verified Customer Reviews Section (Matching Design Kit Screen 07) */}
                         <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                             {/* Review Top Summary */}
@@ -1963,9 +1100,12 @@ export default function ListingDetail(props: HomeProps) {
                                 </div>
                             ) : !hasReviews ? (
                                 <div className="rounded-xl border border-dashed border-slate-200 bg-[#FAFCFB] p-6 text-center">
-                                    <p className="text-xs font-bold text-slate-600">No verified reviews yet</p>
+                                    <p className="text-xs font-bold text-slate-600">
+                                        No verified reviews yet
+                                    </p>
                                     <p className="mt-1 text-[11px] text-slate-400">
-                                        Customer reviews and milestone completion photos appear after verified orders are completed.
+                                        Customer reviews and milestone completion photos appear
+                                        after verified orders are completed.
                                     </p>
                                 </div>
                             ) : null}
@@ -1998,8 +1138,14 @@ export default function ListingDetail(props: HomeProps) {
                                     <div className="flex [scrollbar-width:none] gap-2 overflow-x-auto">
                                         {[
                                             { id: 'all', label: `All (${reviewsCount})` },
-                                            { id: '5', label: `★ 5 Stars (${ratingDistribution[5] ?? 0})` },
-                                            { id: '4', label: `★ 4 Stars (${ratingDistribution[4] ?? 0})` },
+                                            {
+                                                id: '5',
+                                                label: `★ 5 Stars (${ratingDistribution[5] ?? 0})`,
+                                            },
+                                            {
+                                                id: '4',
+                                                label: `★ 4 Stars (${ratingDistribution[4] ?? 0})`,
+                                            },
                                             { id: 'photos', label: `With Photos (${photosCount})` },
                                         ].map((rf) => (
                                             <button
@@ -2056,12 +1202,16 @@ export default function ListingDetail(props: HomeProps) {
 
                                     {totalPages > 1 && (
                                         <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
-                                            <span>Page {reviewPage} of {totalPages}</span>
+                                            <span>
+                                                Page {reviewPage} of {totalPages}
+                                            </span>
                                             <div className="flex items-center gap-1.5">
                                                 <button
                                                     type="button"
                                                     disabled={reviewPage <= 1}
-                                                    onClick={() => setReviewPage((p) => Math.max(1, p - 1))}
+                                                    onClick={() =>
+                                                        setReviewPage((p) => Math.max(1, p - 1))
+                                                    }
                                                     className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 disabled:opacity-40"
                                                 >
                                                     ‹ Prev
@@ -2069,7 +1219,11 @@ export default function ListingDetail(props: HomeProps) {
                                                 <button
                                                     type="button"
                                                     disabled={reviewPage >= totalPages}
-                                                    onClick={() => setReviewPage((p) => Math.min(totalPages, p + 1))}
+                                                    onClick={() =>
+                                                        setReviewPage((p) =>
+                                                            Math.min(totalPages, p + 1),
+                                                        )
+                                                    }
                                                     className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 disabled:opacity-40"
                                                 >
                                                     Next ›
@@ -2082,7 +1236,7 @@ export default function ListingDetail(props: HomeProps) {
                         </section>
                     </div>
 
-                    {/* RIGHT COLUMN (42% on Desktop): Sticky Purchase / Escrow Card with DUAL CTAs */}
+                    {/* RIGHT COLUMN: Selected seller option and booking actions */}
                     <div className="sticky top-24 hidden lg:col-span-5 lg:block">
                         <div className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-md">
                             {/* Selected Package Header */}
@@ -2091,12 +1245,18 @@ export default function ListingDetail(props: HomeProps) {
                                     <div className="text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">
                                         Selected: {activePackage.title}
                                     </div>
-                                    <div className="mt-1 font-mono text-2xl font-extrabold text-[#0F2F58]">
-                                        ₱{unitPrice.toFixed(2)}
-                                    </div>
+                                    {packages.length > 0 ? (
+                                        <div className="mt-1 font-mono text-2xl font-extrabold text-[#0F2F58]">
+                                            ₱{unitPrice.toFixed(2)}
+                                        </div>
+                                    ) : (
+                                        <div className="mt-1 text-sm font-semibold text-amber-800">
+                                            Price unavailable
+                                        </div>
+                                    )}
                                 </div>
-                                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-extrabold text-emerald-800">
-                                    Fixed Rate SLA
+                                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-extrabold text-slate-600">
+                                    Seller price
                                 </span>
                             </div>
 
@@ -2123,8 +1283,9 @@ export default function ListingDetail(props: HomeProps) {
                                         </span>
                                         <button
                                             type="button"
-                                            onClick={() => setQuantity((q) => q + 1)}
-                                            className="flex size-7 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                                            onClick={() => setQuantity((q) => Math.min(quantityLimit, q + 1))}
+                                            disabled={selectedOptionUnavailable || quantity >= quantityLimit}
+                                            className="flex size-7 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40"
                                             aria-label="Increase quantity"
                                         >
                                             <Plus className="size-3.5" />
@@ -2133,41 +1294,16 @@ export default function ListingDetail(props: HomeProps) {
                                 </div>
                             </div>
 
-                            {/* Escrow Total Breakdown */}
                             <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-4 text-xs">
                                 <div className="flex justify-between text-slate-600">
-                                    <span>Base Package ({activePackage.title}):</span>
+                                    <span>{packages.length > 0 ? `${activePackage.title} × ${quantity}` : 'Price unavailable'}</span>
                                     <span className="font-mono font-bold text-slate-800">
-                                        ₱{(activePackage.price * quantity).toFixed(2)}
-                                    </span>
-                                </div>
-                                {scopeAddonFee > 0 && (
-                                    <div className="flex justify-between text-slate-600">
-                                        <span>Deal Chain Partner Extension:</span>
-                                        <span className="font-mono font-bold text-slate-800">
-                                            +₱{(scopeAddonFee * quantity).toFixed(2)}
-                                        </span>
-                                    </div>
-                                )}
-                                {customizerFee > 0 && (
-                                    <div className="flex justify-between text-slate-600">
-                                        <span>Customizer Enhancements:</span>
-                                        <span className="font-mono font-bold text-slate-800">
-                                            +₱{(customizerFee * quantity).toFixed(2)}
-                                        </span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between text-slate-600">
-                                    <span>Tiwala Community Assurance:</span>
-                                    <span className="font-mono font-bold text-emerald-700">
-                                        ₱0.00 (Launch Promo)
+                                        {packages.length > 0 ? `₱${calculatedTotal.toFixed(2)}` : '—'}
                                     </span>
                                 </div>
                                 <div className="flex justify-between border-t border-slate-200 pt-2 text-sm font-extrabold text-[#0F2F58]">
-                                    <span>Total Escrow Amount:</span>
-                                    <span className="font-mono text-base">
-                                        ₱{calculatedTotal.toFixed(2)}
-                                    </span>
+                                    <span>Total</span>
+                                    <span className="font-mono text-base">{packages.length > 0 ? `₱${calculatedTotal.toFixed(2)}` : 'Unavailable'}</span>
                                 </div>
                             </div>
 
@@ -2177,12 +1313,15 @@ export default function ListingDetail(props: HomeProps) {
                                 <button
                                     type="button"
                                     onClick={handleDirectAction}
-                                    className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold tracking-wide text-white shadow-md transition-all hover:bg-[#153e74] active:scale-98"
+                                    disabled={selectedOptionUnavailable}
+                                    className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] text-xs font-extrabold tracking-wide text-white shadow-md transition-all hover:bg-[#153e74] active:scale-98 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <span>
-                                        {chainSlotContext
-                                            ? `Add to Chain Slot · ₱${calculatedTotal.toFixed(2)}`
-                                            : `${isService ? 'Book Service Now' : 'Buy Product Now'} · ₱${calculatedTotal.toFixed(2)}`}
+                                        {selectedOptionUnavailable
+                                            ? 'Unavailable'
+                                            : chainSlotContext
+                                              ? `Add to Chain Slot · ₱${calculatedTotal.toFixed(2)}`
+                                              : `${isService ? 'Book Service Now' : 'Buy Product Now'} · ₱${calculatedTotal.toFixed(2)}`}
                                     </span>
                                     <ArrowRight className="size-4" />
                                 </button>
@@ -2191,22 +1330,16 @@ export default function ListingDetail(props: HomeProps) {
                                 <button
                                     type="button"
                                     onClick={handleAddToPicks}
+                                    disabled={selectedOptionUnavailable}
                                     className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-100 text-xs font-bold text-slate-800 shadow-2xs transition-all hover:bg-slate-200 active:scale-98"
                                 >
-                                    <Plus className="size-4 text-[#0F2F58] stroke-[2.5]" />
-                                    <span className="font-extrabold text-[#0F2F58]">Add to Citizen Picks</span>
+                                    <Plus className="size-4 stroke-[2.5] text-[#0F2F58]" />
+                                    <span className="font-extrabold text-[#0F2F58]">
+                                        Add to Citizen Picks
+                                    </span>
                                 </button>
                             </div>
 
-                            {/* Trust Guarantee Badge */}
-                            <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-[11px] text-emerald-900">
-                                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-700" />
-                                <span>
-                                    <strong>Tiwala Escrow Protection:</strong> Funds release to the
-                                    provider only after you review and approve the final milestone
-                                    photos.
-                                </span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -2230,8 +1363,9 @@ export default function ListingDetail(props: HomeProps) {
                         </span>
                         <button
                             type="button"
-                            onClick={() => setQuantity((q) => q + 1)}
-                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow-2xs hover:bg-slate-100 active:scale-90"
+                            onClick={() => setQuantity((q) => Math.min(quantityLimit, q + 1))}
+                            disabled={selectedOptionUnavailable || quantity >= quantityLimit}
+                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow-2xs hover:bg-slate-100 active:scale-90 disabled:opacity-40"
                             aria-label="Increase quantity"
                         >
                             <Plus className="size-3 stroke-[2.5]" />
@@ -2242,12 +1376,15 @@ export default function ListingDetail(props: HomeProps) {
                     <button
                         type="button"
                         onClick={handleDirectAction}
-                        className="flex h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-[#0F2F58] px-3 text-xs font-extrabold text-white shadow-md active:bg-[#0a2240]"
+                        disabled={selectedOptionUnavailable}
+                        className="flex h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-[#0F2F58] px-3 text-xs font-extrabold text-white shadow-md active:bg-[#0a2240] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <span className="truncate">
-                            {chainSlotContext
-                                ? `Add to Slot · ₱${calculatedTotal.toFixed(2)}`
-                                : `${isService ? 'Book Service' : 'Buy Now'} · ₱${calculatedTotal.toFixed(2)}`}
+                            {selectedOptionUnavailable
+                                ? 'Unavailable'
+                                : chainSlotContext
+                                  ? `Add to Slot · ₱${calculatedTotal.toFixed(2)}`
+                                  : `${isService ? 'Book Service' : 'Buy Now'} · ₱${calculatedTotal.toFixed(2)}`}
                         </span>
                         <ArrowRight className="size-3.5 shrink-0" />
                     </button>
@@ -2256,66 +1393,44 @@ export default function ListingDetail(props: HomeProps) {
                     <button
                         type="button"
                         onClick={handleAddToPicks}
+                        disabled={selectedOptionUnavailable}
                         className="flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-full bg-slate-100 px-3 text-xs font-bold text-slate-800 shadow-2xs transition-all hover:bg-slate-200 active:scale-95"
                         title="Add to Citizen Picks"
                         aria-label="Add to Citizen Picks"
                     >
-                        <Plus className="size-4 text-[#0F2F58] stroke-[2.5]" />
-                        <span className="text-[11px] font-extrabold text-[#0F2F58] whitespace-nowrap">Picks</span>
+                        <Plus className="size-4 stroke-[2.5] text-[#0F2F58]" />
+                        <span className="text-[11px] font-extrabold whitespace-nowrap text-[#0F2F58]">
+                            Picks
+                        </span>
                     </button>
                 </div>
             </div>
 
-            {/* Partner Selection Right-Side Drawer */}
-            <PartnerSelectionDrawer
-                open={Boolean(subModalRole)}
-                onClose={() => setSubModalRole(null)}
-                role={subModalRole}
-                candidates={subModalRole ? partnerCatalog[subModalRole] : []}
-                currentSelectedId={
-                    subModalRole === 'store'
-                        ? currentStore.id
-                        : subModalRole === 'courier'
-                          ? currentCourier.id
-                          : subModalRole === 'technician'
-                            ? currentTech.id
-                            : currentAudit.id
-                }
-                onSelect={handleSelectCandidate}
-            />
-
-            {/* Citizen Picks Drawer */}
             <PicksDrawer
                 open={picksOpen}
                 onClose={() => setPicksOpen(false)}
                 items={basket}
                 recipes={Object.values(dealChainRecipes)}
                 onUpdateQuantity={(id, delta) => {
-                    const next = basket
-                        .map((item) =>
-                            item.id === id ? { ...item, quantity: item.quantity + delta } : item,
-                        )
-                        .filter((item) => item.quantity > 0);
-                    saveBasket(next);
+                    saveBasket(basket.map((item) => item.id === id
+                        ? { ...item, quantity: Math.max(1, Math.min(item.variant_available ?? Number.MAX_SAFE_INTEGER, item.quantity + delta)) }
+                        : item));
                 }}
-                onRemoveItem={(id) => {
-                    const next = basket.filter((item) => item.id !== id);
-                    saveBasket(next);
-                }}
+                onRemoveItem={(id) => saveBasket(basket.filter((item) => item.id !== id))}
                 onCheckout={() => {
                     setPicksOpen(false);
-                    const itemsWithDealChain = basket.filter((item) => Boolean(item.dealChain));
-                    if (itemsWithDealChain.length > 0) {
+                    if (basket.some((item) => Boolean(item.dealChain))) {
                         setCheckoutModalOpen(true);
-                    } else if (basket.length > 0) {
-                        router.visit(`/listings/${basket[0].id}/book`);
+                        return;
                     }
+                    const item = basket[0];
+                    if (!item) return;
+                    const url = listingBookingUrl(item, window.location.origin);
+                    if (url) router.visit(url);
                 }}
                 onAttachDealChain={handleAttachDealChain}
                 onSwapSlotCandidate={handleSwapSlotCandidate}
             />
-
-            {/* Dedicated Deal Chain Checkout Modal */}
             <DealChainCheckoutModal
                 open={checkoutModalOpen}
                 onClose={() => setCheckoutModalOpen(false)}

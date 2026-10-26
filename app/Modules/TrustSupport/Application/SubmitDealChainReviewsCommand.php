@@ -7,6 +7,9 @@ namespace App\Modules\TrustSupport\Application;
 use App\Shared\Application\ActorContext;
 use App\Shared\Application\AuditRecorder;
 use App\Shared\Application\OutboxWriter;
+use App\Shared\Contracts\DealChainCurrentChildrenPort;
+use App\Shared\Contracts\DealChildFinancialStatePort;
+use App\Shared\Contracts\ReviewOrderReaderPort;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -25,6 +28,9 @@ final class SubmitDealChainReviewsCommand
     public function __construct(
         private readonly AuditRecorder $audits,
         private readonly OutboxWriter $outbox,
+        private readonly DealChainCurrentChildrenPort $currentChildren,
+        private readonly ReviewOrderReaderPort $orders,
+        private readonly DealChildFinancialStatePort $financialState,
     ) {}
 
     /**
@@ -65,7 +71,7 @@ final class SubmitDealChainReviewsCommand
         ?array $granularReviews,
         string $correlationId,
     ): array {
-        if (! Schema::hasTable('deal_chains') || ! Schema::hasTable('orders') || ! Schema::hasTable('reviews')) {
+        if (! Schema::hasTable('reviews')) {
             throw new TrustSupportError('STORAGE_UNAVAILABLE', 'Review subsystem storage is unavailable.', $correlationId, status: 503);
         }
 
@@ -82,22 +88,14 @@ final class SubmitDealChainReviewsCommand
             $granularReviews,
             $correlationId,
         ): array {
-            $chain = DB::table('deal_chains')->where('id', $dealChainId)->first();
-            if ($chain === null) {
+            if (! $this->currentChildren->lockReviewChain($dealChainId)) {
                 throw new TrustSupportError('DEAL_CHAIN_NOT_FOUND', 'The target deal chain was not found.', $correlationId, status: 404);
             }
 
-            // Find all eligible completed child orders in this deal chain
-            $childOrders = DB::table('orders')
-                ->where('deal_chain_id', $dealChainId)
-                ->where('buyer_user_id', $authorUserId)
-                ->whereIn('status', ['accepted', 'closed'])
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get();
-
-            if ($childOrders->isEmpty()) {
-                throw new TrustSupportError('NO_ELIGIBLE_ORDERS', 'No eligible settled orders found in this deal chain.', $correlationId);
+            $currentOrderIds = $this->currentChildren->currentConfirmedOrderIds($dealChainId);
+            $childOrders = $this->orders->completedDealChainChildrenForUpdate($currentOrderIds, $dealChainId, $authorUserId);
+            if ($childOrders === []) {
+                throw new TrustSupportError('NO_ELIGIBLE_ORDERS', 'No eligible completed orders were found in this deal chain.', $correlationId);
             }
 
             // Index granular reviews if mode is granular
@@ -121,8 +119,18 @@ final class SubmitDealChainReviewsCommand
             $results = [];
 
             foreach ($childOrders as $order) {
-                $orderId = (string) $order->id;
-                $subjectUserId = (string) $order->provider_user_id;
+                $orderId = $order['order_id'];
+                $subjectUserId = $order['provider_user_id'];
+
+                $settlement = $this->financialState->forDealChild($orderId);
+                if ($settlement === null || ! $settlement['settled'] || $settlement['settled_at'] === null) {
+                    continue;
+                }
+                $settledAt = CarbonImmutable::parse($settlement['settled_at']);
+                $sealedUntil = $settledAt->addHours(72);
+                if ($sealedUntil->isPast()) {
+                    continue;
+                }
 
                 // Check for active dispute
                 if (Schema::hasTable('disputes')) {
@@ -154,7 +162,6 @@ final class SubmitDealChainReviewsCommand
 
                 $validChips = array_values(array_intersect($rawChips, self::ALLOWED_BUYER_CHIPS));
 
-                // Pairwise Independent Unblinding: check if this specific provider has already reviewed
                 $counterpartyReview = DB::table('reviews')
                     ->where('order_id', $orderId)
                     ->where('author_user_id', $subjectUserId)
@@ -162,10 +169,23 @@ final class SubmitDealChainReviewsCommand
                     ->lockForUpdate()
                     ->first();
 
-                $willUnblind = $counterpartyReview !== null;
+                $hasHold = false;
+                if (Schema::hasTable('administrative_holds')) {
+                    $hasHold = DB::table('administrative_holds')
+                        ->where(function ($q) use ($orderId, $settlement): void {
+                            $q->where('order_id', $orderId);
+                            if (isset($settlement['obligation_id']) && $settlement['obligation_id'] !== null) {
+                                $q->orWhere('payment_obligation_id', $settlement['obligation_id']);
+                            }
+                        })
+                        ->whereIn('status', ['active', 'reviewing'])
+                        ->where('effective_at', '<=', now())
+                        ->exists();
+                }
+                $willUnblind = $counterpartyReview !== null && ! $hasHold;
                 $moderationStatus = $willUnblind ? 'approved' : 'sealed';
                 $unblindedAt = $willUnblind ? $now : null;
-                $sealedUntil = $willUnblind ? null : $now->addHours(72);
+                $sealedUntil = $willUnblind ? null : $settledAt->addHours(72);
 
                 $existing = DB::table('reviews')
                     ->where('order_id', $orderId)

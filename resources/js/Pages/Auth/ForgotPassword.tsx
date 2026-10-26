@@ -62,14 +62,15 @@ export default function ForgotPassword(props: ForgotPasswordProps) {
     const codeError = page.props.errors?.code;
     const passwordError = page.props.errors?.password;
     const phoneError = page.props.errors?.phone;
+    const emailError = page.props.errors?.email;
 
     const errorText = Array.isArray(formError)
         ? formError[0]
         : formError ||
+          (Array.isArray(emailError) ? emailError[0] : emailError) ||
           (Array.isArray(codeError) ? codeError[0] : codeError) ||
           (Array.isArray(passwordError) ? passwordError[0] : passwordError) ||
           (Array.isArray(phoneError) ? phoneError[0] : phoneError);
-
     // Active countdown timer effect
     useEffect(() => {
         if (cooldownSeconds <= 0) return;
@@ -215,6 +216,26 @@ export default function ForgotPassword(props: ForgotPasswordProps) {
                                 shortly.
                             </p>
                         </div>
+                        {props.devMode ? (
+                            <div className="rounded-xl border border-sky-200 bg-sky-50/80 p-3 text-left text-xs text-sky-950">
+                                <p className="font-semibold text-sky-900">Developer mode notice:</p>
+                                <p className="mt-1 text-sky-800">
+                                    Emails are delivered to Mailpit at{' '}
+                                    <a
+                                        href="http://localhost:8025"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="font-semibold underline hover:text-sky-950"
+                                    >
+                                        localhost:8025
+                                    </a>
+                                    . By security design (anti-enumeration), reset emails are only dispatched
+                                    if the email is linked to an existing account (e.g. <code>juan@tagudin.ph</code>,{' '}
+                                    <code>rosa@tagudin.ph</code>). If the account was registered via mobile phone,
+                                    use the <strong>Mobile</strong> recovery method instead.
+                                </p>
+                            </div>
+                        ) : null}
                         <button
                             type="button"
                             className="sz-auth-secondary-link cursor-pointer py-1 text-xs font-semibold text-slate-500 hover:text-slate-900"
@@ -294,7 +315,11 @@ export default function ForgotPassword(props: ForgotPasswordProps) {
                         {/* Email Form */}
                         {mode === 'email' ? (
                             <form onSubmit={submitEmail} className="sz-stack flex flex-col gap-3">
-                                <Field label="Email" hint="The email you linked to your account">
+                                <Field
+                                    label="Email"
+                                    hint="The email you linked to your account"
+                                    error={Array.isArray(emailError) ? emailError[0] : emailError}
+                                >
                                     <TextInput
                                         type="email"
                                         value={email}
@@ -304,6 +329,12 @@ export default function ForgotPassword(props: ForgotPasswordProps) {
                                         required
                                     />
                                 </Field>
+                                {props.devMode ? (
+                                    <p className="text-[11px] text-slate-500">
+                                        Dev accounts with email: <code>juan@tagudin.ph</code>,{' '}
+                                        <code>rosa@tagudin.ph</code>. Phone-registered accounts use Mobile recovery.
+                                    </p>
+                                ) : null}
                                 <div className="sz-auth-actions mt-1">
                                     <button
                                         type="submit"

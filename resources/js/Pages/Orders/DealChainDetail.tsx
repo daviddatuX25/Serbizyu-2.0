@@ -1,20 +1,19 @@
-import { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
+import { Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     Check,
     Clock,
     Lock,
-    MessageSquare,
     Phone,
-    Send,
     ShieldCheck,
     Sparkles,
     Star,
-    X,
 } from 'lucide-react';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import ReviewCeremonyModal from '../../components/reviews/ReviewCeremonyModal';
+import AppointmentSlotPicker, { type AppointmentHold } from '../../components/orders/AppointmentSlotPicker';
+import ConversationDrawer from '../../components/conversations/ConversationDrawer';
 
 interface DealChainRecord {
     id: string;
@@ -29,6 +28,21 @@ interface DealChainRecord {
     created_at: string;
 }
 
+
+interface DealNeedConfirmation {
+    invitation_id: string;
+    expected_need_version: number;
+    terms_hash: string;
+    capacity_hash: string;
+    listing_id: string;
+    listing_version_id: string;
+    listing_version: number;
+    title: string;
+    work_shape: string;
+    amount_minor: number | null;
+    currency: string;
+}
+
 interface DealNeedRecord {
     id: string;
     deal_chain_id: string;
@@ -36,9 +50,9 @@ interface DealNeedRecord {
     need_kind: string;
     title: string;
     listing_title?: string | null;
-    description: string;
+    description?: string;
     status: string;
-    requested_at: string;
+    requested_at?: string;
     child_order_id?: string | null;
     order_reference?: string | null;
     child_order_status?: string | null;
@@ -49,7 +63,22 @@ interface DealNeedRecord {
     amount_source?: string | null;
     provider_name?: string | null;
     provider_phone?: string | null;
-    can_view_order?: boolean;
+    handoff_url?: string | null;
+    can_view_order: boolean;
+    confirmation?: DealNeedConfirmation | null;
+    expected_need_version?: number;
+    node_role?: string;
+    can_withdraw?: boolean;
+    can_replace?: boolean;
+    replaces_deal_need_id?: string | null;
+}
+
+interface ReplacementCandidate {
+    id: string;
+    title: string;
+    provider_name: string;
+    price_minor: number;
+    role: string;
 }
 
 interface DealDependencyRecord {
@@ -68,15 +97,9 @@ interface DealChainDetailProps {
     dependencies: DealDependencyRecord[];
     notice?: string | null;
     view?: 'project' | 'worker';
-    worker?: string | null;
-}
+    can_open_relay?: boolean;
 
-interface ChatMessage {
-    id: string;
-    sender: string;
-    role: 'buyer' | 'store' | 'courier' | 'technician' | 'system';
-    text: string;
-    time: string;
+
 }
 
 function statusLabel(status: string): string {
@@ -86,14 +109,14 @@ function statusLabel(status: string): string {
         invited: 'Provider invited',
         quoted: 'Quote received',
         accepted: 'Accepted',
+        awaiting_customer_confirmation: 'Provider accepted · Confirm terms',
         in_progress: 'In progress',
         completed: 'Completed',
-        blocked: 'Gated / Blocked',
-        cancelled: 'Cancelled',
-        failed: 'Failed',
-        awaiting_signoff: 'Needs Sign-off',
-    };
+        replacement_needed: 'Partner needed',
+        superseded: 'Replaced',
+        cancelled: 'Withdrawn',
 
+    };
     return labels[status] ?? status.replaceAll('_', ' ');
 }
 
@@ -101,9 +124,10 @@ function statusTone(status: string): string {
     if (status === 'completed') return 'border-emerald-200 bg-emerald-50 text-emerald-800';
     if (status === 'in_progress' || status === 'accepted')
         return 'border-sky-200 bg-sky-50 text-sky-800';
-    if (status === 'blocked' || status === 'failed')
+    if (status === 'blocked' || status === 'failed' || status === 'replacement_needed')
         return 'border-amber-200 bg-amber-50 text-amber-900';
-    if (status === 'cancelled') return 'border-slate-200 bg-slate-100 text-slate-600';
+    if (status === 'cancelled' || status === 'superseded')
+        return 'border-slate-200 bg-slate-100 text-slate-600';
 
     return 'border-blue-200 bg-blue-50 text-blue-900';
 }
@@ -140,11 +164,19 @@ function slotRoleBadge(slot: DealNeedRecord): { label: string; bg: string; text:
 }
 
 function formatAmount(slot: DealNeedRecord): string {
-    if (slot.amount_minor === null || slot.amount_minor === undefined) {
+    const amountMinor = slot.confirmation?.amount_minor ?? slot.amount_minor;
+    const currency = slot.confirmation?.currency ?? slot.currency ?? 'PHP';
+    if (amountMinor === null || amountMinor === undefined) {
         return 'Amount pending provider terms';
     }
 
-    return `${slot.currency ?? 'PHP'} ${(slot.amount_minor / 100).toFixed(2)}`;
+    return `${currency} ${(amountMinor / 100).toFixed(2)}`;
+
+}
+function appointmentHoldKey(slot: DealNeedRecord): string | null {
+    return slot.confirmation
+        ? `${slot.id}:${slot.confirmation.listing_version_id}`
+        : null;
 }
 
 export default function DealChainDetail({
@@ -153,7 +185,7 @@ export default function DealChainDetail({
     dependencies,
     notice,
     view = 'project',
-    worker = null,
+    can_open_relay = false,
 }: DealChainDetailProps) {
     const shortId = chain.id ? chain.id.substring(0, 8).toUpperCase() : 'DC';
     const slotsById = new Map(slots.map((slot) => [slot.id, slot]));
@@ -162,66 +194,120 @@ export default function DealChainDetail({
             ? null
             : `${chain.currency_code ?? 'PHP'} ${chain.total_budget_amount.toFixed(2)}`;
     const contextLabel =
-        view === 'worker' && worker
-            ? `Server projection for ${worker}.`
+        view === 'worker'
+            ? 'Partner view · your agreement and shared readiness only.'
             : 'Coordinator project projection.';
-    const [reviewModalOpen, setReviewModalOpen] = useState(false);
-    const [chatOpen, setChatOpen] = useState(false);
-    const [chatActiveSlot, setChatActiveSlot] = useState<DealNeedRecord | null>(null);
-    const [chatInput, setChatInput] = useState('');
-    const [messages, setMessages] = useState<ChatMessage[]>([
-        {
-            id: 'm1',
-            sender: 'Tagudin Hardware Depot',
-            role: 'store',
-            text: 'Materials packed and verified at Counter Lane 2. Ready for courier dispatch.',
-            time: '1:12 PM',
-        },
-        {
-            id: 'm2',
-            sender: 'Danny Express Rider',
-            role: 'courier',
-            text: 'Package picked up from hardware! En route to jobsite gate via Poblacion East.',
-            time: '1:15 PM',
-        },
-        {
-            id: 'm3',
-            sender: 'Kuya Ben AC Services',
-            role: 'technician',
-            text: 'On-site prepping indoor unit. Will begin installation once courier drops off the parts.',
-            time: '1:18 PM',
-        },
-    ]);
-
-    const isCompleted =
-        chain.status === 'completed' ||
-        slots.length > 0 && slots.every(
-            (s) =>
-                s.status === 'completed' ||
-                s.child_order_status === 'completed' ||
-                s.child_order_status === 'closed',
-        );
-
-    const handleSendMessage = () => {
-        if (!chatInput.trim()) return;
-        const newMsg: ChatMessage = {
-            id: `msg-${Date.now()}`,
-            sender: 'Coordinator (You)',
-            role: 'buyer',
-            text: chatInput.trim(),
-            time: 'Just now',
+    const [relayOpen, setRelayOpen] = useState(false);
+    const conversationSearch = window.location.search;
+    const conversationContext = useMemo(() => {
+        const query = new URLSearchParams(conversationSearch);
+        const owner = query.get('owner_user_id');
+        const grant = query.get('consent_grant_id');
+        return {
+            ...(owner ? { owner_user_id: owner } : {}),
+            ...(grant ? { consent_grant_id: grant } : {}),
         };
-        setMessages((prev) => [...prev, newMsg]);
-        setChatInput('');
+    }, [conversationSearch]);
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [confirmingNeedId, setConfirmingNeedId] = useState<string | null>(null);
+    const [appointmentHolds, setAppointmentHolds] = useState<Record<string, AppointmentHold>>({});
+    const [candidateOptions, setCandidateOptions] = useState<Record<string, ReplacementCandidate[]>>({});
+    const [loadingCandidatesFor, setLoadingCandidatesFor] = useState<string | null>(null);
+    const [replacementError, setReplacementError] = useState<string | null>(null);
+    const [withdrawingNeedId, setWithdrawingNeedId] = useState<string | null>(null);
+
+    const postDealAction = async (url: string, payload: Record<string, unknown>) => {
+        const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
+        const response = await fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-Idempotency-Key': window.crypto.randomUUID(),
+            },
+            body: JSON.stringify(payload),
+        });
+        const result = await response.json() as { error?: { message?: string } };
+        if (!response.ok) throw new Error(result.error?.message ?? 'This Deal Chain action could not be completed.');
+        router.reload();
     };
 
-    const handleQuickPrompt = (prompt: string) => {
-        setChatInput(prompt);
+    const withdrawPartner = async (slot: DealNeedRecord) => {
+        if (!window.confirm('Withdraw this current partner slot? Any completed sibling agreements and payments stay unchanged.')) return;
+        setWithdrawingNeedId(slot.id);
+        setReplacementError(null);
+        try {
+            await postDealAction(`/deal-chains/${chain.id}/needs/${slot.id}/withdraw`, {
+                expected_need_version: slot.expected_need_version ?? 1,
+            });
+        } catch (error) {
+            setReplacementError(error instanceof Error ? error.message : 'The partner slot could not be withdrawn.');
+        } finally {
+            setWithdrawingNeedId(null);
+        }
     };
 
-    const openChatForSlot = (slot: DealNeedRecord) => {
-        setChatActiveSlot(slot);
-        setChatOpen(true);
+    const loadReplacementCandidates = async (slot: DealNeedRecord) => {
+        setLoadingCandidatesFor(slot.id);
+        setReplacementError(null);
+        try {
+            const role = (slot.node_role ?? 'labor').toUpperCase();
+            const response = await fetch(`/api/deal-chains/slot-candidates?role=${encodeURIComponent(role)}`, {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json' },
+            });
+            if (!response.ok) throw new Error('Eligible current listings could not be loaded.');
+            const result = await response.json() as { data?: ReplacementCandidate[] };
+            setCandidateOptions((current) => ({ ...current, [slot.id]: result.data ?? [] }));
+        } catch (error) {
+            setReplacementError(error instanceof Error ? error.message : 'Eligible listings could not be loaded.');
+        } finally {
+            setLoadingCandidatesFor(null);
+        }
+    };
+
+    const chooseReplacement = async (slot: DealNeedRecord, candidate: ReplacementCandidate) => {
+        setReplacementError(null);
+        try {
+            await postDealAction(`/deal-chains/${chain.id}/needs/${slot.id}/replace`, {
+                expected_need_version: slot.expected_need_version ?? 1,
+                listing_id: candidate.id,
+            });
+        } catch (error) {
+            setReplacementError(error instanceof Error ? error.message : 'The invitation could not be issued.');
+        }
+    };
+
+    const currentSlots = slots.filter((slot) => slot.status !== 'superseded');
+    const isCompleted =
+        currentSlots.length > 0 && currentSlots.every(
+            (slot) => slot.status === 'completed' || slot.child_order_status === 'completed',
+        );
+    const confirmAgreement = (slot: DealNeedRecord) => {
+        const terms = slot.confirmation;
+        const holdKey = appointmentHoldKey(slot);
+        const appointmentHold = holdKey ? appointmentHolds[holdKey] : undefined;
+        if (!terms || terms.amount_minor === null || (terms.work_shape === 'A3' && !appointmentHold)) return;
+
+        setConfirmingNeedId(slot.id);
+        router.post(
+            `/deal-chains/${chain.id}/needs/${slot.id}/confirm-agreement`,
+            {
+                invitation_id: terms.invitation_id,
+                expected_need_version: terms.expected_need_version,
+                terms_hash: terms.terms_hash,
+                capacity_hash: terms.capacity_hash,
+                appointment_reservation_id: appointmentHold?.id ?? null,
+            },
+            {
+                preserveScroll: true,
+                headers: { 'X-Idempotency-Key': window.crypto.randomUUID() },
+                onFinish: () => setConfirmingNeedId(null),
+            },
+        );
     };
 
     return (
@@ -242,23 +328,11 @@ export default function DealChainDetail({
                     <span className="text-sm font-extrabold text-[#0F2F58]">
                         Deal Chain #{shortId}
                     </span>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800">
-                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Live Relay
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[9px] font-extrabold text-slate-700">
+                        {statusLabel(chain.status)}
                     </span>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={() => {
-                        setChatActiveSlot(null);
-                        setChatOpen(true);
-                    }}
-                    className="flex size-9 items-center justify-center rounded-full text-slate-700 hover:bg-slate-100"
-                    title="Team Coordination Chat"
-                >
-                    <MessageSquare className="size-5 text-[#0F2F58]" />
-                </button>
             </header>
 
             <main className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6 lg:py-8">
@@ -278,17 +352,6 @@ export default function DealChainDetail({
                         </span>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setChatActiveSlot(null);
-                            setChatOpen(true);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-extrabold text-[#0F2F58] shadow-2xs hover:bg-slate-50"
-                    >
-                        <MessageSquare className="size-3.5 text-sky-600" />
-                        <span>Team Relay Chat</span>
-                    </button>
                 </div>
 
                 {notice && (
@@ -298,7 +361,7 @@ export default function DealChainDetail({
                     </div>
                 )}
 
-                {isCompleted && (
+                {view === 'project' && isCompleted && (
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 shadow-xs">
                         <div className="flex items-start gap-3">
                             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
@@ -333,15 +396,25 @@ export default function DealChainDetail({
                                 Multi-Party Deal Chain #{shortId}
                             </span>
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800">
-                                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 {slots.length}-Slot Orchestrated Relay
                             </span>
                         </div>
-                        <span className="text-right font-mono text-base font-extrabold text-[#0F2F58]">
-                            {summaryAmount
-                                ? `${summaryAmount} · Derived child total`
-                                : 'No child terms formed'}
-                        </span>
+                        {view === 'project' && (
+                            <span className="text-right font-mono text-base font-extrabold text-[#0F2F58]">
+                                {summaryAmount
+                                    ? `${summaryAmount} · Derived child total`
+                                    : 'No child terms formed'}
+                            </span>
+                        )}
+                        {can_open_relay && (
+                            <button
+                                type="button"
+                                onClick={() => setRelayOpen(true)}
+                                className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#0F2F58] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#0c2444] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F2F58]"
+                            >
+                                Open handoff relay
+                            </button>
+                        )}
                     </div>
 
                     <div>
@@ -388,8 +461,10 @@ export default function DealChainDetail({
                             (dependency) => dependency.successor_need_id === slot.id,
                         );
 
-                        const hasChildOrder = Boolean(slot.child_order_id);
+                        const hasChildOrder = Boolean(slot.child_order_id && (view === 'project' || slot.can_view_order));
                         const roleMeta = slotRoleBadge(slot);
+                        const holdKey = appointmentHoldKey(slot);
+                        const appointmentHold = holdKey ? appointmentHolds[holdKey] : undefined;
 
                         return (
                             <div key={slot.id} className="space-y-3">
@@ -441,7 +516,7 @@ export default function DealChainDetail({
                                                 <div className="mt-2.5 flex flex-wrap items-center gap-3 text-xs">
                                                     <div className="flex items-center gap-1.5 font-bold text-slate-700">
                                                         <ShieldCheck className="size-3.5 text-emerald-600 shrink-0" />
-                                                        <span>{slot.provider_name ?? 'Assigned Partner'}</span>
+                                                        <span>{slot.provider_name ?? 'Provider not named'}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -449,7 +524,9 @@ export default function DealChainDetail({
 
                                         <div className="max-w-[45%] shrink-0 text-right">
                                             <span className="font-mono text-sm font-black text-[#0F2F58]">
-                                                {formatAmount(slot)}
+                                                {view === 'worker' && !slot.can_view_order
+                                                    ? 'Shared readiness'
+                                                    : formatAmount(slot)}
                                             </span>
                                             <div className="mt-1">
                                                 <span
@@ -465,6 +542,40 @@ export default function DealChainDetail({
                                             </div>
                                         </div>
                                     </div>
+                                    {slot.confirmation && (
+                                        <section className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5" aria-label="Accepted provider terms">
+                                            <p className="text-xs font-semibold leading-5 text-slate-700">
+                                                {slot.replaces_deal_need_id
+                                                    ? <>You accepted a fresh replacement invitation for <strong>{slot.confirmation.title}</strong> at {formatAmount(slot)}. Review these pinned terms and confirm to form the new child Order.</>
+                                                    : <>Provider accepted <strong>{slot.confirmation.title}</strong> for {formatAmount(slot)}. Confirm only after reviewing these pinned terms.</>}
+                                            </p>
+                                            {slot.confirmation.work_shape === 'A3' && (
+                                                <div className="space-y-2">
+                                                    <AppointmentSlotPicker
+                                                        key={`${slot.id}-${slot.confirmation.listing_version_id}`}
+                                                        source={{
+                                                            kind: 'listing',
+                                                            listingId: slot.confirmation.listing_id,
+                                                            listingVersionId: slot.confirmation.listing_version_id,
+                                                        }}
+                                                        disabled={confirmingNeedId === slot.id}
+                                                        onHeld={(hold) => {
+                                                            const key = appointmentHoldKey(slot);
+                                                            if (key) {
+                                                                setAppointmentHolds((current) => ({ ...current, [key]: hold }));
+                                                            }
+                                                        }}
+                                                    />
+                                                    {appointmentHold && (
+                                                        <p className="text-xs font-bold text-emerald-800">
+                                                            Appointment held for {new Date(appointmentHold.starts_at).toLocaleString()} · hold expires {new Date(appointmentHold.hold_expires_at).toLocaleTimeString()}.
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </section>
+                                    )}
+
 
                                     {/* Action Bar for this Child Order / Slot */}
                                     <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5 border-t border-slate-100 pt-3.5">
@@ -479,30 +590,99 @@ export default function DealChainDetail({
                                                     <span>Call</span>
                                                 </a>
                                             )}
+                                        </div>
+                                        {hasChildOrder ? (
+                                            <div className="flex flex-wrap justify-end gap-2">
+                                                <Link
+                                                    href={`/orders/${slot.child_order_id}`}
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F2F58] px-4 py-2 text-xs font-extrabold text-white shadow-xs hover:bg-[#0c2444] transition-all"
+                                                >
+                                                    <span>View Task Details</span>
+                                                    <span className="text-[10px]">→</span>
+                                                </Link>
+                                                {slot.handoff_url && (
+                                                    <Link
+                                                        href={slot.handoff_url}
+                                                        className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-extrabold text-amber-950 shadow-xs hover:bg-amber-100 transition-all"
+                                                    >
+                                                        <span>Open product handoff</span>
+                                                        <span className="text-[10px]">→</span>
+                                                    </Link>
+                                                )}
+                                            </div>
+                                        ) : slot.child_order_id ? (
+                                            <span className="text-xs font-semibold text-slate-500">
+                                                Shared readiness only · sibling Order details are private
+                                            </span>
+                                        ) : slot.confirmation ? (
                                             <button
                                                 type="button"
-                                                onClick={() => openChatForSlot(slot)}
-                                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                                onClick={() => confirmAgreement(slot)}
+                                                disabled={slot.confirmation.amount_minor === null || confirmingNeedId === slot.id || (slot.confirmation.work_shape === 'A3' && !appointmentHold)}
+                                                className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-[#0F2F58] px-4 py-2 text-xs font-extrabold text-white shadow-xs transition-colors hover:bg-[#0c2444] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F2F58] disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                <MessageSquare className="size-3 text-sky-600" />
-                                                <span>Message</span>
+                                                {confirmingNeedId === slot.id ? 'Forming child Order…' : 'Confirm provider terms'}
                                             </button>
-                                        </div>
-
-                                        {hasChildOrder ? (
-                                            <Link
-                                                href={`/orders/${slot.child_order_id}`}
-                                                className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F2F58] px-4 py-2 text-xs font-extrabold text-white shadow-xs hover:bg-[#0c2444] transition-all"
-                                            >
-                                                <span>View Task Details</span>
-                                                <span className="text-[10px]">→</span>
-                                            </Link>
                                         ) : (
                                             <span className="text-xs font-semibold text-slate-500">
                                                 No child Order formed
                                             </span>
                                         )}
                                     </div>
+                                    {slot.can_withdraw && (
+                                        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => void withdrawPartner(slot)}
+                                                disabled={withdrawingNeedId === slot.id}
+                                                className="inline-flex min-h-9 items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-800 hover:bg-rose-100 disabled:opacity-50"
+                                            >
+                                                {withdrawingNeedId === slot.id ? 'Withdrawing…' : 'Withdraw current partner'}
+                                            </button>
+                                            <p className="text-[11px] text-slate-500">Completed sibling agreements and payments remain unchanged.</p>
+                                        </div>
+                                    )}
+                                    {view === 'project' && slot.can_replace && (
+                                        <section className="mt-3 space-y-3 rounded-xl border border-amber-200 bg-amber-50/70 p-3" aria-label="Choose a replacement partner">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div>
+                                                    <h4 className="text-xs font-extrabold text-amber-950">Choose a replacement partner</h4>
+                                                    <p className="text-[11px] text-amber-900">A fresh invitation is sent. No Order forms until the provider accepts and you confirm their terms.</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => void loadReplacementCandidates(slot)}
+                                                    disabled={loadingCandidatesFor === slot.id}
+                                                    className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-bold text-amber-950 hover:bg-amber-100 disabled:opacity-50"
+                                                >
+                                                    {loadingCandidatesFor === slot.id ? 'Loading listings…' : 'Show eligible listings'}
+                                                </button>
+                                            </div>
+                                            {(candidateOptions[slot.id] ?? []).length > 0 && (
+                                                <ul className="space-y-2">
+                                                    {(candidateOptions[slot.id] ?? []).map((candidate) => (
+                                                        <li key={candidate.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-100 bg-white p-3">
+                                                            <div className="min-w-0">
+                                                                <p className="truncate text-xs font-extrabold text-slate-900">{candidate.title}</p>
+                                                                <p className="text-[11px] text-slate-600">Provider: {candidate.provider_name}</p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => void chooseReplacement(slot, candidate)}
+                                                                className="rounded-lg bg-[#0F2F58] px-3 py-2 text-xs font-bold text-white hover:bg-[#0c2444]"
+                                                            >
+                                                                Send invitation
+                                                            </button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                            {candidateOptions[slot.id]?.length === 0 && loadingCandidatesFor !== slot.id && (
+                                                <p className="text-xs text-slate-600">No eligible active listings are available for this slot.</p>
+                                            )}
+                                            {replacementError && <p role="alert" className="text-xs font-semibold text-rose-800">{replacementError}</p>}
+                                        </section>
+                                    )}
                                 </article>
 
                                 {/* Outgoing Dependency Visual Connectors */}
@@ -541,131 +721,6 @@ export default function DealChainDetail({
                 </div>
             </main>
 
-            {/* Team Coordination & Direct Messaging Drawer */}
-            {chatOpen && (
-                <div
-                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4"
-                    onClick={() => setChatOpen(false)}
-                >
-                    <div
-                        className="flex h-[85vh] sm:h-[640px] w-full max-w-lg flex-col rounded-t-3xl sm:rounded-2xl bg-white shadow-2xl overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Drawer Header */}
-                        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3.5">
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-sm font-black text-[#0F2F58] truncate">
-                                        {chatActiveSlot
-                                            ? `Direct Chat · ${chatActiveSlot.provider_name ?? 'Provider'}`
-                                            : `Deal Chain #${shortId} Coordination Room`}
-                                    </h3>
-                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800">
-                                        Relay Active
-                                    </span>
-                                </div>
-                                <p className="text-[11px] text-slate-500 truncate">
-                                    {chatActiveSlot
-                                        ? `Slot #${chatActiveSlot.ordinal}: ${chatActiveSlot.title}`
-                                        : `${slots.length} participants: Buyer, Store, Courier, Technician`}
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setChatOpen(false)}
-                                className="flex size-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200/70"
-                            >
-                                <X className="size-4" />
-                            </button>
-                        </div>
-
-                        {/* Message Stream */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50">
-                            {messages.map((m) => {
-                                const isSelf = m.role === 'buyer';
-                                return (
-                                    <div
-                                        key={m.id}
-                                        className={`flex flex-col ${isSelf ? 'items-end' : 'items-start'}`}
-                                    >
-                                        <div className="flex items-center gap-1.5 mb-1 px-1">
-                                            <span className="text-[10px] font-extrabold text-slate-600">
-                                                {m.sender}
-                                            </span>
-                                            <span className="text-[9px] text-slate-400">{m.time}</span>
-                                        </div>
-                                        <div
-                                            className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs font-medium leading-relaxed ${
-                                                isSelf
-                                                    ? 'bg-[#0F2F58] text-white shadow-xs rounded-br-xs'
-                                                    : 'bg-white text-slate-800 border border-slate-200 shadow-2xs rounded-bl-xs'
-                                            }`}
-                                        >
-                                            {m.text}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Quick Prompts Bar */}
-                        <div className="border-t border-slate-100 bg-white px-4 py-2 flex items-center gap-1.5 overflow-x-auto text-[11px]">
-                            <button
-                                type="button"
-                                onClick={() => handleQuickPrompt('Where are you now?')}
-                                className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-700 hover:bg-slate-100 font-bold"
-                            >
-                                Where are you now?
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleQuickPrompt('Parts are on-site.')}
-                                className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-700 hover:bg-slate-100 font-bold"
-                            >
-                                Parts are on-site
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleQuickPrompt('Proceeding with load test.')}
-                                className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-700 hover:bg-slate-100 font-bold"
-                            >
-                                Proceeding with load test
-                            </button>
-                        </div>
-
-                        {/* Input Composer */}
-                        <div className="border-t border-slate-200 bg-white p-3.5">
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    handleSendMessage();
-                                }}
-                                className="flex items-center gap-2"
-                            >
-                                <input
-                                    type="text"
-                                    value={chatInput}
-                                    onChange={(e) => setChatInput(e.target.value)}
-                                    placeholder={
-                                        chatActiveSlot
-                                            ? `Message ${chatActiveSlot.provider_name ?? 'provider'}...`
-                                            : 'Send relay update to team...'
-                                    }
-                                    className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0F2F58] focus:bg-white focus:outline-none"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={!chatInput.trim()}
-                                    className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0D715F] text-white shadow-xs hover:bg-[#0a574a] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
-                                >
-                                    <Send className="size-4" />
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Review Ceremony Modal */}
             <ReviewCeremonyModal
                 dealChainId={chain.id}
@@ -673,13 +728,20 @@ export default function DealChainDetail({
                 isOpen={reviewModalOpen}
                 onClose={() => setReviewModalOpen(false)}
                 targets={slots
-                    .filter((s) => s.child_order_id)
+                    .filter((slot) => slot.child_order_id && slot.child_order_status === 'completed'
+                        && !['superseded', 'cancelled', 'failed', 'replacement_needed'].includes(slot.status))
                     .map((s) => ({
                         orderId: s.child_order_id!,
                         providerName: s.provider_name ?? 'Provider',
                         role: s.need_kind,
                         title: s.listing_title ?? s.title,
                     }))}
+            />
+            <ConversationDrawer
+                open={relayOpen}
+                onClose={() => setRelayOpen(false)}
+                openUrl={`/deal-chains/${chain.id}/relay`}
+                context={conversationContext}
             />
         </div>
     );

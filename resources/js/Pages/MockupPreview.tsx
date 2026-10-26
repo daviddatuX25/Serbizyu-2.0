@@ -240,10 +240,7 @@ export default function MockupPreview() {
                 {activeTab === 'auth' && (
                     <div className="mx-auto max-w-md">
                         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/50">
-                            <div className="mb-4 flex items-center justify-between">
-                                <span className="rounded-md bg-[#EBF2FA] px-2 py-0.5 text-[11px] font-bold text-[#0F2F58]">
-                                    Tagudin Citizen Identity
-                                </span>
+                            <div className="mb-4 flex items-center justify-end">
                                 <span className="text-xs text-slate-400">Step 1 of 2</span>
                             </div>
 
@@ -393,11 +390,7 @@ export default function MockupPreview() {
                         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
                             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                                 <div>
-                                    <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                                        <CheckCircle2 className="size-3.5" />
-                                        <span>Verified Tagudin Provider · Rosa Tagudin</span>
-                                    </div>
-                                    <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                                    <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
                                         Provider Studio
                                     </h1>
                                     <p className="mt-1 max-w-xl text-xs text-slate-500 sm:text-sm">

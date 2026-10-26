@@ -539,7 +539,7 @@ it('persists listing media and deal chain specifications and preserves them acro
         'listing_type' => 'service',
         'work_shape' => 'A1',
         'work_catalog_code' => 'set-repairs-inverter-clean',
-        'work_set_version' => 1,
+        'work_set_version' => 2,
         'media' => $mediaPayload,
         'deal_chain_combinations' => $dealChainCombinations,
         'deal_chain_specification' => $dealChainSpecification,
@@ -637,4 +637,96 @@ it('persists stall_location and structured geography on product draft create and
         ->and($updated['geography']['coordinates']['lat'])->toBe(16.9412)
         ->and($updated['geography']['coordinates']['source'])->toBe('manual')
         ->and($updated['geography']['coordinates']['accuracy_m'])->toBe(5);
+});
+it('retains the complete product version payload when submitting for review', function (): void {
+    listingLifecyclePgsqlOrSkip();
+    app(WorkCatalogSeeder::class)->run();
+    $catalog = app(WorkCatalog::class);
+    $workOptions = $catalog->optionsFor(null, 'product');
+    $productWorkSet = collect([...$workOptions['recommended'], ...$workOptions['other_archetypes']])
+        ->first(static fn (array $workSet): bool => $workSet['set_code'] === 'set-product-market-handoff');
+    expect($productWorkSet)->not->toBeNull();
+
+    $user = User::factory()->create();
+    $actor = new ResourceActor($user->id, $user->id);
+    $correlationId = (string) Str::uuid7();
+    $input = [
+        'title' => 'Tagudin handoff product',
+        'description' => 'A locally stocked product with a governed handoff.',
+        'category_code' => 'food',
+        'listing_type' => 'product',
+        'work_shape' => 'A4',
+        'work_catalog_code' => 'set-product-market-handoff',
+        'work_set_version' => 1,
+        'prep_lead_time' => 'next_day',
+        'milestone_stages' => $productWorkSet['steps'],
+        'variants' => [['id' => 'variant-one', 'name' => 'Standard', 'price' => 125, 'stock' => 7, 'is_default' => true]],
+        'media' => ['items' => [['id' => 'cover', 'kind' => 'photo', 'url' => '/product.jpg', 'is_cover' => true]]],
+        'deal_chain_combinations' => [['id' => 'pickup', 'title' => 'Pickup', 'isDefault' => true, 'nodes' => []]],
+        'deal_chain_specification' => ['based_on_recipe_code' => 'direct', 'combination_count' => 1],
+    ];
+
+    $created = app(CreateListingDraft::class)->handle($actor, $input, $correlationId);
+    expect($created['prep_lead_time'])->toBe('next_day')
+        ->and($created['work_specification']['based_on_set_code'] ?? null)->toBe('set-product-market-handoff');
+
+    $updated = app(UpdateListingDraft::class)->handle(
+        (string) $created['id'],
+        $actor,
+        (int) $created['expected_version'],
+        ['title' => 'Tagudin handoff product updated'],
+        $correlationId,
+    );
+    $submitted = app(SubmitListing::class)->handle(
+        (string) $created['id'],
+        $actor,
+        (int) $updated['expected_version'],
+        'product-submit-'.(string) Str::uuid7(),
+        $correlationId,
+    );
+
+    $terms = json_decode((string) DB::table('listing_versions')
+        ->where('listing_id', $created['id'])
+        ->where('version_number', $submitted['version'])
+        ->value('terms'), true);
+
+    expect($terms['media']['items'])->toHaveCount(1)
+        ->and($terms['variants'])->toBe($input['variants'])
+        ->and($terms['work_catalog_code'])->toBe('set-product-market-handoff')
+        ->and($terms['work_set_version'])->toBe(1)
+        ->and($terms['prep_lead_time'])->toBe('next_day')
+        ->and($terms['deal_chain_combinations'])->toEqual($input['deal_chain_combinations'])
+        ->and($terms['deal_chain_specification'])->toEqual($input['deal_chain_specification'])
+        ->and($terms['work_specification']['nodes'])->toEqual($productWorkSet['steps']);
+});
+it('allows an owner to revise a rejected listing draft', function (): void {
+    listingLifecyclePgsqlOrSkip();
+    app(WorkCatalogSeeder::class)->run();
+
+    $user = User::factory()->create();
+    $actor = new ResourceActor($user->id, $user->id);
+    $correlationId = (string) Str::uuid7();
+    $created = app(CreateListingDraft::class)->handle($actor, [
+        'title' => 'Product returned for edits',
+        'description' => 'A product listing returned with a review note.',
+        'category_code' => 'food',
+        'listing_type' => 'product',
+        'work_shape' => 'A4',
+    ], $correlationId);
+    DB::table('listings')->where('id', $created['id'])->update([
+        'status' => 'rejected',
+        'review_status' => 'rejected',
+    ]);
+
+    $revised = app(UpdateListingDraft::class)->handle(
+        (string) $created['id'],
+        $actor,
+        (int) $created['expected_version'],
+        ['title' => 'Product revised after review'],
+        $correlationId,
+    );
+
+    expect($revised['title'])->toBe('Product revised after review')
+        ->and($revised['status'])->toBe('draft')
+        ->and($revised['review_status'])->toBe('not_required');
 });

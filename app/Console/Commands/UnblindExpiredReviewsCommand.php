@@ -43,6 +43,23 @@ final class UnblindExpiredReviewsCommand extends Command
 
         $count = 0;
         foreach ($expired as $review) {
+            $orderId = $review->order_id !== null ? (string) $review->order_id : '';
+            if ($orderId !== '') {
+                $hasHold = DB::table('administrative_holds')
+                    ->where(function ($q) use ($orderId): void {
+                        $q->where('order_id', $orderId);
+                        if (Schema::hasTable('payment_obligations')) {
+                            $q->orWhereIn('payment_obligation_id', DB::table('payment_obligations')->where('order_id', $orderId)->select('id'));
+                        }
+                    })
+                    ->whereIn('status', ['active', 'reviewing'])
+                    ->where('effective_at', '<=', now())
+                    ->exists();
+                if ($hasHold) {
+                    continue;
+                }
+            }
+
             DB::table('reviews')->where('id', $review->id)->update([
                 'moderation_status' => 'approved',
                 'sealed_until' => null,
@@ -50,7 +67,6 @@ final class UnblindExpiredReviewsCommand extends Command
                 'updated_at' => $now,
             ]);
 
-            $orderId = (string) $review->order_id;
             $correlationId = (string) ($review->correlation_id ?? $review->id);
 
             $auditId = $audits->record(

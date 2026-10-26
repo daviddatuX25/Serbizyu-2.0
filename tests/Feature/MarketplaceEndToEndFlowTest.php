@@ -44,75 +44,18 @@ final class MarketplaceEndToEndFlowTest extends TestCase
 
     public function test_complete_provider_listing_to_buyer_booking_and_order_fulfillment(): void
     {
-        // STEP 1: Set up Provider (Rosa Tagudin)
-        $providerPhone = '+639178881234';
-        $provider = User::where('phone_e164', $providerPhone)->first();
-        if ($provider === null) {
-            $providerId = (string) Str::uuid7();
-            $now = now();
-            DB::table('users')->insert([
-                'id' => $providerId,
-                'phone_e164' => $providerPhone,
-                'email' => 'rosa@tagudin.ph',
-                'status' => 'active',
-                'primary_access_tier' => 'L1',
-                'locale' => 'fil',
-                'timezone' => 'Asia/Manila',
-                'version' => 1,
-                'phone_verified_at' => $now,
-                'correlation_id' => $providerId,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-            DB::table('user_profiles')->insert([
-                'user_id' => $providerId,
-                'display_name' => 'Rosa Tagudin',
-                'service_area_display' => 'Tagudin',
-                'accessibility_preferences' => json_encode([]),
-                'language_preferences' => json_encode(['primary' => 'fil']),
-                'version' => 1,
-                'correlation_id' => $providerId,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-            $provider = User::findOrFail($providerId);
-        }
-        // Ensure provider role via RoleAssignmentService
-        $roleService = app(RoleAssignmentService::class);
-        $roleService->ensureActive($provider->id, 'provide', (string) Str::uuid7());
-        // STEP 2: Set up Buyer (Juan Dela Cruz)
-        $buyerPhone = '+639171234567';
-        $buyer = User::where('phone_e164', $buyerPhone)->first();
-        if ($buyer === null) {
-            $buyerId = (string) Str::uuid7();
-            $now = now();
-            DB::table('users')->insert([
-                'id' => $buyerId,
-                'phone_e164' => $buyerPhone,
-                'email' => 'juan@tagudin.ph',
-                'status' => 'active',
-                'primary_access_tier' => 'L1',
-                'locale' => 'fil',
-                'timezone' => 'Asia/Manila',
-                'version' => 1,
-                'phone_verified_at' => $now,
-                'correlation_id' => $buyerId,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-            DB::table('user_profiles')->insert([
-                'user_id' => $buyerId,
-                'display_name' => 'Juan Dela Cruz',
-                'service_area_display' => 'Tagudin',
-                'accessibility_preferences' => json_encode([]),
-                'language_preferences' => json_encode(['primary' => 'fil']),
-                'version' => 1,
-                'correlation_id' => $buyerId,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-            $buyer = User::findOrFail($buyerId);
-        }
+        $provider = User::factory()
+            ->withEmailPassword('rosa+'.Str::uuid().'@example.test')
+            ->create();
+        app(RoleAssignmentService::class)->ensureActive(
+            $provider->id,
+            'provider',
+            (string) Str::uuid7(),
+        );
+
+        $buyer = User::factory()
+            ->withEmailPassword('juan+'.Str::uuid().'@example.test')
+            ->create();
 
         // STEP 3: Provider creates a new listing draft
         $createResponse = $this->actingAs($provider)->postJson('/listings', [
@@ -186,17 +129,16 @@ final class MarketplaceEndToEndFlowTest extends TestCase
             ->where('listing_id', $listingId)
             ->first();
         self::assertNotNull($order, 'Order proposal must be created on book action.');
-        self::assertSame('pending_acceptance', $order->status);
+        self::assertSame('proposed', $order->status);
 
-        // STEP 7: Finalize the Order (Contract Agreement)
-        $finalizeKey = 'finalize-'.Str::random(12);
-        $finalizeResponse = $this->actingAs($provider)->postJson("/orders/{$order->id}/finalize", [
+        $acceptKey = 'accept-'.Str::random(12);
+        $acceptResponse = $this->actingAs($provider)->postJson("/orders/{$order->id}/accept", [
             'expected_order_version' => (int) $order->version,
-            'idempotency_key' => $finalizeKey,
+            'idempotency_key' => $acceptKey,
         ]);
 
-        $finalizeResponse->assertOk();
-        self::assertSame('accepted', $finalizeResponse->json('data.status'));
+        $acceptResponse->assertOk();
+        self::assertSame('accepted', $acceptResponse->json('data.status'));
 
         // Confirm work instance was provisioned
         $work = DB::table('work_instances')->where('order_id', $order->id)->first();
@@ -222,7 +164,6 @@ final class MarketplaceEndToEndFlowTest extends TestCase
                 'duration_label' => null,
                 'required_proofs' => [],
                 'approval_method' => 'app_confirm',
-                'metric_unit' => null,
                 'status' => 'active',
                 'completed_at' => null,
                 'completed_by_user_id' => null,
@@ -251,6 +192,6 @@ final class MarketplaceEndToEndFlowTest extends TestCase
             ->post("/orders/{$order->id}/work/signoff");
         $signoffResponse->assertRedirect();
         self::assertSame('completed', DB::table('work_instances')->where('order_id', $order->id)->value('status'));
-        self::assertSame('closed', DB::table('orders')->where('id', $order->id)->value('status'));
+        self::assertSame('completed', DB::table('orders')->where('id', $order->id)->value('status'));
     }
 }

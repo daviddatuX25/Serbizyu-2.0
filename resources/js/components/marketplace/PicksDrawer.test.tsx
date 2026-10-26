@@ -37,18 +37,21 @@ describe('PicksDrawer', () => {
                 extraFee: 215,
                 nodes: [
                     {
+                        key: 'part',
                         role: 'STORE',
                         title: 'Tagudin Hardware & Supply Depot',
                         sub: 'Partner quote required',
                         type: 'store',
                     },
                     {
+                        key: 'courier',
                         role: 'COURIER',
                         title: 'Danny Express Motorcycle Pool',
                         sub: 'Partner quote required',
                         type: 'delivery',
                     },
                     {
+                        key: 'labor',
                         role: 'LABOR',
                         title: 'Kuya Ben Aircon Services',
                         sub: 'Provider agreement required',

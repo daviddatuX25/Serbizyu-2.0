@@ -40,6 +40,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
         applicableListingTypes: ['service'],
         nodes: [
             {
+                key: 'part',
                 role: 'Part',
                 title: '35uF AC Run Cap.',
                 sub: 'Tagudin Hardware Depot',
@@ -50,6 +51,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 18000,
             },
             {
+                key: 'courier',
                 role: 'Rider',
                 title: 'Danny Express',
                 sub: 'On-demand ~20 mins transit',
@@ -60,6 +62,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 3500,
             },
             {
+                key: 'labor',
                 role: 'Labor',
                 title: 'Primary Listing',
                 sub: 'Verified Technician',
@@ -80,6 +83,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
         applicableCategories: DELIVERY_CATEGORIES,
         nodes: [
             {
+                key: 'store',
                 role: 'Store',
                 title: 'Counter Pickup',
                 sub: 'Tagudin Source',
@@ -87,6 +91,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 image: '/photos/ac-capacitor.jpg',
             },
             {
+                key: 'courier',
                 role: 'Rider',
                 title: 'Danny Express',
                 sub: 'Fast point-to-point courier',
@@ -97,6 +102,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 3500,
             },
             {
+                key: 'primary',
                 role: 'Destination',
                 title: 'Primary Listing',
                 sub: 'Customer Doorstep',
@@ -118,6 +124,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
         applicableListingTypes: ['service'],
         nodes: [
             {
+                key: 'primary',
                 role: 'Labor',
                 title: 'Primary Listing',
                 sub: 'Certified Labor Provider',
@@ -125,6 +132,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 image: '/photos/ac-clean.jpg',
             },
             {
+                key: 'audit',
                 role: 'Audit',
                 title: 'Safety Inspection',
                 sub: 'Master Electrician',
@@ -149,6 +157,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
         applicableListingTypes: ['product'],
         nodes: [
             {
+                key: 'primary',
                 role: 'Product',
                 title: 'Primary Listing',
                 sub: 'Stall Counter Ready',
@@ -156,6 +165,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 image: '/photos/ac-capacitor.jpg',
             },
             {
+                key: 'courier',
                 role: 'Rider',
                 title: 'Danny Express',
                 sub: 'Courier Transport Runner',
@@ -166,6 +176,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 3500,
             },
             {
+                key: 'installation',
                 role: 'Labor',
                 title: 'Installation Provider',
                 sub: 'Kuya Ben AC Services',
@@ -191,6 +202,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
         applicableWorkShapes: ['A4'],
         nodes: [
             {
+                key: 'primary',
                 role: 'Bakery',
                 title: 'Primary Listing',
                 sub: 'Stall counter ready',
@@ -201,6 +213,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 18000,
             },
             {
+                key: 'courier',
                 role: 'Rider',
                 title: 'Danny Express Thermal',
                 sub: 'Insulated hot delivery',
@@ -226,6 +239,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
         applicableWorkShapes: ['A1', 'A4'],
         nodes: [
             {
+                key: 'primary',
                 role: 'Artist',
                 title: 'Primary Listing',
                 sub: 'Custom layout & artwork',
@@ -236,6 +250,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 8000,
             },
             {
+                key: 'courier',
                 role: 'Rider',
                 title: 'Danny Express',
                 sub: 'Gift-safe padala transit',
@@ -261,6 +276,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
         applicableWorkShapes: ['A1'],
         nodes: [
             {
+                key: 'primary',
                 role: 'Print',
                 title: 'Primary Listing',
                 sub: 'Press production ready',
@@ -271,6 +287,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 20000,
             },
             {
+                key: 'courier',
                 role: 'Rider',
                 title: 'Danny Express',
                 sub: 'Bundled print dispatch',
@@ -296,6 +313,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
         applicableWorkShapes: ['A1', 'A3'],
         nodes: [
             {
+                key: 'part',
                 role: 'Haberdashery',
                 title: 'Button Pack',
                 sub: 'Centro Haberdashery',
@@ -304,6 +322,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 3000,
             },
             {
+                key: 'courier',
                 role: 'Rider',
                 title: 'Danny Express',
                 sub: 'Two-way garment transit',
@@ -314,6 +333,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 4500,
             },
             {
+                key: 'labor',
                 role: 'Tailor',
                 title: 'Primary Listing',
                 sub: 'Garment hem alteration',
@@ -339,6 +359,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
         applicableWorkShapes: ['A1', 'A9'],
         nodes: [
             {
+                key: 'store',
                 role: 'Produce',
                 title: 'Market Crate',
                 sub: 'Wet market stall',
@@ -347,6 +368,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 8000,
             },
             {
+                key: 'courier',
                 role: 'Hauler',
                 title: 'Kuya Jun Tricycle',
                 sub: 'Bulky cargo transport',
@@ -356,6 +378,7 @@ export const CANONICAL_DEAL_CHAIN_RECIPES: Record<
                 priceMinor: 6000,
             },
             {
+                key: 'primary',
                 role: 'Runner',
                 title: 'Primary Listing',
                 sub: 'Errand procurement runner',

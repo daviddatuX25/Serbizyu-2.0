@@ -29,7 +29,8 @@ namespace App\Shared\Contracts;
  *     capability_profile_business_version: int|null,
  *     work_shape: string,
  *     work_specification?: array<string, mixed>|null,
- *     milestone_stages?: list<array<string, mixed>>
+ *     milestone_stages?: list<array<string, mixed>>,
+ *     terms?: array<string, mixed>
  * }
  */
 interface OrderListingSourcePort
@@ -46,4 +47,12 @@ interface OrderListingSourcePort
      * @return ListingOrderSource|null
      */
     public function lockActiveApproved(string $listingId): ?array;
+
+    /**
+     * Resolve lanes eligible for a payment obligation against the immutable
+     * listing version accepted by the order.
+     *
+     * @return list<string>
+     */
+    public function eligiblePaymentLanesForVersion(string $listingVersionId): array;
 }

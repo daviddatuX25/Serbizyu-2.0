@@ -314,14 +314,27 @@ export default function CreateService({
                 editingDraft.milestoneStages.length > 0
               ? (editingDraft.milestoneStages as unknown as WorkStage[])
               : null;
+    const normalizedDraftStages = draftStages?.map((stage) => {
+        const serialized = stage as WorkStage & {
+            checklist_items?: WorkStage['checklistItems'];
+            metric_requirements?: WorkStage['metricRequirements'];
+        };
+        return {
+            ...stage,
+            checklistItems: stage.checklistItems ?? serialized.checklist_items,
+            metricRequirements: stage.metricRequirements ?? serialized.metric_requirements,
+        };
+    });
     const initialTemplate =
         (editingDraft?.work_catalog_code
             ? allWorkTemplates.find((template) => template.id === editingDraft.work_catalog_code)
             : null) ??
         allWorkTemplates.find((template) => template.categoryCodes?.includes(category)) ??
-        EMPTY_WORK_TEMPLATE;
+        (normalizedDraftStages && normalizedDraftStages.length > 0
+            ? (allWorkTemplates.find((t) => t.shape === 'A1') ?? allWorkTemplates[0] ?? EMPTY_WORK_TEMPLATE)
+            : EMPTY_WORK_TEMPLATE);
     const [selectedTemplate, setSelectedTemplate] = useState<WorkTemplate>(initialTemplate);
-    const [stages, setStages] = useState<WorkStage[]>(draftStages ?? initialTemplate.stages);
+    const [stages, setStages] = useState<WorkStage[]>(normalizedDraftStages ?? initialTemplate.stages);
     const [workModalOpen, setWorkModalOpen] = useState(false);
     const [customizerModalOpen, setCustomizerModalOpen] = useState(false);
     const [previewTab, setPreviewTab] = useState<'card' | 'timeline'>('card');
@@ -337,6 +350,7 @@ export default function CreateService({
     );
 
     const isCustomizedFromTemplate = useMemo(() => {
+        if (!selectedTemplate.id) return stages.length > 0;
         if (stages.length !== selectedTemplate.stages.length) return true;
         return stages.some((stage, index) => {
             const original = selectedTemplate.stages[index];
@@ -896,13 +910,21 @@ export default function CreateService({
     // Form Submission
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (allWorkTemplates.length === 0 || !selectedTemplate.id) {
+        const effectiveTemplate = selectedTemplate.id
+            ? selectedTemplate
+            : (allWorkTemplates.find((t) => t.categoryCodes?.includes(category)) ??
+               allWorkTemplates.find((t) => t.shape === 'A1') ??
+               allWorkTemplates[0]);
+
+        if (allWorkTemplates.length === 0 || (!selectedTemplate.id && !effectiveTemplate)) {
             setFormErrors({
                 work_catalog_code:
                     'No compatible published work set is available for this service.',
             });
             return;
         }
+
+        const templateToUse = selectedTemplate.id ? selectedTemplate : effectiveTemplate;
         if (!isAuthenticated) {
             redirectGuestToSignIn();
             return;
@@ -912,15 +934,16 @@ export default function CreateService({
         const effectiveDescription =
             description.trim().length >= 10
                 ? description.trim()
-                : `${title.trim()} — Professional ${category} service in Tagudin, Ilocos Sur. Governed under ${selectedTemplate.title} with photo milestone evidence.`;
+                : `${title.trim()} — Professional ${category} service in Tagudin, Ilocos Sur. Governed under ${templateToUse.title} with photo milestone evidence.`;
 
         const payload: Record<string, FormDataConvertible> = {
             title: title.trim(),
             description: effectiveDescription,
             category_code: category,
             listing_type: 'service',
-            work_catalog_code: selectedTemplate.id,
-            work_set_version: selectedTemplate.setVersion ?? 1,
+            work_shape: templateToUse.shape || 'A1',
+            work_catalog_code: templateToUse.id,
+            work_set_version: templateToUse.setVersion ?? 1,
             price_amount_minor: effectivePriceMinor,
             pricing_mode: pricingMode,
             inclusions,
@@ -954,7 +977,8 @@ export default function CreateService({
                 ...(s.approvalMethod !== undefined ? { approval_method: s.approvalMethod } : {}),
                 ...(s.handoffParty !== undefined ? { handoff_party: s.handoffParty } : {}),
                 ...(Array.isArray(s.requiredProofs) ? { required_proofs: s.requiredProofs } : {}),
-                ...(s.metricUnit !== undefined ? { metric_unit: s.metricUnit } : {}),
+                ...(Array.isArray(s.checklistItems) ? { checklist_items: s.checklistItems } : {}),
+                ...(Array.isArray(s.metricRequirements) ? { metric_requirements: s.metricRequirements } : {}),
             })),
             media: media as unknown as FormDataConvertible,
             deal_chain_combinations: combinations as unknown as FormDataConvertible,
@@ -1697,7 +1721,7 @@ export default function CreateService({
                                         </div>
                                     )}
 
-                                    {selectedTemplate.id && (
+                                    {(selectedTemplate.id || stages.length > 0) && (
                                         <div className="space-y-3 rounded-2xl border border-slate-200 bg-[#FAFCFB] p-3.5 shadow-2xs">
                                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                                 <div className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -1775,7 +1799,7 @@ export default function CreateService({
                                             </button>
                                             <button
                                                 type="button"
-                                                disabled={!selectedTemplate.id}
+                                                disabled={!selectedTemplate.id && stages.length === 0}
                                                 onClick={() => setStep(4)}
                                                 className="flex-1 cursor-pointer rounded-xl bg-[#FFC72C] py-3 text-xs font-bold text-slate-950 shadow-xs hover:bg-[#e6b327] disabled:opacity-50"
                                             >
@@ -2430,7 +2454,7 @@ export default function CreateService({
                                                 disabled={
                                                     isSubmitting ||
                                                     !title.trim() ||
-                                                    !selectedTemplate.id
+                                                    (!selectedTemplate.id && stages.length === 0)
                                                 }
                                                 className="w-full cursor-pointer rounded-xl bg-[#0F2F58] px-6 py-3 text-center text-xs font-extrabold text-white shadow-md hover:bg-[#153e74] disabled:opacity-50 sm:w-auto"
                                             >
@@ -2501,10 +2525,27 @@ export default function CreateService({
                     open={workModalOpen}
                     onClose={() => setWorkModalOpen(false)}
                     templates={allWorkTemplates}
-                    activeTemplateId={selectedTemplate.id}
+                    activeTemplateId={selectedTemplate.id || null}
                     onSelect={handleSelectTemplate}
                     onBuildCustom={() => {
                         setWorkModalOpen(false);
+                        const base =
+                            (selectedTemplate.id
+                                ? allWorkTemplates.find((t) => t.id === selectedTemplate.id)
+                                : null) ??
+                            allWorkTemplates.find((t) => t.categoryCodes?.includes(category)) ??
+                            allWorkTemplates.find((t) => t.shape === 'A1') ??
+                            allWorkTemplates[0];
+
+                        if (base && !selectedTemplate.id) {
+                            setSelectedTemplate({
+                                ...base,
+                                title: 'Custom Service Workflow',
+                            });
+                            if (stages.length === 0) {
+                                setStages(base.stages);
+                            }
+                        }
                         setCustomizerModalOpen(true);
                     }}
                 />
@@ -2517,9 +2558,30 @@ export default function CreateService({
                     flowType={selectedTemplate.flowType}
                     onSave={(updatedStages) => {
                         setStages(updatedStages);
+                        if (!selectedTemplate.id) {
+                            const base =
+                                allWorkTemplates.find((t) => t.categoryCodes?.includes(category)) ??
+                                allWorkTemplates.find((t) => t.shape === 'A1') ??
+                                allWorkTemplates[0];
+                            if (base) {
+                                setSelectedTemplate({
+                                    ...base,
+                                    title: 'Custom Service Workflow',
+                                });
+                            }
+                        }
                     }}
                     onResetToTemplate={() => {
-                        setStages(selectedTemplate.stages);
+                        const base =
+                            allWorkTemplates.find((t) => t.id === selectedTemplate.id) ??
+                            allWorkTemplates.find((t) => t.categoryCodes?.includes(category)) ??
+                            allWorkTemplates.find((t) => t.shape === 'A1') ??
+                            allWorkTemplates[0];
+                        if (base) {
+                            setStages(base.stages);
+                        } else {
+                            setStages(selectedTemplate.stages);
+                        }
                     }}
                 />
 

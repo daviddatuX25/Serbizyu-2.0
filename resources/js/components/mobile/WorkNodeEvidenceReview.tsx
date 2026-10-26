@@ -1,12 +1,13 @@
 import { AlertCircle, CheckCircle2, MapPin } from 'lucide-react';
-import type { WorkNodeEvidenceProjection } from '../../types';
+import type { WorkNodeEvidenceProjection, WorkNodeRecord } from '../../types';
 
 type WorkNodeEvidenceReviewProps = {
     evidence: WorkNodeEvidenceProjection | null | undefined;
+    node: WorkNodeRecord;
     onPreviewPhoto: (url: string) => void;
 };
 
-export default function WorkNodeEvidenceReview({ evidence, onPreviewPhoto }: WorkNodeEvidenceReviewProps) {
+export default function WorkNodeEvidenceReview({ evidence, node, onPreviewPhoto }: WorkNodeEvidenceReviewProps) {
     if (!evidence) {
         return (
             <p className="mt-3 border-t border-slate-200 pt-3 text-[11px] text-slate-600">
@@ -56,18 +57,24 @@ export default function WorkNodeEvidenceReview({ evidence, onPreviewPhoto }: Wor
 
             {evidence.metric_readings.length > 0 && (
                 <ul className="flex flex-wrap gap-2" aria-label="Submitted measurements">
-                    {evidence.metric_readings.map((reading, index) => (
-                        <li key={`${reading.unit}-${index}`} className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-800">
-                            <strong>{reading.value}</strong> {reading.unit}
+                    {evidence.metric_readings.map((reading) => (
+                        <li key={reading.id} className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-800">
+                            <span>{node.metric_requirements?.find((item) => item.id === reading.id)?.name ?? reading.id}: </span><strong>{reading.value}</strong> {reading.unit}
                         </li>
                     ))}
                 </ul>
             )}
 
-            {evidence.checklist_completed && (
-                <p className="flex items-center gap-2 text-xs font-semibold text-emerald-800">
-                    <CheckCircle2 className="size-4" aria-hidden="true" /> Checklist completed
-                </p>
+            {evidence.checklist_responses.length > 0 && (
+                <ul className="space-y-1 text-xs" aria-label="Submitted checklist responses">
+                    {evidence.checklist_responses.map((response) => {
+                        const item = node.checklist_items?.find((definition) => definition.id === response.id);
+                        return <li key={response.id} className={response.completed ? 'text-emerald-800' : 'text-slate-600'}>
+                            {response.completed ? <CheckCircle2 className="mr-1 inline size-4" aria-hidden="true" /> : null}
+                            {item?.label ?? response.id}: {response.completed ? 'Complete' : 'Not complete'}
+                        </li>;
+                    })}
+                </ul>
             )}
 
             {evidence.notes && (

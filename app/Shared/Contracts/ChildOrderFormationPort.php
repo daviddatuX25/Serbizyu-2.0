@@ -24,6 +24,11 @@ interface ChildOrderFormationPort
      *     quantity?: int,
      *     lane?: string,
      *     expected_listing_version?: int,
+     *     expected_listing_version_id?: string,
+     *     resource_key?: string,
+     *     selection?: array<string, mixed>,
+     *     unit_amount_minor?: int|null,
+     *     appointment_reservation_id?: string,
      * }  $params
      * @return array{
      *     order_id: string,

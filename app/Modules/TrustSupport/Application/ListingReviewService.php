@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Schema;
 
 final class ListingReviewService implements ListingReviewReaderPort
 {
+
     private const BAYESIAN_PRIOR_WEIGHT = 5;
 
     private const BAYESIAN_CATALOG_MEAN = 4.5;
@@ -26,7 +27,10 @@ final class ListingReviewService implements ListingReviewReaderPort
             ->where('orders.listing_id', $listingId)
             ->whereNotNull('reviews.unblinded_at')
             ->whereIn('reviews.moderation_status', ['approved', 'unblinded'])
-            ->pluck('reviews.rating');
+            ->select(['reviews.order_id', 'reviews.rating'])
+            ->get()
+            ->reject(fn ($row): bool => $this->isQuarantined((string) $row->order_id))
+            ->pluck('rating');
 
         $count = $rows->count();
         if ($count === 0) {
@@ -61,7 +65,10 @@ final class ListingReviewService implements ListingReviewReaderPort
                 ->where('evidence_files.scan_status', 'clean')
                 ->where('evidence_files.visibility', 'public')
                 ->where('evidence_files.media_type', 'like', 'image/%')
-                ->count('evidence_files.id')
+                ->select(['reviews.order_id', 'evidence_files.id'])
+                ->get()
+                ->reject(fn ($row): bool => $this->isQuarantined((string) $row->order_id))
+                ->count()
             : 0;
 
         return [
@@ -138,6 +145,7 @@ final class ListingReviewService implements ListingReviewReaderPort
             ->whereIn('reviews.moderation_status', ['approved', 'unblinded'])
             ->select([
                 'reviews.id',
+                'reviews.order_id',
                 'reviews.author_user_id',
                 'reviews.rating',
                 'reviews.content',
@@ -154,6 +162,9 @@ final class ListingReviewService implements ListingReviewReaderPort
 
         $results = [];
         foreach ($query->get() as $row) {
+            if ($this->isQuarantined((string) $row->order_id)) {
+                continue;
+            }
             $displayName = (string) ($row->display_name ?? 'Resident Customer');
             $barangay = (string) ($row->service_area_display ?? 'Tagudin');
             $createdAt = Carbon::parse($row->created_at);
@@ -197,32 +208,29 @@ final class ListingReviewService implements ListingReviewReaderPort
             return [];
         }
 
-        $rows = DB::table('reviews')
+        $rawRows = DB::table('reviews')
             ->join('orders', 'orders.id', '=', 'reviews.order_id')
             ->whereIn('orders.listing_id', $listingIds)
             ->whereNotNull('reviews.unblinded_at')
             ->whereIn('reviews.moderation_status', ['approved', 'unblinded'])
-            ->groupBy('orders.listing_id')
-            ->selectRaw('
-                orders.listing_id,
-                COUNT(*) as reviews_count,
-                AVG(reviews.rating) as avg_rating
-            ')
+            ->select(['orders.listing_id', 'reviews.order_id', 'reviews.rating'])
             ->get()
-            ->keyBy('listing_id');
+            ->reject(fn ($row): bool => $this->isQuarantined((string) $row->order_id));
+
+        $rows = $rawRows->groupBy('listing_id');
 
         $result = [];
         foreach ($listingIds as $id) {
-            $row = $rows->get($id);
-            if ($row === null) {
+            $group = $rows->get($id);
+            if ($group === null || $group->isEmpty()) {
                 $result[$id] = [
                     'rating' => 0.0,
                     'reviews_count' => 0,
                     'rating_label' => 'New',
                 ];
             } else {
-                $avg = round((float) $row->avg_rating, 1);
-                $cnt = (int) $row->reviews_count;
+                $avg = round((float) $group->avg('rating'), 1);
+                $cnt = (int) $group->count();
                 $result[$id] = [
                     'rating' => $avg,
                     'reviews_count' => $cnt,
@@ -256,5 +264,33 @@ final class ListingReviewService implements ListingReviewReaderPort
             'distribution' => [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0],
             'satisfaction_pct' => 100,
         ];
+    }
+
+    private function isQuarantined(string $orderId): bool
+    {
+        if (Schema::hasTable('disputes')) {
+            $hasDispute = DB::table('disputes')
+                ->where('order_id', $orderId)
+                ->whereNotIn('status', ['resolved', 'closed', 'withdrawn', 'rejected'])
+                ->exists();
+            if ($hasDispute) {
+                return true;
+            }
+        }
+
+        if (Schema::hasTable('administrative_holds')) {
+            return DB::table('administrative_holds')
+                ->where(function ($q) use ($orderId): void {
+                    $q->where('order_id', $orderId);
+                    if (Schema::hasTable('payment_obligations')) {
+                        $q->orWhereIn('payment_obligation_id', DB::table('payment_obligations')->where('order_id', $orderId)->select('id'));
+                    }
+                })
+                ->whereIn('status', ['active', 'reviewing'])
+                ->where('effective_at', '<=', now())
+                ->exists();
+        }
+
+        return false;
     }
 }

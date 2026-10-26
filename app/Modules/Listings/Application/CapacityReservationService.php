@@ -141,6 +141,9 @@ final class CapacityReservationService
                 throw new ListingError('LISTING_NOT_FOUND', 'Capacity bucket was not found.', $correlationId, status: 404);
             }
 
+            if ((string) ($bucket->availability_status ?? '') === 'paused') {
+                throw new ListingError('CAPACITY_UNAVAILABLE', 'This stock item is paused and cannot accept new holds.', $correlationId, status: 409);
+            }
             $remaining = (int) $bucket->remaining_quantity;
             if ($quantity > $remaining) {
                 throw new ListingError(
@@ -181,11 +184,24 @@ final class CapacityReservationService
             DB::table('listing_capacity')->where('id', $listingCapacityId)->update([
                 'remaining_quantity' => $newRemaining,
                 'reservation_status' => $newRemaining === 0 ? 'held' : 'open',
+                'availability_status' => $newRemaining < 0 ? 'shortage' : ($newRemaining === 0 ? 'out_of_stock' : 'open'),
                 'row_version' => ((int) $bucket->row_version) + 1,
                 'version' => ((int) $bucket->version) + 1,
                 'correlation_id' => $correlationId,
                 'updated_at' => $now,
             ]);
+            $this->appendReservationMovement(
+                (string) $listingCapacityId,
+                $id,
+                null,
+                'hold',
+                $quantity,
+                0,
+                0,
+                $commandScope,
+                $idempotencyKey,
+                $correlationId,
+            );
 
             return [
                 'reservation_id' => $id,
@@ -209,6 +225,7 @@ final class CapacityReservationService
         string $idempotencyKey,
         string $correlationId,
         ?string $heldReservationId = null,
+        string $resourceKey = '',
     ): ?array {
         if ($quantity < 1) {
             throw new ListingError(
@@ -232,6 +249,7 @@ final class CapacityReservationService
             $idempotencyKey,
             $correlationId,
             $heldReservationId,
+            $resourceKey,
         ): ?array {
             $existing = DB::table('listing_capacity_reservations')
                 ->where('command_scope', $commandScope)
@@ -295,11 +313,14 @@ final class CapacityReservationService
                     'replay' => true,
                 ];
             }
-            $buckets = DB::table('listing_capacity')
+            $bucketQuery = DB::table('listing_capacity')
                 ->where('listing_id', $listingId)
                 ->where('listing_version_id', $listingVersionId)
-                ->lockForUpdate()
-                ->get();
+                ->where('capacity_type', 'quantity');
+            if ($resourceKey !== '') {
+                $bucketQuery->where('resource_key', $resourceKey);
+            }
+            $buckets = $bucketQuery->lockForUpdate()->get();
 
             if ($buckets->isEmpty()) {
                 if ($heldReservationId !== null) {
@@ -354,20 +375,21 @@ final class CapacityReservationService
             if ($buckets->count() > 1) {
                 throw new ListingError(
                     'AMBIGUOUS_CAPACITY_BUCKET',
-                    'Multiple capacity buckets found for this listing version.',
+                    'Multiple capacity buckets found for this listing variant.',
                     $correlationId,
                     status: 409,
                 );
             }
 
             $bucket = $buckets->first();
-            if ((string) ($bucket->resource_key ?? '') !== '') {
-                throw new ListingError(
-                    'AMBIGUOUS_CAPACITY_BUCKET',
-                    'Capacity bucket with non-empty resource key cannot be finalized directly.',
-                    $correlationId,
-                    status: 409,
-                );
+            if ($bucket === null) {
+                throw new ListingError('CAPACITY_BUCKET_NOT_FOUND', 'The selected variant has no stock bucket.', $correlationId, status: 409);
+            }
+            if ($resourceKey === '' && (string) ($bucket->resource_key ?? '') !== '') {
+                throw new ListingError('AMBIGUOUS_CAPACITY_BUCKET', 'The listing requires an explicit variant selection.', $correlationId, status: 409);
+            }
+            if ($resourceKey !== '' && (string) ($bucket->resource_key ?? '') !== $resourceKey) {
+                throw new ListingError('CAPACITY_BUCKET_NOT_FOUND', 'The selected variant has no stock bucket.', $correlationId, status: 409);
             }
 
             if ($held !== null) {
@@ -411,6 +433,24 @@ final class CapacityReservationService
                     'correlation_id' => $correlationId,
                     'updated_at' => $now,
                 ]);
+                DB::table('listing_capacity')->where('id', $bucket->id)->update([
+                    'row_version' => ((int) $bucket->row_version) + 1,
+                    'version' => ((int) $bucket->version) + 1,
+                    'correlation_id' => $correlationId,
+                    'updated_at' => $now,
+                ]);
+                $this->appendReservationMovement(
+                    (string) $bucket->id,
+                    (string) $heldReservationId,
+                    $orderId,
+                    'commit',
+                    -$quantity,
+                    $quantity,
+                    0,
+                    $commandScope,
+                    $idempotencyKey,
+                    $correlationId,
+                );
 
                 return [
                     'reservation_id' => $heldReservationId,
@@ -461,16 +501,163 @@ final class CapacityReservationService
             DB::table('listing_capacity')->where('id', $bucket->id)->update([
                 'remaining_quantity' => $newRemaining,
                 'reservation_status' => $newRemaining === 0 ? 'held' : 'open',
+                'availability_status' => $newRemaining <= 0 ? 'out_of_stock' : 'open',
                 'row_version' => ((int) $bucket->row_version) + 1,
                 'version' => ((int) $bucket->version) + 1,
                 'correlation_id' => $correlationId,
                 'updated_at' => $now,
             ]);
+            $this->appendReservationMovement(
+                (string) $bucket->id,
+                $id,
+                $orderId,
+                'commit',
+                0,
+                $quantity,
+                0,
+                $commandScope,
+                $idempotencyKey,
+                $correlationId,
+            );
 
             return [
                 'reservation_id' => $id,
                 'status' => 'committed',
                 'remaining_quantity' => $newRemaining,
+                'replay' => false,
+            ];
+        });
+    }
+
+    /** @return array{reservation_id: string, status: string, fulfilled_quantity: int, remaining_quantity: int, replay: bool} */
+    public function fulfillForOrder(
+        string $reservationId,
+        int $quantity,
+        string $actorUserId,
+        string $commandScope,
+        string $idempotencyKey,
+        string $correlationId,
+    ): array {
+        if ($quantity < 1 || trim($commandScope) === '' || trim($idempotencyKey) === '') {
+            throw new ListingError('VALIDATION_FAILED', 'A positive fulfillment quantity and idempotency key are required.', $correlationId, fieldErrors: ['quantity' => ['Enter a quantity of at least 1.']]);
+        }
+
+        return DB::transaction(function () use ($reservationId, $quantity, $actorUserId, $commandScope, $idempotencyKey, $correlationId): array {
+            $existingMovement = DB::table('stock_movements')
+                ->where('command_scope', $commandScope)
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+            if ($existingMovement !== null) {
+                if ((string) $existingMovement->movement_type !== 'fulfillment'
+                    || (string) $existingMovement->reservation_id !== $reservationId
+                    || -((int) $existingMovement->delta_on_hand) !== $quantity) {
+                    throw new ListingError('IDEMPOTENCY_CONFLICT', 'That fulfillment key was already used for different input.', $correlationId, status: 409);
+                }
+
+                $reservation = DB::table('listing_capacity_reservations')->where('id', $reservationId)->first();
+                $bucket = DB::table('listing_capacity')->where('id', $reservation?->listing_capacity_id)->first();
+
+                return [
+                    'reservation_id' => $reservationId,
+                    'status' => (string) ($reservation->status ?? ''),
+                    'fulfilled_quantity' => (int) ($reservation->fulfilled_quantity ?? 0),
+                    'remaining_quantity' => (int) ($bucket->remaining_quantity ?? 0),
+                    'replay' => true,
+                ];
+            }
+
+            $reservation = DB::table('listing_capacity_reservations')
+                ->where('id', $reservationId)
+                ->lockForUpdate()
+                ->first();
+            if ($reservation === null || $reservation->order_id === null) {
+                throw new ListingError('LISTING_NOT_FOUND', 'Order capacity reservation was not found.', $correlationId, status: 404);
+            }
+            if ((string) $reservation->status !== 'committed') {
+                throw new ListingError('INVALID_STATE', 'Only committed order capacity can be fulfilled.', $correlationId, status: 409);
+            }
+
+            $bucket = DB::table('listing_capacity')
+                ->where('id', $reservation->listing_capacity_id)
+                ->lockForUpdate()
+                ->first();
+            if ($bucket === null) {
+                throw new ListingError('LISTING_NOT_FOUND', 'The order capacity bucket was not found.', $correlationId, status: 404);
+            }
+
+            $fulfilledQuantity = (int) $reservation->fulfilled_quantity;
+            $releasedQuantity = (int) $reservation->released_quantity;
+            if ($quantity > (int) $reservation->quantity - $fulfilledQuantity - $releasedQuantity) {
+                throw new ListingError('VALIDATION_FAILED', 'Fulfilled quantity cannot exceed unfulfilled order quantity.', $correlationId, status: 409, fieldErrors: ['quantity' => ['Enter a quantity no greater than the order quantity remaining.']]);
+            }
+            if ($quantity > (int) $bucket->quantity) {
+                throw new ListingError('CAPACITY_SHORTAGE', 'On-hand stock is below this fulfillment quantity.', $correlationId, status: 409);
+            }
+
+            $now = now();
+            $nextFulfilled = $fulfilledQuantity + $quantity;
+            $status = $nextFulfilled + $releasedQuantity === (int) $reservation->quantity ? 'fulfilled' : 'committed';
+            DB::table('listing_capacity_reservations')->where('id', $reservationId)->update([
+                'fulfilled_quantity' => $nextFulfilled,
+                'fulfilled_at' => $status === 'fulfilled' ? $now : $reservation->fulfilled_at,
+                'status' => $status,
+                'row_version' => ((int) $reservation->row_version) + 1,
+                'correlation_id' => $correlationId,
+                'updated_at' => $now,
+            ]);
+
+            $onHand = (int) $bucket->quantity - $quantity;
+            $balances = DB::table('listing_capacity_reservations')
+                ->where('listing_capacity_id', $bucket->id)
+                ->selectRaw("COALESCE(SUM(CASE WHEN status = 'held' THEN quantity ELSE 0 END), 0) AS held")
+                ->selectRaw("COALESCE(SUM(CASE WHEN status IN ('committed', 'fulfilled') THEN quantity - fulfilled_quantity - released_quantity ELSE 0 END), 0) AS committed")
+                ->first();
+            $held = (int) ($balances->held ?? 0);
+            $committed = (int) ($balances->committed ?? 0);
+            $available = $onHand - $held - $committed;
+            DB::table('listing_capacity')->where('id', $bucket->id)->update([
+                'quantity' => $onHand,
+                'remaining_quantity' => $available,
+                'availability_status' => $available < 0 ? 'shortage' : ($available === 0 ? 'out_of_stock' : 'open'),
+                'row_version' => ((int) $bucket->row_version) + 1,
+                'version' => ((int) $bucket->version) + 1,
+                'correlation_id' => $correlationId,
+                'updated_at' => $now,
+            ]);
+            $ownerId = (string) DB::table('listings')->where('id', $bucket->listing_id)->value('owner_user_id');
+            DB::table('stock_movements')->insert([
+                'id' => (string) Str::uuid7(),
+                'listing_capacity_id' => $bucket->id,
+                'source_listing_version_id' => $reservation->listing_version_id,
+                'reservation_id' => $reservationId,
+                'order_id' => $reservation->order_id,
+                'movement_type' => 'fulfillment',
+                'delta_on_hand' => -$quantity,
+                'delta_held' => 0,
+                'delta_committed' => -$quantity,
+                'balance_on_hand' => $onHand,
+                'balance_held' => $held,
+                'balance_committed' => $committed,
+                'balance_available' => $available,
+                'counted_quantity' => null,
+                'reason' => 'Physical stock departed into order custody.',
+                'reference' => null,
+                'evidence_file_id' => null,
+                'actor_user_id' => $actorUserId,
+                'owner_user_id' => $ownerId,
+                'consent_grant_id' => null,
+                'command_scope' => $commandScope,
+                'idempotency_key' => $idempotencyKey,
+                'correlation_id' => $correlationId,
+                'occurred_at' => $now,
+                'created_at' => $now,
+            ]);
+
+            return [
+                'reservation_id' => $reservationId,
+                'status' => $status,
+                'fulfilled_quantity' => $nextFulfilled,
+                'remaining_quantity' => $available,
                 'replay' => false,
             ];
         });
@@ -517,6 +704,9 @@ final class CapacityReservationService
                 ->where('id', $reservation->listing_capacity_id)
                 ->lockForUpdate()
                 ->first();
+            if ($bucket === null) {
+                throw new ListingError('LISTING_NOT_FOUND', 'Capacity bucket was not found.', $correlationId, status: 404);
+            }
 
             $now = now();
             DB::table('listing_capacity_reservations')->where('id', $reservationId)->update([
@@ -526,6 +716,24 @@ final class CapacityReservationService
                 'correlation_id' => $correlationId,
                 'updated_at' => $now,
             ]);
+            DB::table('listing_capacity')->where('id', $bucket->id)->update([
+                'row_version' => ((int) $bucket->row_version) + 1,
+                'version' => ((int) $bucket->version) + 1,
+                'correlation_id' => $correlationId,
+                'updated_at' => $now,
+            ]);
+            $this->appendReservationMovement(
+                (string) $bucket->id,
+                $reservationId,
+                $reservation->order_id === null ? null : (string) $reservation->order_id,
+                'commit',
+                -((int) $reservation->quantity),
+                (int) $reservation->quantity,
+                0,
+                'capacity-reservation:commit:'.$reservationId,
+                'capacity-commit:'.$reservationId,
+                $correlationId,
+            );
 
             return [
                 'reservation_id' => $reservationId,
@@ -582,14 +790,14 @@ final class CapacityReservationService
             }
 
             $now = now();
-            $restore = in_array((string) $reservation->status, ['held', 'committed'], true);
-            $newRemaining = $restore
-                ? ((int) $bucket->remaining_quantity) + ((int) $reservation->quantity)
-                : (int) $bucket->remaining_quantity;
+            $outstanding = (int) $reservation->quantity
+                - (int) $reservation->fulfilled_quantity
+                - (int) $reservation->released_quantity;
+            $newRemaining = (int) $bucket->remaining_quantity + $outstanding;
 
-            // Committed quantity was already removed from remaining at hold time; restore only once on release/expire.
             DB::table('listing_capacity_reservations')->where('id', $reservationId)->update([
                 'status' => $status,
+                'released_quantity' => (int) $reservation->released_quantity + $outstanding,
                 'released_at' => $now,
                 'row_version' => ((int) $reservation->row_version) + 1,
                 'correlation_id' => $correlationId,
@@ -599,11 +807,24 @@ final class CapacityReservationService
             DB::table('listing_capacity')->where('id', $bucket->id)->update([
                 'remaining_quantity' => $newRemaining,
                 'reservation_status' => $newRemaining > 0 ? 'open' : 'held',
+                'availability_status' => $newRemaining < 0 ? 'shortage' : ($newRemaining === 0 ? 'out_of_stock' : 'open'),
                 'row_version' => ((int) $bucket->row_version) + 1,
                 'version' => ((int) $bucket->version) + 1,
                 'correlation_id' => $correlationId,
                 'updated_at' => $now,
             ]);
+            $this->appendReservationMovement(
+                (string) $bucket->id,
+                $reservationId,
+                $reservation->order_id === null ? null : (string) $reservation->order_id,
+                'release',
+                (string) $reservation->status === 'held' ? -$outstanding : 0,
+                (string) $reservation->status === 'committed' ? -$outstanding : 0,
+                0,
+                'capacity-reservation:'.$status.':'.$reservationId,
+                'reservation-terminal:'.$reservationId.':'.$status,
+                $correlationId,
+            );
 
             return [
                 'reservation_id' => $reservationId,
@@ -611,5 +832,62 @@ final class CapacityReservationService
                 'remaining_quantity' => $newRemaining,
             ];
         });
+    }
+
+    private function appendReservationMovement(
+        string $capacityId,
+        string $reservationId,
+        ?string $orderId,
+        string $movementType,
+        int $deltaHeld,
+        int $deltaCommitted,
+        int $deltaOnHand,
+        string $commandScope,
+        string $idempotencyKey,
+        string $correlationId,
+    ): void {
+        $bucket = DB::table('listing_capacity')->where('id', $capacityId)->first();
+        if ($bucket === null) {
+            throw new ListingError('LISTING_NOT_FOUND', 'Capacity bucket was not found.', $correlationId, status: 404);
+        }
+        $balances = DB::table('listing_capacity_reservations')
+            ->where('listing_capacity_id', $capacityId)
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'held' THEN quantity ELSE 0 END), 0) AS held")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status IN ('committed', 'fulfilled') THEN quantity - fulfilled_quantity - released_quantity ELSE 0 END), 0) AS committed")
+            ->first();
+        $onHand = (int) $bucket->quantity;
+        $held = (int) ($balances->held ?? 0);
+        $committed = (int) ($balances->committed ?? 0);
+        $available = $onHand - $held - $committed;
+        $ownerId = (string) DB::table('listings')->where('id', $bucket->listing_id)->value('owner_user_id');
+        $now = now();
+
+        DB::table('stock_movements')->insert([
+            'id' => (string) Str::uuid7(),
+            'listing_capacity_id' => $capacityId,
+            'source_listing_version_id' => $bucket->listing_version_id,
+            'reservation_id' => $reservationId,
+            'order_id' => $orderId,
+            'movement_type' => $movementType,
+            'delta_on_hand' => $deltaOnHand,
+            'delta_held' => $deltaHeld,
+            'delta_committed' => $deltaCommitted,
+            'balance_on_hand' => $onHand,
+            'balance_held' => $held,
+            'balance_committed' => $committed,
+            'balance_available' => $available,
+            'counted_quantity' => null,
+            'reason' => null,
+            'reference' => null,
+            'evidence_file_id' => null,
+            'actor_user_id' => null,
+            'owner_user_id' => $ownerId,
+            'consent_grant_id' => null,
+            'command_scope' => 'capacity-movement:'.$movementType.':'.$commandScope,
+            'idempotency_key' => $idempotencyKey,
+            'correlation_id' => $correlationId,
+            'occurred_at' => $now,
+            'created_at' => $now,
+        ]);
     }
 }

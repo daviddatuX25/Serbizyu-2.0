@@ -22,8 +22,15 @@ final class WorkCatalogSeeder extends Seeder
         }
 
         $now = now();
+        $existingCatalogCodes = DB::table('work_catalog_versions')
+            ->distinct()
+            ->pluck('catalog_code')
+            ->flip();
         $rows = [];
         foreach (TagudinWorkCatalog::definitions() as $definition) {
+            if (isset($existingCatalogCodes[$definition['catalog_code']])) {
+                continue;
+            }
             $rows[] = [
                 'id' => $definition['id'],
                 'catalog_code' => $definition['catalog_code'],
@@ -35,11 +42,15 @@ final class WorkCatalogSeeder extends Seeder
                 'summary' => $definition['summary'],
                 'status' => $definition['status'],
                 'definition' => json_encode($definition['definition'], JSON_THROW_ON_ERROR),
-                'payload_version' => 1,
+                'payload_version' => $definition['payload_schema_version'],
                 'correlation_id' => $definition['id'],
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
+        }
+
+        if ($rows === []) {
+            return;
         }
 
         DB::table('work_catalog_versions')->upsert(

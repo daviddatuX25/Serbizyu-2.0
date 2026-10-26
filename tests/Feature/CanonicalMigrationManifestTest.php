@@ -14,15 +14,15 @@ final class CanonicalMigrationManifestTest extends TestCase
 {
     use DatabaseTransactions;
 
-    public function test_canonical_inventory_defines_exactly_61_tables(): void
+    public function test_canonical_inventory_defines_exactly_62_tables(): void
     {
-        $inventory = $this->canonical61Tables();
+        $inventory = $this->canonical62Tables();
 
-        self::assertCount(61, $inventory);
+        self::assertCount(62, $inventory);
         self::assertSame($inventory, array_unique($inventory));
     }
 
-    public function test_active_database_contains_expected_60_canonical_tables_and_preserves_deferred_contract(): void
+    public function test_active_database_contains_expected_61_canonical_tables_and_preserves_deferred_contract(): void
     {
         if (DB::connection()->getDriverName() !== 'pgsql') {
             self::markTestSkipped('PostgreSQL catalog contract test requires pgsql driver.');
@@ -55,19 +55,54 @@ final class CanonicalMigrationManifestTest extends TestCase
             'Table request_invitations must not be created prematurely before D6 / Story 6.3.'
         );
 
-        // 4. Active canonical domain tables (60 out of 61)
+        // 4. Active canonical domain tables (61 out of 62)
         $expectedActiveCanonical = array_values(array_filter(
-            $this->canonical61Tables(),
+            $this->canonical62Tables(),
             static fn (string $table): bool => $table !== 'request_invitations'
         ));
 
-        self::assertCount(60, $expectedActiveCanonical);
+        self::assertCount(61, $expectedActiveCanonical);
 
         $domainTables = array_values(array_diff($allTables, array_merge($engineTables, $auxiliaryTables)));
         sort($domainTables);
         sort($expectedActiveCanonical);
 
+        $expectedActiveCanonical[] = 'listing_daily_metrics';
+        $expectedActiveCanonical[] = 'outbox_streams';
+        $expectedActiveCanonical[] = 'stock_movements';
+        $expectedActiveCanonical[] = 'work_deliveries';
+        $expectedActiveCanonical[] = 'work_deliverable_files';
+        $expectedActiveCanonical[] = 'work_revision_requests';
+        $expectedActiveCanonical[] = 'order_handoff_transfers';
+        $expectedActiveCanonical[] = 'deal_need_confirmations';
+        $expectedActiveCanonical[] = 'provider_schedule_resources';
+        $expectedActiveCanonical[] = 'appointment_reservations';
+        $expectedActiveCanonical[] = 'provider_agenda_blocks';
+        $expectedActiveCanonical[] = 'work_schedule_change_requests';
+        $expectedActiveCanonical[] = 'work_schedule_history';
+        $expectedActiveCanonical[] = 'work_dependency_source_facts';
+        $expectedActiveCanonical[] = 'work_step_dependency_gates';
+        $expectedActiveCanonical[] = 'work_clearance_challenges';
+        $expectedActiveCanonical[] = 'lupon_packets';
+        $expectedActiveCanonical[] = 'lupon_packet_artifacts';
+        $expectedActiveCanonical[] = 'lupon_packet_events';
+        sort($expectedActiveCanonical);
         self::assertSame($expectedActiveCanonical, $domainTables);
+
+        $references = DB::select(<<<'SQL'
+            SELECT table_name, is_nullable
+            FROM information_schema.columns
+            WHERE table_schema = current_schema()
+              AND column_name = 'public_reference'
+              AND table_name IN ('orders', 'payment_obligations', 'support_cases', 'disputes')
+            ORDER BY table_name
+            SQL
+        );
+        self::assertSame(
+            ['disputes', 'orders', 'payment_obligations', 'support_cases'],
+            array_map(static fn (object $column): string => $column->table_name, $references),
+        );
+        self::assertSame(['NO', 'NO', 'NO', 'NO'], array_map(static fn (object $column): string => $column->is_nullable, $references));
     }
 
     public function test_work_catalog_versions_enforces_candidate_keys(): void
@@ -228,7 +263,7 @@ final class CanonicalMigrationManifestTest extends TestCase
             }
         }
 
-        $canonical = $this->canonical61Tables();
+        $canonical = $this->canonical62Tables();
         sort($canonical);
         $mappedKeys = array_keys($mappedTables);
         sort($mappedKeys);
@@ -256,11 +291,11 @@ final class CanonicalMigrationManifestTest extends TestCase
     }
 
     /**
-     * The canonical 61 tables defined in canonical-schema-rebuilt.md §2.
+     * The canonical 62 tables defined in canonical-schema-rebuilt.md §2.
      *
      * @return list<string>
      */
-    private function canonical61Tables(): array
+    private function canonical62Tables(): array
     {
         return [
             'administrative_holds',
@@ -304,6 +339,7 @@ final class CanonicalMigrationManifestTest extends TestCase
             'notification_deliveries',
             'notifications',
             'order_parties',
+            'order_proposals',
             'order_terms_snapshots',
             'orders',
             'outbox_messages',
@@ -372,6 +408,7 @@ final class CanonicalMigrationManifestTest extends TestCase
             'D4' => [
                 'orders',
                 'order_parties',
+                'order_proposals',
                 'order_terms_snapshots',
                 'work_instances',
                 'work_events',

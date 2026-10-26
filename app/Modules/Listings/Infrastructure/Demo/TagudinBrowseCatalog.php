@@ -27,7 +27,7 @@ use App\Shared\Infrastructure\Demo\TagudinPartnerCatalog;
  *     price_amount_minor: int|null,
  *     currency: string|null,
  *     package_tiers?: list<array{id: string, title: string, price: int, orig_price?: int, sub: string, inclusions: list<string>}>,
- *     milestone_stages?: list<array{title: string, description: string}>,
+ *     milestone_stages?: list<array<string, mixed>>,
  *     work_catalog_code?: string,
  *     addons?: list<array<string, mixed>>,
  *     partner_candidates?: list<array<string, mixed>>,
@@ -205,8 +205,8 @@ final class TagudinBrowseCatalog
                 'milestone_stages' => [
                     ['title' => 'Breaker isolation & coil status triage', 'description' => 'Stage 1 · Breaker lockout photo gate'],
                     ['title' => 'Chemical foam wash & pressure rinse', 'description' => 'Stage 2 · Foam coverage photo gate'],
-                    ['title' => 'Cold compressor run & amp verification', 'description' => 'Stage 3 · Amperage reading photo gate'],
-                    ['title' => 'Delta temperature drop test (ΔT ≥ 12°C)', 'description' => 'Stage 4 · Probe delta photo + Citizen OTP sign-off'],
+                    ['id' => 'compressor-current', 'title' => 'Cold compressor run & amp verification', 'description' => 'Stage 3 · Amperage reading photo gate', 'required_proofs' => ['metric_reading'], 'metric_requirements' => [['id' => 'compressor-current', 'name' => 'Compressor current', 'unit' => 'A', 'required' => true]]],
+                    ['id' => 'temperature-delta', 'title' => 'Delta temperature drop test (ΔT ≥ 12°C)', 'description' => 'Stage 4 · Probe delta photo + Citizen OTP sign-off', 'required_proofs' => ['photo_proof', 'metric_reading'], 'metric_requirements' => [['id' => 'temperature-delta', 'name' => 'Temperature delta', 'unit' => '°C', 'required' => true, 'min' => 12]], 'approval_method' => 'presence_otp'],
                 ],
                 'barangay_name' => 'Poblacion',
                 'barangay_code' => '0102933037',
@@ -247,7 +247,9 @@ final class TagudinBrowseCatalog
                 'barangay_name' => 'Rizal',
                 'barangay_code' => '0102933037',
                 'stall_location' => 'Tagudin Central Hardware, Rizal',
-                'coordinates' => ['lat' => 16.9378, 'lng' => 120.4442],
+                'variants' => [
+                    ['id' => 'var-ac-capacitor-35uf', 'name' => '35µF · 450V', 'price' => 180, 'stock' => 20, 'is_default' => true],
+                ],
             ],
             [
                 'fixture_key' => 'active-tagudin-ac-install-01',

@@ -147,7 +147,7 @@
 | Appointment/handoff / Digital delivery | Gap | Later |
 | Evidence/concern/support | Present (`payment-flow-mobile.html` dispute drawer + hold stage, `admin-triage.html`) | — |
 | Completion & Review Ceremony | Present (`review-ceremony-mobile.html`, `payment-flow-mobile.html`) | — |
-| Agent-assisted / Admin | Gap | Later |
+| Agent-assisted / Admin | Admin present (`sessions/admin-workspace-kit.html`: Inbox, Order workspace, shared states); agent-assisted gap | Agent later |
 
 ## 10 · Shell & navigation
 
@@ -156,7 +156,7 @@
 | Buyer nav specimen | Present | — |
 | Provider nav specimen | Present | — |
 | Adaptive product rail + mobile dock | Present / accepted | ProductShell |
-| Agent / Admin nav | Gap | Later |
+| Agent / Admin nav | Admin present (`sessions/admin-workspace-kit.html`: five destinations + permission-filtered specialist group); agent gap | Agent later |
 | Journey map | Gap | Later |
 
 ## 11 · Foundation domain
@@ -245,3 +245,38 @@ Start with Wave A, one fixed-perspective URL at a time:
 6. `responses-sealed-after-close.html`
 
 This inventory tracks visual/component gaps only. Behavior, authorization, schema, and lifecycle discoveries must be promoted through the projection matrix, architecture, and OpenSpec before permanent React/Laravel integration.
+
+## Superseded commerce state atlas — retained reference
+
+Specimen: [`sessions/commerce-state-atlas.html`](sessions/commerce-state-atlas.html), linked from the kit index.
+
+This earlier board contains 34 fixed-perspective specimens: Orders (7), Payments (12), Stock (3), Scheduling (5), Work (4), and Deal Chain (3). Each phone depicts one synthetic actor and resource state; actions are disabled samples. It has no scripts, persistence, shared mutable scenario, or backend calls. Its examples remain useful reference while its forest/paper styling is no longer current.
+
+Coverage includes agreement review, capacity conflicts, partial-work cancellation, loading/stale views, bilateral cash reporting, P2P evidence review/recovery, sandbox gateway uncertainty, protected-payment blockers, money-history empty states, stock adjustments, appointment conflicts/no-show reports, completion review, digital delivery, and independent child-order replacement.
+
+**Status:** retained as a previous state inventory. The unified navy/white/mango UI kit below is the current visual authority. The atlas does not mark the separate 37-session backlog complete or authorize live payment behavior.
+
+### Final unified UI kit — current visual authority
+
+[`sessions/final-kit.html`](sessions/final-kit.html) is the entry point for the shared navy/white/mango system. It links the six-state language, shared components, and full domain specimens:
+
+- [`sessions/final-requests-quotes.html`](sessions/final-requests-quotes.html): 4 Listing Detail/builder truth states (variants + stock, Work spec gates, seller-saved Deal Chain combinations, A4 builder sync) and 8 Request, Quote Composer, sealed tender, counter-offer, and award states.
+- [`sessions/final-orders-stock.html`](sessions/final-orders-stock.html): 10 order states and 7 inventory states, including the adjustment ledger.
+- [`sessions/final-payments.html`](sessions/final-payments.html): 15 obligation, evidence, mismatch, reconciliation, and money-history states.
+- [`sessions/final-scheduling-work.html`](sessions/final-scheduling-work.html): 7 capacity states and 10 Work states across A1/A3/A4/A9.
+- [`sessions/final-deal-chain.html`](sessions/final-deal-chain.html): 14 discovery, consent, execution, replacement, and partner states.
+- [`sessions/final-work-tools.html`](sessions/final-work-tools.html): 13 tools and 22 capture/review states. `photo_proof` is the only live capture endpoint; other tools are labeled catalogued or proposed.
+- [`sessions/final-notifications-messages.html`](sessions/final-notifications-messages.html): 4 turn-taking notification inbox states and 6 scoped conversation states (1:1 Order, Agent Acting-For, attachment evidence, Deal Chain handoff relay, Case dispute thread, archived read-only).
+- [`sessions/admin-workspace-kit.html`](sessions/admin-workspace-kit.html): staff Inbox and Order workspace, using the same brand palette and state separation.
+
+All pages share `sessions/final-kit.css`, `sessions/final-state-icons.css`, and `sessions/final-icons.svg`. Statuses and actions pair text with one monochrome SVG icon family; color reinforces state. Static fixtures and disabled controls; no live route or action is implied.
+
+### Named Deal Chain combination — focused review
+
+[`sessions/deal-chain-combination-preview.html`](sessions/deal-chain-combination-preview.html) explores the founder-requested overlapping circular-thumbnail composition in the selected navy/white/mango light theme. A combination uses its own name rather than a forced plus-separated list. The fixed customer view shows separate partner quotes and two explicit execution prerequisites; choosing the combination does not bind providers. Static review only, with an inert product action; no theme cutover or backend change is implied.
+
+### Admin workspace — navy foundation
+
+[`sessions/admin-workspace-kit.html`](sessions/admin-workspace-kit.html) defines the admin foundation in the selected navy/white/mango light theme: six contracts (theme, shell, lists, records, actions, states), an Inbox with saved views instead of metric cards, and an Order workspace with separate Agreement/Work/Payment/Case rails, one current responsibility, and independent Deal Chain siblings. Patterns borrow from Shadcn Admin (sidebar, data-table toolbar, saved views, command search); its router, auth, demo data and palette are not imported. Fixtures continue the Cool Again example.
+
+It supersedes the dark executive specimens (`admin-ui-kit.html`, `admin-triage.html`, `admin-inspector.html`, `admin-hold-console.html`, `admin-kit.css`) as visual direction; those files remain for reference. Static review only: navigation and actions are inert; no route, permission, theme cutover or backend change is implied.

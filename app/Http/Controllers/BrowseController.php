@@ -35,6 +35,7 @@ final class BrowseController
         $communityRequests = DB::table('requests')
             ->leftJoin('user_profiles', 'user_profiles.user_id', '=', 'requests.requester_user_id')
             ->where('requests.status', 'published')
+            ->where(fn ($query) => $query->whereNull('requests.expires_at')->orWhere('requests.expires_at', '>', now()))
             ->orderByDesc('requests.created_at')
             ->select(
                 'requests.id',

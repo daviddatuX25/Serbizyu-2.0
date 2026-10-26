@@ -7,7 +7,8 @@ interface WorkCatalogModalProps {
     open: boolean;
     onClose: () => void;
     templates: WorkTemplate[];
-    activeTemplateId: string | null;
+    activeTemplateId?: string | null;
+    selectedId?: string | null;
     onSelect: (template: WorkTemplate) => void;
     onBuildCustom?: () => void;
 }
@@ -23,11 +24,13 @@ export default function WorkCatalogModal({
     onClose,
     templates,
     activeTemplateId,
+    selectedId,
     onSelect,
     onBuildCustom,
 }: WorkCatalogModalProps) {
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState<string>('all');
+    const effectiveActiveId = activeTemplateId ?? selectedId ?? null;
 
     const filtered = useMemo(() => {
         const q = search.toLowerCase();
@@ -244,7 +247,7 @@ export default function WorkCatalogModal({
                             </div>
                         ) : (
                             filtered.map((t) => {
-                                const isActive = t.id === activeTemplateId;
+                                const isActive = t.id === effectiveActiveId;
                                 return (
                                     <button
                                         key={t.id}

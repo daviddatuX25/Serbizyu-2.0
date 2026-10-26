@@ -14,6 +14,9 @@ use App\Shared\Contracts\DealNeedOrderLinkPort;
 use App\Shared\Contracts\OrderCapacityPort;
 use App\Shared\Contracts\OrderListingSourcePort;
 use App\Shared\Contracts\OrderPaymentObligationPort;
+use App\Shared\Application\NotificationIntent;
+use App\Shared\Contracts\NotificationAttention;
+use App\Shared\Contracts\NotificationsPort;
 use DateTimeInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -30,6 +33,7 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
         private readonly OrderPaymentObligationPort $payments,
         private readonly WorkExecutionService $workExecution,
         private readonly DealNeedOrderLinkPort $dealLink,
+        private readonly NotificationsPort $notifications,
     ) {}
 
     /**
@@ -44,6 +48,11 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
      *     quantity?: int,
      *     lane?: string,
      *     expected_listing_version?: int,
+     *     expected_listing_version_id?: string,
+     *     resource_key?: string,
+     *     selection?: array<string, mixed>,
+     *     unit_amount_minor?: int|null,
+     *     appointment_reservation_id?: string,
      * }  $params
      * @return array{
      *     order_id: string,
@@ -73,6 +82,11 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
         $quantity = max(1, (int) ($params['quantity'] ?? 1));
         $lane = (string) ($params['lane'] ?? 'external_cash');
         $expectedListingVersion = isset($params['expected_listing_version']) ? (int) $params['expected_listing_version'] : null;
+        $expectedListingVersionId = isset($params['expected_listing_version_id']) ? (string) $params['expected_listing_version_id'] : null;
+        $resourceKey = (string) ($params['resource_key'] ?? '');
+        $unitAmountMinor = isset($params['unit_amount_minor']) ? (int) $params['unit_amount_minor'] : null;
+        $appointmentReservationId = isset($params['appointment_reservation_id']) ? (string) $params['appointment_reservation_id'] : null;
+        $selection = is_array($params['selection'] ?? null) ? $params['selection'] : [];
 
         if ($dealChainId === '' || $dealNeedId === '' || $listingId === '' || $buyerUserId === '' || $providerUserId === '') {
             throw new OrderError(
@@ -93,7 +107,7 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
             );
         }
 
-        $allowedLanes = ['external_cash', 'external_digital_proof', 'direct_digital', 'tiwala_protected_digital'];
+        $allowedLanes = ['external_cash', 'p2p_transfer', 'protected_digital'];
         if (! in_array($lane, $allowedLanes, true)) {
             throw new OrderError(
                 'UNSUPPORTED_PAYMENT_LANE',
@@ -115,6 +129,10 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
             'currency' => $currency,
             'quantity' => $quantity,
             'lane' => $lane,
+            'resource_key' => $resourceKey,
+            'selection' => $selection,
+            'unit_amount_minor' => $unitAmountMinor,
+            'appointment_reservation_id' => $appointmentReservationId,
         ];
 
         try {
@@ -151,16 +169,21 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
             $quantity,
             $lane,
             $expectedListingVersion,
-            $reservation,
+            $expectedListingVersionId,
+            $resourceKey,
+            $unitAmountMinor,
+            $selection,
+            $appointmentReservationId,
             $correlationId,
             $idempotencyKey,
+            $reservation,
         ): array {
             // 1. Verify and lock Deal Need via DealCoordination port
             $needSnapshot = $this->dealLink->lockEligibleNeed($dealChainId, $dealNeedId, $correlationId);
             // Verify absence of an active child order for this Deal Need
             $existingActiveOrder = DB::table('orders')
                 ->where('deal_need_id', $dealNeedId)
-                ->whereNotIn('status', ['cancelled', 'closed'])
+                ->whereIn('status', ['proposed', 'accepted', 'in_progress'])
                 ->first();
 
             if ($existingActiveOrder !== null) {
@@ -192,7 +215,8 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
                 );
             }
 
-            if ($expectedListingVersion !== null && (int) $source['listing_version_number'] !== $expectedListingVersion) {
+            if (($expectedListingVersion !== null && (int) $source['listing_version_number'] !== $expectedListingVersion)
+                || ($expectedListingVersionId !== null && (string) $source['listing_version_id'] !== $expectedListingVersionId)) {
                 throw new OrderError(
                     'VERSION_CONFLICT',
                     'Listing terms changed. Refresh and review before confirming.',
@@ -201,32 +225,58 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
                     retryable: true,
                 );
             }
-
-            $now = now();
-            $orderId = (string) Str::uuid7();
-
-            // 3. Commit capacity
+            $workShape = (string) ($source['work_shape'] ?? '');
+            $workSpecification = $source['work_specification'] ?? null;
+            $workStages = (array) ($source['milestone_stages'] ?? []);
             try {
-                $this->capacity->commitForOrder(
-                    listingId: $listingId,
-                    listingVersionId: (string) $source['listing_version_id'],
-                    orderId: $orderId,
-                    quantity: $quantity,
-                    commandScope: 'order.child_formation:'.$orderId,
-                    idempotencyKey: $idempotencyKey,
-                    correlationId: $correlationId,
-                    heldReservationId: null,
+                $workContract = WorkContractSelector::resolve(
+                    $this->workRegistry,
+                    $workShape,
+                    is_array($workSpecification) ? $workSpecification : null,
+                    $workStages,
+                    $correlationId,
                 );
-            } catch (KernelException $error) {
+            } catch (WorkContractError $error) {
                 throw new OrderError(
                     $error->envelope->code,
                     $error->getMessage(),
                     $correlationId,
-                    status: $error->status,
+                    status: 422,
+                    fieldErrors: $error->envelope->fieldErrors,
                 );
             }
+            $workSpecification = is_array($workSpecification) ? $workSpecification : [];
+            $workSpecification['shape_contract_version'] = $workContract->shapeContractVersion;
+            $workSpecification['payload_schema_version'] = $workContract->payloadSchemaVersion;
+            $workSpecification['nodes'] ??= $workStages;
+            $source['work_specification'] = $workSpecification;
+            $appointmentHold = null;
+            if ($workShape === 'A3') {
+                if ($appointmentReservationId === null || $appointmentReservationId === '') {
+                    throw new OrderError('APPOINTMENT_HOLD_REQUIRED', 'An A3 child Order requires a customer-held appointment time.', $correlationId, status: 422);
+                }
+                try {
+                    $appointmentHold = $this->capacity->claimAppointmentHold(
+                        reservationId: $appointmentReservationId,
+                        listingId: $listingId,
+                        listingVersionId: (string) $source['listing_version_id'],
+                        providerUserId: $providerUserId,
+                        customerUserId: $buyerUserId,
+                        correlationId: $correlationId,
+                    );
+                } catch (KernelException $error) {
+                    throw new OrderError($error->envelope->code, $error->getMessage(), $correlationId, status: $error->status, retryable: true);
+                }
+            } elseif ($appointmentReservationId !== null) {
+                throw new OrderError('UNEXPECTED_APPOINTMENT_HOLD', 'Appointment holds are only valid for A3 child Orders.', $correlationId, status: 422);
+            }
 
-            // 4. Create child Order with exact lineage constraints
+            $now = now();
+            $orderId = (string) Str::uuid7();
+            $termsSnapshotId = (string) Str::uuid7();
+            $proposalId = (string) Str::uuid7();
+
+            // Insert the order row before its order-linked capacity commitment.
             DB::table('orders')->insert([
                 'id' => $orderId,
                 'origin' => 'deal_chain',
@@ -246,23 +296,55 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
                 'updated_at' => $now,
             ]);
 
+            try {
+                $capacityReservation = $this->capacity->commitForOrder(
+                    listingId: $listingId,
+                    listingVersionId: (string) $source['listing_version_id'],
+                    orderId: $orderId,
+                    quantity: $quantity,
+                    commandScope: 'order.child_formation:'.$orderId,
+                    idempotencyKey: $idempotencyKey,
+                    correlationId: $correlationId,
+                    heldReservationId: null,
+                    resourceKey: $resourceKey,
+                );
+            } catch (KernelException $error) {
+                throw new OrderError(
+                    $error->envelope->code,
+                    $error->getMessage(),
+                    $correlationId,
+                    status: $error->status,
+                );
+            }
+
             // 5. Insert primary Order Parties
             $this->insertParty($orderId, $buyerUserId, 'buyer', 'primary', $correlationId, $now);
             $this->insertParty($orderId, $providerUserId, 'provider', 'primary', $correlationId, $now);
 
             // 6. Insert Order Terms Snapshot
+            $termsScope = [
+                'title' => (string) $source['title'],
+                'quantity' => $quantity,
+                'listing_type' => (string) $source['listing_type'],
+                'category_code' => (string) $source['category_code'],
+                'amount_minor' => $amountMinor,
+                'unit_amount_minor' => $unitAmountMinor,
+                'currency' => $currency,
+                'lane' => $lane,
+                'resource_key' => $resourceKey !== '' ? $resourceKey : null,
+                'appointment_reservation_id' => $appointmentReservationId,
+                'selection' => $selection,
+                'work_specification' => $workSpecification,
+                'milestone_stages' => $workStages,
+            ];
+            $scopeJson = json_encode($termsScope, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             DB::table('order_terms_snapshots')->insert([
-                'id' => (string) Str::uuid7(),
+                'id' => $termsSnapshotId,
                 'order_id' => $orderId,
                 'snapshot_version' => 1,
                 'source_listing_version_id' => (string) $source['listing_version_id'],
                 'source_quote_id' => null,
-                'scope' => json_encode([
-                    'title' => (string) $source['title'],
-                    'quantity' => $quantity,
-                    'listing_type' => (string) $source['listing_type'],
-                    'category_code' => (string) $source['category_code'],
-                ], JSON_THROW_ON_ERROR),
+                'scope' => $scopeJson,
                 'scope_payload_version' => 1,
                 'amount_minor' => $amountMinor,
                 'currency' => $currency,
@@ -283,22 +365,40 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
                 'correlation_id' => $correlationId,
                 'created_at' => $now,
             ]);
+            DB::table('order_proposals')->insert([
+                'id' => $proposalId,
+                'order_id' => $orderId,
+                'proposal_version' => 1,
+                'parent_proposal_id' => null,
+                'kind' => 'initial',
+                'status' => 'accepted',
+                'proposed_by_user_id' => $providerUserId,
+                'responded_by_user_id' => $actorUserId,
+                'responded_at' => $now,
+                'source_listing_version_id' => (string) $source['listing_version_id'],
+                'scope' => $scopeJson,
+                'scope_payload_version' => 1,
+                'amount_minor' => $amountMinor,
+                'currency' => $currency,
+                'terms_hash' => hash('sha256', $scopeJson),
+                'note' => null,
+                'appointment_reservation_id' => $appointmentReservationId,
+                'capacity_reservation_id' => $capacityReservation['reservation_id'] ?? null,
+                'expires_at' => null,
+                'correlation_id' => $correlationId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+            DB::table('orders')->where('id', $orderId)->update([
+                'current_proposal_id' => $proposalId,
+                'current_terms_snapshot_id' => $termsSnapshotId,
+                'accepted_at' => $now,
+            ]);
 
-            // 7. Initialize Work Instance
-            $workShape = (string) ($source['work_shape'] ?? '');
-            if ($workShape === '') {
-                $workShape = (string) ($source['listing_type'] === 'product' ? 'A4' : 'A1');
-            }
-
-            $workContract = $this->workRegistry->resolveForWork(
-                shapeCode: $workShape,
-                shapeContractVersion: 1,
-                payloadSchemaVersion: 1,
-                correlationId: $correlationId,
-            );
+            // 7. Initialize Work Instance with the validated selected contract.
 
             $workId = (string) Str::uuid7();
-            $structure = $this->workExecution->initializeStructure($source, $workContract->shapeCode);
+            $structure = $this->workExecution->initializeStructure($source, $workContract->shapeCode, $correlationId);
 
             DB::table('work_instances')->insert([
                 'id' => $workId,
@@ -321,6 +421,25 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
+            if ($appointmentReservationId !== null) {
+                try {
+                    $appointment = $this->capacity->commitAppointmentForOrder(
+                        reservationId: $appointmentReservationId,
+                        orderId: $orderId,
+                        workInstanceId: $workId,
+                        actorUserId: $actorUserId,
+                        correlationId: $correlationId,
+                    );
+                } catch (KernelException $error) {
+                    throw new OrderError($error->envelope->code, $error->getMessage(), $correlationId, status: $error->status, retryable: true);
+                }
+
+                DB::table('work_instances')->where('id', $workId)->update([
+                    'status' => 'scheduled',
+                    'scheduled_at' => $appointment['starts_at'],
+                    'updated_at' => $now,
+                ]);
+            }
 
             // 8. Create Primary Payment Obligation
             $obligationId = null;
@@ -372,6 +491,19 @@ final class FormDealNeedChildOrder implements ChildOrderFormationPort
                 correlationId: $correlationId,
                 auditEventId: $auditId,
             );
+            $this->notifications->recordIntent(new NotificationIntent(
+                recipientUserId: $providerUserId,
+                eventSourceType: 'order',
+                eventSourceId: $orderId,
+                eventType: 'order.accepted',
+                attention: NotificationAttention::Updates,
+                title: 'Deal Need agreement accepted',
+                body: 'Review the accepted Order for your Deal Chain Need.',
+                actionUrl: route('orders.show', ['order' => $orderId], false),
+                idempotencyKey: 'order.accepted:'.$orderId.':v1:'.$providerUserId,
+                correlationId: $correlationId,
+            ));
+
 
             $this->idempotency->succeed($reservation->row, $response);
 

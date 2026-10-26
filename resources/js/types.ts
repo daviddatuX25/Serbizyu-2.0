@@ -1,5 +1,24 @@
 import type { PageProps } from '@inertiajs/core';
 
+export type NotificationAttention = 'needs_action' | 'updates';
+
+export type NotificationSummary = {
+    unread_count: number;
+    needs_action_count: number;
+    updates_count: number;
+};
+
+export type NotificationRecord = {
+    id: string;
+    event_type: string;
+    attention: NotificationAttention;
+    title: string;
+    body: string;
+    action_url: string;
+    created_at: string;
+    read_at: string | null;
+};
+
 export type EnvironmentSummary = {
     environment: string;
     providers: Record<string, { mode: string; enabled: boolean }>;
@@ -138,6 +157,8 @@ export type ListingRecord = {
     pricingMode?: string | null;
     inclusions?: string[] | null;
     variants?: Array<Record<string, unknown>> | null;
+    listing_version_id?: string | null;
+    current_version?: number | null;
     addons?: ListingAddonRecord[];
     partner_candidates?: PartnerCandidateRecord[];
     catalog_source?: string | null;
@@ -260,12 +281,13 @@ export type WorkNodeEvidenceProjection = {
         landmark?: string | null;
     } | null;
     metric_readings: Array<{
+        id: string;
         value: number;
         unit: string;
         observed_at: string;
         received_at: string;
     }>;
-    checklist_completed: boolean;
+    checklist_responses: Array<{ id: string; completed: boolean }>;
     photos: WorkNodeEvidencePhoto[];
     pending_photo_count: number;
 };
@@ -291,12 +313,17 @@ export type WorkNodeRecord = {
         | 'gps_checkin'
         | 'none'
         | string;
-    evidence_description: string;
+    evidence_description?: string;
+    mandatory?: boolean;
     control_mode: 'provider_advance' | 'customer_confirm' | 'counterparty_handoff' | string;
+    handoff_party?: 'recipient_confirm' | 'worker_dropoff' | string | null;
     approval_method?: 'app_confirm' | 'presence_otp' | 'worker_dropoff' | 'none' | string;
     required_proofs?: string[];
-    metric_unit?: string | null;
-    mandatory: boolean;
+    checklist_items?: Array<{ id: string; label: string; required: boolean }>;
+    metric_requirements?: Array<{ id: string; name: string; unit: string; required: boolean; target?: number | null; min?: number | null; max?: number | null }>;
+    can_issue_challenge?: boolean;
+    can_verify_challenge?: boolean;
+    pending_challenge?: { id: string; kind: 'presence_otp' | 'worker_dropoff'; expires_at: string; work_version: number; issued_by_role: string } | null;
     duration_label?: string | null;
     status?: 'active' | 'completed' | 'locked' | 'awaiting_customer_confirmation' | string;
     completed_at?: string | null;
@@ -357,6 +384,7 @@ export type HomeProps = PageProps & {
         schemaMigrations: boolean;
     };
     session?: SliceSession | null;
+    notificationSummary?: NotificationSummary | null;
     temporaryOtpPreview?: {
         code: string;
         expires_in_seconds: number;

@@ -25,14 +25,6 @@ final class WorkCatalog implements WorkSpecificationPort
         'counterparty_handoff',
     ];
 
-    public const WORK_TOOLS = [
-        'photo_proof',
-        'gps_checkin',
-        'metric_reading',
-        'checklist_steps',
-        'external_connector',
-    ];
-
     public const APPROVAL_METHODS = [
         'app_confirm',
         'presence_otp',
@@ -101,7 +93,7 @@ final class WorkCatalog implements WorkSpecificationPort
     }
 
     /**
-     * Normalize raw stage/step arrays into canonical Work Nodes with 5 fundamental node_kinds and 3 control_modes.
+     * Normalize raw stage/step arrays into canonical Work Nodes with authored item and reading requirements.
      *
      * @param  array<int, array<string, mixed>>  $rawSteps
      * @return list<array{
@@ -117,10 +109,12 @@ final class WorkCatalog implements WorkSpecificationPort
      *     duration_label: string|null,
      *     required_proofs: list<string>,
      *     approval_method: string,
-     *     metric_unit: string|null
+     *     handoff_party: string|null,
+     *     checklist_items: list<array{id: string, label: string, required: bool}>,
+     *     metric_requirements: list<array{id: string, name: string, unit: string, required: bool, target?: float, min?: float, max?: float}>
      * }>
      */
-    public function normalizeNodes(array $rawSteps, string $workShape = 'A1'): array
+    public function normalizeNodes(array $rawSteps, string $workShape = 'A1', bool $requireToolDefinitions = false): array
     {
         $values = array_values($rawSteps);
         $total = count($values);
@@ -130,9 +124,25 @@ final class WorkCatalog implements WorkSpecificationPort
             $ordinal = $idx + 1;
             $isFirst = $ordinal === 1;
             $isLast = $ordinal === $total && $total > 1;
+            if (array_key_exists('metric_unit', $raw) || array_key_exists('metricUnit', $raw)) {
+                throw new \InvalidArgumentException('Anonymous metric units are retired; author named metric_requirements.');
+            }
 
             $hasRequiredProofs = array_key_exists('required_proofs', $raw) || array_key_exists('requiredProofs', $raw);
             $rawRequiredProofs = $raw['required_proofs'] ?? $raw['requiredProofs'] ?? null;
+            if ($hasRequiredProofs) {
+                if (! is_array($rawRequiredProofs) || ! array_is_list($rawRequiredProofs)) {
+                    throw new \InvalidArgumentException('required_proofs must be a supported tool list.');
+                }
+                foreach ($rawRequiredProofs as $proof) {
+                    if (! is_string($proof) || ! in_array($proof, WorkSpecificationPort::WORK_TOOLS, true)) {
+                        throw new \InvalidArgumentException('A required Work proof tool is unknown or unsupported.');
+                    }
+                    if ($proof === 'external_connector') {
+                        throw new \InvalidArgumentException('external_connector proof is unsupported by the current Work protocol.');
+                    }
+                }
+            }
             $hasExplicitEvidenceType = array_key_exists('evidence_type', $raw) || array_key_exists('evidenceType', $raw);
             $rawEvidenceType = (string) ($raw['evidence_type'] ?? $raw['evidenceType'] ?? '');
             $evidenceDescription = trim((string) ($raw['evidence_description'] ?? $raw['evidenceDescription'] ?? $raw['evidence'] ?? 'Verification proof required at this gate.'));
@@ -164,11 +174,8 @@ final class WorkCatalog implements WorkSpecificationPort
                 }
             }
 
-            if ($hasRequiredProofs && is_array($rawRequiredProofs)) {
-                $requiredProofs = array_values(array_filter(
-                    $rawRequiredProofs,
-                    static fn (mixed $proof): bool => is_string($proof) && in_array($proof, self::WORK_TOOLS, true),
-                ));
+            if ($hasRequiredProofs) {
+                $requiredProofs = array_values($rawRequiredProofs);
             } else {
                 $requiredProofs = match ($rawEvidenceType) {
                     'photo_required', 'video_required', 'receipt_upload' => ['photo_proof'],
@@ -211,18 +218,47 @@ final class WorkCatalog implements WorkSpecificationPort
                 };
             }
 
+            $rawHandoffParty = $raw['handoff_party'] ?? $raw['handoffParty'] ?? null;
+            if ($rawHandoffParty !== null && ! in_array($rawHandoffParty, ['recipient_confirm', 'worker_dropoff'], true)) {
+                throw new \InvalidArgumentException('A Work node handoff party is invalid.');
+            }
             $approvalMethod = (string) ($raw['approval_method'] ?? $raw['approvalMethod'] ?? '');
             if (! in_array($approvalMethod, self::APPROVAL_METHODS, true)) {
                 $approvalMethod = match (true) {
                     $rawControlMode === 'customer_confirm' => 'app_confirm',
-                    ($raw['handoff_party'] ?? $raw['handoffParty'] ?? '') === 'worker_dropoff' => 'worker_dropoff',
+                    $rawHandoffParty === 'worker_dropoff' => 'worker_dropoff',
                     $rawControlMode === 'provider_advance' => 'none',
                     default => 'none',
                 };
             }
+            if ($rawHandoffParty === 'worker_dropoff' && $approvalMethod !== 'worker_dropoff') {
+                throw new \InvalidArgumentException('Worker drop-off handoffs require worker_dropoff clearance.');
+            }
+            if ($approvalMethod === 'worker_dropoff') {
+                $rawHandoffParty = 'worker_dropoff';
+                if ($rawControlMode !== 'counterparty_handoff') {
+                    throw new \InvalidArgumentException('Worker drop-off clearance requires counterparty_handoff authority.');
+                }
+            }
+            if ($approvalMethod === 'presence_otp' && $rawControlMode !== 'customer_confirm') {
+                throw new \InvalidArgumentException('Presence OTP clearance requires customer_confirm authority.');
+            }
+
+            $nodeId = trim((string) ($raw['id'] ?? strtolower($workShape).'-node-'.$ordinal));
+            if ($nodeId === '') {
+                throw new \InvalidArgumentException('Every Work node needs a stable ID.');
+            }
+            $checklistItems = $this->normalizeChecklistItems(
+                $this->authoredField($raw, 'checklist_items', 'checklistItems'),
+                $requireToolDefinitions && in_array('checklist_steps', $requiredProofs, true),
+            );
+            $metricRequirements = $this->normalizeMetricRequirements(
+                $this->authoredField($raw, 'metric_requirements', 'metricRequirements'),
+                $requireToolDefinitions && in_array('metric_reading', $requiredProofs, true),
+            );
 
             $normalized[] = [
-                'id' => trim((string) ($raw['id'] ?? strtolower($workShape).'-node-'.$ordinal)),
+                'id' => $nodeId,
                 'ordinal' => $ordinal,
                 'title' => trim((string) ($raw['title'] ?? 'Step '.$ordinal)),
                 'description' => trim((string) ($raw['description'] ?? $raw['desc'] ?? '')),
@@ -236,13 +272,149 @@ final class WorkCatalog implements WorkSpecificationPort
                     : null,
                 'required_proofs' => $requiredProofs,
                 'approval_method' => $approvalMethod,
-                'metric_unit' => isset($raw['metric_unit']) || isset($raw['metricUnit'])
-                    ? trim((string) ($raw['metric_unit'] ?? $raw['metricUnit']))
-                    : null,
+                'handoff_party' => $rawHandoffParty,
+                'checklist_items' => $checklistItems,
+                'metric_requirements' => $metricRequirements,
             ];
         }
 
+        $normalizedShape = strtoupper(trim($workShape));
+        if ($normalizedShape === 'A4') {
+            if ($total !== 3
+                || $normalized[0]['node_kind'] !== 'checkin_intake'
+                || $normalized[0]['control_mode'] !== 'provider_advance'
+                || $normalized[1]['node_kind'] !== 'handoff_ready'
+                || $normalized[1]['control_mode'] !== 'counterparty_handoff'
+                || $normalized[1]['approval_method'] === 'worker_dropoff'
+                || $normalized[2]['node_kind'] !== 'final_signoff'
+                || ! in_array(
+                    [$normalized[2]['control_mode'], $normalized[2]['approval_method']],
+                    [['customer_confirm', 'app_confirm'], ['counterparty_handoff', 'worker_dropoff']],
+                    true,
+                )
+            ) {
+                throw new \InvalidArgumentException('A4 requires its three governed preparation, custody, and recipient-clearance nodes.');
+            }
+            if (array_filter($normalized, static fn (array $node): bool => $node['approval_method'] === 'presence_otp') !== []) {
+                throw new \InvalidArgumentException('A4 uses six-digit recipient drop-off clearance, not presence OTP.');
+            }
+        } elseif ($normalizedShape === 'A9') {
+            foreach ($normalized as $node) {
+                if (in_array($node['approval_method'], ['presence_otp', 'worker_dropoff'], true)) {
+                    throw new \InvalidArgumentException('A9 digital delivery does not support in-person clearance methods.');
+                }
+            }
+        }
+
         return $normalized;
+    }
+
+    /**
+     * @param  array<string, mixed>  $raw
+     */
+    private function authoredField(array $raw, string $snakeCase, string $camelCase): mixed
+    {
+        if (array_key_exists($snakeCase, $raw) && array_key_exists($camelCase, $raw)) {
+            throw new \InvalidArgumentException("Provide only one authored field for [{$snakeCase}].");
+        }
+
+        return $raw[$snakeCase] ?? $raw[$camelCase] ?? [];
+    }
+
+    /**
+     * @return list<array{id: string, label: string, required: bool}>
+     */
+    private function normalizeChecklistItems(mixed $value, bool $required): array
+    {
+        if ($value === null) {
+            $value = [];
+        }
+        if (! is_array($value) || ! array_is_list($value)) {
+            throw new \InvalidArgumentException('checklist_items must be a list of authored items.');
+        }
+        if ($required && $value === []) {
+            throw new \InvalidArgumentException('Checklist proof requires authored checklist_items.');
+        }
+
+        $items = [];
+        $seen = [];
+        foreach ($value as $item) {
+            if (
+                ! is_array($item)
+                || array_diff(array_keys($item), ['id', 'label', 'required']) !== []
+                || ! is_string($item['id'] ?? null)
+                || ! is_string($item['label'] ?? null)
+            ) {
+                throw new \InvalidArgumentException('Each checklist item needs an ID and label.');
+            }
+            $id = trim($item['id']);
+            $label = trim($item['label']);
+            $isRequired = $item['required'] ?? true;
+            if ($id === '' || mb_strlen($id) > 128 || isset($seen[$id]) || $label === '' || mb_strlen($label) > 200 || ! is_bool($isRequired)) {
+                throw new \InvalidArgumentException('Checklist item IDs, labels, and required flags must be valid and unique.');
+            }
+            $seen[$id] = true;
+            $items[] = ['id' => $id, 'label' => $label, 'required' => $isRequired];
+        }
+
+        return $items;
+    }
+
+    /**
+     * @return list<array{id: string, name: string, unit: string, required: bool, target?: float, min?: float, max?: float}>
+     */
+    private function normalizeMetricRequirements(mixed $value, bool $required): array
+    {
+        if ($value === null) {
+            $value = [];
+        }
+        if (! is_array($value) || ! array_is_list($value)) {
+            throw new \InvalidArgumentException('metric_requirements must be a list of named measurements.');
+        }
+        if ($required && $value === []) {
+            throw new \InvalidArgumentException('Metric proof requires authored metric_requirements.');
+        }
+
+        $requirements = [];
+        $seen = [];
+        foreach ($value as $requirement) {
+            if (
+                ! is_array($requirement)
+                || array_diff(array_keys($requirement), ['id', 'name', 'unit', 'required', 'target', 'min', 'max']) !== []
+                || ! is_string($requirement['id'] ?? null)
+                || ! is_string($requirement['name'] ?? null)
+                || ! is_string($requirement['unit'] ?? null)
+            ) {
+                throw new \InvalidArgumentException('Each metric requirement needs an ID, name, and unit.');
+            }
+
+            $id = trim($requirement['id']);
+            $name = trim($requirement['name']);
+            $unit = trim($requirement['unit']);
+            $isRequired = $requirement['required'] ?? true;
+            if ($id === '' || mb_strlen($id) > 128 || isset($seen[$id]) || $name === '' || mb_strlen($name) > 200
+                || $unit === '' || mb_strlen($unit) > 32 || ! is_bool($isRequired)) {
+                throw new \InvalidArgumentException('Metric requirement IDs, names, units, and required flags must be valid and unique.');
+            }
+
+            $normalized = ['id' => $id, 'name' => $name, 'unit' => $unit, 'required' => $isRequired];
+            foreach (['target', 'min', 'max'] as $bound) {
+                if (isset($requirement[$bound])) {
+                    if (! is_numeric($requirement[$bound]) || ! is_finite((float) $requirement[$bound])) {
+                        throw new \InvalidArgumentException("Metric requirement [{$bound}] must be a finite number.");
+                    }
+                    $normalized[$bound] = (float) $requirement[$bound];
+                }
+            }
+            if (isset($normalized['min'], $normalized['max']) && $normalized['min'] > $normalized['max']) {
+                throw new \InvalidArgumentException('Metric minimum cannot exceed its maximum.');
+            }
+
+            $seen[$id] = true;
+            $requirements[] = $normalized;
+        }
+
+        return $requirements;
     }
 
     /**
@@ -265,6 +437,9 @@ final class WorkCatalog implements WorkSpecificationPort
                 'mandatory' => $node['mandatory'],
                 'required_proofs' => $node['required_proofs'],
                 'approval_method' => $node['approval_method'],
+                'handoff_party' => $node['handoff_party'],
+                'checklist_items' => $node['checklist_items'],
+                'metric_requirements' => $node['metric_requirements'],
             ],
             $normalizedNodes,
         );
@@ -310,10 +485,17 @@ final class WorkCatalog implements WorkSpecificationPort
             $rawStages = $selectedSteps !== [] ? $selectedSteps : (array) ($this->publishedForShape($normalizedShape)['definition']['steps'] ?? []);
         }
 
-        $nodes = $this->normalizeNodes($rawStages, $normalizedShape);
+        $nodes = $this->normalizeNodes($rawStages, $normalizedShape, requireToolDefinitions: false);
         $signatureHash = $this->computeSignature($normalizedShape, $nodes);
         $isCustomVariation = $selected !== null && $this->stepsDiffer($nodes, $this->normalizeNodes($selectedSteps, $normalizedShape));
         $catalogCode = $selected['set_code'] ?? $selected['catalog_code'] ?? $selected['option_id'] ?? null;
+        $shapeContractVersion = isset($selected['shape_contract_version']) ? (int) $selected['shape_contract_version'] : 1;
+        $payloadSchemaVersion = isset($selected['payload_schema_version'])
+            ? (int) $selected['payload_schema_version']
+            : ($this->requiresSchemaTwo($nodes) ? 2 : 1);
+        if ($payloadSchemaVersion < 2 && $this->requiresSchemaTwo($nodes) && ($selected === null || $isCustomVariation)) {
+            $payloadSchemaVersion = 2;
+        }
 
         return [
             'signature_hash' => $signatureHash,
@@ -322,12 +504,15 @@ final class WorkCatalog implements WorkSpecificationPort
             'based_on_catalog_code' => $selected['catalog_code'] ?? null,
             'based_on_set_code' => $selected['set_code'] ?? $catalogCode,
             'based_on_set_version' => isset($selected['set_version']) ? (int) $selected['set_version'] : null,
-            'shape_contract_version' => isset($selected['shape_contract_version']) ? (int) $selected['shape_contract_version'] : null,
-            'payload_schema_version' => isset($selected['payload_schema_version']) ? (int) $selected['payload_schema_version'] : null,
+            'shape_contract_version' => $shapeContractVersion,
+            'payload_schema_version' => $payloadSchemaVersion,
             'is_custom_variation' => $isCustomVariation,
             'category_code' => $normalizedCategory,
-            'listing_type' => $normalizedType,
             'nodes' => $nodes,
+            'listing_type' => $normalizedType,
+            'target_duration_label' => isset($selected['target_duration_label']) && is_string($selected['target_duration_label'])
+                ? trim($selected['target_duration_label'])
+                : null,
         ];
     }
 
@@ -452,7 +637,21 @@ final class WorkCatalog implements WorkSpecificationPort
     /** @param list<array<string, mixed>> $actual @param list<array<string, mixed>> $expected */
     private function stepsDiffer(array $actual, array $expected): bool
     {
-        $fields = ['title', 'description', 'node_kind', 'evidence_type', 'evidence_description', 'control_mode', 'mandatory', 'duration_label', 'required_proofs', 'approval_method'];
+        $fields = [
+            'title',
+            'description',
+            'node_kind',
+            'evidence_type',
+            'evidence_description',
+            'control_mode',
+            'mandatory',
+            'duration_label',
+            'required_proofs',
+            'approval_method',
+            'handoff_party',
+            'checklist_items',
+            'metric_requirements',
+        ];
         if (count($actual) !== count($expected)) {
             return true;
         }
@@ -461,6 +660,22 @@ final class WorkCatalog implements WorkSpecificationPort
                 if (($step[$field] ?? null) !== ($expected[$index][$field] ?? null)) {
                     return true;
                 }
+            }
+        }
+
+        return false;
+    }
+
+    /** @param list<array<string, mixed>> $nodes */
+    private function requiresSchemaTwo(array $nodes): bool
+    {
+        foreach ($nodes as $node) {
+            if (array_intersect($node['required_proofs'], ['checklist_steps', 'metric_reading']) !== []
+                || $node['checklist_items'] !== []
+                || $node['metric_requirements'] !== []
+                || in_array($node['approval_method'], ['presence_otp', 'worker_dropoff'], true)
+                || $node['handoff_party'] === 'worker_dropoff') {
+                return true;
             }
         }
 

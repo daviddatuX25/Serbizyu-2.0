@@ -137,8 +137,7 @@ it('H2-R06 reset request for an unknown identifier is non-enumerating', function
     $this->postJson('/auth/password/phone', ['phone' => '+639173099999'])
         ->assertOk()
         ->assertJsonPath('data.status', 'code_pending');
-
-    expect(DB::table('password_reset_tokens')->count())->toBe(0);
+    expect(DB::table('password_reset_tokens')->where('email', 'ghost@serbizyu.test')->count())->toBe(0);
     expect($this->otpDelivery->lastCodeFor('+639173099999'))->toBeNull();
 });
 

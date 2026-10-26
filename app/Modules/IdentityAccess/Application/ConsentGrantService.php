@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\IdentityAccess\Application;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -98,9 +99,15 @@ final class ConsentGrantService
         string $granteeUserId,
         string $grantorUserId,
         string $correlationId,
-        ?string $resourceType = null,
-        ?string $requiredAction = null,
+        string $resourceType,
+        ?string $resourceId,
+        string $requiredAction,
     ): void {
+        if (DB::transactionLevel() < 1) {
+            throw new \LogicException('Acting-for authorization must run inside the mutation transaction.');
+        }
+
+        $now = now();
         $grant = DB::table('consent_grants')
             ->where('id', $grantId)
             ->lockForUpdate()
@@ -110,6 +117,12 @@ final class ConsentGrantService
             || (string) $grant->grantee_user_id !== $granteeUserId
             || (string) $grant->grantor_user_id !== $grantorUserId
             || (string) $grant->status !== 'active'
+            || $grant->revoked_at !== null
+            || $grant->suspended_at !== null
+            || (string) $grant->resource_type !== $resourceType
+            || ($grant->resource_id === null ? null : (string) $grant->resource_id) !== $resourceId
+            || Carbon::parse((string) $grant->starts_at)->greaterThan($now)
+            || ($grant->expires_at !== null && ! $now->lt(Carbon::parse((string) $grant->expires_at)))
         ) {
             throw new IdentityAccessError(
                 'AUTHORIZATION_DENIED',
@@ -119,43 +132,19 @@ final class ConsentGrantService
             );
         }
 
-        if ($grant->expires_at !== null && now()->greaterThan($grant->expires_at)) {
-            DB::table('consent_grants')->where('id', $grantId)->update([
-                'status' => 'expired',
-                'updated_at' => now(),
-                'version' => DB::raw('version + 1'),
-            ]);
+        /** @var array<string, mixed> $scope */
+        $scope = is_string($grant->permission_scope)
+            ? json_decode($grant->permission_scope, true) ?: []
+            : (array) $grant->permission_scope;
+        $actions = $scope['actions'] ?? $scope;
 
+        if (! is_array($actions) || ! in_array($requiredAction, $actions, true)) {
             throw new IdentityAccessError(
                 'AUTHORIZATION_DENIED',
                 'You are not authorized to perform this action.',
                 $correlationId,
                 status: 403,
             );
-        }
-
-        if ($resourceType !== null && (string) $grant->resource_type !== $resourceType) {
-            throw new IdentityAccessError(
-                'AUTHORIZATION_DENIED',
-                'You are not authorized to perform this action.',
-                $correlationId,
-                status: 403,
-            );
-        }
-
-        if ($requiredAction !== null) {
-            /** @var array<string, mixed> $scope */
-            $scope = json_decode((string) $grant->permission_scope, true) ?: [];
-            $actions = $scope['actions'] ?? $scope;
-
-            if (! is_array($actions) || ! in_array($requiredAction, $actions, true)) {
-                throw new IdentityAccessError(
-                    'AUTHORIZATION_DENIED',
-                    'You are not authorized to perform this action.',
-                    $correlationId,
-                    status: 403,
-                );
-            }
         }
     }
 }

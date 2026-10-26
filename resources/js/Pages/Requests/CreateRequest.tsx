@@ -525,6 +525,15 @@ export default function CreateRequest({
             setRequirements(saved.requirements);
         }
         setAttachPipeline(Boolean(saved.attachPipeline));
+        if (Array.isArray(saved.pipelineStages) && saved.pipelineStages.length > 0) {
+            setStages(saved.pipelineStages.map(({ step: savedStep, dur, ...stage }) => ({
+                ...stage,
+                color: stage.color ?? '#0F2F58',
+                bg: stage.bg ?? '#EBF2FA',
+                num: String(savedStep),
+                dur: String(dur),
+            })));
+        }
         if (saved.urgency) setUrgency(saved.urgency);
         if (saved.scheduledDate) setScheduledDate(saved.scheduledDate);
         if (saved.scheduledTimeWindow) setScheduledTimeWindow(saved.scheduledTimeWindow);
@@ -548,12 +557,9 @@ export default function CreateRequest({
         requirements,
         attachPipeline,
         pipelineStages: stages.map((s, idx) => ({
-            id: s.id,
+            ...s,
             step: idx + 1,
-            title: s.title,
-            dur: parseInt(s.dur) || 15,
-            desc: s.desc,
-            evidence: s.evidence,
+            dur: parseInt(s.dur, 10) || 15,
         })),
         urgency,
         scheduledDate,
@@ -664,7 +670,11 @@ export default function CreateRequest({
                       work_shape: selectedTemplate.shape,
                       catalog_code: selectedTemplate.id,
                       target_sla: selectedTemplate.sla,
-                      stages: stages,
+                      stages: stages.map(({ checklistItems, metricRequirements, ...stage }) => ({
+                          ...stage,
+                          ...(Array.isArray(checklistItems) ? { checklist_items: checklistItems } : {}),
+                          ...(Array.isArray(metricRequirements) ? { metric_requirements: metricRequirements } : {}),
+                      })),
                   }
                 : null,
         };
@@ -1706,6 +1716,7 @@ export default function CreateRequest({
                     if (tab === 'explore') router.visit('/browse');
                     else if (tab === 'orders') router.visit('/orders');
                     else if (tab === 'profile') router.visit('/my-listings');
+                    else if (tab === 'invitations') router.visit('/deal-invitations');
                 }}
             />
         </div>

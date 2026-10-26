@@ -23,6 +23,7 @@ import type {
     PublishedDealChainRecipeId,
     SlotCandidateListing,
 } from '../marketplace/types';
+import { listingBookingUrl, readPicksBasket, savePicksBasket } from '../marketplace/booking';
 
 export default function Picks(props: HomeProps) {
     const dealChainRecipes = useMemo(
@@ -45,12 +46,7 @@ export default function Picks(props: HomeProps) {
     useEffect(() => {
         const syncBasket = () => {
             try {
-                const stored = localStorage.getItem('serbizyu.picks');
-                if (stored) {
-                    setBasket(JSON.parse(stored));
-                } else {
-                    setBasket([]);
-                }
+                setBasket(readPicksBasket(localStorage));
             } catch {
                 // ignore
             }
@@ -69,7 +65,7 @@ export default function Picks(props: HomeProps) {
     const saveBasket = (newBasket: BasketItem[]) => {
         setBasket(newBasket);
         try {
-            localStorage.setItem('serbizyu.picks', JSON.stringify(newBasket));
+            savePicksBasket(localStorage, newBasket);
             window.dispatchEvent(new Event('serbizyu:picks-updated'));
         } catch {
             // ignore
@@ -78,7 +74,9 @@ export default function Picks(props: HomeProps) {
 
     const updateQuantity = (id: string, delta: number) => {
         const next = basket
-            .map((item) => (item.id === id ? { ...item, quantity: item.quantity + delta } : item))
+            .map((item) => item.id === id
+                ? { ...item, quantity: Math.min(item.variant_available ?? Number.MAX_SAFE_INTEGER, item.quantity + delta) }
+                : item)
             .filter((item) => item.quantity > 0);
         saveBasket(next);
     };
@@ -125,10 +123,12 @@ export default function Picks(props: HomeProps) {
     const handleProceedToCheckout = () => {
         if (hasDealChain) {
             setCheckoutModalOpen(true);
-        } else if (basket.length > 0) {
-            // Direct ordinary booking -> forms order proposal
-            router.visit(`/listings/${basket[0].id}/book`);
+            return;
         }
+        const item = basket[0];
+        if (!item) return;
+        const url = listingBookingUrl(item, window.location.origin);
+        if (url) router.visit(url);
     };
 
     const handleSwapSlotCandidate = (
@@ -173,21 +173,19 @@ export default function Picks(props: HomeProps) {
             '/deal-chains/authorize',
             {
                 items: basket.map((b) => ({
-                    id: b.id,
+                    id: b.listing_id,
+                    listing_version_id: b.listing_version_id,
+                    variant_id: b.variant_id,
+                    package_id: b.package_id,
                     quantity: b.quantity,
+                    deal_chain_combination_id: b.deal_chain_combination_id,
                     deal_chain: b.dealChain?.recipeId || null,
+                    addon_ids: b.addon_ids ?? [],
                     slot_overrides: b.dealChain?.nodes
                         ? Object.fromEntries(
                               b.dealChain.nodes
                                   .filter((n) => n.listingId)
-                                  .map((n) => [
-                                      n.type,
-                                      {
-                                          listing_id: n.listingId,
-                                          provider_user_id: n.providerId,
-                                          price_minor: n.priceMinor,
-                                      },
-                                  ]),
+                                  .map((n) => [n.key, { listing_id: n.listingId }]),
                           )
                         : null,
                 })),

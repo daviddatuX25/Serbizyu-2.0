@@ -20,18 +20,21 @@ describe('DealChainCheckoutModal', () => {
                 extraFee: 215,
                 nodes: [
                     {
+                        key: 'store',
                         role: 'STORE',
                         title: 'Tagudin HW',
                         sub: 'Partner quote required',
                         type: 'store',
                     },
                     {
+                        key: 'courier',
                         role: 'COURIER',
                         title: 'Danny Exp',
                         sub: 'Partner quote required',
                         type: 'delivery',
                     },
                     {
+                        key: 'labor',
                         role: 'LABOR',
                         title: 'Kuya Ben AC',
                         sub: 'Provider agreement required',

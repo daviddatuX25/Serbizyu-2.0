@@ -82,6 +82,53 @@ final class ListingReviewsSeeder extends Seeder
         DB::transaction(function () use ($listing, $now): void {
             foreach (self::REVIEWS as $index => $review) {
                 $userId = $review['user_id'];
+                $sequence = sprintf('%02d', $index + 1);
+                $orderId = '0198a3b1-7c40-7abc-8def-0f01000000'.$sequence;
+                $evidenceId = '0198a3b1-7c40-7abc-8def-0f02000000'.$sequence;
+                $reviewId = '0198a3b1-7c40-7abc-8def-0f03000000'.$sequence;
+                $createdAt = $now->subDays(8 - $index * 2);
+
+                $eligibleOrder = DB::table('orders as orders')
+                    ->join('order_proposals as proposals', function ($join): void {
+                        $join->on('proposals.id', '=', 'orders.current_proposal_id')
+                            ->on('proposals.order_id', '=', 'orders.id');
+                    })
+                    ->join('order_terms_snapshots as terms', function ($join): void {
+                        $join->on('terms.id', '=', 'orders.current_terms_snapshot_id')
+                            ->on('terms.order_id', '=', 'orders.id');
+                    })
+                    ->join('work_instances as work', 'work.order_id', '=', 'orders.id')
+                    ->join('payment_obligations as obligations', 'obligations.order_id', '=', 'orders.id')
+                    ->where('orders.id', $orderId)
+                    ->where('orders.listing_id', self::LISTING_ID)
+                    ->where('orders.buyer_user_id', $userId)
+                    ->where('orders.provider_user_id', (string) $listing->owner_user_id)
+                    ->where('orders.status', 'completed')
+                    ->whereNotNull('orders.completed_at')
+                    ->where('proposals.status', 'accepted')
+                    ->where('work.status', 'completed')
+                    ->whereIn('obligations.status', ['due', 'payer_reported_cash', 'payer_submitted_p2p_proof', 'settled'])
+                    ->whereRaw("NULLIF(BTRIM(terms.scope->>'title'), '') IS NOT NULL")
+                    ->exists();
+
+                if (! $eligibleOrder) {
+                    DB::table('reviews')->where('id', $reviewId)->delete();
+                    DB::table('evidence_files')->where('id', $evidenceId)->delete();
+                    DB::table('orders')
+                        ->where('id', $orderId)
+                        ->where('status', 'completed')
+                        ->whereNull('current_terms_snapshot_id')
+                        ->whereNull('current_proposal_id')
+                        ->update([
+                            'status' => 'cancelled',
+                            'completed_at' => null,
+                            'cancelled_at' => $now,
+                            'updated_at' => $now,
+                        ]);
+
+                    continue;
+                }
+
                 DB::table('users')->updateOrInsert(['id' => $userId], [
                     'phone_e164' => $review['phone'],
                     'status' => 'active',
@@ -103,30 +150,6 @@ final class ListingReviewsSeeder extends Seeder
                     'correlation_id' => self::CORRELATION_ID,
                     'created_at' => $now,
                     'updated_at' => $now,
-                ]);
-
-                $sequence = sprintf('%02d', $index + 1);
-                $orderId = '0198a3b1-7c40-7abc-8def-0f01000000'.$sequence;
-                $evidenceId = '0198a3b1-7c40-7abc-8def-0f02000000'.$sequence;
-                $reviewId = '0198a3b1-7c40-7abc-8def-0f03000000'.$sequence;
-                $createdAt = $now->subDays(8 - $index * 2);
-
-                DB::table('orders')->updateOrInsert(['id' => $orderId], [
-                    'origin' => 'listing',
-                    'mechanism' => 'direct',
-                    'listing_id' => self::LISTING_ID,
-                    'request_id' => null,
-                    'quote_id' => null,
-                    'buyer_user_id' => $userId,
-                    'provider_user_id' => (string) $listing->owner_user_id,
-                    'status' => 'closed',
-                    'geography' => 'Tagudin Centro',
-                    'deal_chain_id' => null,
-                    'deal_need_id' => null,
-                    'correlation_id' => self::CORRELATION_ID,
-                    'version' => 1,
-                    'created_at' => $createdAt,
-                    'updated_at' => $createdAt,
                 ]);
 
                 DB::table('evidence_files')->updateOrInsert(['id' => $evidenceId], [

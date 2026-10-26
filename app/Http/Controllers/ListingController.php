@@ -117,7 +117,7 @@ final class ListingController
 
         try {
             $sessionUserId = $this->session->requireUser($request, $correlationId);
-            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.create');
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId);
 
             $listingType = (string) ($validated['listing_type'] ?? 'service');
             $hasProvider = $this->roles->hasActive($actor->resourceOwnerId, 'provider');
@@ -177,7 +177,7 @@ final class ListingController
 
         try {
             $sessionUserId = $this->session->requireUser($request, $correlationId);
-            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.update');
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId);
             $saved = $this->updateListing->handle($listing, $actor, $expectedVersion, $validated, $correlationId);
 
             return $this->success($request, ['data' => $saved], $correlationId);
@@ -202,7 +202,7 @@ final class ListingController
                 );
             }
             $sessionUserId = $this->session->requireUser($request, $correlationId);
-            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.submit');
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId);
             $submitted = $this->submitListing->handle(
                 $listing,
                 $actor,
@@ -224,7 +224,7 @@ final class ListingController
 
         try {
             $sessionUserId = $this->session->requireUser($request, $correlationId);
-            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.pause');
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId);
             $paused = $this->pauseListing->handle($listing, $actor, $expectedVersion, $correlationId);
 
             if ($request->wantsJson()) {
@@ -244,7 +244,7 @@ final class ListingController
 
         try {
             $sessionUserId = $this->session->requireUser($request, $correlationId);
-            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.resume');
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId);
             $resumed = $this->resumeListing->handle($listing, $actor, $expectedVersion, $correlationId);
 
             if ($request->wantsJson()) {
@@ -264,7 +264,7 @@ final class ListingController
 
         try {
             $sessionUserId = $this->session->requireUser($request, $correlationId);
-            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId, 'listing', 'listing.archive');
+            $actor = $this->resourceActors->resolve($request, $sessionUserId, $correlationId);
             $archived = $this->archiveListing->handle($listing, $actor, $expectedVersion, $correlationId);
 
             if ($request->wantsJson()) {

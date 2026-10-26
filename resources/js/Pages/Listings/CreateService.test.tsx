@@ -188,4 +188,49 @@ describe('CreateService Component — Granular Guided & Standard Modes', () => {
         // Step 5 does NOT contain Detailed Description
         expect(screen.queryByLabelText(/Detailed Description/i)).toBeNull();
     });
+
+    it('reflects custom workflow created in Work Studio and allows proceeding through listing creation', () => {
+        render(<CreateService workOptions={mockWorkOptions} />);
+
+        // Step 1: title and courier category (no category-specific work sets)
+        const titleInput = screen.getByPlaceholderText(/e\.g\. Inverter Split AC Deep Clean/i);
+        fireEvent.change(titleInput, { target: { value: 'Custom App Development Service' } });
+        const categorySelect = screen.getByDisplayValue('Select trade category...') as HTMLSelectElement;
+        fireEvent.change(categorySelect, { target: { value: 'courier' } });
+
+        // Advance to Step 2
+        fireEvent.click(screen.getByRole('button', { name: /continue to visual proof/i }));
+        // Advance to Step 3
+        fireEvent.click(screen.getByRole('button', { name: /continue to work plan/i }));
+
+        // Confirm amber notice is displayed
+        expect(screen.getByText(/No category-specific work sets for Courier & Delivery yet/i)).toBeTruthy();
+        const continueBtn = screen.getByRole('button', { name: /continue to deliverables/i });
+        expect(continueBtn.getAttribute('disabled')).toBeDefined();
+
+        // Open Work Catalog
+        fireEvent.click(screen.getByRole('button', { name: /Browse All Compatible Service Work Sets/i }));
+        expect(screen.getByText('Work Execution Catalog')).toBeTruthy();
+
+        // Click "Build Custom Workflow in Work Studio ↗"
+        fireEvent.click(screen.getByRole('button', { name: /Build Custom Workflow in Work Studio/i }));
+
+        // Customizer modal is now open
+        expect(screen.getByText(/Work Studio · Execution Pipeline/i)).toBeTruthy();
+
+        // Click "Apply Workflow to Listing ➔"
+        const applyBtn = screen.getByRole('button', { name: /Apply Workflow to Listing/i });
+        fireEvent.click(applyBtn);
+
+        // The custom workflow MUST reflect on the page!
+        expect(screen.getByText('Custom for this listing')).toBeTruthy();
+        expect(screen.getByRole('button', { name: /Customize Work Steps/i })).toBeTruthy();
+
+        // The "Continue to Deliverables" button MUST be enabled now
+        expect(continueBtn.getAttribute('disabled')).toBeNull();
+
+        // Can proceed to Step 4
+        fireEvent.click(continueBtn);
+        expect(screen.getByText(/What is physically included in your base labor\?/i)).toBeTruthy();
+    });
 });

@@ -54,6 +54,25 @@ npm run dev          # or: npm run build / npm test / npm run typecheck
 Sail (`compose.sail.yaml`) and ephemeral `composer:2` containers remain valid
 alternatives for isolated backend work; `compose.yaml` is the canonical stack.
 
+### Operational outbox
+
+Apply the forward migrations before running the dispatcher:
+
+```bash
+vendor/bin/sail artisan migrate --no-interaction
+vendor/bin/sail artisan outbox:dispatch --limit=100
+```
+
+Handlers register under the `OutboxConsumerHandler` container tag. A message is
+published only after its consumers durably acknowledge delivery; failures retry
+with backoff and exhausted attempts remain visible as `dead_letter`. Unsupported
+contract versions are parked rather than silently discarded. Schedule the command
+with the application scheduler or run it directly when diagnosing local delivery.
+
+Orders and obligations expose sequence-backed `ORD-*` and `OBL-*` references.
+Support cases and disputes share the `CASE-*` sequence so a case reference is
+unambiguous across both record types.
+
 | Layer | Locked baseline |
 |---|---|
 | Backend | PHP 8.4 · Laravel 12 · PHP-FPM, modular monolith w/ hexagonal ports & adapters |

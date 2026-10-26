@@ -26,7 +26,7 @@ final class DealNeedOrderLinkService implements DealNeedOrderLinkPort
             );
         }
 
-        if (! in_array($need->status, ['open', 'invited', 'accepted'], true)) {
+        if ($need->status !== 'awaiting_customer_confirmation') {
             throw new DealCoordinationError(
                 'INVALID_NEED_STATE',
                 "Cannot form child order for Need in '{$need->status}' status.",

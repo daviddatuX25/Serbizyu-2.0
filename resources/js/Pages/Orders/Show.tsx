@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Form, Link, router, usePage } from '@inertiajs/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     ArrowLeft,
@@ -14,7 +14,6 @@ import {
     MoreVertical,
     Package,
     Phone,
-    Send,
     ShieldCheck,
     Star,
     X,
@@ -25,20 +24,47 @@ import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import ReviewCeremonyModal from '../../components/reviews/ReviewCeremonyModal';
 import GlovoWaveModal from '../../components/mobile/GlovoWaveModal';
 import WorkNodeEvidenceReview from '../../components/mobile/WorkNodeEvidenceReview';
+import PaymentObligationSheet, { type PaymentObligation } from '../../components/mobile/PaymentObligationSheet';
+import A9DeliveryPanel, { type A9DeliveryProjection } from '../../components/mobile/A9DeliveryPanel';
+import A4HandoffPanel, { type A4HandoffProjection } from '../../components/orders/A4HandoffPanel';
+import AppointmentPanel from '../../components/orders/AppointmentPanel';
+import WorkClearanceChallenge from '../../components/orders/WorkClearanceChallenge';
+import ConversationDrawer from '../../components/conversations/ConversationDrawer';
+type OrderProposal = {
+    id: string;
+    version: number;
+    kind: string;
+    status: string;
+    proposed_by_user_id: string;
+    amount_minor: number | null;
+    currency: string | null;
+    note: string | null;
+    can_accept: boolean;
+    can_decline: boolean;
+    can_counter: boolean;
+    can_amend: boolean;
+    expected_order_version: number;
+};
+
+type ProposalSheetAction = 'counter' | 'amend';
+
 type OrderShowProps = {
     correlationId?: string | null;
     notice?: string | null;
     actor_perspective?: 'customer' | 'provider' | 'courier';
+    proposal?: OrderProposal | null;
     order: {
         id: string;
-        status: string;
+        status: 'proposed' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
         version: number;
         listing_id: string;
         mechanism: string;
         origin: string;
         geography?: string | null;
-        proposal?: Record<string, unknown>;
-        can_finalize: boolean;
+        can_accept: boolean;
+        can_decline: boolean;
+        can_counter: boolean;
+        can_amend: boolean;
         can_signoff: boolean;
         can_view_work_evidence: boolean;
         is_order_buyer: boolean;
@@ -79,6 +105,7 @@ type OrderShowProps = {
     } | null;
     work?: {
         id: string;
+        version: number;
         status: string;
         work_shape: string;
         signature_hash?: string | null;
@@ -87,16 +114,18 @@ type OrderShowProps = {
         pending_customer_confirmation?: boolean;
         nodes?: WorkNodeRecord[];
     } | null;
-    obligation?: {
-        id: string;
-        status: string;
-        lane: string;
-        amount_minor: number;
-        currency: string;
+    obligation?: PaymentObligation | null;
+    a9Delivery?: A9DeliveryProjection | null;
+    a4Handoff?: A4HandoffProjection;
+    appointment?: {
+        scheduledAt: string | null;
+        scheduleChangeRequests: { id: string; proposedStart: string; proposedEnd: string; proposerUserId: string; status: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'expired'; createdAt: string }[];
+        canPropose: boolean;
+        viewerUserId: string;
     } | null;
     financials?: {
-        amount_minor: number;
-        currency: string;
+        amount_minor: number | null;
+        currency: string | null;
         label: string;
         status: string;
         breakdown: { label: string; amount_minor: number }[];
@@ -112,24 +141,20 @@ type OrderShowProps = {
         is_current?: boolean;
     }[];
     errors?: Record<string, string | string[]>;
+    active_support_case_id?: string | null;
 };
 
-interface ChatMessage {
-    id: string;
-    sender: string;
-    text: string;
-    time: string;
-    isSelf: boolean;
-}
+type SupportCategory = 'fulfillment' | 'payment' | 'cancellation' | 'other';
 
 function money(minor: number | undefined, currency: string | undefined): string {
     if (minor === undefined || minor === null) {
-        return '—';
+        return 'Terms not yet agreed';
     }
-    return `${currency ?? 'PHP'} ${(minor / 100).toLocaleString('en-PH', {
+    const formatted = (minor / 100).toLocaleString('en-PH', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
-    })}`;
+    });
+    return currency ? `${currency} ${formatted}` : formatted;
 }
 
 function matchNodeKindBadge(kind: string): { label: string; style: string } {
@@ -161,6 +186,16 @@ function matchNodeKindBadge(kind: string): { label: string; style: string } {
             };
     }
 }
+function requestedConversationContext(search: string): { owner_user_id?: string; consent_grant_id?: string } {
+    const query = new URLSearchParams(search);
+    const owner = query.get('owner_user_id');
+    const grant = query.get('consent_grant_id');
+    return {
+        ...(owner ? { owner_user_id: owner } : {}),
+        ...(grant ? { consent_grant_id: grant } : {}),
+    };
+}
+
 export default function OrderShow(props: OrderShowProps) {
     const page = usePage<{
         errors?: Record<string, string | string[]>;
@@ -179,37 +214,174 @@ export default function OrderShow(props: OrderShowProps) {
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
     const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
-    // Chat drawer state
     const [chatOpen, setChatOpen] = useState(false);
-    const [chatInput, setChatInput] = useState('');
-    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-        {
-            id: 'c1',
-            sender: perspective === 'customer' ? (props.order.provider_name ?? 'Provider') : (props.order.customer_name ?? 'Customer'),
-            text: perspective === 'customer'
-                ? 'Good day! I have confirmed your appointment and am preparing the equipment.'
-                : 'Hello! Looking forward to the service. Please let me know once you arrive at the gate.',
-            time: '1:10 PM',
-            isSelf: false,
-        },
-    ]);
-
-    // Support Desk drawer state
-    const [supportOpen, setSupportOpen] = useState(false);
+    const [supportComposeOpen, setSupportComposeOpen] = useState(false);
+    const [supportConversationOpen, setSupportConversationOpen] = useState(false);
+    const [supportConversationUrl, setSupportConversationUrl] = useState<string | null>(null);
+    const [supportCategory, setSupportCategory] = useState<SupportCategory>('fulfillment');
+    const [supportReport, setSupportReport] = useState('');
+    const [supportCreating, setSupportCreating] = useState(false);
+    const [supportError, setSupportError] = useState<string | null>(null);
     const [biddingDrawerOpen, setBiddingDrawerOpen] = useState(false);
-    const [supportInput, setSupportInput] = useState('');
-    const [supportMessages, setSupportMessages] = useState<ChatMessage[]>([
-        {
-            id: 's1',
-            sender: 'Tagudin Dispatch Support',
-            text: 'Hello! You are connected to Serbizyu Tagudin Support (#SUP-TAGUDIN). How can we assist with your order?',
-            time: 'Just now',
-            isSelf: false,
-        },
-    ]);
+    const [activeSupportCaseId, setActiveSupportCaseId] = useState(props.active_support_case_id ?? null);
+    const supportIdempotency = useRef<{ category: SupportCategory; content: string; key: string } | null>(null);
+    const conversationSearch = window.location.search;
+    const conversationContext = useMemo(() => requestedConversationContext(conversationSearch), [conversationSearch]);
+    useEffect(() => {
+        setActiveSupportCaseId(props.active_support_case_id ?? null);
+    }, [props.active_support_case_id, props.order.id]);
 
     const [processingNodeId, setProcessingNodeId] = useState<string | null>(null);
     const [signoffProcessing, setSignoffProcessing] = useState(false);
+    const [proposalSheetAction, setProposalSheetAction] = useState<ProposalSheetAction | null>(null);
+    const [proposalAmount, setProposalAmount] = useState('');
+    const [proposalScope, setProposalScope] = useState('');
+    const [proposalNote, setProposalNote] = useState('');
+    const [proposalActionProcessing, setProposalActionProcessing] = useState(false);
+    const [proposalIdempotencyKey, setProposalIdempotencyKey] = useState('');
+    const [proposalProcessing, setProposalProcessing] = useState(false);
+
+    const openProposalSheet = (action: ProposalSheetAction) => {
+        const minor = props.proposal?.amount_minor;
+        setProposalSheetAction(action);
+        setProposalAmount(minor === null || minor === undefined ? '' : (minor / 100).toFixed(2));
+        setProposalScope('');
+        setProposalNote('');
+        setProposalIdempotencyKey(crypto.randomUUID());
+    };
+
+    const sendProposalAction = (
+        action: 'accept' | 'decline' | ProposalSheetAction,
+        proposalAccept = false,
+        payload: { amount_minor?: number; scope?: string; note?: string } = {},
+        idempotencyKey: string = crypto.randomUUID(),
+        onSuccess?: () => void,
+        onFinish?: () => void,
+    ) => {
+        const path = proposalAccept && props.proposal
+            ? `/orders/${props.order.id}/proposals/${props.proposal.id}/accept`
+            : `/orders/${props.order.id}/${action}`;
+        router.post(path, {
+            expected_order_version: proposalAccept
+                ? props.proposal?.expected_order_version
+                : props.order.version,
+            idempotency_key: idempotencyKey,
+            ...payload,
+        }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess,
+            onFinish,
+        });
+    };
+
+    const submitProposalChange = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!proposalSheetAction) return;
+        const amount = Number(proposalAmount);
+        if (!Number.isFinite(amount) || amount <= 0) return;
+        const payload: { amount_minor: number; scope?: string; note?: string } = {
+            amount_minor: Math.round(amount * 100),
+        };
+        if (proposalScope.trim() !== '') payload.scope = proposalScope;
+        if (proposalNote.trim() !== '') payload.note = proposalNote;
+        setProposalProcessing(true);
+        sendProposalAction(
+            proposalSheetAction,
+            false,
+            payload,
+            proposalIdempotencyKey,
+            () => {
+                setProposalSheetAction(null);
+                setProposalAmount('');
+                setProposalScope('');
+                setProposalNote('');
+                setProposalIdempotencyKey('');
+            },
+            () => setProposalProcessing(false),
+        );
+    };
+
+    const orderStatus = props.order.status;
+    const workStatus = props.work?.status ?? 'not_available';
+    const isWorkCompleted = workStatus === 'completed';
+    const isPaymentSettled = props.obligation?.status === 'settled';
+    const isSignoff =
+        workStatus === 'awaiting_signoff' ||
+        workStatus === 'completion_proposed';
+    const isInProgress =
+        orderStatus === 'in_progress' ||
+        (orderStatus === 'accepted' && workStatus === 'in_progress') ||
+        workStatus === 'scheduled';
+    const isPending = orderStatus === 'proposed';
+
+    const amountMinor =
+        props.terms?.amount_minor ??
+        props.obligation?.amount_minor ??
+        props.financials?.amount_minor ??
+        undefined;
+    const currency =
+        props.terms?.currency ??
+        props.obligation?.currency ??
+        props.financials?.currency ??
+        undefined;
+    const financialAmount =
+        props.financials?.amount_minor ??
+        props.obligation?.amount_minor ??
+        props.terms?.amount_minor ??
+        props.proposal?.amount_minor ??
+        undefined;
+    const financialCurrency =
+        props.financials?.currency ??
+        props.obligation?.currency ??
+        props.terms?.currency ??
+        props.proposal?.currency ??
+        undefined;
+    const hasAcceptedTerms = Boolean(props.terms || props.obligation);
+    const isPendingProposal = props.proposal?.status === 'proposed' && !hasAcceptedTerms;
+    const termsDifferFromObligation = Boolean(
+        props.terms
+        && props.obligation
+        && (props.terms.amount_minor !== props.obligation.amount_minor || props.terms.currency !== props.obligation.currency),
+    );
+    const financialHeaderLabel = props.obligation
+        ? props.financials?.label || 'Payment obligation'
+        : isPendingProposal
+          ? 'Proposed terms'
+          : 'Order terms';
+    const financialAmountLabel = props.obligation
+        ? props.financials?.label || 'Payment obligation'
+        : isPendingProposal
+          ? 'Proposed amount'
+          : props.terms
+            ? 'Agreed amount'
+            : 'Order amount';
+    const formattedAmount = money(amountMinor, currency);
+
+    const orderShortId = `#ORD-${props.order.id.slice(0, 8).toUpperCase()}`;
+    const listingTitle = props.order.listing_title || 'Order';
+
+    // Smart back link
+    const backHref = props.order.deal_chain_id
+        ? `/deal-chains/${props.order.deal_chain_id}`
+        : '/orders';
+    const backLabel = props.order.deal_chain_id
+        ? `${props.order.deal_chain_ref ?? 'Deal Chain'} Relay Pool`
+        : 'Orders Hub';
+
+    const counterpartyName = props.order.counterparty_name ?? '';
+    const counterpartyPhone = props.order.counterparty_phone ?? '';
+
+    const proposal = props.proposal;
+    const canAcceptProposal = proposal?.can_accept === true || props.order.can_accept;
+    const canDeclineProposal = proposal?.can_decline === true || props.order.can_decline;
+    const canCounterProposal = proposal?.can_counter === true || props.order.can_counter;
+    const canAmendProposal = proposal?.can_amend === true || props.order.can_amend;
+    const submitSimpleProposalAction = (action: 'accept' | 'decline', proposalAccept = false) => {
+        if (proposalActionProcessing) return;
+        setProposalActionProcessing(true);
+        sendProposalAction(action, proposalAccept, {}, crypto.randomUUID(), undefined, () => setProposalActionProcessing(false));
+    };
 
     const handleAdvanceNode = (
         nodeId: string,
@@ -235,81 +407,70 @@ export default function OrderShow(props: OrderShowProps) {
         });
     };
 
-    const handleSendChatMessage = () => {
-        if (!chatInput.trim()) return;
-        const newMsg: ChatMessage = {
-            id: `msg-${Date.now()}`,
-            sender: 'You',
-            text: chatInput.trim(),
-            time: 'Just now',
-            isSelf: true,
-        };
-        setChatMessages((prev) => [...prev, newMsg]);
-        setChatInput('');
+    const openSupport = () => {
+        setSupportError(null);
+        if (activeSupportCaseId) {
+            setSupportConversationUrl(`/support-cases/${activeSupportCaseId}/conversation`);
+            setSupportConversationOpen(true);
+            setSupportComposeOpen(false);
+            return;
+        }
+        setSupportComposeOpen(true);
     };
 
-    const handleSendSupportMessage = () => {
-        if (!supportInput.trim()) return;
-        const newMsg: ChatMessage = {
-            id: `sup-${Date.now()}`,
-            sender: 'You',
-            text: supportInput.trim(),
-            time: 'Just now',
-            isSelf: true,
-        };
-        setSupportMessages((prev) => [...prev, newMsg]);
-        setSupportInput('');
-        setTimeout(() => {
-            setSupportMessages((prev) => [
-                ...prev,
-                {
-                    id: `sup-reply-${Date.now()}`,
-                    sender: 'Tagudin Dispatch Support',
-                    text: 'Thank you for your report. A local dispatch agent has noted this on Order ' + props.order.id.slice(0, 8).toUpperCase() + '.',
-                    time: 'Just now',
-                    isSelf: false,
+    const createSupportCase = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const content = supportReport.trim();
+        if (!content || supportCreating) return;
+        setSupportCreating(true);
+        setSupportError(null);
+        const xsrfToken = document.cookie.split(';').map((cookie) => cookie.trim())
+            .find((cookie) => cookie.startsWith('XSRF-TOKEN='))?.slice('XSRF-TOKEN='.length);
+        if (!supportIdempotency.current || supportIdempotency.current.category !== supportCategory || supportIdempotency.current.content !== content) {
+            supportIdempotency.current = { category: supportCategory, content, key: crypto.randomUUID() };
+        }
+        const idempotencyKey = supportIdempotency.current.key;
+        try {
+            const response = await fetch('/support-cases', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-Idempotency-Key': idempotencyKey,
+                    'X-XSRF-TOKEN': xsrfToken ? decodeURIComponent(xsrfToken) : '',
                 },
-            ]);
-        }, 1000);
+                body: JSON.stringify({
+                    order_id: props.order.id,
+                    category: supportCategory,
+                    content,
+                    idempotency_key: idempotencyKey,
+                    ...conversationContext,
+                }),
+            });
+            const payload = await response.json() as {
+                data?: { id: string; public_reference: string; conversation_id: string };
+                error?: { message?: string };
+                message?: string;
+            };
+            if (!response.ok || !payload.data?.id) {
+                throw new Error(payload.error?.message ?? payload.message ?? `Support case could not be opened (${response.status}).`);
+            }
+            setSupportComposeOpen(false);
+            setActiveSupportCaseId(payload.data.id);
+            setSupportConversationUrl(`/support-cases/${payload.data.id}/conversation`);
+            setSupportReport('');
+            setChatOpen(false);
+            setSupportConversationOpen(true);
+            supportIdempotency.current = null;
+        } catch (cause) {
+            setSupportError(cause instanceof Error ? cause.message : 'Support case could not be opened. Your report is still here.');
+        } finally {
+            setSupportCreating(false);
+        }
     };
 
-    // Derived lifecycle status
-    const orderStatus = props.order.status;
-    const workStatus =
-        props.work?.status ??
-        (orderStatus === 'accepted' ? 'in_progress' : 'pending');
-    const isSettled = orderStatus === 'closed' || workStatus === 'completed';
-    const isSignoff =
-        workStatus === 'awaiting_signoff' ||
-        workStatus === 'completion_proposed';
-    const isInProgress =
-        (orderStatus === 'accepted' && workStatus === 'in_progress') ||
-        workStatus === 'scheduled';
-    const isPending = orderStatus === 'pending_acceptance';
-
-    // Scoped amounts
-    const amountMinor =
-        props.financials?.amount_minor ??
-        props.obligation?.amount_minor ??
-        props.terms?.amount_minor ??
-        Number(props.order.proposal?.amount_minor ?? 45000);
-    const currency =
-        props.financials?.currency ?? props.obligation?.currency ?? 'PHP';
-    const formattedAmount = money(amountMinor, currency);
-
-    const orderShortId = `#ORD-${props.order.id.slice(0, 8).toUpperCase()}`;
-    const listingTitle = props.order.listing_title || 'Tagudin Service Order';
-
-    // Smart back link
-    const backHref = props.order.deal_chain_id
-        ? `/deal-chains/${props.order.deal_chain_id}`
-        : '/orders';
-    const backLabel = props.order.deal_chain_id
-        ? `${props.order.deal_chain_ref ?? 'Deal Chain'} Relay Pool`
-        : 'Orders Hub';
-
-    const counterpartyName = props.order.counterparty_name ?? '';
-    const counterpartyPhone = props.order.counterparty_phone ?? '';
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 pb-28">
@@ -359,13 +520,27 @@ export default function OrderShow(props: OrderShowProps) {
                                     type="button"
                                     onClick={() => {
                                         setOptionsMenuOpen(false);
-                                        setSupportOpen(true);
+                                        openSupport();
                                     }}
                                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                 >
                                     <HelpCircle className="size-3.5 text-blue-600" />
                                     <span>Contact Support Desk</span>
                                 </button>
+                                <Link
+                                    href="/stock"
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                >
+                                    <Package className="size-3.5 text-slate-500" />
+                                    <span>Stock ledger</span>
+                                </Link>
+                                <Link
+                                    href="/money-history"
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                >
+                                    <Coins className="size-3.5 text-slate-500" />
+                                    <span>Money history</span>
+                                </Link>
                                 <Link
                                     href={backHref}
                                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50"
@@ -407,28 +582,28 @@ export default function OrderShow(props: OrderShowProps) {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {props.order.can_contact && (
+                            <button
+                                type="button"
+                                onClick={() => setChatOpen(true)}
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50"
+                            >
+                                <MessageSquare className="size-3.5 text-sky-600" />
+                                <span>Message {counterpartyName.split(' ')[0] || 'counterparty'}</span>
+                            </button>
+                        )}
                         {props.order.can_contact && counterpartyPhone !== '' && (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={() => setChatOpen(true)}
-                                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50"
-                                >
-                                    <MessageSquare className="size-3.5 text-sky-600" />
-                                    <span>Message {counterpartyName.split(' ')[0]}</span>
-                                </button>
-                                <a
-                                    href={`tel:${counterpartyPhone}`}
-                                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50"
-                                >
-                                    <Phone className="size-3.5 text-emerald-600" />
-                                    <span>Call</span>
-                                </a>
-                            </>
+                            <a
+                                href={`tel:${counterpartyPhone}`}
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50"
+                            >
+                                <Phone className="size-3.5 text-emerald-600" />
+                                <span>Call</span>
+                            </a>
                         )}
                         <button
                             type="button"
-                            onClick={() => setSupportOpen(true)}
+                            onClick={openSupport}
                             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50"
                         >
                             <HelpCircle className="size-3.5 text-blue-600" />
@@ -511,7 +686,7 @@ export default function OrderShow(props: OrderShowProps) {
                                 <div className="flex items-center gap-2">
                                     <span
                                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
-                                            isSettled
+                                            isWorkCompleted
                                                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
                                                 : isSignoff
                                                 ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
@@ -522,21 +697,19 @@ export default function OrderShow(props: OrderShowProps) {
                                     >
                                         <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                         <span>
-                                            {isSettled
-                                                ? 'Settled & Closed'
+                                            {isWorkCompleted
+                                                ? 'Work completed'
                                                 : isSignoff
                                                 ? 'Awaiting Sign-off'
                                                 : isInProgress
                                                 ? 'Work Underway'
                                                 : isPending
-                                                ? 'Pending Acceptance'
-                                                : 'Confirmed'}
+                                                ? 'Proposal open'
+                                                : orderStatus.replaceAll('_', ' ')}
                                         </span>
                                     </span>
                                     <span className="text-[10px] font-bold text-white/70">
-                                        {props.order.can_finalize
-                                            ? 'Needs Acceptance'
-                                            : 'Confirmed'}
+                                        {props.order.status.replaceAll('_', ' ')}
                                     </span>
                                 </div>
 
@@ -545,24 +718,12 @@ export default function OrderShow(props: OrderShowProps) {
                                 </h1>
 
                                 <p className="text-xs text-white/80">
-                                    {perspective === 'customer'
-                                        ? `Provider: ${props.order.provider_name || 'Kuya Ben AC'} · Centro, Tagudin`
-                                        : perspective === 'provider'
-                                        ? `Client: ${props.order.customer_name || 'Maria Santos'} · Tagudin Resident`
-                                        : `Delivery Assignment: Danny Express Rider`}
+                                    {counterpartyName ? `Counterparty: ${counterpartyName}` : null}
                                 </p>
                             </div>
 
-                            {/* Service Media Thumbnail */}
-                            <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-white/20 shadow-sm bg-white/10">
-                                <img
-                                    src="/photos/ac-clean.jpg"
-                                    alt="Service thumbnail"
-                                    className="size-full object-cover"
-                                />
-                            </div>
                         </div>
-                        {props.order.can_contact && counterpartyPhone !== '' && (
+                        {props.order.can_contact && (
                             <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-2">
                                 <button
                                     type="button"
@@ -570,30 +731,76 @@ export default function OrderShow(props: OrderShowProps) {
                                     className="flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-white/10 py-1.5 text-xs font-bold text-white hover:bg-white/20"
                                 >
                                     <MessageSquare className="size-3.5 text-sky-300" />
-                                    <span>Message {counterpartyName.split(' ')[0]}</span>
+                                    <span>Message {counterpartyName.split(' ')[0] || 'counterparty'}</span>
                                 </button>
-                                <a
-                                    href={`tel:${counterpartyPhone}`}
-                                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/20"
-                                >
-                                    <Phone className="size-3.5 text-emerald-300" />
-                                    <span>Call</span>
-                                </a>
+                                {counterpartyPhone !== '' && (
+                                    <a
+                                        href={`tel:${counterpartyPhone}`}
+                                        className="flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/20"
+                                    >
+                                        <Phone className="size-3.5 text-emerald-300" />
+                                        <span>Call</span>
+                                    </a>
+                                )}
                             </div>
                         )}
 
 
-                        {/* Timing ETA Strip */}
-                        <div className="mt-3 flex items-center justify-between border-t border-white/15 pt-2.5 text-[11px] text-white/90">
-                            <div className="flex items-center gap-1.5">
-                                <Clock className="size-3.5 text-emerald-300" />
-                                <span>Estimated Arrival: ~25 mins (Today)</span>
-                            </div>
-                            <span className="font-mono text-xs font-extrabold text-amber-300">
-                                {formattedAmount}
-                            </span>
-                        </div>
                     </div>
+                    <section aria-label="Order progress rails" data-testid="order-progress-rails" className="grid grid-cols-3 gap-2">
+                        <div className="rounded-xl border border-slate-200 bg-white p-3">
+                            <span className="block text-[10px] font-bold text-slate-500">Agreement</span>
+                            <strong className="mt-1 block text-xs font-extrabold text-[#0F2F58]">
+                                {orderStatus === 'accepted' || orderStatus === 'in_progress' || orderStatus === 'completed' ? 'Accepted' : orderStatus.replaceAll('_', ' ')}
+                            </strong>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-white p-3">
+                            <span className="block text-[10px] font-bold text-slate-500">Work</span>
+                            <strong className="mt-1 block text-xs font-extrabold text-[#0F2F58]">
+                                {isWorkCompleted ? 'Completed' : workStatus.replaceAll('_', ' ')}
+                            </strong>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-white p-3">
+                            <span className="block text-[10px] font-bold text-slate-500">Payment</span>
+                            <strong className={`mt-1 block text-xs font-extrabold ${isPaymentSettled ? 'text-emerald-800' : 'text-[#0F2F58]'}`}>
+                                {props.obligation ? props.obligation.status.replaceAll('_', ' ') : 'Not available'}
+                            </strong>
+                        </div>
+                    </section>
+                    {proposal && (
+                        <section aria-label="Current proposal" className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/60 p-4 shadow-xs">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <p className="text-[10px] font-extrabold tracking-wider text-amber-900 uppercase">Current proposal</p>
+                                    <h2 className="mt-1 text-sm font-extrabold text-slate-900">{proposal.kind.replaceAll('_', ' ')} · {proposal.status.replaceAll('_', ' ')}</h2>
+                                </div>
+                                <span className="font-mono text-sm font-extrabold text-[#0F2F58]">{money(proposal.amount_minor ?? undefined, proposal.currency ?? undefined)}</span>
+                            </div>
+                            {proposal.note && <p className="text-xs leading-relaxed text-slate-700">{proposal.note}</p>}
+                            <div className="flex flex-wrap gap-2">
+                                {canAcceptProposal && (
+                                    <button type="button" disabled={proposalActionProcessing} onClick={() => submitSimpleProposalAction('accept', proposal.can_accept)} className="min-h-10 rounded-full bg-[#0D715F] px-4 text-xs font-extrabold text-white hover:bg-[#0a574a] disabled:opacity-50">
+                                        Accept proposal
+                                    </button>
+                                )}
+                                {canDeclineProposal && (
+                                    <button type="button" disabled={proposalActionProcessing} onClick={() => submitSimpleProposalAction('decline')} className="min-h-10 rounded-full border border-rose-300 bg-white px-4 text-xs font-extrabold text-rose-800 hover:bg-rose-50 disabled:opacity-50">
+                                        Decline proposal
+                                    </button>
+                                )}
+                                {canCounterProposal && (
+                                    <button type="button" disabled={proposalActionProcessing} onClick={() => openProposalSheet('counter')} className="min-h-10 rounded-full border border-[#0F2F58] bg-white px-4 text-xs font-extrabold text-[#0F2F58] hover:bg-blue-50 disabled:opacity-50">
+                                        Counter proposal
+                                    </button>
+                                )}
+                                {canAmendProposal && (
+                                    <button type="button" disabled={proposalActionProcessing} onClick={() => openProposalSheet('amend')} className="min-h-10 rounded-full border border-slate-300 bg-white px-4 text-xs font-extrabold text-slate-800 hover:bg-slate-50 disabled:opacity-50">
+                                        Amend proposal
+                                    </button>
+                                )}
+                            </div>
+                        </section>
+                    )}
 
                     {/* 2. Live Progress Execution Section */}
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3.5">
@@ -601,7 +808,7 @@ export default function OrderShow(props: OrderShowProps) {
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-sm font-extrabold tracking-wider text-[#0F2F58] uppercase">
-                                        Work Execution Pipeline
+                                        {props.work?.work_shape === 'A9' ? 'A9 Delivery Plan' : 'Work Execution Pipeline'}
                                     </h2>
                                     {props.work?.signature_hash && (
                                         <span className="font-mono text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
@@ -610,7 +817,9 @@ export default function OrderShow(props: OrderShowProps) {
                                     )}
                                 </div>
                                 <p className="mt-0.5 text-xs text-slate-500">
-                                    {props.work?.nodes && props.work.nodes.length > 0
+                                    {props.work?.work_shape === 'A9'
+                                        ? 'Planned delivery steps. Evidence, QA, and version acceptance happen in the A9 delivery panel.'
+                                        : props.work?.nodes && props.work.nodes.length > 0
                                         ? `${props.work.nodes.length} Work nodes · ${props.work.work_shape || 'A1'}`
                                         : isPending
                                         ? 'Work steps appear after the provider accepts the order.'
@@ -624,9 +833,10 @@ export default function OrderShow(props: OrderShowProps) {
                             <div className="space-y-3">
                                 {props.work.nodes.map((node) => {
                                     const kindBadge = matchNodeKindBadge(node.node_kind);
-                                    const isNodeCompleted = node.status === 'completed';
-                                    const isNodeActive = node.status === 'in_progress' || node.status === 'active';
-                                    const isAwaitingConfirm = node.status === 'awaiting_customer_confirmation';
+                                    const isNativeA9 = props.work?.work_shape === 'A9';
+                                    const isNodeCompleted = !isNativeA9 && node.status === 'completed';
+                                    const isNodeActive = !isNativeA9 && (node.status === 'in_progress' || node.status === 'active');
+                                    const isAwaitingConfirm = !isNativeA9 && node.status === 'awaiting_customer_confirmation';
                                     const activeAction: WorkNodeAction = node.node_kind === 'final_signoff'
                                         ? 'propose_completion'
                                         : node.control_mode === 'customer_confirm' || node.node_kind === 'decision_gate'
@@ -639,7 +849,9 @@ export default function OrderShow(props: OrderShowProps) {
                                         <div
                                             key={node.id}
                                             className={`rounded-xl border p-4 transition-all ${
-                                                isNodeActive
+                                                isNativeA9
+                                                    ? 'border-slate-200 bg-white'
+                                                    : isNodeActive
                                                     ? 'border-sky-300 bg-sky-50/30 ring-1 ring-sky-200'
                                                     : isNodeCompleted
                                                     ? 'border-emerald-200 bg-emerald-50/20'
@@ -650,14 +862,16 @@ export default function OrderShow(props: OrderShowProps) {
                                                 <div className="flex items-start gap-3 min-w-0">
                                                     <div
                                                         className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                                                            isNodeCompleted
+                                                            isNativeA9
+                                                                ? 'bg-slate-200 text-slate-500'
+                                                                : isNodeCompleted
                                                                 ? 'bg-emerald-600 text-white'
                                                                 : isNodeActive
                                                                 ? 'bg-[#0F2F58] text-white'
                                                                 : 'bg-slate-200 text-slate-500'
                                                         }`}
                                                     >
-                                                        {isNodeCompleted ? <Check className="size-3.5" /> : node.ordinal}
+                                                        {isNativeA9 ? node.ordinal : isNodeCompleted ? <Check className="size-3.5" /> : node.ordinal}
                                                     </div>
 
                                                     <div className="min-w-0 flex-1 space-y-1">
@@ -678,7 +892,9 @@ export default function OrderShow(props: OrderShowProps) {
                                                 </div>
 
                                                 <div className="shrink-0 text-right">
-                                                    {isNodeCompleted ? (
+                                                    {isNativeA9 ? (
+                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">Planned step</span>
+                                                    ) : isNodeCompleted ? (
                                                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800">
                                                             <Check className="size-3" /> Done
                                                         </span>
@@ -691,16 +907,17 @@ export default function OrderShow(props: OrderShowProps) {
                                                             Active Gate
                                                         </span>
                                                     ) : (
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase">
-                                                            Locked
-                                                        </span>
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase">Locked</span>
                                                     )}
                                                 </div>
                                             </div>
 
                                             {!isNodeCompleted && (isNodeActive || isAwaitingConfirm) && (
                                                 <div className="mt-3.5 border-t border-slate-200/80 pt-3">
-                                                    {perspective === 'provider' && isNodeActive && (
+                                                    {props.work?.work_shape !== 'A4' && props.work?.work_shape !== 'A9' && (node.can_issue_challenge || node.can_verify_challenge) && node.approval_method !== 'app_confirm' && (
+                                                        <WorkClearanceChallenge orderId={props.order.id} workVersion={props.work!.version} node={node} />
+                                                    )}
+                                                    {perspective === 'provider' && isNodeActive && props.work?.work_shape !== 'A4' && props.work?.work_shape !== 'A9' && (
                                                         <WorkNodeEvidenceTools
                                                             orderId={props.order.id}
                                                             node={node}
@@ -735,13 +952,15 @@ export default function OrderShow(props: OrderShowProps) {
                                                                         : 'The provider submitted this step for your review.'}
                                                                 </p>
                                                             </div>
-                                                            {!props.order.is_order_buyer ? (
+                                                            {props.work?.work_shape === 'A4' ? (
+                                                                <span className="text-[11px] font-semibold text-amber-950">Use the governed A4 handoff panel below to complete authored Work proof and recipient receipt.</span>
+                                                            ) : !props.order.is_order_buyer ? (
                                                                 <span className="text-[11px] font-semibold text-slate-600">
                                                                     Only the child order buyer can approve this step.
                                                                 </span>
-                                                            ) : node.approval_method === 'presence_otp' ? (
+                                                            ) : node.approval_method === 'presence_otp' || node.approval_method === 'worker_dropoff' ? (
                                                                 <span className="text-[11px] font-semibold text-amber-950">
-                                                                    This step requires an in-person confirmation code.
+                                                                    {node.approval_method === 'presence_otp' ? 'This step requires the provider to verify the customer-issued in-person code.' : 'This handoff requires the receiving party to verify the worker-issued code.'}
                                                                 </span>
                                                             ) : node.node_kind === 'final_signoff' ? (
                                                                 props.order.can_signoff ? (
@@ -772,9 +991,10 @@ export default function OrderShow(props: OrderShowProps) {
                                                 </div>
                                             )}
 
-                                            {props.order.can_view_work_evidence && (node.evidence !== null && node.evidence !== undefined || isAwaitingConfirm) && (
+                                            {!isNativeA9 && props.order.can_view_work_evidence && (node.evidence !== null && node.evidence !== undefined || isAwaitingConfirm) && (
                                                 <WorkNodeEvidenceReview
                                                     evidence={node.evidence}
+                                                    node={node}
                                                     onPreviewPhoto={setPreviewPhoto}
                                                 />
                                             )}
@@ -787,7 +1007,7 @@ export default function OrderShow(props: OrderShowProps) {
                                 <p className="text-xs font-bold text-slate-800">No governed Work steps are available.</p>
                                 <p className="text-[11px] leading-relaxed text-slate-600">
                                     {isPending
-                                        ? 'Work steps appear after the provider accepts and the order is finalized.'
+                                        ? 'Work steps become available after proposal acceptance.'
                                         : 'This order has no active Work node data. No completion or proof action is available here.'}
                                 </p>
                             </div>
@@ -795,117 +1015,101 @@ export default function OrderShow(props: OrderShowProps) {
                     </div>
 
 
-                    {/* 3. Graphic Invoice */}
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3.5">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                            <h2 className="text-xs font-extrabold tracking-wider text-[#0F2F58] uppercase">
-                                Graphic Invoice
-                            </h2>
-                            <span className="font-mono text-[9px] font-bold text-slate-400">
-                                {props.financials?.label || 'Direct Settlement'}
-                            </span>
-                        </div>
+                    {props.work?.work_shape === 'A9' && props.a9Delivery?.enabled && (
+                        <A9DeliveryPanel orderId={props.order.id} delivery={props.a9Delivery} />
+                    )}
+                    {props.appointment && <AppointmentPanel orderId={props.order.id} appointment={props.appointment} />}
+                    {props.a4Handoff?.enabled && (
+                        <A4HandoffPanel
+                            orderId={props.order.id}
+                            orderVersion={props.order.version}
+                            handoff={props.a4Handoff}
+                        />
+                    )}
 
-                        <div className="space-y-2 text-xs">
-                            {props.financials?.breakdown?.map((item, idx) => (
-                                <div key={idx} className="flex justify-between text-slate-700">
-                                    <span>{item.label}</span>
-                                    <span className="font-mono font-bold">
-                                        {money(item.amount_minor, currency)}
-                                    </span>
-                                </div>
-                            )) || (
-                                <>
+                    {/* Commercial Terms */}
+                    {(props.financials || amountMinor !== undefined || props.obligation) && (
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3.5">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                <h2 className="text-xs font-extrabold tracking-wider text-[#0F2F58] uppercase">Commercial terms</h2>
+                                <span className="font-mono text-[9px] font-bold text-slate-400">
+                                    {financialHeaderLabel}
+                                </span>
+                            </div>
+
+                            <div className="space-y-2 text-xs">
+                                {props.financials ? (
+                                    <>
+                                        {props.financials.breakdown.map((item, idx) => (
+                                            <div key={idx} className="flex justify-between text-slate-700">
+                                                <span>{item.label}</span>
+                                                <span className="font-mono font-bold">{money(item.amount_minor, financialCurrency)}</span>
+                                            </div>
+                                        ))}
+                                        {financialAmount !== undefined && (
+                                            <div className="flex items-center justify-between border-t border-slate-200 pt-2.5 text-sm font-extrabold text-[#0F2F58]">
+                                                <span>{financialAmountLabel}:</span>
+                                                <span className="font-mono text-base">{money(financialAmount, financialCurrency)}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : props.obligation ? (
                                     <div className="flex justify-between text-slate-700">
-                                        <span>Primary Consideration:</span>
+                                        <span>Payment obligation</span>
+                                        <span className="font-mono font-bold">{money(props.obligation.amount_minor, props.obligation.currency)}</span>
+                                    </div>
+                                ) : amountMinor !== undefined ? (
+                                    <div className="flex justify-between text-slate-700">
+                                        <span>{financialAmountLabel}</span>
                                         <span className="font-mono font-bold">{formattedAmount}</span>
                                     </div>
-                                    <div className="flex justify-between text-slate-600">
-                                        <span>0% Platform Fee · Tagudin Public Rails</span>
-                                        <span className="font-mono font-bold text-emerald-700">
-                                            ₱0.00 (Zero Fee)
-                                        </span>
+                                ) : null}
+                                {termsDifferFromObligation && props.terms && (
+                                    <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5 text-slate-700">
+                                        <span>Current agreed terms · v{props.terms.snapshot_version}</span>
+                                        <span className="shrink-0 font-mono font-bold">{money(props.terms.amount_minor, props.terms.currency)}</span>
                                     </div>
-                                </>
-                            )}
-
-                            <div className="flex items-center justify-between border-t border-slate-200 pt-2.5 text-sm font-extrabold text-[#0F2F58]">
-                                <span>{props.financials?.label || 'Total Amount'}:</span>
-                                <span className="font-mono text-base">{formattedAmount}</span>
+                                )}
                             </div>
-                        </div>
 
-                        {/* Payment Method Badge Strip */}
-                        <div className="rounded-xl border border-slate-100 bg-[#FAFCFB] p-3 text-xs flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-slate-700 font-semibold">
-                                <Coins className="size-4 text-[#0F2F58]" />
-                                <span>
-                                    {props.obligation?.lane === 'external_cash'
-                                        ? 'Cash on Delivery · Due on Completion'
-                                        : 'Escrow Secured via Tagudin Rails'}
-                                </span>
+                        {props.obligation && (
+                            <div className="space-y-3 border-t border-slate-200 pt-3">
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                                    <span className="font-semibold text-slate-700">
+                                        {props.obligation.lane === 'external_cash'
+                                            ? 'External cash · direct between parties'
+                                            : props.obligation.lane === 'p2p_transfer'
+                                              ? 'Personal wallet transfer'
+                                              : 'Protected digital · sandbox only'}
+                                    </span>
+                                    <span className="rounded-full border border-slate-200 px-2.5 py-1 font-bold text-slate-700">
+                                        {props.obligation.status.replaceAll('_', ' ')}
+                                    </span>
+                                </div>
+                                <PaymentObligationSheet key={props.obligation.id} orderId={props.order.id} obligation={props.obligation} />
+                                <Link href="/money-history" className="inline-flex min-h-10 items-center text-xs font-extrabold text-[#0F2F58] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F2F58]">
+                                    View money history
+                                </Link>
                             </div>
-                            <span
-                                className={`rounded-full px-2 py-0.5 text-[9.5px] font-extrabold uppercase ${
-                                    isSettled
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : 'bg-amber-100 text-amber-800'
-                                }`}
-                            >
-                                {isSettled ? 'Settled' : 'Payment Pending'}
-                            </span>
-                        </div>
+                        )}
                     </div>
+                        )}
 
-                    {/* 4. Service Location Strip */}
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-                        <div className="flex items-start gap-3">
-                            <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-[#0F2F58]">
-                                <MapPin className="size-4" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                                    Service Location · Tagudin
-                                </span>
-                                <div className="text-xs font-extrabold text-slate-900 mt-0.5">
-                                    {props.order.service_address ||
-                                        'Purok 4, Barangay Centro, Tagudin, Ilocos Sur'}
+                    {props.order.service_address || props.order.landmark ? (
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                            <div className="flex items-start gap-3">
+                                <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-[#0F2F58]">
+                                    <MapPin className="size-4" />
                                 </div>
-                                <div className="text-[11px] text-slate-500 mt-0.5">
-                                    {props.order.landmark ||
-                                        'Near Barangay Health Center · Blue Gate'}
+                                <div className="min-w-0 flex-1">
+                                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Service Location</span>
+                                    {props.order.service_address && <div className="mt-0.5 text-xs font-extrabold text-slate-900">{props.order.service_address}</div>}
+                                    {props.order.landmark && <div className="mt-0.5 text-[11px] text-slate-500">{props.order.landmark}</div>}
                                 </div>
                             </div>
                         </div>
+                    ) : null}
                     </div>
-
-                    {/* Finalize Form for Pending Orders */}
-                    {props.order.can_finalize && (
-                        <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-xs">
-                            <Form
-                                action={`/orders/${props.order.id}/finalize`}
-                                method="post"
-                                className="space-y-3"
-                            >
-                                <div>
-                                    <div className="text-xs font-extrabold text-amber-900">
-                                        Awaiting Standing Acceptance
-                                    </div>
-                                    <p className="mt-0.5 text-[11px] text-amber-800 leading-relaxed">
-                                        Both parties agree to the work scope and commercial terms.
-                                    </p>
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] py-3 text-xs font-bold text-white shadow-xs hover:bg-[#153e74]"
-                                >
-                                    <span>Authorize &amp; Lock Standing Acceptance</span>
-                                    <ArrowRight className="size-3.5" />
-                                </button>
-                            </Form>
-                        </div>
-                    )}
-                </div>
             </main>
 
             {/* 5. Fixed Bottom Action Dock */}
@@ -922,7 +1126,7 @@ export default function OrderShow(props: OrderShowProps) {
                                 <span>{props.order.deal_chain_id ? 'Relay Pool' : 'Orders Hub'}</span>
                             </Link>
 
-                            {isSignoff ? (
+                            {isSignoff && props.work?.work_shape !== 'A4' && props.work?.work_shape !== 'A9' ? (
                                 props.order.can_signoff ? (
                                     <button
                                         type="button"
@@ -930,7 +1134,7 @@ export default function OrderShow(props: OrderShowProps) {
                                         disabled={signoffProcessing}
                                         className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0D715F] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#0a574a] disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        {signoffProcessing ? 'Saving sign-off…' : 'Review work & release payment'}
+                                        {signoffProcessing ? 'Saving sign-off…' : 'Review and confirm Work'}
                                         <ArrowRight className="size-4" />
                                     </button>
                                 ) : (
@@ -943,7 +1147,7 @@ export default function OrderShow(props: OrderShowProps) {
                                         </span>
                                     </div>
                                 )
-                            ) : isSettled ? (
+                            ) : isWorkCompleted ? (
                                 <button
                                     type="button"
                                     data-testid="leave-review-btn"
@@ -968,7 +1172,7 @@ export default function OrderShow(props: OrderShowProps) {
                                 <span>{props.order.deal_chain_id ? 'Relay Pool' : 'Orders Hub'}</span>
                             </Link>
 
-                            {isSettled ? (
+                            {isWorkCompleted ? (
                                 <button
                                     type="button"
                                     data-testid="provider-reliability-btn"
@@ -987,244 +1191,58 @@ export default function OrderShow(props: OrderShowProps) {
                         </>
                     )}
 
-                    {/* COURIER ACTIONS */}
-                    {perspective === 'courier' && (
-                        <>
-                            {isSettled ? (
-                                <div className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 text-xs font-extrabold text-emerald-800 shadow-sm">
-                                    <CheckCircle2 className="size-4 text-emerald-600" />
-                                    <span>Delivery Completed · Transit Fee Settled</span>
-                                </div>
-                            ) : isInProgress ? (
-                                <>
-                                    <div className="flex h-11 items-center justify-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3.5 text-xs font-bold text-emerald-800">
-                                        <CheckCircle2 className="size-4 text-emerald-600" />
-                                        <span>Picked Up</span>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            router.post(`/orders/${props.order.id}/courier/handoff`)
-                                        }
-                                        className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
-                                    >
-                                        <span>Confirm Hand-off at Gate · {formattedAmount}</span>
-                                        <ArrowRight className="size-4" />
-                                    </button>
-                                </>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        router.post(`/orders/${props.order.id}/courier/pickup`)
-                                    }
-                                    className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
-                                >
-                                    <Package className="size-4 text-white" />
-                                    <span>Confirm Package Pickup at Store</span>
-                                    <ArrowRight className="size-4" />
-                                </button>
-                            )}
-                        </>
-                    )}
                 </div>
             </footer>
 
-            {/* Direct Order Chat Drawer */}
-            {chatOpen && (
-                <div
-                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4"
-                    onClick={() => setChatOpen(false)}
-                >
-                    <div
-                        className="flex h-[85vh] sm:h-[620px] w-full max-w-lg flex-col rounded-t-3xl sm:rounded-2xl bg-white shadow-2xl overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Drawer Header */}
-                        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3.5">
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-sm font-black text-[#0F2F58] truncate">
-                                        Chat with {counterpartyName}
-                                    </h3>
-                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800">
-                                        Online
-                                    </span>
-                                </div>
-                                <p className="text-[11px] text-slate-500 truncate">
-                                    Order {orderShortId} · {listingTitle}
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setChatOpen(false)}
-                                className="flex size-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200/70"
-                            >
-                                <X className="size-4" />
-                            </button>
-                        </div>
-
-                        {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50">
-                            {chatMessages.map((m) => (
-                                <div
-                                    key={m.id}
-                                    className={`flex flex-col ${m.isSelf ? 'items-end' : 'items-start'}`}
-                                >
-                                    <div className="flex items-center gap-1.5 mb-1 px-1">
-                                        <span className="text-[10px] font-extrabold text-slate-600">
-                                            {m.sender}
-                                        </span>
-                                        <span className="text-[9px] text-slate-400">{m.time}</span>
-                                    </div>
-                                    <div
-                                        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs font-medium leading-relaxed ${
-                                            m.isSelf
-                                                ? 'bg-[#0F2F58] text-white shadow-xs rounded-br-xs'
-                                                : 'bg-white text-slate-800 border border-slate-200 shadow-2xs rounded-bl-xs'
-                                        }`}
-                                    >
-                                        {m.text}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Quick Prompts */}
-                        <div className="border-t border-slate-100 bg-white px-4 py-2 flex items-center gap-1.5 overflow-x-auto text-[11px]">
-                            <button
-                                type="button"
-                                onClick={() => setChatInput('I have arrived at the gate.')}
-                                className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-700 hover:bg-slate-100 font-bold"
-                            >
-                                I have arrived at the gate
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setChatInput('Testing the cold run now.')}
-                                className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-700 hover:bg-slate-100 font-bold"
-                            >
-                                Testing cold run now
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setChatInput('Gate is open, please enter.')}
-                                className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-700 hover:bg-slate-100 font-bold"
-                            >
-                                Gate is open
-                            </button>
-                        </div>
-
-                        {/* Composer */}
-                        <div className="border-t border-slate-200 bg-white p-3.5">
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    handleSendChatMessage();
-                                }}
-                                className="flex items-center gap-2"
-                            >
-                                <input
-                                    type="text"
-                                    value={chatInput}
-                                    onChange={(e) => setChatInput(e.target.value)}
-                                    placeholder={`Message ${counterpartyName.split(' ')[0]}...`}
-                                    className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0F2F58] focus:bg-white focus:outline-none"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={!chatInput.trim()}
-                                    className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0D715F] text-white shadow-xs hover:bg-[#0a574a] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
-                                >
-                                    <Send className="size-4" />
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Support Desk Drawer */}
-            {supportOpen && (
-                <div
-                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4"
-                    onClick={() => setSupportOpen(false)}
-                >
-                    <div
-                        className="flex h-[85vh] sm:h-[620px] w-full max-w-lg flex-col rounded-t-3xl sm:rounded-2xl bg-white shadow-2xl overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3.5">
-                            <div>
-                                <h3 className="text-sm font-black text-[#0F2F58]">
-                                    Tagudin Dispatch &amp; Support Desk
-                                </h3>
-                                <p className="text-[11px] text-slate-500">
-                                    Ticket #SUP-TAGUDIN · Order {orderShortId}
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setSupportOpen(false)}
-                                className="flex size-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200/70"
-                            >
-                                <X className="size-4" />
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
-                            {supportMessages.map((m) => (
-                                <div
-                                    key={m.id}
-                                    className={`flex flex-col ${m.isSelf ? 'items-end' : 'items-start'}`}
-                                >
-                                    <div className="flex items-center gap-1.5 mb-1 px-1">
-                                        <span className="text-[10px] font-extrabold text-slate-600">
-                                            {m.sender}
-                                        </span>
-                                        <span className="text-[9px] text-slate-400">{m.time}</span>
-                                    </div>
-                                    <div
-                                        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs font-medium leading-relaxed ${
-                                            m.isSelf
-                                                ? 'bg-[#0F2F58] text-white shadow-xs rounded-br-xs'
-                                                : 'bg-white text-slate-800 border border-slate-200 shadow-2xs rounded-bl-xs'
-                                        }`}
-                                    >
-                                        {m.text}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="border-t border-slate-200 bg-white p-3.5">
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    handleSendSupportMessage();
-                                }}
-                                className="flex items-center gap-2"
-                            >
-                                <input
-                                    type="text"
-                                    value={supportInput}
-                                    onChange={(e) => setSupportInput(e.target.value)}
-                                    placeholder="Explain issue or ask dispatch for help..."
-                                    className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0F2F58] focus:bg-white focus:outline-none"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={!supportInput.trim()}
-                                    className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-white shadow-xs hover:bg-blue-800 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
-                                >
-                                    <Send className="size-4" />
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConversationDrawer
+                open={chatOpen}
+                onClose={() => setChatOpen(false)}
+                openUrl={`/orders/${props.order.id}/conversation`}
+                context={conversationContext}
+            />
+            <GlovoWaveModal
+                open={supportComposeOpen}
+                onClose={() => setSupportComposeOpen(false)}
+                title="Contact Support"
+                subtitle={`Open an actual support case for Order ${orderShortId}`}
+            >
+                <form onSubmit={(event) => void createSupportCase(event)} className="space-y-4 py-4">
+                    <label className="block space-y-1.5 text-sm font-semibold text-slate-800">
+                        <span>Issue type</span>
+                        <select
+                            value={supportCategory}
+                            onChange={(event) => setSupportCategory(event.target.value as SupportCategory)}
+                            className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"
+                        >
+                            <option value="fulfillment">Order or fulfillment</option>
+                            <option value="payment">Payment</option>
+                            <option value="cancellation">Cancellation</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </label>
+                    <label className="block space-y-1.5 text-sm font-semibold text-slate-800">
+                        <span>What do you need help with?</span>
+                        <textarea
+                            value={supportReport}
+                            onChange={(event) => setSupportReport(event.target.value)}
+                            rows={4}
+                            required
+                            maxLength={5000}
+                            className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm focus:border-[#0F2F58] focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-[#0F2F58]/20"
+                        />
+                    </label>
+                    {supportError && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{supportError}</p>}
+                    <button type="submit" disabled={supportCreating || !supportReport.trim()} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#0F2F58] px-4 text-sm font-bold text-white disabled:opacity-50">
+                        {supportCreating ? <><span className="size-4 animate-spin rounded-full border-2 border-white/50 border-t-white" />Opening case…</> : 'Open support case'}
+                    </button>
+                </form>
+            </GlovoWaveModal>
+            <ConversationDrawer
+                open={supportConversationOpen}
+                onClose={() => setSupportConversationOpen(false)}
+                openUrl={supportConversationUrl ?? undefined}
+                context={conversationContext}
+            />
 
             {/* Photo Preview Modal */}
             {previewPhoto && (
@@ -1257,6 +1275,60 @@ export default function OrderShow(props: OrderShowProps) {
                 </div>
             )}
 
+            <GlovoWaveModal
+                open={proposalSheetAction !== null}
+                onClose={() => setProposalSheetAction(null)}
+                title={proposalSheetAction === 'amend' ? 'Amend proposal' : 'Counter proposal'}
+                subtitle="Send revised terms for the other party to review."
+                bottomSlot={
+                    <button
+                        type="submit"
+                        form="proposal-change-form"
+                        disabled={proposalProcessing}
+                        className="min-h-11 w-full rounded-full bg-[#0F2F58] px-5 text-sm font-extrabold text-white hover:bg-[#153e74] disabled:opacity-50"
+                    >
+                        {proposalProcessing ? 'Sending…' : proposalSheetAction === 'amend' ? 'Send amended proposal' : 'Send counterproposal'}
+                    </button>
+                }
+            >
+                <form id="proposal-change-form" onSubmit={submitProposalChange} className="space-y-4">
+                    <label className="block space-y-1.5 text-xs font-bold text-slate-800">
+                        <span>Amount</span>
+                        <input
+                            aria-label="Amount"
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            required
+                            value={proposalAmount}
+                            onChange={(event) => setProposalAmount(event.target.value)}
+                            className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium"
+                        />
+                    </label>
+                    {errors.amount_minor && <p role="alert" className="text-xs font-semibold text-rose-700">{Array.isArray(errors.amount_minor) ? errors.amount_minor[0] : errors.amount_minor}</p>}
+                    <label className="block space-y-1.5 text-xs font-bold text-slate-800">
+                        <span>Scope</span>
+                        <textarea
+                            aria-label="Scope"
+                            rows={3}
+                            value={proposalScope}
+                            onChange={(event) => setProposalScope(event.target.value)}
+                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium"
+                        />
+                    </label>
+                    <label className="block space-y-1.5 text-xs font-bold text-slate-800">
+                        <span>Note</span>
+                        <textarea
+                            aria-label="Note"
+                            rows={2}
+                            value={proposalNote}
+                            onChange={(event) => setProposalNote(event.target.value)}
+                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium"
+                        />
+                    </label>
+                    {errors.note && <p role="alert" className="text-xs font-semibold text-rose-700">{Array.isArray(errors.note) ? errors.note[0] : errors.note}</p>}
+                </form>
+            </GlovoWaveModal>
             {/* Review Ceremony Modal */}
             <ReviewCeremonyModal
                 isOpen={reviewModalOpen}

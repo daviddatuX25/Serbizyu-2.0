@@ -139,6 +139,12 @@ export interface WorkStepOption {
     evidence_description?: string;
     control_mode?: string;
     mandatory?: boolean;
+    duration_label?: string | null;
+    required_proofs?: string[];
+    approval_method?: string;
+    handoff_party?: string | null;
+    checklist_items?: Array<{ id: string; label: string; required: boolean }>;
+    metric_requirements?: Array<{ id: string; name: string; unit: string; required: boolean; target?: number | null; min?: number | null; max?: number | null }>;
 }
 
 export interface WorkSetOption {
@@ -246,6 +252,22 @@ const DEFAULT_PRODUCT_CATEGORY_META: ProductCategoryMeta = {
     defaultLocation: '',
     readyLabel: 'Pickup Ready',
 };
+
+function hydrateProductVariants(value: unknown): ProductVariantForm[] {
+    if (!Array.isArray(value) || value.length === 0) return [];
+
+    return value.map((item, index) => {
+        const variant = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+
+        return {
+            id: typeof variant.id === 'string' ? variant.id : `variant-${index + 1}`,
+            name: typeof variant.name === 'string' ? variant.name : '',
+            price: Number(variant.price ?? 0),
+            stock: Number(variant.stock ?? 0),
+            isDefault: Boolean(variant.isDefault ?? variant.is_default),
+        };
+    });
+}
 
 function isProductBuilderDraft(value: unknown): value is ProductBuilderDraft {
     if (typeof value !== 'object' || value === null) {
@@ -453,6 +475,7 @@ export default function CreateProduct({
 
     const defaultWorkSet = useMemo<WorkSetOption>(() => {
         return (
+            availableWorkSets.find((s) => s.set_code === 'set-product-market-handoff') ||
             availableWorkSets.find((s) => s.work_shape === 'A4') ||
             availableWorkSets[0] || {
                 catalog_code: 'tagudin-product-handoff-a4',
@@ -561,11 +584,11 @@ export default function CreateProduct({
         (editingDraft?.geography as unknown as StructuredGeography) ?? null,
     );
     const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
-    const [variants, setVariants] = useState<ProductVariantForm[]>(
-        editingDraft?.variants &&
-            Array.isArray(editingDraft.variants) &&
-            editingDraft.variants.length > 0
-            ? (editingDraft.variants as unknown as ProductVariantForm[])
+    const [variants, setVariants] = useState<ProductVariantForm[]>(() => {
+        const hydrated = hydrateProductVariants(editingDraft?.variants);
+
+        return hydrated.length > 0
+            ? hydrated
             : [
                   {
                       id: 'var-1',
@@ -574,8 +597,8 @@ export default function CreateProduct({
                       stock: 0,
                       isDefault: true,
                   },
-              ],
-    );
+              ];
+    });
     // Step 3: Swappable Deal Chain Fulfillment
     const [combos, setCombos] = useState<PartnerCombo[]>(() => {
         if (
@@ -1041,15 +1064,32 @@ export default function CreateProduct({
                       settlement_mode: 'independent_provider_agreement',
                   }));
 
-        const workCatalogCode = editingDraft?.work_catalog_code || defaultWorkSet.catalog_code;
+        const savedSetCode = editingDraft?.work_specification?.based_on_set_code;
+        const savedWorkCode = editingDraft?.work_catalog_code;
+        const workCatalogCode =
+            (typeof savedSetCode === 'string' && savedSetCode.startsWith('set-') && savedSetCode) ||
+            (typeof savedWorkCode === 'string' && savedWorkCode.startsWith('set-') && savedWorkCode) ||
+            defaultWorkSet.set_code;
         const workSetVersion = editingDraft?.work_set_version || defaultWorkSet.set_version;
         const workShape = defaultWorkSet.work_shape || 'A4';
 
         const milestoneStages = defaultWorkSet.steps.map((step, idx) => ({
             id: step.id,
+            ordinal: step.ordinal || idx + 1,
             title: step.title,
             description: step.description,
             step: step.ordinal || idx + 1,
+            node_kind: step.node_kind,
+            evidence_type: step.evidence_type,
+            evidence_description: step.evidence_description,
+            control_mode: step.control_mode,
+            mandatory: step.mandatory ?? true,
+            duration_label: step.duration_label ?? null,
+            required_proofs: step.required_proofs ?? [],
+            approval_method: step.approval_method,
+            handoff_party: step.handoff_party ?? null,
+            checklist_items: step.checklist_items ?? [],
+            metric_requirements: step.metric_requirements ?? [],
         }));
         const payload: Record<string, FormDataConvertible> = {
             title: title.trim(),
@@ -1302,6 +1342,31 @@ export default function CreateProduct({
                     </div>
                 </div>
             </div>
+
+            <section
+                aria-label="Governed A4 handoff preview"
+                className="space-y-2 rounded-xl border border-[#D7E1EA] bg-white p-3 text-xs"
+            >
+                <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-[#0F2F58]">Governed A4 Handoff</span>
+                    <span className="rounded-full bg-[#EBF2FA] px-2 py-0.5 text-[10px] font-bold text-[#0F2F58]">
+                        Read only
+                    </span>
+                </div>
+                <ol className="space-y-1.5">
+                    {defaultWorkSet.steps.map((workStep, index) => (
+                        <li
+                            key={workStep.id}
+                            className="flex items-start gap-2 text-slate-700"
+                        >
+                            <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#F2F5F8] text-[10px] font-extrabold text-[#0F2F58]">
+                                {index + 1}
+                            </span>
+                            <span>{workStep.title}</span>
+                        </li>
+                    ))}
+                </ol>
+            </section>
 
             <div className="space-y-1 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-[11px] text-amber-900">
                 <div className="flex items-center gap-1.5 font-bold">

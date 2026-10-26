@@ -20,6 +20,40 @@ final class OrderListingSourceAdapter implements OrderListingSourcePort
         return $this->find($listingId, true);
     }
 
+    public function eligiblePaymentLanesForVersion(string $listingVersionId): array
+    {
+        $source = DB::table('listing_versions')
+            ->join('capability_profiles', function ($join): void {
+                $join->on('capability_profiles.profile_family_code', '=', 'listing_versions.capability_profile_family_code')
+                    ->on('capability_profiles.business_version', '=', 'listing_versions.capability_profile_business_version');
+            })
+            ->where('listing_versions.id', $listingVersionId)
+            ->first([
+                'listing_versions.payment_lane_availability',
+                'capability_profiles.allowed_payment_lanes',
+            ]);
+
+        if ($source === null) {
+            return [];
+        }
+
+        $configured = is_string($source->payment_lane_availability)
+            ? json_decode($source->payment_lane_availability, true)
+            : $source->payment_lane_availability;
+        $capabilities = is_string($source->allowed_payment_lanes)
+            ? json_decode($source->allowed_payment_lanes, true)
+            : $source->allowed_payment_lanes;
+        if (! is_array($configured) || ! is_array($capabilities)) {
+            return [];
+        }
+
+        return array_values(array_intersect(
+            array_filter($configured, static fn (mixed $lane): bool => is_string($lane)),
+            array_filter($capabilities, static fn (mixed $lane): bool => is_string($lane)),
+            ['external_cash', 'p2p_transfer', 'protected_digital'],
+        ));
+    }
+
     /**
      * @return array<string, mixed>|null
      */
@@ -100,6 +134,7 @@ final class OrderListingSourceAdapter implements OrderListingSourcePort
             'work_shape' => (string) $row->work_shape,
             'work_specification' => isset($terms['work_specification']) && is_array($terms['work_specification']) ? $terms['work_specification'] : null,
             'milestone_stages' => isset($terms['milestone_stages']) && is_array($terms['milestone_stages']) ? $terms['milestone_stages'] : [],
+            'terms' => $terms,
         ];
     }
 }

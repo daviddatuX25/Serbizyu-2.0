@@ -7,7 +7,7 @@ namespace App\Http\Controllers;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
 use App\Modules\IdentityAccess\Application\IdentityVerificationService;
-use App\Modules\IdentityAccess\Application\RoleAssignmentService;
+use App\Shared\Contracts\StaffAccessPort;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +17,7 @@ final class AdminIdentityVerificationController extends Controller
 {
     public function __construct(
         private readonly CurrentSession $session,
-        private readonly RoleAssignmentService $roles,
+        private readonly StaffAccessPort $staffAccess,
         private readonly IdentityVerificationService $verificationService,
     ) {}
 
@@ -27,7 +27,7 @@ final class AdminIdentityVerificationController extends Controller
 
         try {
             $reviewerId = $this->session->requireUser($request, $correlationId);
-            if (! $this->roles->hasActive($reviewerId, 'admin')) {
+            if (! $this->staffAccess->canAccessStaff($reviewerId)) {
                 throw new IdentityAccessError(
                     'AUTHORIZATION_DENIED',
                     'Reviewing verifications requires administrator authorization.',

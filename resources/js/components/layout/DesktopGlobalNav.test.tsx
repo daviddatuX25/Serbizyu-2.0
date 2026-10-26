@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DesktopGlobalNav } from './DesktopGlobalNav';
 
 const routerPost = vi.hoisted(() => vi.fn());
+const routerVisit = vi.hoisted(() => vi.fn());
 let mockPageProps: Record<string, unknown> = {};
 
 vi.mock('@inertiajs/react', () => ({
@@ -11,12 +12,13 @@ vi.mock('@inertiajs/react', () => ({
             {children}
         </a>
     ),
-    router: { post: routerPost },
+    router: { post: routerPost, visit: routerVisit },
     usePage: () => ({ props: mockPageProps }),
 }));
 describe('DesktopGlobalNav dynamic auth state', () => {
     beforeEach(() => {
         cleanup();
+        routerVisit.mockReset();
         routerPost.mockReset();
         mockPageProps = {};
         window.localStorage.clear();
@@ -138,6 +140,29 @@ describe('DesktopGlobalNav dynamic auth state', () => {
         expect(screen.queryByText('Citizen Picks')).toBeNull();
     });
 
+    it('forwards the exact selected variant and listing version from the navbar Picks drawer', () => {
+        window.localStorage.setItem('serbizyu.picks', JSON.stringify([{
+            id: 'listing-1:variant-blue:',
+            listing_id: 'listing-1',
+            listing_type: 'product',
+            variant_id: 'variant-blue',
+            package_id: null,
+            listing_version_id: 'version-9',
+            title: 'Capacitor · Blue',
+            price: 184,
+            quantity: 2,
+        }]));
+        render(<DesktopGlobalNav session={null} readiness={null} />);
+        fireEvent.click(screen.getByRole('button', { name: /View citizen picks/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Confirm Order/i }));
+
+        expect(routerVisit).toHaveBeenCalledTimes(1);
+        const url = new URL(routerVisit.mock.calls[0][0], 'http://localhost');
+        expect(url.pathname).toBe('/listings/listing-1/book');
+        expect(url.searchParams.get('variant_id')).toBe('variant-blue');
+        expect(url.searchParams.get('listing_version_id')).toBe('version-9');
+        expect(url.searchParams.get('quantity')).toBe('2');
+    });
     it('renders unified Post CTA and opens streamlined CreatorPostModal when clicked', () => {
         render(<DesktopGlobalNav session={null} readiness={null} />);
 

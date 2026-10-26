@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Modules\OrdersWork\Application\WorkContractDefinition;
+use App\Modules\OrdersWork\Application\WorkContractRegistry;
+use App\Modules\OrdersWork\Application\WorkContractSelector;
 use App\Modules\OrdersWork\Application\WorkExecutionService;
 use App\Shared\Infrastructure\Demo\DealChainExecutionFixtures as Fix;
 use Carbon\CarbonImmutable;
@@ -11,14 +14,18 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 final class DealChainExecutionSeeder extends Seeder
 {
     private WorkExecutionService $workExecution;
 
-    public function run(WorkExecutionService $workExecution): void
+    private WorkContractRegistry $workRegistry;
+
+    public function run(WorkExecutionService $workExecution, WorkContractRegistry $workRegistry): void
     {
         $this->workExecution = $workExecution;
+        $this->workRegistry = $workRegistry;
         $environment = (string) config('serbizyu.environment', config('app.env', 'local'));
         if (! in_array($environment, ['local', 'test', 'testing', 'capstone', 'team', 'training'], true)) {
             return;
@@ -182,6 +189,15 @@ final class DealChainExecutionSeeder extends Seeder
                 [
                     'deal_chain_id' => Fix::CHAIN_ID_ONGOING,
                     'ordinal' => $n['ordinal'],
+                    'node_key' => match ($n['ordinal']) {
+                        1 => 'part', 2 => 'courier', default => 'labor'
+                    },
+                    'node_role' => match ($n['ordinal']) {
+                        1 => 'store', 2 => 'courier', default => 'labor'
+                    },
+                    'recipe_code' => 'turnkey_parts',
+                    'recipe_version' => 1,
+                    'source_listing_id' => Fix::LISTING_AC_CLEAN,
                     'need_kind' => $n['need_kind'],
                     'title' => $n['title'],
                     'description' => $n['description'],
@@ -312,7 +328,7 @@ final class DealChainExecutionSeeder extends Seeder
             amountMinor: 3500,
             status: 'accepted',
             workStatus: 'in_progress',
-            workShape: 'A2',
+            workShape: 'A1',
             now: $now->subMinutes(30),
             correlationId: $correlationId,
         );
@@ -330,7 +346,7 @@ final class DealChainExecutionSeeder extends Seeder
             amountMinor: 45000,
             status: 'accepted',
             workStatus: 'in_progress',
-            workShape: 'A1',
+            workShape: 'A3',
             now: $now->subMinutes(25),
             correlationId: $correlationId,
         );
@@ -384,6 +400,15 @@ final class DealChainExecutionSeeder extends Seeder
                 [
                     'deal_chain_id' => Fix::CHAIN_ID_TECH_DEMO,
                     'ordinal' => $tn['ordinal'],
+                    'node_key' => match ($tn['ordinal']) {
+                        1 => 'primary', 2 => 'courier', default => 'installation'
+                    },
+                    'node_role' => match ($tn['ordinal']) {
+                        1 => 'store', 2 => 'courier', default => 'labor'
+                    },
+                    'recipe_code' => 'product_install',
+                    'recipe_version' => 1,
+                    'source_listing_id' => Fix::LISTING_AC_CAPACITOR_INSTALLATION,
                     'need_kind' => $tn['need_kind'],
                     'title' => $tn['title'],
                     'description' => $tn['description'],
@@ -457,7 +482,7 @@ final class DealChainExecutionSeeder extends Seeder
             amountMinor: 3500,
             status: 'accepted',
             workStatus: 'in_progress',
-            workShape: 'A2',
+            workShape: 'A1',
             now: $now->subMinutes(20),
             correlationId: $correlationId,
         );
@@ -491,7 +516,7 @@ final class DealChainExecutionSeeder extends Seeder
             listingId: Fix::LISTING_COURIER,
             title: 'Tagudin Express Motorcycle Delivery',
             amountMinor: 4500,
-            status: 'pending_acceptance',
+            status: 'proposed',
             workStatus: null,
             workShape: null,
             now: $now->subMinutes(15),
@@ -511,7 +536,7 @@ final class DealChainExecutionSeeder extends Seeder
             amountMinor: 25000,
             status: 'accepted',
             workStatus: 'awaiting_signoff',
-            workShape: 'A1',
+            workShape: 'A3',
             now: $now->subHours(3),
             correlationId: $correlationId,
         );
@@ -526,9 +551,9 @@ final class DealChainExecutionSeeder extends Seeder
             listingId: Fix::LISTING_COURIER,
             title: 'Tricycle Poblacion Route',
             amountMinor: 4500,
-            status: 'closed',
+            status: 'completed',
             workStatus: 'completed',
-            workShape: 'A2',
+            workShape: null,
             now: $now->subDays(7),
             correlationId: $correlationId,
         );
@@ -543,7 +568,7 @@ final class DealChainExecutionSeeder extends Seeder
             listingId: Fix::LISTING_BIBINGKA,
             title: 'Fresh Tagudin Bibingka (2 Packs)',
             amountMinor: 16000,
-            status: 'closed',
+            status: 'completed',
             workStatus: 'completed',
             workShape: 'A4',
             now: $now->subDays(10),
@@ -560,7 +585,7 @@ final class DealChainExecutionSeeder extends Seeder
             listingId: Fix::LISTING_SUB_BREAKER,
             title: 'Emergency Sub-Breaker Replacement',
             amountMinor: 22000,
-            status: 'closed',
+            status: 'completed',
             workStatus: 'completed',
             workShape: 'A1',
             now: $now->subDays(24),
@@ -644,16 +669,80 @@ final class DealChainExecutionSeeder extends Seeder
                 'updated_at' => $now,
             ]
         );
-        if ($status !== 'pending_acceptance') {
-            $listingVersion = DB::table('listing_versions')->where('listing_id', $listingId)->orderByDesc('version_number')->first();
-            $versionId = $listingVersion ? (string) $listingVersion->id : null;
+        $listingSource = DB::table('listings')
+            ->join('listing_versions', function ($join): void {
+                $join->on('listing_versions.listing_id', '=', 'listings.id')
+                    ->on('listing_versions.version_number', '=', 'listings.current_version');
+            })
+            ->join('capability_profiles', function ($join): void {
+                $join->on('capability_profiles.profile_family_code', '=', 'listing_versions.capability_profile_family_code')
+                    ->on('capability_profiles.business_version', '=', 'listing_versions.capability_profile_business_version');
+            })
+            ->where('listings.id', $listingId)
+            ->select('listing_versions.*', 'capability_profiles.work_shape as listing_work_shape')
+            ->first();
+        $listingVersion = $listingSource;
+        $listingShape = $listingSource?->listing_work_shape;
+        $listingTerms = $listingVersion === null
+            ? []
+            : (is_string($listingVersion->terms) ? json_decode($listingVersion->terms, true, 512, JSON_THROW_ON_ERROR) : (array) $listingVersion->terms);
+        $workStages = is_array($listingTerms['milestone_stages'] ?? null) ? $listingTerms['milestone_stages'] : [];
+        $workSpecification = is_array($listingTerms['work_specification'] ?? null) ? $listingTerms['work_specification'] : null;
+        $workContract = null;
+        if ($workShape !== null) {
+            if (is_string($listingShape) && $listingShape !== '' && $listingShape !== $workShape) {
+                throw new RuntimeException('Seeded Work shape must match its persisted listing shape.');
+            }
+            $workContract = WorkContractSelector::resolve(
+                $this->workRegistry,
+                $workShape,
+                $workSpecification,
+                $workStages,
+                $correlationId,
+            );
+            $workSpecification ??= [];
+            $workSpecification['shape_contract_version'] = $workContract->shapeContractVersion;
+            $workSpecification['payload_schema_version'] = $workContract->payloadSchemaVersion;
+            $workSpecification['nodes'] ??= $workStages;
+            $listingTerms['work_specification'] = $workSpecification;
+        }
+        $versionId = $listingVersion ? (string) $listingVersion->id : null;
+        $proposalScope = [
+            'title' => $title,
+            'amount_minor' => $amountMinor,
+            'unit_amount_minor' => $amountMinor,
+            'currency' => 'PHP',
+            'quantity' => 1,
+            'listing_version_id' => $versionId,
+            'listing_version_number' => $listingVersion ? (int) $listingVersion->version_number : 1,
+            'lane' => 'external_cash',
+            'work_specification' => $workSpecification,
+            'milestone_stages' => $workStages,
+        ];
+        $proposalJson = json_encode($proposalScope, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $existingProposal = DB::table('order_proposals')->where('order_id', $orderId)->where('proposal_version', 1)->first();
+        $proposalId = $existingProposal ? (string) $existingProposal->id : (string) Str::uuid7();
+        $existingTerms = DB::table('order_terms_snapshots')->where('order_id', $orderId)->where('snapshot_version', 1)->first();
+        $termsSnapshotId = $existingTerms ? (string) $existingTerms->id : (string) Str::uuid7();
+        DB::table('order_parties')->where('order_id', $orderId)->where('party_type', 'buyer')->update([
+            'scope' => json_encode(['role' => 'buyer', 'proposal' => $proposalScope], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ]);
+        if ($status !== 'proposed') {
 
             DB::table('order_terms_snapshots')->updateOrInsert(
                 ['order_id' => $orderId, 'snapshot_version' => 1],
                 [
-                    'id' => (string) Str::uuid7(),
+                    'id' => $termsSnapshotId,
                     'source_listing_version_id' => $versionId,
-                    'scope' => json_encode(['title' => $title], JSON_THROW_ON_ERROR),
+                    'scope' => json_encode([
+                        'title' => $title,
+                        'quantity' => 1,
+                        'amount_minor' => $amountMinor,
+                        'unit_amount_minor' => $amountMinor,
+                        'resource_key' => null,
+                        'work_specification' => $workSpecification,
+                        'milestone_stages' => $workStages,
+                    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
                     'scope_payload_version' => 1,
                     'amount_minor' => $amountMinor,
                     'currency' => 'PHP',
@@ -664,24 +753,33 @@ final class DealChainExecutionSeeder extends Seeder
                     'review_rules' => json_encode(['review_window_days' => 14], JSON_THROW_ON_ERROR),
                     'review_rules_payload_version' => 1,
                     'policy_version_id' => null,
-                    'accepted_by_user_id' => $buyerId,
+                    'accepted_by_user_id' => $providerId,
                     'accepted_at' => $now,
                     'correlation_id' => $correlationId,
                     'created_at' => $now,
                 ]
             );
-
             $existingWork = DB::table('work_instances')->where('order_id', $orderId)->first();
-            $workId = $existingWork ? (string) $existingWork->id : (string) Str::uuid7();
+
+            $workId = $workShape !== null
+                ? ($existingWork ? (string) $existingWork->id : (string) Str::uuid7())
+                : null;
             if ($workShape !== null) {
-                $workStructure = $this->seedWorkStructure($workShape, $workStatus, $now);
+                $workStructure = $this->seedWorkStructure(
+                    $workShape,
+                    $workStatus,
+                    $now,
+                    $listingTerms,
+                    $workContract,
+                    $correlationId,
+                );
                 DB::table('work_instances')->updateOrInsert(
                     ['order_id' => $orderId],
                     [
                         'id' => $workId,
                         'work_shape' => $workShape,
-                        'shape_contract_version' => 1,
-                        'payload_schema_version' => 1,
+                        'shape_contract_version' => $workContract->shapeContractVersion,
+                        'payload_schema_version' => $workContract->payloadSchemaVersion,
                         'row_version' => 1,
                         'status' => $workStatus ?? 'not_started',
                         'scheduled_at' => null,
@@ -711,8 +809,9 @@ final class DealChainExecutionSeeder extends Seeder
                     'payer_user_id' => $buyerId,
                     'recipient_user_id' => $providerId,
                     'lane' => 'external_cash',
-                    'status' => $status === 'closed' ? 'paid_out' : 'created',
-                    'due_condition' => 'on_acceptance',
+                    'status' => $status === 'completed' ? 'disputed_mismatch' : 'not_due',
+                    'due_condition' => 'on_work_acceptance',
+                    'due_at' => $status === 'completed' ? now() : null,
                     'policy_version_id' => null,
                     'platform_fee_amount_minor' => 0,
                     'processor_cost_amount_minor' => 0,
@@ -722,15 +821,57 @@ final class DealChainExecutionSeeder extends Seeder
                     'updated_at' => $now,
                 ]
             );
+            DB::table('order_proposals')->updateOrInsert(
+                ['order_id' => $orderId, 'proposal_version' => 1],
+                [
+                    'id' => $proposalId,
+                    'parent_proposal_id' => null,
+                    'kind' => 'initial',
+                    'status' => $status === 'proposed' ? 'proposed' : 'accepted',
+                    'proposed_by_user_id' => $buyerId,
+                    'responded_by_user_id' => $status === 'proposed' ? null : $providerId,
+                    'responded_at' => $status === 'proposed' ? null : $now,
+                    'source_listing_version_id' => $versionId,
+                    'scope' => $proposalJson,
+                    'scope_payload_version' => 1,
+                    'amount_minor' => $amountMinor,
+                    'currency' => 'PHP',
+                    'terms_hash' => hash('sha256', $proposalJson),
+                    'note' => null,
+                    'capacity_reservation_id' => null,
+                    'expires_at' => null,
+                    'correlation_id' => $correlationId,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
+            );
+            DB::table('orders')->where('id', $orderId)->update([
+                'current_proposal_id' => $proposalId,
+                'current_terms_snapshot_id' => $status === 'proposed' ? null : $termsSnapshotId,
+                'accepted_at' => $status === 'proposed' ? null : $now,
+                'completed_at' => $status === 'completed' ? $now : null,
+            ]);
         }
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function seedWorkStructure(string $workShape, ?string $workStatus, CarbonImmutable $now): array
-    {
-        $structure = $this->workExecution->initializeStructure([], $workShape);
+    private function seedWorkStructure(
+        string $workShape,
+        ?string $workStatus,
+        CarbonImmutable $now,
+        array $sourceTerms,
+        WorkContractDefinition $workContract,
+        string $correlationId,
+    ): array {
+        $structure = $this->workExecution->initializeStructure(
+            $sourceTerms,
+            $workShape,
+            $correlationId,
+            $workContract->shapeContractVersion,
+            $workContract->payloadSchemaVersion,
+        );
         $nodes = $structure['nodes'];
 
         if ($workStatus === 'awaiting_signoff' && $nodes !== []) {

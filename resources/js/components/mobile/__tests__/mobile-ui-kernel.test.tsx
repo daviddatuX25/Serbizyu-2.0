@@ -952,18 +952,17 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
                     onClose={vi.fn()}
                     stages={initialStages}
                     onSave={onSave}
-                />,
+                />
             );
-
             const approvalCards = screen.getAllByText('Customer Approval Required');
             fireEvent.click(approvalCards[approvalCards.length - 1]);
-            fireEvent.click(screen.getByRole('radio', { name: /In-Person 4-Digit Customer OTP/i }));
+            fireEvent.click(screen.getByText('In-Person 4-Digit Customer OTP'));
             fireEvent.click(screen.getByRole('button', { name: /Live Order Simulator/i }));
-            expect(screen.getByText('Customer 4-Digit OTP')).toBeDefined();
+
+            expect(screen.getByText(/Server-issued codes are not shown in authoring previews/)).toBeDefined();
 
             fireEvent.click(screen.getByRole('button', { name: /Customer View/i }));
-            expect(screen.getByText('Your Milestone Release OTP')).toBeDefined();
-            expect(screen.getByText('8 4 2 1')).toBeDefined();
+            expect(screen.getByText(/A customer-issued code is shown only in the authorized customer’s live order session/)).toBeDefined();
 
             fireEvent.click(screen.getByRole('button', { name: /Apply Workflow to Listing/i }));
             const saved: WorkStage[] = onSave.mock.calls[0][0];
@@ -985,6 +984,26 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             fireEvent.click(screen.getByRole('button', { name: /Apply Workflow to Listing/i }));
             const saved: WorkStage[] = onSave.mock.calls[0][0];
             expect(saved[0].requiredProofs).toContain('gps_checkin');
+        });
+        it('authors stable checklist and named metric definitions into the stage', () => {
+            const onSave = vi.fn();
+            render(<WorkNodeCustomizerModal open onClose={vi.fn()} stages={initialStages} onSave={onSave} />);
+            fireEvent.click(screen.getByRole('checkbox', { name: /Metric \/ Measurement Reading/i }));
+            const checklistCheckbox = screen.getByRole('checkbox', { name: /Itemized Safety Checklist/i });
+            if (!checklistCheckbox.matches(':checked')) {
+                fireEvent.click(checklistCheckbox);
+            }
+            fireEvent.click(screen.getByRole('button', { name: 'Add measurement' }));
+            fireEvent.change(screen.getByLabelText('Measurement 1 name'), { target: { value: 'Line voltage' } });
+            fireEvent.change(screen.getByLabelText('Measurement 1 unit'), { target: { value: 'V' } });
+            fireEvent.click(screen.getByRole('button', { name: 'Add item' }));
+            fireEvent.change(screen.getByLabelText('Checklist item 1'), { target: { value: 'Verify breaker lockout' } });
+            fireEvent.click(screen.getByRole('button', { name: /Apply Workflow to Listing/i }));
+            const saved: WorkStage[] = onSave.mock.calls[0][0];
+            expect(saved[0].metricRequirements).toEqual([expect.objectContaining({ name: 'Line voltage', unit: 'V', required: true })]);
+            expect(saved[0].checklistItems).toEqual([expect.objectContaining({ label: 'Verify breaker lockout', required: true })]);
+            expect(saved[0].metricRequirements?.[0].id).toMatch(/^metric-/);
+            expect(saved[0].checklistItems?.[0].id).toMatch(/^item-/);
         });
     });
 

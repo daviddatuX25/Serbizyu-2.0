@@ -197,6 +197,9 @@ final class FixtureRepository
                 }
 
                 if ($active !== null) {
+                    if ((string) $active->work_shape === 'local_service') {
+                        DB::table('capability_profiles')->where('id', $active->id)->update(['work_shape' => 'A1', 'updated_at' => $now]);
+                    }
                     return (string) $active->id;
                 }
 

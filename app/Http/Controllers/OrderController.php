@@ -4,35 +4,41 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\FinalizeOrderRequest;
 use App\Http\Requests\ProposeOrderRequest;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
+use App\Modules\OrdersWork\Application\A4HandoffService;
+use App\Modules\OrdersWork\Application\A9DeliveryService;
 use App\Modules\OrdersWork\Application\FinalizeOrderAgreement;
 use App\Modules\OrdersWork\Application\OrderError;
+use App\Modules\OrdersWork\Application\RespondToOrderProposal;
 use App\Modules\OrdersWork\Application\SubmitOrderProposal;
+use App\Modules\OrdersWork\Application\WorkClearanceChallengeService;
 use App\Modules\OrdersWork\Application\WorkExecutionService;
 use App\Modules\OrdersWork\Application\WorkNodeEvidenceService;
 use App\Shared\Contracts\OrderListingSourcePort;
+use App\Shared\Contracts\OrderPaymentObligationPort;
+use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
-/**
- * Thin throwaway Order HTTP surface for founder confirm of T3 Direct Booking.
- * Hi-fi Browse/Detail chrome stays; this only wires Book → propose → finalize.
- */
 final class OrderController extends Controller
 {
     public function __construct(
         private readonly CurrentSession $session,
         private readonly SubmitOrderProposal $propose,
         private readonly FinalizeOrderAgreement $finalize,
+        private readonly RespondToOrderProposal $proposalResponses,
         private readonly OrderListingSourcePort $listingSource,
         private readonly WorkExecutionService $workExecution,
         private readonly WorkNodeEvidenceService $workEvidence,
+        private readonly WorkClearanceChallengeService $workChallenges,
+        private readonly OrderPaymentObligationPort $paymentObligations,
+        private readonly A9DeliveryService $a9Deliveries,
+        private readonly A4HandoffService $a4Handoff,
     ) {}
 
     public function index(Request $request): mixed
@@ -43,15 +49,8 @@ final class OrderController extends Controller
             $userId = $this->session->requireUser($request, $correlationId);
 
             $orders = DB::table('orders')
-                ->leftJoin('listings', 'listings.id', '=', 'orders.listing_id')
-                ->leftJoin('listing_versions', function ($join): void {
-                    $join->on('listing_versions.listing_id', '=', 'listings.id')
-                        ->on('listing_versions.version_number', '=', 'listings.current_version');
-                })
-                ->leftJoin('order_terms_snapshots', function ($join): void {
-                    $join->on('order_terms_snapshots.order_id', '=', 'orders.id')
-                        ->on('order_terms_snapshots.snapshot_version', '=', DB::raw('1'));
-                })
+                ->leftJoin('order_terms_snapshots', 'order_terms_snapshots.id', '=', 'orders.current_terms_snapshot_id')
+                ->leftJoin('order_proposals', 'order_proposals.id', '=', 'orders.current_proposal_id')
                 ->leftJoin('work_instances', 'work_instances.order_id', '=', 'orders.id')
                 ->where(function ($q) use ($userId): void {
                     $q->where('orders.buyer_user_id', $userId)
@@ -66,6 +65,7 @@ final class OrderController extends Controller
                 })
                 ->select(
                     'orders.id',
+                    'orders.public_reference',
                     'orders.status as order_status',
                     'orders.listing_id',
                     'orders.buyer_user_id',
@@ -73,9 +73,11 @@ final class OrderController extends Controller
                     'orders.deal_chain_id',
                     'orders.created_at',
                     'orders.updated_at',
-                    DB::raw("COALESCE(listing_versions.terms->>'title', 'Tagudin Service Order') as listing_title"),
-                    'order_terms_snapshots.amount_minor',
-                    'order_terms_snapshots.currency',
+                    DB::raw("CASE WHEN orders.current_terms_snapshot_id IS NOT NULL THEN order_terms_snapshots.scope->>'title' WHEN orders.status = 'proposed' THEN order_proposals.scope->>'title' ELSE NULL END as listing_title"),
+                    DB::raw("CASE WHEN orders.current_terms_snapshot_id IS NOT NULL THEN order_terms_snapshots.amount_minor WHEN orders.status = 'proposed' THEN order_proposals.amount_minor ELSE NULL END as amount_minor"),
+                    DB::raw("CASE WHEN orders.current_terms_snapshot_id IS NOT NULL THEN order_terms_snapshots.currency WHEN orders.status = 'proposed' THEN order_proposals.currency ELSE NULL END as currency"),
+                    'order_proposals.status as current_proposal_status',
+                    'order_proposals.proposed_by_user_id',
                     'work_instances.status as work_status',
                     'work_instances.work_shape'
                 )
@@ -88,8 +90,9 @@ final class OrderController extends Controller
                 ->orderByDesc('updated_at')
                 ->get();
 
-            $ongoing = [];
-            $history = [];
+            $needsAction = [];
+            $active = [];
+            $done = [];
             $activeDealChainIds = $dealChains->pluck('id')->all();
 
             // 1. Roll up active Deal Chains for coordinator/buyer into unified set cards with dynamic N-slot progress strip
@@ -105,10 +108,7 @@ final class OrderController extends Controller
                     ->get();
 
                 $childOrders = DB::table('orders')
-                    ->leftJoin('order_terms_snapshots', function ($join): void {
-                        $join->on('order_terms_snapshots.order_id', '=', 'orders.id')
-                            ->on('order_terms_snapshots.snapshot_version', '=', DB::raw('1'));
-                    })
+                    ->leftJoin('order_terms_snapshots', 'order_terms_snapshots.id', '=', 'orders.current_terms_snapshot_id')
                     ->leftJoin('work_instances', 'work_instances.order_id', '=', 'orders.id')
                     ->where('orders.deal_chain_id', $dc->id)
                     ->select(
@@ -130,6 +130,9 @@ final class OrderController extends Controller
                 $needsById = $needs->keyBy('id');
                 $slots = [];
                 $totalAmountMinor = 0;
+                $totalCurrency = null;
+                $hasAmounts = false;
+                $mixedCurrencies = false;
 
                 foreach ($needs as $need) {
                     $child = $childOrders->get($need->id);
@@ -153,7 +156,16 @@ final class OrderController extends Controller
                     $statusLabel = 'Seeking Bids';
 
                     if ($child !== null) {
-                        $totalAmountMinor += (int) ($child->amount_minor ?? 0);
+                        if ($child->amount_minor !== null) {
+                            $childCurrency = is_string($child->currency) ? (string) $child->currency : null;
+                            if ($childCurrency === null || ($totalCurrency !== null && $childCurrency !== $totalCurrency)) {
+                                $mixedCurrencies = true;
+                            } else {
+                                $totalCurrency = $childCurrency;
+                                $totalAmountMinor += (int) $child->amount_minor;
+                                $hasAmounts = true;
+                            }
+                        }
                         $workStatus = (string) ($child->work_status ?? '');
 
                         if ($workStatus === 'completed' || $need->status === 'completed') {
@@ -171,7 +183,7 @@ final class OrderController extends Controller
                                 $statusLabel = 'Counter Ready';
                             } else {
                                 $slotStatus = 'in_transit';
-                                $statusLabel = 'In Transit (~8m)';
+                                $statusLabel = 'In Transit';
                             }
                         } else {
                             $slotStatus = 'on_site_prep';
@@ -187,11 +199,6 @@ final class OrderController extends Controller
                         $slotStatus = 'blocked';
                         $statusLabel = 'On-Site Prepping / Gated';
                     } elseif ($invite !== null) {
-                        $scope = json_decode((string) ($invite->scope ?? '{}'), true);
-                        if (is_array($scope) && isset($scope['price_minor'])) {
-                            $totalAmountMinor += (int) $scope['price_minor'];
-                        }
-
                         if ($invite->status === 'accepted') {
                             $slotStatus = 'partner_confirmed';
                             $statusLabel = 'Partner Ready';
@@ -225,15 +232,16 @@ final class OrderController extends Controller
                     ];
                 }
 
-                $ongoing[] = [
+                $active[] = [
                     'id' => (string) $dc->id,
                     'type' => 'deal_chain',
                     'title' => (string) $dc->title,
                     'order_status' => (string) $dc->status,
                     'work_status' => null,
-                    'amount_minor' => $totalAmountMinor > 0 ? $totalAmountMinor : 66500,
-                    'currency' => 'PHP',
+                    'amount_minor' => $hasAmounts && ! $mixedCurrencies ? $totalAmountMinor : null,
+                    'currency' => $hasAmounts && ! $mixedCurrencies ? $totalCurrency : null,
                     'role' => 'coordinator',
+                    'public_reference' => (string) $dc->public_reference,
                     'slots' => $slots,
                     'slots_count' => count($slots),
                     'updated_at' => (string) $dc->updated_at,
@@ -241,45 +249,52 @@ final class OrderController extends Controller
                 ];
             }
 
-            // 2. Process Orders: standalone direct orders and assigned worker tasks
             foreach ($orders as $o) {
                 $status = (string) $o->order_status;
                 $workStatus = $o->work_status ? (string) $o->work_status : null;
-                $isHistory = in_array($status, ['closed', 'cancelled'], true) || $workStatus === 'failed';
-
+                $isDone = in_array($status, ['completed', 'cancelled'], true);
                 $item = [
                     'id' => (string) $o->id,
                     'type' => 'order',
-                    'title' => (string) ($o->listing_title ?? 'Tagudin Service Order'),
+                    'title' => is_string($o->listing_title) && trim($o->listing_title) !== '' ? trim($o->listing_title) : null,
                     'order_status' => $status,
                     'work_status' => $workStatus,
-                    'amount_minor' => (int) ($o->amount_minor ?? 8000),
-                    'currency' => (string) ($o->currency ?? 'PHP'),
-                    'role' => $o->buyer_user_id === $userId ? 'buyer' : ($o->provider_user_id === $userId ? 'provider' : 'courier'),
+                    'amount_minor' => $o->amount_minor !== null ? (int) $o->amount_minor : null,
+                    'currency' => is_string($o->currency) ? (string) $o->currency : null,
+                    'role' => (string) $o->buyer_user_id === $userId ? 'buyer' : ((string) $o->provider_user_id === $userId ? 'provider' : 'courier'),
+                    'public_reference' => is_string($o->public_reference) ? (string) $o->public_reference : null,
                     'updated_at' => (string) $o->updated_at,
                     'created_at' => (string) $o->created_at,
                 ];
-
-                if ($isHistory) {
-                    $history[] = $item;
+                $isChildOfActiveChain = $o->deal_chain_id !== null && in_array((string) $o->deal_chain_id, $activeDealChainIds, true);
+                $isChainBuyer = $isChildOfActiveChain && (string) $o->buyer_user_id === $userId;
+                if ($isChainBuyer) {
+                    continue;
+                }
+                if ($isDone) {
+                    $done[] = $item;
+                } elseif (
+                    $status === 'proposed'
+                    && (string) $o->current_proposal_status === 'proposed'
+                    && (string) $o->proposed_by_user_id !== $userId
+                ) {
+                    $needsAction[] = $item;
                 } else {
-                    $isChildOfActiveChain = $o->deal_chain_id !== null && in_array($o->deal_chain_id, $activeDealChainIds, true);
-                    $isBuyer = (string) $o->buyer_user_id === $userId;
-
-                    if (! ($isChildOfActiveChain && $isBuyer)) {
-                        $ongoing[] = $item;
-                    }
+                    $active[] = $item;
                 }
             }
 
             return Inertia::render('Orders/Index', [
-                'ongoing' => $ongoing,
-                'history' => $history,
+                'needsAction' => $needsAction,
+                'active' => $active,
+                'done' => $done,
                 'counts' => [
-                    'ongoing' => count($ongoing),
-                    'history' => count($history),
+                    'needsAction' => count($needsAction),
+                    'active' => count($active),
+                    'done' => count($done),
                 ],
             ]);
+
         } catch (IdentityAccessError) {
             return redirect()->route('auth.sign-in');
         }
@@ -301,18 +316,61 @@ final class OrderController extends Controller
             }
 
             $expectedVersion = (int) $source['listing_version_number'];
-            $existing = DB::table('orders')
-                ->where('buyer_user_id', $buyerUserId)
-                ->where('listing_id', $listing)
-                ->where('status', 'pending_acceptance')
-                ->orderByDesc('created_at')
-                ->first();
-
-            if ($existing !== null) {
-                return redirect()->route('orders.show', ['order' => $existing->id]);
+            $requestedVersionId = $request->query('listing_version_id');
+            if (is_string($requestedVersionId) && $requestedVersionId !== '' && $requestedVersionId !== (string) $source['listing_version_id']) {
+                throw new OrderError('VERSION_CONFLICT', 'This listing changed. Refresh and review before booking.', $correlationId, status: 409, retryable: true);
             }
+            $quantity = filter_var($request->query('quantity', '1'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 999]]);
+            if ($quantity === false) {
+                throw new OrderError('VALIDATION_FAILED', 'Choose a valid quantity.', $correlationId, status: 422);
+            }
+            $variantId = $request->query('variant_id');
+            $packageId = $request->query('package_id');
+            $combinationId = $request->query('deal_chain_combination_id');
+            $rawAddonIds = $request->query('addon_ids', []);
+            if (! is_array($rawAddonIds) || collect($rawAddonIds)->contains(static fn (mixed $id): bool => ! is_string($id))) {
+                throw new OrderError('VALIDATION_FAILED', 'Choose valid seller add-ons.', $correlationId, status: 422);
+            }
+            $addonIds = array_values(array_unique($rawAddonIds));
+            if ($variantId !== null && $packageId !== null) {
+                throw new OrderError('VALIDATION_FAILED', 'Choose either a variant or a package, not both.', $correlationId, status: 422);
+            }
+            $lane = (string) $request->query('lane', 'external_cash');
+            $note = $request->query('note');
+            $slot = $request->query('slot');
+            if ($slot !== null && ! is_array($slot)) {
+                throw new OrderError('VALIDATION_FAILED', 'Choose a valid booking slot.', $correlationId, status: 422);
+            }
+            $selection = [
+                'variant_id' => is_string($variantId) && $variantId !== '' ? $variantId : null,
+                'package_id' => is_string($packageId) && $packageId !== '' ? $packageId : null,
+                'listing_version_id' => (string) $source['listing_version_id'],
+                'deal_chain_combination_id' => is_string($combinationId) && $combinationId !== '' ? $combinationId : null,
+                'addon_ids' => $addonIds,
+                'lane' => $lane,
+                'note' => is_string($note) ? $note : null,
+                'slot' => $slot,
+            ];
+            $appointmentReservationId = $request->query('appointment_reservation_id');
+            if (strtoupper((string) ($source['work_shape'] ?? '')) === 'A3' && (! is_string($appointmentReservationId) || $appointmentReservationId === '')) {
+                $request->session()->put('appointment_booking_draft', [
+                    'listing_id' => $listing,
+                    'expected_listing_version' => $expectedVersion,
+                    'listing_version_id' => (string) $source['listing_version_id'],
+                    'variant_id' => $selection['variant_id'],
+                    'package_id' => $selection['package_id'],
+                    'deal_chain_combination_id' => $selection['deal_chain_combination_id'],
+                    'addon_ids' => $addonIds,
+                    'lane' => $lane,
+                    'note' => $selection['note'],
+                    'quantity' => $quantity,
+                ]);
 
-            $idempotencyKey = 'ui-book:'.$buyerUserId.':'.$listing.':v'.$expectedVersion;
+                return redirect()->route('listings.appointment-booking', ['listing' => $listing]);
+            }
+            $selection['appointment_reservation_id'] = is_string($appointmentReservationId) ? $appointmentReservationId : null;
+            $selectionHash = substr(hash('sha256', json_encode([$selection, $quantity], JSON_THROW_ON_ERROR)), 0, 32);
+            $idempotencyKey = 'order.start:'.$buyerUserId.':'.$listing.':'.$selectionHash;
             $proposed = $this->propose->handle(
                 buyerUserId: $buyerUserId,
                 listingId: $listing,
@@ -320,15 +378,14 @@ final class OrderController extends Controller
                 idempotencyKey: $idempotencyKey,
                 correlationId: $correlationId,
                 input: [
-                    'amount_minor' => (int) ($source['price_amount_minor'] ?? 0),
-                    'currency' => (string) ($source['currency'] ?? 'PHP'),
-                    'quantity' => 1,
+                    'quantity' => $quantity,
+                    ...$selection,
                 ],
             );
 
             return redirect()
                 ->route('orders.show', ['order' => $proposed['order_id']])
-                ->with('notice', 'Proposal created — review and finalize when ready.');
+                ->with('notice', 'Proposal sent for counterparty response.');
         } catch (IdentityAccessError|OrderError $error) {
             return $this->failure($request, $error);
         }
@@ -341,6 +398,30 @@ final class OrderController extends Controller
 
         try {
             $buyerUserId = $this->session->requireUser($request, $correlationId);
+            $appointmentReservationId = $validated['appointment_reservation_id'] ?? null;
+            $source = $this->listingSource->findActiveApproved($listing);
+            if (
+                strtoupper((string) ($source['work_shape'] ?? '')) === 'A3'
+                && (! is_string($appointmentReservationId) || $appointmentReservationId === '')
+            ) {
+                if ($request->expectsJson() || $request->wantsJson()) {
+                    throw new OrderError('APPOINTMENT_HOLD_REQUIRED', 'Choose and hold an appointment before proposing this A3 order.', $correlationId, status: 409);
+                }
+                $request->session()->put('appointment_booking_draft', [
+                    'listing_id' => $listing,
+                    'expected_listing_version' => (int) $validated['expected_listing_version'],
+                    'listing_version_id' => (string) ($validated['listing_version_id'] ?? $source['listing_version_id'] ?? ''),
+                    'variant_id' => $validated['variant_id'] ?? null,
+                    'package_id' => $validated['package_id'] ?? null,
+                    'deal_chain_combination_id' => $validated['deal_chain_combination_id'] ?? null,
+                    'addon_ids' => $validated['addon_ids'] ?? [],
+                    'lane' => $validated['lane'] ?? 'external_cash',
+                    'note' => $validated['note'] ?? null,
+                    'quantity' => (int) ($validated['quantity'] ?? 1),
+                ]);
+
+                return redirect()->route('listings.appointment-booking', ['listing' => $listing]);
+            }
             $proposed = $this->propose->handle(
                 buyerUserId: $buyerUserId,
                 listingId: $listing,
@@ -351,6 +432,15 @@ final class OrderController extends Controller
                     'amount_minor' => (int) ($validated['amount_minor'] ?? 0),
                     'currency' => (string) ($validated['currency'] ?? 'PHP'),
                     'quantity' => (int) ($validated['quantity'] ?? 1),
+                    'variant_id' => $validated['variant_id'] ?? null,
+                    'package_id' => $validated['package_id'] ?? null,
+                    'listing_version_id' => $validated['listing_version_id'] ?? null,
+                    'deal_chain_combination_id' => $validated['deal_chain_combination_id'] ?? null,
+                    'lane' => $validated['lane'] ?? 'external_cash',
+                    'note' => $validated['note'] ?? null,
+                    'slot' => $validated['slot'] ?? null,
+                    'addon_ids' => $validated['addon_ids'] ?? [],
+                    'appointment_reservation_id' => $appointmentReservationId,
                 ],
             );
 
@@ -382,6 +472,7 @@ final class OrderController extends Controller
                 ->where('user_id', $actorUserId)
                 ->where('status', 'active')
                 ->first();
+            $work = DB::table('work_instances')->where('order_id', $order)->first();
 
             $isChainCoordinator = false;
             $chainRecord = null;
@@ -391,8 +482,31 @@ final class OrderController extends Controller
                     $isChainCoordinator = true;
                 }
             }
-
-            if (! $isChainCoordinator && $actorUserId !== $buyerId && $actorUserId !== $providerId && $partyRow === null) {
+            $isDealChainProductOrder = $row->deal_chain_id !== null
+                && $row->deal_need_id !== null
+                && (string) ($work->work_shape ?? '') === 'A4'
+                && DB::table('deal_needs')
+                    ->where('id', $row->deal_need_id)
+                    ->where('deal_chain_id', $row->deal_chain_id)
+                    ->where('need_kind', 'product')
+                    ->exists();
+            $partyResponsibility = (string) ($partyRow?->responsibility ?? '');
+            $isOperationalHandoffParty = $partyRow !== null && (
+                in_array((string) $partyRow->party_type, ['courier', 'recipient'], true)
+                || in_array($partyResponsibility, ['courier', 'delivery', 'final_recipient'], true)
+            );
+            $hasCommercialPartyScope = $partyRow !== null
+                && in_array((string) $partyRow->party_type, ['buyer', 'agent'], true)
+                && in_array($partyResponsibility, ['primary', 'ordering_and_payment'], true);
+            if (
+                ($isDealChainProductOrder
+                    && $isOperationalHandoffParty
+                    && ! $hasCommercialPartyScope
+                    && ! $isChainCoordinator
+                    && $actorUserId !== $buyerId
+                    && $actorUserId !== $providerId)
+                || (! $isChainCoordinator && $actorUserId !== $buyerId && $actorUserId !== $providerId && $partyRow === null)
+            ) {
                 throw new OrderError('AUTHORIZATION_DENIED', 'You are not authorized to view this order.', $correlationId, status: 403);
             }
 
@@ -404,21 +518,28 @@ final class OrderController extends Controller
                     : (($partyRow?->party_type === 'courier' || str_contains((string) ($partyRow?->responsibility ?? ''), 'courier'))
                         ? 'courier'
                         : 'customer'));
-            // Read accepted terms snapshot for accurate agreed title and terms
-            $terms = DB::table('order_terms_snapshots')->where('order_id', $order)->orderBy('snapshot_version')->first();
-            $termsData = json_decode((string) ($terms?->terms ?? '{}'), true);
-            $listingTitle = is_array($termsData) && isset($termsData['title']) && is_string($termsData['title']) && trim($termsData['title']) !== ''
-                ? trim($termsData['title'])
+            $terms = $row->current_terms_snapshot_id !== null
+                ? DB::table('order_terms_snapshots')->where('id', $row->current_terms_snapshot_id)->first()
                 : null;
-
-            if ($listingTitle === null) {
-                $listingVersion = DB::table('listing_versions')
-                    ->where('listing_id', $row->listing_id)
-                    ->orderByDesc('version_number')
-                    ->first();
-                $listingTerms = json_decode((string) ($listingVersion?->terms ?? '{}'), true);
-                $listingTitle = is_array($listingTerms) ? (string) ($listingTerms['title'] ?? 'Tagudin Service Order') : 'Tagudin Service Order';
-            }
+            $termsData = is_array($terms?->scope)
+                ? $terms->scope
+                : json_decode((string) ($terms?->scope ?? '{}'), true);
+            $termsData = is_array($termsData) ? $termsData : [];
+            $currentProposalRow = $row->current_proposal_id !== null
+                ? DB::table('order_proposals')->where('id', $row->current_proposal_id)->first()
+                : null;
+            $proposalScope = is_array($currentProposalRow?->scope)
+                ? $currentProposalRow->scope
+                : json_decode((string) ($currentProposalRow?->scope ?? '{}'), true);
+            $proposalScope = is_array($proposalScope) ? $proposalScope : [];
+            $listingTitle = isset($termsData['title']) && is_string($termsData['title']) && trim($termsData['title']) !== ''
+                ? trim($termsData['title'])
+                : ((string) $row->status === 'proposed'
+                    && isset($proposalScope['title'])
+                    && is_string($proposalScope['title'])
+                    && trim($proposalScope['title']) !== ''
+                    ? trim($proposalScope['title'])
+                    : null);
 
             $providerProfile = DB::table('user_profiles')->where('user_id', $providerId)->first();
             $providerUser = DB::table('users')->where('id', $providerId)->first();
@@ -437,8 +558,12 @@ final class OrderController extends Controller
             $counterpartyName = $counterpartyProfile?->display_name;
             $counterpartyPhone = $counterpartyUser?->phone_e164;
 
-            $work = DB::table('work_instances')->where('order_id', $order)->first();
-            $obligation = DB::table('payment_obligations')->where('order_id', $order)->first();
+            $obligationProjection = $this->paymentObligations->projectForOrder(
+                (string) $row->id,
+                $actorUserId,
+                $terms?->source_listing_version_id !== null ? (string) $terms->source_listing_version_id : null,
+            );
+            $obligation = $obligationProjection === null ? null : (object) $obligationProjection;
 
             $workProjection = $this->workExecution->projectForOrder($work, $terms);
             $canViewWorkEvidence = $actorUserId === $buyerId || $actorUserId === $providerId;
@@ -451,11 +576,23 @@ final class OrderController extends Controller
                     canViewSubmittedEvidence: $canViewWorkEvidence,
                     canManageEvidence: $actorUserId === $providerId,
                 );
+                $workProjection['nodes'] = array_map(
+                    fn (array $node): array => $this->workChallenges->projectNode(
+                        orderId: (string) $row->id,
+                        actorUserId: $actorUserId,
+                        workVersion: (int) $workProjection['version'],
+                        workSignature: (string) ($workProjection['signature_hash'] ?? ''),
+                        node: $node,
+                    ),
+                    $workProjection['nodes'],
+                );
             }
+            $a9DeliveryProjection = $this->a9Deliveries->projectForOrder((string) $row->id, $actorUserId);
             $isOrderBuyer = $actorUserId === $buyerId;
             $canSignoff = false;
             if (
                 $isOrderBuyer
+                && ! in_array((string) ($work->work_shape ?? ''), ['A4', 'A9'], true)
                 && ($workProjection['status'] ?? null) === 'awaiting_signoff'
                 && is_array($workProjection['nodes'] ?? null)
             ) {
@@ -476,52 +613,49 @@ final class OrderController extends Controller
                     break;
                 }
             }
-            $buyerParty = DB::table('order_parties')
-                ->where('order_id', $order)
-                ->where('party_type', 'buyer')
-                ->where('status', 'active')
-                ->first();
-            $proposal = [];
-            if ($buyerParty !== null) {
-                $scope = json_decode((string) ($buyerParty->scope ?? '{}'), true);
-                if (is_array($scope) && isset($scope['proposal']) && is_array($scope['proposal'])) {
-                    $proposal = $scope['proposal'];
-                }
-            }
+            $isParty = $actorUserId === $buyerId || $actorUserId === $providerId;
+            $hasPendingProposal = $currentProposalRow !== null && (string) $currentProposalRow->status === 'proposed';
+            $canRespond = $hasPendingProposal && (string) $currentProposalRow->proposed_by_user_id !== $actorUserId;
+            $canAmend = $isParty
+                && in_array((string) $row->status, ['accepted', 'in_progress'], true)
+                && ! $hasPendingProposal;
+            $proposal = $currentProposalRow === null ? null : [
+                'id' => (string) $currentProposalRow->id,
+                'version' => (int) $currentProposalRow->proposal_version,
+                'kind' => (string) $currentProposalRow->kind,
+                'status' => (string) $currentProposalRow->status,
+                'proposed_by_user_id' => (string) $currentProposalRow->proposed_by_user_id,
+                'amount_minor' => (int) $currentProposalRow->amount_minor,
+                'currency' => (string) $currentProposalRow->currency,
+                'note' => is_string($currentProposalRow->note) ? $currentProposalRow->note : null,
+                'can_accept' => $canRespond,
+                'can_decline' => $canRespond && (string) $row->status === 'proposed',
+                'can_counter' => $canRespond && (string) $row->status === 'proposed',
+                'can_amend' => $canAmend,
+                'expected_order_version' => (int) $row->version,
+            ];
 
-            $totalAmountMinor = (int) ($obligation?->amount_minor ?? $terms?->amount_minor ?? $proposal['amount_minor'] ?? 45000);
-            $currency = (string) ($obligation?->currency ?? $terms?->currency ?? 'PHP');
-
-            $scopedFinancials = match ($actorPerspective) {
-                'courier' => [
-                    'amount_minor' => 8000,
-                    'currency' => 'PHP',
-                    'label' => 'Courier Delivery Fee',
-                    'status' => 'due_on_handoff',
-                    'breakdown' => [
-                        ['label' => 'Motorcycle Transit Fee', 'amount_minor' => 8000],
-                    ],
-                ],
-                'provider' => [
-                    'amount_minor' => $totalAmountMinor,
-                    'currency' => $currency,
-                    'label' => 'Total Provider Payout',
-                    'status' => (string) ($obligation?->status ?? 'pending'),
-                    'breakdown' => [
-                        ['label' => 'Technician Labor', 'amount_minor' => $totalAmountMinor],
-                    ],
-                ],
-                default => [
-                    'amount_minor' => $totalAmountMinor,
-                    'currency' => $currency,
-                    'label' => 'Total Agreed Settlement',
-                    'status' => (string) ($obligation?->status ?? 'pending'),
-                    'breakdown' => [
-                        ['label' => 'Labor & Service', 'amount_minor' => $totalAmountMinor],
-                        ['label' => 'Platform Commission', 'amount_minor' => 0],
-                    ],
-                ],
-            };
+            $totalAmountMinor = $obligation?->amount_minor !== null
+                ? (int) $obligation->amount_minor
+                : ($terms?->amount_minor !== null
+                    ? (int) $terms->amount_minor
+                    : ($hasPendingProposal ? (int) $currentProposalRow->amount_minor : null));
+            $currency = is_string($obligation?->currency ?? null)
+                ? (string) $obligation->currency
+                : (is_string($terms?->currency ?? null)
+                    ? (string) $terms->currency
+                    : ($hasPendingProposal ? (string) $currentProposalRow->currency : null));
+            $financialStatus = is_string($obligation?->status ?? null) ? (string) $obligation->status : null;
+            $breakdown = $totalAmountMinor === null
+                ? []
+                : [['label' => 'Order amount', 'amount_minor' => $totalAmountMinor]];
+            $scopedFinancials = [
+                'amount_minor' => $totalAmountMinor,
+                'currency' => $currency,
+                'label' => $obligation === null ? 'Order terms' : 'Payment obligation',
+                'status' => $financialStatus,
+                'breakdown' => $breakdown,
+            ];
 
             $dealChainSlots = [];
             if ($row->deal_chain_id !== null) {
@@ -584,7 +718,7 @@ final class OrderController extends Controller
                             $statusLabel = '⬡ Gated';
                         } elseif ($workStatus === 'in_progress' || $n->status === 'in_progress') {
                             $slotStatus = $n->need_kind === 'product' ? 'counter_ready' : 'in_transit';
-                            $statusLabel = $n->need_kind === 'product' ? 'Counter Ready' : 'In Transit (~8m)';
+                            $statusLabel = 'In Transit';
                         } else {
                             $slotStatus = 'on_site_prep';
                             $statusLabel = 'On-Site Prepping';
@@ -656,6 +790,11 @@ final class OrderController extends Controller
                 'correlationId' => $correlationId,
                 'notice' => $request->session()->get('notice'),
                 'actor_perspective' => $actorPerspective,
+                'proposal' => $proposal,
+                'active_support_case_id' => DB::table('support_cases')
+                    ->where('order_id', $row->id)
+                    ->whereNotIn('status', ['resolved', 'closed', 'archived'])
+                    ->orderByDesc('opened_at')->orderByDesc('id')->value('id'),
                 'order' => [
                     'id' => (string) $row->id,
                     'request_id' => $row->request_id ? (string) $row->request_id : null,
@@ -666,27 +805,29 @@ final class OrderController extends Controller
                     'listing_id' => (string) $row->listing_id,
                     'deal_chain_id' => $row->deal_chain_id ? (string) $row->deal_chain_id : null,
                     'deal_chain_title' => $chainRecord?->title ?? null,
-                    'deal_chain_ref' => $row->deal_chain_id ? ('#DC-'.strtoupper(substr((string) $row->deal_chain_id, -3))) : null,
+                    'deal_chain_ref' => $chainRecord?->public_reference ?? null,
                     'buyer_user_id' => $buyerId,
                     'provider_user_id' => $providerId,
                     'mechanism' => (string) $row->mechanism,
                     'origin' => (string) $row->origin,
                     'geography' => $row->geography,
-                    'proposal' => $proposal,
+                    'public_reference' => is_string($row->public_reference) ? (string) $row->public_reference : null,
                     'is_order_buyer' => $isOrderBuyer,
                     'can_signoff' => $canSignoff,
                     'can_view_work_evidence' => $canViewWorkEvidence,
-                    'can_finalize' => (string) $row->status === 'pending_acceptance'
-                        && ($actorUserId === $buyerId || $actorUserId === $providerId),
+                    'can_accept' => (bool) ($proposal['can_accept'] ?? false),
+                    'can_decline' => (bool) ($proposal['can_decline'] ?? false),
+                    'can_counter' => (bool) ($proposal['can_counter'] ?? false),
+                    'can_amend' => (bool) ($proposal['can_amend'] ?? false),
                     'actor_role' => $actorPerspective === 'customer' ? 'buyer' : ($actorPerspective === 'provider' ? 'provider' : 'courier'),
-                    'customer_name' => (string) ($buyerProfile?->display_name ?? 'Maria Santos'),
-                    'provider_name' => (string) ($providerProfile?->display_name ?? 'Kuya Ben AC Services'),
+                    'customer_name' => is_string($buyerProfile?->display_name) ? (string) $buyerProfile->display_name : null,
+                    'provider_name' => is_string($providerProfile?->display_name) ? (string) $providerProfile->display_name : null,
                     'counterparty_name' => is_string($counterpartyName) ? $counterpartyName : null,
                     'counterparty_phone' => is_string($counterpartyPhone) ? $counterpartyPhone : null,
                     'can_contact' => is_string($counterpartyName) && is_string($counterpartyPhone) && $counterpartyPhone !== '',
                     'listing_title' => $listingTitle,
-                    'service_address' => 'Purok 4, Barangay Centro, Tagudin, Ilocos Sur',
-                    'landmark' => 'Near Barangay Health Center · Blue Gate',
+                    'service_address' => is_string($termsData['service_address'] ?? null) ? $termsData['service_address'] : null,
+                    'landmark' => is_string($termsData['landmark'] ?? null) ? $termsData['landmark'] : null,
                 ],
                 'terms' => $terms === null ? null : [
                     'snapshot_version' => (int) $terms->snapshot_version,
@@ -697,46 +838,188 @@ final class OrderController extends Controller
                     'accepted_at' => (string) $terms->accepted_at,
                 ],
                 'work' => $workProjection,
-                'obligation' => $obligation === null ? null : [
-                    'id' => (string) $obligation->id,
-                    'status' => (string) $obligation->status,
-                    'lane' => (string) $obligation->lane,
-                    'amount_minor' => (int) $obligation->amount_minor,
-                    'currency' => (string) $obligation->currency,
-                ],
+                'a9Delivery' => $a9DeliveryProjection,
+                'a4Handoff' => $this->a4Handoff->projectForOrder((string) $row->id, $actorUserId, $correlationId),
+                'obligation' => $obligationProjection,
                 'financials' => $scopedFinancials,
                 'deal_chain_slots' => $dealChainSlots,
+                'appointment' => $this->appointmentProjection((string) $row->id, $actorUserId, $buyerId, $providerId, (string) $row->status, (string) ($work->work_shape ?? '')),
             ]);
         } catch (IdentityAccessError|OrderError $error) {
             return $this->failure($request, $error);
         }
     }
 
-    public function finalize(FinalizeOrderRequest $request, string $order): mixed
+    public function handoffShow(Request $request, string $order): mixed
     {
-        $validated = $request->validated();
         $correlationId = $this->correlationId($request);
 
         try {
             $actorUserId = $this->session->requireUser($request, $correlationId);
-            $finalized = $this->finalize->handle(
+            $row = DB::table('orders')->where('id', $order)->first([
+                'id',
+                'public_reference',
+                'buyer_user_id',
+                'provider_user_id',
+                'current_terms_snapshot_id',
+            ]);
+            if ($row === null) {
+                throw new OrderError('ORDER_NOT_FOUND', 'The order could not be found.', $correlationId, status: 404);
+            }
+            if (! DB::table('work_instances')->where('order_id', $order)->where('work_shape', 'A4')->exists()) {
+                throw new OrderError('INVALID_ORDER_SHAPE', 'This handoff view is only available for A4 orders.', $correlationId, status: 409);
+            }
+
+            if (! $this->a4Handoff->canViewAsCurrentPhaseActor((string) $row->id, $actorUserId, $correlationId)) {
+                throw new OrderError('AUTHORIZATION_DENIED', 'You are not authorized to view this order handoff.', $correlationId, status: 403);
+            }
+
+            $terms = $row->current_terms_snapshot_id === null
+                ? null
+                : DB::table('order_terms_snapshots')->where('id', $row->current_terms_snapshot_id)->first(['scope']);
+            $scope = is_array($terms?->scope)
+                ? $terms->scope
+                : json_decode((string) ($terms?->scope ?? '{}'), true);
+            $title = is_array($scope) && is_string($scope['title'] ?? null) && trim($scope['title']) !== ''
+                ? trim($scope['title'])
+                : 'Order handoff';
+
+            return Inertia::render('Orders/Handoff', [
+                'correlationId' => $correlationId,
+                'order' => [
+                    'id' => (string) $row->id,
+                    'public_reference' => is_string($row->public_reference) ? (string) $row->public_reference : null,
+                    'title' => $title,
+                    'version' => (int) DB::table('orders')->where('id', $order)->value('version'),
+                ],
+                'a4Handoff' => $this->a4Handoff->projectForOrder((string) $row->id, $actorUserId, $correlationId),
+            ]);
+        } catch (IdentityAccessError|OrderError $error) {
+            return $this->failure($request, $error);
+        }
+    }
+
+    public function accept(Request $request, string $order): mixed
+    {
+        $correlationId = $this->correlationId($request);
+        try {
+            $actorUserId = $this->session->requireUser($request, $correlationId);
+            $validated = $this->proposalCommand($request);
+            $current = DB::table('orders')->where('id', $order)->value('current_proposal_id');
+            $proposal = is_string($current) ? DB::table('order_proposals')->where('id', $current)->first() : null;
+            if ($proposal !== null && (string) $proposal->kind === 'amendment') {
+                $result = $this->proposalResponses->acceptAmendment(
+                    actorUserId: $actorUserId,
+                    orderId: $order,
+                    proposalId: (string) $proposal->id,
+                    expectedOrderVersion: (int) $validated['expected_order_version'],
+                    idempotencyKey: (string) $validated['idempotency_key'],
+                    correlationId: $correlationId,
+                );
+            } else {
+                $result = $this->finalize->handle(
+                    actorUserId: $actorUserId,
+                    orderId: $order,
+                    expectedOrderVersion: (int) $validated['expected_order_version'],
+                    idempotencyKey: (string) $validated['idempotency_key'],
+                    correlationId: $correlationId,
+                );
+            }
+
+            return $this->proposalResponse($request, $order, $result, 'Order proposal accepted.');
+        } catch (IdentityAccessError|OrderError $error) {
+            return $this->failure($request, $error);
+        }
+    }
+
+    public function acceptProposal(Request $request, string $order, string $proposal): mixed
+    {
+        $correlationId = $this->correlationId($request);
+        try {
+            $actorUserId = $this->session->requireUser($request, $correlationId);
+            $validated = $this->proposalCommand($request);
+            $result = $this->proposalResponses->acceptAmendment(
                 actorUserId: $actorUserId,
                 orderId: $order,
+                proposalId: $proposal,
                 expectedOrderVersion: (int) $validated['expected_order_version'],
                 idempotencyKey: (string) $validated['idempotency_key'],
                 correlationId: $correlationId,
             );
 
-            if ($request->expectsJson() || $request->wantsJson()) {
-                return response()->json(['data' => $finalized], 200, ['X-Correlation-Id' => $correlationId]);
-            }
-
-            return redirect()
-                ->route('orders.show', ['order' => $order])
-                ->with('notice', 'Order accepted — terms, work stub, and external-cash obligation are in place.');
+            return $this->proposalResponse($request, $order, $result, 'Order amendment accepted.');
         } catch (IdentityAccessError|OrderError $error) {
             return $this->failure($request, $error);
         }
+    }
+
+    public function decline(Request $request, string $order): mixed
+    {
+        return $this->respondToProposal($request, $order, 'decline');
+    }
+
+    public function counter(Request $request, string $order): mixed
+    {
+        return $this->respondToProposal($request, $order, 'counter');
+    }
+
+    public function amend(Request $request, string $order): mixed
+    {
+        return $this->respondToProposal($request, $order, 'amend');
+    }
+
+    private function respondToProposal(Request $request, string $order, string $action): mixed
+    {
+        $correlationId = $this->correlationId($request);
+        try {
+            $actorUserId = $this->session->requireUser($request, $correlationId);
+            $validated = $this->proposalCommand($request, $action !== 'decline');
+            $result = $this->proposalResponses->handle(
+                actorUserId: $actorUserId,
+                orderId: $order,
+                action: $action,
+                expectedOrderVersion: (int) $validated['expected_order_version'],
+                idempotencyKey: (string) $validated['idempotency_key'],
+                correlationId: $correlationId,
+                input: array_intersect_key($validated, array_flip(['amount_minor', 'currency', 'scope', 'note'])),
+            );
+
+            return $this->proposalResponse($request, $order, $result, match ($action) {
+                'decline' => 'Order proposal declined.',
+                'counter' => 'Counter-proposal sent.',
+                default => 'Amendment proposed.',
+            });
+        } catch (IdentityAccessError|OrderError $error) {
+            return $this->failure($request, $error);
+        }
+    }
+
+    /** @return array<string, mixed> */
+    private function proposalCommand(Request $request, bool $amountRequired = false): array
+    {
+        $header = $request->header('Idempotency-Key');
+        if (is_string($header) && $header !== '' && ! $request->filled('idempotency_key')) {
+            $request->merge(['idempotency_key' => trim($header)]);
+        }
+
+        return $request->validate([
+            'expected_order_version' => ['required', 'integer', 'min:1'],
+            'idempotency_key' => ['required', 'string', 'max:128', 'regex:/^[A-Za-z0-9._:-]{8,128}$/'],
+            'amount_minor' => [$amountRequired ? 'required' : 'sometimes', 'integer', 'min:0'],
+            'currency' => ['sometimes', 'string', 'size:3'],
+            'scope' => ['sometimes', 'array'],
+            'note' => ['sometimes', 'nullable', 'string', 'max:2000'],
+        ]);
+    }
+
+    /** @param array<string, mixed> $result */
+    private function proposalResponse(Request $request, string $order, array $result, string $notice): mixed
+    {
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json(['data' => $result], 200, ['X-Correlation-Id' => $this->correlationId($request)]);
+        }
+
+        return redirect()->route('orders.show', ['order' => $order])->with('notice', $notice);
     }
 
     public function proposeWorkCompletion(Request $request, string $order): mixed
@@ -789,7 +1072,6 @@ final class OrderController extends Controller
         }
     }
 
-
     public function advanceWorkNode(Request $request, string $order, string $node): mixed
     {
         $correlationId = $this->correlationId($request);
@@ -826,8 +1108,6 @@ final class OrderController extends Controller
         }
     }
 
-
-
     public function signoffWork(Request $request, string $order): mixed
     {
         $correlationId = $this->correlationId($request);
@@ -842,6 +1122,9 @@ final class OrderController extends Controller
             if ((string) $orderRow->buyer_user_id !== $userId) {
                 throw new OrderError('AUTHORIZATION_DENIED', 'Only the buyer can sign off work completion.', $correlationId, status: 403);
             }
+            if (DB::table('work_instances')->where('order_id', $order)->where('work_shape', 'A4')->exists()) {
+                throw new OrderError('HANDOFF_PROTOCOL_REQUIRED', 'A4 product or courier-service completion requires the governed recipient receipt action.', $correlationId, status: 409);
+            }
 
             DB::transaction(function () use ($orderRow, $userId, $correlationId): void {
                 $lockedOrder = DB::table('orders')->where('id', $orderRow->id)->lockForUpdate()->first();
@@ -849,139 +1132,46 @@ final class OrderController extends Controller
                     throw new OrderError('AUTHORIZATION_DENIED', 'Only the buyer can sign off work completion.', $correlationId, status: 403);
                 }
 
-                $now = now();
                 $work = DB::table('work_instances')->where('order_id', $lockedOrder->id)->lockForUpdate()->first();
                 if ($work === null || (string) $work->status !== 'awaiting_signoff') {
                     throw new OrderError('INVALID_STATE', 'Work is not awaiting customer sign-off.', $correlationId, status: 409);
                 }
-
-                $structure = json_decode((string) $work->structure, true);
-                $nodes = is_array($structure['nodes'] ?? null) ? $structure['nodes'] : [];
-                $finalNodeIndex = null;
-                foreach ($nodes as $index => $node) {
-                    if (is_array($node) && ($node['node_kind'] ?? null) === 'final_signoff') {
-                        $finalNodeIndex = $index;
+                $structure = is_array($work->structure) ? $work->structure : json_decode((string) $work->structure, true);
+                $finalNode = null;
+                foreach ((array) ($structure['nodes'] ?? []) as $candidate) {
+                    if (is_array($candidate) && ($candidate['node_kind'] ?? null) === 'final_signoff') {
+                        $finalNode = $candidate;
                         break;
                     }
                 }
-                if ($finalNodeIndex === null || ($nodes[$finalNodeIndex]['status'] ?? null) !== 'awaiting_customer_confirmation') {
+                if (! is_array($finalNode) || ($finalNode['status'] ?? null) !== 'awaiting_customer_confirmation') {
                     throw new OrderError('INVALID_STATE', 'The final Work node is not awaiting customer sign-off.', $correlationId, status: 409);
                 }
-                $finalNode = $nodes[$finalNodeIndex];
-                if (($finalNode['approval_method'] ?? 'app_confirm') !== 'app_confirm') {
-                    throw new OrderError('CONFIRMATION_METHOD_UNAVAILABLE', 'This Work requires an in-person confirmation method.', $correlationId, status: 409);
-                }
 
-                $evidencePayload = is_array($finalNode['evidence_payload'] ?? null) ? $finalNode['evidence_payload'] : [];
-                $evidenceFileIds = array_values(array_filter(
-                    (array) ($evidencePayload['evidence_file_ids'] ?? []),
-                    static fn (mixed $id): bool => is_string($id),
-                ));
-                if (in_array('photo_proof', (array) ($finalNode['required_proofs'] ?? []), true)) {
-                    $this->workEvidence->assertAvailablePhotoEvidence(
-                        workInstanceId: (string) $work->id,
-                        nodeId: (string) $finalNode['id'],
-                        actorUserId: (string) $lockedOrder->provider_user_id,
-                        evidenceFileIds: $evidenceFileIds,
-                        correlationId: $correlationId,
-                    );
-                }
+                $previousWorkStatus = (string) $work->status;
+                $this->workExecution->advanceNode(
+                    orderId: (string) $lockedOrder->id,
+                    actorUserId: $userId,
+                    nodeId: (string) $finalNode['id'],
+                    action: 'signoff_completion',
+                    correlationId: $correlationId,
+                );
+                $completedAt = now();
+                $obligation = DB::table('payment_obligations')->where('order_id', $lockedOrder->id)->first();
 
-                $prevWorkStatus = (string) $work->status;
-                $nodes[$finalNodeIndex]['status'] = 'completed';
-                $nodes[$finalNodeIndex]['customer_confirmed_at'] = $now->toIso8601String();
-                $structure['nodes'] = $nodes;
-                $structure['pending_customer_confirmation'] = false;
-
-                DB::table('work_instances')->where('id', $work->id)->update([
-                    'status' => 'completed',
-                    'structure' => json_encode($structure, JSON_THROW_ON_ERROR),
-                    'completed_at' => $now,
-                    'updated_at' => $now,
-                ]);
-
-                if (Schema::hasTable('work_events')) {
-                    DB::table('work_events')->insert([
-                        'id' => (string) Str::uuid7(),
-                        'work_instance_id' => $work->id,
-                        'previous_status' => $prevWorkStatus,
-                        'new_status' => 'completed',
-                        'event_type' => 'work.node.signoff_completion',
-                        'event_version' => 1,
-                        'actor_user_id' => $userId,
-                        'evidence_file_id' => $evidenceFileIds[0] ?? null,
-                        'payload' => json_encode([
-                            'node_id' => (string) $finalNode['id'],
-                            'action' => 'signoff_completion',
-                            'evidence_file_ids' => $evidenceFileIds,
-                            'approved_at' => $now->toIso8601String(),
-                        ], JSON_THROW_ON_ERROR),
-                        'payload_version' => 1,
-                        'idempotency_key' => 'work_signoff_'.substr($correlationId, 0, 12).'_'.Str::random(6),
-                        'correlation_id' => $correlationId,
-                        'occurred_at' => $now,
-                        'effective_at' => $now,
-                        'created_at' => $now,
-                    ]);
-                }
-
-                DB::table('orders')->where('id', $orderRow->id)->update([
-                    'status' => 'closed',
-                    'updated_at' => $now,
-                ]);
-
-                $obligation = DB::table('payment_obligations')->where('order_id', $orderRow->id)->lockForUpdate()->first();
-                if ($obligation !== null) {
-                    $prevObligationStatus = (string) $obligation->status;
-                    DB::table('payment_obligations')->where('id', $obligation->id)->update([
-                        'status' => 'released',
-                        'updated_at' => $now,
+                if ($lockedOrder->deal_need_id !== null && $lockedOrder->deal_chain_id !== null) {
+                    DB::table('deal_needs')->where('id', $lockedOrder->deal_need_id)->update([
+                        'status' => 'completed',
+                        'version' => DB::raw('version + 1'),
+                        'updated_at' => $completedAt,
                     ]);
 
-                    if (Schema::hasTable('payment_events')) {
-                        DB::table('payment_events')->insert([
-                            'id' => (string) Str::uuid7(),
-                            'payment_obligation_id' => $obligation->id,
-                            'event_type' => 'payment.obligation.released',
-                            'lane' => (string) $obligation->lane,
-                            'amount_minor' => (int) $obligation->amount_minor,
-                            'currency' => (string) $obligation->currency,
-                            'actor_user_id' => $userId,
-                            'previous_status' => $prevObligationStatus,
-                            'new_status' => 'released',
-                            'idempotency_key' => 'signoff_release_'.substr($correlationId, 0, 12).'_'.Str::random(6),
-                            'correlation_id' => $correlationId,
-                            'occurred_at' => $now,
-                            'effective_at' => $now,
-                            'created_at' => $now,
-                        ]);
-                    }
-                }
-
-                // Deal Chain Completion Check
-                if ($orderRow->deal_need_id !== null && $orderRow->deal_chain_id !== null) {
-                    DB::table('deal_needs')
-                        ->where('id', $orderRow->deal_need_id)
-                        ->update([
+                    if (! DB::table('deal_needs')->where('deal_chain_id', $lockedOrder->deal_chain_id)->where('status', '!=', 'completed')->exists()) {
+                        DB::table('deal_chains')->where('id', $lockedOrder->deal_chain_id)->update([
                             'status' => 'completed',
                             'version' => DB::raw('version + 1'),
-                            'updated_at' => $now,
+                            'updated_at' => $completedAt,
                         ]);
-
-                    // Check if all needs in this chain are completed
-                    $hasIncompleteNeeds = DB::table('deal_needs')
-                        ->where('deal_chain_id', $orderRow->deal_chain_id)
-                        ->where('status', '!=', 'completed')
-                        ->exists();
-
-                    if (! $hasIncompleteNeeds) {
-                        DB::table('deal_chains')
-                            ->where('id', $orderRow->deal_chain_id)
-                            ->update([
-                                'status' => 'completed',
-                                'version' => DB::raw('version + 1'),
-                                'updated_at' => $now,
-                            ]);
                     }
                 }
 
@@ -992,303 +1182,240 @@ final class OrderController extends Controller
                         'acting_for_user_id' => null,
                         'action' => 'order.customer.signoff',
                         'target_type' => 'order',
-                        'target_id' => $orderRow->id,
-                        'order_id' => $orderRow->id,
+                        'target_id' => $lockedOrder->id,
+                        'order_id' => $lockedOrder->id,
                         'payment_obligation_id' => $obligation?->id,
-                        'previous_value_summary' => json_encode(['work_status' => $prevWorkStatus]),
-                        'new_value_summary' => json_encode(['work_status' => 'completed', 'order_status' => 'closed', 'obligation_status' => 'released']),
+                        'previous_value_summary' => json_encode(['work_status' => $previousWorkStatus]),
+                        'new_value_summary' => json_encode(['work_status' => 'completed', 'order_status' => 'completed', 'payment_status' => $obligation?->status]),
                         'reason' => 'Customer verified and signed off completed work',
                         'command_name' => 'SignoffWorkCommand',
                         'correlation_id' => $correlationId,
-                        'occurred_at' => $now,
-                        'created_at' => $now,
+                        'occurred_at' => $completedAt,
+                        'created_at' => $completedAt,
                     ]);
                 }
             });
 
-            return redirect()->back()->with('notice', 'Work sign-off approved! Escrow payment released to provider.');
+            return redirect()->back()->with('notice', 'Work sign-off approved. Payment settlement still requires separate confirmation.');
         } catch (IdentityAccessError|OrderError $error) {
             return $this->failure($request, $error);
         }
     }
 
-    public function courierPickup(Request $request, string $order): mixed
+    public function markPrepared(Request $request, string $order): mixed
+    {
+        return $this->runHandoffAction($request, $order, 'Order prepared for handoff.', function (string $actorId, string $correlationId) use ($request, $order): array {
+            $this->assertAllowedHandoffFields($request, [
+                'evidence_file_id',
+                'idempotency_key',
+                'expected_order_version',
+                'node_id',
+                'work_version',
+                'checklist_responses',
+                'metric_readings',
+                'location',
+                'notes',
+            ], $correlationId);
+            $data = $request->validate([
+                'evidence_file_id' => ['required', 'uuid'],
+                'idempotency_key' => ['required', 'string', 'min:8', 'max:128', 'regex:/^[A-Za-z0-9._:-]+$/'],
+                'expected_order_version' => ['required', 'integer', 'min:1'],
+                'node_id' => ['sometimes', 'string', 'max:120'],
+                'work_version' => ['sometimes', 'integer', 'min:1'],
+                'checklist_responses' => ['sometimes', 'array', 'list'],
+                'metric_readings' => ['sometimes', 'array', 'list'],
+                'location' => ['sometimes', 'array'],
+                'notes' => ['sometimes', 'string', 'max:2000'],
+            ]);
+            $proofPayload = array_intersect_key($data, array_flip(['checklist_responses', 'metric_readings', 'location', 'notes']));
+
+            return $this->a4Handoff->markPrepared(
+                $order,
+                $actorId,
+                $data['evidence_file_id'],
+                $data['idempotency_key'],
+                (int) $data['expected_order_version'],
+                $correlationId,
+                $data['node_id'] ?? null,
+                isset($data['work_version']) ? (int) $data['work_version'] : null,
+                $proofPayload,
+            );
+        });
+    }
+
+    public function offerCustody(Request $request, string $order): mixed
+    {
+        return $this->runHandoffAction($request, $order, 'Custody offer sent.', function (string $actorId, string $correlationId) use ($request, $order): array {
+            $this->assertAllowedHandoffFields($request, [
+                'transfer_mode',
+                'courier_user_id',
+                'idempotency_key',
+                'expected_transfer_version',
+            ], $correlationId);
+            $data = $request->validate([
+                'transfer_mode' => ['required', 'string', 'in:counter_pickup,courier_delivery'],
+                'courier_user_id' => ['nullable', 'uuid'],
+                'idempotency_key' => ['required', 'string', 'min:8', 'max:128', 'regex:/^[A-Za-z0-9._:-]+$/'],
+                'expected_transfer_version' => ['required', 'integer', 'min:1'],
+            ]);
+
+            return $this->a4Handoff->offerCustody($order, $actorId, $data['transfer_mode'], $data['courier_user_id'] ?? null, $data['idempotency_key'], (int) $data['expected_transfer_version'], $correlationId);
+        });
+    }
+
+    public function acceptCustody(Request $request, string $order, string $transfer): mixed
+    {
+        return $this->runHandoffAction($request, $order, 'Custody accepted. Stock fulfillment was recorded once.', function (string $actorId, string $correlationId) use ($request, $order, $transfer): array {
+            $this->assertAllowedHandoffFields($request, [
+                'evidence_file_id',
+                'idempotency_key',
+                'expected_transfer_version',
+                'node_id',
+                'work_version',
+                'checklist_responses',
+                'metric_readings',
+                'location',
+                'notes',
+            ], $correlationId);
+            $data = $request->validate([
+                'evidence_file_id' => ['required', 'uuid'],
+                'idempotency_key' => ['required', 'string', 'min:8', 'max:128', 'regex:/^[A-Za-z0-9._:-]+$/'],
+                'expected_transfer_version' => ['required', 'integer', 'min:1'],
+                'node_id' => ['sometimes', 'string', 'max:120'],
+                'work_version' => ['sometimes', 'integer', 'min:1'],
+                'checklist_responses' => ['sometimes', 'array', 'list'],
+                'metric_readings' => ['sometimes', 'array', 'list'],
+                'location' => ['sometimes', 'array'],
+                'notes' => ['sometimes', 'string', 'max:2000'],
+            ]);
+            $proofPayload = array_intersect_key($data, array_flip(['checklist_responses', 'metric_readings', 'location', 'notes']));
+
+            return $this->a4Handoff->acceptCustody(
+                $order,
+                $transfer,
+                $actorId,
+                $data['evidence_file_id'],
+                $data['idempotency_key'],
+                (int) $data['expected_transfer_version'],
+                $correlationId,
+                $data['node_id'] ?? null,
+                isset($data['work_version']) ? (int) $data['work_version'] : null,
+                $proofPayload,
+            );
+        });
+    }
+
+    public function recordReceipt(Request $request, string $order): mixed
+    {
+        return $this->runHandoffAction($request, $order, 'Final receipt recorded. Payment remains independently unsettled.', function (string $actorId, string $correlationId) use ($request, $order): array {
+            $this->assertAllowedHandoffFields($request, [
+                'evidence_file_id',
+                'idempotency_key',
+                'expected_transfer_version',
+                'node_id',
+                'work_version',
+                'checklist_responses',
+                'metric_readings',
+                'location',
+                'notes',
+                'challenge_id',
+                'code',
+            ], $correlationId);
+            $data = $request->validate([
+                'evidence_file_id' => ['required', 'uuid'],
+                'idempotency_key' => ['required', 'string', 'min:8', 'max:128', 'regex:/^[A-Za-z0-9._:-]+$/'],
+                'expected_transfer_version' => ['required', 'integer', 'min:1'],
+                'node_id' => ['sometimes', 'string', 'max:120'],
+                'work_version' => ['sometimes', 'integer', 'min:1'],
+                'checklist_responses' => ['sometimes', 'array', 'list'],
+                'metric_readings' => ['sometimes', 'array', 'list'],
+                'location' => ['sometimes', 'array'],
+                'notes' => ['sometimes', 'string', 'max:2000'],
+                'challenge_id' => ['sometimes', 'nullable', 'uuid'],
+                'code' => ['sometimes', 'nullable', 'string', 'regex:/\A[0-9]{6}\z/'],
+            ]);
+            $proofPayload = array_intersect_key($data, array_flip(['checklist_responses', 'metric_readings', 'location', 'notes']));
+
+            return $this->a4Handoff->recordReceipt(
+                $order,
+                $actorId,
+                $data['evidence_file_id'],
+                $data['idempotency_key'],
+                (int) $data['expected_transfer_version'],
+                $correlationId,
+                isset($data['work_version']) ? (int) $data['work_version'] : null,
+                $data['node_id'] ?? null,
+                $proofPayload,
+                $data['challenge_id'] ?? null,
+                $data['code'] ?? null,
+            );
+        });
+    }
+
+    /** @param Closure(string, string): array<string, mixed> $action */
+    private function runHandoffAction(Request $request, string $order, string $notice, Closure $action): mixed
     {
         $correlationId = $this->correlationId($request);
 
         try {
-            $actorUserId = $this->session->requireUser($request, $correlationId);
-            $orderRow = DB::table('orders')->where('id', $order)->first();
-            if ($orderRow === null) {
-                throw new OrderError('ORDER_NOT_FOUND', 'Order not found.', $correlationId, status: 404);
+            $actorId = $this->session->requireUser($request, $correlationId);
+            $result = $action($actorId, $correlationId);
+
+            if ($request->expectsJson() || $request->wantsJson()) {
+                return response()->json(['data' => $result], 200, ['X-Correlation-Id' => $correlationId]);
             }
 
-            $isProvider = (string) $orderRow->provider_user_id === $actorUserId;
-            $isCourierParty = DB::table('order_parties')
-                ->where('order_id', $order)
-                ->where('user_id', $actorUserId)
-                ->where('status', 'active')
-                ->where(function ($q): void {
-                    $q->where('party_type', 'courier')
-                        ->orWhere('responsibility', 'like', '%courier%')
-                        ->orWhere('responsibility', 'like', '%delivery%');
-                })
-                ->exists();
-
-            if (! $isProvider && ! $isCourierParty) {
-                throw new OrderError('AUTHORIZATION_DENIED', 'Only the assigned courier can confirm pickup.', $correlationId, status: 403);
-            }
-
-            DB::transaction(function () use ($orderRow, $actorUserId, $correlationId): void {
-                $now = now();
-                $work = DB::table('work_instances')->where('order_id', $orderRow->id)->lockForUpdate()->first();
-                $prevWorkStatus = (string) ($work?->status ?? 'not_started');
-                $newWorkStatus = 'in_progress';
-
-                if ($work !== null) {
-                    $workUpdate = [
-                        'status' => $newWorkStatus,
-                        'updated_at' => $now,
-                    ];
-                    if ($work->started_at === null) {
-                        $workUpdate['started_at'] = $now;
-                    }
-                    DB::table('work_instances')->where('id', $work->id)->update($workUpdate);
-
-                    if (Schema::hasTable('work_events')) {
-                        DB::table('work_events')->insert([
-                            'id' => (string) Str::uuid7(),
-                            'work_instance_id' => $work->id,
-                            'previous_status' => $prevWorkStatus,
-                            'new_status' => $newWorkStatus,
-                            'event_type' => 'work.courier.pickup',
-                            'event_version' => 1,
-                            'actor_user_id' => $actorUserId,
-                            'evidence_file_id' => null,
-                            'payload' => json_encode(['action' => 'courier_pickup', 'picked_up_at' => $now->toIso8601String()], JSON_THROW_ON_ERROR),
-                            'payload_version' => 1,
-                            'idempotency_key' => 'courier_pickup_'.substr($correlationId, 0, 12).'_'.Str::random(6),
-                            'correlation_id' => $correlationId,
-                            'occurred_at' => $now,
-                            'effective_at' => $now,
-                            'created_at' => $now,
-                        ]);
-                    }
-                }
-
-                if ($orderRow->deal_need_id !== null) {
-                    DB::table('deal_needs')
-                        ->where('id', $orderRow->deal_need_id)
-                        ->update([
-                            'status' => 'in_progress',
-                            'version' => DB::raw('version + 1'),
-                            'updated_at' => $now,
-                        ]);
-                }
-
-                if (Schema::hasTable('audit_events')) {
-                    DB::table('audit_events')->insert([
-                        'id' => (string) Str::uuid7(),
-                        'actor_user_id' => $actorUserId,
-                        'acting_for_user_id' => null,
-                        'action' => 'order.courier.pickup',
-                        'target_type' => 'order',
-                        'target_id' => $orderRow->id,
-                        'order_id' => $orderRow->id,
-                        'previous_value_summary' => json_encode(['work_status' => $prevWorkStatus]),
-                        'new_value_summary' => json_encode(['work_status' => $newWorkStatus]),
-                        'reason' => 'Store pickup verified by courier runner',
-                        'command_name' => 'CourierPickupCommand',
-                        'correlation_id' => $correlationId,
-                        'occurred_at' => $now,
-                        'created_at' => $now,
-                    ]);
-                }
-            });
-
-            return redirect()->back()->with('notice', 'Store pickup verified by courier. En route to customer destination.');
+            return redirect()->back()->with('notice', $notice);
         } catch (IdentityAccessError|OrderError $error) {
             return $this->failure($request, $error);
         }
     }
 
-    public function courierHandoff(Request $request, string $order): mixed
+    /**
+     * @param  list<string>  $allowed
+     */
+    private function assertAllowedHandoffFields(Request $request, array $allowed, string $correlationId): void
     {
-        $correlationId = $this->correlationId($request);
-
-        try {
-            $actorUserId = $this->session->requireUser($request, $correlationId);
-            $orderRow = DB::table('orders')->where('id', $order)->first();
-            if ($orderRow === null) {
-                throw new OrderError('ORDER_NOT_FOUND', 'Order not found.', $correlationId, status: 404);
-            }
-
-            $isProvider = (string) $orderRow->provider_user_id === $actorUserId;
-            $isCourierParty = DB::table('order_parties')
-                ->where('order_id', $order)
-                ->where('user_id', $actorUserId)
-                ->where('status', 'active')
-                ->where(function ($q): void {
-                    $q->where('party_type', 'courier')
-                        ->orWhere('responsibility', 'like', '%courier%')
-                        ->orWhere('responsibility', 'like', '%delivery%');
-                })
-                ->exists();
-
-            if (! $isProvider && ! $isCourierParty) {
-                throw new OrderError('AUTHORIZATION_DENIED', 'Only the assigned courier can confirm hand-off.', $correlationId, status: 403);
-            }
-
-            DB::transaction(function () use ($orderRow, $actorUserId, $correlationId): void {
-                $now = now();
-                $work = DB::table('work_instances')->where('order_id', $orderRow->id)->lockForUpdate()->first();
-                $prevWorkStatus = (string) ($work?->status ?? 'in_progress');
-                $newWorkStatus = 'completed';
-
-                if ($work !== null) {
-                    DB::table('work_instances')->where('id', $work->id)->update([
-                        'status' => $newWorkStatus,
-                        'completed_at' => $now,
-                        'updated_at' => $now,
-                    ]);
-
-                    if (Schema::hasTable('work_events')) {
-                        DB::table('work_events')->insert([
-                            'id' => (string) Str::uuid7(),
-                            'work_instance_id' => $work->id,
-                            'previous_status' => $prevWorkStatus,
-                            'new_status' => $newWorkStatus,
-                            'event_type' => 'work.courier.handoff',
-                            'event_version' => 1,
-                            'actor_user_id' => $actorUserId,
-                            'evidence_file_id' => null,
-                            'payload' => json_encode(['action' => 'courier_handoff', 'delivered_at' => $now->toIso8601String()], JSON_THROW_ON_ERROR),
-                            'payload_version' => 1,
-                            'idempotency_key' => 'courier_handoff_'.substr($correlationId, 0, 12).'_'.Str::random(6),
-                            'correlation_id' => $correlationId,
-                            'occurred_at' => $now,
-                            'effective_at' => $now,
-                            'created_at' => $now,
-                        ]);
-                    }
-                }
-
-                // Close courier order
-                DB::table('orders')->where('id', $orderRow->id)->update([
-                    'status' => 'closed',
-                    'updated_at' => $now,
-                ]);
-
-                // Release payment obligation for courier fee
-                $obligation = DB::table('payment_obligations')->where('order_id', $orderRow->id)->lockForUpdate()->first();
-                if ($obligation !== null) {
-                    $prevObligationStatus = (string) $obligation->status;
-                    DB::table('payment_obligations')->where('id', $obligation->id)->update([
-                        'status' => 'released',
-                        'updated_at' => $now,
-                    ]);
-
-                    if (Schema::hasTable('payment_events')) {
-                        DB::table('payment_events')->insert([
-                            'id' => (string) Str::uuid7(),
-                            'payment_obligation_id' => $obligation->id,
-                            'event_type' => 'payment.obligation.released',
-                            'lane' => (string) $obligation->lane,
-                            'amount_minor' => (int) $obligation->amount_minor,
-                            'currency' => (string) $obligation->currency,
-                            'actor_user_id' => $actorUserId,
-                            'previous_status' => $prevObligationStatus,
-                            'new_status' => 'released',
-                            'idempotency_key' => 'pay_release_'.substr($correlationId, 0, 12).'_'.Str::random(6),
-                            'correlation_id' => $correlationId,
-                            'occurred_at' => $now,
-                            'effective_at' => $now,
-                            'created_at' => $now,
-                        ]);
-                    }
-                }
-
-                // Dependency Unblocking Pipeline
-                if ($orderRow->deal_need_id !== null && $orderRow->deal_chain_id !== null) {
-                    DB::table('deal_needs')
-                        ->where('id', $orderRow->deal_need_id)
-                        ->update([
-                            'status' => 'completed',
-                            'version' => DB::raw('version + 1'),
-                            'updated_at' => $now,
-                        ]);
-
-                    $outgoingEdges = DB::table('deal_dependencies')
-                        ->where('deal_chain_id', $orderRow->deal_chain_id)
-                        ->where('predecessor_need_id', $orderRow->deal_need_id)
-                        ->where('status', 'active')
-                        ->get();
-
-                    foreach ($outgoingEdges as $edge) {
-                        $hasIncompletePred = DB::table('deal_dependencies')
-                            ->join('deal_needs', 'deal_needs.id', '=', 'deal_dependencies.predecessor_need_id')
-                            ->where('deal_dependencies.deal_chain_id', $orderRow->deal_chain_id)
-                            ->where('deal_dependencies.successor_need_id', $edge->successor_need_id)
-                            ->where('deal_dependencies.status', 'active')
-                            ->where('deal_needs.status', '!=', 'completed')
-                            ->exists();
-
-                        if (! $hasIncompletePred) {
-                            $successorNeed = DB::table('deal_needs')->where('id', $edge->successor_need_id)->first();
-                            if ($successorNeed !== null) {
-                                $newNeedStatus = in_array($successorNeed->status, ['blocked', 'draft', 'open'], true)
-                                    ? 'in_progress'
-                                    : $successorNeed->status;
-
-                                DB::table('deal_needs')
-                                    ->where('id', $edge->successor_need_id)
-                                    ->update([
-                                        'status' => $newNeedStatus,
-                                        'version' => DB::raw('version + 1'),
-                                        'updated_at' => $now,
-                                    ]);
-
-                                $successorOrder = DB::table('orders')->where('deal_need_id', $edge->successor_need_id)->first();
-                                if ($successorOrder !== null) {
-                                    DB::table('work_instances')
-                                        ->where('order_id', $successorOrder->id)
-                                        ->whereIn('status', ['not_started', 'scheduled'])
-                                        ->update([
-                                            'status' => 'in_progress',
-                                            'started_at' => $now,
-                                            'updated_at' => $now,
-                                        ]);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (Schema::hasTable('audit_events')) {
-                    DB::table('audit_events')->insert([
-                        'id' => (string) Str::uuid7(),
-                        'actor_user_id' => $actorUserId,
-                        'acting_for_user_id' => null,
-                        'action' => 'order.courier.handoff',
-                        'target_type' => 'order',
-                        'target_id' => $orderRow->id,
-                        'order_id' => $orderRow->id,
-                        'payment_obligation_id' => $obligation?->id,
-                        'previous_value_summary' => json_encode(['work_status' => $prevWorkStatus]),
-                        'new_value_summary' => json_encode(['work_status' => $newWorkStatus, 'order_status' => 'closed']),
-                        'reason' => 'Parcel handoff at gate confirmed; dependency gate unblocked',
-                        'command_name' => 'CourierHandoffCommand',
-                        'correlation_id' => $correlationId,
-                        'occurred_at' => $now,
-                        'created_at' => $now,
-                    ]);
-                }
-            });
-
-            return redirect()->back()->with('notice', 'Parcel handoff at gate confirmed. Transit delivery fee settled and downstream work unblocked.');
-        } catch (IdentityAccessError|OrderError $error) {
-            return $this->failure($request, $error);
+        if (array_diff(array_keys($request->all()), $allowed) !== []) {
+            throw new OrderError('INVALID_HANDOFF_REQUEST', 'The handoff request contains unsupported fields.', $correlationId, status: 422);
         }
+    }
+
+    /** @return array<string, mixed>|null */
+    private function appointmentProjection(string $orderId, string $actorId, string $buyerId, string $providerId, string $orderStatus, string $workShape): ?array
+    {
+        if ($workShape !== 'A3') {
+            return null;
+        }
+
+        $reservation = DB::table('appointment_reservations')
+            ->where('order_id', $orderId)
+            ->where('status', 'committed')
+            ->orderByDesc('starts_at')
+            ->first();
+        $requests = DB::table('work_schedule_change_requests')
+            ->leftJoin('appointment_reservations as proposed_reservation', 'proposed_reservation.id', '=', 'work_schedule_change_requests.proposed_reservation_id')
+            ->where('work_schedule_change_requests.order_id', $orderId)
+            ->orderBy('work_schedule_change_requests.created_at')
+            ->select('work_schedule_change_requests.id', 'work_schedule_change_requests.proposed_by_user_id', 'work_schedule_change_requests.status', 'work_schedule_change_requests.created_at', 'proposed_reservation.starts_at', 'proposed_reservation.ends_at')
+            ->get();
+        $projectedRequests = $requests->map(static fn (object $request): array => [
+            'id' => (string) $request->id,
+            'proposedStart' => $request->starts_at === null ? '' : (string) $request->starts_at,
+            'proposedEnd' => $request->ends_at === null ? '' : (string) $request->ends_at,
+            'proposerUserId' => (string) $request->proposed_by_user_id,
+            'status' => (string) $request->status === 'proposed' ? 'pending' : (string) $request->status,
+            'createdAt' => (string) $request->created_at,
+        ])->all();
+        $isParticipant = $actorId === $buyerId || $actorId === $providerId;
+        $hasPending = collect($projectedRequests)->contains(static fn (array $request): bool => $request['status'] === 'pending');
+
+        return [
+            'scheduledAt' => $reservation === null ? null : (string) $reservation->starts_at,
+            'scheduleChangeRequests' => $projectedRequests,
+            'canPropose' => $isParticipant && in_array($orderStatus, ['accepted', 'in_progress'], true) && $reservation !== null && ! $hasPending,
+            'viewerUserId' => $actorId,
+        ];
     }
 
     private function correlationId(Request $request): string

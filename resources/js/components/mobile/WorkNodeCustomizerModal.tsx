@@ -172,6 +172,7 @@ function resolveStageProofs(stage: WorkStage, index: number, total: number): Wor
 
 function resolveStageApprovalMethod(stage: WorkStage, index: number, total: number): WorkApprovalMethod {
     if (stage.approvalMethod) return stage.approvalMethod;
+    if (stage.handoffParty === 'worker_dropoff' && resolveStageClearanceMode(stage, index, total) === 'physical_handoff') return 'worker_dropoff';
     const text = `${stage.title} ${stage.desc} ${stage.evidence}`.toLowerCase();
     if (stage.requiredProofs?.includes('customer_otp') || text.includes('otp')) return 'presence_otp';
     if (resolveStageClearanceMode(stage, index, total) === 'customer_approval') return 'app_confirm';
@@ -353,7 +354,8 @@ export default function WorkNodeCustomizerModal({
             clearanceMode: primitive.clearanceMode,
             handoffParty: primitive.handoffParty,
             requiredProofs: primitive.requiredProofs,
-            metricUnit: primitive.metricUnit || '',
+            checklistItems: primitive.checklistItems,
+            metricRequirements: primitive.metricRequirements,
             interactionType: primitive.interactionType,
             evidenceProtocol: primitive.evidenceProtocol,
             gateType: primitive.clearanceMode === 'customer_approval' ? 'signoff' : 'execution',
@@ -812,7 +814,7 @@ export default function WorkNodeCustomizerModal({
                                                             type="radio"
                                                             name="handoffParty"
                                                             checked={currentStage.handoffParty !== 'worker_dropoff'}
-                                                            onChange={() => updateCurrentStage({ handoffParty: 'recipient_confirm' })}
+                                                            onChange={() => updateCurrentStage({ handoffParty: 'recipient_confirm', approvalMethod: 'app_confirm' })}
                                                             className="accent-[#0F2F58]"
                                                         />
                                                         <span>Recipient Confirms (OTP / App Tap)</span>
@@ -822,7 +824,7 @@ export default function WorkNodeCustomizerModal({
                                                             type="radio"
                                                             name="handoffParty"
                                                             checked={currentStage.handoffParty === 'worker_dropoff'}
-                                                            onChange={() => updateCurrentStage({ handoffParty: 'worker_dropoff' })}
+                                                            onChange={() => updateCurrentStage({ handoffParty: 'worker_dropoff', approvalMethod: 'worker_dropoff' })}
                                                             className="accent-[#0F2F58]"
                                                         />
                                                         <span>Worker Drop-off Photo (Porch / Counter)</span>
@@ -904,21 +906,42 @@ export default function WorkNodeCustomizerModal({
                                             })}
                                         </div>
 
-                                        {/* Metric reading unit input */}
                                         {currentProofs.includes('metric_reading') && (
-                                            <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/50 p-2 text-xs">
-                                                <span className="font-bold text-amber-950 shrink-0">Measurement Unit:</span>
-                                                <input
-                                                    type="text"
-                                                    value={currentStage.metricUnit || '°C delta'}
-                                                    onChange={(e) => updateCurrentStage({ metricUnit: e.target.value })}
-                                                    placeholder="e.g. °C delta, Volts, psi, kg"
-                                                    className="rounded-lg border border-amber-300 bg-white px-2 py-1 text-xs font-mono font-bold text-slate-900 outline-none w-36"
-                                                />
+                                            <div className="mt-1.5 space-y-2 rounded-xl border border-amber-200 bg-amber-50/50 p-3">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-bold text-amber-950">Named measurements</span>
+                                                    <button type="button" onClick={() => updateCurrentStage({ metricRequirements: [...(currentStage.metricRequirements ?? []), { id: `metric-${crypto.randomUUID()}`, name: '', unit: '', required: true }] })} className="min-h-9 rounded-full border border-amber-300 px-3 text-xs font-bold">Add measurement</button>
+                                                </div>
+                                                {(currentStage.metricRequirements ?? []).map((metric, index) => (
+                                                    <div key={metric.id} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                                        <input aria-label={`Measurement ${index + 1} name`} value={metric.name} onChange={(event) => updateCurrentStage({ metricRequirements: (currentStage.metricRequirements ?? []).map((item) => item.id === metric.id ? { ...item, name: event.currentTarget.value } : item) })} placeholder="Measurement name" className="min-h-10 rounded-lg border border-amber-300 px-3 text-sm" />
+                                                        <input aria-label={`Measurement ${index + 1} unit`} value={metric.unit} onChange={(event) => updateCurrentStage({ metricRequirements: (currentStage.metricRequirements ?? []).map((item) => item.id === metric.id ? { ...item, unit: event.currentTarget.value } : item) })} placeholder="Unit (e.g. V, °C)" className="min-h-10 rounded-lg border border-amber-300 px-3 text-sm" />
+                                                        <input type="number" aria-label={`Measurement ${index + 1} target`} value={metric.target ?? ''} onChange={(event) => updateCurrentStage({ metricRequirements: (currentStage.metricRequirements ?? []).map((item) => item.id === metric.id ? { ...item, target: event.currentTarget.value === '' ? undefined : Number(event.currentTarget.value) } : item) })} placeholder="Target (optional)" className="min-h-10 rounded-lg border border-amber-300 px-3 text-sm" />
+                                                        <input type="number" aria-label={`Measurement ${index + 1} minimum`} value={metric.min ?? ''} onChange={(event) => updateCurrentStage({ metricRequirements: (currentStage.metricRequirements ?? []).map((item) => item.id === metric.id ? { ...item, min: event.currentTarget.value === '' ? undefined : Number(event.currentTarget.value) } : item) })} placeholder="Minimum (optional)" className="min-h-10 rounded-lg border border-amber-300 px-3 text-sm" />
+                                                        <input type="number" aria-label={`Measurement ${index + 1} maximum`} value={metric.max ?? ''} onChange={(event) => updateCurrentStage({ metricRequirements: (currentStage.metricRequirements ?? []).map((item) => item.id === metric.id ? { ...item, max: event.currentTarget.value === '' ? undefined : Number(event.currentTarget.value) } : item) })} placeholder="Maximum (optional)" className="min-h-10 rounded-lg border border-amber-300 px-3 text-sm" />
+                                                        <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={metric.required} onChange={(event) => updateCurrentStage({ metricRequirements: (currentStage.metricRequirements ?? []).map((item) => item.id === metric.id ? { ...item, required: event.currentTarget.checked } : item) })} />Required</label>
+                                                        <button type="button" onClick={() => updateCurrentStage({ metricRequirements: (currentStage.metricRequirements ?? []).filter((item) => item.id !== metric.id) })} className="min-h-9 text-left text-xs font-semibold text-rose-700">Remove measurement</button>
+                                                    </div>
+                                                ))}
                                             </div>
                                         )}
-                                    </div>
+                                        {currentProofs.includes('checklist_steps') && (
+                                            <div className="mt-1.5 space-y-2 rounded-xl border border-slate-200 bg-white p-3">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-bold text-slate-900">Checklist items</span>
+                                                    <button type="button" onClick={() => updateCurrentStage({ checklistItems: [...(currentStage.checklistItems ?? []), { id: `item-${crypto.randomUUID()}`, label: '', required: true }] })} className="min-h-9 rounded-full border border-slate-300 px-3 text-xs font-bold">Add item</button>
+                                                </div>
+                                                {(currentStage.checklistItems ?? []).map((item, index) => (
+                                                    <div key={item.id} className="flex flex-wrap items-center gap-2">
+                                                        <input aria-label={`Checklist item ${index + 1}`} value={item.label} onChange={(event) => updateCurrentStage({ checklistItems: (currentStage.checklistItems ?? []).map((entry) => entry.id === item.id ? { ...entry, label: event.currentTarget.value } : entry) })} placeholder="Describe a required step" className="min-h-10 min-w-0 flex-1 rounded-lg border border-slate-300 px-3 text-sm" />
+                                                        <label className="flex min-h-10 items-center gap-1 text-xs"><input type="checkbox" checked={item.required} onChange={(event) => updateCurrentStage({ checklistItems: (currentStage.checklistItems ?? []).map((entry) => entry.id === item.id ? { ...entry, required: event.currentTarget.checked } : entry) })} />Required</label>
+                                                        <button type="button" onClick={() => updateCurrentStage({ checklistItems: (currentStage.checklistItems ?? []).filter((entry) => entry.id !== item.id) })} className="min-h-10 px-2 text-xs font-semibold text-rose-700">Remove</button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
 
+</div>
                                     {/* Specific Instructions / Label */}
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-slate-700">
@@ -1048,49 +1071,19 @@ export default function WorkNodeCustomizerModal({
                                                     )}
 
                                                     {currentProofs.includes('metric_reading') && (
-                                                        <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-2.5 flex items-center justify-between">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <Gauge className="size-4 text-amber-700" />
-                                                                <span className="text-xs font-bold text-slate-900">
-                                                                    Measurement Reading
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-1 font-mono text-xs font-bold">
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="12.4"
-                                                                    disabled
-                                                                    className="w-14 rounded border border-amber-300 bg-white px-2 py-0.5 text-right text-xs"
-                                                                />
-                                                                <span>{currentStage.metricUnit || '°C'}</span>
-                                                            </div>
+                                                        <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50/40 p-2.5">
+                                                            {(currentStage.metricRequirements ?? []).map((metric) => <div key={metric.id} className="flex items-center justify-between gap-2 text-xs"><span className="font-semibold">{metric.name || 'Unnamed measurement'}</span><span>{metric.unit} {metric.target !== undefined && metric.target !== null ? `· Target ${metric.target}` : ''}</span></div>)}
+                                                            {(currentStage.metricRequirements ?? []).length === 0 ? <span className="text-xs text-amber-900">Add named measurements in Configure.</span> : null}
                                                         </div>
                                                     )}
 
                                                     {(currentApprovalMethod === 'presence_otp' || currentProofs.includes('customer_otp')) && (
-                                                        <div className="rounded-xl border border-indigo-200 bg-indigo-50/40 p-2.5 flex items-center justify-between">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <KeyRound className="size-4 text-indigo-700" />
-                                                                <span className="text-xs font-bold text-slate-900">
-                                                                    Customer 4-Digit OTP
-                                                                </span>
-                                                            </div>
-                                                            <span className="font-mono text-xs font-bold text-slate-400 tracking-widest">
-                                                                [ · · · · ]
-                                                            </span>
-                                                        </div>
+                                                        <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-2.5 text-xs text-indigo-900">Server-issued codes are not shown in authoring previews.</div>
                                                     )}
-
                                                     {currentProofs.includes('checklist_steps') && (
-                                                        <div className="rounded-xl border border-slate-200 bg-white p-2.5 space-y-1.5 text-xs font-semibold text-slate-700">
-                                                            <label className="flex items-center gap-2">
-                                                                <input type="checkbox" defaultChecked disabled className="accent-[#0F2F58]" />
-                                                                <span>1. Safety Breaker Lockout verified</span>
-                                                            </label>
-                                                            <label className="flex items-center gap-2">
-                                                                <input type="checkbox" defaultChecked disabled className="accent-[#0F2F58]" />
-                                                                <span>2. Customer area cleared and protected</span>
-                                                            </label>
+                                                        <div className="rounded-xl border border-slate-200 bg-white p-2.5 space-y-2 text-xs font-semibold text-slate-700">
+                                                            {(currentStage.checklistItems ?? []).map((item) => <label key={item.id} className="flex items-center gap-2"><input type="checkbox" disabled className="accent-[#0F2F58]" /><span>{item.label || 'Unnamed checklist item'}{item.required ? ' *' : ''}</span></label>)}
+                                                            {(currentStage.checklistItems ?? []).length === 0 ? <span>Add itemized checklist steps in Configure.</span> : null}
                                                         </div>
                                                     )}
                                                 </div>
@@ -1153,32 +1146,10 @@ export default function WorkNodeCustomizerModal({
                                                                 Request Adjustment
                                                             </button>
                                                         </div>
-                                                        {currentApprovalMethod === 'presence_otp' && (
-                                                            <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 space-y-1 text-center">
-                                                                <div className="text-xs font-bold text-indigo-950">
-                                                                    Your Milestone Release OTP
-                                                                </div>
-                                                                <div className="font-mono text-xl font-extrabold text-[#0F2F58] tracking-widest">
-                                                                    8 4 2 1
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500">
-                                                                    Provide to technician only when physically satisfied with the completed task.
-                                                                </span>
-                                                            </div>
-                                                        )}
+                                                        {currentApprovalMethod === 'presence_otp' && <p className="text-xs text-indigo-900">A customer-issued code is shown only in the authorized customer’s live order session.</p>}
                                                     </div>
                                                 ) : (currentApprovalMethod === 'presence_otp' || currentProofs.includes('customer_otp')) ? (
-                                                    <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 space-y-1 text-center">
-                                                        <div className="text-xs font-bold text-indigo-950">
-                                                            Your Milestone Release OTP
-                                                        </div>
-                                                        <div className="font-mono text-xl font-extrabold text-[#0F2F58] tracking-widest">
-                                                            8 4 2 1
-                                                        </div>
-                                                        <span className="text-[10px] text-slate-500">
-                                                            Provide to technician only when physically satisfied with the completed task.
-                                                        </span>
-                                                    </div>
+                                                    <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900">Codes are issued by the server and appear only in the authorized customer’s live order session.</div>
                                                 ) : (
                                                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-1 text-xs text-slate-600">
                                                         <div className="font-bold text-slate-900">

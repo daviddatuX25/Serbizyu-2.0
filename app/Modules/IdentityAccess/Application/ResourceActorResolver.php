@@ -6,7 +6,6 @@ namespace App\Modules\IdentityAccess\Application;
 
 use App\Shared\Application\ResourceActor;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Resolves owner vs Agent acting-for for listing (and later) writes.
@@ -15,7 +14,6 @@ use Illuminate\Support\Facades\DB;
 final class ResourceActorResolver
 {
     public function __construct(
-        private readonly ConsentGrantService $consents,
         private readonly RoleAssignmentService $roles,
     ) {}
 
@@ -23,8 +21,6 @@ final class ResourceActorResolver
         Request $request,
         string $sessionUserId,
         string $correlationId,
-        string $resourceType,
-        string $requiredAction,
     ): ResourceActor {
         $suppliedOwner = trim((string) (
             $request->input('owner_user_id')
@@ -84,17 +80,6 @@ final class ResourceActorResolver
                 status: 403,
             );
         }
-
-        DB::transaction(function () use ($grantId, $sessionUserId, $actingFor, $correlationId, $resourceType, $requiredAction): void {
-            $this->consents->assertActiveForActingFor(
-                $grantId,
-                $sessionUserId,
-                $actingFor,
-                $correlationId,
-                $resourceType,
-                $requiredAction,
-            );
-        });
 
         return new ResourceActor(
             resourceOwnerId: $actingFor,

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Serbizyu kit · Admin workspace</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="final-state-icons.css">
+  <style>
+    /* Static mapping of the light theme in resources/css/app.css (navy / white / mango).
+       Semantic status colours are separate from brand emphasis. */
+    :root {
+      --background: #f8fafc;
+      --foreground: #0f172a;
+      --card: #ffffff;
+      --primary: #0f2f58;
+      --primary-foreground: #ffffff;
+      --muted: #f1f5f9;
+      --muted-foreground: #526177;
+      --accent: #ebf2fa;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --ring: #0f2f58;
+      --mango: #ffc244;
+      --mango-wash: #fff6e0;
+      --mango-line: #f5d58a;
+      --mango-foreground: #5c3d00;
+      --ok: #0a6b47;
+      --ok-wash: #e7f6ef;
+      --wait: #7a5200;
+      --wait-wash: #fff3d6;
+      --bad: #a83422;
+      --bad-wash: #fdeeea;
+      --info: #0f2f58;
+      --info-wash: #ebf2fa;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body { min-width: 0; margin: 0; background: var(--background); color: var(--foreground); font-family: var(--tk-font-body); font-size: 15px; line-height: 1.45; }
+    ::selection { background: var(--mango); color: var(--foreground); }
+    a { color: var(--primary); text-underline-offset: 4px; }
+    a:focus-visible, button:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+    h1, h2, h3, h4 { font-family: var(--tk-font-display); letter-spacing: -.015em; }
+    .icon { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .num { font-variant-numeric: tabular-nums; }
+    .ref { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; font-weight: 600; color: var(--muted-foreground); letter-spacing: 0; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    /* Review page chrome */
+    .page-head { max-width: 1320px; margin: 0 auto; padding: 22px 28px 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+    .page-brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--primary); font-family: var(--tk-font-display); font-weight: 800; }
+    .page-brand img { height: 30px; width: auto; display: block; }
+    .page-brand span { padding-left: 12px; border-left: 1px solid var(--border-strong); font-size: 15px; }
+    .page-nav { display: flex; flex-wrap: wrap; gap: 4px; }
+    .page-nav a { padding: 7px 11px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; color: var(--muted-foreground); }
+    .page-nav a:hover { background: var(--accent); color: var(--primary); }
+    .intro { max-width: 1320px; margin: 0 auto; padding: 30px 28px 6px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 32px; align-items: end; }
+    .intro h1 { margin: 0; color: var(--primary); font-size: clamp(28px, 3.4vw, 42px); line-height: 1.08; letter-spacing: -.035em; max-width: 18ch; }
+    .intro p { margin: 0; color: var(--muted-foreground); }
+    .static-label { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; padding: 4px 10px; border-radius: 999px; background: var(--card); border: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--muted-foreground); }
+    section.block { max-width: 1320px; margin: 0 auto; padding: 36px 28px 8px; scroll-margin-top: 12px; }
+    .block-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; margin-bottom: 16px; }
+    .block-head h2 { margin: 0; font-size: 22px; color: var(--primary); }
+    .block-head p { margin: 0; color: var(--muted-foreground); font-size: 14px; max-width: 62ch; }
+
+    /* Foundation plan */
+    .plan { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .plan article { padding: 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); }
+    .plan h3 { margin: 0 0 4px; font-size: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary); }
+    .plan .step { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; background: var(--accent); font-size: 12px; font-weight: 800; }
+    .plan p { margin: 0 0 10px; color: var(--muted-foreground); font-size: 14px; }
+    .plan ul { margin: 0; padding-left: 17px; font-size: 13.5px; }
+    .plan li { margin: 4px 0; }
+    .swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+    .swatch { border: 1px solid var(--border); border-radius: 9px; overflow: hidden; font-size: 11px; }
+    .swatch i { display: block; height: 30px; }
+    .swatch span { display: block; padding: 4px 6px; font-weight: 700; }
+    .swatch small { display: block; padding: 0 6px 5px; color: var(--muted-foreground); }
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 4px; font-size: 12.5px; font-weight: 700; color: var(--primary); }
+    .flow span { padding: 4px 8px; border-radius: 7px; background: var(--accent); }
+    .flow svg { width: 13px; height: 13px; color: var(--muted-foreground); }
+    .sources { margin-top: 12px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    .sources article { padding: 16px 18px; border-radius: 16px; border: 1px dashed var(--border-strong); background: transparent; }
+    .sources h3 { margin: 0 0 6px; font-size: 14px; }
+    .sources p { margin: 0; font-size: 13.5px; color: var(--muted-foreground); }
+
+    /* Specimen frame */
+    figure.specimen { margin: 0; }
+    figure.specimen figcaption { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--muted-foreground); }
+    figure.specimen figcaption strong { color: var(--foreground); }
+    .app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 760px; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; background: var(--background); box-shadow: 0 10px 20px -16px rgba(15, 47, 88, .35); }
+
+    /* Sidebar (shadcn Sidebar anatomy) */
+    .side { display: flex; flex-direction: column; gap: 4px; padding: 14px 10px; background: var(--card); border-right: 1px solid var(--border); min-width: 0; }
+    .side-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 14px; }
+    .side-brand img { width: 34px; height: 34px; border-radius: 10px; display: block; }
+    .side-brand strong { display: block; font-family: var(--tk-font-display); font-size: 14px; color: var(--primary); line-height: 1.15; }
+    .side-brand small { display: block; font-size: 12px; color: var(--muted-foreground); }
+    .side-label { padding: 12px 10px 4px; font-size: 11px; font-weight: 700; color: var(--muted-foreground); }
+    .nav-item { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 10px; border-radius: 9px; font-size: 14px; font-weight: 600; color: #334155; }
+    .nav-item .icon { color: var(--muted-foreground); }
+    .nav-item[aria-current="page"] { background: var(--accent); color: var(--primary); font-weight: 750; }
+    .nav-item[aria-current="page"] .icon { color: var(--primary); }
+    .nav-item .count { margin-left: auto; min-width: 22px; padding: 1px 7px; border-radius: 999px; font-size: 12px; font-weight: 800; text-align: center; background: var(--mango); color: var(--mango-foreground); }
+    .nav-item.minor { font-size: 13.5px; font-weight: 500; color: var(--muted-foreground); }
+    .side-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-top: 1px solid var(--border); }
+    .avatar { display: inline-grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: var(--accent); color: var(--primary); font-size: 12px; font-weight: 800; font-family: var(--tk-font-display); }
+    .avatar.photo { overflow: hidden; }
+    .avatar.photo img { width: 100%; height: 100%; object-fit: cover; }
+    .side-foot strong { display: block; font-size: 13px; }
+    .side-foot small { display: block; font-size: 12px; color: var(--muted-foreground); }
+
+    /* Main column */
+    .main { min-width: 0; display: flex; flex-direction: column; }
+    .topbar { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 20px; background: var(--card); border-bottom: 1px solid var(--border); }
+    .menu-btn { display: none; }
+    .crumbs { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 13.5px; color: var(--muted-foreground); }
+    .crumbs strong { color: var(--foreground); font-weight: 700; white-space: nowrap; }
+    .crumbs svg { width: 14px; height: 14px; }
+    .search { margin-left: auto; display: flex; align-items: center; gap: 8px; width: min(320px, 40%); height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--background); color: var(--muted-foreground); font-size: 13.5px; }
+    .search kbd { margin-left: auto; padding: 1px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); font-family: inherit; font-size: 11px; font-weight: 700; }
+    .env { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--mango-line); background: var(--mango-wash); color: var(--mango-foreground); font-size: 12px; font-weight: 750; white-space: nowrap; }
+    .env::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #c98a00; }
+    .content { padding: 22px 24px 28px; min-width: 0; }
+
+    /* Shared pieces */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 0 13px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--card); color: var(--foreground); font: 700 13.5px/1 var(--tk-font-display); white-space: nowrap; }
+    .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+    .btn.ghost { border-color: transparent; background: transparent; color: var(--muted-foreground); }
+    .btn:disabled { opacity: 1; cursor: default; }
+    .btn:not(:has(.icon))::before { content: ""; display: inline-block; width: 14px; height: 14px; flex: 0 0 14px; background-color: currentColor; mask: var(--state-icon-arrow) center / contain no-repeat; -webkit-mask: var(--state-icon-arrow) center / contain no-repeat; }
+    .chip:not(:has(.icon))::before { content: ""; display: inline-block; width: 13px; height: 13px; flex: 0 0 13px; background-color: currentColor; mask-position: center; mask-size: contain; mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; }
+    .chip.ok:not(:has(.icon))::before { mask-image: var(--state-icon-check); -webkit-mask-image: var(--state-icon-check); }
+    .chip.wait:not(:has(.icon))::before { mask-image: var(--state-icon-clock); -webkit-mask-image: var(--state-icon-clock); }
+    .chip.bad:not(:has(.icon))::before { mask-image: var(--state-icon-alert); -webkit-mask-image: var(--state-icon-alert); }
+    .chip.info:not(:has(.icon))::before, .chip.neutral:not(:has(.icon))::before { mask-image: var(--state-icon-info); -webkit-mask-image: var(--state-icon-info); }
+    .btn .tag { padding: 2px 6px; border-radius: 6px; background: var(--muted); color: var(--muted-foreground); font: 700 11px/1.2 var(--tk-font-body); }
+    .chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 750; white-space: nowrap; }
+    .chip .icon { width: 13px; height: 13px; }
+    .chip.ok { background: var(--ok-wash); color: var(--ok); }
+    .chip.wait { background: var(--wait-wash); color: var(--wait); }
+    .chip.bad { background: var(--bad-wash); color: var(--bad); }
+    .chip.info { background: var(--info-wash); color: var(--info); }
+    .chip.neutral { background: var(--muted); color: #334155; }
+    .card { border: 1px solid var(--border); border-radius: 14px; background: var(--card); min-width: 0; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--border); }
+    .card-head h4 { margin: 0; font-size: 14px; }
+    .card-head a, .card-head span { font-size: 12.5px; font-weight: 700; color: var(--muted-foreground); text-decoration: none; }
+    .card-body { padding: 14px 16px; }
+
+    /* Inbox */
+    .screen-title { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .screen-title h3 { margin: 0; font-size: 24px; color: var(--primary); }
+    .screen-title p { margin: 2px 0 0; color: var(--muted-foreground); font-size: 14px; }
+    .views { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 12px; overflow-x: auto; }
+    .view { display: inline-flex; align-items: center; gap: 7px; padding: 9px 12px 10px; font-size: 13.5px; font-weight: 650; color: var(--muted-foreground); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+    .view b { font-weight: 800; font-size: 12px; padding: 0 6px; border-radius: 999px; background: var(--muted); color: #334155; }
+    .view[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 750; }
+    .view[aria-selected="true"] b { background: var(--primary); color: #fff; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .field { display: flex; align-items: center; gap: 8px; height: 36px; min-width: 240px; flex: 0 1 300px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--card); color: var(--muted-foreground); font-size: 13.5px; }
+    .filter { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 1px dashed var(--border-strong); border-radius: 9px; background: var(--card); font-size: 13px; font-weight: 650; color: #334155; }
+    .filter.on { border-style: solid; border-color: var(--primary); background: var(--accent); color: var(--primary); }
+    .filter .icon { width: 14px; height: 14px; }
+    .toolbar .spacer { flex: 1; }
+    .table-wrap { border: 1px solid var(--border); border-radius: 14px; background: var(--card); overflow: hidden; }
+    table.queue { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .queue th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: var(--muted-foreground); background: #fbfcfe; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .queue td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .queue tr:last-child td { border-bottom: 0; }
+    .queue tr[aria-selected="true"] td { background: var(--mango-wash); }
+    .item-title { display: block; font-weight: 700; color: var(--foreground); }
+    .item-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 2px; font-size: 13px; color: var(--muted-foreground); }
+    .area { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 650; color: #334155; white-space: nowrap; }
+    .area .icon { width: 15px; height: 15px; color: var(--muted-foreground); }
+    .age { white-space: nowrap; font-size: 13.5px; }
+    .age.late { color: var(--bad); font-weight: 750; }
+    .queue td.open { width: 1%; text-align: right; }
+    .table-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted-foreground); }
+    .pager { display: flex; gap: 6px; }
+
+    /* Order workspace */
+    .record-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+    .record-head h3 { margin: 4px 0 4px; font-size: 24px; color: var(--primary); line-height: 1.15; }
+    .record-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13.5px; color: var(--muted-foreground); }
+    .record-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border-strong); }
+    .rails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 14px; background: var(--card); margin-bottom: 14px; }
+    .rail { padding: 12px 14px; min-width: 0; }
+    .rail + .rail { border-left: 1px solid var(--border); }
+    .rail span { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted-foreground); }
+    .rail span .icon { width: 14px; height: 14px; }
+    .rail strong { display: block; margin: 5px 0 1px; font-family: var(--tk-font-display); font-size: 15px; }
+    .rail small { display: block; font-size: 12.5px; color: var(--muted-foreground); }
+    .rail.ok strong { color: var(--ok); }
+    .rail.wait strong { color: var(--wait); }
+    .rail.bad strong { color: var(--bad); }
+    .rail.info strong { color: var(--info); }
+    .rail.ok strong::before { mask-image: var(--state-icon-check); -webkit-mask-image: var(--state-icon-check); }
+    .rail.wait strong::before { mask-image: var(--state-icon-clock); -webkit-mask-image: var(--state-icon-clock); }
+    .rail.bad strong::before { mask-image: var(--state-icon-alert); -webkit-mask-image: var(--state-icon-alert); }
+    .rail.info strong::before { mask-image: var(--state-icon-info); -webkit-mask-image: var(--state-icon-info); }
+    .rail strong::before { content: ""; display: inline-block; width: 14px; height: 14px; margin-right: 5px; vertical-align: -2px; background-color: currentColor; mask-position: center; mask-size: contain; mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; }
+    .next { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin-bottom: 16px; border: 1px solid var(--mango-line); border-radius: 14px; background: var(--mango-wash); }
+    .next-copy { display: flex; gap: 12px; min-width: 0; flex: 1 1 380px; }
+    .next-copy .badge-ic { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; background: var(--mango); color: var(--mango-foreground); }
+    .next-copy strong { display: block; font-family: var(--tk-font-display); font-size: 15px; }
+    .next-copy p { margin: 2px 0 0; font-size: 14px; color: #3f3a2e; }
+    .next-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; overflow-x: auto; }
+    .ws-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+    .stack { display: grid; gap: 14px; min-width: 0; }
+    dl.terms { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 18px; font-size: 14px; }
+    dl.terms dt { color: var(--muted-foreground); }
+    dl.terms dd { margin: 0; font-weight: 600; }
+    .steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; }
+    .steps li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .steps li:first-child { padding-top: 0; }
+    .steps li:last-child { border-bottom: 0; padding-bottom: 0; }
+    .mark { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--border-strong); color: var(--muted-foreground); }
+    .mark .icon { width: 13px; height: 13px; stroke-width: 2.4; }
+    .mark.done { border-color: var(--ok); background: var(--ok); color: #fff; }
+    .mark.concern { border-color: var(--bad); background: var(--bad-wash); color: var(--bad); }
+    .steps strong { display: block; font-size: 14px; }
+    .steps small { display: block; font-size: 13px; color: var(--muted-foreground); }
+    .steps time { font-size: 12.5px; color: var(--muted-foreground); white-space: nowrap; }
+    .evidence { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .evidence img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+    .evidence span { font-size: 12.5px; color: var(--muted-foreground); }
+    .money { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .money strong { font-family: var(--tk-font-display); font-size: 22px; color: var(--primary); }
+    .plain-note { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted-foreground); }
+    .plain-note .icon { width: 15px; height: 15px; margin-top: 2px; }
+    .person { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .person:first-child { padding-top: 0; }
+    .person:last-child { border-bottom: 0; padding-bottom: 0; }
+    .person .avatar { width: 36px; height: 36px; }
+    .person strong { display: block; font-size: 14px; }
+    .person small { display: block; font-size: 12.5px; color: var(--muted-foreground); }
+    .chain-id { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .mini-cluster { position: relative; width: 78px; height: 52px; flex-shrink: 0; }
+    .mini-cluster img { position: absolute; border-radius: 50%; border: 3px solid var(--card); object-fit: cover; }
+    .mini-cluster img:nth-child(1) { width: 38px; height: 38px; left: 0; top: 10px; transform: rotate(-8deg); z-index: 1; }
+    .mini-cluster img:nth-child(2) { width: 46px; height: 46px; left: 20px; top: 0; transform: rotate(6deg); z-index: 3; }
+    .mini-cluster img:nth-child(3) { width: 36px; height: 36px; left: 44px; top: 14px; z-index: 2; }
+    .chain-id strong { display: block; font-family: var(--tk-font-display); font-size: 17px; color: var(--primary); }
+    .chain-id small { display: block; font-size: 12.5px; color: var(--muted-foreground); }
+    .sibling { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 13.5px; }
+    .sibling.current { margin: 0 -16px; padding: 9px 16px; background: var(--accent); border-top-color: transparent; }
+    .sibling strong { font-weight: 700; }
+    .sibling .ref { display: block; }
+    .sibling-states { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; align-items: center; }
+    .timeline { margin: 0; padding: 0; list-style: none; }
+    .timeline li { position: relative; padding: 0 0 12px 18px; font-size: 13.5px; }
+    .timeline li::before { content: ""; position: absolute; left: 3px; top: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); }
+    .timeline li::after { content: ""; position: absolute; left: 6px; top: 18px; bottom: 2px; width: 1px; background: var(--border); }
+    .timeline li:last-child { padding-bottom: 0; }
+    .timeline li:last-child::after { display: none; }
+    .timeline li.recent::before { background: var(--bad); }
+    .timeline small { display: block; color: var(--muted-foreground); font-size: 12.5px; }
+
+    /* States */
+    .states { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+    .state-card { padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); min-width: 0; }
+    .state-card .kicker { margin-bottom: 10px; font-size: 11px; font-weight: 800; color: var(--muted-foreground); letter-spacing: .04em; text-transform: uppercase; }
+    .state-card h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 4px; font-size: 14.5px; }
+    .state-card h3 .icon { width: 16px; height: 16px; color: var(--muted-foreground); }
+    .state-card h3.wait .icon { color: var(--wait); }
+    .state-card p { margin: 0 0 12px; font-size: 13px; color: var(--muted-foreground); }
+    .skeleton { display: grid; gap: 8px; }
+    .skeleton i { display: block; height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--muted), #e9eef5, var(--muted)); }
+    .skeleton i:nth-child(2) { width: 72%; }
+    .skeleton i:nth-child(3) { width: 48%; }
+    .boundary { max-width: 1320px; margin: 0 auto; padding: 28px 28px 40px; font-size: 13px; color: var(--muted-foreground); }
+
+    @media (max-width: 1180px) {
+      .app { grid-template-columns: 64px minmax(0, 1fr); }
+      .side { padding-inline: 8px; align-items: center; }
+      .side-brand { padding: 4px 0 12px; }
+      .side-brand div, .side-label, .nav-item .label, .side-foot div { display: none; }
+      .nav-item { width: 44px; justify-content: center; padding: 0; position: relative; }
+      .nav-item .count { position: absolute; top: -2px; right: -4px; min-width: 18px; padding: 0 4px; font-size: 10.5px; }
+      .side-foot { padding: 10px 0 0; }
+      .plan { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .states { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .ws-grid { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 760px) {
+      .page-head, .intro, section.block, .boundary { padding-left: 14px; padding-right: 14px; }
+      .intro { grid-template-columns: minmax(0, 1fr); gap: 12px; padding-top: 22px; }
+      .page-brand span { display: none; }
+      .plan, .sources, .states { grid-template-columns: minmax(0, 1fr); }
+      .app { grid-template-columns: minmax(0, 1fr); min-height: 0; border-radius: 16px; }
+      .side { display: none; }
+      .menu-btn { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 9px; background: var(--card); color: var(--foreground); }
+      .topbar { padding: 0 12px; gap: 8px; }
+      .search { display: none; }
+      .env { margin-left: auto; }
+      .content { padding: 16px 12px 20px; }
+      .field { min-width: 0; flex: 1 1 100%; }
+      .toolbar .spacer, .toolbar .btn.ghost { display: none; }
+      table.queue, .queue tbody, .queue tr, .queue td { display: block; width: 100%; }
+      .queue thead { display: none; }
+      .queue tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 12px; border-bottom: 1px solid var(--border); }
+      .queue tr:last-child { border-bottom: 0; }
+      .queue tr[aria-selected="true"] { background: var(--mango-wash); }
+      .queue td { padding: 0; border: 0; background: transparent !important; }
+      .queue td.item { grid-column: 1 / -1; }
+      .queue td.open { width: auto; grid-column: 2; grid-row: 2 / span 2; align-self: center; }
+      .queue td.area-cell, .queue td.waiting { grid-column: 1; }
+      .queue td.age-cell { grid-column: 1; }
+      .rails { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .rail:nth-child(3) { border-left: 0; }
+      .rail:nth-child(n + 3) { border-top: 1px solid var(--border); }
+      .record-head .btn { display: none; }
+      .next-actions { width: 100%; }
+      .next-actions .btn { flex: 1 1 auto; }
+      dl.terms { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+      dl.terms dd { margin-bottom: 8px; }
+      .steps li { grid-template-columns: 26px minmax(0, 1fr); }
+      .steps time { grid-column: 2; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M5 5h14l2 8v6H3v-6l2-8Z"/></symbol>
+    <symbol id="i-orders" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+    <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 9 5.5 4h13L20 9"/><path d="M4 9h16v2a3 3 0 0 1-5.3 2 3 3 0 0 1-5.4 0A3 3 0 0 1 4 11V9Z"/><path d="M5 14v6h14v-6"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.5A5.5 5.5 0 0 1 21 20"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M16 14.5h2"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+    <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.8 20h18.4L12 4Z"/><path d="M12 10v4M12 17.2v.1"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5"/><path d="M14.5 6.5 17 4l3 3-2.5 2.5"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4L11.5 6"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.5-1.4"/></symbol>
+    <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16a3.5 3.5 0 0 1 6.4 0M15 10h3M15 13.5h3"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H10l-5 4v-4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.5L4 8"/><path d="M4 4v4h4M4 13a8 8 0 0 0 14.3 4.5L20 16"/><path d="M20 20v-4h-4"/></symbol>
+    <symbol id="i-handshake" viewBox="0 0 24 24"><path d="m11 17 2 2a1.4 1.4 0 0 0 2-2"/><path d="m14 14 2.5 2.5a1.4 1.4 0 0 0 2-2L15 11l-1.5 1.5a2 2 0 0 1-3-3L13 7l5 1 3 3M3 11l3-3 5-1"/><path d="m6 14 3 3"/></symbol>
+    <symbol id="i-cash" viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="11" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5v.1M18 14.4v.1"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  </svg>
+
+  <header class="page-head">
+    <a class="page-brand" href="../index.html"><img src="../assets/brand/serbizyu-long-navy-opt.png" alt="Serbizyu"><span>Admin workspace kit</span></a>
+    <nav class="page-nav" aria-label="Kit sections">
+      <a href="#foundations">Foundations</a>
+      <a href="#inbox">Inbox</a>
+      <a href="#order">Order workspace</a>
+      <a href="#states">States</a>
+      <a href="commerce-state-atlas.html">State atlas</a>
+    </nav>
+  </header>
+
+  <div class="intro">
+    <div>
+      <span class="static-label"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>Static kit · fixture data</span>
+      <h1>The staff side of the same marketplace.</h1>
+    </div>
+    <p>Navy structure, white working surfaces, mango only for what needs attention now. One queue, one record workspace, the full domain model underneath.</p>
+  </div>
+
+  <!-- 1 · Foundations -->
+  <section class="block" id="foundations" aria-labelledby="foundations-title">
+    <div class="block-head">
+      <h2 id="foundations-title">Foundations</h2>
+      <p>Six contracts every admin page follows. Built from the existing shadcn components; patterns borrowed from Shadcn Admin.</p>
+    </div>
+    <div class="plan">
+      <article>
+        <h3><span class="step">1</span>Theme</h3>
+        <p>One token source: the light theme in <code>app.css</code>.</p>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#0f2f58"></i><span>Navy</span><small>Structure</small></div>
+          <div class="swatch"><i style="background:#fff"></i><span>White</span><small>Surfaces</small></div>
+          <div class="swatch"><i style="background:#ffc244"></i><span>Mango</span><small>Attention</small></div>
+          <div class="swatch"><i style="background:#f8fafc"></i><span>Canvas</span><small>Background</small></div>
+        </div>
+        <ul>
+          <li>Status colours stay semantic, never brand.</li>
+          <li>Dark mode is an option, not the identity.</li>
+        </ul>
+      </article>
+      <article>
+        <h3><span class="step">2</span>Shell</h3>
+        <p>Five daily destinations; specialist tools below.</p>
+        <ul>
+          <li>Inbox · Orders · Marketplace · People · Payments.</li>
+          <li>Governance, System, Audit: permission-filtered.</li>
+          <li>Server-derived environment and data cohort in the top bar.</li>
+          <li>Global search (<kbd>⌘K</kbd>) opens records directly.</li>
+        </ul>
+      </article>
+      <article>
+        <h3><span class="step">3</span>Lists</h3>
+        <p>Answer “which record do I open?”</p>
+        <ul>
+          <li>Saved views with counts instead of metric cards.</li>
+          <li>Search, a few filters, compact rows, one Open action.</li>
+          <li>Each row: reference, people, who it waits on, age.</li>
+        </ul>
+      </article>
+      <article>
+        <h3><span class="step">4</span>Records</h3>
+        <p>Answer “what happened, and what may I do?”</p>
+        <ul>
+          <li>Identity and parties first.</li>
+          <li>Agreement, Work, Payment and Case as separate rails.</li>
+          <li>Current responsibility, then supporting detail and history.</li>
+        </ul>
+      </article>
+      <article>
+        <h3><span class="step">5</span>Actions</h3>
+        <p>Consequential actions follow one path.</p>
+        <div class="flow">
+          <span>Inspect</span><svg class="icon" aria-hidden="true"><use href="#i-chev"/></svg>
+          <span>Impact</span><svg class="icon" aria-hidden="true"><use href="#i-chev"/></svg>
+          <span>Reason</span><svg class="icon" aria-hidden="true"><use href="#i-chev"/></svg>
+          <span>Approval</span><svg class="icon" aria-hidden="true"><use href="#i-chev"/></svg>
+          <span>Execute</span><svg class="icon" aria-hidden="true"><use href="#i-chev"/></svg>
+          <span>Outcome</span>
+        </div>
+        <ul>
+          <li>Only permitted, backend-supported actions appear enabled.</li>
+          <li>Approval needs are labelled before the click.</li>
+        </ul>
+      </article>
+      <article>
+        <h3><span class="step">6</span>States</h3>
+        <p>Every list and record handles:</p>
+        <ul>
+          <li>Empty, loading, restricted, stale, unavailable.</li>
+          <li>Unknown payment outcome shown as unresolved, never success.</li>
+        </ul>
+      </article>
+    </div>
+    <div class="sources">
+      <article>
+        <h3>Borrowed</h3>
+        <p>Shadcn Admin sidebar and header, data-table toolbar, saved views, pagination, settings layouts, command search.</p>
+      </article>
+      <article>
+        <h3>Not imported</h3>
+        <p>Its router, auth, demo data, chart dashboards, generic CRUD, duplicate primitives and neutral palette.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- 2 · Inbox -->
+  <section class="block" id="inbox" aria-labelledby="inbox-title">
+    <div class="block-head">
+      <h2 id="inbox-title">Inbox</h2>
+      <p>The daily starting point. Items point at durable records; dismissing an item never closes its case.</p>
+    </div>
+    <figure class="specimen">
+      <div class="app">
+        <aside class="side" aria-label="Admin navigation specimen">
+          <div class="side-brand"><img src="../assets/brand/serbizyu-circle-navy-opt.png" alt=""><div><strong>Serbizyu</strong><small>Admin · Tagudin</small></div></div>
+          <span class="nav-item" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#i-inbox"/></svg><span class="label">Inbox</span><span class="count num">4</span></span>
+          <span class="nav-item"><svg class="icon" aria-hidden="true"><use href="#i-orders"/></svg><span class="label">Orders</span></span>
+          <span class="nav-item"><svg class="icon" aria-hidden="true"><use href="#i-store"/></svg><span class="label">Marketplace</span></span>
+          <span class="nav-item"><svg class="icon" aria-hidden="true"><use href="#i-people"/></svg><span class="label">People</span></span>
+          <span class="nav-item"><svg class="icon" aria-hidden="true"><use href="#i-wallet"/></svg><span class="label">Payments</span></span>
+          <span class="side-label">Specialist</span>
+          <span class="nav-item minor"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg><span class="label">Governance</span></span>
+          <span class="nav-item minor"><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg><span class="label">System</span></span>
+          <span class="nav-item minor"><svg class="icon" aria-hidden="true"><use href="#i-history"/></svg><span class="label">Audit</span></span>
+          <div class="side-foot"><span class="avatar">SR</span><div><strong>Sample reviewer</strong><small>Desk supervisor</small></div></div>
+        </aside>
+        <div class="main">
+          <div class="topbar">
+            <button type="button" class="menu-btn" disabled aria-label="Open navigation"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
+            <div class="crumbs"><strong>Inbox</strong></div>
+            <div class="search"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>Find order, person, listing<kbd>⌘K</kbd></div>
+            <span class="env">Local · Fixture</span>
+          </div>
+          <div class="content">
+            <div class="screen-title">
+              <div><h3>Inbox</h3><p>Items that need staff attention.</p></div>
+            </div>
+            <div class="views" role="tablist" aria-label="Saved views">
+              <span class="view" role="tab" aria-selected="true">All open <b class="num">6</b></span>
+              <span class="view" role="tab" aria-selected="false">Waiting on me <b class="num">4</b></span>
+              <span class="view" role="tab" aria-selected="false">Waiting on others <b class="num">2</b></span>
+              <span class="view" role="tab" aria-selected="false">Closed this week</span>
+            </div>
+            <div class="toolbar">
+              <div class="field"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>Search this view</div>
+              <span class="filter"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Area</span>
+              <span class="filter on">Reason: Any concern</span>
+              <span class="filter"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Age</span>
+              <span class="spacer"></span>
+              <button type="button" class="btn ghost" disabled><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>Reset</button>
+            </div>
+            <div class="table-wrap">
+              <table class="queue">
+                <thead>
+                  <tr><th scope="col">Item</th><th scope="col">Area</th><th scope="col">Waiting on</th><th scope="col">Age</th><th scope="col"><span class="sr-only">Open</span></th></tr>
+                </thead>
+                <tbody>
+                  <tr aria-selected="true">
+                    <td class="item"><span class="item-title">Customer reports cooling still weak</span><span class="item-meta"><span class="ref">CASE-0412 · ORD-2714</span>Maria Santos · Kuya Ben</span></td>
+                    <td class="area-cell"><span class="area"><svg class="icon" aria-hidden="true"><use href="#i-wrench"/></svg>Work</span></td>
+                    <td class="waiting"><span class="chip wait">You</span></td>
+                    <td class="age-cell"><span class="age num">38 min</span></td>
+                    <td class="open"><button type="button" class="btn" disabled>Open</button></td>
+                  </tr>
+                  <tr>
+                    <td class="item"><span class="item-title">Cash amounts disagree</span><span class="item-meta"><span class="ref">OBL-1088 · ORD-2731</span>Paid ₱650 says customer · ₱500 says provider</span></td>
+                    <td class="area-cell"><span class="area"><svg class="icon" aria-hidden="true"><use href="#i-cash"/></svg>Payment</span></td>
+                    <td class="waiting"><span class="chip wait">You</span></td>
+                    <td class="age-cell"><span class="age late num">2 h 14 min</span></td>
+                    <td class="open"><button type="button" class="btn" disabled>Open</button></td>
+                  </tr>
+                  <tr>
+                    <td class="item"><span class="item-title">Gateway outcome unknown</span><span class="item-meta"><span class="ref">OBL-1061</span>Maya sandbox · reconciliation required</span></td>
+                    <td class="area-cell"><span class="area"><svg class="icon" aria-hidden="true"><use href="#i-wallet"/></svg>Payment</span></td>
+                    <td class="waiting"><span class="chip info">Reconciliation</span></td>
+                    <td class="age-cell"><span class="age num">51 min</span></td>
+                    <td class="open"><button type="button" class="btn" disabled>Open</button></td>
+                  </tr>
+                  <tr>
+                    <td class="item"><span class="item-title">Trade licence submitted</span><span class="item-meta"><span class="ref">IDV-0193</span>Juan Carpentry Works</span></td>
+                    <td class="area-cell"><span class="area"><svg class="icon" aria-hidden="true"><use href="#i-id"/></svg>Identity</span></td>
+                    <td class="waiting"><span class="chip wait">You</span></td>
+                    <td class="age-cell"><span class="age num">5 h</span></td>
+                    <td class="open"><button type="button" class="btn" disabled>Open</button></td>
+                  </tr>
+                  <tr>
+                    <td class="item"><span class="item-title">Chain partner withdrew before pickup</span><span class="item-meta"><span class="ref">ORD-2702</span>Bayani Breaker Swap · delivery slot open</span></td>
+                    <td class="area-cell"><span class="area"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg>Deal Chain</span></td>
+                    <td class="waiting"><span class="chip neutral">Coordinator</span></td>
+                    <td class="age-cell"><span class="age num">1 h 05 min</span></td>
+                    <td class="open"><button type="button" class="btn" disabled>Open</button></td>
+                  </tr>
+                  <tr>
+                    <td class="item"><span class="item-title">Product listing awaiting review</span><span class="item-meta"><span class="ref">LST-0331</span>Holcim Excel 40 kg · Mang Jose Hardware</span></td>
+                    <td class="area-cell"><span class="area"><svg class="icon" aria-hidden="true"><use href="#i-store"/></svg>Marketplace</span></td>
+                    <td class="waiting"><span class="chip wait">You</span></td>
+                    <td class="age-cell"><span class="age num">Yesterday</span></td>
+                    <td class="open"><button type="button" class="btn" disabled>Open</button></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="table-foot"><span class="num">6 open items</span><div class="pager"><button type="button" class="btn" disabled><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg>Previous</button><button type="button" class="btn" disabled>Next<svg class="icon" aria-hidden="true"><use href="#i-chev"/></svg></button></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><strong>Inbox · all open</strong><span>Saved views replace metric cards. Mango marks the selected row and the waiting-on-me count only.</span></figcaption>
+    </figure>
+  </section>
+
+  <!-- 3 · Order workspace -->
+  <section class="block" id="order" aria-labelledby="order-title">
+    <div class="block-head">
+      <h2 id="order-title">Order workspace</h2>
+      <p>The record opened from CASE-0412. A Work concern on one child order; sibling orders keep their own completion and payment.</p>
+    </div>
+    <figure class="specimen">
+      <div class="app">
+        <aside class="side" aria-label="Admin navigation specimen">
+          <div class="side-brand"><img src="../assets/brand/serbizyu-circle-navy-opt.png" alt=""><div><strong>Serbizyu</strong><small>Admin · Tagudin</small></div></div>
+          <span class="nav-item"><svg class="icon" aria-hidden="true"><use href="#i-inbox"/></svg><span class="label">Inbox</span><span class="count num">4</span></span>
+          <span class="nav-item" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#i-orders"/></svg><span class="label">Orders</span></span>
+          <span class="nav-item"><svg class="icon" aria-hidden="true"><use href="#i-store"/></svg><span class="label">Marketplace</span></span>
+          <span class="nav-item"><svg class="icon" aria-hidden="true"><use href="#i-people"/></svg><span class="label">People</span></span>
+          <span class="nav-item"><svg class="icon" aria-hidden="true"><use href="#i-wallet"/></svg><span class="label">Payments</span></span>
+          <span class="side-label">Specialist</span>
+          <span class="nav-item minor"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg><span class="label">Governance</span></span>
+          <span class="nav-item minor"><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg><span class="label">System</span></span>
+          <span class="nav-item minor"><svg class="icon" aria-hidden="true"><use href="#i-history"/></svg><span class="label">Audit</span></span>
+          <div class="side-foot"><span class="avatar">SR</span><div><strong>Sample reviewer</strong><small>Desk supervisor</small></div></div>
+        </aside>
+        <div class="main">
+          <div class="topbar">
+            <button type="button" class="menu-btn" disabled aria-label="Open navigation"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
+            <div class="crumbs"><span>Orders</span><svg class="icon" aria-hidden="true"><use href="#i-chev"/></svg><strong>ORD-2714</strong></div>
+            <div class="search"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>Find order, person, listing<kbd>⌘K</kbd></div>
+            <span class="env">Local · Fixture</span>
+          </div>
+          <div class="content">
+            <div class="record-head">
+              <div>
+                <span class="ref">ORD-2714 · Child 3 of 3 · Accepted Oct 20</span>
+                <h3>Aircon repair for Maria Santos</h3>
+                <div class="record-meta"><span>Provider Kuya Ben</span><span class="dot"></span><span>Pob. Este, Tagudin</span><span class="dot"></span><span>Part of <strong style="color:var(--primary)">Cool Again</strong></span></div>
+              </div>
+              <button type="button" class="btn" disabled><svg class="icon" aria-hidden="true"><use href="#i-msg"/></svg>Message parties</button>
+            </div>
+
+            <div class="rails" aria-label="Independent record states">
+              <div class="rail ok"><span><svg class="icon" aria-hidden="true"><use href="#i-handshake"/></svg>Agreement</span><strong>Accepted</strong><small>Terms v2 · Oct 20</small></div>
+              <div class="rail wait"><span><svg class="icon" aria-hidden="true"><use href="#i-wrench"/></svg>Work</span><strong>Awaiting acceptance</strong><small>3 of 4 steps recorded</small></div>
+              <div class="rail info"><span><svg class="icon" aria-hidden="true"><use href="#i-cash"/></svg>Payment</span><strong>Not due</strong><small>₱850 external cash</small></div>
+              <div class="rail bad"><span><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg>Case</span><strong>Open</strong><small>CASE-0412 · 38 min</small></div>
+            </div>
+
+            <div class="next">
+              <div class="next-copy">
+                <span class="badge-ic"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg></span>
+                <div><strong>Waiting on you: review the cooling concern</strong><p>Maria says cooling is still weak after Kuya Ben marked the test complete. Payment stays not due until Work is accepted.</p></div>
+              </div>
+              <div class="next-actions">
+                <button type="button" class="btn primary" disabled>Review case</button>
+                <button type="button" class="btn" disabled>Request evidence</button>
+                <button type="button" class="btn" disabled><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>Hold this order<span class="tag">Needs approval</span></button>
+              </div>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Record sections">
+              <span class="view" role="tab" aria-selected="true">Overview</span>
+              <span class="view" role="tab" aria-selected="false">Work</span>
+              <span class="view" role="tab" aria-selected="false">Payments</span>
+              <span class="view" role="tab" aria-selected="false">Deal Chain</span>
+              <span class="view" role="tab" aria-selected="false">History</span>
+            </div>
+
+            <div class="ws-grid">
+              <div class="stack">
+                <div class="card">
+                  <div class="card-head"><h4>Accepted terms</h4><span>Version 2 · locked</span></div>
+                  <div class="card-body">
+                    <dl class="terms">
+                      <dt>Service</dt><dd>Fit replacement capacitor and test cooling</dd>
+                      <dt>Price</dt><dd class="num">₱850</dd>
+                      <dt>Appointment</dt><dd>Tue Oct 21 · 1:00 PM · on site</dd>
+                      <dt>Prerequisite</dt><dd>Capacitor received from Danny Express</dd>
+                      <dt>Acceptance</dt><dd>Customer confirms cooling after test</dd>
+                    </dl>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-head"><h4>Work</h4><span>Appointment</span></div>
+                  <div class="card-body">
+                    <ol class="steps">
+                      <li><span class="mark done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><div><strong>Arrived on site</strong><small>Kuya Ben</small></div><time>1:04 PM</time></li>
+                      <li><span class="mark done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><div><strong>Capacitor fitted</strong><small>Kuya Ben</small><div class="evidence"><img src="../photos/ac-capacitor.jpg" alt="Fitted capacitor photo"><span>1 photo</span></div></div><time>1:38 PM</time></li>
+                      <li><span class="mark done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><div><strong>Cooling test reported complete</strong><small>Kuya Ben</small></div><time>2:10 PM</time></li>
+                      <li><span class="mark concern"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg></span><div><strong>Customer acceptance</strong><small>Concern raised by Maria Santos</small></div><time>2:41 PM</time></li>
+                    </ol>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-head"><h4>Payment</h4><span class="ref">OBL-1048</span></div>
+                  <div class="card-body">
+                    <div class="money"><div><strong class="num">₱850</strong></div><span class="chip info">Not due</span></div>
+                    <div class="record-meta" style="margin-top:4px"><span>External cash</span><span class="dot"></span><span>Due when Work is accepted</span><span class="dot"></span><span>No declarations yet</span></div>
+                    <div class="plain-note"><svg class="icon" aria-hidden="true"><use href="#i-cash"/></svg><span>Paid directly between Maria and Kuya Ben. Serbizyu holds nothing for this obligation.</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stack">
+                <div class="card">
+                  <div class="card-head"><h4>People</h4></div>
+                  <div class="card-body">
+                    <div class="person"><span class="avatar">MS</span><div><strong>Maria Santos</strong><small>Customer · Direct</small></div><span class="chip neutral">Phone verified</span></div>
+                    <div class="person"><span class="avatar photo"><img src="../photos/ac-clean.jpg" alt=""></span><div><strong>Kuya Ben</strong><small>Provider · Aircon services</small></div><span class="chip ok">Barangay endorsed</span></div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-head"><h4>Deal Chain</h4><span>3 independent orders</span></div>
+                  <div class="card-body">
+                    <div class="chain-id">
+                      <div class="mini-cluster" aria-hidden="true"><img src="../photos/ac-capacitor.jpg" alt=""><img src="../photos/courier.jpg" alt=""><img src="../photos/ac-clean.jpg" alt=""></div>
+                      <div><strong>Cool Again</strong><small>Combined ₱1,110 · coordinated by Maria</small></div>
+                    </div>
+                    <div class="sibling"><div><strong>Tagudin Hardware</strong><span class="ref">ORD-2710 · Part</span></div><div class="sibling-states"><span class="chip ok">Handed over</span><span class="chip ok">₱180 confirmed</span></div></div>
+                    <div class="sibling"><div><strong>Danny Express</strong><span class="ref">ORD-2711 · Delivery</span></div><div class="sibling-states"><span class="chip ok">Delivered</span><span class="chip ok">₱80 confirmed</span></div></div>
+                    <div class="sibling current"><div><strong>Kuya Ben</strong><span class="ref">ORD-2714 · This order</span></div><div class="sibling-states"><span class="chip bad">Case open</span><span class="chip info">₱850 not due</span></div></div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-head"><h4>Recent activity</h4><span>Full history in History</span></div>
+                  <div class="card-body">
+                    <ul class="timeline">
+                      <li class="recent">Maria Santos raised a concern<small>“Still warm after 20 minutes.” · 2:41 PM</small></li>
+                      <li>Kuya Ben reported the cooling test complete<small>2:10 PM</small></li>
+                      <li>Kuya Ben added a photo<small>Capacitor fitted · 1:38 PM</small></li>
+                      <li>Danny Express recorded handoff to Kuya Ben<small>12:52 PM · ORD-2711</small></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><strong>Order workspace · child order with an open case</strong><span>Four independent rails; one current responsibility; hold labelled as requiring approval before the click.</span></figcaption>
+    </figure>
+  </section>
+
+  <!-- 4 · States -->
+  <section class="block" id="states" aria-labelledby="states-title">
+    <div class="block-head">
+      <h2 id="states-title">States</h2>
+      <p>Shared overlays for lists and records. None of them invents success.</p>
+    </div>
+    <div class="states">
+      <div class="state-card">
+        <div class="kicker">Empty</div>
+        <h3><svg class="icon" aria-hidden="true"><use href="#i-inbox"/></svg>Nothing waiting on you</h3>
+        <p>2 items are waiting on others.</p>
+        <button type="button" class="btn" disabled>Show all open</button>
+      </div>
+      <div class="state-card">
+        <div class="kicker">Loading</div>
+        <div class="skeleton" aria-label="Loading rows"><i></i><i></i><i></i></div>
+        <p style="margin-top:12px">Layout and actions stay in place; actions wait.</p>
+      </div>
+      <div class="state-card">
+        <div class="kicker">Restricted</div>
+        <h3><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>Evidence needs case access</h3>
+        <p>Metadata is visible. Files open only for an assigned case reviewer.</p>
+      </div>
+      <div class="state-card">
+        <div class="kicker">Stale</div>
+        <h3 class="wait"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>This record changed</h3>
+        <p>Kuya Ben added evidence at 2:58 PM. Refresh before acting.</p>
+        <button type="button" class="btn" disabled>Refresh</button>
+      </div>
+      <div class="state-card">
+        <div class="kicker">Unavailable</div>
+        <h3><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg>Retry delivery</h3>
+        <p>Shown disabled until the backend supports it.</p>
+        <button type="button" class="btn" disabled>Retry<span class="tag">Pending backend</span></button>
+      </div>
+    </div>
+  </section>
+
+  <p class="boundary">Static kit. Fixture people, references and amounts continue the Cool Again example. Navigation items and buttons are inert specimens; no route, permission or payment behaviour is implied. Supersedes the dark admin specimens (<a href="admin-ui-kit.html">admin-ui-kit</a>, <a href="admin-triage.html">triage</a>, <a href="admin-inspector.html">inspector</a>, <a href="admin-hold-console.html">hold console</a>) for visual direction.</p>
+</body>
+</html>

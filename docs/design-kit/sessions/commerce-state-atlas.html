@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Serbizyu UI Kit · Commerce State Atlas</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    :root {
+      --atlas-paper: #fffcf6;
+      --atlas-page: #f3efe4;
+      --atlas-ink: #12201c;
+      --atlas-soft: #4d655a;
+      --atlas-muted: #53695e;
+      --atlas-line: #d5e0d9;
+      --atlas-line-strong: #b7c9bf;
+      --atlas-forest: #0d715f;
+      --atlas-forest-deep: #0a574a;
+      --atlas-forest-wash: #e8f7f1;
+      --atlas-mango: #f0b429;
+      --atlas-mango-wash: #fff6e4;
+      --atlas-coral: #a83422;
+      --atlas-coral-wash: #fff1ed;
+      --atlas-blue: #285f8f;
+      --atlas-blue-wash: #edf5fb;
+      --atlas-shadow: 0 18px 42px -30px rgba(18, 32, 28, .5);
+      --atlas-radius: 16px;
+    }
+
+    ::selection { background: #c6eadc; color: var(--atlas-ink); }
+    body { min-width: 0; color: var(--atlas-ink); }
+    a:focus-visible { outline: 3px solid var(--atlas-forest); outline-offset: 4px; }
+    .atlas-nav a:focus-visible { outline: 3px solid var(--atlas-forest); outline-offset: 1px; }
+    .atlas-boundary { padding: 12px 0; border-top: 1px solid var(--atlas-line-strong); border-bottom: 1px solid var(--atlas-line-strong); color: var(--atlas-soft); font-size: .9rem; }
+    .review-map { margin: 22px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 20px; }
+    .review-map a { display: flex; justify-content: space-between; align-items: center; min-height: 52px; gap: 10px; border-bottom: 1px solid var(--atlas-line-strong); color: var(--atlas-ink); text-decoration: none; font-weight: 750; }
+    .review-map a span { color: var(--atlas-soft); font-size: .8rem; text-align: right; }
+    .review-map a:hover { color: var(--atlas-forest); }
+    .screen-spec { scroll-margin-top: 24px; }
+    .screen-spec:target .phone { outline: 3px solid var(--atlas-forest); outline-offset: 5px; }
+    .screen-spec figcaption a { display: inline-block; padding: 4px 0; color: var(--atlas-forest-deep); font-size: .8rem; font-weight: 750; }
+    .btn[data-specimen]:disabled { opacity: 1; cursor: default; }
+    .proof.proof-file { height: auto; min-height: 104px; padding: 14px; display: flex; align-items: center; gap: 12px; text-align: left; border-style: solid; }
+    .proof-file strong { display: block; overflow-wrap: anywhere; }
+    .proof-file small { display: block; margin-top: 4px; }
+    .readiness { margin-top: 36px; border-top: 2px solid var(--atlas-ink); padding-top: 22px; }
+    .readiness h2 { font-family: var(--tk-font-display); letter-spacing: -.025em; }
+    .readiness dl { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; margin: 0; }
+    .readiness dt, .readiness dd { margin: 0; padding: 12px 0; border-bottom: 1px solid var(--atlas-line); }
+    .readiness dt { font-weight: 800; }
+    .readiness dd { color: var(--atlas-soft); }
+    @media (max-width: 640px) { .review-map { grid-template-columns: 1fr 1fr; } .readiness dl { grid-template-columns: 1fr; } .readiness dt { border-bottom: 0; padding-bottom: 0; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    .atlas { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100dvh; }
+    .atlas-rail {
+      position: sticky; top: 0; height: 100dvh; overflow: auto;
+      padding: 22px 16px; border-right: 1px solid var(--atlas-line); background: rgba(255,252,246,.94);
+    }
+    .atlas-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; color: var(--atlas-forest-deep); text-decoration: none; }
+    .atlas-brand strong { font-family: var(--tk-font-display); font-size: 1rem; letter-spacing: -.02em; }
+    .atlas-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 12px; background: var(--atlas-forest); color: white; }
+    .atlas-nav { display: grid; gap: 4px; }
+    .atlas-nav a {
+      display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 7px 10px;
+      color: var(--atlas-soft); text-decoration: none; border-radius: 12px; font-weight: 700; font-size: .88rem;
+    }
+    .atlas-nav a:hover, .atlas-nav a:focus-visible { background: var(--atlas-forest-wash); color: var(--atlas-forest-deep); outline: none; }
+    .rail-rule { margin: 18px 4px 12px; border: 0; border-top: 1px solid var(--atlas-line); }
+    .rail-legend { display: grid; gap: 8px; padding: 0 4px; font-size: .78rem; color: var(--atlas-soft); }
+    .rail-legend span { display: flex; gap: 7px; align-items: center; }
+    .atlas-main { min-width: 0; padding: 28px clamp(18px, 3vw, 42px) 72px; max-width: 1580px; }
+    .atlas-intro { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; margin-bottom: 30px; }
+    .atlas-intro h1 { margin: 0; max-width: 18ch; font-family: var(--tk-font-display); font-size: clamp(2rem, 4vw, 3.6rem); line-height: 1; letter-spacing: -.035em; }
+    .atlas-intro p { margin: 14px 0 0; max-width: 72ch; color: var(--atlas-soft); font-size: 1.04rem; }
+    .truth-strip { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; max-width: 520px; }
+    .truth-pill { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 6px 10px; border: 1px solid var(--atlas-line-strong); border-radius: 999px; background: var(--atlas-paper); color: var(--atlas-soft); font-size: .78rem; font-weight: 800; }
+    .domain { padding-top: 26px; margin-bottom: 52px; }
+    .domain-head { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid var(--atlas-ink); }
+    .domain-head h2 { margin: 0; font-family: var(--tk-font-display); font-size: clamp(1.45rem, 2.4vw, 2rem); letter-spacing: -.03em; }
+    .domain-head p { margin: 5px 0 0; color: var(--atlas-soft); max-width: 72ch; }
+    .domain-count { color: var(--atlas-muted); font-weight: 800; font-size: .82rem; white-space: nowrap; }
+    .screens { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 28px 22px; align-items: start; }
+    figure.screen-spec { margin: 0; min-width: 0; }
+    figcaption { margin-top: 11px; padding: 0 4px; }
+    figcaption strong { display: block; font-family: var(--tk-font-display); font-size: .95rem; }
+    figcaption span { display: block; margin-top: 3px; color: var(--atlas-soft); font-size: .82rem; }
+
+    .ico { width: 18px; height: 18px; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .ico-sm { width: 15px; height: 15px; }
+    .ico-lg { width: 22px; height: 22px; }
+    .phone {
+      position: relative; width: 100%; max-width: 370px; height: 760px; margin: 0 auto; overflow: hidden;
+      border: 1px solid #c1d1c8; border-radius: 30px; background: #f7f3eb; box-shadow: var(--atlas-shadow);
+      display: flex; flex-direction: column; isolation: isolate;
+    }
+    .status { height: 34px; flex: 0 0 auto; padding: 9px 20px 0; display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: var(--atlas-ink); background: var(--atlas-paper); }
+    .app-top { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 8px 14px; border-bottom: 1px solid var(--atlas-line); background: var(--atlas-paper); }
+    .app-top h3 { flex: 1; min-width: 0; margin: 0; font-family: var(--tk-font-display); font-size: 1rem; line-height: 1.15; letter-spacing: -.015em; }
+    .app-top small { display: block; margin-top: 2px; color: var(--atlas-muted); font-family: var(--tk-font-body); font-size: .74rem; font-weight: 700; }
+    .icon-button { width: 38px; height: 38px; display: inline-grid; place-items: center; border: 1px solid var(--atlas-line); border-radius: 999px; background: white; color: var(--atlas-ink); }
+    .app-body { flex: 1; min-height: 0; overflow: auto; padding: 12px 13px 92px; display: grid; grid-auto-rows: max-content; align-content: start; gap: 11px; }
+    .dock { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; display: grid; gap: 7px; padding: 11px 13px 15px; border-top: 1px solid var(--atlas-line); background: rgba(255,252,246,.97); }
+    .dock-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 14px; border-radius: 12px; border: 1px solid transparent; font-family: var(--tk-font-display); font-size: .86rem; font-weight: 800; color: var(--atlas-ink); background: white; text-decoration: none; }
+    .btn-primary { background: var(--atlas-forest); color: white; }
+    .btn-outline { border-color: var(--atlas-line-strong); background: white; }
+    .btn-quiet { background: transparent; color: var(--atlas-soft); }
+    .btn-danger { background: var(--atlas-coral-wash); border-color: #efc2b8; color: var(--atlas-coral); }
+    .btn[disabled] { opacity: .52; }
+    .phone .split { flex-wrap: wrap; }
+    .phone .split > strong, .phone .split > h4 { min-width: 0; }
+    .phone .panel-head { flex-wrap: wrap; }
+    .phone .row > div, .phone .sku > div, .phone .chain-slot > div { min-width: 0; }
+    .phone .chain-slot .state { white-space: normal; }
+    .phone .app-body { padding-bottom: 136px; }
+    .hint { display: flex; gap: 6px; align-items: flex-start; color: var(--atlas-soft); font-size: .76rem; line-height: 1.35; }
+
+    .panel { border: 1px solid var(--atlas-line); border-radius: var(--atlas-radius); background: white; overflow: hidden; }
+    .panel-pad { padding: 13px; }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 13px; border-bottom: 1px solid #edf1ed; }
+    .panel-head strong { font-family: var(--tk-font-display); font-size: .86rem; }
+    .muted { color: var(--atlas-muted); }
+    .soft { color: var(--atlas-soft); }
+    .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .tiny { font-size: .72rem; }
+    .small { font-size: .82rem; }
+    .row { display: flex; align-items: center; gap: 10px; }
+    .split { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .stack { display: grid; gap: 8px; }
+    .divider { height: 1px; background: #edf1ed; margin: 9px 0; }
+    .avatar { width: 38px; height: 38px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 999px; background: var(--atlas-forest-wash); color: var(--atlas-forest-deep); font-family: var(--tk-font-display); font-size: .78rem; font-weight: 900; }
+    .avatar.blue { background: var(--atlas-blue-wash); color: var(--atlas-blue); }
+    .avatar.mango { background: var(--atlas-mango-wash); color: #8a520c; }
+    .thumb { width: 48px; height: 48px; flex: 0 0 auto; border-radius: 13px; object-fit: cover; background: #dfe8e3; }
+    .state { display: inline-flex; align-items: center; gap: 5px; min-height: 26px; padding: 4px 8px; border-radius: 999px; font-size: .72rem; font-weight: 850; white-space: nowrap; }
+    .state.ok { background: var(--atlas-forest-wash); color: var(--atlas-forest-deep); }
+    .state.wait { background: var(--atlas-mango-wash); color: #8a520c; }
+    .state.bad { background: var(--atlas-coral-wash); color: var(--atlas-coral); }
+    .state.info { background: var(--atlas-blue-wash); color: var(--atlas-blue); }
+    .state.neutral { background: #eef2ef; color: var(--atlas-soft); }
+    .count { min-width: 24px; height: 22px; display: inline-grid; place-items: center; border: 1px solid #c6eadc; border-radius: 999px; background: var(--atlas-forest-wash); color: var(--atlas-forest-deep); font-size: .72rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+
+    .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+    .tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 10px; border: 1px solid var(--atlas-line); border-radius: 999px; background: white; color: var(--atlas-soft); font-size: .78rem; font-weight: 800; }
+    .tab.on { border-color: var(--atlas-forest); background: var(--atlas-forest-wash); color: var(--atlas-forest-deep); }
+    .action-card { display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 12px; border: 1px solid var(--atlas-line); border-radius: 15px; background: white; }
+    .action-card h4 { margin: 0; font-family: var(--tk-font-display); font-size: .9rem; line-height: 1.2; }
+    .action-card p { margin: 3px 0 0; color: var(--atlas-soft); font-size: .78rem; line-height: 1.32; }
+    .action-card .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .action-card.focus { border-color: #8bc7b6; box-shadow: 0 10px 24px -22px rgba(13,113,95,.8); }
+
+    .truth-rails { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .rail { min-width: 0; padding: 10px 8px; border-radius: 13px; background: white; border: 1px solid var(--atlas-line); text-align: center; }
+    .rail .ico { margin: 0 auto 5px; }
+    .rail strong { display: block; font-size: .72rem; line-height: 1.15; }
+    .rail span { display: block; margin-top: 3px; font-size: .67rem; color: var(--atlas-muted); line-height: 1.15; }
+    .rail.ok { color: var(--atlas-forest-deep); background: var(--atlas-forest-wash); border-color: #bfe4d6; }
+    .rail.wait { color: #8a520c; background: var(--atlas-mango-wash); border-color: #f2d698; }
+    .rail.bad { color: var(--atlas-coral); background: var(--atlas-coral-wash); border-color: #f0c8bf; }
+
+    .receipt { position: relative; padding: 16px 15px 14px; border: 1px solid var(--atlas-line); border-radius: 18px; background: white; }
+    .receipt::before, .receipt::after { content: ""; position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 999px; background: #f7f3eb; border: 1px solid var(--atlas-line); transform: translateY(-50%); }
+    .receipt::before { left: -9px; } .receipt::after { right: -9px; }
+    .amount { margin: 0; font-family: var(--tk-font-display); font-size: 2.15rem; line-height: 1; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+    .amount.small-amount { font-size: 1.45rem; }
+    .money-line { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #edf1ed; font-size: .82rem; }
+    .money-line:last-child { border-bottom: 0; }
+    .money-line strong { font-variant-numeric: tabular-nums; }
+    .party-flow { display: grid; grid-template-columns: 1fr 52px 1fr; align-items: center; gap: 6px; margin: 13px 0 12px; }
+    .party { display: grid; justify-items: center; gap: 4px; text-align: center; }
+    .party strong { font-size: .78rem; }
+    .party span { font-size: .68rem; color: var(--atlas-muted); }
+    .flow-line { height: 1px; border-top: 2px dashed var(--atlas-line-strong); position: relative; }
+    .flow-line::after { content: ""; position: absolute; right: -3px; top: -6px; width: 9px; height: 9px; border-top: 2px solid var(--atlas-line-strong); border-right: 2px solid var(--atlas-line-strong); transform: rotate(45deg); }
+    .field { display: grid; gap: 5px; }
+    .field label { font-size: .76rem; font-weight: 850; }
+    .input { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; border: 1.5px solid var(--atlas-line); border-radius: 12px; background: white; font-weight: 750; }
+    .input.focus { border-color: var(--atlas-forest); box-shadow: 0 0 0 3px rgba(23,134,111,.13); }
+    .choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
+    .choice { min-height: 44px; display: flex; align-items: center; gap: 7px; padding: 8px 9px; border: 1.5px solid var(--atlas-line); border-radius: 12px; background: white; font-size: .78rem; font-weight: 800; }
+    .choice.on { border-color: var(--atlas-forest); color: var(--atlas-forest-deep); background: #fbfffd; }
+    .proof { height: 104px; display: grid; place-items: center; border: 1.5px dashed var(--atlas-line-strong); border-radius: 15px; background: white; text-align: center; color: var(--atlas-soft); font-size: .78rem; }
+    .proof img { width: 100%; height: 100%; object-fit: cover; border-radius: 13px; }
+
+    .sheet-backdrop { position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); opacity: 1; pointer-events: auto; }
+    .glovo-drawer-sheet { width: 100%; max-height: 85%; display: flex; flex-direction: column; background: transparent; transform: translateY(0); }
+    .glovo-wave-cap { width: 100%; height: 34px; margin-bottom: -1px; display: block; flex-shrink: 0; }
+    .drawer-content-box { background: #ffffff; padding: 6px 20px 28px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+    .drawer-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .drawer-title h4 { margin: 0; font-family: var(--tk-font-display); font-size: 1.05rem; }
+    .drawer-tile { min-height: 48px; display: flex; align-items: center; gap: 9px; padding: 10px; border: 1.5px solid var(--atlas-line); border-radius: 13px; background: #ffffff; font-size: .82rem; font-weight: 800; }
+    .drawer-tile.on { border-color: var(--atlas-forest); color: var(--atlas-forest-deep); }
+
+    .stock-hero { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .stock-metric { padding: 11px 9px; border-radius: 14px; background: white; border: 1px solid var(--atlas-line); }
+    .stock-metric strong { display: block; font-family: var(--tk-font-display); font-size: 1.5rem; line-height: 1; font-variant-numeric: tabular-nums; }
+    .stock-metric span { display: block; margin-top: 5px; color: var(--atlas-muted); font-size: .68rem; font-weight: 800; }
+    .sku { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 12px; border-bottom: 1px solid #edf1ed; }
+    .sku:last-child { border-bottom: 0; }
+    .sku h4 { margin: 0; font-size: .86rem; }
+    .sku p { margin: 3px 0 0; font-size: .74rem; color: var(--atlas-muted); }
+    .stock-bar { height: 7px; margin-top: 8px; border-radius: 999px; overflow: hidden; background: #edf1ed; display: flex; }
+    .stock-bar i { display: block; height: 100%; }
+    .stock-bar .free { background: var(--atlas-forest); } .stock-bar .held { background: var(--atlas-mango); } .stock-bar .done { background: #9bb2a7; }
+    .ledger-row { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: center; padding: 10px 0; border-bottom: 1px solid #edf1ed; font-size: .78rem; }
+    .ledger-row:last-child { border-bottom: 0; }
+    .ledger-row strong { font-variant-numeric: tabular-nums; }
+    .stepper { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; border: 1px solid var(--atlas-line); border-radius: 13px; overflow: hidden; background: white; }
+    .stepper span { min-height: 44px; display: grid; place-items: center; font-weight: 900; font-size: 1.2rem; }
+    .stepper strong { text-align: center; font-family: var(--tk-font-display); font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+
+    .calendar-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .day { min-height: 58px; display: grid; place-items: center; align-content: center; gap: 2px; border: 1px solid var(--atlas-line); border-radius: 13px; background: white; font-size: .7rem; color: var(--atlas-muted); }
+    .day strong { color: var(--atlas-ink); font-family: var(--tk-font-display); font-size: 1.05rem; }
+    .day.on { border-color: var(--atlas-forest); background: var(--atlas-forest-wash); color: var(--atlas-forest-deep); }
+    .agenda { position: relative; display: grid; gap: 8px; }
+    .slot { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 9px; min-height: 58px; padding: 9px 10px; border-radius: 14px; border: 1px solid var(--atlas-line); background: white; }
+    .slot time { color: var(--atlas-muted); font-size: .72rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .slot h4 { margin: 0; font-size: .82rem; }
+    .slot p { margin: 2px 0 0; color: var(--atlas-muted); font-size: .7rem; }
+    .slot.booked { background: #fbfffd; border-color: #bfe4d6; }
+    .slot.held { background: #fffcf2; border-color: #f2d698; }
+    .slot.blocked { background: #f7f8f7; border-style: dashed; }
+    .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .slot-pick { min-height: 46px; display: grid; place-items: center; border: 1.5px solid var(--atlas-line); border-radius: 12px; background: white; font-size: .78rem; font-weight: 850; }
+    .slot-pick.on { border-color: var(--atlas-forest); background: var(--atlas-forest-wash); color: var(--atlas-forest-deep); }
+    .slot-pick.off { color: #a6b1aa; background: #f3f5f3; text-decoration: line-through; }
+
+    .done-contract { padding: 13px; border-radius: 16px; background: #fbfffd; border: 1px solid #bfe4d6; }
+    .done-contract h4 { margin: 0 0 8px; font-family: var(--tk-font-display); font-size: .92rem; }
+    .check-line { display: grid; grid-template-columns: auto 1fr; gap: 8px; padding: 7px 0; font-size: .8rem; }
+    .note-line { display: flex; gap: 8px; align-items: center; padding: 9px 10px; border-radius: 12px; background: #f7f3eb; font-size: .78rem; color: var(--atlas-soft); }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .compare > div { padding: 10px; border-radius: 13px; border: 1px solid var(--atlas-line); background: white; }
+    .compare strong { display: block; margin-bottom: 5px; font-size: .74rem; }
+    .compare p { margin: 0; font-size: .78rem; color: var(--atlas-soft); }
+    .compare .changed { border-color: #f2d698; background: #fffcf2; }
+
+    .chain-slot { display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 12px; border: 1px solid var(--atlas-line); border-radius: 15px; background: white; }
+    .chain-slot h4 { margin: 0; font-size: .86rem; }
+    .chain-slot p { margin: 3px 0 0; color: var(--atlas-muted); font-size: .73rem; line-height: 1.32; }
+    .chain-meta { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+    .dependency { display: flex; gap: 6px; align-items: center; margin-left: 24px; color: var(--atlas-muted); font-size: .72rem; font-weight: 800; }
+    .empty-state { padding: 22px 16px; border: 1.5px dashed var(--atlas-line-strong); border-radius: 17px; background: rgba(255,255,255,.62); text-align: center; }
+    .empty-state .ico { margin: 0 auto 8px; color: var(--atlas-forest); }
+    .empty-state h4 { margin: 0; font-family: var(--tk-font-display); }
+    .empty-state p { margin: 5px auto 12px; max-width: 30ch; color: var(--atlas-soft); font-size: .8rem; }
+    .phone .tiny, .phone small, .phone .rail strong, .phone .rail span,
+    .phone .state, .phone .status, .phone .party span, .phone .slot time,
+    .phone .slot p, .phone .stock-metric span, .phone .day, .phone .chain-slot p,
+    .phone .dependency, .phone .sku p { font-size: .75rem; }
+    .phone .status { height: 36px; padding: 8px 20px; }
+    .phone .slot-pick.off { color: #53695e; }
+    .phone .rail.info { color: var(--atlas-blue); background: var(--atlas-blue-wash); }
+    .phone .action-card.focus { box-shadow: none; }
+
+    @media (max-width: 960px) {
+      .atlas { grid-template-columns: minmax(0, 1fr); }
+      .atlas-rail { position: relative; height: auto; padding: 14px; border-right: 0; border-bottom: 1px solid var(--atlas-line); }
+      .atlas-nav { grid-auto-flow: column; grid-auto-columns: max-content; overflow-x: auto; }
+      .rail-rule, .rail-legend { display: none; }
+      .atlas-intro { grid-template-columns: minmax(0, 1fr); }
+      .truth-strip { justify-content: flex-start; }
+    }
+    @media (max-width: 420px) {
+      .atlas-main { padding: 20px 10px 52px; }
+      .screens { grid-template-columns: minmax(0, 1fr); }
+      .review-map { grid-template-columns: minmax(0, 1fr); }
+      .review-map a { flex-wrap: wrap; }
+      .review-map a span { text-align: left; }
+      .phone { height: 730px; }
+      .domain-head { display: block; }
+      .domain-count { display: block; margin-top: 8px; }
+    }
+  </style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9h.01M18 15h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-2-1-2 1-2-1-2 1-2-1-2 1V3Z"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.3 2.3 4.7-4.8"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m12 4 9 16H3L12 4Z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5.5" y="10" width="13" height="10" rx="2"/><path d="M8.5 10V7.8a3.5 3.5 0 0 1 7 0V10"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5 5L4 17l3 3 5.7-5.7a4 4 0 0 0 5-5l-2.4 2.4-2.6-.6-.6-2.6 2.4-2.4Z"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 10.5 6.2 4h11.6l2.2 6.5"/><path d="M4 10.5h16V20H4zM9 20v-5h6v5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 6.5A3.5 3.5 0 0 1 8.5 3h7A3.5 3.5 0 0 1 19 6.5v5A3.5 3.5 0 0 1 15.5 15H10l-4.5 3.2V15A3.5 3.5 0 0 1 5 11.5Z"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="m14.5 5.5 4 4M5 19l1.2-4.5L16.5 4.2a2 2 0 0 1 2.8 0l.5.5a2 2 0 0 1 0 2.8L9.5 17.8Z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5.5c0 4.2 2.8 7.8 7 9 4.2-1.2 7-4.8 7-9V6l-7-3Z"/><path d="m9.2 11.5 2 2 3.8-4"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 7h12l-3-3M17 17H5l3 3"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h4l2-3h4l2 3h4v12H4z"/><circle cx="12" cy="13" r="3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6v18h12V7l-4-4Z"/><path d="M14 3v4h4"/></symbol>
+</svg>
+
+<div class="atlas">
+  <aside class="atlas-rail">
+    <a class="atlas-brand" href="../index.html"><span class="atlas-mark"><svg class="ico"><use href="#i-layers"/></svg></span><strong>Serbizyu kit</strong></a>
+    <nav class="atlas-nav" aria-label="Commerce state atlas">
+      <a href="#orders"><svg class="ico"><use href="#i-receipt"/></svg>Orders</a>
+      <a href="#payments"><svg class="ico"><use href="#i-cash"/></svg>Payments</a>
+      <a href="#stock"><svg class="ico"><use href="#i-box"/></svg>Stock</a>
+      <a href="#scheduling"><svg class="ico"><use href="#i-calendar"/></svg>Scheduling</a>
+      <a href="#work"><svg class="ico"><use href="#i-wrench"/></svg>Work</a>
+      <a href="#deal-chain"><svg class="ico"><use href="#i-truck"/></svg>Deal Chain</a>
+      <a href="#readiness"><svg class="ico"><use href="#i-shield"/></svg>Review boundary</a>
+      <a href="final-kit.html"><svg class="ico"><use href="#i-layers"/></svg>Final UI kit</a>
+      <a href="admin-workspace-kit.html"><svg class="ico"><use href="#i-file"/></svg>Admin workspace</a>
+    </nav>
+    <hr class="rail-rule">
+    <div class="rail-legend">
+      <span><b class="state ok"><svg class="ico ico-sm"><use href="#i-check"/></svg>Done</b> illustrated fact</span>
+      <span><b class="state wait"><svg class="ico ico-sm"><use href="#i-clock"/></svg>Waiting</b> next actor named</span>
+      <span><b class="state bad"><svg class="ico ico-sm"><use href="#i-alert"/></svg>Held</b> recovery required</span>
+    </div>
+  </aside>
+
+  <main class="atlas-main">
+    <section class="atlas-intro" aria-labelledby="atlas-title">
+      <div>
+        <h1 id="atlas-title">Commerce states, before code.</h1>
+        <p>A cohesive view of buying, fulfilling, getting paid and managing availability. Each phone is a separate fictional actor and moment—not a running transaction.</p>
+      </div>
+      <div class="truth-strip" aria-label="Atlas boundaries">
+        <span class="truth-pill"><svg class="ico ico-sm"><use href="#i-lock"/></svg>Static kit</span>
+        <span class="truth-pill"><svg class="ico ico-sm"><use href="#i-cash"/></svg>Cash + P2P specimens</span>
+        <span class="truth-pill"><svg class="ico ico-sm"><use href="#i-shield"/></svg>Digital lanes: sandbox only</span>
+        <span class="truth-pill"><svg class="ico ico-sm"><use href="#i-layers"/></svg>Independent child orders</span>
+      </div>
+    </section>
+    <p class="atlas-boundary" id="atlas-boundary"><strong>Review only.</strong> Synthetic people, amounts and times. Product buttons are disabled visual specimens; only atlas navigation works. No orders, stock, bookings, messages or payments are submitted. Timing and remedy examples are not approved policy.</p>
+    <nav class="review-map" aria-label="Jump to a screen family">
+      <a href="#orders">Orders <span>Respond · fulfill · recover</span></a>
+      <a href="#payments">Payments <span>Report · confirm · reconcile</span></a>
+      <a href="#stock">Stock <span>Count · reserve · adjust</span></a>
+      <a href="#scheduling">Scheduling <span>Book · reschedule · respond</span></a>
+      <a href="#work">Work <span>Agree · deliver · accept</span></a>
+      <a href="#deal-chain">Deal Chain <span>Choose · coordinate · replace</span></a>
+    </nav>
+
+    <section class="domain" id="orders" aria-labelledby="orders-title">
+      <div class="domain-head">
+        <div><h2 id="orders-title">Order management</h2><p>Role-aware work queues and exact agreement review, without forcing customers and providers into different apps.</p></div>
+        <span class="domain-count">7 states</span>
+      </div>
+      <div class="screens">
+        <figure class="screen-spec">
+          <div class="phone">
+            <div class="status"><span>9:41</span><span>Tagudin</span></div>
+            <header class="app-top"><h3>Business activity<small>Mang Jose Hardware · today</small></h3><span class="icon-button"><svg class="ico"><use href="#i-more"/></svg></span></header>
+            <div class="app-body">
+              <div class="tabs" aria-label="Activity filters"><span class="tab on">Needs me <b class="count">3</b></span><span class="tab">Preparing <b class="count">2</b></span><span class="tab">Scheduled</span><span class="tab">History</span></div>
+              <article class="action-card focus"><span class="avatar mango">MS</span><div><div class="split"><h4>Review order request</h4><span class="state wait">Accept by 11:30</span></div><p>4 bags Holcim cement · counter pickup tomorrow 8:00</p><div class="meta"><span class="state info">Stock held</span><span class="state neutral">₱1,080</span></div></div></article>
+              <article class="action-card"><span class="avatar"><svg class="ico"><use href="#i-box"/></svg></span><div><div class="split"><h4>Mark ready for pickup</h4><span class="state ok">Accepted</span></div><p>2 PVC elbows · Maria Santos</p><div class="meta"><span class="state wait">Preparing</span><span class="state neutral">Cash on pickup</span></div></div></article>
+              <article class="action-card"><span class="avatar blue">RL</span><div><div class="split"><h4>Confirm cash received</h4><span class="state wait">Payment waiting</span></div><p>Customer reported ₱420 paid at counter</p><div class="meta"><span class="state ok">Goods received</span><span class="state neutral">#OBL-418</span></div></div></article>
+              <div class="panel panel-pad"><div class="split"><strong class="small">Low stock affects 2 listings</strong><span class="state bad">Review</span></div><p class="hint" style="margin-top:6px"><svg class="ico ico-sm"><use href="#i-alert"/></svg>New orders pause when available quantity reaches zero.</p></div>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Review next request <svg class="ico"><use href="#i-arrow"/></svg></button></div>
+          </div>
+          <figcaption><strong>Merchant activity queue</strong><span>Merchant · several active orders · next responsibility first.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec" id="proposal-review">
+          <div class="phone">
+            <div class="status"><span>9:42</span><span>Order request</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Review request<small>Maria Santos · proposal v1</small></h3></header>
+            <div class="app-body">
+              <div class="panel"><div class="panel-head"><strong>Exact agreement</strong><span class="state wait">Needs your answer</span></div><div class="panel-pad"><div class="row"><img class="thumb" src="../photos/req-cement.jpg" alt="Cement bags stacked at a hardware counter"><div><strong>Holcim Excel cement</strong><div class="small soft">40 kg bag · listing v6</div></div></div><div class="divider"></div><div class="money-line"><span>Quantity</span><strong>4 bags</strong></div><div class="money-line"><span>Unit price</span><strong>₱270</strong></div><div class="money-line"><span>Pickup</span><strong>Tomorrow · 8:00–9:00</strong></div><div class="money-line"><span>Payment lane</span><strong>External cash</strong></div><div class="money-line"><span>Total</span><strong>₱1,080</strong></div></div></div>
+              <div class="panel panel-pad"><div class="split"><strong class="small">Availability check</strong><span class="state ok"><svg class="ico ico-sm"><use href="#i-check"/></svg>4 held</span></div><div class="stock-bar" aria-label="11 available, 4 held, 5 committed"><i class="free" style="width:55%"></i><i class="held" style="width:20%"></i><i class="done" style="width:25%"></i></div><p class="hint" style="margin-top:8px">Hold expires at 11:30 if you do not answer.</p></div>
+              <div class="note-line"><svg class="ico"><use href="#i-chat"/></svg>“Please keep them dry; I’ll bring a tricycle.”</div>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Accept order</button><div class="dock-row"><button type="button" class="btn btn-outline" data-specimen disabled>Counter</button><button type="button" class="btn btn-danger" data-specimen disabled>Decline</button></div></div>
+          </div>
+          <figcaption><strong>Provider acceptance review</strong><span>Custom proposal · exact quantity, slot, lane and capacity are shown before consent.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec" id="customer-order">
+          <div class="phone">
+            <div class="status"><span>2:16</span><span>#ORD-1048</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Aircon cleaning<small>Kuya Ben · today</small></h3><span class="icon-button"><svg class="ico"><use href="#i-chat"/></svg></span></header>
+            <div class="app-body">
+              <div class="truth-rails"><div class="rail ok"><svg class="ico"><use href="#i-file"/></svg><strong>Agreement</strong><span>Accepted</span></div><div class="rail ok"><svg class="ico"><use href="#i-check"/></svg><strong>Work</strong><span>Completed</span></div><div class="rail wait"><svg class="ico"><use href="#i-cash"/></svg><strong>Payment</strong><span>Your report needed</span></div></div>
+              <div class="receipt"><div class="split"><strong>Amount owed</strong><span class="state wait">Cash</span></div><p class="amount" style="margin-top:12px">₱650</p><p class="small soft" style="margin:6px 0 0">Pay Kuya Ben directly. Serbizyu does not hold this cash.</p></div>
+              <div class="panel"><div class="panel-head"><strong>Completed work</strong><span class="state ok">Signed off 2:12</span></div><div class="panel-pad stack"><div class="check-line"><svg class="ico ico-sm"><use href="#i-check"/></svg><span>Indoor unit cleaned</span></div><div class="check-line"><svg class="ico ico-sm"><use href="#i-check"/></svg><span>Cooling test photo received</span></div></div></div>
+              <div class="panel panel-pad"><div class="split"><span class="small soft">Order closes after payment is resolved.</span><svg class="ico"><use href="#i-clock"/></svg></div></div>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Report cash paid</button><button type="button" class="btn btn-quiet" data-specimen disabled>Report a problem</button></div>
+          </div>
+          <figcaption><strong>Customer order workspace</strong><span>Customer · Work completed while cash remains unresolved.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec">
+          <div class="phone">
+            <div class="status"><span>9:44</span><span>Order request</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Availability changed<small>Holcim Excel cement</small></h3></header>
+            <div class="app-body">
+              <div class="empty-state"><svg class="ico ico-lg"><use href="#i-box"/></svg><h4>Only 2 bags remain</h4><p>Your request for 4 was not accepted. Your pickup time and lane are still selected.</p></div>
+              <div class="panel"><div class="panel-head"><strong>Choose a valid option</strong></div><div class="panel-pad stack"><div class="drawer-tile on"><svg class="ico"><use href="#i-box"/></svg><span>Buy 2 bags now · ₱540</span></div><div class="drawer-tile"><svg class="ico"><use href="#i-calendar"/></svg><span>Ask merchant for restock date</span></div><div class="drawer-tile"><svg class="ico"><use href="#i-store"/></svg><span>Find another seller</span></div></div></div>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Send revised request</button></div>
+          </div>
+          <figcaption><strong>Capacity conflict recovery</strong><span>Customer · stale stock blocks agreement without losing selections.</span></figcaption>
+        </figure>
+<figure class="screen-spec" id="op-order-cancel-review" data-domain="orders">
+  <div class="phone">
+    <div class="status"><span>10:24</span><span>#ORD-2186</span></div>
+    <header class="app-top">
+      <span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span>
+      <h3>Stop or continue?<small>Maria Santos · cabinet repair</small></h3>
+    </header>
+    <div class="app-body">
+      <div class="truth-rails">
+        <div class="rail ok"><svg class="ico"><use href="#i-file"/></svg><strong>Agreement</strong><span>Accepted</span></div>
+        <div class="rail wait"><svg class="ico"><use href="#i-wrench"/></svg><strong>Work</strong><span>Partly performed</span></div>
+        <div class="rail wait"><svg class="ico"><use href="#i-cash"/></svg><strong>Payment</strong><span>Unresolved</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><strong>Work already performed</strong><span class="state info">Provider report</span></div>
+        <div class="panel-pad stack">
+          <div class="check-line"><svg class="ico ico-sm"><use href="#i-check"/></svg><span>Cabinet doors removed for repair</span></div>
+          <div class="check-line"><svg class="ico ico-sm"><use href="#i-clock"/></svg><span>Replacement hinge fitting not started</span></div>
+        </div>
+      </div>
+      <div class="panel panel-pad">
+        <div class="split"><strong class="small">Customer requested cancellation</strong><span class="state wait">Review together</span></div>
+        <p class="small soft" style="margin:7px 0 0">The accepted scope remains visible. Neither the stop request nor work progress settles what is owed.</p>
+      </div>
+      <div class="note-line"><svg class="ico"><use href="#i-chat"/></svg>Provider response: “I can stop here; let's compare the work done with the agreed scope.”</div>
+    </div>
+    <div class="dock">
+      <button type="button" class="btn btn-primary" data-specimen disabled>Reply to cancellation request</button>
+      <div class="dock-row"><button type="button" class="btn btn-outline" data-specimen disabled>Keep current agreement</button><button type="button" class="btn btn-quiet" data-specimen disabled>Open issue</button></div>
+    </div>
+  </div>
+  <figcaption><strong>Partial-work cancellation review</strong><span>Provider · customer requested cancellation after partial performance. Proposed policy: show completed and remaining scope, then seek agreement on consequences; no refund or fee is presumed.</span></figcaption>
+</figure>
+        <figure class="screen-spec" id="order-loading">
+          <div class="phone">
+            <div class="status"><span>9:41</span><span>Order</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Loading order<small>Checking current agreement and actions</small></h3></header>
+            <div class="app-body" aria-busy="true">
+              <div class="tk-skeleton" style="height:84px" aria-hidden="true"></div>
+              <div class="tk-skeleton" style="height:164px" aria-hidden="true"></div>
+              <div class="tk-skeleton" style="height:96px" aria-hidden="true"></div>
+              <p class="hint"><svg class="ico ico-sm"><use href="#i-clock"/></svg>Current terms and permitted actions are loading.</p>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" disabled>Checking current state</button></div>
+          </div>
+          <figcaption><strong>Order loading</strong><span>Participant · no commercial action is available before the current authorized view arrives.</span></figcaption>
+        </figure>
+        <figure class="screen-spec" id="order-unavailable">
+          <div class="phone">
+            <div class="status"><span>9:42</span><span>Connection interrupted</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Order needs refreshing<small>Last view may be out of date</small></h3></header>
+            <div class="app-body">
+              <div class="empty-state"><svg class="ico ico-lg"><use href="#i-alert"/></svg><h4>We cannot confirm the latest state</h4><p>No new action has been submitted. Reconnect before accepting, signing off or reporting payment.</p></div>
+              <div class="panel panel-pad"><strong class="small">Your order is not marked failed</strong><p class="small soft">Connection loss does not cancel an agreement or establish whether money moved.</p></div>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Refresh current order</button></div>
+          </div>
+          <figcaption><strong>Unavailable or stale view</strong><span>Participant · recovery without inventing cancellation, failed payment or stale acceptance authority.</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="domain" id="payments" aria-labelledby="payments-title">
+      <div class="domain-head">
+        <div><h2 id="payments-title">Payments and money history</h2><p>One obligation, one lane, two perspectives. Proof is evidence, confirmation is a separate fact, and cash is never shown as a platform balance.</p></div>
+        <span class="domain-count">12 states</span>
+      </div>
+      <div class="screens">
+        <figure class="screen-spec" id="cash-payer">
+          <div class="phone">
+            <div class="status"><span>2:18</span><span>#OBL-1048</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Aircon cleaning<small>Payment to Kuya Ben</small></h3></header>
+            <div class="app-body"><div class="truth-rails"><div class="rail ok"><svg class="ico"><use href="#i-check"/></svg><strong>Work</strong><span>Completed</span></div><div class="rail wait"><svg class="ico"><use href="#i-cash"/></svg><strong>Payment</strong><span>Due</span></div><div class="rail"><svg class="ico"><use href="#i-lock"/></svg><strong>Order</strong><span>Open</span></div></div></div>
+            <div class="sheet-backdrop"><div class="glovo-drawer-sheet"><svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none"><path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path></svg><div class="drawer-content-box"><div class="drawer-title"><h4>Report cash paid</h4><span class="state wait">External cash</span></div><div class="party-flow"><div class="party"><span class="avatar blue">MS</span><strong>You</strong><span>paid</span></div><div class="flow-line"></div><div class="party"><span class="avatar">KB</span><strong>Kuya Ben</strong><span>receives</span></div></div><div class="field"><label>Amount handed over</label><div class="input focus"><span class="num">₱650.00</span><svg class="ico"><use href="#i-edit"/></svg></div></div><div class="choice-grid"><span class="choice on"><svg class="ico ico-sm"><use href="#i-check"/></svg>Full amount</span><span class="choice"><svg class="ico ico-sm"><use href="#i-swap"/></svg>Different amount</span></div><p class="hint"><svg class="ico ico-sm"><use href="#i-clock"/></svg>Kuya Ben will confirm receipt. Mismatches hold only this payment.</p><button type="button" class="btn btn-primary" data-specimen disabled>Send payment report</button></div></div></div>
+          </div>
+          <figcaption><strong>Cash declaration</strong><span>Payer · completed Work, cash due, locked wave-sheet pattern.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec" id="cash-recipient">
+          <div class="phone">
+            <div class="status"><span>2:20</span><span>#OBL-1048</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Confirm payment<small>Maria Santos · aircon cleaning</small></h3></header>
+            <div class="app-body">
+              <div class="receipt"><div class="split"><strong>Customer reported</strong><span class="state wait">Your confirmation needed</span></div><p class="amount" style="margin-top:12px">₱650</p><div class="divider"></div><div class="money-line"><span>Agreed amount</span><strong>₱650</strong></div><div class="money-line"><span>Reported at</span><strong>2:18 PM</strong></div><div class="money-line"><span>Lane</span><strong>External cash</strong></div></div>
+              <div class="panel panel-pad"><div class="row"><span class="avatar"><svg class="ico"><use href="#i-shield"/></svg></span><div><strong class="small">Confirm only what you received</strong><p class="small soft" style="margin:2px 0 0">This does not change the completed Work.</p></div></div></div>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>I received ₱650</button><div class="dock-row"><button type="button" class="btn btn-outline" data-specimen disabled>Different amount</button><button type="button" class="btn btn-quiet" data-specimen disabled>Not received</button></div></div>
+          </div>
+          <figcaption><strong>Recipient acknowledgement</strong><span>Provider · payer declaration awaits independent confirmation.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec">
+          <div class="phone">
+            <div class="status"><span>4:05</span><span>#OBL-772</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>GCash transfer sent<small>Waiting for Ana’s Bakery</small></h3></header>
+            <div class="app-body">
+              <div class="truth-rails"><div class="rail ok"><svg class="ico"><use href="#i-file"/></svg><strong>Proof</strong><span>Submitted</span></div><div class="rail wait"><svg class="ico"><use href="#i-clock"/></svg><strong>Receipt</strong><span>Recipient checking</span></div><div class="rail"><svg class="ico"><use href="#i-lock"/></svg><strong>Order</strong><span>Open</span></div></div>
+              <div class="panel">
+                <div class="panel-head"><strong>Transfer evidence</strong><span class="state info">P2P</span></div>
+                <div class="panel-pad stack">
+                  <div class="proof proof-file"><svg class="ico ico-lg"><use href="#i-file"/></svg><div><strong>transfer-772.png</strong><small>Image · submitted by Maria · 4:03 PM</small><small>Attachment record, not bank verification</small></div></div>
+                  <div class="money-line"><span>Reference</span><strong class="num">7821 4490 1123</strong></div>
+                  <div class="money-line"><span>Amount sent</span><strong>₱360</strong></div>
+                </div>
+              </div>
+              <p class="hint"><svg class="ico ico-sm"><use href="#i-alert"/></svg>Personal GCash is not Tiwala protected. Serbizyu records evidence only.</p>
+            </div>
+            <div class="dock"><button class="btn btn-outline" disabled><svg class="ico"><use href="#i-clock"/></svg>Waiting for confirmation</button><button type="button" class="btn btn-quiet" data-specimen disabled>Report problem</button></div>
+          </div>
+          <figcaption><strong>P2P proof pending</strong><span>Payer · screenshot submitted, receipt not yet confirmed.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec" id="payment-hold">
+          <div class="phone">
+            <div class="status"><span>5:12</span><span>#OBL-881</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Payment under review<small>Fiesta AC overhaul</small></h3></header>
+            <div class="app-body">
+              <div class="truth-rails"><div class="rail ok"><svg class="ico"><use href="#i-check"/></svg><strong>Work</strong><span>Still completed</span></div><div class="rail bad"><svg class="ico"><use href="#i-alert"/></svg><strong>Payment</strong><span>Held</span></div><div class="rail"><svg class="ico"><use href="#i-lock"/></svg><strong>Order</strong><span>Open</span></div></div>
+              <div class="receipt"><div class="split"><strong>Reported amounts differ</strong><span class="state bad">#OBL-881</span></div><div class="compare" style="margin-top:12px"><div><strong>Maria reported</strong><p class="amount small-amount">₱610</p></div><div class="changed"><strong>Kuya Ben reported</strong><p class="amount small-amount">₱500</p></div></div></div>
+              <div class="panel"><div class="panel-head"><strong>Case progress</strong><span class="state wait">Evidence requested</span></div><div class="panel-pad stack"><div class="ledger-row"><svg class="ico"><use href="#i-check"/></svg><span>Mismatch opened</span><strong>5:08</strong></div><div class="ledger-row"><svg class="ico"><use href="#i-clock"/></svg><span>Receipt requested</span><strong>Awaiting evidence</strong></div></div></div>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled><svg class="ico"><use href="#i-camera"/></svg>Add evidence</button><button type="button" class="btn btn-quiet" data-specimen disabled>Open case</button></div>
+          </div>
+          <figcaption><strong>Payment mismatch hold</strong><span>Participant · only the affected obligation is held.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec" id="money-history">
+          <div class="phone">
+            <div class="status"><span>8:30</span><span>Money</span></div>
+            <header class="app-top"><h3>Money history<small>Kuya Ben · October</small></h3><span class="icon-button"><svg class="ico"><use href="#i-history"/></svg></span></header>
+            <div class="app-body">
+              <div class="stock-hero"><div class="stock-metric"><strong>₱2.4k</strong><span>Receivable</span></div><div class="stock-metric"><strong>₱650</strong><span>Confirming</span></div><div class="stock-metric"><strong>₱8.9k</strong><span>Settled outside</span></div></div>
+              <div class="tabs"><span class="tab on">Needs action <b class="count">2</b></span><span class="tab">Receivable</span><span class="tab">Settled</span><span class="tab">Issues</span></div>
+              <div class="panel"><div class="ledger-row" style="padding:12px"><span class="avatar blue">MS</span><span><strong>Confirm cash</strong><br><small class="muted">Aircon cleaning · cash</small></span><strong>₱650</strong></div><div class="ledger-row" style="padding:12px"><span class="avatar mango">JR</span><span><strong>Awaiting customer</strong><br><small class="muted">Fan repair · due on completion</small></span><strong>₱450</strong></div><div class="ledger-row" style="padding:12px"><span class="avatar">AL</span><span><strong>Settled outside Serbizyu</strong><br><small class="muted">GCash P2P · both confirmed</small></span><strong>₱780</strong></div></div>
+              <p class="hint"><svg class="ico ico-sm"><use href="#i-lock"/></svg>No withdrawable cash balance. Settled cash stays with you.</p>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Review payments</button></div>
+          </div>
+          <figcaption><strong>Money history</strong><span>Provider · receivables and external settlement without a fake wallet.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec">
+          <div class="phone">
+            <div class="status"><span>10:10</span><span>Sandbox</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Protected payment<small>Electrical inspection · test only</small></h3></header>
+            <div class="app-body">
+              <div class="panel panel-pad"><div class="split"><strong>Sandbox only</strong><span class="state info"><svg class="ico ico-sm"><use href="#i-lock"/></svg>No real money</span></div><p class="hint" style="margin-top:6px">Release is blocked. Work completion does not settle this obligation.</p></div>
+              <div class="panel"><div class="panel-head"><strong>Current blockers</strong><span class="state wait">2 unresolved</span></div><div class="panel-pad"><div class="check-line"><svg class="ico ico-sm"><use href="#i-check"/></svg><span>Work completed</span></div><div class="check-line"><svg class="ico ico-sm"><use href="#i-check"/></svg><span>Amount reconciled</span></div><div class="check-line"><svg class="ico ico-sm"><use href="#i-clock"/></svg><span>Required review not resolved</span></div><div class="check-line"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>Safety hold active</span></div><p class="hint">Full lane-policy, authorization and duplicate-effect checks remain server responsibilities.</p></div></div>
+            </div>
+            <div class="dock"><button class="btn btn-primary" disabled>Release not available</button></div>
+          </div>
+          <figcaption><strong>Protected-lane guard view</strong><span>Sandbox · unmet guards visible, no live-money promise.</span></figcaption>
+        </figure>
+<figure class="screen-spec" id="cash-awaiting-counterparty">
+  <div class="phone">
+    <div class="status"><span>2:19</span><span>#OBL-1048</span></div>
+    <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Aircon cleaning<small>Cash report · Maria Santos</small></h3></header>
+    <div class="app-body">
+      <div class="truth-rails">
+        <div class="rail ok"><svg class="ico"><use href="#i-check"/></svg><strong>Work</strong><span>Completed</span></div>
+        <div class="rail wait"><svg class="ico"><use href="#i-cash"/></svg><strong>Payment</strong><span>Awaiting reply</span></div>
+        <div class="rail"><svg class="ico"><use href="#i-lock"/></svg><strong>Order</strong><span>Open</span></div>
+      </div>
+      <div class="receipt">
+        <div class="split"><strong>Cash reported paid</strong><span class="state wait">Needs Kuya Ben</span></div>
+        <p class="amount" style="margin-top:12px">₱650.00</p>
+        <div class="divider"></div>
+        <div class="money-line"><span>Obligation</span><strong>#OBL-1048</strong></div>
+        <div class="money-line"><span>Reported by</span><strong>Maria Santos</strong></div>
+        <div class="money-line"><span>Report time</span><strong>2:18 PM</strong></div>
+        <div class="money-line"><span>Lane</span><strong>External cash</strong></div>
+      </div>
+      <div class="panel panel-pad">
+        <div class="row"><span class="avatar blue">MS</span><div><strong class="small">Your report is recorded</strong><p class="small soft" style="margin:2px 0 0">Kuya Ben must separately acknowledge receiving the cash. No action is needed from you now.</p></div></div>
+      </div>
+      <p class="hint"><svg class="ico ico-sm"><use href="#i-alert"/></svg>Serbizyu does not hold or verify this physical cash.</p>
+    </div>
+    <div class="dock"><button type="button" class="btn btn-outline" disabled><svg class="ico"><use href="#i-clock"/></svg>Waiting for Kuya Ben</button><button type="button" class="btn btn-quiet" data-specimen disabled>View payment details</button></div>
+  </div>
+  <figcaption><strong>Cash report awaiting counterparty</strong><span>Payer · #OBL-1048 · illustrative fixture; reported at 2:18 PM. No pay-again action while acknowledgement is pending.</span></figcaption>
+</figure>
+
+<figure class="screen-spec" id="cash-bilateral-receipt">
+  <div class="phone">
+    <div class="status"><span>2:24</span><span>#OBL-1048</span></div>
+    <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Payment record<small>Aircon cleaning · Kuya Ben</small></h3></header>
+    <div class="app-body">
+      <div class="receipt">
+        <div class="split"><strong>Both parties acknowledged</strong><span class="state ok"><svg class="ico ico-sm"><use href="#i-check"/></svg>Recorded</span></div>
+        <p class="amount" style="margin-top:14px">₱650.00</p>
+        <div class="party-flow">
+          <div class="party"><span class="avatar blue">MS</span><strong>Maria Santos</strong><span>Payer · 2:18 PM</span></div>
+          <div class="flow-line"></div>
+          <div class="party"><span class="avatar">KB</span><strong>Kuya Ben</strong><span>Received · 2:23 PM</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="money-line"><span>Obligation</span><strong>#OBL-1048</strong></div>
+        <div class="money-line"><span>Lane</span><strong>External cash</strong></div>
+      </div>
+      <div class="panel panel-pad">
+        <div class="row"><span class="avatar"><svg class="ico"><use href="#i-receipt"/></svg></span><div><strong class="small">Receipt acknowledged by both</strong><p class="small soft" style="margin:2px 0 0">Each party recorded their own acknowledgement of the ₱650.00 cash handover.</p></div></div>
+      </div>
+      <div class="note-line"><svg class="ico"><use href="#i-alert"/></svg>Cash was exchanged directly between the parties, outside Serbizyu.</div>
+    </div>
+    <div class="dock"><button type="button" class="btn btn-outline" data-specimen disabled>View payment timeline</button></div>
+  </div>
+  <figcaption><strong>Bilateral cash receipt</strong><span>Payer · Maria Santos · both attributable acknowledgements shown; illustrative fixture, not platform custody or payout.</span></figcaption>
+</figure>
+
+<figure class="screen-spec" id="p2p-recipient-inspection">
+  <div class="phone">
+    <div class="status"><span>4:07</span><span>#OBL-772</span></div>
+    <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Check transfer<small>Maria Santos · order #ORD-772</small></h3></header>
+    <div class="app-body">
+      <div class="truth-rails">
+        <div class="rail info"><svg class="ico"><use href="#i-file"/></svg><strong>Evidence</strong><span>Submitted</span></div>
+        <div class="rail wait"><svg class="ico"><use href="#i-clock"/></svg><strong>Receipt</strong><span>Your response</span></div>
+        <div class="rail"><svg class="ico"><use href="#i-lock"/></svg><strong>Order</strong><span>Open</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><strong>Transfer details</strong><span class="state info">GCash P2P</span></div>
+        <div class="panel-pad stack">
+          <div class="proof"><div><svg class="ico ico-lg"><use href="#i-file"/></svg><br>Transfer proof attached<br><span class="tiny muted">Open evidence to inspect</span></div></div>
+          <div class="money-line"><span>Reference</span><strong class="num">7821 4490 1123</strong></div>
+          <div class="money-line"><span>Amount reported</span><strong>₱360.00</strong></div>
+          <div class="money-line"><span>Sender</span><strong>Maria Santos</strong></div>
+        </div>
+      </div>
+      <div class="panel panel-pad"><strong class="small">Compare with your own wallet record</strong><p class="small soft" style="margin:5px 0 0">A screenshot and reference are evidence from the payer, not provider-verified receipt.</p></div>
+      <p class="hint"><svg class="ico ico-sm"><use href="#i-alert"/></svg>Personal GCash P2P is not Tiwala protected. Serbizyu does not hold these funds.</p>
+    </div>
+    <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Acknowledge receipt</button><button type="button" class="btn btn-danger" data-specimen disabled>Flag a mismatch</button></div>
+  </div>
+  <figcaption><strong>P2P recipient evidence inspection</strong><span>Recipient · can acknowledge or flag mismatch; illustrative fixture, no provider-verified claim.</span></figcaption>
+</figure>
+
+<figure class="screen-spec" id="p2p-evidence-resubmission">
+  <div class="phone">
+    <div class="status"><span>4:12</span><span>#OBL-772</span></div>
+    <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Replace transfer proof<small>Maria Santos · GCash P2P</small></h3></header>
+    <div class="app-body">
+      <div class="panel panel-pad" style="border-color:#f0c8bf;background:var(--atlas-coral-wash)">
+        <div class="split"><strong>Evidence needs a clearer copy</strong><span class="state bad">Unreadable</span></div>
+        <p class="small soft" style="margin:7px 0 0">The submitted image could not be read. This does not change the reported amount or reference.</p>
+      </div>
+      <div class="receipt">
+        <div class="split"><strong>Original report retained</strong><span class="state neutral">Not verified</span></div>
+        <p class="amount small-amount" style="margin-top:12px">₱360.00</p>
+        <div class="divider"></div>
+        <div class="money-line"><span>Obligation</span><strong>#OBL-772</strong></div>
+        <div class="money-line"><span>Reference</span><strong class="num">7821 4490 1123</strong></div>
+        <div class="money-line"><span>Amount reported</span><strong>₱360.00</strong></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><strong>New evidence</strong><span class="state wait">Resubmission</span></div>
+        <div class="panel-pad stack">
+          <div class="proof"><div><svg class="ico ico-lg"><use href="#i-camera"/></svg><br>Choose a clearer transfer image<br><span class="tiny muted">Hide balances and unrelated transfers</span></div></div>
+          <p class="hint"><svg class="ico ico-sm"><use href="#i-alert"/></svg>Keep the amount and reference unchanged unless the original report itself was wrong.</p>
+        </div>
+      </div>
+    </div>
+    <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled><svg class="ico"><use href="#i-camera"/></svg>Resubmit evidence</button><button type="button" class="btn btn-quiet" data-specimen disabled>Ask recipient to review</button></div>
+  </div>
+  <figcaption><strong>P2P evidence recovery</strong><span>Payer · unreadable proof rejected for review; original amount and reference preserved. Illustrative fixture.</span></figcaption>
+</figure>
+
+<figure class="screen-spec" id="direct-digital-outcome-unknown">
+  <div class="phone">
+    <div class="status"><span>10:16</span><span>#OBL-903</span></div>
+    <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Payment status<small>Order #ORD-903 · direct digital</small></h3></header>
+    <div class="app-body">
+      <div class="panel">
+        <div class="panel-head"><strong>Sandbox gateway check</strong><span class="state info">SANDBOX ONLY</span></div>
+        <div class="panel-pad stack">
+          <div class="split"><strong>Gateway outcome</strong><span class="state wait">Unknown</span></div>
+          <p class="small soft" style="margin:0">The response was not received. No success or failure is confirmed yet.</p>
+          <div class="money-line"><span>Attempted amount</span><strong>₱1,200.00</strong></div>
+          <div class="money-line"><span>Gateway reference</span><strong class="num">SBX-903-041</strong></div>
+        </div>
+      </div>
+      <div class="truth-rails">
+        <div class="rail info"><svg class="ico"><use href="#i-wrench"/></svg><strong>Work</strong><span>In progress</span></div>
+        <div class="rail wait"><svg class="ico"><use href="#i-clock"/></svg><strong>Gateway</strong><span>Unknown</span></div>
+        <div class="rail neutral"><svg class="ico"><use href="#i-lock"/></svg><strong>Order</strong><span>Open</span></div>
+      </div>
+      <div class="panel panel-pad"><div class="row"><span class="avatar mango"><svg class="ico"><use href="#i-clock"/></svg></span><div><strong class="small">Do not start another payment</strong><p class="small soft" style="margin:2px 0 0">Check this attempt's outcome before retrying. Work status is separate from the gateway result.</p></div></div></div>
+      <p class="hint"><svg class="ico ico-sm"><use href="#i-alert"/></svg>Static sandbox specimen only; no live gateway, charge, settlement, or payout is represented.</p>
+    </div>
+    <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Check this attempt</button><button type="button" class="btn btn-quiet" data-specimen disabled>View order</button></div>
+  </div>
+  <figcaption><strong>Direct digital outcome unknown</strong><span>Buyer · sandbox-only gateway uncertainty, distinct from Work status; illustrative fixture, no blind repay prompt.</span></figcaption>
+</figure>
+
+<figure class="screen-spec" id="money-history-empty">
+  <div class="phone">
+    <div class="status"><span>9:41</span><span>Money history</span></div>
+    <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Money history<small>Your recorded payment activity</small></h3></header>
+    <div class="app-body">
+      <div class="tabs" aria-label="Money history filters"><span class="tab on">All</span><span class="tab">Needs action</span><span class="tab">Recorded</span></div>
+      <div class="empty-state">
+        <svg class="ico ico-lg"><use href="#i-history"/></svg>
+        <h4>No payment records yet</h4>
+        <p>When a payment report or acknowledgement is recorded for your orders, it will appear here.</p>
+        <button type="button" class="btn btn-outline" data-specimen disabled>View orders</button>
+      </div>
+      <div class="panel panel-pad">
+        <div class="row"><span class="avatar"><svg class="ico"><use href="#i-alert"/></svg></span><div><strong class="small">Payment records are not a wallet balance</strong><p class="small soft" style="margin:2px 0 0">External cash and P2P transfers stay between the parties; no withdrawable balance is shown here.</p></div></div>
+      </div>
+    </div>
+    <div class="dock"><button type="button" class="btn btn-outline" data-specimen disabled>Browse orders</button></div>
+  </div>
+  <figcaption><strong>Empty money history</strong><span>Provider · no recorded entries; illustrative fixture, with no invented wallet or zero-withdrawable claim.</span></figcaption>
+</figure>
+      </div>
+    </section>
+
+    <section class="domain" id="stock" aria-labelledby="stock-title">
+      <div class="domain-head">
+        <div><h2 id="stock-title">Stock and availability</h2><p>Stock is an operational ledger: on hand, held, committed and available. Listing edits do not silently rewrite inventory history.</p></div>
+        <span class="domain-count">3 states</span>
+      </div>
+      <div class="screens">
+        <figure class="screen-spec">
+          <div class="phone">
+            <div class="status"><span>7:58</span><span>Inventory</span></div>
+            <header class="app-top"><h3>Stock<small>Mang Jose Hardware</small></h3><span class="icon-button"><svg class="ico"><use href="#i-plus"/></svg></span></header>
+            <div class="app-body">
+              <div class="stock-hero"><div class="stock-metric"><strong>3</strong><span>Products</span></div><div class="stock-metric"><strong>6</strong><span>Held</span></div><div class="stock-metric"><strong>2</strong><span>Low</span></div></div>
+              <div class="tabs"><span class="tab on">All items</span><span class="tab">Low stock</span><span class="tab">Paused</span></div>
+              <div class="panel"><div class="sku"><img class="thumb" src="../photos/req-cement.jpg" alt="Cement stock"><div><h4>Holcim Excel 40 kg</h4><p>20 on hand · 4 held · 5 committed</p><div class="stock-bar" aria-label="11 available, 4 held, 5 committed"><i class="free" style="width:55%"></i><i class="held" style="width:20%"></i><i class="done" style="width:25%"></i></div></div><span class="state ok">11</span></div><div class="sku"><span class="avatar mango"><svg class="ico"><use href="#i-box"/></svg></span><div><h4>PVC elbow · ½ inch</h4><p>3 on hand · 2 held</p><div class="stock-bar"><i class="free" style="width:33%"></i><i class="held" style="width:67%"></i></div></div><span class="state wait">1</span></div><div class="sku"><span class="avatar blue"><svg class="ico"><use href="#i-box"/></svg></span><div><h4>Breaker · 20A</h4><p>0 available · orders paused</p><div class="stock-bar"><i class="done" style="width:100%"></i></div></div><span class="state bad">0</span></div></div>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Adjust stock</button></div>
+          </div>
+          <figcaption><strong>Inventory overview</strong><span>Merchant · available quantity excludes active holds.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec" id="stock-adjust">
+          <div class="phone">
+            <div class="status"><span>8:03</span><span>Inventory</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Holcim Excel 40 kg<small>Stock movement</small></h3></header>
+            <div class="app-body"><div class="panel"><div class="panel-head"><strong>Availability movements</strong><span class="state neutral">Audit trail</span></div><div class="panel-pad"><div class="ledger-row"><svg class="ico"><use href="#i-plus"/></svg><span>Delivery received</span><strong>+20</strong></div><div class="ledger-row"><svg class="ico"><use href="#i-lock"/></svg><span>Order #1048 hold</span><strong>−4</strong></div><div class="ledger-row"><svg class="ico"><use href="#i-check"/></svg><span>Order committed · still on hand</span><strong>−5</strong></div></div></div></div>
+            <div class="sheet-backdrop"><div class="glovo-drawer-sheet"><svg class="glovo-wave-cap" viewBox="0 0 390 34" preserveAspectRatio="none"><path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path></svg><div class="drawer-content-box"><div class="drawer-title"><h4>Record adjustment</h4><span class="state neutral">On hand 20</span></div><div class="choice-grid"><span class="choice"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Received</span><span class="choice on"><svg class="ico ico-sm"><use href="#i-minus"/></svg>Damaged</span><span class="choice"><svg class="ico ico-sm"><use href="#i-swap"/></svg>Count fix</span><span class="choice"><svg class="ico ico-sm"><use href="#i-history"/></svg>Returned</span></div><div class="stepper"><span><svg class="ico"><use href="#i-minus"/></svg></span><strong>−2</strong><span><svg class="ico"><use href="#i-plus"/></svg></span></div><div class="field"><label>Reason</label><div class="input"><span>Bags torn during unloading</span></div></div><div class="money-line"><span>New on hand</span><strong>18</strong></div><div class="money-line"><span>Available after allocations</span><strong>9</strong></div><button type="button" class="btn btn-primary" data-specimen disabled>Record −2 damaged</button></div></div></div>
+          </div>
+          <figcaption><strong>Stock adjustment</strong><span>Merchant · reasoned movement preview before recording.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec">
+          <div class="phone">
+            <div class="status"><span>8:06</span><span>New listing</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Set availability<small>Rice cooker repair kit</small></h3></header>
+            <div class="app-body"><div class="empty-state"><svg class="ico ico-lg"><use href="#i-box"/></svg><h4>Add stock before publishing</h4><p>Customers can only order quantities you can actually hand over.</p><button type="button" class="btn btn-primary" data-specimen disabled>Add opening stock</button></div><div class="panel panel-pad"><div class="row"><span class="avatar"><svg class="ico"><use href="#i-store"/></svg></span><div><strong class="small">Made to order?</strong><p class="small soft" style="margin:2px 0 0">Choose a supported capacity policy. Preparation time alone does not guarantee availability.</p></div></div></div></div>
+          </div>
+          <figcaption><strong>Missing stock policy</strong><span>Merchant · fail closed before an unfulfillable product goes live.</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="domain" id="scheduling" aria-labelledby="scheduling-title">
+      <div class="domain-head">
+        <div><h2 id="scheduling-title">Service scheduling</h2><p>For appointments, time is capacity. Slots can be open, held, booked or blocked; changes preserve the original agreement until both sides accept.</p></div>
+        <span class="domain-count">5 states</span>
+      </div>
+      <div class="screens">
+        <figure class="screen-spec">
+          <div class="phone">
+            <div class="status"><span>7:30</span><span>Schedule</span></div>
+            <header class="app-top"><h3>Kuya Ben’s schedule<small>Aircon services</small></h3><span class="icon-button"><svg class="ico"><use href="#i-plus"/></svg></span></header>
+            <div class="app-body"><div class="calendar-strip"><span class="day">Mon<strong>19</strong></span><span class="day on">Tue<strong>20</strong></span><span class="day">Wed<strong>21</strong></span><span class="day">Thu<strong>22</strong></span><span class="day">Fri<strong>23</strong></span></div><div class="agenda"><div class="slot booked"><time>8:00</time><div><h4>Aircon cleaning</h4><p>Maria Santos · Pob. Este</p></div><span class="state ok">Booked</span></div><div class="slot held"><time>10:00</time><div><h4>Diagnosis request</h4><p>Hold expires 9:20</p></div><span class="state wait">Held</span></div><div class="slot"><time>1:00</time><div><h4>Open slot</h4><p>2 hours · Tagudin center</p></div><span class="state neutral">Open</span></div><div class="slot blocked"><time>3:00</time><div><h4>Parts pickup</h4><p>Blocked by provider</p></div><span class="state neutral"><svg class="ico ico-sm"><use href="#i-lock"/></svg>Blocked</span></div></div></div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Manage availability</button></div>
+          </div>
+          <figcaption><strong>Provider appointment agenda</strong><span>Provider · booked, held, open and blocked capacity together.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec" id="booking-pick">
+          <div class="phone">
+            <div class="status"><span>6:42</span><span>Booking</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Choose a time<small>Aircon cleaning · ₱650</small></h3></header>
+            <div class="app-body"><div class="calendar-strip"><span class="day">Mon<strong>19</strong></span><span class="day on">Tue<strong>20</strong></span><span class="day">Wed<strong>21</strong></span><span class="day">Thu<strong>22</strong></span><span class="day">Fri<strong>23</strong></span></div><div class="panel panel-pad"><div class="split"><strong class="small">Tuesday availability</strong><span class="state ok">2 open</span></div><div class="slot-grid" style="margin-top:12px"><span class="slot-pick off">8:00</span><span class="slot-pick off">10:00</span><span class="slot-pick on">1:00</span><span class="slot-pick off">2:00</span><span class="slot-pick">4:00</span><span class="slot-pick off">5:00</span></div></div><div class="panel panel-pad"><div class="money-line"><span>Duration</span><strong>About 2 hours</strong></div><div class="money-line"><span>Location</span><strong>Poblacion Este</strong></div><div class="money-line"><span>Payment</span><strong>Cash after service</strong></div></div></div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Request 1:00 PM</button><span class="hint" style="justify-content:center">Kuya Ben confirms before it is booked.</span></div>
+          </div>
+          <figcaption><strong>Customer slot selection</strong><span>Customer · only valid capacity can be requested.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec">
+          <div class="phone">
+            <div class="status"><span>9:05</span><span>#ORD-1048</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>New time requested<small>Kuya Ben · aircon cleaning</small></h3></header>
+            <div class="app-body"><div class="compare"><div><strong>Current booking</strong><p>Tue 20 · 1:00 PM</p></div><div class="changed"><strong>Requested</strong><p>Wed 21 · 9:00 AM</p></div></div><div class="panel panel-pad"><div class="split"><strong class="small">Reason</strong><span class="state wait">Your answer needed</span></div><p class="small soft" style="margin:7px 0 0">Compressor part arrives tomorrow morning.</p></div><div class="note-line"><svg class="ico"><use href="#i-lock"/></svg>Your original booking remains valid until you accept.</div></div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Accept new time</button><div class="dock-row"><button type="button" class="btn btn-outline" data-specimen disabled>Suggest another</button><button type="button" class="btn btn-quiet" data-specimen disabled>Keep current</button></div></div>
+          </div>
+          <figcaption><strong>Reschedule request</strong><span>Customer · proposed change does not mutate the active booking.</span></figcaption>
+        </figure>
+<figure class="screen-spec" id="op-schedule-slot-taken" data-domain="scheduling">
+  <div class="phone">
+    <div class="status"><span>11:08</span><span>Appointment request</span></div>
+    <header class="app-top">
+      <span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span>
+      <h3>That time was taken<small>Aircon cleaning · 2 hours</small></h3>
+    </header>
+    <div class="app-body">
+      <div class="panel panel-pad">
+        <div class="split"><strong class="small">Requested slot</strong><span class="state bad">No longer open</span></div>
+        <p class="small soft" style="margin:7px 0 0">Today · 1:00–3:00 PM. The two-hour duration is unchanged; this request is not booked.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><strong>Available alternatives</strong><span class="state info">2-hour windows</span></div>
+        <div class="panel-pad stack">
+          <div class="slot blocked"><time>1–3 PM</time><div><h4>Today · requested</h4><p>Now occupied · overlaps unavailable</p></div><span class="state bad">Taken</span></div>
+          <div class="slot blocked"><time>2–4 PM</time><div><h4>Today</h4><p>Overlaps the occupied booking</p></div><span class="state neutral">Unavailable</span></div>
+          <div class="slot booked"><time>4–6 PM</time><div><h4>Today</h4><p>Full two-hour window</p></div><span class="state ok">Open</span></div>
+          <div class="slot"><time>1–3 PM</time><div><h4>Tomorrow</h4><p>Full two-hour window</p></div><span class="state ok">Open</span></div>
+        </div>
+      </div>
+      <div class="note-line"><svg class="ico"><use href="#i-calendar"/></svg>Choose a valid window; the original time has not been silently moved.</div>
+    </div>
+    <div class="dock">
+      <button type="button" class="btn btn-primary" data-specimen disabled>Request 4:00 PM today</button>
+      <button type="button" class="btn btn-outline" data-specimen disabled>Request tomorrow at 1:00 PM</button>
+    </div>
+  </div>
+  <figcaption><strong>Customer · requested slot just taken</strong><span>Two-hour duration preserved; overlapping hourly starts are unavailable. Proposed policy: recheck capacity when a request is submitted and leave a taken slot unbooked.</span></figcaption>
+</figure>
+
+<figure class="screen-spec" id="op-appointment-no-show" data-domain="scheduling">
+  <div class="phone">
+    <div class="status"><span>2:18</span><span>#ORD-2411</span></div>
+    <header class="app-top">
+      <span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span>
+      <h3>Appointment attendance<small>Rosa Dela Cruz · appliance repair</small></h3>
+    </header>
+    <div class="app-body">
+      <div class="compare">
+        <div><strong>Agreed visit</strong><p>Today · 2:00 PM<br>Customer address</p></div>
+        <div class="changed"><strong>Current report</strong><p>Provider reports no one answered</p></div>
+      </div>
+      <div class="truth-rails">
+        <div class="rail ok"><svg class="ico"><use href="#i-file"/></svg><strong>Agreement</strong><span>Visit agreed</span></div>
+        <div class="rail wait"><svg class="ico"><use href="#i-clock"/></svg><strong>Attendance</strong><span>Unverified report</span></div>
+        <div class="rail"><svg class="ico"><use href="#i-cash"/></svg><strong>Payment</strong><span>Not resolved</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><strong>Attendance reports</strong><span class="state wait">Awaiting response</span></div>
+        <div class="panel-pad stack">
+          <div class="note-line"><svg class="ico"><use href="#i-chat"/></svg>Provider: “I arrived at the agreed address at 2:00.”</div>
+          <div class="note-line"><svg class="ico"><use href="#i-clock"/></svg>Customer response: not yet received</div>
+          <p class="small soft" style="margin:0">No no-show finding or charge has been made. Add context or ask for help reviewing the visit.</p>
+        </div>
+      </div>
+    </div>
+    <div class="dock">
+      <button type="button" class="btn btn-primary" data-specimen disabled>Add my response</button>
+      <button type="button" class="btn btn-outline" data-specimen disabled>Ask for issue review</button>
+    </div>
+  </div>
+  <figcaption><strong>Provider · no-show reported, unverified</strong><span>Attendance report is separate from agreement and payment. Proposed policy: offer the other party a response and an issue-intake route before any outcome; no automatic blame or fee.</span></figcaption>
+</figure>
+      </div>
+    </section>
+
+    <section class="domain" id="work" aria-labelledby="work-title">
+      <div class="domain-head">
+        <div><h2 id="work-title">Simple Work, final agreements</h2><p>No mandatory workflow builder. A pinned done-when contract governs completion; private notes can evolve without changing consent.</p></div>
+        <span class="domain-count">4 states</span>
+      </div>
+      <div class="screens">
+        <figure class="screen-spec">
+          <div class="phone">
+            <div class="status"><span>11:42</span><span>#ORD-1048</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Aircon cleaning<small>In progress · Maria Santos</small></h3></header>
+            <div class="app-body"><div class="done-contract"><div class="split"><h4>Done when</h4><span class="state ok">Accepted terms</span></div><div class="check-line"><svg class="ico ico-sm"><use href="#i-check"/></svg><span>One indoor split-type unit is cleaned</span></div><div class="check-line"><svg class="ico ico-sm"><use href="#i-camera"/></svg><span>Cooling test photo is attached</span></div><div class="check-line"><svg class="ico ico-sm"><use href="#i-shield"/></svg><span>Customer confirms completion</span></div></div><div class="panel"><div class="panel-head"><strong>Private notes</strong><span class="state neutral">Not part of agreement</span></div><div class="panel-pad stack"><div class="note-line"><svg class="ico"><use href="#i-check"/></svg>Bring extension ladder</div><div class="note-line"><svg class="ico"><use href="#i-plus"/></svg>Check outdoor unit drainage</div></div></div><div class="panel panel-pad"><div class="split"><span class="small soft">Proof required</span><span class="state wait">1 photo</span></div></div></div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Propose completion</button><button type="button" class="btn btn-quiet" data-specimen disabled>Propose change</button></div>
+          </div>
+          <figcaption><strong>Zero authored steps</strong><span>Provider · completion contract pinned, advisory notes non-blocking.</span></figcaption>
+        </figure>
+
+        <figure class="screen-spec" id="change-proposal">
+          <div class="phone">
+            <div class="status"><span>12:08</span><span>Change request</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Change requested<small>Kuya Ben · aircon cleaning</small></h3></header>
+            <div class="app-body"><div class="panel panel-pad"><div class="split"><strong>Additional work found</strong><span class="state wait">Approval needed</span></div><p class="small soft" style="margin:7px 0 0">Drain line is clogged and leaking inside.</p></div><div class="compare"><div><strong>Current</strong><p>Cleaning only<br>₱650</p></div><div class="changed"><strong>Proposed</strong><p>Cleaning + drain repair<br>₱900</p></div></div><div class="panel"><div class="panel-head"><strong>What changes</strong></div><div class="panel-pad"><div class="money-line"><span>Price</span><strong>+₱250</strong></div><div class="money-line"><span>Time</span><strong>+30 minutes</strong></div><div class="money-line"><span>Proof</span><strong>Drain flow photo</strong></div></div></div><p class="hint"><svg class="ico ico-sm"><use href="#i-lock"/></svg>Declining keeps the original agreement unchanged.</p></div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Approve change</button><button type="button" class="btn btn-outline" data-specimen disabled>Keep original</button></div>
+          </div>
+          <figcaption><strong>Agreement change review</strong><span>Customer · material amendment requires explicit approval.</span></figcaption>
+        </figure>
+<figure class="screen-spec" id="op-work-completion-review" data-domain="work">
+  <div class="phone">
+    <div class="status"><span>4:36</span><span>#ORD-2540</span></div>
+    <header class="app-top">
+      <span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span>
+      <h3>Fence repair<small>Customer review · today</small></h3>
+    </header>
+    <div class="app-body">
+      <div class="truth-rails">
+        <div class="rail ok"><svg class="ico"><use href="#i-file"/></svg><strong>Agreement</strong><span>Accepted</span></div>
+        <div class="rail wait"><svg class="ico"><use href="#i-wrench"/></svg><strong>Work</strong><span>Proposed done</span></div>
+        <div class="rail wait"><svg class="ico"><use href="#i-cash"/></svg><strong>Payment</strong><span>₱1,200 due</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><strong>Provider completion proposal</strong><span class="state wait">Your review</span></div>
+        <div class="panel-pad stack">
+          <div class="check-line"><svg class="ico ico-sm"><use href="#i-check"/></svg><span>Two loose fence panels reattached</span></div>
+          <div class="check-line"><svg class="ico ico-sm"><use href="#i-check"/></svg><span>Gate latch adjusted and tested</span></div>
+          <div class="note-line"><svg class="ico"><use href="#i-camera"/></svg>After-work photo · received 4:31 PM</div>
+        </div>
+      </div>
+      <div class="receipt">
+        <div class="split"><strong>Payment remains due</strong><span class="state neutral">External cash</span></div>
+        <p class="amount" style="margin-top:12px">₱1,200</p>
+        <p class="small soft" style="margin:6px 0 0">Pay the provider directly under the accepted agreement. Completion proposal is not customer sign-off or payment confirmation.</p>
+      </div>
+      <div class="note-line"><svg class="ico"><use href="#i-clock"/></svg>Customer sign-off: not yet given</div>
+    </div>
+    <div class="dock">
+      <button type="button" class="btn btn-primary" data-specimen disabled>Review proposed completion</button>
+      <button type="button" class="btn btn-quiet" data-specimen disabled>Raise a question</button>
+    </div>
+  </div>
+  <figcaption><strong>Customer · completion proposed, unsigned</strong><span>Work proposal, customer sign-off, and payment remain distinct. Proposed policy: keep payment due and completion unsigned until the customer responds; no automatic release is shown.</span></figcaption>
+</figure>
+
+<figure class="screen-spec" id="op-a9-deliverable-review" data-domain="work">
+  <div class="phone">
+    <div class="status"><span>9:52</span><span>#ORD-2637 · A9</span></div>
+    <header class="app-top">
+      <span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span>
+      <h3>Review digital delivery<small>Kitchen lighting plan · A9 Digital Delivery</small></h3>
+    </header>
+    <div class="app-body">
+      <div class="truth-rails">
+        <div class="rail ok"><svg class="ico"><use href="#i-file"/></svg><strong>Agreement</strong><span>Accepted</span></div>
+        <div class="rail wait"><svg class="ico"><use href="#i-clock"/></svg><strong>Deliverable</strong><span>Received, not accepted</span></div>
+        <div class="rail wait"><svg class="ico"><use href="#i-cash"/></svg><strong>Payment</strong><span>₱3,600 due</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><strong>Delivered artifact</strong><span class="state info">Received 9:48 AM</span></div>
+        <div class="panel-pad stack">
+          <div class="proof proof-file">
+            <svg class="ico ico-lg"><use href="#i-file"/></svg>
+            <div><strong>Lighting plan · version 2</strong><small>Fixture locations · circuit notes</small><small>Document record, not acceptance</small></div>
+          </div>
+          <div><strong class="small">kitchen-lighting-plan-v2.pdf</strong><div class="tiny muted">PDF · version 2 · 3 pages · delivered by Noel Reyes</div></div>
+          <div class="note-line"><svg class="ico"><use href="#i-clock"/></svg>Customer review pending · acceptance not recorded</div>
+        </div>
+      </div>
+      <div class="panel panel-pad">
+        <strong class="small">Accepted scope</strong>
+        <p class="small soft" style="margin:5px 0 0">Kitchen lighting layout with fixture locations and circuit notes.</p>
+        <p class="tiny muted" style="margin:7px 0 0">Revision allowance is not stated here; review against the accepted agreement.</p>
+      </div>
+    </div>
+    <div class="dock">
+      <button type="button" class="btn btn-primary" data-specimen disabled>Review version 2</button>
+      <button type="button" class="btn btn-outline" data-specimen disabled>Ask about this deliverable</button>
+    </div>
+  </div>
+  <figcaption><strong>Customer · A9 artifact received, not accepted</strong><span>Version-pinned digital delivery and acceptance are distinct from payment. Proposed policy: show the agreed scope and artifact version during review; revision allowance remains whatever the accepted agreement says and is not invented here.</span></figcaption>
+</figure>
+      </div>
+    </section>
+
+    <section class="domain" id="deal-chain" aria-labelledby="chain-title">
+      <div class="domain-head">
+        <div><h2 id="chain-title">Deal Chain coordination</h2><p>Named combinations use overlapping partner thumbnails. Execution keeps readable, independent slots and actual prerequisites. <a href="deal-chain-combination-preview.html">Open the navy-theme combination preview</a>.</p></div>
+        <span class="domain-count">3 states</span>
+      </div>
+      <div class="screens">
+        <figure class="screen-spec">
+          <div class="phone">
+            <div class="status"><span>3:30</span><span>Deal Chain</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Choose a partner set<small>Cool Again · aircon repair</small></h3></header>
+            <div class="app-body">
+              <div style="display:flex;align-items:center;justify-content:center;height:180px;padding:15px">
+                <img src="../photos/ac-capacitor.jpg" alt="Replacement capacitor" style="width:110px;height:110px;object-fit:cover;border:5px solid white;border-radius:50%;transform:translateY(12px) rotate(-10deg)">
+                <img src="../photos/courier.jpg" alt="Courier service" style="width:140px;height:140px;object-fit:cover;border:5px solid white;border-radius:50%;margin-left:-36px;z-index:2;transform:translateY(-8px) rotate(8deg)">
+                <img src="../photos/ac-clean.jpg" alt="Aircon service" style="width:108px;height:108px;object-fit:cover;border:5px solid white;border-radius:50%;margin-left:-36px;transform:translateY(20px) rotate(-5deg)">
+              </div>
+              <h4 style="margin:0;text-align:center;font-size:24px">Cool Again</h4>
+              <p class="small soft" style="margin:0;text-align:center">Replacement part, local delivery and fitting.</p>
+              <div class="panel panel-pad">
+                <div class="money-line"><span>Tagudin Hardware</span><strong>₱180</strong></div>
+                <div class="money-line"><span>Danny Express</span><strong>₱80</strong></div>
+                <div class="money-line"><span>Kuya Ben</span><strong>₱850</strong></div>
+              </div>
+              <p class="hint">3 independent orders and payments. Partners are not booked yet.</p>
+            </div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Review partner agreements</button></div>
+          </div>
+          <figcaption><strong>Named combination · overlapping thumbnails</strong><span>Customer · illustrative name and quotes, before booking.</span><a href="deal-chain-combination-preview.html">View the focused navy-theme preview</a></figcaption>
+        </figure>
+
+        <figure class="screen-spec" id="active-chain">
+          <div class="phone">
+            <div class="status"><span>4:12</span><span>#DC-892</span></div>
+            <header class="app-top"><span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span><h3>Breaker replacement<small>3 independent orders</small></h3><span class="icon-button"><svg class="ico"><use href="#i-chat"/></svg></span></header>
+            <div class="app-body"><article class="chain-slot"><span class="avatar"><svg class="ico"><use href="#i-store"/></svg></span><div><div class="split"><h4>Mang Jose Hardware</h4><span class="state ok">Collected</span></div><p>20A breaker collected at 4:04 · #ORD-901</p><div class="chain-meta"><span class="state ok">Handoff recorded</span><span class="state wait">Cash due</span></div></div></article><div class="dependency"><svg class="ico ico-sm"><use href="#i-arrow"/></svg>Ready item unlocks pickup</div><article class="chain-slot"><span class="avatar blue"><svg class="ico"><use href="#i-truck"/></svg></span><div><div class="split"><h4>Danny Express</h4><span class="state info">In transit</span></div><p>Picked up 4:04 · arriving around 4:20 · #ORD-902</p><div class="chain-meta"><span class="state info">Custody accepted</span><span class="state neutral">₱80 separate</span></div></div></article><div class="dependency"><svg class="ico ico-sm"><use href="#i-arrow"/></svg>Delivery unlocks installation start</div><article class="chain-slot"><span class="avatar mango"><svg class="ico"><use href="#i-wrench"/></svg></span><div><div class="split"><h4>Kuya Ben</h4><span class="state wait">Waiting</span></div><p>On site · cannot start until breaker arrives · #ORD-903</p><div class="chain-meta"><span class="state neutral">Work not started</span><span class="state neutral">Payment not due</span></div></div></article></div>
+            <div class="dock"><button type="button" class="btn btn-primary" data-specimen disabled>Open delivery order</button><button type="button" class="btn btn-quiet" data-specimen disabled>Replace a partner</button></div>
+          </div>
+          <figcaption><strong>Active chain slots</strong><span>Coordinator · each child keeps independent Work and payment truth.</span></figcaption>
+        </figure>
+<figure class="screen-spec" id="op-chain-replacement-needed" data-domain="deal-chain">
+  <div class="phone">
+    <div class="status"><span>3:17</span><span>#DC-904</span></div>
+    <header class="app-top">
+      <span class="icon-button"><svg class="ico"><use href="#i-back"/></svg></span>
+      <h3>Breaker replacement<small>Deal Chain · partner coordination</small></h3>
+    </header>
+    <div class="app-body">
+      <div class="chain-slot">
+        <span class="avatar"><svg class="ico"><use href="#i-store"/></svg></span>
+        <div><div class="split"><h4>Mang Jose Hardware</h4><span class="state ok">Completed</span></div><p>Breaker collected by Maria · child #ORD-2710</p><div class="chain-meta"><span class="state ok">Cash acknowledged</span><span class="state neutral">History preserved</span></div></div>
+      </div>
+      <div class="dependency"><svg class="ico ico-sm"><use href="#i-arrow"/></svg>Completed predecessor remains recorded</div>
+      <div class="chain-slot">
+        <span class="avatar blue"><svg class="ico"><use href="#i-truck"/></svg></span>
+        <div><div class="split"><h4>Danny Express · delivery</h4><span class="state bad">Replacement needed</span></div><p>Child #ORD-2711 · withdrew before collecting from Maria</p><div class="chain-meta"><span class="state neutral">No replacement bound</span></div></div>
+      </div>
+      <div class="dependency"><svg class="ico ico-sm"><use href="#i-arrow"/></svg>Installation waits for delivery at site</div>
+      <div class="chain-slot">
+        <span class="avatar mango"><svg class="ico"><use href="#i-wrench"/></svg></span>
+        <div><div class="split"><h4>Ramon · installation</h4><span class="state wait">Blocked</span></div><p>Child #ORD-2712 · needs delivered breaker at site</p><div class="chain-meta"><span class="state wait">Waiting for site receipt</span><span class="state neutral">Not cancelled</span></div></div>
+      </div>
+      <div class="panel panel-pad">
+        <div class="split"><strong class="small">Next coordination step</strong><span class="state info">Choose separately</span></div>
+        <p class="small soft" style="margin:7px 0 0">Find a delivery partner for review. The existing delivery child stays unresolved until parties decide what happens to that order.</p>
+      </div>
+    </div>
+    <div class="dock">
+      <button type="button" class="btn btn-primary" data-specimen disabled>Find delivery options</button>
+      <button type="button" class="btn btn-outline" data-specimen disabled>Review affected child order</button>
+    </div>
+  </div>
+  <figcaption><strong>Coordinator · delivery child needs replacement</strong><span>Completed parts child is preserved; installation waits for site receipt. Proposed policy: replacement selection never auto-binds a provider or erases the previous agreement.</span></figcaption>
+</figure>
+      </div>
+    </section>
+    <section class="readiness" id="readiness" aria-labelledby="readiness-title">
+      <h2 id="readiness-title">Ready for visual review—not production activation</h2>
+      <dl>
+        <dt>What this validates</dt>
+        <dd>Hierarchy, language, actor responsibilities, shape-specific fulfillment and the distinction between agreement, Work and money.</dd>
+        <dt>What remains proposed</dt>
+        <dd>Amendment approval, cancellation consequences, appointment remedies and replacement handling. A specimen does not settle policy.</dd>
+        <dt>What this does not prove</dt>
+        <dd>Authorization, atomic capacity, idempotency, evidence access, durable notices, financial reconciliation or end-to-end application behavior.</dd>
+        <dt>Before implementation</dt>
+        <dd>Validate the screens, resolve policy in the existing domain contracts, then implement each cross-role journey against authoritative queries and commands.</dd>
+      </dl>
+    </section>
+  </main>
+</div>
+</body>
+</html>

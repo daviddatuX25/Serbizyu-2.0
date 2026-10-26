@@ -5,15 +5,16 @@ import { ArrowLeft } from 'lucide-react';
 interface AuthShellProps {
     title: string;
     subtitle?: string;
+    badge?: ReactNode;
     returnTo?: string;
     maxWidth?: 'narrow' | 'wide';
     children: ReactNode;
 }
 
-
 export function AuthShell({
     title,
     subtitle = 'Enter your details below to continue.',
+    badge,
     returnTo = '/',
     maxWidth = 'narrow',
     children,
@@ -23,7 +24,10 @@ export function AuthShell({
         if (returnTo.startsWith('/')) {
             pathname = returnTo.split('?')[0].split('#')[0];
         } else {
-            pathname = new URL(returnTo, typeof window !== 'undefined' ? window.location.origin : 'http://localhost').pathname;
+            pathname = new URL(
+                returnTo,
+                typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+            ).pathname;
         }
     } catch {
         pathname = returnTo;
@@ -38,14 +42,19 @@ export function AuthShell({
             if (returnTo.startsWith('/')) {
                 backHref = returnTo;
             } else {
-                const parsed = new URL(returnTo, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+                const parsed = new URL(
+                    returnTo,
+                    typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+                );
                 backHref = parsed.pathname + parsed.search + parsed.hash;
             }
         } catch {
             backHref = returnTo;
         }
     }
-    const backLabel = isReturningToListingBuilder ? 'Back to listing builder' : 'Back to Marketplace';
+    const backLabel = isReturningToListingBuilder
+        ? 'Back to listing builder'
+        : 'Back to Marketplace';
     return (
         <div className="flex min-h-screen flex-col bg-[#F8FAFC]">
             {/* Minimalist Topbar matching DesktopGlobalNav */}
@@ -92,10 +101,12 @@ export function AuthShell({
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgba(15,47,88,0.06)] sm:p-8">
                         {/* Title Block */}
                         <div className="mb-6">
-                            <div className="inline-flex items-center gap-1.5 rounded-md bg-[#EBF2FA] px-2 py-0.5 text-[11px] font-bold text-[#0F2F58]">
-                                <span>Tagudin Citizen Identity</span>
-                            </div>
-                            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
+                            {badge ? (
+                                <div className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-[#EBF2FA] px-2 py-0.5 text-[11px] font-bold text-[#0F2F58]">
+                                    {typeof badge === 'string' ? <span>{badge}</span> : badge}
+                                </div>
+                            ) : null}
+                            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
                                 {title}
                             </h1>
                             {subtitle && (
@@ -106,7 +117,6 @@ export function AuthShell({
                         {/* Content / Forms */}
                         {children}
                     </div>
-
                 </div>
             </main>
         </div>

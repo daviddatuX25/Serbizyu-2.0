@@ -165,6 +165,12 @@ External Digital Proof allows parties to use GCash, Maya, bank transfer, or anot
   - `superseded`
 - Duplicate/reused references, amount mismatches, altered evidence, and suspicious repeated relationships are review signals.
 
+- P2P proof is kept on private storage in quarantine until the registered scanner marks its JPEG, PNG, or WebP contents clean. Only clean proof may be submitted for recipient review.
+- The recipient may verify receipt or reject a submitted proof; rejection allows the payer to submit an image replacement without changing the accepted obligation amount or public reference.
+- A reported amount mismatch atomically creates a TrustSupport case and payment dispute, and places a hold on that payment obligation only. It does not pause or rewrite Order, Work, or sibling obligations.
+- Only authorized staff may resolve a mismatch, either recording settlement or releasing the obligation back to due. A receipt image alone is not verification.
+- Money History is grouped by currency and viewer role; its title comes from the immutable accepted-terms snapshot, and amounts remain in minor units.
+
 ### 7.2 Required user-facing copy
 
 Before confirmation and on the resulting record:

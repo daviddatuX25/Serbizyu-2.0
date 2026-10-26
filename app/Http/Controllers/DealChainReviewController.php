@@ -75,7 +75,7 @@ final class DealChainReviewController
             if ($request->wantsJson()) {
                 return response()->json([
                     'error' => [
-                        'code' => $e->code,
+                        'code' => $e->envelope->code,
                         'message' => $e->getMessage(),
                     ],
                 ], $e->status);

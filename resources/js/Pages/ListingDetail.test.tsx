@@ -3,21 +3,22 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import ListingDetail from './ListingDetail';
 import type { HomeProps, ListingRecord } from '../types';
 
+const { visit } = vi.hoisted(() => ({ visit: vi.fn() }));
+
 vi.mock('@inertiajs/react', () => ({
     Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
         <a href={href} {...props}>
             {children}
         </a>
     ),
-    router: {
-        visit: vi.fn(),
-    },
+    router: { visit },
 }));
 
 describe('ListingDetail Page', () => {
     afterEach(() => {
         cleanup();
         window.localStorage.clear();
+        visit.mockClear();
     });
 
     const mockListing: ListingRecord = {
@@ -44,85 +45,161 @@ describe('ListingDetail Page', () => {
     };
 
     function getDesktop(container: HTMLElement): HTMLElement {
-        const el = container.querySelector('.hidden.lg\\:flex')?.closest('div');
-        return (el || container) as HTMLElement;
+        return (container.querySelector('main') || container) as HTMLElement;
     }
 
-    it('renders listing details, package tier options, and starting rate', () => {
+    it('renders the seller price and does not claim an escrow guarantee', () => {
         const { container } = render(<ListingDetail {...baseProps} />);
         const desktop = getDesktop(container as HTMLElement);
 
-        expect(within(desktop).getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThan(
-            0,
-        );
+        expect(within(desktop).getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThan(0);
         expect(within(desktop).getAllByText('₱450.00').length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Kuya Ben AC/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Choose Package Tier/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/1 Unit Standard/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Tiwala Escrow Protection/i).length).toBeGreaterThan(0);
+        expect(within(desktop).getByText(/Choose service package/i)).toBeTruthy();
+        expect(within(desktop).queryByText(/Tiwala Escrow Protection/i)).toBeNull();
     });
 
-    it('updates total escrow amount and renders live pipeline when turnkey deal chain preset is selected', () => {
-        const { container } = render(<ListingDetail {...baseProps} />);
-        const desktop = getDesktop(container as HTMLElement);
+    it('renders authored Work Specification steps and saved Deal Chain partner slots', () => {
+        const listing: ListingRecord = {
+            ...mockListing,
+            listing_version_id: 'service-version-3',
+            work_specification: {
+                nodes: [{
+                    id: 'inspect',
+                    ordinal: 1,
+                    title: 'Inspect wheel',
+                    description: 'Check for visible damage.',
+                    target_duration_minutes: 30,
+                    required_proofs: ['photo_proof'],
+                    clearance_mode: 'customer_approval',
+                    approval_method: 'app_confirm',
+                }],
+            },
+            deal_chain_combinations: [{
+                id: 'combo-fit',
+                title: 'Repair and fitting',
+                isDefault: true,
+                nodes: [{
+                    id: 'slot-rider',
+                    role: 'delivery',
+                    title: 'Local rider',
+                    sub: 'Active rider listing',
+                    listingId: 'rider-listing-1',
+                }],
+            }],
+        };
+        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={listing} />);
+        const main = container.querySelector('main') as HTMLElement;
 
-        // Initially Labor Only (₱450.00)
-        expect(within(desktop).getAllByText('₱450.00').length).toBeGreaterThan(0);
-
-        // Click "Turnkey Parts"
-        const turnkeyBtn = within(desktop).getByRole('button', { name: /Turnkey Parts/i });
-        fireEvent.click(turnkeyBtn);
-
-        // Renders Connected Deal Chain Flow & Partner Banners
-        expect(within(desktop).getAllByText(/Connected Deal Chain Flow/i).length).toBeGreaterThan(
-            0,
-        );
-        expect(within(desktop).getAllByText(/Change Courier ▾/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Change Store ▾/i).length).toBeGreaterThan(0);
+        expect(within(main).getByText('Work Specification')).toBeTruthy();
+        expect(within(main).getByText('Inspect wheel')).toBeTruthy();
+        fireEvent.click(within(main).getByRole('button', { name: 'Details' }));
+        expect(within(main).getByText(/Target duration: 30 min/)).toBeTruthy();
+        expect(within(main).getByText(/Required proof: photo proof/)).toBeTruthy();
+        expect(within(main).getByText(/Clearance: customer approval/)).toBeTruthy();
+        expect(within(main).getByText(/Approval: app confirm/)).toBeTruthy();
+        expect(within(main).getByText('Repair and fitting')).toBeTruthy();
+        expect(within(main).getByText('Active rider listing')).toBeTruthy();
+        expect(within(main).queryByText(/Tiwala Escrow Protection|Turnkey Parts|Safety Audit/)).toBeNull();
+        fireEvent.click(within(main).getByRole('button', { name: /Book Service Now/i }));
+        const booking = new URL(visit.mock.calls[0][0], 'http://localhost');
+        expect(booking.searchParams.get('listing_version_id')).toBe('service-version-3');
+        expect(booking.searchParams.get('deal_chain_combination_id')).toBe('combo-fit');
     });
 
-    it('opens partner substitution modal and substitutes selected partner', () => {
-        const { container } = render(<ListingDetail {...baseProps} />);
-        const desktop = getDesktop(container as HTMLElement);
+    it('offers only seller-authored add-ons and includes their ids and prices in booking and Picks', () => {
+        const listing: ListingRecord = {
+            ...mockListing,
+            listing_version_id: 'service-version-7',
+            addons: [{
+                id: 'addon-rush',
+                code: 'rush_priority',
+                title: 'Rush scheduling',
+                description: 'Request a priority appointment.',
+                price_amount_minor: 10000,
+                currency: 'PHP',
+                partner_role: 'technician',
+                partner_fixture_keys: [],
+                status: 'available',
+                settlement_mode: 'independent_provider_agreement',
+            }],
+        };
+        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={listing} />);
+        const main = container.querySelector('main') as HTMLElement;
+        fireEvent.click(within(main).getByRole('checkbox', { name: /Rush scheduling/i }));
+        fireEvent.click(within(main).getByRole('button', { name: /Book Service Now/i }));
 
-        // Switch to Turnkey Parts to show courier banner
-        fireEvent.click(within(desktop).getByRole('button', { name: /Turnkey Parts/i }));
+        const booking = new URL(visit.mock.calls[0][0], 'http://localhost');
+        expect(booking.searchParams.getAll('addon_ids[]')).toEqual(['addon-rush']);
+        expect(booking.searchParams.get('listing_version_id')).toBe('service-version-7');
 
-        // Click "Change Courier ▾"
-        const changeCourierBtn = within(desktop).getByRole('button', { name: /Change Courier ▾/i });
-        fireEvent.click(changeCourierBtn);
-
-        // Substitution Drawer opens
-        expect(screen.getByText('Select Courier Partner')).toBeTruthy();
-        expect(screen.getByText(/Kuya Danny Tricycle Cargo/i)).toBeTruthy();
-
-        // Select Kuya Danny Tricycle Cargo
-        fireEvent.click(screen.getByText(/Kuya Danny Tricycle Cargo/i));
-
-        // Slot banner reflects substituted partner
-        expect(within(desktop).getAllByText(/Kuya Danny Tricycle Cargo/i).length).toBeGreaterThan(
-            0,
-        );
+        fireEvent.click(within(main).getByRole('button', { name: /Add to Citizen Picks/i }));
+        const saved = JSON.parse(window.localStorage.getItem('serbizyu.picks') ?? '[]');
+        expect(saved[0]).toMatchObject({ addon_ids: ['addon-rush'], listing_version_id: 'service-version-7' });
     });
+    it('selects a stocked authored variant and forwards its identifiers and quantity to booking and Picks', () => {
+        const listing: ListingRecord = {
+            id: 'listing-product-1',
+            title: 'Olive Oil',
+            listing_type: 'product',
+            listing_version_id: 'version-4',
+            variants: [
+                {
+                    id: 'bottle-250',
+                    name: '250 ml',
+                    price_amount_minor: 12000,
+                    is_default: true,
+                    availability: { available: 4, availability_status: 'open' },
+                },
+                {
+                    id: 'bottle-500',
+                    name: '500 ml',
+                    price_amount_minor: 22000,
+                    is_default: false,
+                    availability: { available: 0, availability_status: 'out_of_stock' },
+                },
+            ],
+        };
+        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={listing} />);
+        const main = container.querySelector('main') as HTMLElement;
 
-    it('toggles package customizer and adds rush priority enhancements', () => {
-        const { container } = render(<ListingDetail {...baseProps} />);
-        const desktop = getDesktop(container as HTMLElement);
+        expect(within(main).getByRole('button', { name: /250 ml.*₱120\.00.*4 available/i })).toBeTruthy();
+        expect((within(main).getByRole('button', { name: /500 ml.*₱220\.00.*0 available/i }) as HTMLButtonElement).disabled).toBe(true);
+        expect(within(main).queryByText(/1 Unit Standard|Choose Package Tier/)).toBeNull();
 
-        // Click customize service options toggle
-        const customizerToggle = within(desktop).getByRole('button', {
-            name: /Customize service speed/i,
+        fireEvent.click(within(main).getByRole('button', { name: 'Increase quantity' }));
+        fireEvent.click(within(main).getByRole('button', { name: /Buy Product Now/i }));
+        expect(visit).toHaveBeenCalledTimes(1);
+        const booking = new URL(visit.mock.calls[0][0], 'http://localhost');
+        expect(booking.searchParams.get('variant_id')).toBe('bottle-250');
+        expect(booking.searchParams.get('listing_version_id')).toBe('version-4');
+        expect(booking.searchParams.get('quantity')).toBe('2');
+
+        fireEvent.click(within(main).getByRole('button', { name: /Add to Citizen Picks/i }));
+        const saved = JSON.parse(window.localStorage.getItem('serbizyu.picks') ?? '[]');
+        expect(saved[0]).toMatchObject({
+            variant_id: 'bottle-250',
+            listing_version_id: 'version-4',
+            quantity: 2,
         });
-        fireEvent.click(customizerToggle);
-
-        // Check Fast Clean (+₱100)
-        const fastCleanCheckbox = within(desktop).getAllByRole('checkbox')[0];
-        fireEvent.click(fastCleanCheckbox);
-
-        // 450 + 100 = ₱550.00
-        expect(within(desktop).getAllByText('₱550.00').length).toBeGreaterThan(0);
     });
+    it('does not invent a product price when no authored variants exist', () => {
+        const listing: ListingRecord = {
+            ...mockListing,
+            listing_type: 'product',
+            listing_version_id: 'version-no-variants',
+            price_amount_minor: undefined,
+            variants: [],
+        };
+        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={listing} />);
+        const purchaseButtons = within(container).getAllByRole('button', { name: 'Unavailable' });
 
+        expect(purchaseButtons).toHaveLength(2);
+        purchaseButtons.forEach((button) => expect((button as HTMLButtonElement).disabled).toBe(true));
+        expect(container.textContent).not.toContain('₱0.00');
+        expect(within(container).getAllByRole('button', { name: /Add to Citizen Picks/i })
+            .every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
+        expect(visit).not.toHaveBeenCalled();
+    });
     it('updates quantity and multiplies the planning estimate', () => {
         const { container } = render(<ListingDetail {...baseProps} />);
         const desktop = getDesktop(container as HTMLElement);
@@ -250,45 +327,44 @@ describe('ListingDetail Page', () => {
         expect(within(desktop).getByText('Page 1 of 2')).toBeTruthy();
     });
 
-    it('adapts headers and specifications dynamically for product listings', () => {
+    it('renders authored product variants and product Work Specification without generated fulfillment scopes', () => {
         const productListing: ListingRecord = {
+            ...mockListing,
             id: 'product-1',
             title: 'Weekend bibingka tray',
-            description: 'Fresh warm bibingka cakes in banana leaf wrapping.',
-            category_code: 'local-food',
             listing_type: 'product',
-            status: 'active',
-            area: 'Tagudin Market',
-            owner_name: 'Auntie Tess',
-            public: true,
+            listing_version_id: 'product-version-2',
             price_amount_minor: 18000,
-            currency: 'PHP',
+            variants: [{
+                id: 'tray-six',
+                name: 'Six-piece tray',
+                price_amount_minor: 18000,
+                is_default: true,
+                availability: { available: 5, availability_status: 'open' },
+            }],
+            work_specification: {
+                nodes: [{
+                    id: 'prepare',
+                    ordinal: 1,
+                    title: 'Prepare and pack',
+                    target_duration_minutes: 25,
+                    required_proofs: ['photo_proof'],
+                    clearance_mode: 'physical_handoff',
+                    approval_method: 'presence_otp',
+                }],
+            },
         };
 
-        const { container } = render(
-            <ListingDetail {...baseProps} activeListingDetail={productListing} />,
-        );
-        const desktop = getDesktop(container as HTMLElement);
+        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={productListing} />);
+        const main = container.querySelector('main') as HTMLElement;
 
-        // Check product adaptations
-        expect(within(desktop).getAllByText('Weekend bibingka tray').length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Verified Local Product/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Solo Snack Box/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/In-Store Pickup/i).length).toBeGreaterThan(0);
-        expect(within(desktop).getAllByText(/Doorstep Delivery/i).length).toBeGreaterThan(0);
-
-        // Verified Fulfillment & Handoff Protocol for products (instead of Work Execution Pipeline)
-        expect(within(desktop).getByText('Fulfillment & Handoff Protocol')).toBeTruthy();
-        expect(within(desktop).getByText(/custody & dispatch gates/i)).toBeTruthy();
-        expect(within(desktop).getByText('Sourcing & Package Preparation')).toBeTruthy();
-        expect(within(desktop).getByText('Counter Collection & Verification')).toBeTruthy();
-        expect(within(desktop).getByText('Condition Close-Out & Release')).toBeTruthy();
-
-        // Switching to delivery updates custody gates
-        fireEvent.click(within(desktop).getByText(/Doorstep Delivery/i));
-        expect(within(desktop).getByText('Store Sourcing & Dispatch Packaging')).toBeTruthy();
-        expect(within(desktop).getByText('Courier Custody & Transit Relay')).toBeTruthy();
-        expect(within(desktop).getByText('Doorstep Arrival & Photo Confirmation')).toBeTruthy();
+        expect(within(main).getAllByText('Weekend bibingka tray').length).toBeGreaterThan(0);
+        expect(within(main).getByRole('button', { name: /Six-piece tray.*₱180\.00.*5 available/i })).toBeTruthy();
+        expect(within(main).getByText('Prepare and pack')).toBeTruthy();
+        fireEvent.click(within(main).getByRole('button', { name: 'Details' }));
+        expect(within(main).getByText(/Target duration: 25 min/)).toBeTruthy();
+        expect(within(main).getByText(/Clearance: physical handoff/)).toBeTruthy();
+        expect(within(main).queryByText(/Solo Snack Box|In-Store Pickup|Doorstep Delivery/)).toBeNull();
     });
     it('renders server-projected package tiers and milestone stages from database terms', () => {
         const customListing: ListingRecord = {
@@ -327,16 +403,29 @@ describe('ListingDetail Page', () => {
                     ],
                 },
             ],
-            milestone_stages: [
-                {
-                    title: 'Material measurement & cutting',
-                    description: 'Stage 1 · Cut specifications gate',
-                },
-                {
-                    title: 'TIG welding and structural test',
-                    description: 'Stage 2 · Weld bead penetration test',
-                },
-            ],
+            work_specification: {
+                nodes: [
+                    {
+                        id: 'measure',
+                        ordinal: 1,
+                        title: 'Material measurement & cutting',
+                        description: 'Measure and cut material.',
+                        duration_label: '45 minutes',
+                        required_proofs: ['photo_proof'],
+                        control_mode: 'provider_advance',
+                        approval_method: 'none',
+                    },
+                    {
+                        id: 'weld',
+                        ordinal: 2,
+                        title: 'TIG welding and structural test',
+                        description: 'Check weld bead penetration.',
+                        required_proofs: ['metric_reading'],
+                        control_mode: 'customer_confirm',
+                        approval_method: 'app_confirm',
+                    },
+                ],
+            },
         };
 
         const { container } = render(
@@ -350,12 +439,13 @@ describe('ListingDetail Page', () => {
         expect(within(desktop).getByText('Hinge welding & alignment')).toBeTruthy();
         expect(within(desktop).getByText('Anti-rust primer coat')).toBeTruthy();
 
-        // Server-projected milestone stages are rendered in compact stepper!
         expect(within(desktop).getByText('Material measurement & cutting')).toBeTruthy();
 
-        // Expand pipeline details
         const detailsBtn = within(desktop).getByRole('button', { name: /Details/i });
         fireEvent.click(detailsBtn);
-        expect(within(desktop).getByText('Stage 1 · Cut specifications gate')).toBeTruthy();
+        expect(within(desktop).getByText('Target duration: 45 minutes')).toBeTruthy();
+        expect(within(desktop).getByText(/Required proof: photo proof/)).toBeTruthy();
+        expect(within(desktop).getByText(/Clearance: provider advance/)).toBeTruthy();
+        expect(within(desktop).getByText(/Approval: app confirm/)).toBeTruthy();
     });
 });

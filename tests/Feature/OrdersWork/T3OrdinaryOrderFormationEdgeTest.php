@@ -70,6 +70,24 @@ function t3EdgeActiveListingFixture(string $listingType = 'service'): array
             'published_at' => now(),
             'updated_at' => now(),
         ]);
+    if ($listingType === 'product') {
+        $terms = json_decode((string) DB::table('listing_versions')
+            ->where('listing_id', $listing['id'])
+            ->where('version_number', (int) $listing['current_version'])
+            ->value('terms'), true) ?: [];
+        $terms['variants'] = [[
+            'id' => 'variant-edge-default',
+            'resource_key' => 'edge-default-stock',
+            'name' => 'Default product variant',
+            'price_amount_minor' => 25000,
+            'currency' => 'PHP',
+            'is_default' => true,
+        ]];
+        DB::table('listing_versions')
+            ->where('listing_id', $listing['id'])
+            ->where('version_number', (int) $listing['current_version'])
+            ->update(['terms' => json_encode($terms, JSON_THROW_ON_ERROR)]);
+    }
 
     $listing['expected_version'] = (int) DB::table('listings')->where('id', $listing['id'])->value('current_version');
 
@@ -128,7 +146,120 @@ it('rejects propose when the listing version is already stale', function (): voi
     expect(DB::table('orders')->where('buyer_user_id', $fx['buyer']->id)->count())->toBe(0);
 });
 
-it('commits capacity during finalization and replays without consuming it twice', function (): void {
+it('persists a selected product variant at its server price and keeps its listing version and quantity', function (): void {
+    t3EdgePgsqlOrSkip();
+
+    $fx = t3EdgeActiveListingFixture('product');
+    $version = DB::table('listing_versions')
+        ->where('listing_id', $fx['listing']['id'])
+        ->where('version_number', (int) $fx['listing']['expected_version'])
+        ->first();
+    $terms = json_decode((string) $version->terms, true) ?: [];
+    $terms['variants'] = [[
+        'id' => 'variant-blue',
+        'resource_key' => 'blue-finish',
+        'name' => 'Blue finish',
+        'price_amount_minor' => 18400,
+        'is_default' => false,
+    ]];
+    DB::table('listing_versions')->where('id', $version->id)->update([
+        'terms' => json_encode($terms, JSON_THROW_ON_ERROR),
+    ]);
+    app(CapacityReservationService::class)->ensureBucket(
+        listingId: $fx['listing']['id'],
+        listingVersionId: (string) $version->id,
+        capacityType: 'quantity',
+        quantity: 5,
+        correlationId: $fx['correlation_id'],
+        resourceKey: 'blue-finish',
+    );
+
+    $proposed = app(SubmitOrderProposal::class)->handle(
+        buyerUserId: $fx['buyer']->id,
+        listingId: $fx['listing']['id'],
+        expectedListingVersion: (int) $fx['listing']['expected_version'],
+        idempotencyKey: 'propose-variant-edge-1',
+        correlationId: $fx['correlation_id'],
+        input: [
+            'variant_id' => 'variant-blue',
+            'listing_version_id' => (string) $version->id,
+            'quantity' => 2,
+            'amount_minor' => 1,
+            'currency' => 'USD',
+        ],
+    );
+    $proposal = json_decode((string) DB::table('order_parties')
+        ->where('order_id', $proposed['order_id'])
+        ->where('party_type', 'buyer')
+        ->value('scope'), true)['proposal'];
+    expect($proposal)->toMatchArray([
+        'variant_id' => 'variant-blue',
+        'package_id' => null,
+        'listing_version_id' => (string) $version->id,
+        'quantity' => 2,
+        'unit_amount_minor' => 18400,
+        'amount_minor' => 36800,
+        'currency' => 'PHP',
+    ]);
+});
+it('commits the exact selected variant capacity resource for the requested quantity', function (): void {
+    t3EdgePgsqlOrSkip();
+    $fx = t3EdgeActiveListingFixture('product');
+    $version = DB::table('listing_versions')
+        ->where('listing_id', $fx['listing']['id'])
+        ->where('version_number', (int) $fx['listing']['expected_version'])
+        ->first();
+    $terms = json_decode((string) $version->terms, true) ?: [];
+    $terms['variants'] = [[
+        'id' => 'variant-blue',
+        'resource_key' => 'variant-blue',
+        'name' => 'Blue finish',
+        'price_amount_minor' => 18400,
+        'is_default' => false,
+    ]];
+    DB::table('listing_versions')->where('id', $version->id)->update([
+        'terms' => json_encode($terms, JSON_THROW_ON_ERROR),
+    ]);
+
+    $bucket = app(CapacityReservationService::class)->ensureBucket(
+        listingId: $fx['listing']['id'],
+        listingVersionId: (string) $version->id,
+        capacityType: 'quantity',
+        quantity: 5,
+        correlationId: $fx['correlation_id'],
+        resourceKey: 'variant-blue',
+    );
+    $proposed = app(SubmitOrderProposal::class)->handle(
+        buyerUserId: $fx['buyer']->id,
+        listingId: $fx['listing']['id'],
+        expectedListingVersion: (int) $fx['listing']['expected_version'],
+        idempotencyKey: 'propose-variant-capacity-1',
+        correlationId: $fx['correlation_id'],
+        input: [
+            'variant_id' => 'variant-blue',
+            'listing_version_id' => (string) $version->id,
+            'quantity' => 2,
+        ],
+    );
+    $finalized = app(FinalizeOrderAgreement::class)->handle(
+        actorUserId: $fx['provider']->id,
+        orderId: $proposed['order_id'],
+        expectedOrderVersion: (int) $proposed['version'],
+        idempotencyKey: 'finalize-variant-capacity-1',
+        correlationId: $fx['correlation_id'],
+    );
+
+    $reservation = DB::table('listing_capacity_reservations')
+        ->where('order_id', $proposed['order_id'])
+        ->first();
+    expect($finalized['amount_minor'])->toBe(36800)
+        ->and($reservation)->not->toBeNull()
+        ->and((string) $reservation->listing_capacity_id)->toBe($bucket['id'])
+        ->and((int) $reservation->quantity)->toBe(2)
+        ->and((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(3)
+        ->and((int) DB::table('payment_obligations')->where('order_id', $proposed['order_id'])->value('amount_minor'))->toBe(36800);
+});
+it('holds capacity at proposal time and commits it only once on acceptance replay', function (): void {
     t3EdgePgsqlOrSkip();
 
     $fx = t3EdgeActiveListingFixture('product');
@@ -144,6 +275,7 @@ it('commits capacity during finalization and replays without consuming it twice'
         capacityType: 'quantity',
         quantity: 2,
         correlationId: $fx['correlation_id'],
+        resourceKey: 'edge-default-stock',
     );
 
     $proposed = app(SubmitOrderProposal::class)->handle(
@@ -155,18 +287,18 @@ it('commits capacity during finalization and replays without consuming it twice'
         input: ['amount_minor' => 10000, 'currency' => 'PHP', 'quantity' => 1],
     );
 
-    expect(DB::table('listing_capacity_reservations')->count())->toBe(0)
-        ->and((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(2);
+    expect(DB::table('listing_capacity_reservations')->where('id', $proposed['capacity_reservation_id'])->value('status'))->toBe('held')
+        ->and((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(1);
 
     $finalized = app(FinalizeOrderAgreement::class)->handle(
-        actorUserId: $fx['buyer']->id,
+        actorUserId: $fx['provider']->id,
         orderId: $proposed['order_id'],
         expectedOrderVersion: (int) $proposed['version'],
         idempotencyKey: 'finalize-capacity-edge-1',
         correlationId: $fx['correlation_id'],
     );
     $replayed = app(FinalizeOrderAgreement::class)->handle(
-        actorUserId: $fx['buyer']->id,
+        actorUserId: $fx['provider']->id,
         orderId: $proposed['order_id'],
         expectedOrderVersion: (int) $proposed['version'],
         idempotencyKey: 'finalize-capacity-edge-1',
@@ -222,6 +354,7 @@ it('rolls back committed capacity when finalization later fails', function (): v
         capacityType: 'quantity',
         quantity: 1,
         correlationId: $fx['correlation_id'],
+        resourceKey: 'edge-default-stock',
     );
 
     $proposed = app(SubmitOrderProposal::class)->handle(
@@ -235,7 +368,7 @@ it('rolls back committed capacity when finalization later fails', function (): v
 
     t3EdgeExpectOrderError(
         fn () => app(FinalizeOrderAgreement::class)->handle(
-            actorUserId: $fx['buyer']->id,
+            actorUserId: $fx['provider']->id,
             orderId: $proposed['order_id'],
             expectedOrderVersion: ((int) $proposed['version']) + 1,
             idempotencyKey: 'finalize-rollback-edge-1',
@@ -244,9 +377,10 @@ it('rolls back committed capacity when finalization later fails', function (): v
         'VERSION_CONFLICT',
     );
 
-    expect((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(1)
-        ->and(DB::table('listing_capacity_reservations')->where('order_id', $proposed['order_id'])->count())->toBe(0)
-        ->and(DB::table('orders')->where('id', $proposed['order_id'])->value('status'))->toBe('pending_acceptance')
+    expect((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(0)
+        ->and(DB::table('listing_capacity_reservations')->where('id', $proposed['capacity_reservation_id'])->value('status'))->toBe('held')
+        ->and(DB::table('listing_capacity_reservations')->where('id', $proposed['capacity_reservation_id'])->value('order_id'))->toBeNull()
+        ->and(DB::table('orders')->where('id', $proposed['order_id'])->value('status'))->toBe('proposed')
         ->and(DB::table('order_terms_snapshots')->where('order_id', $proposed['order_id'])->count())->toBe(0)
         ->and(DB::table('work_instances')->where('order_id', $proposed['order_id'])->count())->toBe(0)
         ->and(DB::table('payment_obligations')->where('order_id', $proposed['order_id'])->count())->toBe(0);
@@ -292,7 +426,7 @@ it('rejects reused finalize idempotency keys with a different fingerprint', func
     );
 
     app(FinalizeOrderAgreement::class)->handle(
-        actorUserId: $fx['buyer']->id,
+        actorUserId: $fx['provider']->id,
         orderId: $proposed['order_id'],
         expectedOrderVersion: (int) $proposed['version'],
         idempotencyKey: 'finalize-fp-1',
@@ -301,7 +435,7 @@ it('rejects reused finalize idempotency keys with a different fingerprint', func
 
     t3EdgeExpectOrderError(
         fn () => app(FinalizeOrderAgreement::class)->handle(
-            actorUserId: $fx['buyer']->id,
+            actorUserId: $fx['provider']->id,
             orderId: $proposed['order_id'],
             expectedOrderVersion: ((int) $proposed['version']) + 99,
             idempotencyKey: 'finalize-fp-1',
@@ -311,7 +445,7 @@ it('rejects reused finalize idempotency keys with a different fingerprint', func
     );
 });
 
-it('promotes a legacy held reservation on finalize without a second decrement', function (): void {
+it('commits the exact proposal-time hold without a second capacity decrement', function (): void {
     t3EdgePgsqlOrSkip();
 
     $fx = t3EdgeActiveListingFixture('product');
@@ -319,55 +453,27 @@ it('promotes a legacy held reservation on finalize without a second decrement', 
         ->where('listing_id', $fx['listing']['id'])
         ->where('version_number', (int) $fx['listing']['expected_version'])
         ->value('id');
-
-    $capacity = app(CapacityReservationService::class);
-    $bucket = $capacity->ensureBucket(
+    $bucket = app(CapacityReservationService::class)->ensureBucket(
         listingId: $fx['listing']['id'],
         listingVersionId: $versionId,
         capacityType: 'quantity',
         quantity: 5,
         correlationId: $fx['correlation_id'],
+        resourceKey: 'edge-default-stock',
     );
-
-    // Pre-hold 2 units
-    $held = $capacity->hold(
-        listingCapacityId: $bucket['id'],
-        quantity: 2,
-        commandScope: 'legacy.hold:'.$fx['buyer']->id,
-        idempotencyKey: 'legacy-hold-key-1',
-        correlationId: $fx['correlation_id'],
-    );
-
-    expect((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(3);
-
     $proposed = app(SubmitOrderProposal::class)->handle(
         buyerUserId: $fx['buyer']->id,
         listingId: $fx['listing']['id'],
         expectedListingVersion: (int) $fx['listing']['expected_version'],
         idempotencyKey: 'propose-legacy-hold-1',
         correlationId: $fx['correlation_id'],
-        input: ['amount_minor' => 25000, 'currency' => 'PHP', 'quantity' => 2],
+        input: ['quantity' => 2],
     );
 
-    // Attach legacy held capacity reservation ID to proposal
-    DB::table('order_parties')
-        ->where('order_id', $proposed['order_id'])
-        ->where('party_type', 'buyer')
-        ->update([
-            'scope' => json_encode([
-                'proposal' => [
-                    'amount_minor' => 25000,
-                    'currency' => 'PHP',
-                    'quantity' => 2,
-                    'listing_version_id' => $versionId,
-                    'listing_version_number' => (int) $fx['listing']['expected_version'],
-                    'capacity_reservation_id' => $held['reservation_id'],
-                ],
-            ]),
-        ]);
-
+    expect((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(3)
+        ->and(DB::table('listing_capacity_reservations')->where('id', $proposed['capacity_reservation_id'])->value('status'))->toBe('held');
     $finalized = app(FinalizeOrderAgreement::class)->handle(
-        actorUserId: $fx['buyer']->id,
+        actorUserId: $fx['provider']->id,
         orderId: $proposed['order_id'],
         expectedOrderVersion: (int) $proposed['version'],
         idempotencyKey: 'finalize-legacy-hold-1',
@@ -375,14 +481,13 @@ it('promotes a legacy held reservation on finalize without a second decrement', 
     );
 
     expect($finalized['status'])->toBe('accepted')
-        ->and($finalized['capacity_reservation_id'])->toBe($held['reservation_id'])
-        // Remaining quantity MUST still be 3 (not 1 - no second decrement!)
+        ->and($finalized['capacity_reservation_id'])->toBe($proposed['capacity_reservation_id'])
         ->and((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(3)
-        ->and(DB::table('listing_capacity_reservations')->where('id', $held['reservation_id'])->value('status'))->toBe('committed')
-        ->and(DB::table('listing_capacity_reservations')->where('id', $held['reservation_id'])->value('order_id'))->toBe($proposed['order_id']);
+        ->and(DB::table('listing_capacity_reservations')->where('id', $proposed['capacity_reservation_id'])->value('status'))->toBe('committed')
+        ->and(DB::table('listing_capacity_reservations')->where('id', $proposed['capacity_reservation_id'])->value('order_id'))->toBe($proposed['order_id']);
 });
 
-it('rejects finalization with ambiguous or resource key capacity buckets', function (): void {
+it('rejects an unavailable selected product resource before creating the Order', function (): void {
     t3EdgePgsqlOrSkip();
 
     $fx = t3EdgeActiveListingFixture('product');
@@ -390,38 +495,29 @@ it('rejects finalization with ambiguous or resource key capacity buckets', funct
         ->where('listing_id', $fx['listing']['id'])
         ->where('version_number', (int) $fx['listing']['expected_version'])
         ->value('id');
-
-    $capacity = app(CapacityReservationService::class);
-    // Create a bucket with resource_key
-    $capacity->ensureBucket(
+    app(CapacityReservationService::class)->ensureBucket(
         listingId: $fx['listing']['id'],
         listingVersionId: $versionId,
         capacityType: 'quantity',
         quantity: 2,
         correlationId: $fx['correlation_id'],
-        resourceKey: 'specific_resource_1',
-    );
-
-    $proposed = app(SubmitOrderProposal::class)->handle(
-        buyerUserId: $fx['buyer']->id,
-        listingId: $fx['listing']['id'],
-        expectedListingVersion: (int) $fx['listing']['expected_version'],
-        idempotencyKey: 'propose-ambiguous-bucket-1',
-        correlationId: $fx['correlation_id'],
-        input: ['amount_minor' => 10000, 'currency' => 'PHP', 'quantity' => 1],
+        resourceKey: 'other-product',
     );
 
     $error = t3EdgeExpectOrderError(
-        fn () => app(FinalizeOrderAgreement::class)->handle(
-            actorUserId: $fx['buyer']->id,
-            orderId: $proposed['order_id'],
-            expectedOrderVersion: (int) $proposed['version'],
-            idempotencyKey: 'finalize-ambiguous-bucket-1',
+        fn () => app(SubmitOrderProposal::class)->handle(
+            buyerUserId: $fx['buyer']->id,
+            listingId: $fx['listing']['id'],
+            expectedListingVersion: (int) $fx['listing']['expected_version'],
+            idempotencyKey: 'propose-ambiguous-bucket-1',
             correlationId: $fx['correlation_id'],
+            input: ['quantity' => 1],
         ),
-        'AMBIGUOUS_CAPACITY_BUCKET',
+        'AVAILABILITY_CONFLICT',
     );
-    expect($error->status)->toBe(409);
+
+    expect($error->status)->toBe(409)
+        ->and(DB::table('orders')->where('listing_id', $fx['listing']['id'])->count())->toBe(0);
 });
 
 it('rejects capacity replay when existing reservation is not in committed status', function (): void {
@@ -440,6 +536,7 @@ it('rejects capacity replay when existing reservation is not in committed status
         capacityType: 'quantity',
         quantity: 3,
         correlationId: $fx['correlation_id'],
+        resourceKey: 'edge-default-stock',
     );
 
     // Create a held reservation directly with the command_scope and idempotency_key
@@ -469,53 +566,25 @@ it('rejects capacity replay when existing reservation is not in committed status
             ->and($error->status)->toBe(409);
     }
 });
-it('rejects a supplied hold when the listing version has no capacity bucket', function (): void {
+it('rejects a product proposal when its resource-key bucket is missing', function (): void {
     t3EdgePgsqlOrSkip();
 
     $fx = t3EdgeActiveListingFixture('product');
-    $proposed = app(SubmitOrderProposal::class)->handle(
-        buyerUserId: $fx['buyer']->id,
-        listingId: $fx['listing']['id'],
-        expectedListingVersion: (int) $fx['listing']['expected_version'],
-        idempotencyKey: 'propose-no-bucket-hold-1',
-        correlationId: $fx['correlation_id'],
-        input: ['amount_minor' => 25000, 'currency' => 'PHP', 'quantity' => 1],
-    );
-
-    $suppliedHoldId = (string) Str::uuid7();
-    DB::table('order_parties')
-        ->where('order_id', $proposed['order_id'])
-        ->where('party_type', 'buyer')
-        ->update([
-            'scope' => json_encode([
-                'proposal' => [
-                    'amount_minor' => 25000,
-                    'currency' => 'PHP',
-                    'quantity' => 1,
-                    'listing_version_id' => $proposed['listing_version_id'],
-                    'listing_version_number' => (int) $proposed['listing_version_number'],
-                    'capacity_reservation_id' => $suppliedHoldId,
-                ],
-            ], JSON_THROW_ON_ERROR),
-        ]);
-
     $error = t3EdgeExpectOrderError(
-        fn () => app(FinalizeOrderAgreement::class)->handle(
-            actorUserId: $fx['buyer']->id,
-            orderId: $proposed['order_id'],
-            expectedOrderVersion: (int) $proposed['version'],
-            idempotencyKey: 'finalize-no-bucket-hold-1',
+        fn () => app(SubmitOrderProposal::class)->handle(
+            buyerUserId: $fx['buyer']->id,
+            listingId: $fx['listing']['id'],
+            expectedListingVersion: (int) $fx['listing']['expected_version'],
+            idempotencyKey: 'propose-no-bucket-hold-1',
             correlationId: $fx['correlation_id'],
+            input: ['quantity' => 1],
         ),
-        'INVALID_STATE',
+        'AVAILABILITY_CONFLICT',
     );
 
     expect($error->status)->toBe(409)
-        ->and(DB::table('listing_capacity')->where('listing_id', $fx['listing']['id'])->where('listing_version_id', $proposed['listing_version_id'])->count())->toBe(0)
-        ->and(DB::table('listing_capacity_reservations')->where('order_id', $proposed['order_id'])->count())->toBe(0)
-        ->and(DB::table('orders')->where('id', $proposed['order_id'])->value('status'))->toBe('pending_acceptance')
-        ->and(DB::table('work_instances')->where('order_id', $proposed['order_id'])->count())->toBe(0)
-        ->and(DB::table('payment_obligations')->where('order_id', $proposed['order_id'])->count())->toBe(0);
+        ->and(DB::table('orders')->where('listing_id', $fx['listing']['id'])->count())->toBe(0)
+        ->and(DB::table('listing_capacity_reservations')->where('correlation_id', $fx['correlation_id'])->count())->toBe(0);
 });
 
 it('rejects a held reservation already bound to a different order', function (): void {
@@ -533,6 +602,7 @@ it('rejects a held reservation already bound to a different order', function ():
         capacityType: 'quantity',
         quantity: 3,
         correlationId: $fx['correlation_id'],
+        resourceKey: 'edge-default-stock',
     );
 
     $foreignProposal = app(SubmitOrderProposal::class)->handle(
@@ -564,25 +634,21 @@ it('rejects a held reservation already bound to a different order', function ():
         'updated_at' => now(),
     ]);
 
-    DB::table('order_parties')
-        ->where('order_id', $targetProposal['order_id'])
-        ->where('party_type', 'buyer')
-        ->update([
-            'scope' => json_encode([
-                'proposal' => [
-                    'amount_minor' => 25000,
-                    'currency' => 'PHP',
-                    'quantity' => 1,
-                    'listing_version_id' => $versionId,
-                    'listing_version_number' => (int) $fx['listing']['expected_version'],
-                    'capacity_reservation_id' => $held['reservation_id'],
-                ],
-            ], JSON_THROW_ON_ERROR),
-        ]);
+    $targetScope = json_decode(
+        (string) DB::table('order_proposals')->where('id', $targetProposal['proposal_id'])->value('scope'),
+        true,
+    );
+    $targetScope['capacity_reservation_id'] = $held['reservation_id'];
+    $targetScopeJson = json_encode($targetScope, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    DB::table('order_proposals')->where('id', $targetProposal['proposal_id'])->update([
+        'capacity_reservation_id' => $held['reservation_id'],
+        'scope' => $targetScopeJson,
+        'terms_hash' => hash('sha256', $targetScopeJson),
+    ]);
 
     $error = t3EdgeExpectOrderError(
         fn () => app(FinalizeOrderAgreement::class)->handle(
-            actorUserId: $foreignBuyer->id,
+            actorUserId: $fx['provider']->id,
             orderId: $targetProposal['order_id'],
             expectedOrderVersion: (int) $targetProposal['version'],
             idempotencyKey: 'finalize-foreign-hold-target-1',
@@ -594,8 +660,8 @@ it('rejects a held reservation already bound to a different order', function ():
     expect($error->status)->toBe(409)
         ->and(DB::table('listing_capacity_reservations')->where('id', $held['reservation_id'])->value('status'))->toBe('held')
         ->and(DB::table('listing_capacity_reservations')->where('id', $held['reservation_id'])->value('order_id'))->toBe($foreignProposal['order_id'])
-        ->and((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(2)
-        ->and(DB::table('orders')->where('id', $targetProposal['order_id'])->value('status'))->toBe('pending_acceptance')
+        ->and((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(0)
+        ->and(DB::table('orders')->where('id', $targetProposal['order_id'])->value('status'))->toBe('proposed')
         ->and(DB::table('work_instances')->where('order_id', $targetProposal['order_id'])->count())->toBe(0)
         ->and(DB::table('payment_obligations')->where('order_id', $targetProposal['order_id'])->count())->toBe(0);
 });
@@ -615,6 +681,7 @@ it('rejects finalization when the capacity hold changes between proposal reads',
         capacityType: 'quantity',
         quantity: 4,
         correlationId: $fx['correlation_id'],
+        resourceKey: 'edge-default-stock',
     );
     $firstHold = $capacity->hold(
         listingCapacityId: $bucket['id'],
@@ -639,31 +706,16 @@ it('rejects finalization when the capacity hold changes between proposal reads',
         correlationId: $fx['correlation_id'],
         input: ['amount_minor' => 25000, 'currency' => 'PHP', 'quantity' => 1],
     );
-    DB::table('order_parties')
-        ->where('order_id', $proposed['order_id'])
-        ->where('party_type', 'buyer')
-        ->update([
-            'scope' => json_encode([
-                'proposal' => [
-                    'amount_minor' => 25000,
-                    'currency' => 'PHP',
-                    'quantity' => 1,
-                    'listing_version_id' => $versionId,
-                    'listing_version_number' => (int) $fx['listing']['expected_version'],
-                    'capacity_reservation_id' => $firstHold['reservation_id'],
-                ],
-            ], JSON_THROW_ON_ERROR),
-        ]);
 
     $source = app(OrderListingSourcePort::class);
     app()->bind(OrderListingSourcePort::class, static function () use ($source, $proposed, $changedHold): OrderListingSourcePort {
-        return new class($source, $proposed['order_id'], $changedHold['reservation_id']) implements OrderListingSourcePort
+        return new class($source, $proposed['proposal_id'], $changedHold['reservation_id']) implements OrderListingSourcePort
         {
             private bool $changed = false;
 
             public function __construct(
                 private readonly OrderListingSourcePort $inner,
-                private readonly string $orderId,
+                private readonly string $proposalId,
                 private readonly string $changedHoldId,
             ) {}
 
@@ -676,26 +728,24 @@ it('rejects finalization when the capacity hold changes between proposal reads',
             {
                 if (! $this->changed) {
                     $this->changed = true;
-                    $party = DB::table('order_parties')
-                        ->where('order_id', $this->orderId)
-                        ->where('party_type', 'buyer')
-                        ->where('status', 'active')
-                        ->first();
-                    $scope = json_decode((string) $party->scope, true, 512, JSON_THROW_ON_ERROR);
-                    $scope['proposal']['capacity_reservation_id'] = $this->changedHoldId;
-                    DB::table('order_parties')->where('id', $party->id)->update([
-                        'scope' => json_encode($scope, JSON_THROW_ON_ERROR),
+                    DB::table('order_proposals')->where('id', $this->proposalId)->update([
+                        'capacity_reservation_id' => $this->changedHoldId,
                     ]);
                 }
 
                 return $this->inner->lockActiveApproved($listingId);
+            }
+
+            public function eligiblePaymentLanesForVersion(string $listingVersionId): array
+            {
+                return $this->inner->eligiblePaymentLanesForVersion($listingVersionId);
             }
         };
     });
 
     $error = t3EdgeExpectOrderError(
         fn () => app(FinalizeOrderAgreement::class)->handle(
-            actorUserId: $fx['buyer']->id,
+            actorUserId: $fx['provider']->id,
             orderId: $proposed['order_id'],
             expectedOrderVersion: (int) $proposed['version'],
             idempotencyKey: 'finalize-changed-hold-1',
@@ -705,10 +755,10 @@ it('rejects finalization when the capacity hold changes between proposal reads',
     );
 
     expect($error->status)->toBe(409)
-        ->and((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(2)
+        ->and((int) DB::table('listing_capacity')->where('id', $bucket['id'])->value('remaining_quantity'))->toBe(1)
         ->and(DB::table('listing_capacity_reservations')->where('id', $firstHold['reservation_id'])->value('status'))->toBe('held')
         ->and(DB::table('listing_capacity_reservations')->where('id', $changedHold['reservation_id'])->value('status'))->toBe('held')
-        ->and(DB::table('orders')->where('id', $proposed['order_id'])->value('status'))->toBe('pending_acceptance')
+        ->and(DB::table('orders')->where('id', $proposed['order_id'])->value('status'))->toBe('proposed')
         ->and(DB::table('work_instances')->where('order_id', $proposed['order_id'])->count())->toBe(0)
         ->and(DB::table('payment_obligations')->where('order_id', $proposed['order_id'])->count())->toBe(0);
 });

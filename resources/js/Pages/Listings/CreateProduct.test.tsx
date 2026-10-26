@@ -1,10 +1,14 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { router } from '@inertiajs/react';
-import type { SliceSession } from '../../types';
+import type { ListingRecord, SliceSession } from '../../types';
 import type * as MobileComponents from '../../components/mobile';
 import type { DealChainCustomizerModalProps } from '../../components/mobile/DealChainCustomizerModal';
-import CreateProduct, { defaultCombosForCategory, isInstallationApplicable } from './CreateProduct';
+import CreateProduct, {
+    defaultCombosForCategory,
+    isInstallationApplicable,
+    type WorkSetOption,
+} from './CreateProduct';
 
 // Mock Inertia router and Link
 vi.mock('@inertiajs/react', () => ({
@@ -213,6 +217,29 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         const addVariantBtn = screen.getByRole('button', { name: /add variation/i });
         fireEvent.click(addVariantBtn);
         expect(screen.getByText('Variant 2')).toBeTruthy();
+    });
+
+    it('hydrates stored snake-case variant defaults and shows the governed A4 handoff steps', () => {
+        render(
+            <CreateProduct
+                editingDraft={{
+                    id: 'product-draft',
+                    title: 'Rice flour',
+                    category_code: 'food',
+                    variants: [
+                        { id: 'plain', name: 'Plain', price: 125, stock: 7, is_default: true },
+                        { id: 'sweet', name: 'Sweet', price: 150, stock: 4, is_default: false },
+                    ],
+                } as ListingRecord}
+            />,
+        );
+
+        expect(screen.getByText('Sourcing and package preparation')).toBeTruthy();
+        expect(screen.getByText('Handoff and recipient confirmation')).toBeTruthy();
+        expect(screen.getByText('Condition close-out')).toBeTruthy();
+
+        fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
+        expect(screen.getByText('Default Variant')).toBeTruthy();
     });
 
     it('places Detailed Description in Step 1 (Product Identity) and keeps Step 3 (Pickup Point) focused strictly on location', () => {
@@ -431,6 +458,125 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         expect(screen.queryByText(/Counter Custody/i)).toBeNull();
     });
 
+    it('submits all governed A4 node mechanics from the selected Work Set', () => {
+        const mockPost = vi.fn();
+        vi.mocked(router.post).mockImplementation(mockPost);
+
+        const session = {
+            authenticated: true,
+            user: { id: 'usr-1', name: 'Vendor Kuya', email: 'vendor@tagudin.ph' },
+            current_slice: 'product',
+        } as unknown as SliceSession;
+        const productSet = {
+            catalog_code: 'tagudin-product-handoff-a4',
+            set_code: 'set-product-market-handoff',
+            set_version: 1,
+            work_shape: 'A4',
+            title: 'Market Product Preparation & Handoff',
+            summary: 'Prepare package, confirm recipient or courier handoff, and record condition close-out.',
+            steps: [
+                {
+                    id: 'a4-prepare',
+                    ordinal: 1,
+                    title: 'Sourcing and package preparation',
+                    description: 'Verify the product count, condition, packaging, and dispatch details.',
+                    node_kind: 'checkin_intake',
+                    evidence_type: 'receipt_upload',
+                    evidence_description: 'Receipt, inventory slip, or prepared package evidence.',
+                    control_mode: 'provider_advance',
+                    mandatory: true,
+                    duration_label: null,
+                    required_proofs: ['photo_proof'],
+                    approval_method: 'none',
+                    handoff_party: null,
+                    checklist_items: [{ id: 'count-item', label: 'Verify product count', required: true }],
+                    metric_requirements: [{ id: 'weight', name: 'Package weight', unit: 'kg', required: true, target: 2 }],
+                },
+                {
+                    id: 'a4-handoff',
+                    ordinal: 2,
+                    title: 'Handoff and recipient confirmation',
+                    description: 'Transfer the product to the recipient or independently contracted courier.',
+                    node_kind: 'handoff_ready',
+                    evidence_type: 'dual_sign',
+                    evidence_description: 'Recipient confirmation and product count evidence.',
+                    control_mode: 'counterparty_handoff',
+                    mandatory: true,
+                    duration_label: null,
+                    required_proofs: [],
+                    approval_method: 'none',
+                    handoff_party: null,
+                },
+                {
+                    id: 'a4-close',
+                    ordinal: 3,
+                    title: 'Condition close-out',
+                    description: 'Record the delivered condition and close the product work instance.',
+                    node_kind: 'final_signoff',
+                    evidence_type: 'photo_required',
+                    evidence_description: 'Final package or recipient handoff photo where applicable.',
+                    control_mode: 'customer_confirm',
+                    mandatory: true,
+                    duration_label: null,
+                    required_proofs: ['photo_proof'],
+                    approval_method: 'app_confirm',
+                    handoff_party: null,
+                },
+            ],
+        } as unknown as WorkSetOption;
+
+        render(
+            <CreateProduct
+                session={session}
+                workOptions={{ recommended: [productSet], other_archetypes: [] }}
+            />,
+        );
+        fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
+        fireEvent.change(screen.getByTestId('product-title-input'), {
+            target: { value: 'Fresh Tagudin Bibingka' },
+        });
+        fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '120' } });
+        fireEvent.click(screen.getByRole('button', { name: /Save Private Draft/i }));
+
+        expect(mockPost).toHaveBeenCalled();
+        expect(mockPost.mock.calls[0][1]).toEqual(
+            expect.objectContaining({
+                work_catalog_code: 'set-product-market-handoff',
+                milestone_stages: [
+                    expect.objectContaining({
+                        id: 'a4-prepare',
+                        ordinal: 1,
+                        node_kind: 'checkin_intake',
+                        evidence_type: 'receipt_upload',
+                        evidence_description: 'Receipt, inventory slip, or prepared package evidence.',
+                        control_mode: 'provider_advance',
+                        required_proofs: ['photo_proof'],
+                        approval_method: 'none',
+                        checklist_items: [{ id: 'count-item', label: 'Verify product count', required: true }],
+                        metric_requirements: [{ id: 'weight', name: 'Package weight', unit: 'kg', required: true, target: 2 }],
+                    }),
+                    expect.objectContaining({
+                        id: 'a4-handoff',
+                        ordinal: 2,
+                        node_kind: 'handoff_ready',
+                        evidence_type: 'dual_sign',
+                        control_mode: 'counterparty_handoff',
+                        approval_method: 'none',
+                    }),
+                    expect.objectContaining({
+                        id: 'a4-close',
+                        ordinal: 3,
+                        node_kind: 'final_signoff',
+                        evidence_type: 'photo_required',
+                        control_mode: 'customer_confirm',
+                        required_proofs: ['photo_proof'],
+                        approval_method: 'app_confirm',
+                    }),
+                ],
+            }),
+        );
+    });
+
     it('submits draft with canonical A4 work shape, work_catalog_code, and governed milestone stages', () => {
         const mockPost = vi.fn();
         vi.mocked(router.post).mockImplementation(mockPost);
@@ -463,7 +609,7 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
             expect.objectContaining({
                 listing_type: 'product',
                 work_shape: 'A4',
-                work_catalog_code: 'tagudin-product-handoff-a4',
+                work_catalog_code: 'set-product-market-handoff',
                 work_set_version: 1,
                 prep_lead_time: 'in_stock',
                 milestone_stages: expect.arrayContaining([

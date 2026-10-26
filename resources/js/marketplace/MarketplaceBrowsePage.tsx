@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { router } from '@inertiajs/react';
 import type { ListingRecord } from '@/types';
 import type { BasketItem, MarketplaceBrowseProps, MarketplaceCategory } from './types';
 import { MarketplaceHeader } from './components/MarketplaceHeader';
@@ -48,30 +49,47 @@ export const MarketplaceBrowsePage: React.FC<MarketplaceBrowseProps> = ({
     };
 
     const handleAddToCart = (item: ListingRecord) => {
+        const isProduct = (item.listing_type || item.listingType) === 'product';
+        const needsSellerSelection =
+            isProduct || (item.package_tiers?.length ?? item.packageTiers?.length ?? 0) > 0;
         const rawMinor = item.price_amount_minor;
-        const price = rawMinor ? rawMinor / 100 : 80;
+
+        if (needsSellerSelection || typeof rawMinor !== 'number' || rawMinor <= 0) {
+            router.visit(`/listings/${item.id}`);
+            return;
+        }
+
+        const price = rawMinor / 100;
         const listingContext = {
+            listing_id: item.id,
+            listing_version_id: item.listing_version_id ?? null,
+            variant_id: null,
+            package_id: null,
+            deal_chain_combination_id: null,
             category_code: item.category_code ?? item.categoryCode ?? null,
             listing_type: item.listing_type ?? item.listingType ?? null,
             work_shape: item.work_shape ?? item.workShape ?? null,
         };
 
         setBasket((prev) => {
-            const existing = prev.find((b) => b.id === item.id);
+            const existing = prev.find((basketItem) => basketItem.id === item.id);
             if (existing) {
-                return prev.map((b) =>
-                    b.id === item.id ? { ...b, ...listingContext, quantity: b.quantity + 1 } : b,
+                return prev.map((basketItem) =>
+                    basketItem.id === item.id
+                        ? { ...basketItem, ...listingContext, quantity: basketItem.quantity + 1 }
+                        : basketItem,
                 );
             }
-            return [
-                ...prev,
-                { id: item.id, title: item.title, price, quantity: 1, ...listingContext },
-            ];
+            return [...prev, {
+                id: item.id,
+                title: item.title,
+                price,
+                quantity: 1,
+                ...listingContext,
+            }];
         });
 
-        if (onAddToCart) {
-            onAddToCart(item);
-        }
+        onAddToCart?.(item);
     };
 
     const basketCount = useMemo(
@@ -182,7 +200,10 @@ export const MarketplaceBrowsePage: React.FC<MarketplaceBrowseProps> = ({
                 <BottomNavBar
                     activeTab={activeTab}
                     ordersCount={basketCount}
-                    onTabSelect={setActiveTab}
+                    onTabSelect={(tab) => {
+                        if (tab === 'invitations') router.visit('/deal-invitations');
+                        else setActiveTab(tab);
+                    }}
                 />
             </div>
         </div>

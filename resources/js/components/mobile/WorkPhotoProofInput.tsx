@@ -1,18 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
+import { router } from '@inertiajs/react';
 import { AlertCircle, Camera, CheckCircle2, Loader2, Upload, X } from 'lucide-react';
 import type { WorkNodeEvidenceCandidate } from '../../types';
 
 const MAX_PHOTOS_PER_NODE = 8;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+const NO_CANDIDATES: WorkNodeEvidenceCandidate[] = [];
 
+type PhotoStatus = 'selected' | 'uploading' | 'quarantined' | 'clean' | 'failed' | 'rejected';
 type PhotoDraft = {
     key: string;
     evidenceId?: string;
     file?: File;
     previewUrl: string;
-    scanStatus: 'selected' | 'uploading' | 'quarantined' | 'clean' | 'failed';
+    scanStatus: PhotoStatus;
     error?: string;
 };
+
+function projectScanStatus(status: string): PhotoStatus {
+    if (status === 'clean') return 'clean';
+    if (status === 'infected' || status === 'failed') return 'rejected';
+    return 'quarantined';
+}
+
+function scanFailureMessage(status: string): string | undefined {
+    if (status === 'infected') return 'This photo was rejected by the safety scan. Remove it and upload a safe replacement.';
+    if (status === 'failed') return 'The safety scan failed. Remove this photo and upload it again.';
+    return undefined;
+}
 
 type WorkPhotoProofInputProps = {
     orderId: string;
@@ -26,46 +41,54 @@ type WorkPhotoProofInputProps = {
 export default function WorkPhotoProofInput({
     orderId,
     nodeId,
-    candidates = [],
+    candidates,
     disabled,
     onEvidenceIdsChange,
     onPreviewPhoto,
 }: WorkPhotoProofInputProps) {
+    const candidateList = candidates ?? NO_CANDIDATES;
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const localPreviewUrls = useRef(new Set<string>());
     const onEvidenceIdsChangeRef = useRef(onEvidenceIdsChange);
     onEvidenceIdsChangeRef.current = onEvidenceIdsChange;
 
-    const [photos, setPhotos] = useState<PhotoDraft[]>(() => candidates.map((candidate) => ({
-        key: candidate.id,
-        evidenceId: candidate.id,
-        previewUrl: candidate.url ?? '',
-        scanStatus: candidate.scan_status === 'clean' ? 'clean' : 'quarantined',
-    })));
+    const [photos, setPhotos] = useState<PhotoDraft[]>(() => candidateList.map((candidate) => {
+        const scanStatus = projectScanStatus(candidate.scan_status);
+        return {
+            key: candidate.id,
+            evidenceId: candidate.id,
+            previewUrl: scanStatus === 'clean' ? candidate.url ?? '' : '',
+            scanStatus,
+            error: scanFailureMessage(candidate.scan_status),
+        };
+    }));
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
-    const candidateKey = JSON.stringify(candidates);
+    const candidateKey = JSON.stringify(candidateList);
 
     useEffect(() => {
         setPhotos((current) => {
             const currentById = new Map(
                 current.filter((photo) => photo.evidenceId !== undefined).map((photo) => [photo.evidenceId as string, photo]),
             );
-            const projected = candidates.map((candidate) => {
+            const projected = candidateList.map((candidate) => {
                 const existing = currentById.get(candidate.id);
+                const scanStatus = projectScanStatus(candidate.scan_status);
                 return {
                     key: candidate.id,
                     evidenceId: candidate.id,
-                    file: existing?.file,
-                    previewUrl: existing?.previewUrl.startsWith('blob:') ? existing.previewUrl : (candidate.url ?? ''),
-                    scanStatus: candidate.scan_status === 'clean' ? 'clean' as const : 'quarantined' as const,
-                    error: existing?.error,
+                    file: scanStatus === 'rejected' ? undefined : existing?.file,
+                    previewUrl: scanStatus === 'clean'
+                        ? existing?.previewUrl.startsWith('blob:') ? existing.previewUrl : candidate.url ?? ''
+                        : '',
+                    scanStatus,
+                    error: scanFailureMessage(candidate.scan_status) ?? existing?.error,
                 };
             });
             const localDrafts = current.filter((photo) => photo.evidenceId === undefined);
             return [...projected, ...localDrafts];
         });
-    }, [nodeId, candidateKey, candidates]);
+    }, [nodeId, candidateKey, candidateList]);
 
     useEffect(() => {
         onEvidenceIdsChangeRef.current(
@@ -159,11 +182,14 @@ export default function WorkPhotoProofInput({
                 throw new Error(result.error?.message ?? firstValidationError ?? result.message ?? 'The image could not be uploaded. Try again.');
             }
 
+            const scanStatus = projectScanStatus(result.data.scan_status);
             setPhotos((current) => current.map((item) => item.key === photoKey ? {
                 ...item,
                 evidenceId: result.data?.id,
                 file: undefined,
-                scanStatus: result.data?.scan_status === 'clean' ? 'clean' : 'quarantined',
+                previewUrl: scanStatus === 'rejected' ? '' : item.previewUrl,
+                scanStatus,
+                error: scanFailureMessage(result.data?.scan_status ?? ''),
             } : item));
         } catch (error) {
             const message = error instanceof Error ? error.message : 'The image could not be uploaded. Try again.';
@@ -243,13 +269,18 @@ export default function WorkPhotoProofInput({
                             <div className="flex min-h-10 items-center justify-between gap-1 px-2 py-1.5">
                                 <span className="flex min-w-0 items-center gap-1 text-[10px] font-semibold text-slate-700">
                                     {photo.scanStatus === 'clean' ? <CheckCircle2 className="size-3 shrink-0 text-emerald-700" aria-hidden="true" /> : null}
+                                    {photo.scanStatus === 'rejected' ? <AlertCircle className="size-3 shrink-0 text-rose-700" aria-hidden="true" /> : null}
                                     <span className="truncate">
-                                        {photo.scanStatus === 'selected' || photo.scanStatus === 'failed'
+                                        {photo.scanStatus === 'selected'
                                             ? 'Not uploaded'
+                                            : photo.scanStatus === 'failed'
+                                            ? 'Upload failed'
                                             : photo.scanStatus === 'uploading'
                                             ? 'Uploading'
                                             : photo.scanStatus === 'clean'
                                             ? 'Available'
+                                            : photo.scanStatus === 'rejected'
+                                            ? 'Rejected by safety scan'
                                             : 'Safety scan pending'}
                                     </span>
                                 </span>
@@ -273,20 +304,34 @@ export default function WorkPhotoProofInput({
                                             <X className="size-3.5" aria-hidden="true" />
                                         </button>
                                     </div>
+                                ) : photo.scanStatus === 'rejected' ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => removeLocalPhoto(photo.key)}
+                                        disabled={disabled}
+                                        className="shrink-0 rounded-md px-2 py-1 text-[10px] font-bold text-rose-800 hover:bg-rose-50 disabled:opacity-50"
+                                        aria-label="Remove rejected photo"
+                                    >
+                                        Remove
+                                    </button>
                                 ) : photo.scanStatus === 'uploading' ? (
                                     <Loader2 className="size-3.5 animate-spin text-slate-500" aria-label="Uploading" />
                                 ) : null}
                             </div>
+                            {photo.scanStatus === 'rejected' && photo.error ? <p className="border-t border-slate-100 px-2 py-2 text-[10px] leading-relaxed text-rose-800" role="status">{photo.error}</p> : null}
                         </li>
                     ))}
                 </ul>
             )}
 
             {pendingScanCount > 0 && (
-                <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-950" role="status">
-                    <AlertCircle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                    <span>{pendingScanCount} photo{pendingScanCount === 1 ? '' : 's'} waiting for a safety scan. Proof cannot advance until a photo is available.</span>
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-950" role="status">
+                    <p className="flex items-start gap-2">
+                        <AlertCircle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                        <span>{pendingScanCount} photo{pendingScanCount === 1 ? '' : 's'} waiting for a safety scan. Proof cannot advance until a photo is available.</span>
+                    </p>
+                    <button type="button" onClick={() => router.reload()} disabled={disabled || isUploading} className="min-h-9 shrink-0 rounded-full border border-amber-300 bg-white px-3 font-bold text-amber-950 disabled:opacity-50">Refresh scan status</button>
+                </div>
             )}
             {uploadError && <p className="text-xs text-red-700" role="alert">{uploadError}</p>}
         </section>

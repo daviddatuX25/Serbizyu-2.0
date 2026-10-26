@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import {
     BarChart3,
-    CheckCircle2,
     Clock,
     Eye,
     FileText,
     MapPin,
+    PauseCircle,
     Plus,
     Search,
     Send,
@@ -38,7 +38,6 @@ type EnrichedListing = ListingRecord & {
         orders: number;
         ctr_pct: string;
         cvr_pct: string;
-        is_projected: boolean;
     };
     review_summary?: {
         rating: number;
@@ -48,14 +47,10 @@ type EnrichedListing = ListingRecord & {
 };
 
 function resolveListingTelemetry(listing: EnrichedListing) {
-    const status = normalizeListingStatus(listing.status ?? listing.state);
     const telemetry = listing.telemetry;
     const review = listing.review_summary;
 
     if (telemetry) {
-        const ratingDisplay = review && review.reviews_count > 0
-            ? review.rating.toFixed(1)
-            : 'New';
         return {
             impressions: telemetry.impressions,
             views: telemetry.views,
@@ -63,23 +58,8 @@ function resolveListingTelemetry(listing: EnrichedListing) {
             orders: telemetry.orders,
             ctrPct: telemetry.ctr_pct,
             cvrPct: telemetry.cvr_pct,
-            rating: ratingDisplay,
+            rating: review && review.reviews_count > 0 ? review.rating.toFixed(1) : 'New',
             reviewsCount: review?.reviews_count ?? 0,
-            isProjected: telemetry.is_projected,
-        };
-    }
-
-    if (status === 'draft') {
-        return {
-            impressions: 0,
-            views: 0,
-            inquiries: 0,
-            orders: 0,
-            ctrPct: '0.0',
-            cvrPct: '0.0',
-            rating: 'New',
-            reviewsCount: 0,
-            isProjected: true,
         };
     }
 
@@ -92,7 +72,6 @@ function resolveListingTelemetry(listing: EnrichedListing) {
         cvrPct: '0.0',
         rating: 'New',
         reviewsCount: 0,
-        isProjected: false,
     };
 }
 
@@ -166,13 +145,12 @@ export default function MyListings(props: HomeProps) {
             { impressions: 0, views: 0, inquiries: 0, orders: 0 },
         );
 
-        const hasLiveTraffic = totals.impressions > 0;
-        const impressions = hasLiveTraffic ? totals.impressions : 640;
-        const views = hasLiveTraffic ? totals.views : 156;
-        const inquiries = hasLiveTraffic ? totals.inquiries : 38;
-        const orders = hasLiveTraffic ? totals.orders : 12;
-        const cvr = views > 0 ? ((orders / views) * 100).toFixed(1) : '7.7';
-        const ctr = impressions > 0 ? ((views / impressions) * 100).toFixed(1) : '24.4';
+        const impressions = totals.impressions;
+        const views = totals.views;
+        const inquiries = totals.inquiries;
+        const orders = totals.orders;
+        const cvr = views > 0 ? ((orders / views) * 100).toFixed(1) : '—';
+        const ctr = impressions > 0 ? ((views / impressions) * 100).toFixed(1) : '—';
 
         return {
             impressions,
@@ -181,7 +159,6 @@ export default function MyListings(props: HomeProps) {
             orders,
             cvr,
             ctr,
-            isSampleBaseline: !hasLiveTraffic,
         };
     }, [listingsWithMetrics, selectedInsightListingId]);
 
@@ -201,15 +178,28 @@ export default function MyListings(props: HomeProps) {
             },
         );
     };
+    const handleLifecycleAction = (
+        listing: ListingRecord,
+        action: 'pause' | 'resume' | 'archive',
+    ) => {
+        if (!listing.id || submittingId) return;
+        const version = listing.version ?? listing.expectedVersion ?? listing.expected_version ?? 1;
+        setSubmittingId(listing.id);
+        router.post(
+            `/listings/${listing.id}/${action}`,
+            { expected_version: version },
+            {
+                preserveScroll: true,
+                onFinish: () => setSubmittingId(null),
+            },
+        );
+    };
+
 
     return (
-        <div className="flex min-h-screen flex-col bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 pb-20">
+        <div className="flex min-h-screen flex-col bg-[#F8FAFC] pb-20 font-['Plus_Jakarta_Sans',sans-serif] text-slate-900">
             {/* Desktop Navigation */}
-            <DesktopGlobalNav
-                activeRoute="listings"
-                session={session}
-                readiness={readiness}
-            />
+            <DesktopGlobalNav activeRoute="listings" session={session} readiness={readiness} />
 
             {/* Mobile Header */}
             <div className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200/80 bg-white px-4 py-3 lg:hidden">
@@ -218,11 +208,11 @@ export default function MyListings(props: HomeProps) {
                         S
                     </div>
                     <span className="text-sm font-extrabold text-[#0F2F58]">My Listings</span>
+                <Link href="/stock" className="text-xs font-bold text-[#0F2F58] hover:underline">
+                    Stock ledger
+                </Link>
                 </div>
-                <Link
-                    href="/browse"
-                    className="text-xs font-bold text-[#0F2F58] hover:underline"
-                >
+                <Link href="/browse" className="text-xs font-bold text-[#0F2F58] hover:underline">
                     Browse Marketplace →
                 </Link>
             </div>
@@ -234,16 +224,13 @@ export default function MyListings(props: HomeProps) {
                         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
                             <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
                                 <div>
-                                    <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-800">
-                                        <CheckCircle2 className="size-3.5 text-emerald-600" />
-                                        <span>Provider Studio · Tagudin</span>
-                                    </div>
-                                    <h1 className="mt-2 text-xl font-extrabold tracking-tight text-[#0F2F58] sm:text-2xl">
+                                    <h1 className="text-xl font-extrabold tracking-tight text-[#0F2F58] sm:text-2xl">
                                         My Listings &amp; Insights
                                     </h1>
                                     <p className="mt-1 max-w-2xl text-xs text-slate-500 sm:text-sm">
-                                        Inspect how neighbors see your listings, track search-to-order
-                                        conversion, and launch the Service or Product Studio Builder.
+                                        Inspect how neighbors see your listings, track
+                                        search-to-order conversion, and launch the Service or
+                                        Product Studio Builder.
                                     </p>
                                 </div>
 
@@ -320,7 +307,7 @@ export default function MyListings(props: HomeProps) {
                                         <TrendingUp className="size-3.5 text-emerald-600" />
                                     </div>
                                     <div className="mt-1 font-mono text-xl font-extrabold text-emerald-700">
-                                        {activeInsightMetrics.ctr}%
+                                        {activeInsightMetrics.ctr === '—' ? '—' : `${activeInsightMetrics.ctr}%`}
                                     </div>
                                     <div className="mt-0.5 text-[10px] font-semibold text-slate-500">
                                         {activeInsightMetrics.views} detail views
@@ -371,48 +358,61 @@ export default function MyListings(props: HomeProps) {
                                 </div>
                             </div>
 
-                            <FunnelAnalytics
-                                title={
-                                    selectedInsightListingId === 'all'
-                                        ? 'Portfolio Discovery & Conversion Funnel (30d)'
-                                        : 'Selected Listing Conversion Funnel (30d)'
-                                }
-                                description="Resident search impressions through bilateral order confirmation in Tagudin"
-                                steps={[
-                                    {
-                                        id: 'impressions',
-                                        label: 'Search Impressions (Browse & Category)',
-                                        value: activeInsightMetrics.impressions,
-                                        color: 'bg-[#0F2F58]',
-                                        subtext:
-                                            'Times your listing card appeared in Tagudin marketplace discovery',
-                                    },
-                                    {
-                                        id: 'views',
-                                        label: 'Listing Detail Views',
-                                        value: activeInsightMetrics.views,
-                                        color: 'bg-sky-600',
-                                        subtext:
-                                            'Neighbors who opened your full listing, packages, and reviews',
-                                    },
-                                    {
-                                        id: 'inquiries',
-                                        label: 'High-Intent Engagements (Deal Chain & Chat)',
-                                        value: activeInsightMetrics.inquiries,
-                                        color: 'bg-amber-500',
-                                        subtext:
-                                            'Package tier selected, partner extension toggled, or inquiry started',
-                                    },
-                                    {
-                                        id: 'orders',
-                                        label: 'Confirmed Orders',
-                                        value: activeInsightMetrics.orders,
-                                        color: 'bg-emerald-600',
-                                        subtext: 'Completed bookings and direct counter handoffs',
-                                    },
-                                ]}
-                                conversionBadgeText={`${activeInsightMetrics.cvr}% View-to-Order CVR`}
-                            />
+                            {activeInsightMetrics.impressions > 0 ||
+                            activeInsightMetrics.views > 0 ||
+                            activeInsightMetrics.inquiries > 0 ||
+                            activeInsightMetrics.orders > 0 ? (
+                                <FunnelAnalytics
+                                    title={
+                                        selectedInsightListingId === 'all'
+                                            ? 'Portfolio Discovery & Conversion Funnel (30d)'
+                                            : 'Selected Listing Conversion Funnel (30d)'
+                                    }
+                                    description="Resident search impressions through bilateral order confirmation in Tagudin"
+                                    steps={[
+                                        {
+                                            id: 'impressions',
+                                            label: 'Search Impressions (Browse & Category)',
+                                            value: activeInsightMetrics.impressions,
+                                            color: 'bg-[#0F2F58]',
+                                            subtext:
+                                                'Times your listing card appeared in Tagudin marketplace discovery',
+                                        },
+                                        {
+                                            id: 'views',
+                                            label: 'Listing Detail Views',
+                                            value: activeInsightMetrics.views,
+                                            color: 'bg-sky-600',
+                                            subtext:
+                                                'Neighbors who opened your full listing, packages, and reviews',
+                                        },
+                                        {
+                                            id: 'inquiries',
+                                            label: 'High-Intent Engagements (Deal Chain & Chat)',
+                                            value: activeInsightMetrics.inquiries,
+                                            color: 'bg-amber-500',
+                                            subtext:
+                                                'Package tier selected, partner extension toggled, or inquiry started',
+                                        },
+                                        {
+                                            id: 'orders',
+                                            label: 'Confirmed Orders',
+                                            value: activeInsightMetrics.orders,
+                                            color: 'bg-emerald-600',
+                                            subtext: 'Completed bookings and direct counter handoffs',
+                                        },
+                                    ]}
+                                    conversionBadgeText={
+                                        activeInsightMetrics.cvr === '—'
+                                            ? '— View-to-Order CVR'
+                                            : `${activeInsightMetrics.cvr}% View-to-Order CVR`
+                                    }
+                                />
+                            ) : (
+                                <p className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-xs font-semibold text-slate-500">
+                                    No discovery or order activity has been recorded for this period.
+                                </p>
+                            )}
                         </section>
 
                         {/* 3. Listings Inventory Grid (Same Visual Language as Browse.tsx) */}
@@ -433,9 +433,7 @@ export default function MyListings(props: HomeProps) {
                                             key={tab.key}
                                             type="button"
                                             onClick={() =>
-                                                setStatusFilter(
-                                                    tab.key as typeof statusFilter,
-                                                )
+                                                setStatusFilter(tab.key as typeof statusFilter)
                                             }
                                             className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-extrabold transition-all ${
                                                 statusFilter === tab.key
@@ -512,12 +510,12 @@ export default function MyListings(props: HomeProps) {
                                         );
                                         const priceMinor = listing.price_amount_minor;
                                         const priceDisplay =
-                                            typeof priceMinor === 'number' && priceMinor > 0
+                                            typeof priceMinor === 'number'
                                                 ? `₱${(priceMinor / 100).toLocaleString('en-PH', {
                                                       minimumFractionDigits: 2,
                                                       maximumFractionDigits: 2,
                                                   })}`
-                                                : '₱450.00';
+                                                : 'Price not set';
                                         const stagesCount = (
                                             listing.milestone_stages ??
                                             listing.milestoneStages ??
@@ -650,7 +648,7 @@ export default function MyListings(props: HomeProps) {
                                                                     CTR
                                                                 </div>
                                                                 <div className="font-mono text-xs font-extrabold text-emerald-700">
-                                                                    {metrics.ctrPct}%
+                                                                    {metrics.impressions > 0 ? `${metrics.ctrPct}%` : '—'}
                                                                 </div>
                                                             </div>
                                                             <div>
@@ -665,39 +663,66 @@ export default function MyListings(props: HomeProps) {
                                                     </div>
 
                                                     {/* Owner Actions Footer */}
-                                                    <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                                                    <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
                                                         <Link
                                                             href={previewHref}
-                                                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-[#0F2F58] hover:border-[#0F2F58] hover:bg-[#F0F5FA]"
+                                                            className="inline-flex flex-1 basis-32 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-[#0F2F58] hover:border-[#0F2F58] hover:bg-[#F0F5FA]"
                                                         >
                                                             <Eye className="size-3.5" />
                                                             <span>Customer View &amp; Manage</span>
                                                         </Link>
 
+                                                        {(status === 'draft' || status === 'rejected') && (
+                                                            <Link
+                                                                href={editHref}
+                                                                aria-label={`${status === 'rejected' ? 'Revise' : 'Edit'} ${listing.title} in Builder`}
+                                                                className="inline-flex items-center justify-center gap-1 rounded-xl border border-[#0F2F58]/30 bg-[#EBF2FA] px-2.5 py-2 text-xs font-extrabold text-[#0F2F58] hover:bg-[#dbe8f6]"
+                                                            >
+                                                                <Sliders className="size-3.5" />
+                                                                <span>{status === 'rejected' ? 'Revise' : 'Edit'}</span>
+                                                            </Link>
+                                                        )}
                                                         {status === 'draft' && (
-                                                            <>
-                                                                <Link
-                                                                    href={editHref}
-                                                                    aria-label={`Edit ${listing.title} in Builder`}
-                                                                    className="inline-flex items-center justify-center gap-1 rounded-xl border border-[#0F2F58]/30 bg-[#EBF2FA] px-2.5 py-2 text-xs font-extrabold text-[#0F2F58] hover:bg-[#dbe8f6]"
-                                                                >
-                                                                    <Sliders className="size-3.5" />
-                                                                    <span>Edit</span>
-                                                                </Link>
-                                                                <button
-                                                                    type="button"
-                                                                    disabled={
-                                                                        submittingId === listing.id
-                                                                    }
-                                                                    onClick={() =>
-                                                                        handleSubmitDraft(listing)
-                                                                    }
-                                                                    className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-xl bg-[#0F2F58] px-2.5 py-2 text-xs font-extrabold text-white hover:bg-[#153e74] disabled:opacity-50"
-                                                                >
-                                                                    <Send className="size-3" />
-                                                                    <span>Submit</span>
-                                                                </button>
-                                                            </>
+                                                            <button
+                                                                type="button"
+                                                                disabled={submittingId === listing.id}
+                                                                onClick={() => handleSubmitDraft(listing)}
+                                                                className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-xl bg-[#0F2F58] px-2.5 py-2 text-xs font-extrabold text-white hover:bg-[#153e74] disabled:opacity-50"
+                                                            >
+                                                                <Send className="size-3" />
+                                                                <span>Submit</span>
+                                                            </button>
+                                                        )}
+                                                        {status === 'active' && (
+                                                            <button
+                                                                type="button"
+                                                                disabled={submittingId === listing.id}
+                                                                onClick={() => handleLifecycleAction(listing, 'pause')}
+                                                                className="inline-flex cursor-pointer items-center gap-1 rounded-xl border border-slate-200 px-2.5 py-2 text-xs font-bold text-slate-700 disabled:opacity-50"
+                                                            >
+                                                                <PauseCircle className="size-3.5" />
+                                                                Pause
+                                                            </button>
+                                                        )}
+                                                        {status === 'paused' && (
+                                                            <button
+                                                                type="button"
+                                                                disabled={submittingId === listing.id}
+                                                                onClick={() => handleLifecycleAction(listing, 'resume')}
+                                                                className="inline-flex cursor-pointer items-center gap-1 rounded-xl border border-slate-200 px-2.5 py-2 text-xs font-bold text-slate-700 disabled:opacity-50"
+                                                            >
+                                                                Resume
+                                                            </button>
+                                                        )}
+                                                        {status !== 'archived' && (
+                                                            <button
+                                                                type="button"
+                                                                disabled={submittingId === listing.id}
+                                                                onClick={() => handleLifecycleAction(listing, 'archive')}
+                                                                className="inline-flex cursor-pointer items-center gap-1 rounded-xl border border-slate-200 px-2.5 py-2 text-xs font-bold text-slate-700 disabled:opacity-50"
+                                                            >
+                                                                Archive
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </div>
@@ -728,6 +753,7 @@ export default function MyListings(props: HomeProps) {
                     if (tab === 'post') setCreatorOpen(true);
                     if (tab === 'quick_deal') setQuickDealOpen(true);
                     if (tab === 'orders') router.visit('/orders');
+                    if (tab === 'invitations') router.visit('/deal-invitations');
                     if (tab === 'profile') router.visit('/my-listings');
                 }}
                 onQuickDealClick={() => setQuickDealOpen(true)}

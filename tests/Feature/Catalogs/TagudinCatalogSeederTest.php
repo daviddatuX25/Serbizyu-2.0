@@ -53,7 +53,8 @@ it('seeds idempotent work and deal-chain catalogs with compatible browse supply'
         'set-crafts-custom-card',
     )
         ->and($workSets->get('set-repairs-inverter-clean')['status'])->toBe('published')
-        ->and($workSets->get('set-repairs-inverter-clean')['set_version'])->toBe(1)
+        ->and($workSets->get('set-repairs-inverter-clean')['set_version'])->toBe(2)
+        ->and($workSets->get('set-repairs-electrical-turnkey')['set_version'])->toBe(2)
         ->and($workSets->get('set-repairs-inverter-clean')['steps'][0]['dur'])->toBe('10m')
         ->and($workSets->get('set-repairs-plumbing-leak')['steps'][0])->not->toHaveKey('dur');
 

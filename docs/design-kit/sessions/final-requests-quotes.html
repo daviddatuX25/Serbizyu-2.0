@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Serbizyu final kit · Listings, Requests &amp; Quotes</title>
+<link rel="stylesheet" href="final-kit.css">
+</head>
+<body>
+<header class="fk-head"><div class="fk-head-inner">
+  <a class="fk-brand" href="final-kit.html"><img src="../assets/brand/serbizyu-long-navy-opt.png" alt="Serbizyu"><span>Final UI kit</span></a>
+  <nav class="fk-nav" aria-label="Final kit pages">
+    <a href="final-kit.html">Foundations</a>
+    <a href="final-requests-quotes.html" aria-current="page">Listings &amp; requests</a>
+    <a href="final-orders-stock.html">Orders &amp; stock</a>
+    <a href="final-payments.html">Payments</a>
+    <a href="final-scheduling-work.html">Scheduling &amp; Work</a>
+    <a href="final-deal-chain.html">Deal Chain</a>
+    <a href="final-work-tools.html">Work tools</a>
+    <a href="final-notifications-messages.html">Notifications &amp; messages</a>
+    <a href="admin-workspace-kit.html">Admin</a>
+  </nav>
+</div></header>
+
+<div class="fk-intro">
+  <div>
+    <span class="fk-badge"><svg class="ic sm" aria-hidden="true"><use href="final-icons.svg#i-lock"/></svg>Static kit · fixture data</span>
+    <h1>Listings, requests &amp; quotes</h1>
+  </div>
+  <p>Author-saved variants, Work specifications and named Deal Chain combinations appear directly on Listing Detail. Customer requests and provider quotes preserve Work stages and clearance modes into accepted orders.</p>
+</div>
+
+<nav class="fk-toc" aria-label="On this page">
+  <a href="#listings">Listing detail &amp; builder truth <b>4</b></a>
+  <a href="#requests">Requests, quotes &amp; negotiation <b>8</b></a>
+</nav>
+
+<section class="fk-section" id="listings">
+  <div class="fk-section-head">
+    <h2>Listing detail &amp; builder truth</h2>
+    <p>Listing Detail renders the seller's actual authored variants, live available stock, Work step proof/clearance badges, and saved Deal Chain combinations—never generic fallback marketing banners.</p>
+  </div>
+  <div class="specs">
+    <figure class="spec" id="listing-product-variants-stock">
+      <div class="phone"><div class="status"><span>9:41</span><span>Tagudin Hardware</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Holcim Excel Cement<small>Product · Rizal, Tagudin</small></h3></header>
+        <div class="app-body">
+          <div class="capture"><img src="../photos/req-cement.jpg" alt="Holcim Excel 40 kg cement bags at Tagudin Hardware"><span class="stamp"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-store"/></svg>Stall counter · A4 handoff</span></div>
+          <div class="card card-pad stack">
+            <div class="split"><strong class="card-title">Choose variant</strong><span class="chip done">11 available</span></div>
+            <div class="option on"><span class="radio"></span><div class="grow"><strong>40 kg bag</strong><small class="hint">11 available · 20 on hand</small></div><span class="money">₱285</span></div>
+            <div class="option"><span class="radio"></span><div class="grow"><strong>10-bag pallet lot</strong><small class="hint">2 lots available</small></div><span class="money">₱2,780</span></div>
+            <div class="option off"><span class="radio"></span><div class="grow"><strong>Half-bag repack (20 kg)</strong><small class="hint">0 available · paused</small></div><span class="chip settled">Out of stock</span></div>
+          </div>
+          <div class="notice settled"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-info"/></svg><div><strong>Direct payment · no pooled wallet</strong><p>External cash at counter or verified personal GCash/Maya transfer. Serbizyu holds no funds.</p></div></div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Request 40 kg bag · ₱285</button></div>
+      </div>
+      <figcaption><strong>Product listing · variants &amp; live stock</strong><span class="who">Customer · renders authored variants and available stock from listing_capacity, replacing static escrow copy.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="listing-service-work-spec">
+      <div class="phone"><div class="status"><span>9:41</span><span>Kuya Ben · A3</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Inverter AC Deep Clean<small>Service · Poblacion, Tagudin</small></h3></header>
+        <div class="app-body">
+          <div class="card card-pad stack">
+            <div class="split"><strong class="card-title">Work specification</strong><span class="chip info">A3 appointment · v1</span></div>
+            <p class="hint">Pinned into your order snapshot upon acceptance.</p>
+            <ol class="steps">
+              <li><span class="mark">1</span><div><strong>Arrival &amp; breaker lockout</strong><small>GPS pin + photo · Worker clears</small></div><time>15m</time></li>
+              <li><span class="mark">2</span><div><strong>Alkaline coil wash</strong><small>Photo proof · Customer approval</small></div><time>45m</time></li>
+              <li><span class="mark">3</span><div><strong>Cold air delta test (≥12°C)</strong><small>Metric reading (°C) · Worker clears</small></div><time>20m</time></li>
+              <li><span class="mark">4</span><div><strong>Final handover sign-off</strong><small>Checklist + Customer sign-off</small></div><time>10m</time></li>
+            </ol>
+          </div>
+          <div class="card card-pad stack">
+            <div class="split"><strong class="card-title">Packages</strong><span class="money">From ₱450</span></div>
+            <div class="option on"><span class="radio"></span><div class="grow"><strong>1 Unit Standard</strong><small class="hint">Indoor + outdoor coil wash</small></div><span class="money">₱450</span></div>
+            <div class="option"><span class="radio"></span><div class="grow"><strong>2 Units Dual Split</strong><small class="hint">Two indoor units + pressure check</small></div><span class="money">₱850</span></div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Choose appointment slot · ₱450</button></div>
+      </div>
+      <figcaption><strong>Service listing · Work tools &amp; gates</strong><span class="who">Customer · displays authored required_proofs and clearance_mode per Work step before booking.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="listing-saved-deal-chain-combo">
+      <div class="phone"><div class="status"><span>9:41</span><span>Saved combination</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">AC Clean + Part Combo<small>Authored by Kuya Ben</small></h3></header>
+        <div class="app-body">
+          <div class="card card-pad stack">
+            <div class="split"><strong class="card-title">Cool Again</strong><span class="chip info">3 independent partners</span></div>
+            <div class="cluster">
+              <figure class="c1"><img src="../photos/ac-capacitor.jpg" alt="35µF AC run capacitor"></figure>
+              <figure class="c2"><img src="../photos/courier.jpg" alt="Danny Express courier"></figure>
+              <figure class="c3"><img src="../photos/ac-clean.jpg" alt="Kuya Ben AC technician"></figure>
+              <span class="count">3</span>
+            </div>
+            <div class="row"><span class="avatar sq"><img src="../photos/ac-capacitor.jpg" alt=""></span><div><strong>Tagudin Hardware</strong><small>35µF capacitor · A4 pickup</small></div><div class="end"><span class="money">₱180</span></div></div>
+            <div class="row"><span class="avatar sq"><img src="../photos/courier.jpg" alt=""></span><div><strong>Danny Express</strong><small>Hardware → Pob. Este transit</small></div><div class="end"><span class="money">₱80</span></div></div>
+            <div class="row"><span class="avatar sq"><img src="../photos/ac-clean.jpg" alt=""></span><div><strong>Kuya Ben</strong><small>Fit capacitor + deep clean</small></div><div class="end"><span class="money">₱850</span></div></div>
+            <p class="hint">Informational sum ₱1,110. Selecting stages 3 separate partner invitations—no pooled checkout.</p>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Review 3 partner agreements</button></div>
+      </div>
+      <figcaption><strong>Listing detail · seller-authored Deal Chain</strong><span class="who">Customer · renders listing.deal_chain_combinations with provenance instead of hardcoded turnkey toggles.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="builder-product-a4-sync">
+      <div class="phone"><div class="status"><span>9:41</span><span>Product builder</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Stock &amp; handoff<small>Step 3 of 4 · CreateProduct</small></h3></header>
+        <div class="app-body">
+          <div class="card card-pad stack">
+            <div class="split"><strong class="card-title">Opening stock buckets</strong><span class="chip info">Ledger synced</span></div>
+            <div class="row"><div><strong>40 kg bag</strong><small>₱285 · default variant</small></div><div class="end"><strong>20 on hand</strong><small>Creates capacity bucket</small></div></div>
+            <div class="row"><div><strong>10-bag pallet lot</strong><small>₱2,780 · bulk variant</small></div><div class="end"><strong>2 on hand</strong><small>Creates capacity bucket</small></div></div>
+          </div>
+          <div class="card card-pad stack">
+            <div class="split"><strong class="card-title">Governed A4 handoff</strong><span class="chip settled">Protocol locked</span></div>
+            <ol class="steps">
+              <li><span class="mark">1</span><div><strong>Prepared at stall</strong><small>Merchant confirms item packed</small></div><time>Lead 30m</time></li>
+              <li><span class="mark">2</span><div><strong>Counter or courier custody</strong><small>Drop-off code or pickup photo</small></div><time>Handoff</time></li>
+              <li><span class="mark">3</span><div><strong>Customer receipt</strong><small>Buyer confirms condition received</small></div><time>Close</time></li>
+            </ol>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Save &amp; provision stock</button></div>
+      </div>
+      <figcaption><strong>Product builder · stock &amp; A4 protocol</strong><span class="who">Merchant · variants provision listing_capacity rows and preview the governed A4 handoff without labor pipeline jargon.</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fk-section" id="requests">
+  <div class="fk-section-head">
+    <h2>Requests, quotes &amp; negotiation</h2>
+    <p>Citizens post open or sealed requests; providers submit versioned quotes carrying intact Work stages and clearance authority; acceptance forms an Order snapshot.</p>
+  </div>
+  <div class="specs">
+    <figure class="spec" id="req-customer-tracker">
+      <div class="phone"><div class="status"><span>9:41</span><span>Maria Santos</span></div>
+        <header class="app-top"><h3 class="grow">Requests &amp; quotes<small>Pob. Este, Tagudin</small></h3></header>
+        <div class="app-body">
+          <div class="seg"><span aria-selected="true">My requests <b>2</b></span><span>Orders <b>3</b></span></div>
+          <div class="card">
+            <div class="row"><span class="icon-tile waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-wrench"/></svg></span><div><strong>Breaker tripping diagnostic</strong><small class="ref">REQ-6234 · Open tender · Budget ₱400</small></div><div class="end"><span class="chip waiting">2 quotes · review</span></div></div>
+            <div class="row"><span class="icon-tile info"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-lock"/></svg></span><div><strong>Emergency split AC repair</strong><small class="ref">REQ-83AA · Sealed quotes · Budget ₱450</small></div><div class="end"><span class="chip info">1 quote · open</span></div></div>
+            <div class="row"><span class="icon-tile done"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-check-circle"/></svg></span><div><strong>Municipal Hall courier run</strong><small class="ref">REQ-62A4 · Awarded → ORD-2740</small></div><div class="end"><span class="chip settled">Awarded</span></div></div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Post a new request</button></div>
+      </div>
+      <figcaption><strong>Customer · My requests tracker</strong><span class="who">Customer · tracks open, quoted and awarded requests alongside active orders.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="req-provider-quotes-tracker">
+      <div class="phone"><div class="status"><span>9:41</span><span>Kuya Ben</span></div>
+        <header class="app-top"><h3 class="grow">Submitted quotes<small>Provider workspace</small></h3></header>
+        <div class="app-body">
+          <div class="seg"><span aria-selected="true">Needs action <b>1</b></span><span>Waiting <b>2</b></span><span>Awarded</span></div>
+          <div class="card">
+            <div class="row"><span class="icon-tile waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-clock"/></svg></span><div><strong>Breaker tripping diagnostic</strong><small class="ref">QTE-90B1 v2 · Maria countered ₱360</small></div><div class="end"><span class="chip waiting">Kuya Ben · respond</span></div></div>
+            <div class="row"><span class="icon-tile info"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-file-text"/></svg></span><div><strong>Emergency split AC repair</strong><small class="ref">QTE-9104 v1 · ₱450 · Sealed</small></div><div class="end"><span class="chip waiting">Waiting on Maria</span></div></div>
+            <div class="row"><span class="icon-tile settled"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-x"/></svg></span><div><strong>Pipe joint leak repair</strong><small class="ref">QTE-8812 · Another quote selected</small></div><div class="end"><span class="chip settled">Not selected</span></div></div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn block" disabled>Browse open requests</button></div>
+      </div>
+      <figcaption><strong>Provider · My quotes tracker</strong><span class="who">Provider · tracks submitted quotes, counter-offers awaiting response, and non-selected outcomes.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="req-open-public-detail">
+      <div class="phone"><div class="status"><span>9:45</span><span class="ref">REQ-6234</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Breaker tripping diagnostic<small>Maria Santos · Brgy. Centro (exact hidden)</small></h3></header>
+        <div class="app-body">
+          <div class="capture"><img src="../photos/req-electrician.jpg" alt="Residential electrical sub-panel"><span class="stamp"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-pin"/></svg>Tagudin Centro · Exact address after award</span></div>
+          <div class="card card-pad stack">
+            <div class="split"><span class="chip info">Open tender</span><span class="money lg">₱400 est.</span></div>
+            <p>Kitchen sub-breaker trips when water kettle and fridge run together. Need load check and replacement 20A breaker if faulty.</p>
+            <div class="divider"></div>
+            <strong class="label">Requested Work stages (A1)</strong>
+            <ol class="steps">
+              <li><span class="mark">1</span><div><strong>Panel isolation &amp; amp reading</strong><small>Metric reading + photo · Worker clears</small></div><time>20m</time></li>
+              <li><span class="mark">2</span><div><strong>Breaker swap &amp; load verification</strong><small>Photo proof · Customer approval</small></div><time>40m</time></li>
+            </ol>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Submit quote</button></div>
+      </div>
+      <figcaption><strong>Open request detail · privacy &amp; Work spec</strong><span class="who">Provider · sees barangay-level location and requested Work stages with clearance rules before quoting.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="req-sealed-tender-view">
+      <div class="phone"><div class="status"><span>9:46</span><span class="ref">REQ-83AA</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Emergency split AC repair<small>Sealed quotes · 2 responses</small></h3></header>
+        <div class="app-body">
+          <div class="notice info"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-lock"/></svg><div><strong>Sealed tender</strong><p>Other providers' prices and proposals are hidden. Only the requester sees all quotes.</p></div></div>
+          <div class="card card-pad stack">
+            <div class="split"><strong class="card-title">Your submitted quote</strong><span class="chip waiting">Waiting on Maria</span></div>
+            <dl class="kv">
+              <dt>Quote ref</dt><dd class="ref">QTE-9104 · v1</dd>
+              <dt>Your price</dt><dd class="money">₱450</dd>
+              <dt>Duration</dt><dd>1.5 hours · A1 linear</dd>
+              <dt>Payment lane</dt><dd>External cash or P2P</dd>
+            </dl>
+          </div>
+          <div class="card card-pad"><strong class="card-title">Competing responses</strong><p class="hint">1 other verified provider submitted a sealed quote. Amounts are not disclosed.</p></div>
+        </div>
+        <div class="dock"><button type="button" class="btn block" disabled>Revise your quote</button></div>
+      </div>
+      <figcaption><strong>Sealed tender · provider perspective</strong><span class="who">Provider · sees own quote v1 while competing bids stay sealed.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="quote-composer-sheet">
+      <div class="phone"><div class="status"><span>9:48</span><span class="ref">REQ-6234</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Breaker diagnostic<small>Submit quote</small></h3></header>
+        <div class="app-body"><div class="card card-pad"><strong class="card-title">Request budget</strong><p class="hint">₱400 estimate · Tagudin Centro</p></div></div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Compose quote</button></div>
+        <div class="sheet-backdrop open"><div class="glovo-drawer-sheet">
+          <svg class="glovo-wave-cap" aria-hidden="true" viewBox="0 0 390 34" preserveAspectRatio="none"><path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0, 315 8, 390 28 L 390 34 L 0 34 Z" fill="#FFFFFF"></path></svg>
+          <div class="drawer-content-box">
+            <div class="drawer-title"><div><h4>Submit quote</h4><p>Kuya Ben · copies request Work stages</p></div><span class="chip info">A1 · v1</span></div>
+            <div class="field"><span class="label">Quote amount (PHP)</span><div class="input focus"><strong>₱380</strong></div></div>
+            <div class="drawer-option-card on"><span class="icon-tile"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-gauge"/></svg></span><div><strong>Step 1 · Amp reading + photo</strong><small>Worker clears · preserved</small></div></div>
+            <div class="drawer-option-card on"><span class="icon-tile waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-shield"/></svg></span><div><strong>Step 2 · Breaker swap photo</strong><small>Customer approval · app sign-off preserved</small></div></div>
+            <button type="button" class="btn primary block" disabled>Send quote · ₱380</button>
+          </div>
+        </div></div>
+      </div>
+      <figcaption><strong>Quote composer · stage clearance preserved</strong><span class="who">Provider · copying request stages retains clearance_mode and approval_method into the submitted quote.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="quote-customer-comparison">
+      <div class="phone"><div class="status"><span>10:02</span><span class="ref">REQ-6234</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Compare 2 quotes<small>Maria Santos · choose or counter</small></h3></header>
+        <div class="app-body">
+          <div class="card card-pad stack">
+            <div class="split"><div><strong>Mang Jose Electrical</strong><small>Verified · 4.9★ · 1.5 hrs</small></div><span class="money lg">₱380</span></div>
+            <p class="hint">Includes 20A DIN breaker + amp load test. Preserves your 2-step customer approval gate.</p>
+            <div class="row-wrap"><span class="chip info">A1 · 2 steps</span><span class="chip done">Customer gate kept</span></div>
+          </div>
+          <div class="card card-pad stack">
+            <div class="split"><div><strong>Ramon Home Fix</strong><small>Verified · 4.7★ · 2 hrs</small></div><span class="money lg">₱350</span></div>
+            <p class="hint">Diagnostic labor only; replacement breaker billed separately if needed.</p>
+            <div class="row-wrap"><span class="chip info">A1 · 2 steps</span><span class="chip waiting">Labor only</span></div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Accept Mang Jose · ₱380</button></div>
+      </div>
+      <figcaption><strong>Customer · quote comparison</strong><span class="who">Customer · compares price, inclusions and preserved Work gates side by side.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="quote-counter-negotiation">
+      <div class="phone"><div class="status"><span>10:08</span><span class="ref">QTE-90B1 · v2</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Counter-offer review<small>Mang Jose · respond to Maria</small></h3></header>
+        <div class="app-body">
+          <div class="notice waiting"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-clock"/></svg><div><strong>Waiting on Mang Jose</strong><p>Quote v1 (₱380) is superseded if accepted; no order exists until both agree.</p></div></div>
+          <div class="card card-pad stack">
+            <span class="chip proposed">Counter-offer · v2</span>
+            <div class="split"><span>Previous quote (v1)</span><span>₱380</span></div>
+            <div class="split"><span>Maria's counter (v2)</span><strong class="money">₱360</strong></div>
+            <p class="hint">Note: "I already bought the 20A breaker—need diagnostic and installation labor only."</p>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Accept ₱360 counter</button></div>
+      </div>
+      <figcaption><strong>Counter-offer · immutable quote lineage</strong><span class="who">Provider · reviews superseded v1 vs counter v2 before accepting or re-countering.</span></figcaption>
+    </figure>
+
+    <figure class="spec" id="quote-awarded-to-order">
+      <div class="phone"><div class="status"><span>10:15</span><span class="ref">ORD-2741</span></div>
+        <header class="app-top"><span class="icon-btn plain"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></span><h3 class="grow">Quote accepted<small>REQ-6234 → Order ORD-2741</small></h3></header>
+        <div class="app-body">
+          <div class="truth">
+            <div class="done"><span>Agreement</span><strong>Accepted</strong><small>₱360 · QTE v2</small></div>
+            <div class="info"><span>Work</span><strong>Not started</strong><small>A1 · 2 steps</small></div>
+            <div class="info"><span>Payment</span><strong>Not due</strong><small>External cash</small></div>
+          </div>
+          <div class="notice done"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-check-circle"/></svg><div><strong>Order snapshot pinned</strong><p>Exact address unlocked for Mang Jose. Competing quotes marked Not selected.</p></div></div>
+          <div class="card card-pad stack">
+            <strong class="card-title">Pinned Work steps</strong>
+            <div class="split"><span>1. Panel isolation &amp; amp reading</span><span class="chip info">Metric + photo</span></div>
+            <div class="split"><span>2. Breaker swap &amp; load check</span><span class="chip waiting">Customer sign-off</span></div>
+          </div>
+        </div>
+        <div class="dock"><button type="button" class="btn primary block" disabled>Open order workspace</button></div>
+      </div>
+      <figcaption><strong>Quote accepted → Order formed</strong><span class="who">Customer &amp; provider · creates Order, Terms Snapshot, Work Instance (not_started) and Payment Obligation (not_due).</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<p class="fk-boundary">Static fixtures only. Listing capacities, request quotes, order snapshots and payment obligations remain independent domain records; no live mutation is implied.</p>
+</body>
+</html>

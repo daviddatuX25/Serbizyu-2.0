@@ -2,23 +2,38 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\A9DeliveryController;
 use App\Http\Controllers\AdminDealChainCatalogController;
 use App\Http\Controllers\AdminIdentityVerificationController;
+use App\Http\Controllers\AgendaController;
+use App\Http\Controllers\AppointmentBookingController;
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrowseController;
 use App\Http\Controllers\CapabilityController;
+use App\Http\Controllers\CommunicationsController;
+use App\Http\Controllers\StaffWorkspaceController;
+use App\Http\Controllers\StaffGovernanceController;
+use App\Http\Controllers\LuponPacketController;
 use App\Http\Controllers\DealChainController;
 use App\Http\Controllers\DealChainReviewController;
+use App\Http\Controllers\DealInvitationController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IdentityEvidenceController;
 use App\Http\Controllers\ListingController;
+use App\Http\Controllers\ListingReviewController;
 use App\Http\Controllers\MyListingsController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderWorkChallengeController;
+use App\Http\Controllers\PaymentObligationController;
 use App\Http\Controllers\RequestController;
-use App\Http\Controllers\WorkEvidenceController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\TelemetryController;
+use App\Http\Controllers\TenderWorkspaceController;
+use App\Http\Controllers\WorkEvidenceController;
 use App\Http\Middleware\EnsureAuthenticated;
 use App\Modules\Catalogs\Application\DealChainCatalog;
 use App\Modules\Catalogs\Application\WorkCatalog;
@@ -96,6 +111,54 @@ Route::get('/api/deal-chains/slot-candidates', [DealChainController::class, 'slo
     ->middleware('throttle:60,1')
     ->name('deal-chains.slot-candidates');
 Route::middleware(EnsureAuthenticated::class)->group(function (): void {
+    Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+    Route::get('/stock/{capacity}', [StockController::class, 'show'])->whereUuid('capacity')->name('stock.show');
+    Route::post('/stock/{capacity}/adjustments', [StockController::class, 'adjust'])->whereUuid('capacity')->name('stock.adjustment');
+    Route::get('/my-requests', [TenderWorkspaceController::class, 'requests'])->name('requests.mine');
+    Route::get('/my-quotes', [TenderWorkspaceController::class, 'quotes'])->name('quotes.mine');
+    Route::get('/money-history', [PaymentObligationController::class, 'moneyHistory'])->name('payments.money-history');
+    Route::get('/listings/{listing}/appointment-slots', [AppointmentController::class, 'slots'])->name('appointments.slots');
+    Route::post('/listings/{listing}/appointment-holds', [AppointmentController::class, 'hold'])->name('appointments.holds');
+    Route::get('/listings/{listing}/appointment-booking', [AppointmentBookingController::class, 'show'])->name('listings.appointment-booking');
+    Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
+    Route::post('/agenda/blocks', [AgendaController::class, 'storeBlock'])->name('agenda.blocks.store');
+    Route::delete('/agenda/blocks/{block}', [AgendaController::class, 'destroyBlock'])->name('agenda.blocks.destroy');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/summary', [NotificationController::class, 'summary'])->name('notifications.summary');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead'])
+        ->whereUuid('notification')->name('notifications.read');
+    Route::post('/orders/{order}/conversation', [CommunicationsController::class, 'openOrder'])
+        ->whereUuid('order')->name('conversations.orders.open');
+    Route::post('/deal-chains/{dealChain}/relay', [CommunicationsController::class, 'openRelay'])
+        ->whereUuid('dealChain')->name('conversations.relay.open');
+    Route::post('/support-cases', [CommunicationsController::class, 'createCase'])->name('support-cases.store');
+    Route::post('/support-cases/{case}/conversation', [CommunicationsController::class, 'openCase'])
+        ->whereUuid('case')->name('conversations.cases.open');
+    Route::get('/conversations/{conversation}', [CommunicationsController::class, 'show'])
+        ->whereUuid('conversation')->name('conversations.show');
+    Route::get('/conversations/{conversation}/messages', [CommunicationsController::class, 'messages'])
+        ->whereUuid('conversation')->name('conversations.messages.index');
+    Route::post('/conversations/{conversation}/messages', [CommunicationsController::class, 'storeMessage'])
+        ->whereUuid('conversation')->name('conversations.messages.store');
+    Route::get('/conversations/{conversation}/attachments/{evidence}', [CommunicationsController::class, 'downloadAttachment'])
+        ->whereUuid('conversation')->whereUuid('evidence')->name('conversations.attachments.download');
+    Route::post('/orders/{order}/schedule-change-requests', [AppointmentController::class, 'proposeChange'])->name('orders.schedule-change-requests.store');
+    Route::post('/orders/{order}/schedule-change-requests/{request}/{action}', [AppointmentController::class, 'respondToChange'])
+        ->where('action', 'accept|reject|withdraw')->name('orders.schedule-change-requests.respond');
+    Route::post('/orders/{order}/payment-obligations/{obligation}/lane', [PaymentObligationController::class, 'chooseLane'])->name('orders.payment-obligations.lane');
+    Route::post('/orders/{order}/payment-obligations/{obligation}/cash/report', [PaymentObligationController::class, 'reportCash'])->name('orders.payment-obligations.cash.report');
+    Route::post('/orders/{order}/payment-obligations/{obligation}/cash/acknowledge', [PaymentObligationController::class, 'acknowledgeCash'])->name('orders.payment-obligations.cash.acknowledge');
+    Route::post('/orders/{order}/payment-obligations/{obligation}/p2p/proof', [PaymentObligationController::class, 'uploadP2pProof'])->name('orders.payment-obligations.p2p.proof');
+    Route::post('/orders/{order}/payment-obligations/{obligation}/p2p/verify', [PaymentObligationController::class, 'verifyP2pPayment'])->name('orders.payment-obligations.p2p.verify');
+    Route::post('/orders/{order}/payment-obligations/{obligation}/p2p/reject', [PaymentObligationController::class, 'rejectP2pProof'])->name('orders.payment-obligations.p2p.reject');
+    Route::get('/orders/{order}/payment-obligations/{obligation}/p2p/proof', [PaymentObligationController::class, 'downloadP2pProof'])->name('orders.payment-obligations.p2p.proof.show');
+    Route::post('/orders/{order}/payment-obligations/{obligation}/mismatch', [PaymentObligationController::class, 'flagPaymentMismatch'])->name('orders.payment-obligations.mismatch');
+    Route::post('/orders/{order}/deliveries', [A9DeliveryController::class, 'create'])->name('orders.deliveries.create');
+    Route::post('/orders/{order}/deliveries/{delivery}/files', [A9DeliveryController::class, 'upload'])->name('orders.deliveries.files.store');
+    Route::post('/orders/{order}/deliveries/{delivery}/submit', [A9DeliveryController::class, 'submit'])->name('orders.deliveries.submit');
+    Route::post('/orders/{order}/revision-requests', [A9DeliveryController::class, 'requestRevision'])->name('orders.deliveries.revision');
+    Route::post('/orders/{order}/deliveries/{delivery}/accept', [A9DeliveryController::class, 'accept'])->name('orders.deliveries.accept');
+    Route::get('/orders/{order}/deliveries/{delivery}/files/{file}', [A9DeliveryController::class, 'download'])->name('orders.deliveries.files.show');
     Route::get('/account/capabilities', [CapabilityController::class, 'index'])->name('account.capabilities.index');
     Route::post('/account/capabilities', [CapabilityController::class, 'store'])->name('account.capabilities.store');
     Route::delete('/account/capabilities/{role}', [CapabilityController::class, 'destroy'])->name('account.capabilities.destroy');
@@ -104,6 +167,8 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::post('/requests/{id}/quotes', [RequestController::class, 'storeQuote'])->name('requests.quotes.store');
     Route::post('/requests/{id}/quotes/{quote}/accept', [RequestController::class, 'acceptQuote'])->name('requests.quotes.accept');
     Route::post('/requests/{id}/quotes/{quote}/counter', [RequestController::class, 'counterQuote'])->name('requests.quotes.counter');
+    Route::get('/requests/{id}/quotes/{quote}/appointment-slots', [AppointmentController::class, 'quoteSlots'])->name('requests.quotes.appointment-slots');
+    Route::post('/requests/{id}/quotes/{quote}/appointment-holds', [AppointmentController::class, 'quoteHold'])->name('requests.quotes.appointment-holds');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/listings/{listing}/book', [OrderController::class, 'start'])
         ->middleware('throttle:30,1')
@@ -112,24 +177,36 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
         ->middleware('throttle:30,1')
         ->name('orders.propose');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::post('/orders/{order}/finalize', [OrderController::class, 'finalize'])
-        ->middleware('throttle:30,1')
-        ->name('orders.finalize');
+    Route::post('/orders/{order}/accept', [OrderController::class, 'accept'])->middleware('throttle:30,1')->name('orders.accept');
+    Route::post('/orders/{order}/decline', [OrderController::class, 'decline'])->middleware('throttle:30,1')->name('orders.decline');
+    Route::post('/orders/{order}/counter', [OrderController::class, 'counter'])->middleware('throttle:30,1')->name('orders.counter');
+    Route::post('/orders/{order}/amend', [OrderController::class, 'amend'])->middleware('throttle:30,1')->name('orders.amend');
+    Route::post('/orders/{order}/proposals/{proposal}/accept', [OrderController::class, 'acceptProposal'])->middleware('throttle:30,1')->name('orders.proposals.accept');
     Route::post('/orders/{order}/work/propose-completion', [OrderController::class, 'proposeWorkCompletion'])
         ->name('orders.work.propose-completion');
     Route::post('/orders/{order}/work/signoff', [OrderController::class, 'signoffWork'])
         ->name('orders.work.signoff');
     Route::post('/orders/{order}/work-nodes/{node}', [OrderController::class, 'advanceWorkNode'])
         ->name('orders.work-nodes.advance');
+    Route::post('/orders/{order}/work-nodes/{node}/clearance-challenges', [OrderWorkChallengeController::class, 'issue'])
+        ->whereUuid('order')
+        ->middleware('throttle:work-challenge-issue')
+        ->name('orders.work-challenges.issue');
+    Route::post('/orders/{order}/work-nodes/{node}/clearance-challenges/{challenge}/verify', [OrderWorkChallengeController::class, 'verify'])
+        ->whereUuid('order')
+        ->whereUuid('challenge')
+        ->middleware('throttle:work-challenge-verify')
+        ->name('orders.work-challenges.verify');
     Route::post('/orders/{order}/work-nodes/{node}/evidence', [WorkEvidenceController::class, 'store'])
         ->middleware('throttle:30,1')
         ->name('orders.work-evidence.store');
     Route::get('/orders/{order}/work-evidence/{evidence}', [WorkEvidenceController::class, 'show'])
         ->name('orders.work-evidence.show');
-    Route::post('/orders/{order}/courier/pickup', [OrderController::class, 'courierPickup'])
-        ->name('orders.courier.pickup');
-    Route::post('/orders/{order}/courier/handoff', [OrderController::class, 'courierHandoff'])
-        ->name('orders.courier.handoff');
+    Route::get('/orders/{order}/handoff', [OrderController::class, 'handoffShow'])->name('orders.handoff.show');
+    Route::post('/orders/{order}/handoff/prepared', [OrderController::class, 'markPrepared'])->name('orders.handoff.prepared');
+    Route::post('/orders/{order}/handoff/custody', [OrderController::class, 'offerCustody'])->name('orders.handoff.custody');
+    Route::post('/orders/{order}/handoff/custody/{transfer}/accept', [OrderController::class, 'acceptCustody'])->name('orders.handoff.custody.accept');
+    Route::post('/orders/{order}/handoff/receipt', [OrderController::class, 'recordReceipt'])->name('orders.handoff.receipt');
     Route::post('/deal-chains/authorize', [DealChainController::class, 'authorize'])
         ->middleware('throttle:30,1')
         ->name('deal-chains.authorize');
@@ -141,6 +218,13 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
         ->name('deal-chains.reviews.store');
     Route::get('/deal-chains/{dealChain}', [DealChainController::class, 'show'])
         ->name('deal-chains.show');
+    Route::post('/deal-chains/{dealChain}/needs/{need}/confirm-agreement', [DealChainController::class, 'confirmAgreement'])
+        ->middleware('throttle:30,1')->name('deal-chains.needs.confirm-agreement');
+    Route::post('/deal-chains/{dealChain}/needs/{need}/withdraw', [DealChainController::class, 'withdrawPartner'])
+        ->middleware('throttle:30,1')->name('deal-chains.needs.withdraw');
+    Route::post('/deal-chains/{dealChain}/needs/{need}/replace', [DealChainController::class, 'chooseReplacement'])
+        ->middleware('throttle:30,1')->name('deal-chains.needs.replace');
+    Route::get('/deal-invitations', [DealInvitationController::class, 'index'])->name('deal-invitations.index');
     Route::post('/deal-invitations/{invitation}/respond', [DealChainController::class, 'respondToInvitation'])
         ->middleware('throttle:30,1')
         ->name('deal-invitations.respond');
@@ -152,52 +236,67 @@ Route::middleware(EnsureAuthenticated::class)->group(function (): void {
     Route::delete('/account/identity/evidence/{id}', [IdentityEvidenceController::class, 'destroy'])->name('account.identity.evidence.destroy');
     Route::get('/account/identity/trust-level', [IdentityEvidenceController::class, 'trustLevel'])->name('account.identity.trust-level');
 
-    // Admin identity verification review & retention holds
-    Route::get('/admin/identity-verifications', [AdminIdentityVerificationController::class, 'index'])->name('admin.identity-verifications.index');
-    Route::post('/admin/identity-verifications/{id}/review', [AdminIdentityVerificationController::class, 'review'])->name('admin.identity-verifications.review');
-    Route::post('/admin/identity/retention-holds', [AdminIdentityVerificationController::class, 'createRetentionHold'])->name('admin.identity.retention-holds.store');
-    Route::delete('/admin/identity/retention-holds/{id}', [AdminIdentityVerificationController::class, 'releaseRetentionHold'])->name('admin.identity.retention-holds.destroy');
+    Route::middleware(EnsureAuthenticated::class.':admin')->group(function (): void {
+        // Admin identity verification review & retention holds
+        Route::get('/admin/identity-verifications', [AdminIdentityVerificationController::class, 'index'])->name('admin.identity-verifications.index');
+        Route::post('/admin/identity-verifications/{id}/review', [AdminIdentityVerificationController::class, 'review'])->name('admin.identity-verifications.review');
+        Route::post('/admin/identity/retention-holds', [AdminIdentityVerificationController::class, 'createRetentionHold'])->name('admin.identity.retention-holds.store');
+        Route::delete('/admin/identity/retention-holds/{id}', [AdminIdentityVerificationController::class, 'releaseRetentionHold'])->name('admin.identity.retention-holds.destroy');
+    });
 });
 
 Route::get('/users/{userId}/trust-profile', [IdentityEvidenceController::class, 'publicTrustProfile'])->name('users.trust-profile');
 
-Route::get('/admin', fn () => Inertia::render('Admin/Triage'))->name('admin.triage');
-Route::get('/admin/triage', fn () => Inertia::render('Admin/Triage'))->name('admin.triage.index');
-Route::get('/admin/inspect', function () {
-    return Inertia::render('Admin/Inspector/Show', [
-        'orderRef' => request()->query('ref', request()->query('order', 'ORD-2026-09')),
-    ]);
-})->name('admin.inspect');
-Route::get('/admin/inspector', function () {
-    return Inertia::render('Admin/Inspector/Show', [
-        'orderRef' => request()->query('ref', request()->query('order', 'ORD-2026-09')),
-    ]);
-})->name('admin.inspector');
-Route::get('/admin/orders', fn () => Inertia::render('Admin/Orders/Index'))->name('admin.orders.index');
-Route::get('/admin/listings', fn () => Inertia::render('Admin/Listings/Index'))->name('admin.listings.index');
-Route::get('/admin/tenders', fn () => Inertia::render('Admin/Tenders/Index'))->name('admin.tenders.index');
-Route::get('/admin/requests', fn () => Inertia::render('Admin/Tenders/Index'))->name('admin.requests.index');
-Route::get('/admin/users', fn () => Inertia::render('Admin/Users/Index'))->name('admin.users.index');
-Route::middleware(EnsureAuthenticated::class.':admin')
-    ->prefix('/admin/catalogs')
-    ->name('admin.catalogs.')
-    ->group(function (): void {
-        Route::get('/work', fn (WorkCatalog $catalog) => Inertia::render('Admin/Catalogs/WorkCatalog', [
-            'workCatalog' => $catalog->frontend(),
-        ]))->name('work');
-        Route::get('/deal-chains', [AdminDealChainCatalogController::class, 'index'])->name('deal-chains');
-        Route::post('/deal-chains/recipes', [AdminDealChainCatalogController::class, 'storeRecipe'])->name('deal-chains.recipes.store');
-        Route::post('/deal-chains/recipes/{recipeCode}/publish', [AdminDealChainCatalogController::class, 'publishRecipe'])->name('deal-chains.recipes.publish');
-        Route::get('/taxonomy', fn () => Inertia::render('Admin/Catalogs/TaxonomyStudio'))->name('taxonomy');
-    });
-Route::get('/admin/financials', fn () => Inertia::render('Admin/Financials/Index'))->name('admin.financials.index');
-Route::get('/admin/disputes', fn () => Inertia::render('Admin/Disputes/Index'))->name('admin.disputes.index');
-Route::get('/admin/telemetry', fn () => Inertia::render('Admin/System/TelemetryIndex'))->name('admin.telemetry.index');
-Route::get('/admin/system-health', fn () => Inertia::render('Admin/System/TelemetryIndex'))->name('admin.system-health');
-Route::get('/admin/outbox', fn () => Inertia::render('Admin/System/TelemetryIndex'))->name('admin.outbox');
-Route::get('/admin/audit', fn () => Inertia::render('Admin/System/TelemetryIndex'))->name('admin.audit');
-Route::get('/admin/holds', fn () => Inertia::render('Admin/Disputes/Index'))->name('admin.holds');
-Route::get('/admin/capabilities', fn () => Inertia::render('Admin/Users/Index'))->name('admin.capabilities');
+Route::middleware(EnsureAuthenticated::class.':admin')->group(function (): void {
+    Route::post('/admin/payment-mismatches/{case}/resolve', [PaymentObligationController::class, 'resolveMismatch'])->name('admin.payment-mismatches.resolve');
+    Route::post('/admin/support-cases/{case}/assign', [StaffGovernanceController::class, 'assign'])
+        ->whereUuid('case')->name('admin.support-cases.assign');
+    Route::post('/admin/support-cases/{case}/resolve', [StaffGovernanceController::class, 'resolve'])
+        ->whereUuid('case')->name('admin.support-cases.resolve');
+    Route::post('/admin/command-approvals', [StaffGovernanceController::class, 'requestApproval'])
+        ->name('admin.command-approvals.store');
+    Route::post('/admin/command-approvals/{approval}/approve', [StaffGovernanceController::class, 'approve'])
+        ->whereUuid('approval')->name('admin.command-approvals.approve');
+    Route::post('/admin/command-approvals/{approval}/execute', [StaffGovernanceController::class, 'execute'])
+        ->whereUuid('approval')->name('admin.command-approvals.execute');
+    Route::post('/admin/support-cases/{case}/lupon-packets', [LuponPacketController::class, 'create'])
+        ->whereUuid('case')->name('admin.lupon-packets.store');
+    Route::get('/admin/lupon-packets/{packet}/artifacts/{artifact}', [LuponPacketController::class, 'artifact'])
+        ->whereUuid('packet')->whereUuid('artifact')->name('admin.lupon-packets.artifact');
+    Route::post('/admin/lupon-packets/{packet}/transmission', [LuponPacketController::class, 'transmit'])
+        ->whereUuid('packet')->name('admin.lupon-packets.transmission');
+    Route::post('/admin/lupon-packets/{packet}/returned-paperwork', [LuponPacketController::class, 'returnedPaperwork'])
+        ->whereUuid('packet')->name('admin.lupon-packets.returned-paperwork');
+    Route::get('/admin/lupon-packets/{packet}/returned-paperwork', [LuponPacketController::class, 'returnedPaperworkFile'])
+        ->whereUuid('packet')->name('admin.lupon-packets.returned-paperwork-file');
+    Route::post('/admin/lupon-packets/{packet}/archive', [LuponPacketController::class, 'archive'])
+        ->whereUuid('packet')->name('admin.lupon-packets.archive');
+    Route::get('/admin', [StaffWorkspaceController::class, 'inbox'])->name('admin.triage');
+    Route::get('/admin/triage', [StaffWorkspaceController::class, 'inbox'])->name('admin.triage.index');
+    Route::get('/admin/inspect', [StaffWorkspaceController::class, 'inspect'])->name('admin.inspect');
+    Route::get('/admin/orders', [StaffWorkspaceController::class, 'registry'])->defaults('kind', 'orders')->name('admin.orders.index');
+    Route::get('/admin/listings', [StaffWorkspaceController::class, 'registry'])->defaults('kind', 'listings')->name('admin.listings.index');
+    Route::post('/admin/listings/{listing}/approve', [ListingReviewController::class, 'approve'])
+        ->whereUuid('listing')->name('admin.listings.approve');
+    Route::post('/admin/listings/{listing}/reject', [ListingReviewController::class, 'reject'])
+        ->whereUuid('listing')->name('admin.listings.reject');
+    Route::get('/admin/tenders', [StaffWorkspaceController::class, 'registry'])->defaults('kind', 'tenders')->name('admin.tenders.index');
+    Route::get('/admin/users', [StaffWorkspaceController::class, 'registry'])->defaults('kind', 'users')->name('admin.users.index');
+    Route::prefix('/admin/catalogs')
+        ->name('admin.catalogs.')
+        ->group(function (): void {
+            Route::get('/work', fn (WorkCatalog $catalog) => Inertia::render('Admin/Catalogs/WorkCatalog', [
+                'workCatalog' => $catalog->frontend(),
+            ]))->name('work');
+            Route::get('/deal-chains', [AdminDealChainCatalogController::class, 'index'])->name('deal-chains');
+            Route::post('/deal-chains/recipes', [AdminDealChainCatalogController::class, 'storeRecipe'])->name('deal-chains.recipes.store');
+            Route::post('/deal-chains/recipes/{recipeCode}/publish', [AdminDealChainCatalogController::class, 'publishRecipe'])->name('deal-chains.recipes.publish');
+            Route::get('/taxonomy', fn () => Inertia::render('Admin/Catalogs/TaxonomyStudio'))->name('taxonomy');
+        });
+    Route::get('/admin/financials', [StaffWorkspaceController::class, 'registry'])->defaults('kind', 'financials')->name('admin.financials.index');
+    Route::get('/admin/disputes', [StaffWorkspaceController::class, 'registry'])->defaults('kind', 'disputes')->name('admin.disputes.index');
+    Route::get('/admin/telemetry', [StaffWorkspaceController::class, 'registry'])->defaults('kind', 'telemetry')->name('admin.telemetry.index');
+});
 Route::get('/picks', fn (DealChainCatalog $catalog) => Inertia::render('Picks', [
     'dealChainCatalog' => $catalog->frontend(),
 ]))->name('picks');

@@ -175,7 +175,15 @@ describe('Browse Page', () => {
         window.localStorage.setItem(
             'serbizyu.picks',
             JSON.stringify([
-                { id: 'item_1', title: 'Inverter Split AC Deep Clean', price: 450, quantity: 1 },
+                {
+                    id: 'listing-1:base:',
+                    listing_id: 'listing-1',
+                    listing_version_id: 'version-5',
+                    title: 'Inverter Split AC Deep Clean',
+                    price: 450,
+                    quantity: 1,
+                    listing_type: 'service',
+                },
             ]),
         );
         const { container } = render(<Browse {...baseProps} />);
@@ -193,6 +201,8 @@ describe('Browse Page', () => {
         expect(screen.getAllByText('Inverter Split AC Deep Clean').length).toBeGreaterThanOrEqual(
             1,
         );
+        fireEvent.click(screen.getByRole('button', { name: /Confirm Booking/i }));
+        expect(mockVisit).toHaveBeenCalledWith('/listings/listing-1/book?quantity=1&listing_version_id=version-5');
     });
 
     it('sorts listings by nearest when nearest sort option is chosen', () => {

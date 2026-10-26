@@ -41,13 +41,17 @@ describe('Picks Page', () => {
     it('renders staged items and opens the planning modal without fake orders', () => {
         const mockPicks = [
             {
-                id: 'listing-1',
+                id: 'listing-1:base:',
+                listing_id: 'listing-1',
                 title: 'Inverter Split AC Deep Clean (1 Unit Standard)',
                 price: 450,
                 quantity: 1,
             },
             {
-                id: 'listing-2',
+                id: 'listing-2:variant-green:',
+                listing_id: 'listing-2',
+                variant_id: 'variant-green',
+                listing_version_id: 'version-3',
                 title: 'Weekend bibingka tray (Family Fiesta)',
                 price: 180,
                 quantity: 2,
@@ -65,7 +69,30 @@ describe('Picks Page', () => {
         expect(screen.queryByText(/Planning boundary/i)).toBeNull();
 
         fireEvent.click(screen.getByRole('button', { name: /Confirm Order & Bookings/i }));
-        expect(router.visit).toHaveBeenCalledWith('/listings/listing-1/book');
+        expect(router.visit).toHaveBeenCalledWith('/listings/listing-1/book?quantity=1');
+    });
+
+    it('forwards the selected variant, listing version, and quantity from shared Picks', () => {
+        window.localStorage.setItem('serbizyu.picks', JSON.stringify([{
+            id: 'listing-variant:variant-blue:',
+            listing_id: 'listing-variant',
+            listing_type: 'product',
+            variant_id: 'variant-blue',
+            package_id: null,
+            listing_version_id: 'version-9',
+            title: 'Capacitor · Blue',
+            price: 184,
+            quantity: 2,
+        }]));
+
+        render(<Picks {...baseProps} />);
+        fireEvent.click(screen.getByRole('button', { name: /Confirm Order/i }));
+
+        const url = new URL(vi.mocked(router.visit).mock.calls[0][0] as string, 'http://localhost');
+        expect(url.pathname).toBe('/listings/listing-variant/book');
+        expect(url.searchParams.get('variant_id')).toBe('variant-blue');
+        expect(url.searchParams.get('listing_version_id')).toBe('version-9');
+        expect(url.searchParams.get('quantity')).toBe('2');
     });
 
     it('opens the coordinated chain modal when items have a deal chain attached', () => {
@@ -81,12 +108,14 @@ describe('Picks Page', () => {
                     extraFee: 215,
                     nodes: [
                         {
+                            key: 'part',
                             role: 'STORE',
                             title: 'Tagudin HW',
                             sub: 'Partner quote required',
                             type: 'store',
                         },
                         {
+                            key: 'labor',
                             role: 'LABOR',
                             title: 'Kuya Ben AC',
                             sub: 'Provider agreement required',

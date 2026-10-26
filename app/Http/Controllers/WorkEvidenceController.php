@@ -28,7 +28,7 @@ final class WorkEvidenceController extends Controller
         try {
             $actorUserId = $session->requireUser($request, $correlationId);
             $validated = $request->validate([
-                'file' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+                'file' => ['required', 'file', 'max:10240'],
                 'tool_key' => ['required', 'string', 'in:photo_proof'],
             ]);
 

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenders\Application;
 
-use App\Modules\IdentityAccess\Application\CurrentSession;
-use App\Modules\IdentityAccess\Application\RoleAssignmentService;
+use App\Shared\Contracts\OrderCapacityPort;
+use App\Shared\Contracts\OrderListingSourcePort;
+use App\Shared\Contracts\RoleCapabilityReaderPort;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -22,8 +23,9 @@ use Illuminate\Support\Facades\DB;
 final class RequestDetailProjector
 {
     public function __construct(
-        private readonly CurrentSession $session,
-        private readonly RoleAssignmentService $roles,
+        private readonly RoleCapabilityReaderPort $roles,
+        private readonly OrderCapacityPort $capacity,
+        private readonly OrderListingSourcePort $listings,
     ) {}
 
     /**
@@ -42,10 +44,21 @@ final class RequestDetailProjector
             return null;
         }
 
-        $sessionData = $this->session->read($request);
-        $userId = is_array($sessionData) && ($sessionData['authenticated'] ?? false)
-            ? (string) ($sessionData['user_id'] ?? '')
-            : null;
+        $user = $request->user();
+        $userId = $user !== null ? (string) $user->getAuthIdentifier() : null;
+        $displayName = $userId === null
+            ? ''
+            : (string) (DB::table('user_profiles')->where('user_id', $userId)->value('display_name') ?: '');
+        $sessionData = $userId === null ? null : [
+            'authenticated' => true,
+            'isAuthenticated' => true,
+            'status' => 'authenticated',
+            'user_id' => $userId,
+            'userId' => $userId,
+            'source' => 'phone_otp',
+            'display_name' => $displayName,
+            'displayName' => $displayName,
+        ];
 
         $isRequester = $userId !== null && $userId === (string) $requestRecord->requester_user_id;
         $hasProviderRole = $userId !== null && $this->roles->hasActive($userId, 'provide');
@@ -95,10 +108,24 @@ final class RequestDetailProjector
             ->get()
             ->keyBy('subject_user_id');
 
-        $quotesData = $quotes->map(function ($q) use ($providerProfiles, $reviewsQuery): array {
+        $quotesData = $quotes->map(function ($q) use ($providerProfiles, $reviewsQuery, $userId, $isRequester, $requestRecord): array {
             $profile = $providerProfiles->get($q->provider_user_id);
             $reviewStats = $reviewsQuery->get($q->provider_user_id);
             $scope = is_string($q->scope) ? json_decode($q->scope, true) : (array) $q->scope;
+            $scope = is_array($scope) ? $scope : [];
+            $expired = $requestRecord->expires_at !== null && now()->greaterThanOrEqualTo($requestRecord->expires_at);
+            $quoteExpired = $q->expires_at !== null && now()->greaterThanOrEqualTo($q->expires_at);
+            $isProposer = ($scope['counter_by'] ?? 'provider') === 'requester' ? $isRequester : $userId === (string) $q->provider_user_id;
+            $canRespond = $userId !== null && ! $isProposer && ! $expired && ! $quoteExpired
+                && in_array($requestRecord->status, ['published', 'sourcing', 'quoted'], true)
+                && $q->status === 'submitted';
+            $workShape = strtoupper((string) $q->work_shape);
+            $appointmentHold = $userId !== null && $workShape === 'A3' && $q->status === 'submitted'
+                ? $this->capacity->currentQuoteAppointmentHold((string) $q->id, (int) $q->quote_version, (string) $requestRecord->requester_user_id)
+                : null;
+            $canChooseAppointment = $isRequester && $workShape === 'A3' && ! $expired && ! $quoteExpired
+                && in_array($requestRecord->status, ['published', 'sourcing', 'quoted'], true)
+                && $q->status === 'submitted';
 
             return [
                 'id' => (string) $q->id,
@@ -108,16 +135,32 @@ final class RequestDetailProjector
                 'rating' => $reviewStats !== null ? round((float) $reviewStats->avg_rating, 1) : null,
                 'review_count' => $reviewStats !== null ? (int) $reviewStats->review_count : 0,
                 'quote_version' => (int) $q->quote_version,
+                'listing_id' => $q->listing_id === null ? null : (string) $q->listing_id,
+                'listing_type' => is_string($scope['listing_type'] ?? null) ? $scope['listing_type'] : null,
+                'listing_version_id' => is_string($scope['appointment_listing_version_id'] ?? null)
+                    ? $scope['appointment_listing_version_id']
+                    : (is_string($scope['source_listing_version_id'] ?? null) ? $scope['source_listing_version_id'] : null),
+                'appointment_duration_minutes' => is_numeric($scope['appointment_duration_minutes'] ?? null)
+                    ? (int) $scope['appointment_duration_minutes']
+                    : null,
+                'appointment_hold' => $appointmentHold,
+                'can_choose_appointment' => $canChooseAppointment,
                 'amount_minor' => (int) $q->amount_minor,
                 'currency' => (string) $q->currency,
-                'scope' => is_array($scope) ? $scope : ['details' => (string) $q->scope],
+                'scope' => $scope,
                 'work_shape' => (string) $q->work_shape,
                 'status' => (string) $q->status,
+                'can_accept' => $canRespond,
+                'can_counter' => $canRespond,
                 'created_at' => (string) $q->created_at,
             ];
         })->values()->all();
 
         $requesterProfile = DB::table('user_profiles')->where('user_id', $requestRecord->requester_user_id)->first();
+        $category = DB::table('categories')
+            ->where('id', $requestRecord->category_id)
+            ->select(['id', 'code', 'name'])
+            ->first();
         $itemList = is_string($requestRecord->item_list) ? json_decode($requestRecord->item_list, true) : (array) $requestRecord->item_list;
         $timing = is_string($requestRecord->timing) ? json_decode($requestRecord->timing, true) : (array) $requestRecord->timing;
         $location = is_string($requestRecord->location) ? json_decode($requestRecord->location, true) : (array) $requestRecord->location;
@@ -126,6 +169,9 @@ final class RequestDetailProjector
             'id' => (string) $requestRecord->id,
             'requester_user_id' => (string) $requestRecord->requester_user_id,
             'requester_name' => $requesterProfile?->display_name ?? 'Tagudin Citizen',
+            'category_id' => (string) $requestRecord->category_id,
+            'category_code' => $category?->code ?? null,
+            'category_name' => $category?->name ?? 'Service Request',
             'title' => is_array($itemList) ? ($itemList['title'] ?? 'Service Request') : 'Service Request',
             'description' => (string) $requestRecord->description,
             'item_list' => is_array($itemList) ? $itemList : [],
@@ -144,26 +190,50 @@ final class RequestDetailProjector
             $myListings = DB::table('listings')
                 ->where('owner_user_id', $userId)
                 ->where('status', 'active')
-                ->select(['id', 'listing_type'])
-                ->get()
-                ->map(function ($l): array {
-                    $version = DB::table('listing_versions')
-                        ->where('listing_id', $l->id)
-                        ->orderByDesc('version_number')
-                        ->first();
-                    $terms = is_string($version?->terms) ? json_decode($version->terms, true) : (array) ($version?->terms ?? []);
-                    $title = is_array($terms) && isset($terms['title']) ? (string) $terms['title'] : 'Service Listing';
-                    $workShape = is_array($terms) && isset($terms['work_shape']) ? (string) $terms['work_shape'] : 'A1';
-                    $priceMinor = $version !== null ? (int) $version->price_amount_minor : null;
+                ->orderBy('id')
+                ->get(['id'])
+                ->map(function ($listing): ?array {
+                    $source = $this->listings->findActiveApproved((string) $listing->id);
+                    if ($source === null) {
+                        return null;
+                    }
+
+                    $terms = is_array($source['terms'] ?? null) ? $source['terms'] : [];
+                    $variants = [];
+                    foreach (is_array($terms['variants'] ?? null) ? $terms['variants'] : [] as $variant) {
+                        if (! is_array($variant) || ! is_string($variant['id'] ?? null) || $variant['id'] === '') {
+                            continue;
+                        }
+                        $label = is_string($variant['name'] ?? null) && trim($variant['name']) !== ''
+                            ? trim($variant['name'])
+                            : (is_string($variant['label'] ?? null) && trim($variant['label']) !== ''
+                                ? trim($variant['label'])
+                                : (string) $variant['id']);
+                        $variants[] = array_filter([
+                            'id' => (string) $variant['id'],
+                            'name' => $label,
+                            'label' => $label,
+                            'price_amount_minor' => is_numeric($variant['price_amount_minor'] ?? null)
+                                ? (int) $variant['price_amount_minor']
+                                : null,
+                            'price' => is_numeric($variant['price'] ?? null) ? (float) $variant['price'] : null,
+                            'is_default' => (bool) ($variant['is_default'] ?? $variant['isDefault'] ?? false),
+                            'currency' => is_string($variant['currency'] ?? null) ? strtoupper($variant['currency']) : ($source['currency'] ?? null),
+                        ], static fn (mixed $value): bool => $value !== null);
+                    }
 
                     return [
-                        'id' => (string) $l->id,
-                        'title' => $title,
-                        'listing_type' => (string) $l->listing_type,
-                        'work_shape' => $workShape,
-                        'price_amount_minor' => $priceMinor,
+                        'id' => (string) $source['listing_id'],
+                        'title' => (string) $source['title'],
+                        'listing_type' => (string) $source['listing_type'],
+                        'work_shape' => (string) $source['work_shape'],
+                        'listing_version_id' => (string) $source['listing_version_id'],
+                        'price_amount_minor' => $source['price_amount_minor'],
+                        'variants' => $variants,
                     ];
                 })
+                ->filter(static fn (?array $listing): bool => $listing !== null)
+                ->values()
                 ->all();
         }
 
@@ -174,8 +244,10 @@ final class RequestDetailProjector
             'viewer_role' => $viewerRole,
             'session' => is_array($sessionData) ? $sessionData : null,
             'actions' => [
-                'can_quote' => in_array($viewerRole, ['eligible_responder', 'bidder'], true) && (string) $requestRecord->status === 'published',
-                'can_accept' => $isRequester && (string) $requestRecord->status === 'published',
+                'can_quote' => in_array($viewerRole, ['eligible_responder', 'bidder'], true)
+                    && in_array($requestRecord->status, ['published', 'sourcing', 'quoted'], true)
+                    && ($requestRecord->expires_at === null || now()->lessThan($requestRecord->expires_at)),
+                'can_accept' => collect($quotesData)->contains('can_accept', true),
                 'is_owner' => $isRequester,
             ],
         ];

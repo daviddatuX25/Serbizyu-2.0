@@ -2,291 +2,198 @@
 
 declare(strict_types=1);
 
-use App\Models\User;
 use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
 use Carbon\CarbonImmutable;
+use App\Modules\DealCoordination\Application\WithdrawDealPartner;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Tests\Support\AuthenticatesWithPhoneOtp;
+use Tests\Support\CreatesSettledDealChainReview;
 
-uses(DatabaseTransactions::class, AuthenticatesWithPhoneOtp::class);
+uses(DatabaseTransactions::class, CreatesSettledDealChainReview::class);
+ 
 
 beforeEach(function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
         $this->markTestSkipped('PostgreSQL baseline required.');
     }
-
-    $this->bootPhoneOtpAuth();
     app(FixtureRepository::class)->ensure();
     $this->withoutMiddleware(ThrottleRequests::class);
 });
+it('quarantines held child reviews while allowing sibling publication and timeout processing', function (): void {
+    $chain = $this->createReviewableDealChain();
+    $held = $chain['children'][0];
+    $sibling = $chain['children'][1];
 
-function createTestUser(string $phone = '+639171234888'): string
-{
-    $id = (string) Str::uuid7();
-    DB::table('users')->insert([
-        'id' => $id,
-        'phone_e164' => $phone,
-        'status' => 'active',
-        'primary_access_tier' => 'L1',
-        'locale' => 'en',
-        'timezone' => 'Asia/Manila',
-        'version' => 1,
-        'correlation_id' => $id,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+    $caseId = $this->actingAs($chain['buyer'])->postJson('/support-cases', [
+        'order_id' => $held['order_id'],
+        'category' => 'fulfillment',
+        'content' => 'Review the held order.',
+        'idempotency_key' => 'review-hold-case-'.Str::uuid7(),
+    ])->assertCreated()->json('data.id');
+    $maker = \App\Models\User::factory()->create(['status' => 'active', 'primary_access_tier' => 'L4']);
+    $checker = \App\Models\User::factory()->create(['status' => 'active', 'primary_access_tier' => 'L4']);
+    $approval = $this->actingAs($maker)->postJson('/admin/command-approvals', [
+        'case_id' => $caseId,
+        'command_type' => 'administrative_hold.place',
+        'checker_user_id' => $checker->id,
+        'target_kind' => 'order',
+        'target_id' => $held['order_id'],
+        'expected_target_version' => (int) DB::table('orders')->where('id', $held['order_id'])->value('version'),
+        'reason_class' => 'dispute',
+        'reason' => 'Quarantine review publication while the order is under review.',
+        'idempotency_key' => 'review-hold-'.Str::uuid7(),
+    ])->assertCreated()->json('data');
+    $this->actingAs($checker)->postJson('/admin/command-approvals/'.$approval['id'].'/approve', [])->assertOk();
+    $heldHold = $this->actingAs($checker)->postJson('/admin/command-approvals/'.$approval['id'].'/execute', [])->assertOk()->json('data');
 
-    return $id;
-}
+    foreach ([$held, $sibling] as $child) {
+        $this->actingAs($chain['buyer'])->postJson("/orders/{$child['order_id']}/reviews", [
+            'rating' => 5,
+            'content' => 'The completed work was excellent.',
+            'attribute_chips' => ['on_time'],
+        ])->assertCreated();
+    }
+    foreach ([$held, $sibling] as $child) {
+        $this->actingAs($child['provider'])->postJson("/orders/{$child['order_id']}/reviews", [
+            'rating' => 5,
+            'content' => 'The buyer coordinated well.',
+            'attribute_chips' => ['respectful_communication'],
+        ])->assertCreated();
+    }
 
-function createDealNeed(string $dealChainId, int $ordinal, string $kind, string $title): string
-{
-    $id = (string) Str::uuid7();
-    DB::table('deal_needs')->insert([
-        'id' => $id,
-        'deal_chain_id' => $dealChainId,
-        'ordinal' => $ordinal,
-        'need_kind' => $kind,
-        'title' => $title,
-        'description' => "Scope for {$title}",
-        'status' => 'completed',
-        'requested_at' => now(),
-        'version' => 1,
-        'correlation_id' => $id,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+    $heldReviews = DB::table('reviews')->where('order_id', $held['order_id'])->get();
+    $siblingReviews = DB::table('reviews')->where('order_id', $sibling['order_id'])->get();
+    expect($heldReviews)->toHaveCount(2)
+        ->and($heldReviews->every(fn ($review): bool => $review->moderation_status === 'sealed' && $review->unblinded_at === null))->toBeTrue()
+        ->and($siblingReviews->every(fn ($review): bool => $review->moderation_status === 'approved' && $review->unblinded_at !== null))->toBeTrue();
 
-    return $id;
-}
-it('submits unified deal chain reviews in cascade mode across all child orders', function (): void {
-    $buyerId = $this->authenticateProvider();
-    $provider1 = createTestUser('+639170000001');
-    $provider2 = createTestUser('+639170000002');
-    $dealChainId = (string) Str::uuid7();
-    DB::table('deal_chains')->insert([
-        'id' => $dealChainId,
-        'coordinator_user_id' => $buyerId,
-        'status' => 'completed',
-        'title' => 'Tagudin All-In AC Clean and Courier',
-        'goal' => 'Clean 2 AC units and deliver filter',
-        'version' => 1,
-        'correlation_id' => $dealChainId,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+    $listingId = (string) DB::table('orders')->where('id', $sibling['order_id'])->value('listing_id');
+    expect(app(\App\Modules\TrustSupport\Application\ListingReviewService::class)->reviewsForListing($listingId))
+        ->toHaveCount(2);
 
-    $order1 = (string) Str::uuid7();
-    $order2 = (string) Str::uuid7();
-    $need1 = createDealNeed($dealChainId, 1, 'service', 'Clean 2 AC units');
-    $need2 = createDealNeed($dealChainId, 2, 'service', 'Deliver filter');
+    DB::table('reviews')->where('order_id', $held['order_id'])->update(['sealed_until' => now()->subMinute()]);
+    DB::table('reviews')->where('order_id', $sibling['order_id'])->update(['sealed_until' => now()->subMinute()]);
+    $this->travel(1)->minutes();
+    $this->artisan('reviews:unblind-expired')->assertSuccessful();
+    expect(DB::table('reviews')->where('order_id', $held['order_id'])->whereNotNull('unblinded_at')->count())->toBe(0)
+        ->and(DB::table('reviews')->where('order_id', $sibling['order_id'])->whereNotNull('unblinded_at')->count())->toBe(2);
+    $releaseApproval = $this->actingAs($maker)->postJson('/admin/command-approvals', [
+        'case_id' => $caseId,
+        'command_type' => 'administrative_hold.release',
+        'checker_user_id' => $checker->id,
+        'target_kind' => 'order',
+        'target_id' => $held['order_id'],
+        'expected_target_version' => (int) DB::table('orders')->where('id', $held['order_id'])->value('version'),
+        'hold_id' => $heldHold['hold_id'],
+        'expected_hold_version' => $heldHold['hold_version'],
+        'reason_class' => 'dispute',
+        'reason' => 'Release the exact hold after timeout quarantine.',
+        'idempotency_key' => 'review-hold-release-'.Str::uuid7(),
+    ])->assertCreated()->json('data');
+    $this->actingAs($checker)->postJson('/admin/command-approvals/'.$releaseApproval['id'].'/approve', [])->assertOk();
+    $this->actingAs($checker)->postJson('/admin/command-approvals/'.$releaseApproval['id'].'/execute', [])->assertOk();
+    $this->artisan('reviews:unblind-expired')->assertSuccessful();
+    expect(DB::table('reviews')->where('order_id', $held['order_id'])->whereNotNull('unblinded_at')->count())->toBe(2);
 
-    DB::table('orders')->insert([
-        [
-            'id' => $order1,
-            'deal_chain_id' => $dealChainId,
-            'deal_need_id' => $need1,
-            'origin' => 'deal_chain',
-            'mechanism' => 'fixed',
-            'buyer_user_id' => $buyerId,
-            'provider_user_id' => $provider1,
-            'status' => 'closed',
-            'correlation_id' => $order1,
-            'version' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ],
-        [
-            'id' => $order2,
-            'deal_chain_id' => $dealChainId,
-            'deal_need_id' => $need2,
-            'origin' => 'deal_chain',
-            'mechanism' => 'fixed',
-            'buyer_user_id' => $buyerId,
-            'provider_user_id' => $provider2,
-            'status' => 'closed',
-            'correlation_id' => $order2,
-            'version' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ],
-    ]);
+    $siblingCaseId = $this->actingAs($chain['buyer'])->postJson('/support-cases', [
+        'order_id' => $sibling['order_id'],
+        'category' => 'fulfillment',
+        'content' => 'Review the published sibling order.',
+        'idempotency_key' => 'review-sibling-hold-case-'.Str::uuid7(),
+    ])->assertCreated()->json('data.id');
+    $siblingApproval = $this->actingAs($maker)->postJson('/admin/command-approvals', [
+        'case_id' => $siblingCaseId,
+        'command_type' => 'administrative_hold.place',
+        'checker_user_id' => $checker->id,
+        'target_kind' => 'order',
+        'target_id' => $sibling['order_id'],
+        'expected_target_version' => (int) DB::table('orders')->where('id', $sibling['order_id'])->value('version'),
+        'reason_class' => 'dispute',
+        'reason' => 'Quarantine previously published review ratings.',
+        'idempotency_key' => 'review-sibling-hold-'.Str::uuid7(),
+    ])->assertCreated()->json('data');
+    $this->actingAs($checker)->postJson('/admin/command-approvals/'.$siblingApproval['id'].'/approve', [])->assertOk();
+    $this->actingAs($checker)->postJson('/admin/command-approvals/'.$siblingApproval['id'].'/execute', [])->assertOk();
 
-    $submissionId = (string) Str::uuid7();
+    $listingReviews = app(\App\Modules\TrustSupport\Application\ListingReviewService::class);
+    expect($listingReviews->reviewsForListing($listingId))->toBe([])
+        ->and($listingReviews->summaryForListing($listingId)['reviews_count'])->toBe(0)
+        ->and($listingReviews->summariesForListings([$listingId])[$listingId]['reviews_count'])->toBe(0)
+        ->and(DB::table('reviews')->where('order_id', $sibling['order_id'])->where('moderation_status', 'approved')->count())->toBe(2);
+});
 
-    // Buyer submits unified review with cascade
-    $response = $this->postJson("/deal-chains/{$dealChainId}/reviews", [
-        'submission_id' => $submissionId,
+it('submits unified deal chain reviews across completed and settled current children', function (): void {
+    $chain = $this->createReviewableDealChain();
+    $firstOrderId = $chain['children'][0]['order_id'];
+    $secondOrderId = $chain['children'][1]['order_id'];
+
+    $response = $this->postJson("/deal-chains/{$chain['chain_id']}/reviews", [
+        'submission_id' => (string) Str::uuid7(),
         'mode' => 'cascade',
         'unified_review' => [
             'rating' => 5,
             'content' => 'Outstanding team coordination!',
             'attribute_chips' => ['on_time', 'clean_workspace'],
         ],
-    ]);
+    ])->assertCreated();
 
-    $response->assertCreated();
-    $data = $response->json('data');
+    expect($response->json('data.submitted_count'))->toBe(2);
+    $reviews = DB::table('reviews')->where('deal_chain_id', $chain['chain_id'])->get();
+    expect($reviews)->toHaveCount(2)
+        ->and($reviews->pluck('order_id')->all())->toContain($firstOrderId, $secondOrderId);
 
-    expect($data['mode'])->toBe('cascade')
-        ->and($data['submitted_count'])->toBe(2);
-
-    $reviews = DB::table('reviews')->where('deal_chain_id', $dealChainId)->get();
-    expect($reviews)->toHaveCount(2);
-
-    foreach ($reviews as $rev) {
-        expect((int) $rev->rating)->toBe(5)
-            ->and($rev->submission_mode)->toBe('cascade')
-            ->and($rev->moderation_status)->toBe('sealed')
-            ->and($rev->unblinded_at)->toBeNull()
-            ->and($rev->sealed_until)->not->toBeNull();
+    foreach ($reviews as $review) {
+        $settledAt = DB::table('payment_obligations')->where('order_id', $review->order_id)->value('settled_at');
+        expect((int) $review->rating)->toBe(5)
+            ->and($review->submission_mode)->toBe('cascade')
+            ->and($review->moderation_status)->toBe('sealed')
+            ->and($review->unblinded_at)->toBeNull()
+            ->and(CarbonImmutable::parse($review->sealed_until)->equalTo(CarbonImmutable::parse((string) $settledAt)->addHours(72)))->toBeTrue();
     }
 });
 
-it('submits granular per-node reviews with independent star ratings', function (): void {
-    $buyerId = $this->authenticateProvider();
-    $techProvider = createTestUser('+639170000011');
-    $courierProvider = createTestUser('+639170000012');
-    $dealChainId = (string) Str::uuid7();
-    DB::table('deal_chains')->insert([
-        'id' => $dealChainId,
-        'coordinator_user_id' => $buyerId,
-        'status' => 'completed',
-        'title' => 'Electrical Repair + Delivery',
-        'goal' => 'Circuit fix and breaker run',
-        'version' => 1,
-        'correlation_id' => $dealChainId,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+it('submits granular ratings for separately completed current Deal Chain children', function (): void {
+    $chain = $this->createReviewableDealChain();
+    $primaryOrderId = $chain['children'][0]['order_id'];
+    $secondOrderId = $chain['children'][1]['order_id'];
 
-    $techOrder = (string) Str::uuid7();
-    $courierOrder = (string) Str::uuid7();
-    $techNeed = createDealNeed($dealChainId, 1, 'service', 'Circuit fix');
-    $courierNeed = createDealNeed($dealChainId, 2, 'service', 'Breaker run');
-
-    DB::table('orders')->insert([
-        [
-            'id' => $techOrder,
-            'deal_chain_id' => $dealChainId,
-            'deal_need_id' => $techNeed,
-            'origin' => 'deal_chain',
-            'mechanism' => 'fixed',
-            'buyer_user_id' => $buyerId,
-            'provider_user_id' => $techProvider,
-            'status' => 'closed',
-            'correlation_id' => $techOrder,
-            'version' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ],
-        [
-            'id' => $courierOrder,
-            'deal_chain_id' => $dealChainId,
-            'deal_need_id' => $courierNeed,
-            'origin' => 'deal_chain',
-            'mechanism' => 'fixed',
-            'buyer_user_id' => $buyerId,
-            'provider_user_id' => $courierProvider,
-            'status' => 'closed',
-            'correlation_id' => $courierOrder,
-            'version' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ],
-    ]);
-
-    // Buyer unchecks cascade and gives granular overrides: 5 stars to tech, 4 stars to courier
-    $response = $this->postJson("/deal-chains/{$dealChainId}/reviews", [
+    $response = $this->postJson("/deal-chains/{$chain['chain_id']}/reviews", [
         'mode' => 'granular',
         'granular_reviews' => [
             [
-                'order_id' => $techOrder,
+                'order_id' => $primaryOrderId,
                 'rating' => 5,
-                'content' => 'Master technician, solved tripping breaker in 30 mins.',
+                'content' => 'Master technician, completed the agreed work.',
                 'attribute_chips' => ['expert_fix', 'clean_workspace'],
             ],
             [
-                'order_id' => $courierOrder,
+                'order_id' => $secondOrderId,
                 'rating' => 4,
-                'content' => 'Safe transit, slightly delayed by rain.',
+                'content' => 'The second service was delivered as agreed.',
                 'attribute_chips' => ['fair_pricing'],
             ],
         ],
-    ]);
+    ])->assertCreated();
 
-    $response->assertCreated();
-
-    $techReview = DB::table('reviews')->where('order_id', $techOrder)->first();
-    $courierReview = DB::table('reviews')->where('order_id', $courierOrder)->first();
-
-    expect((int) $techReview->rating)->toBe(5)
-        ->and($techReview->submission_mode)->toBe('granular')
-        ->and($techReview->content)->toContain('Master technician');
-
-    expect((int) $courierReview->rating)->toBe(4)
-        ->and($courierReview->submission_mode)->toBe('granular')
-        ->and($courierReview->content)->toContain('Safe transit');
+    expect($response->json('data.submitted_count'))->toBe(2);
+    $primaryReview = DB::table('reviews')->where('order_id', $primaryOrderId)->first();
+    $secondReview = DB::table('reviews')->where('order_id', $secondOrderId)->first();
+    expect((int) $primaryReview->rating)->toBe(5)
+        ->and($primaryReview->submission_mode)->toBe('granular')
+        ->and($primaryReview->content)->toContain('Master technician')
+        ->and((int) $secondReview->rating)->toBe(4)
+        ->and($secondReview->submission_mode)->toBe('granular')
+        ->and($secondReview->content)->toContain('second service');
 });
 
-it('unblinds child orders pairwise independently without unblinding siblings', function (): void {
-    $buyerId = $this->authenticateProvider();
-    $laborProvider = createTestUser('+639170000021');
-    $courierProvider = createTestUser('+639170000022');
-    $dealChainId = (string) Str::uuid7();
-    DB::table('deal_chains')->insert([
-        'id' => $dealChainId,
-        'coordinator_user_id' => $buyerId,
-        'status' => 'completed',
-        'title' => 'Tagudin Two-Node Project',
-        'goal' => 'Dual node chain',
-        'version' => 1,
-        'correlation_id' => $dealChainId,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+it('unblinds each current child review pair independently', function (): void {
+    $chain = $this->createReviewableDealChain();
+    $primary = $chain['children'][0];
+    $second = $chain['children'][1];
 
-    $laborOrder = (string) Str::uuid7();
-    $courierOrder = (string) Str::uuid7();
-    $laborNeed = createDealNeed($dealChainId, 1, 'service', 'Dual node labor');
-    $courierNeed2 = createDealNeed($dealChainId, 2, 'service', 'Dual node transit');
-
-    DB::table('orders')->insert([
-        [
-            'id' => $laborOrder,
-            'deal_chain_id' => $dealChainId,
-            'deal_need_id' => $laborNeed,
-            'origin' => 'deal_chain',
-            'mechanism' => 'fixed',
-            'buyer_user_id' => $buyerId,
-            'provider_user_id' => $laborProvider,
-            'status' => 'closed',
-            'correlation_id' => $laborOrder,
-            'version' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ],
-        [
-            'id' => $courierOrder,
-            'deal_chain_id' => $dealChainId,
-            'deal_need_id' => $courierNeed2,
-            'origin' => 'deal_chain',
-            'mechanism' => 'fixed',
-            'buyer_user_id' => $buyerId,
-            'provider_user_id' => $courierProvider,
-            'status' => 'closed',
-            'correlation_id' => $courierOrder,
-            'version' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ],
-    ]);
-
-    // 1. Buyer submits reviews for both in cascade mode (both become sealed)
-    $this->postJson("/deal-chains/{$dealChainId}/reviews", [
+    $this->postJson("/deal-chains/{$chain['chain_id']}/reviews", [
         'mode' => 'cascade',
         'unified_review' => [
             'rating' => 5,
@@ -295,74 +202,89 @@ it('unblinds child orders pairwise independently without unblinding siblings', f
         ],
     ])->assertCreated();
 
-    // Both sealed initially
-    expect(DB::table('reviews')->where('deal_chain_id', $dealChainId)->where('moderation_status', 'sealed')->count())->toBe(2);
+    expect(DB::table('reviews')->where('deal_chain_id', $chain['chain_id'])->where('moderation_status', 'sealed')->count())->toBe(2);
 
-    // 2. Courier provider reviews the buyer with non-numeric Citizen Reliability
-    $this->actingAs(User::find($courierProvider));
-
-    $this->postJson("/orders/{$courierOrder}/reviews", [
+    $this->actingAs($primary['provider']);
+    $this->postJson("/orders/{$primary['order_id']}/reviews", [
         'attribute_chips' => ['cash_ready_on_site', 'respectful_communication'],
-        'content' => 'Easy delivery drop-off.',
-        'rating' => 5, // provider rating constraint
+        'content' => 'Buyer coordinated the work well.',
+        'rating' => 5,
     ])->assertCreated();
 
-    // 3. Courier order pair unblinds immediately!
-    $courierBuyerReview = DB::table('reviews')->where('order_id', $courierOrder)->where('author_role', 'buyer')->first();
-    $courierProviderReview = DB::table('reviews')->where('order_id', $courierOrder)->where('author_role', 'provider')->first();
+    $primaryBuyerReview = DB::table('reviews')->where('order_id', $primary['order_id'])->where('author_role', 'buyer')->first();
+    $primaryProviderReview = DB::table('reviews')->where('order_id', $primary['order_id'])->where('author_role', 'provider')->first();
+    $secondBuyerReview = DB::table('reviews')->where('order_id', $second['order_id'])->where('author_role', 'buyer')->first();
 
-    expect($courierBuyerReview->moderation_status)->toBe('approved')
-        ->and($courierBuyerReview->unblinded_at)->not->toBeNull();
-
-    expect($courierProviderReview->moderation_status)->toBe('approved')
-        ->and($courierProviderReview->rating)->toBeNull(); // NULL rating for provider!
-
-    // 4. Labor order pair REMAINS sealed! (Pairwise independence)
-    $laborBuyerReview = DB::table('reviews')->where('order_id', $laborOrder)->where('author_role', 'buyer')->first();
-    expect($laborBuyerReview->moderation_status)->toBe('sealed')
-        ->and($laborBuyerReview->unblinded_at)->toBeNull();
+    expect($primaryBuyerReview->moderation_status)->toBe('approved')
+        ->and($primaryBuyerReview->unblinded_at)->not->toBeNull()
+        ->and($primaryProviderReview->moderation_status)->toBe('approved')
+        ->and($primaryProviderReview->rating)->toBeNull()
+        ->and($secondBuyerReview->moderation_status)->toBe('sealed')
+        ->and($secondBuyerReview->unblinded_at)->toBeNull();
 });
 
-it('unblinds sealed reviews past 72-hour window via artisan command', function (): void {
-    $buyerId = createTestUser('+639170000031');
-    $providerId = createTestUser('+639170000032');
-    $orderId = (string) Str::uuid7();
+it('does not cascade a buyer review onto an uncompleted current replacement child', function (): void {
+    $chain = $this->createReviewableDealChain(settleBoth: false);
+    $primary = $chain['children'][0];
+    $withdrawn = $chain['children'][1];
+    $this->completeAndSettleReviewChild($primary, $chain['buyer'], (string) Str::uuid7());
+    $replacement = $this->replaceUnstartedReviewChild($chain, $withdrawn);
+    $this->actingAs($chain['buyer']);
 
-    DB::table('orders')->insert([
-        'id' => $orderId,
-        'origin' => 'direct',
-        'mechanism' => 'fixed',
-        'buyer_user_id' => $buyerId,
-        'provider_user_id' => $providerId,
-        'status' => 'closed',
-        'correlation_id' => $orderId,
-        'version' => 1,
-        'created_at' => now()->subDays(4),
-        'updated_at' => now()->subDays(4),
-    ]);
-
-    $reviewId = (string) Str::uuid7();
-    DB::table('reviews')->insert([
-        'id' => $reviewId,
-        'order_id' => $orderId,
-        'author_user_id' => $buyerId,
-        'subject_user_id' => $providerId,
-        'author_role' => 'buyer',
+    $response = $this->postJson("/orders/{$primary['order_id']}/reviews", [
         'rating' => 5,
-        'content' => 'Great fix.',
-        'moderation_status' => 'sealed',
-        'sealed_until' => CarbonImmutable::now()->subMinutes(10), // expired!
-        'unblinded_at' => null,
-        'correlation_id' => $orderId,
-        'version' => 1,
-        'created_at' => now()->subDays(4),
-        'updated_at' => now()->subDays(4),
+        'content' => 'The completed primary work was good.',
+        'cascade' => true,
+    ])->assertCreated();
+
+    expect($response->json('data.cascaded_count'))->toBe(0)
+        ->and(DB::table('deal_needs')->where('id', $replacement['need_id'])->value('replaces_deal_need_id'))->toBe($withdrawn['need_id'])
+        ->and(DB::table('deal_need_confirmations')->where('deal_need_id', $replacement['need_id'])->value('order_id'))->toBe($replacement['order_id'])
+        ->and(DB::table('orders')->where('id', $replacement['order_id'])->value('status'))->toBe('accepted')
+        ->and(DB::table('reviews')->where('order_id', $replacement['order_id'])->count())->toBe(0);
+});
+
+it('rejects direct review submission for a withdrawn historical child', function (): void {
+    $chain = $this->createReviewableDealChain(settleBoth: false);
+    $historical = $chain['children'][1];
+    $need = DB::table('deal_needs')->where('id', $historical['need_id'])->firstOrFail();
+    app(WithdrawDealPartner::class)->handle(
+        actorUserId: (string) $historical['provider']->id,
+        dealChainId: $chain['chain_id'],
+        dealNeedId: $historical['need_id'],
+        expectedNeedVersion: (int) $need->version,
+        idempotencyKey: 'review-withdraw-'.Str::uuid7(),
+        correlationId: (string) Str::uuid7(),
+    );
+
+    $response = $this->actingAs($chain['buyer'])->postJson("/orders/{$historical['order_id']}/reviews", [
+        'rating' => 5,
+        'content' => 'A withdrawn child is not reviewable.',
     ]);
 
-    // Run unblind command
+    $response->assertStatus(409);
+    expect(DB::table('reviews')->where('order_id', $historical['order_id'])->count())->toBe(0);
+});
+
+it('unblinds sealed reviews when the real settlement window elapses', function (): void {
+    $chain = $this->createReviewableDealChain();
+    $this->postJson("/deal-chains/{$chain['chain_id']}/reviews", [
+        'mode' => 'cascade',
+        'unified_review' => [
+            'rating' => 5,
+            'content' => 'The verified work was excellent.',
+            'attribute_chips' => ['on_time'],
+        ],
+    ])->assertCreated();
+
+    $this->travel(73)->hours();
     $this->artisan('reviews:unblind-expired')->assertSuccessful();
-    $unblindedReview = DB::table('reviews')->where('id', $reviewId)->first();
-    expect($unblindedReview->moderation_status)->toBe('approved')
-        ->and($unblindedReview->sealed_until)->toBeNull()
-        ->and($unblindedReview->unblinded_at)->not->toBeNull();
+
+    $reviews = DB::table('reviews')->where('deal_chain_id', $chain['chain_id'])->get();
+    expect($reviews)->toHaveCount(2);
+    foreach ($reviews as $review) {
+        expect($review->moderation_status)->toBe('approved')
+            ->and($review->sealed_until)->toBeNull()
+            ->and($review->unblinded_at)->not->toBeNull();
+    }
 });

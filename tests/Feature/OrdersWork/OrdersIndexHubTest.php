@@ -22,7 +22,7 @@ it('requires authentication to access the orders hub', function (): void {
     $this->get('/orders')->assertRedirect('/auth/sign-in');
 });
 
-it('renders the orders hub for an authenticated user with ongoing and history buckets', function (): void {
+it('renders a proposed order in the authenticated buyer active bucket', function (): void {
     $buyer = User::factory()->create();
     $provider = User::factory()->create();
     $correlationId = (string) Str::uuid7();
@@ -77,12 +77,14 @@ it('renders the orders hub for an authenticated user with ongoing and history bu
         ->assertOk();
 
     $response->assertJsonPath('component', 'Orders/Index');
-    expect($response->json('props.counts.ongoing'))->toBeGreaterThanOrEqual(1);
-    expect($response->json('props.counts.history'))->toBeGreaterThanOrEqual(0);
+    expect($response->json('props.counts.active'))->toBeGreaterThanOrEqual(1);
+    expect($response->json('props.counts.done'))->toBeGreaterThanOrEqual(0);
 
-    $ongoing = collect($response->json('props.ongoing'));
-    $matched = $ongoing->firstWhere('id', $proposed['order_id']);
-    expect($matched)->not->toBeNull();
-    expect($matched['order_status'])->toBe('pending_acceptance');
-    expect($matched['role'])->toBe('buyer');
+    $active = collect($response->json('props.active'));
+    $matched = $active->firstWhere('id', $proposed['order_id']);
+    expect($matched)->not->toBeNull()
+        ->and($matched['order_status'])->toBe('proposed')
+        ->and($matched['role'])->toBe('buyer')
+        ->and($matched['amount_minor'])->toBe(15000)
+        ->and($matched['currency'])->toBe('PHP');
 });

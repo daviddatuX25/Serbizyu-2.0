@@ -56,6 +56,9 @@ final readonly class ListingProjection
             'area' => (string) $attributes['area'],
             'public' => $public,
         ];
+        if ($public && isset($attributes['listing_version_id']) && is_string($attributes['listing_version_id'])) {
+            $projection['listing_version_id'] = $attributes['listing_version_id'];
+        }
         if (array_key_exists('work_shape', $attributes)) {
             $projection['work_shape'] = (string) $attributes['work_shape'];
         }
@@ -82,13 +85,18 @@ final readonly class ListingProjection
             $projection['milestone_stages'] = $attributes['milestone_stages'];
         }
 
-        foreach (['work_catalog', 'work_specification', 'addons', 'partner_candidates', 'deal_chain_combinations', 'deal_chain_specification', 'media', 'inclusions', 'variants', 'geography'] as $catalogField) {
+        foreach (['work_catalog', 'work_specification', 'addons', 'partner_candidates', 'deal_chain_combinations', 'deal_chain_specification', 'media', 'inclusions', 'geography'] as $catalogField) {
             if (array_key_exists($catalogField, $attributes) && is_array($attributes[$catalogField])) {
                 $projection[$catalogField] = $attributes[$catalogField];
             }
         }
+        if (array_key_exists('variants', $attributes) && is_array($attributes['variants'])) {
+            $projection['variants'] = $public
+                ? self::publicVariants($attributes['variants'])
+                : $attributes['variants'];
+        }
 
-        foreach (['catalog_source', 'work_catalog_code', 'pricing_mode', 'stall_location'] as $stringField) {
+        foreach (['catalog_source', 'work_catalog_code', 'pricing_mode', 'prep_lead_time', 'stall_location'] as $stringField) {
             if (array_key_exists($stringField, $attributes) && is_string($attributes[$stringField])) {
                 $projection[$stringField] = $attributes[$stringField];
             }
@@ -112,5 +120,41 @@ final readonly class ListingProjection
         }
 
         return new self($projection);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $variants
+     * @return list<array<string, mixed>>
+     */
+    private static function publicVariants(array $variants): array
+    {
+        $projected = [];
+        foreach ($variants as $variant) {
+            if (! is_array($variant) || ! is_string($variant['id'] ?? null)) {
+                continue;
+            }
+            $item = ['id' => $variant['id'], 'resource_key' => $variant['id']];
+            foreach (['name', 'title', 'price', 'price_amount_minor', 'currency', 'is_default', 'isDefault', 'description', 'inclusions'] as $field) {
+                if (array_key_exists($field, $variant)) {
+                    $item[$field] = $variant[$field];
+                }
+            }
+            $availability = $variant['availability'] ?? null;
+            if (is_array($availability)) {
+                $safeAvailability = [];
+                foreach (['on_hand', 'held', 'committed_unfulfilled', 'available'] as $field) {
+                    if (isset($availability[$field]) && is_numeric($availability[$field])) {
+                        $safeAvailability[$field] = (int) $availability[$field];
+                    }
+                }
+                if (isset($availability['availability_status']) && is_string($availability['availability_status'])) {
+                    $safeAvailability['availability_status'] = $availability['availability_status'];
+                }
+                $item['availability'] = $safeAvailability;
+            }
+            $projected[] = $item;
+        }
+
+        return $projected;
     }
 }

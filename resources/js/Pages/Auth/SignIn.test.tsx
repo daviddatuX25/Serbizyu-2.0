@@ -44,6 +44,12 @@ describe('unified sign-in page', () => {
         expect(screen.queryByRole('button', { name: 'Use a one-time code instead' })).toBeNull();
     });
 
+    it('does not display Tagudin Citizen Identity badge', () => {
+        render(<SignIn {...baseProps} />);
+
+        expect(screen.queryByText(/Tagudin Citizen Identity/i)).toBeNull();
+    });
+
     it('starts phone OTP from the phone password view', () => {
         render(<SignIn {...baseProps} />);
 
@@ -86,7 +92,9 @@ describe('unified sign-in page', () => {
         expect(backLink).toBeTruthy();
         expect(backLink.getAttribute('href')).toBe('/listings/create/product');
 
-        const guestLink = screen.getByRole('link', { name: /Return to listing builder as a guest/i });
+        const guestLink = screen.getByRole('link', {
+            name: /Return to listing builder as a guest/i,
+        });
         expect(guestLink).toBeTruthy();
         expect(guestLink.getAttribute('href')).toBe('/listings/create/product');
     });

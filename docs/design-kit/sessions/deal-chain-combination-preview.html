@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Serbizyu kit · Named Deal Chain preview</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    /* Static mapping of the selected light theme in resources/css/app.css.
+       No product data, policy, or thumbnail geometry is stored in theme tokens. */
+    :root {
+      --background: #f8fafc;
+      --foreground: #0f172a;
+      --card: #ffffff;
+      --card-foreground: #0f172a;
+      --primary: #0f2f58;
+      --primary-foreground: #ffffff;
+      --muted: #f1f5f9;
+      --muted-foreground: #526177;
+      --accent: #ebf2fa;
+      --accent-foreground: #0f2f58;
+      --border: #e2e8f0;
+      --ring: #0f2f58;
+      --mango: #ffc244;
+      --mango-foreground: #463000;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-width: 0; margin: 0; background: var(--background); color: var(--foreground);
+      font-family: var(--tk-font-body); font-size: 16px; line-height: 1.45;
+    }
+    ::selection { background: var(--mango); color: var(--foreground); }
+    a { color: var(--primary); text-underline-offset: 4px; }
+    a:focus-visible { outline: 3px solid var(--ring); outline-offset: 5px; }
+    .icon { width: 20px; height: 20px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .review-header {
+      max-width: 1080px; margin: 0 auto; padding: 24px 28px 18px; display: flex;
+      flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;
+    }
+    .brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; font-family: var(--tk-font-display); font-size: 17px; font-weight: 800; }
+    .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; color: white; background: var(--primary); }
+    .review-label { display: flex; align-items: center; gap: 7px; color: var(--muted-foreground); font-size: 13px; }
+    .layout { display: grid; grid-template-columns: 228px minmax(0, 1fr); align-items: start; gap: 40px; max-width: 1080px; margin: 0 auto; padding: 20px 28px 48px; }
+    .brief { padding-top: 18px; }
+    .brief h1 { margin: 0; color: var(--primary); font-family: var(--tk-font-display); font-size: 29px; line-height: 1.15; letter-spacing: -.03em; }
+    .brief p { margin: 16px 0; color: var(--muted-foreground); font-size: 15px; }
+    .brief ul { margin: 24px 0; padding-left: 18px; color: var(--muted-foreground); font-size: 14px; }
+    .brief li { margin-bottom: 10px; }
+    .brief a { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 700; }
+    .combination { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 24px; background: var(--card); }
+    .combination-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px 0; }
+    .back-label { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 700; color: var(--primary); }
+    .tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 750; background: var(--accent); color: var(--primary); white-space: nowrap; }
+    .identity { padding: 25px 22px 22px; text-align: center; }
+    .thumbnail-cluster { position: relative; display: flex; justify-content: center; align-items: center; height: 174px; width: min(100%, 340px); margin: 0 auto 12px; }
+    .portrait { position: relative; flex: 0 0 auto; margin: 0; border: 6px solid var(--card); border-radius: 50%; overflow: hidden; background: var(--accent); }
+    .portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .portrait.part { width: 124px; height: 124px; transform: translate(12px, 14px) rotate(-10deg); z-index: 1; }
+    .portrait.delivery { width: 150px; height: 150px; margin-left: -37px; transform: translateY(-9px) rotate(8deg); z-index: 3; }
+    .portrait.service { width: 120px; height: 120px; margin-left: -36px; transform: translate(-4px, 20px) rotate(-5deg); z-index: 2; }
+    .cluster-count { position: absolute; bottom: 1px; right: 28px; z-index: 4; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; background: var(--mango); color: var(--mango-foreground); font-size: 13px; font-weight: 850; font-variant-numeric: tabular-nums; }
+    .identity h2 { margin: 0; color: var(--primary); font-family: var(--tk-font-display); font-size: 32px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+    .identity p { margin: 9px auto 13px; max-width: 40ch; color: var(--muted-foreground); font-size: 15px; }
+    .identity-meta { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; color: var(--muted-foreground); font-size: 13px; }
+    .identity-meta span { display: inline-flex; align-items: center; gap: 5px; }
+    .partners { padding: 0 22px; }
+    .section-heading { margin: 0 0 7px; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .section-heading h3 { margin: 0; font-family: var(--tk-font-display); font-size: 15px; letter-spacing: -.01em; }
+    .section-heading span { font-size: 12px; color: var(--muted-foreground); }
+    .partner { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 11px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+    .partner:last-child { border-bottom: 0; }
+    .partner img { width: 44px; height: 44px; object-fit: cover; border-radius: 50%; }
+    .partner h4 { margin: 0; color: var(--foreground); font-size: 15px; line-height: 1.25; }
+    .partner p { margin: 3px 0 0; color: var(--muted-foreground); font-size: 13px; }
+    .partner-price { text-align: right; }
+    .partner-price strong { display: block; color: var(--primary); font-size: 15px; font-variant-numeric: tabular-nums; }
+    .partner-price span { display: block; font-size: 12px; color: var(--muted-foreground); }
+    .handoffs { margin: 5px 22px 21px; padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); display: grid; gap: 10px; }
+    .handoff { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; font-size: 13px; color: var(--muted-foreground); }
+    .handoff strong { color: var(--primary); font-weight: 700; }
+    .handoff .icon { width: 17px; height: 17px; color: var(--primary); }
+    .combination-footer { padding: 0 22px 22px; }
+    .total { display: flex; justify-content: space-between; gap: 12px; align-items: end; margin-bottom: 14px; }
+    .total strong { color: var(--primary); font-family: var(--tk-font-display); font-size: 26px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .total small { display: block; margin-top: 2px; color: var(--muted-foreground); font-size: 12px; }
+    .total-label { font-size: 14px; font-weight: 700; }
+    .primary-button { width: 100%; min-height: 48px; padding: 11px 14px; border: 0; border-radius: 13px; display: flex; justify-content: center; align-items: center; gap: 8px; background: var(--primary); color: var(--primary-foreground); font-family: var(--tk-font-display); font-size: 14px; font-weight: 750; }
+    .primary-button:disabled { opacity: 1; cursor: default; }
+    .footer-note { margin: 10px 0 0; text-align: center; color: var(--muted-foreground); font-size: 12px; }
+    .review-boundary { max-width: 1080px; margin: 0 auto; padding: 0 28px 28px; color: var(--muted-foreground); font-size: 13px; }
+    @media (max-width: 760px) {
+      .review-header { padding: 16px 16px 0; }
+      .layout { display: flex; flex-direction: column; gap: 20px; padding: 20px 16px 24px; }
+      .brief { padding: 0; }
+      .brief h1 { font-size: 24px; }
+      .brief p { margin: 9px 0 10px; }
+      .brief ul { display: none; }
+      .brief a { font-size: 13px; }
+      .combination { width: 100%; max-width: 560px; align-self: center; border-radius: 20px; }
+      .identity { padding-top: 16px; }
+      .identity h2 { font-size: 29px; }
+      .review-boundary { padding: 0 16px 24px; }
+    }
+    @media (max-width: 380px) {
+      .layout { padding-inline: 10px; }
+      .combination-header, .identity, .partners, .combination-footer { padding-left: 16px; padding-right: 16px; }
+      .handoffs { margin-inline: 16px; }
+      .thumbnail-cluster { height: 152px; }
+      .portrait.part { width: 105px; height: 105px; }
+      .portrait.delivery { width: 128px; height: 128px; }
+      .portrait.service { width: 104px; height: 104px; }
+      .cluster-count { right: 18px; }
+      .partner { grid-template-columns: 36px minmax(0, 1fr) auto; gap: 8px; }
+      .partner img { width: 36px; height: 36px; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5M3 18l9 5 9-5"/></symbol>
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+    <symbol id="back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="pin" viewBox="0 0 24 24"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></symbol>
+    <symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  </svg>
+  <header class="review-header">
+    <a class="brand" href="../index.html"><span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#layers"/></svg></span>Serbizyu kit</a>
+    <span class="review-label"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg>Static design preview</span>
+  </header>
+  <main class="layout">
+    <aside class="brief" aria-labelledby="preview-title">
+      <h1 id="preview-title">A combination with its own name.</h1>
+      <p>Three overlapping thumbnails identify the set. The people, prices and handoffs remain readable below.</p>
+      <ul>
+        <li>Loose image composition; no tabs or switcher.</li>
+        <li>Arrows express the two actual handoffs in this example.</li>
+        <li>One overview; separate partner agreements.</li>
+      </ul>
+      <a href="commerce-state-atlas.html#deal-chain"><svg class="icon" aria-hidden="true"><use href="#back"/></svg>Back to the state atlas</a>
+    </aside>
+    <article class="combination" aria-labelledby="combination-name">
+      <header class="combination-header">
+        <span class="back-label"><svg class="icon" aria-hidden="true"><use href="#back"/></svg>Partner combination</span>
+        <span class="tag">3 partners</span>
+      </header>
+      <div class="identity">
+        <div class="thumbnail-cluster" aria-label="Replacement capacitor, local courier and aircon technician">
+          <figure class="portrait part"><img src="../photos/ac-capacitor.jpg" alt="Replacement aircon capacitor"></figure>
+          <figure class="portrait delivery"><img src="../photos/courier.jpg" alt="Local courier service"></figure>
+          <figure class="portrait service"><img src="../photos/ac-clean.jpg" alt="Aircon service technician"></figure>
+          <span class="cluster-count" aria-hidden="true">3</span>
+        </div>
+        <h2 id="combination-name">Cool Again</h2>
+        <p>A replacement capacitor, delivered and fitted by a local technician.</p>
+        <div class="identity-meta">
+          <span><svg class="icon" aria-hidden="true"><use href="#pin"/></svg>Tagudin</span>
+          <span>Capacity checked before agreement</span>
+        </div>
+      </div>
+      <section class="partners" aria-labelledby="partners-title">
+        <div class="section-heading"><h3 id="partners-title">Your partner set</h3><span>Not booked yet</span></div>
+        <div class="partner">
+          <img src="../photos/ac-capacitor.jpg" alt="">
+          <div><h4>Tagudin Hardware</h4><p>One compatible capacitor</p></div>
+          <div class="partner-price"><strong>₱180</strong><span>Parts</span></div>
+        </div>
+        <div class="partner">
+          <img src="../photos/courier.jpg" alt="">
+          <div><h4>Danny Express</h4><p>Counter pickup to your address</p></div>
+          <div class="partner-price"><strong>₱80</strong><span>Delivery</span></div>
+        </div>
+        <div class="partner">
+          <img src="../photos/ac-clean.jpg" alt="">
+          <div><h4>Kuya Ben</h4><p>Fit the part and test cooling</p></div>
+          <div class="partner-price"><strong>₱850</strong><span>Service</span></div>
+        </div>
+      </section>
+      <div class="handoffs" aria-label="Execution prerequisites">
+        <div class="handoff"><strong>Part ready</strong><svg class="icon" aria-label="enables"><use href="#arrow"/></svg><span>Courier can collect</span></div>
+        <div class="handoff"><strong>Received on site</strong><svg class="icon" aria-label="enables"><use href="#arrow"/></svg><span>Technician can start</span></div>
+      </div>
+      <footer class="combination-footer">
+        <div class="total"><div><span class="total-label">Combined quoted amount</span><small>3 independent orders and payments</small></div><strong>₱1,110</strong></div>
+        <button type="button" class="primary-button" disabled>Review partner agreements<svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></button>
+        <p class="footer-note">Selecting a combination does not book its partners.</p>
+      </footer>
+    </article>
+  </main>
+  <p class="review-boundary">Illustrative combination name, partners and quotes. One customer perspective before booking; no live availability or payment claim. The action is a disabled visual specimen.</p>
+</body>
+</html>

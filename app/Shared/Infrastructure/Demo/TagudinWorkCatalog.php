@@ -30,12 +30,12 @@ final class TagudinWorkCatalog
     {
         return [
             [
-                'id' => '0198a3b1-7c40-7abc-8def-7234567890a1',
+                'id' => '0198a3b1-7c40-7abc-8def-7234567890c1',
                 'catalog_code' => 'tagudin-local-service-a1',
                 'work_shape' => 'A1',
                 'shape_contract_version' => 1,
-                'payload_schema_version' => 1,
-                'catalog_version' => 1,
+                'payload_schema_version' => 2,
+                'catalog_version' => 2,
                 'title' => 'Tagudin Local Service',
                 'summary' => 'Short local service work with scope confirmation, execution proof, and handoff sign-off.',
                 'status' => 'published',
@@ -77,12 +77,12 @@ final class TagudinWorkCatalog
                         [
                             'option_id' => 'set-repairs-inverter-clean',
                             'set_code' => 'set-repairs-inverter-clean',
-                            'set_version' => 1,
+                            'set_version' => 2,
                             'status' => 'published',
                             'catalog_code' => 'tagudin-local-service-a1',
                             'work_shape' => 'A1',
                             'shape_contract_version' => 1,
-                            'payload_schema_version' => 1,
+                            'payload_schema_version' => 2,
                             'category_codes' => ['repairs'],
                             'listing_types' => ['service'],
                             'title' => 'Inverter Aircon Cleaning & Checkup',
@@ -91,7 +91,15 @@ final class TagudinWorkCatalog
                             'steps' => [
                                 ['id' => 'inverter-intake', 'title' => 'Confirm unit and service scope', 'description' => 'Check the unit model, symptoms, access, and agreed service scope.', 'dur' => '10m', 'evidence_type' => 'dual_sign'],
                                 ['id' => 'inverter-clean', 'title' => 'Clean filters and accessible coils', 'description' => 'Clean agreed components and capture condition evidence.', 'dur' => '45m', 'evidence_type' => 'photo_required'],
-                                ['id' => 'inverter-check', 'title' => 'Run airflow and cooling check', 'description' => 'Record operating observations and share the completed result.', 'dur' => '20m', 'evidence_type' => 'meter_log'],
+                                [
+                                    'id' => 'inverter-check',
+                                    'title' => 'Run airflow and cooling check',
+                                    'description' => 'Record operating observations and share the completed result.',
+                                    'dur' => '20m',
+                                    'evidence_type' => 'meter_log',
+                                    'required_proofs' => ['metric_reading'],
+                                    'metric_requirements' => [['id' => 'cooling-delta', 'name' => 'Supply-to-return air temperature difference', 'unit' => '°C', 'required' => true]],
+                                ],
                             ],
                         ],
                         [
@@ -163,12 +171,12 @@ final class TagudinWorkCatalog
                 ],
             ],
             [
-                'id' => '0198a3b1-7c40-7abc-8def-7234567890a3',
+                'id' => '0198a3b1-7c40-7abc-8def-7234567890c3',
                 'catalog_code' => 'tagudin-onsite-service-a3',
                 'work_shape' => 'A3',
                 'shape_contract_version' => 1,
-                'payload_schema_version' => 1,
-                'catalog_version' => 1,
+                'payload_schema_version' => 2,
+                'catalog_version' => 2,
                 'title' => 'Tagudin On-site Service',
                 'summary' => 'Scheduled on-site work with safety triage, execution evidence, measurement, and customer sign-off.',
                 'status' => 'published',
@@ -219,12 +227,12 @@ final class TagudinWorkCatalog
                         [
                             'option_id' => 'set-repairs-electrical-turnkey',
                             'set_code' => 'set-repairs-electrical-turnkey',
-                            'set_version' => 1,
+                            'set_version' => 2,
                             'status' => 'published',
                             'catalog_code' => 'tagudin-onsite-service-a3',
                             'work_shape' => 'A3',
                             'shape_contract_version' => 1,
-                            'payload_schema_version' => 1,
+                            'payload_schema_version' => 2,
                             'category_codes' => ['repairs'],
                             'listing_types' => ['service'],
                             'title' => 'Electrical Diagnostic & Repair',
@@ -233,7 +241,18 @@ final class TagudinWorkCatalog
                             'steps' => [
                                 ['id' => 'electrical-checkin', 'title' => 'Confirm issue and make area safe', 'description' => 'Review symptoms, access, and safe isolation before work.', 'dur' => '15m', 'evidence_type' => 'dual_sign'],
                                 ['id' => 'electrical-repair', 'title' => 'Diagnose and complete agreed repair', 'description' => 'Inspect the circuit and perform the approved repair.', 'dur' => '55m', 'evidence_type' => 'photo_required'],
-                                ['id' => 'electrical-test', 'title' => 'Test operation and review result', 'description' => 'Record relevant checks and obtain customer acknowledgement.', 'dur' => '20m', 'evidence_type' => 'meter_log'],
+                                [
+                                    'id' => 'electrical-test',
+                                    'title' => 'Test operation and review result',
+                                    'description' => 'Record relevant checks and obtain customer acknowledgement.',
+                                    'dur' => '20m',
+                                    'evidence_type' => 'meter_log',
+                                    'required_proofs' => ['metric_reading'],
+                                    'metric_requirements' => [
+                                        ['id' => 'supply-voltage', 'name' => 'Supply voltage', 'unit' => 'V', 'required' => true],
+                                        ['id' => 'load-current', 'name' => 'Load current', 'unit' => 'A', 'required' => true],
+                                    ],
+                                ],
                             ],
                         ],
                         [

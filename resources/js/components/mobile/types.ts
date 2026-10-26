@@ -9,7 +9,7 @@ export type WorkClearanceMode = 'worker_direct' | 'customer_approval' | 'physica
 
 export type HandoffParty = 'recipient_confirm' | 'worker_dropoff';
 
-export type WorkApprovalMethod = 'app_confirm' | 'presence_otp' | 'none';
+export type WorkApprovalMethod = 'app_confirm' | 'presence_otp' | 'worker_dropoff' | 'none';
 
 export type WorkEvidenceType =
     | 'photo_proof'
@@ -52,6 +52,9 @@ export type WorkEvidenceProtocol =
 
 export type WorkStageGateType = 'arrival' | 'execution' | 'diagnostic' | 'signoff';
 
+export type WorkChecklistItem = { id: string; label: string; required: boolean };
+export type WorkMetricRequirement = { id: string; name: string; unit: string; required: boolean; target?: number | null; min?: number | null; max?: number | null };
+
 export interface WorkStage {
     id: string;
     num: string;
@@ -68,7 +71,8 @@ export interface WorkStage {
     requiredProofs?: WorkEvidenceType[];
     approvalMethod?: WorkApprovalMethod;
     toolBindings?: WorkToolBinding[];
-    metricUnit?: string;
+    checklistItems?: WorkChecklistItem[];
+    metricRequirements?: WorkMetricRequirement[];
     interactionType?: WorkInteractionType;
     evidenceProtocol?: WorkEvidenceProtocol;
     gateType?: WorkStageGateType;
@@ -84,7 +88,8 @@ export interface WorkNodePrimitive {
     requiredProofs: WorkEvidenceType[];
     approvalMethod?: WorkApprovalMethod;
     toolBindings?: WorkToolBinding[];
-    metricUnit?: string;
+    checklistItems?: WorkChecklistItem[];
+    metricRequirements?: WorkMetricRequirement[];
     evidence: string;
     color: string;
     bg: string;

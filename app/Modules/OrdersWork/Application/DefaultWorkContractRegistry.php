@@ -15,9 +15,13 @@ final class DefaultWorkContractRegistry implements WorkContractRegistry
     {
         $this->definitions = [
             'A1:1:1' => new WorkContractDefinition('A1', 1, 1),
+            'A1:1:2' => new WorkContractDefinition('A1', 1, 2, supportsItemizedChecklists: true, supportsNamedMetrics: true, supportsClearanceChallenges: true),
             'A3:1:1' => new WorkContractDefinition('A3', 1, 1),
+            'A3:1:2' => new WorkContractDefinition('A3', 1, 2, supportsItemizedChecklists: true, supportsNamedMetrics: true, supportsClearanceChallenges: true),
             'A4:1:1' => new WorkContractDefinition('A4', 1, 1),
+            'A4:1:2' => new WorkContractDefinition('A4', 1, 2, supportsItemizedChecklists: true, supportsNamedMetrics: true, supportsClearanceChallenges: true),
             'A9:1:1' => new WorkContractDefinition('A9', 1, 1),
+            'A9:1:2' => new WorkContractDefinition('A9', 1, 2, supportsItemizedChecklists: true, supportsNamedMetrics: true),
         ];
     }
 

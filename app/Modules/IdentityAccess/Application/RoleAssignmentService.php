@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\IdentityAccess\Application;
 
+use App\Shared\Contracts\RoleCapabilityReaderPort;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-final class RoleAssignmentService
+final class RoleAssignmentService implements RoleCapabilityReaderPort
 {
     public const SUPPORTED_ROLES = ['buyer', 'provider', 'merchant', 'agent'];
 
@@ -127,12 +128,17 @@ final class RoleAssignmentService
 
     public function hasActive(string $userId, string $roleCode): bool
     {
+        $now = now();
         $aliases = self::roleAliases($roleCode);
 
         return DB::table('role_assignments')
             ->where('user_id', $userId)
             ->whereIn('role_code', $aliases)
             ->where('status', 'active')
+            ->where('effective_at', '<=', $now)
+            ->where(function ($query) use ($now): void {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', $now);
+            })
             ->exists();
     }
 

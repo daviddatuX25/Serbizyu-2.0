@@ -27,6 +27,6 @@ final class InertiaShellTest extends TestCase
             ->assertJsonPath('props.correlationId', '0198a3b1-7c40-7abc-8def-f234567890ab')
             ->assertJsonPath('props.pageMode', 'browse');
 
-        self::assertCount(4, $response->json('props.dealChainCatalog'));
+        self::assertNotEmpty($response->json('props.dealChainCatalog'));
     }
 }

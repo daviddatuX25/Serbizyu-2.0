@@ -10,6 +10,14 @@ namespace App\Shared\Contracts;
  */
 interface WorkSpecificationPort
 {
+    public const WORK_TOOLS = [
+        'photo_proof',
+        'gps_checkin',
+        'metric_reading',
+        'checklist_steps',
+        'external_connector',
+    ];
+
     /**
      * @param  array<int, array<string, mixed>>  $rawSteps
      * @return list<array{
@@ -21,13 +29,16 @@ interface WorkSpecificationPort
      *     evidence_type: string,
      *     evidence_description: string,
      *     control_mode: string,
+     *     mandatory: bool,
      *     duration_label: string|null,
      *     required_proofs: list<string>,
      *     approval_method: string,
-     *     metric_unit: string|null
+     *     handoff_party: string|null,
+     *     checklist_items: list<array{id: string, label: string, required: bool}>,
+     *     metric_requirements: list<array{id: string, name: string, unit: string, required: bool, target?: float, min?: float, max?: float}>
      * }>
      */
-    public function normalizeNodes(array $rawSteps, string $workShape = 'A1'): array;
+    public function normalizeNodes(array $rawSteps, string $workShape = 'A1', bool $requireToolDefinitions = false): array;
 
     /**
      * @param  array<int, array<string, mixed>>  $nodes

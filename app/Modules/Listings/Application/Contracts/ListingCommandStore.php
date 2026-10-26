@@ -60,4 +60,7 @@ interface ListingCommandStore
     ): array;
 
     public function recordDenied(string $listingId, ?string $actorId, string $correlationId): void;
+
+    /** @return list<array<string, mixed>> */
+    public function provisionPublishedProductStock(string $listingId, string $ownerUserId, string $correlationId): array;
 }

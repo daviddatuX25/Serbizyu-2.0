@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import type { WorkNodeRecord } from '../../types';
-import { WORK_TOOL_REGISTRY } from './workNodeCatalog';
 import WorkChecklistStepsInput from './WorkChecklistStepsInput';
 import WorkLocationPinInput from './WorkLocationPinInput';
-import WorkMetricReadingsInput from './WorkMetricReadingsInput';
+import WorkMetricReadingsInput, { type MetricReadingDraft } from './WorkMetricReadingsInput';
 import WorkPhotoProofInput from './WorkPhotoProofInput';
+import { WORK_TOOL_REGISTRY } from './workNodeCatalog';
 
 export type WorkNodeAction = 'complete_step' | 'request_confirmation' | 'mark_ready_for_handoff' | 'propose_completion';
-type LocationProof = {
+export type LocationProof = {
     latitude: number;
     longitude: number;
     accuracy_m: number | null;
@@ -16,13 +16,12 @@ type LocationProof = {
     observed_at: string;
     landmark?: string | null;
 };
-type MetricReading = { value: number; unit: string };
-type WorkProofPayload = {
+export type WorkProofPayload = {
     notes?: string;
     evidence_file_ids?: string[];
     location?: LocationProof;
-    metric_readings?: Array<MetricReading & { observed_at: string }>;
-    checklist_completed?: boolean;
+    metric_readings?: MetricReadingDraft[];
+    checklist_responses?: Array<{ id: string; completed: boolean }>;
 };
 
 type WorkNodeEvidenceToolsProps = {
@@ -32,7 +31,10 @@ type WorkNodeEvidenceToolsProps = {
     processing: boolean;
     onSubmit: (payload: WorkProofPayload) => void;
     onPreviewPhoto: (url: string) => void;
+    submitLabel?: string;
 };
+
+const NO_METRIC_REQUIREMENTS: NonNullable<WorkNodeRecord['metric_requirements']> = [];
 
 const actionLabels: Record<WorkNodeAction, string> = {
     complete_step: 'Submit proof & complete step',
@@ -48,27 +50,30 @@ export default function WorkNodeEvidenceTools({
     processing,
     onSubmit,
     onPreviewPhoto,
+    submitLabel,
 }: WorkNodeEvidenceToolsProps) {
     const requiredProofs = node.required_proofs ?? [];
     const unsupportedTools = requiredProofs.filter((toolKey) =>
         !WORK_TOOL_REGISTRY.some((tool) => tool.toolKey === toolKey && tool.kind === 'native'),
     );
+    const checklistItems = node.checklist_items ?? [];
+    const metricRequirements = node.metric_requirements ?? NO_METRIC_REQUIREMENTS;
     const [evidenceFileIds, setEvidenceFileIds] = useState<string[]>(
         (node.candidate_evidence ?? [])
             .filter((candidate) => candidate.scan_status === 'clean')
             .map((candidate) => candidate.id),
     );
     const [location, setLocation] = useState<LocationProof | null>(null);
-    const [metricReadings, setMetricReadings] = useState<MetricReading[]>([]);
-    const [checklistCompleted, setChecklistCompleted] = useState(false);
+    const [metricReadings, setMetricReadings] = useState<MetricReadingDraft[]>([]);
+    const [checklistResponses, setChecklistResponses] = useState<Record<string, boolean>>({});
     const [notes, setNotes] = useState('');
 
     const canSubmit = !processing
         && unsupportedTools.length === 0
         && (!requiredProofs.includes('photo_proof') || evidenceFileIds.length > 0)
         && (!requiredProofs.includes('gps_checkin') || location !== null)
-        && (!requiredProofs.includes('metric_reading') || metricReadings.length > 0)
-        && (!requiredProofs.includes('checklist_steps') || checklistCompleted)
+        && (!requiredProofs.includes('metric_reading') || (metricRequirements.length > 0 && metricRequirements.filter((item) => item.required).every((item) => metricReadings.some((reading) => reading.id === item.id))))
+        && (!requiredProofs.includes('checklist_steps') || (checklistItems.length > 0 && checklistItems.filter((item) => item.required).every((item) => checklistResponses[item.id] === true)))
         && notes.length <= 2000;
 
     const submit = () => {
@@ -87,13 +92,13 @@ export default function WorkNodeEvidenceTools({
             payload.location = location;
         }
         if (requiredProofs.includes('metric_reading')) {
-            payload.metric_readings = metricReadings.map((reading) => ({
-                ...reading,
-                observed_at: new Date().toISOString(),
-            }));
+            payload.metric_readings = metricReadings;
         }
         if (requiredProofs.includes('checklist_steps')) {
-            payload.checklist_completed = checklistCompleted;
+            payload.checklist_responses = checklistItems.map((item) => ({
+                id: item.id,
+                completed: checklistResponses[item.id] === true,
+            }));
         }
         onSubmit(payload);
     };
@@ -133,10 +138,10 @@ export default function WorkNodeEvidenceTools({
                 <WorkLocationPinInput disabled={processing} onChange={setLocation} />
             )}
             {requiredProofs.includes('metric_reading') && (
-                <WorkMetricReadingsInput metricUnit={node.metric_unit} disabled={processing} onChange={setMetricReadings} />
+                <WorkMetricReadingsInput requirements={metricRequirements} disabled={processing} onChange={setMetricReadings} />
             )}
             {requiredProofs.includes('checklist_steps') && (
-                <WorkChecklistStepsInput checked={checklistCompleted} disabled={processing} onChange={setChecklistCompleted} />
+                <WorkChecklistStepsInput items={checklistItems} responses={checklistResponses} disabled={processing} onChange={setChecklistResponses} />
             )}
 
             <label className="block space-y-1 text-xs font-semibold text-slate-700">
@@ -159,7 +164,7 @@ export default function WorkNodeEvidenceTools({
                 className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 py-3 text-xs font-extrabold text-white shadow-xs hover:bg-[#153e74] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F2F58] disabled:cursor-not-allowed disabled:opacity-50"
             >
                 {processing ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-                {processing ? 'Saving work step…' : actionLabels[action]}
+                {processing ? 'Saving work step…' : submitLabel ?? actionLabels[action]}
             </button>
         </div>
     );

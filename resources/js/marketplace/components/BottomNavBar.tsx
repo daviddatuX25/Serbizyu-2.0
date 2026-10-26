@@ -1,14 +1,15 @@
-import React from 'react';
-import { Home, PlusCircle, QrCode, ShoppingBag, User } from 'lucide-react';
+import React, { type ReactNode } from 'react';
+import { Home, Mail, PlusCircle, QrCode, ShoppingBag, User } from 'lucide-react';
 
 export type NavTabId =
-    'explore' | 'post' | 'quick_deal' | 'orders' | 'profile' | 'search' | 'saved';
+    'explore' | 'post' | 'quick_deal' | 'orders' | 'invitations' | 'profile' | 'search' | 'saved';
 
 interface BottomNavBarProps {
     activeTab: NavTabId | string;
     ordersCount?: number;
     onTabSelect: (tab: NavTabId) => void;
     onQuickDealClick?: () => void;
+    notificationSlot?: ReactNode;
 }
 
 export const BottomNavBar: React.FC<BottomNavBarProps> = ({
@@ -16,6 +17,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
     ordersCount = 0,
     onTabSelect,
     onQuickDealClick,
+    notificationSlot,
 }) => {
     const handleQuickDeal = () => {
         if (onQuickDealClick) {
@@ -96,6 +98,21 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
                 <ShoppingBag className="size-5" />
                 <span className="text-[10px] font-bold">Orders</span>
             </button>
+
+            <button
+                type="button"
+                onClick={() => onTabSelect('invitations')}
+                className={`flex flex-1 cursor-pointer flex-col items-center gap-0.5 border-none bg-transparent transition-colors ${
+                    activeTab === 'invitations'
+                        ? 'font-bold text-[#0F2F58]'
+                        : 'text-[#64748B] hover:text-[#0F2F58]'
+                }`}
+                aria-label="Deal invitations"
+            >
+                <Mail className="size-5" />
+                <span className="text-[10px] font-bold">Invites</span>
+            </button>
+            {notificationSlot && <div className="flex flex-1 items-center justify-center">{notificationSlot}</div>}
 
             {/* 5. Profile */}
             <button

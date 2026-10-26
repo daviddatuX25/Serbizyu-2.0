@@ -22,6 +22,7 @@ final class SeedTagudinBrowseCatalog
     public function __construct(
         private readonly FixtureManager $fixtures,
         private readonly CapabilityCatalog $capabilities,
+        private readonly StockLedgerService $stock,
     ) {}
 
     /**
@@ -126,6 +127,7 @@ final class SeedTagudinBrowseCatalog
                     'media' => $row['media'] ?? null,
                     'geography' => $geography,
                     'stall_location' => $row['stall_location'] ?? null,
+                    'variants' => $row['variants'] ?? [],
                 ], JSON_THROW_ON_ERROR),
                 'price_amount_minor' => $row['price_amount_minor'],
                 'currency' => $row['currency'],
@@ -172,6 +174,15 @@ final class SeedTagudinBrowseCatalog
             }
 
             DB::table('listing_versions')->upsert([$versionRow], ['id'], $updateCols);
+            if ($row['listing_type'] === 'product' && is_array($row['variants'] ?? null)) {
+                $this->stock->provisionVariants(
+                    listingId: (string) $row['listing_id'],
+                    listingVersionId: (string) $row['version_id'],
+                    ownerUserId: FixtureConstants::ACTIVE_OWNER_ID,
+                    variants: $row['variants'],
+                    correlationId: (string) $row['listing_id'],
+                );
+            }
 
             $seeded++;
             $keys[] = $row['fixture_key'];

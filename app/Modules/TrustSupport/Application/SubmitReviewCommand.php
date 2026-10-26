@@ -7,6 +7,9 @@ namespace App\Modules\TrustSupport\Application;
 use App\Shared\Application\ActorContext;
 use App\Shared\Application\AuditRecorder;
 use App\Shared\Application\OutboxWriter;
+use App\Shared\Contracts\DealChainCurrentChildrenPort;
+use App\Shared\Contracts\DealChildFinancialStatePort;
+use App\Shared\Contracts\ReviewOrderReaderPort;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -31,6 +34,9 @@ final class SubmitReviewCommand
     public function __construct(
         private readonly AuditRecorder $audits,
         private readonly OutboxWriter $outbox,
+        private readonly DealChainCurrentChildrenPort $currentChildren,
+        private readonly ReviewOrderReaderPort $orders,
+        private readonly DealChildFinancialStatePort $financialState,
     ) {}
 
     /**
@@ -47,7 +53,7 @@ final class SubmitReviewCommand
         ?string $evidenceFileId,
         string $correlationId,
     ): array {
-        if (! Schema::hasTable('orders') || ! Schema::hasTable('reviews')) {
+        if (! Schema::hasTable('reviews')) {
             throw new TrustSupportError('STORAGE_UNAVAILABLE', 'Review subsystem tables are not available.', $correlationId, status: 503);
         }
 
@@ -61,19 +67,55 @@ final class SubmitReviewCommand
             $evidenceFileId,
             $correlationId,
         ): array {
-            $order = DB::table('orders')->where('id', $orderId)->first();
-            if ($order === null) {
+            $orderContext = $this->orders->dealChainIdForOrder($orderId);
+            if ($orderContext === null) {
                 throw new TrustSupportError('ORDER_NOT_FOUND', 'The order for this review does not exist.', $correlationId, status: 404);
             }
 
-            $isBuyer = $order->buyer_user_id === $authorUserId;
-            $isProvider = $order->provider_user_id === $authorUserId;
+            $dealChainId = $orderContext['deal_chain_id'];
+            $currentOrderIds = [];
+            if ($dealChainId !== null) {
+                if (! $this->currentChildren->lockReviewChain($dealChainId)) {
+                    throw new TrustSupportError('ORDER_NOT_REVIEWABLE', 'The order references a deal chain that is no longer available.', $correlationId, status: 409);
+                }
+                $currentOrderIds = $this->currentChildren->currentConfirmedOrderIds($dealChainId);
+            }
 
+            $order = $this->orders->findOrderForUpdate($orderId);
+            if ($order === null) {
+                throw new TrustSupportError('ORDER_NOT_FOUND', 'The order for this review does not exist.', $correlationId, status: 404);
+            }
+            if ($order['deal_chain_id'] !== $dealChainId) {
+                throw new TrustSupportError('ORDER_NOT_REVIEWABLE', 'The order changed while review eligibility was checked.', $correlationId, status: 409);
+            }
+
+            $isBuyer = $order['buyer_user_id'] === $authorUserId;
+            $isProvider = $order['provider_user_id'] === $authorUserId;
             if (! $isBuyer && ! $isProvider) {
                 throw new TrustSupportError('UNAUTHORIZED', 'You are not a party to this order.', $correlationId, status: 403);
             }
+            if ($order['status'] !== 'completed') {
+                throw new TrustSupportError('ORDER_NOT_REVIEWABLE', 'Only completed orders can be reviewed.', $correlationId, status: 409);
+            }
+            if ($dealChainId !== null && ! in_array($orderId, $currentOrderIds, true)) {
+                throw new TrustSupportError('ORDER_NOT_REVIEWABLE', 'This historical deal child is no longer eligible for review.', $correlationId, status: 409);
+            }
 
-            $subjectUserId = $isBuyer ? (string) $order->provider_user_id : (string) $order->buyer_user_id;
+            $siblingOrders = [];
+            if ($isBuyer && $cascade && $dealChainId !== null) {
+                $siblingOrders = $this->orders->completedDealChainChildrenForUpdate($currentOrderIds, $dealChainId, $authorUserId);
+            }
+
+            $settlement = $this->financialState->forDealChild($orderId);
+            if ($settlement === null || ! $settlement['settled'] || $settlement['settled_at'] === null) {
+                throw new TrustSupportError('ORDER_NOT_SETTLED', 'Reviews are available only after verified settlement.', $correlationId, status: 409);
+            }
+            $settledAt = CarbonImmutable::parse($settlement['settled_at']);
+            if ($settledAt->addHours(72)->isPast()) {
+                throw new TrustSupportError('REVIEW_WINDOW_EXPIRED', 'The 72-hour review ceremony window has closed.', $correlationId);
+            }
+
+            $subjectUserId = $isBuyer ? $order['provider_user_id'] : $order['buyer_user_id'];
             $authorRole = $isBuyer ? 'buyer' : 'provider';
 
             // Check if active dispute exists
@@ -85,12 +127,6 @@ final class SubmitReviewCommand
                 if ($hasDispute) {
                     throw new TrustSupportError('DISPUTE_ACTIVE', 'Reviews cannot be submitted while an active dispute is open.', $correlationId);
                 }
-            }
-
-            // Check 72h window from order updated_at
-            $orderFinished = CarbonImmutable::parse($order->updated_at ?? now());
-            if ($orderFinished->addHours(72)->isPast()) {
-                throw new TrustSupportError('REVIEW_WINDOW_EXPIRED', 'The 72-hour review ceremony window has closed.', $correlationId);
             }
 
             // Validate chips allowlist
@@ -108,10 +144,23 @@ final class SubmitReviewCommand
                 ->first();
 
             $now = CarbonImmutable::now();
-            $willUnblind = $counterpartyReview !== null;
+            $hasHold = false;
+            if (Schema::hasTable('administrative_holds')) {
+                $hasHold = DB::table('administrative_holds')
+                    ->where(function ($q) use ($orderId, $settlement): void {
+                        $q->where('order_id', $orderId);
+                        if (isset($settlement['obligation_id']) && $settlement['obligation_id'] !== null) {
+                            $q->orWhere('payment_obligation_id', $settlement['obligation_id']);
+                        }
+                    })
+                    ->whereIn('status', ['active', 'reviewing'])
+                    ->where('effective_at', '<=', now())
+                    ->exists();
+            }
+            $willUnblind = $counterpartyReview !== null && ! $hasHold;
             $moderationStatus = $willUnblind ? 'approved' : 'sealed';
             $unblindedAt = $willUnblind ? $now : null;
-            $sealedUntil = $willUnblind ? null : $now->addHours(72);
+            $sealedUntil = $willUnblind ? null : $settledAt->addHours(72);
 
             // Upsert / insert review for this order
             $reviewId = (string) Str::uuid7();
@@ -166,41 +215,79 @@ final class SubmitReviewCommand
 
             // AD-21 Cascading Deal Chain Reviews
             $cascadedCount = 0;
-            if ($isBuyer && $cascade && ! empty($order->deal_chain_id)) {
-                $siblingOrders = DB::table('orders')
-                    ->where('deal_chain_id', $order->deal_chain_id)
-                    ->where('id', '!=', $orderId)
-                    ->where('buyer_user_id', $authorUserId)
-                    ->whereIn('status', ['completed', 'accepted', 'agreed'])
-                    ->get();
+            if ($isBuyer && $cascade && $dealChainId !== null) {
+                foreach ($siblingOrders as $sibling) {
+                    $siblingOrderId = $sibling['order_id'];
+                    if ($siblingOrderId === $orderId) {
+                        continue;
+                    }
 
-                foreach ($siblingOrders as $sib) {
-                    $siblingSubjectId = (string) $sib->provider_user_id;
+                    $siblingSettlement = $this->financialState->forDealChild($siblingOrderId);
+                    if ($siblingSettlement === null || ! $siblingSettlement['settled'] || $siblingSettlement['settled_at'] === null) {
+                        continue;
+                    }
+                    $siblingSettledAt = CarbonImmutable::parse($siblingSettlement['settled_at']);
+                    $siblingSealedUntil = $siblingSettledAt->addHours(72);
+                    if ($siblingSealedUntil->isPast()) {
+                        continue;
+                    }
+
                     $sibExisting = DB::table('reviews')
-                        ->where('order_id', $sib->id)
+                        ->where('order_id', $siblingOrderId)
                         ->where('author_user_id', $authorUserId)
                         ->exists();
 
                     if (! $sibExisting) {
+                        $sibCounterparty = DB::table('reviews')
+                            ->where('order_id', $siblingOrderId)
+                            ->where('author_user_id', $sibling['provider_user_id'])
+                            ->where('subject_user_id', $authorUserId)
+                            ->lockForUpdate()
+                            ->first();
+                        $sibHasHold = false;
+                        if (Schema::hasTable('administrative_holds')) {
+                            $sibHasHold = DB::table('administrative_holds')
+                                ->where(function ($q) use ($siblingOrderId, $siblingSettlement): void {
+                                    $q->where('order_id', $siblingOrderId);
+                                    if (isset($siblingSettlement['obligation_id']) && $siblingSettlement['obligation_id'] !== null) {
+                                        $q->orWhere('payment_obligation_id', $siblingSettlement['obligation_id']);
+                                    }
+                                })
+                                ->whereIn('status', ['active', 'reviewing'])
+                                ->where('effective_at', '<=', now())
+                                ->exists();
+                        }
+                        $sibWillUnblind = $sibCounterparty !== null && ! $sibHasHold;
+                        $sibModerationStatus = $sibWillUnblind ? 'approved' : 'sealed';
+                        $sibUnblindedAt = $sibWillUnblind ? $now : null;
+                        $sibSealedUntil = $sibWillUnblind ? null : $siblingSealedUntil;
                         DB::table('reviews')->insert([
                             'id' => (string) Str::uuid7(),
-                            'order_id' => $sib->id,
+                            'order_id' => $siblingOrderId,
                             'work_instance_id' => null,
                             'author_user_id' => $authorUserId,
-                            'subject_user_id' => $siblingSubjectId,
+                            'subject_user_id' => $sibling['provider_user_id'],
                             'author_role' => 'buyer',
                             'rating' => $effectiveRating,
                             'content' => $content,
                             'attribute_chips' => json_encode($validChips, JSON_THROW_ON_ERROR),
                             'eligibility_evidence_file_id' => $evidenceFileId,
-                            'moderation_status' => 'sealed',
-                            'sealed_until' => $now->addHours(72),
-                            'unblinded_at' => null,
+                            'moderation_status' => $sibModerationStatus,
+                            'sealed_until' => $sibSealedUntil,
+                            'unblinded_at' => $sibUnblindedAt,
                             'correlation_id' => $correlationId,
                             'version' => 1,
                             'created_at' => $now,
                             'updated_at' => $now,
                         ]);
+                        if ($sibWillUnblind && $sibCounterparty !== null) {
+                            DB::table('reviews')->where('id', $sibCounterparty->id)->update([
+                                'moderation_status' => 'approved',
+                                'sealed_until' => null,
+                                'unblinded_at' => $now,
+                                'updated_at' => $now,
+                            ]);
+                        }
                         $cascadedCount++;
                     }
                 }

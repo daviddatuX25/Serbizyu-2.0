@@ -4,6 +4,8 @@ import '../css/design-system.css';
 import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
 import type { ComponentType } from 'react';
+import { NotificationProvider } from './components/notifications/NotificationCenter';
+import type { NotificationSummary, SliceSession } from './types';
 
 type PageModule = { default: ComponentType<Record<string, unknown>> };
 
@@ -22,6 +24,21 @@ createInertiaApp({
         return page.default;
     },
     setup({ el, App, props }) {
-        createRoot(el).render(<App {...props} />);
+        const pageProps = props.initialPage.props as typeof props.initialPage.props & {
+            session?: SliceSession | null;
+            notificationSummary?: NotificationSummary | null;
+        };
+        const authenticated = pageProps.notificationSummary != null || Boolean(
+            pageProps.session?.authenticated ?? pageProps.session?.isAuthenticated ?? pageProps.session?.userId,
+        );
+        const inertiaApp = <App {...props} />;
+        createRoot(el).render(
+            <NotificationProvider
+                authenticated={authenticated}
+                initialSummary={pageProps.notificationSummary ?? null}
+            >
+                {inertiaApp}
+            </NotificationProvider>,
+        );
     },
 });

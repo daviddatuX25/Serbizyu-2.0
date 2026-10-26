@@ -1,13 +1,14 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { NotificationBell } from './notifications/NotificationCenter';
 import { DesktopGlobalNav } from './layout/DesktopGlobalNav';
-import { BottomNavBar, NavTabId } from '../marketplace/components/BottomNavBar';
+import { BottomNavBar, type NavTabId } from '../marketplace/components/BottomNavBar';
 import { router } from '@inertiajs/react';
 import type { SliceSession, ReadinessState } from '../types';
 
 interface AppShellProps {
     session?: SliceSession | null;
     readiness?: ReadinessState | null;
-    activeRoute?: 'browse' | 'requests' | 'create_listing' | 'listings' | 'orders';
+    activeRoute?: 'browse' | 'requests' | 'create_listing' | 'listings' | 'orders' | 'money-history' | 'deal-invitations';
     activeMobileTab?: NavTabId;
     picksCount?: number;
     onPicksClick?: () => void;
@@ -35,6 +36,7 @@ export function AppShell({
         if (tab === 'explore') router.visit('/browse');
         if (tab === 'post') router.visit('/requests/create');
         if (tab === 'orders') router.visit('/orders');
+        if (tab === 'invitations') router.visit('/deal-invitations');
         if (tab === 'profile') router.visit('/my-listings');
     };
 
@@ -67,6 +69,7 @@ export function AppShell({
                 activeTab={activeMobileTab}
                 ordersCount={picksCount}
                 onTabSelect={handleMobileTabSelect}
+                notificationSlot={<NotificationBell />}
             />
         </div>
     );

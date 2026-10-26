@@ -5,13 +5,19 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Modules\Catalogs\Application\DealChainCatalog;
+use App\Modules\DealCoordination\Application\ConfirmDealNeedAgreement;
 use App\Modules\DealCoordination\Application\DealCoordinationError;
+use App\Modules\DealCoordination\Application\DealNeedConfirmationProjection;
 use App\Modules\DealCoordination\Application\RespondToDealInvitation;
 use App\Modules\DealCoordination\Application\StageDealChain;
+use App\Modules\DealCoordination\Application\ChooseDealReplacement;
+use App\Modules\DealCoordination\Application\WithdrawDealPartner;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
-use App\Shared\Contracts\OrderListingSourcePort;
-use DateTimeInterface;
+use App\Shared\Contracts\OrderHandoffCourierAuthorityPort;
+use App\Shared\Contracts\DealChainConversationParticipantsPort;
+use App\Shared\Application\KernelException;
+use App\Shared\Application\DealChainCandidateRoleClassifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,10 +30,15 @@ final class DealChainController extends Controller
 {
     public function __construct(
         private readonly CurrentSession $session,
-        private readonly OrderListingSourcePort $listingSource,
         private readonly DealChainCatalog $catalog,
         private readonly StageDealChain $stageDealChain,
         private readonly RespondToDealInvitation $respondToInvitation,
+        private readonly ConfirmDealNeedAgreement $confirmDealNeedAgreement,
+        private readonly DealNeedConfirmationProjection $confirmationProjection,
+        private readonly OrderHandoffCourierAuthorityPort $courierAuthority,
+        private readonly WithdrawDealPartner $withdrawPartner,
+        private readonly ChooseDealReplacement $chooseReplacement,
+        private readonly DealChainConversationParticipantsPort $relayParticipants,
     ) {}
 
     public function authorize(Request $request): mixed
@@ -39,15 +50,19 @@ final class DealChainController extends Controller
             $recipeCatalog = $this->recipeCatalog();
             $validated = $request->validate([
                 'items' => ['required', 'array', 'min:1', 'max:20'],
-                'items.*' => ['required', 'array:id,quantity,deal_chain,slot_overrides'],
+                'items.*' => ['required', 'array:id,listing_version_id,variant_id,package_id,addon_ids,deal_chain_combination_id,quantity,deal_chain,slot_overrides'],
                 'items.*.id' => ['required', 'uuid'],
+                'items.*.listing_version_id' => ['nullable', 'uuid'],
+                'items.*.variant_id' => ['nullable', 'string', 'max:191'],
+                'items.*.package_id' => ['nullable', 'string', 'max:191'],
+                'items.*.addon_ids' => ['sometimes', 'array'],
+                'items.*.addon_ids.*' => ['required', 'string', 'max:191'],
+                'items.*.deal_chain_combination_id' => ['nullable', 'string', 'max:191'],
                 'items.*.quantity' => ['required', 'integer', 'min:1', 'max:50'],
-                'items.*.deal_chain' => [
-                    'nullable',
-                    'string',
-                    Rule::in(array_keys($recipeCatalog)),
-                ],
+                'items.*.deal_chain' => ['nullable', 'string', Rule::in(array_keys($recipeCatalog))],
                 'items.*.slot_overrides' => ['nullable', 'array'],
+                'items.*.slot_overrides.*' => ['required', 'array:listing_id'],
+                'items.*.slot_overrides.*.listing_id' => ['required', 'uuid'],
                 'payment_method' => ['prohibited'],
                 'total_amount' => ['prohibited'],
             ]);
@@ -111,6 +126,118 @@ final class DealChainController extends Controller
         }
     }
 
+    public function confirmAgreement(Request $request, string $dealChain, string $need): mixed
+    {
+        $correlationId = $this->correlationId($request);
+        $idempotencyKey = (string) ($request->header('X-Idempotency-Key') ?: Str::uuid7());
+
+        try {
+            $userId = $this->session->requireUser($request, $correlationId);
+            $validated = $request->validate([
+                'invitation_id' => ['required', 'uuid'],
+                'expected_need_version' => ['required', 'integer', 'min:1'],
+                'terms_hash' => ['required', 'string', 'regex:/^[0-9a-f]{64}$/'],
+                'capacity_hash' => ['required', 'string', 'regex:/^[0-9a-f]{64}$/'],
+                'amount_minor' => ['prohibited'],
+                'price_minor' => ['prohibited'],
+                'payment_method' => ['prohibited'],
+                'appointment_reservation_id' => ['nullable', 'uuid'],
+            ]);
+            $result = $this->confirmDealNeedAgreement->handle(
+                actorUserId: $userId,
+                dealChainId: $dealChain,
+                dealNeedId: $need,
+                invitationId: (string) $validated['invitation_id'],
+                expectedNeedVersion: (int) $validated['expected_need_version'],
+                termsHash: (string) $validated['terms_hash'],
+                capacityHash: (string) $validated['capacity_hash'],
+                idempotencyKey: $idempotencyKey,
+                correlationId: $correlationId,
+                appointmentReservationId: isset($validated['appointment_reservation_id']) ? (string) $validated['appointment_reservation_id'] : null,
+            );
+
+            if ($request->expectsJson()) {
+                return response()->json(['data' => $result]);
+            }
+
+            return redirect()
+                ->route('deal-chains.show', ['dealChain' => $dealChain])
+                ->with('notice', 'Provider terms confirmed and an independent child Order was formed.');
+        } catch (IdentityAccessError) {
+            return $request->expectsJson()
+                ? response()->json(['error' => 'Unauthenticated.'], 401)
+                : redirect()->route('auth.sign-in');
+        } catch (DealCoordinationError $error) {
+            if (! $request->expectsJson()) {
+                throw ValidationException::withMessages(
+                    $error->envelope->fieldErrors !== []
+                        ? $error->envelope->fieldErrors
+                        : ['agreement' => [$error->getMessage()]],
+                );
+            }
+
+            return response()->json([
+                'error' => [
+                    'code' => $error->envelope->code,
+                    'message' => $error->getMessage(),
+                    'field_errors' => $error->envelope->fieldErrors,
+                ],
+            ], $error->status);
+        }
+    }
+
+    public function withdrawPartner(Request $request, string $dealChain, string $need): JsonResponse
+    {
+        $correlationId = $this->correlationId($request);
+        try {
+            $userId = $this->session->requireUser($request, $correlationId);
+            $validated = $request->validate(['expected_need_version' => ['required', 'integer', 'min:1']]);
+            $result = $this->withdrawPartner->handle(
+                actorUserId: $userId,
+                dealChainId: $dealChain,
+                dealNeedId: $need,
+                expectedNeedVersion: (int) $validated['expected_need_version'],
+                idempotencyKey: (string) ($request->header('X-Idempotency-Key') ?: Str::uuid7()),
+                correlationId: $correlationId,
+            );
+            return response()->json(['data' => $result]);
+        } catch (IdentityAccessError) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        } catch (DealCoordinationError|KernelException $error) {
+            return response()->json(['error' => ['code' => $error->envelope->code, 'message' => $error->getMessage(), 'field_errors' => $error->envelope->fieldErrors]], $error->status);
+        }
+    }
+
+    public function chooseReplacement(Request $request, string $dealChain, string $need): JsonResponse
+    {
+        $correlationId = $this->correlationId($request);
+        try {
+            $userId = $this->session->requireUser($request, $correlationId);
+            $validated = $request->validate([
+                'expected_need_version' => ['required', 'integer', 'min:1'],
+                'listing_id' => ['required', 'uuid'],
+                'variant_id' => ['nullable', 'string', 'max:191'],
+                'amount_minor' => ['prohibited'],
+                'price_minor' => ['prohibited'],
+            ]);
+            $result = $this->chooseReplacement->handle(
+                actorUserId: $userId,
+                dealChainId: $dealChain,
+                dealNeedId: $need,
+                expectedNeedVersion: (int) $validated['expected_need_version'],
+                listingId: (string) $validated['listing_id'],
+                variantId: isset($validated['variant_id']) ? (string) $validated['variant_id'] : null,
+                idempotencyKey: (string) ($request->header('X-Idempotency-Key') ?: Str::uuid7()),
+                correlationId: $correlationId,
+            );
+            return response()->json(['data' => $result]);
+        } catch (IdentityAccessError) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        } catch (DealCoordinationError|KernelException $error) {
+            return response()->json(['error' => ['code' => $error->envelope->code, 'message' => $error->getMessage(), 'field_errors' => $error->envelope->fieldErrors]], $error->status);
+        }
+    }
+
     public function show(Request $request, string $dealChain): mixed
     {
         $correlationId = $this->correlationId($request);
@@ -127,23 +254,36 @@ final class DealChainController extends Controller
         }
 
         $isCoordinator = (string) $chain->coordinator_user_id === $actorUserId;
-        $isParticipant = DB::table('orders')
+        $participantOrders = DB::table('orders')
             ->where('deal_chain_id', $dealChain)
             ->where(function ($query) use ($actorUserId): void {
                 $query
                     ->where('buyer_user_id', $actorUserId)
                     ->orWhere('provider_user_id', $actorUserId);
             })
-            ->exists();
+            ->get();
+        $isParticipant = $participantOrders->isNotEmpty();
 
         if (! $isCoordinator && ! $isParticipant) {
             abort(404, 'Deal Chain not found');
         }
 
+        $ownedOrderIds = $participantOrders
+            ->pluck('id')
+            ->map(static fn (mixed $id): string => (string) $id)
+            ->all();
         $needs = DB::table('deal_needs')
             ->where('deal_chain_id', $dealChain)
             ->orderBy('ordinal')
             ->get();
+        $confirmationByNeed = $isCoordinator
+            ? $this->confirmationProjection->forCoordinator(
+                $needs->where('status', 'awaiting_customer_confirmation')
+                    ->pluck('id')
+                    ->map(static fn (mixed $id): string => (string) $id)
+                    ->all(),
+            )
+            : [];
         $dependencies = DB::table('deal_dependencies')
             ->where('deal_chain_id', $dealChain)
             ->where('status', 'active')
@@ -155,31 +295,74 @@ final class DealChainController extends Controller
             ->get()
             ->keyBy('deal_need_id');
         $orderIds = $orders->pluck('id')->map(static fn (mixed $id): string => (string) $id)->all();
+        $privateOrderIds = $isCoordinator ? $orderIds : $ownedOrderIds;
         $termsByOrder = collect();
         $obligationsByOrder = collect();
         $workByOrder = collect();
 
-        if ($orderIds !== []) {
+        if ($privateOrderIds !== []) {
             $termsByOrder = DB::table('order_terms_snapshots')
-                ->whereIn('order_id', $orderIds)
+                ->whereIn('order_id', $privateOrderIds)
                 ->orderByDesc('snapshot_version')
                 ->get()
                 ->groupBy('order_id')
                 ->map(static fn ($rows) => $rows->first());
             $obligationsByOrder = DB::table('payment_obligations')
-                ->whereIn('order_id', $orderIds)
+                ->whereIn('order_id', $privateOrderIds)
                 ->get()
                 ->keyBy('order_id');
+        }
+        if ($orderIds !== []) {
             $workByOrder = DB::table('work_instances')
                 ->whereIn('order_id', $orderIds)
                 ->get()
                 ->keyBy('order_id');
         }
+
+        $needsById = $needs->keyBy('id');
+        $handoffUrlByNeed = [];
+        foreach ($dependencies as $dependency) {
+            if ($dependency->status !== 'active') {
+                continue;
+            }
+            $productNeed = $needsById->get($dependency->predecessor_need_id);
+            $courierNeed = $needsById->get($dependency->successor_need_id);
+            if ($productNeed === null
+                || $courierNeed === null
+                || (string) $productNeed->node_role !== 'store'
+                || (string) $productNeed->need_kind !== 'product'
+                || (string) $productNeed->status !== 'in_progress'
+                || (string) $courierNeed->node_role !== 'courier'
+                || (string) $courierNeed->status !== 'in_progress') {
+                continue;
+            }
+
+            $productOrder = $orders->get($productNeed->id);
+            $courierOrder = $orders->get($courierNeed->id);
+            if ($productOrder === null || $courierOrder === null) {
+                continue;
+            }
+
+            foreach ($this->courierAuthority->activeCourierCandidatesForProductNeed(
+                (string) $dealChain,
+                (string) $productNeed->id,
+            ) as $candidate) {
+                if ($candidate['user_id'] === $actorUserId
+                    && $candidate['order_id'] === (string) $courierOrder->id) {
+                    $handoffUrlByNeed[(string) $courierNeed->id] = '/orders/'.(string) $productOrder->id.'/handoff';
+                    break;
+                }
+            }
+        }
+
         $totalAmountMinor = 0;
         $hasFinancialRecords = false;
         $currency = null;
 
-        $providerUserIds = $orders->pluck('provider_user_id')->filter()->unique()->values()->all();
+        $providerOrderIds = $isCoordinator ? $orderIds : $ownedOrderIds;
+        $providerUserIds = $orders->filter(
+            static fn ($order): bool => in_array((string) $order->id, $providerOrderIds, true),
+        )->pluck('provider_user_id')->filter()->unique()->values()->all();
         $providerProfiles = $providerUserIds !== []
             ? DB::table('user_profiles')->whereIn('user_id', $providerUserIds)->get()->keyBy('user_id')
             : collect();
@@ -196,13 +379,20 @@ final class DealChainController extends Controller
             $providerUsers,
             $actorUserId,
             $isCoordinator,
+            $confirmationByNeed,
             &$totalAmountMinor,
             &$hasFinancialRecords,
             &$currency,
+            $handoffUrlByNeed,
         ): array {
             $order = $orders->get($need->id);
-            $terms = $order === null ? null : $termsByOrder->get($order->id);
-            $obligation = $order === null ? null : $obligationsByOrder->get($order->id);
+            $canViewOrder = $order !== null && (
+                $isCoordinator ||
+                $actorUserId === (string) $order->buyer_user_id ||
+                $actorUserId === (string) $order->provider_user_id
+            );
+            $terms = $canViewOrder ? $termsByOrder->get($order->id) : null;
+            $obligation = $canViewOrder ? $obligationsByOrder->get($order->id) : null;
             $work = $order === null ? null : $workByOrder->get($order->id);
             $amountMinor = $obligation?->amount_minor ?? $terms?->amount_minor;
             $amountCurrency = $obligation?->currency ?? $terms?->currency;
@@ -210,7 +400,7 @@ final class DealChainController extends Controller
                 ? 'payment obligation'
                 : ($terms !== null ? 'order terms' : null);
 
-            if ($amountMinor !== null) {
+            if ($isCoordinator && $amountMinor !== null) {
                 $totalAmountMinor += (int) $amountMinor;
                 $hasFinancialRecords = true;
                 $currency ??= (string) $amountCurrency;
@@ -220,68 +410,73 @@ final class DealChainController extends Controller
             $providerProfile = $providerId ? $providerProfiles->get($providerId) : null;
             $providerUser = $providerId ? $providerUsers->get($providerId) : null;
             $providerName = $providerProfile?->display_name;
-            if (! $providerName && $order !== null) {
-                $titleLower = strtolower((string) $need->title);
-                if (str_contains($titleLower, 'hardware') || str_contains($titleLower, 'capacitor') || str_contains($titleLower, 'inverter') || $need->need_kind === 'product') {
-                    $providerName = 'Tagudin Hardware Depot';
-                } elseif (str_contains($titleLower, 'courier') || str_contains($titleLower, 'transit') || str_contains($titleLower, 'rider')) {
-                    $providerName = 'Danny Express Rider';
-                } else {
-                    $providerName = 'Kuya Ben Aircon Services';
-                }
-            }
 
-            $termsData = json_decode((string) ($terms?->terms ?? '{}'), true);
-            $listingTitle = is_array($termsData) && isset($termsData['title']) && is_string($termsData['title']) && trim($termsData['title']) !== ''
+            $termsData = is_array($terms?->scope)
+                ? $terms->scope
+                : json_decode((string) ($terms?->scope ?? '{}'), true);
+            $listingTitle = $canViewOrder && is_array($termsData) && isset($termsData['title']) && is_string($termsData['title']) && trim($termsData['title']) !== ''
                 ? trim($termsData['title'])
                 : (string) $need->title;
 
-            $canViewOrder = $order !== null && (
-                $isCoordinator ||
-                $actorUserId === (string) $order->buyer_user_id ||
-                $actorUserId === (string) $order->provider_user_id
-            );
-
-            return [
+            $slot = [
                 'id' => (string) $need->id,
                 'deal_chain_id' => (string) $need->deal_chain_id,
                 'ordinal' => (int) $need->ordinal,
                 'need_kind' => (string) $need->need_kind,
                 'title' => (string) $need->title,
                 'listing_title' => $listingTitle,
-                'description' => (string) $need->description,
                 'status' => (string) $need->status,
-                'requested_at' => (string) $need->requested_at,
+                'expected_need_version' => (int) $need->version,
+                'node_role' => (string) $need->node_role,
+                'can_withdraw' => ($isCoordinator || $providerId === $actorUserId)
+                    && ! in_array((string) $need->status, ['completed', 'cancelled', 'superseded', 'failed', 'replacement_needed'], true),
+                'can_replace' => $isCoordinator && (string) $need->status === 'replacement_needed',
                 'child_order_id' => $order?->id === null ? null : (string) $order->id,
-                'order_reference' => $order?->id !== null ? ('#ORD-'.strtoupper(substr((string) $order->id, -4))) : null,
-                'child_order_status' => $order?->status === null ? null : (string) $order->status,
+                'order_reference' => $order?->public_reference === null ? null : (string) $order->public_reference,
+                'replaces_deal_need_id' => $need->replaces_deal_need_id === null ? null : (string) $need->replaces_deal_need_id,
                 'work_status' => $work?->status === null ? null : (string) $work->status,
-                'payment_obligation_status' => $obligation?->status === null ? null : (string) $obligation->status,
-                'amount_minor' => $amountMinor === null ? null : (int) $amountMinor,
-                'currency' => $amountCurrency === null ? null : (string) $amountCurrency,
-                'amount_source' => $amountSource,
-                'provider_name' => $providerName,
-                'provider_phone' => $providerUser?->phone_e164 ?? '0917-555-0100',
+                'provider_name' => $canViewOrder ? $providerName : null,
+                'handoff_url' => $handoffUrlByNeed[(string) $need->id] ?? null,
+                'confirmation' => $isCoordinator ? ($confirmationByNeed[(string) $need->id] ?? null) : null,
                 'can_view_order' => $canViewOrder,
             ];
+            if ($isCoordinator || $canViewOrder) {
+                $slot['requested_at'] = (string) $need->requested_at;
+                $slot['description'] = (string) $need->description;
+            }
+
+            if ($isCoordinator || $canViewOrder) {
+                $slot['child_order_status'] = $order?->status === null ? null : (string) $order->status;
+                $slot['payment_obligation_status'] = $obligation?->status === null ? null : (string) $obligation->status;
+                $slot['amount_minor'] = $amountMinor === null ? null : (int) $amountMinor;
+                $slot['currency'] = $amountCurrency === null ? null : (string) $amountCurrency;
+                $slot['amount_source'] = $amountSource;
+            }
+            if ($isCoordinator) {
+                $slot['provider_phone'] = $providerUser?->phone_e164;
+            }
+
+            return $slot;
         })->values()->all();
 
         $chainPayload = (array) $chain;
-        $chainPayload['total_budget_amount'] = $hasFinancialRecords
-            ? $totalAmountMinor / 100
-            : null;
-        $chainPayload['currency_code'] = $currency;
-        $chainPayload['financial_state'] = $hasFinancialRecords
-            ? 'child_amounts_projected'
-            : 'pending_child_agreements';
-        $chainPayload['child_order_count'] = count($orderIds);
-
-        $view = $request->query('view', 'project');
-        $worker = $request->query('worker');
+        if ($isCoordinator) {
+            $chainPayload['total_budget_amount'] = $hasFinancialRecords
+                ? $totalAmountMinor / 100
+                : null;
+            $chainPayload['currency_code'] = $currency;
+            $chainPayload['financial_state'] = $hasFinancialRecords
+                ? 'child_amounts_projected'
+                : 'pending_child_agreements';
+            $chainPayload['child_order_count'] = count($orderIds);
+        }
+        $relayParticipants = $this->relayParticipants->currentRelayParticipants($dealChain);
 
         return Inertia::render('Orders/DealChainDetail', [
             'chain' => $chainPayload,
             'slots' => $slots,
+            'can_open_relay' => $relayParticipants !== null
+                && ($isCoordinator || in_array($actorUserId, $relayParticipants['provider_user_ids'], true)),
             'dependencies' => $dependencies->map(static fn ($dependency): array => [
                 'id' => (string) $dependency->id,
                 'deal_chain_id' => (string) $dependency->deal_chain_id,
@@ -292,269 +487,8 @@ final class DealChainController extends Controller
                 'condition_code' => (string) $dependency->condition_code,
             ])->values()->all(),
             'notice' => session('notice'),
-            'view' => in_array($view, ['project', 'worker'], true) ? $view : 'project',
-            'worker' => is_string($worker) && trim($worker) !== '' ? trim($worker) : null,
+            'view' => $isCoordinator ? 'project' : 'worker',
         ]);
-    }
-
-    /**
-     * @param  array<int, array{id: string, quantity: int, deal_chain: string|null}>  $items
-     * @param  array<string, array<string, mixed>>  $recipeCatalog
-     * @return list<array{source: array<string, mixed>, quantity: int, recipe: string|null, recipe_definition: array<string, mixed>|null}>
-     */
-    private function resolveItems(array $items, string $userId, array $recipeCatalog): array
-    {
-        $resolved = [];
-        $errors = [];
-
-        foreach ($items as $index => $item) {
-            $source = $this->listingSource->findActiveApproved((string) $item['id']);
-            if ($source === null) {
-                $errors["items.{$index}.id"] = ['This listing is no longer available.'];
-
-                continue;
-            }
-
-            if ((string) $source['owner_user_id'] === $userId) {
-                $errors["items.{$index}.id"] = ['You cannot stage your own listing.'];
-
-                continue;
-            }
-
-            $recipe = $item['deal_chain'] ?? null;
-            if ($recipe !== null && ! $this->recipeApplies($recipe, $source, $recipeCatalog)) {
-                $errors["items.{$index}.deal_chain"] = [
-                    'That partner pipeline is not available for this listing category or type.',
-                ];
-
-                continue;
-            }
-
-            $resolved[] = [
-                'source' => $source,
-                'quantity' => (int) $item['quantity'],
-                'recipe' => $recipe,
-                'recipe_definition' => $recipe === null ? null : $recipeCatalog[$recipe] ?? null,
-                'slot_overrides' => $item['slot_overrides'] ?? null,
-            ];
-        }
-
-        if ($errors !== []) {
-            throw ValidationException::withMessages($errors);
-        }
-
-        return $resolved;
-    }
-
-    /**
-     * @param  array<string, mixed>  $source
-     * @param  array<string, array<string, mixed>>  $recipeCatalog
-     */
-    private function recipeApplies(string $recipe, array $source, array $recipeCatalog): bool
-    {
-        $definition = $recipeCatalog[$recipe] ?? null;
-        if ($definition === null) {
-            return false;
-        }
-
-        $workShapes = array_values((array) ($definition['work_shapes'] ?? []));
-
-        return in_array((string) $source['category_code'], (array) $definition['category_codes'], true)
-            && in_array((string) $source['listing_type'], (array) $definition['listing_types'], true)
-            && ($workShapes === [] || in_array((string) ($source['work_shape'] ?? ''), $workShapes, true));
-    }
-
-    /**
-     * @param  array<string, mixed>  $source
-     */
-    private function appendPlan(
-        string $dealChainId,
-        string $coordinatorUserId,
-        string $correlationId,
-        DateTimeInterface $now,
-        int &$ordinal,
-        ?string $recipe,
-        ?array $recipeDefinition,
-        array $source,
-        int $quantity,
-        ?array $slotOverrides = null,
-    ): void {
-        $nodes = $this->nodesFor($recipe, $source, $quantity, $recipeDefinition);
-        $needIds = [];
-
-        foreach ($nodes as $node) {
-            $needId = (string) Str::uuid7();
-            DB::table('deal_needs')->insert([
-                'id' => $needId,
-                'deal_chain_id' => $dealChainId,
-                'ordinal' => $ordinal++,
-                'need_kind' => $node['need_kind'],
-                'title' => $node['title'],
-                'description' => $node['description'],
-                'status' => 'open',
-                'requested_at' => $now,
-                'correlation_id' => $correlationId,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-
-            $override = null;
-            if ($slotOverrides !== null) {
-                $override = $slotOverrides[$node['key']]
-                    ?? $slotOverrides[$node['frontend']['type'] ?? '']
-                    ?? $slotOverrides[$node['frontend']['role'] ?? '']
-                    ?? null;
-
-                if ($override === null && $node['key'] === 'courier') {
-                    $override = $slotOverrides['delivery'] ?? $slotOverrides['rider'] ?? null;
-                }
-                if ($override === null && ($node['key'] === 'part' || $node['key'] === 'store')) {
-                    $override = $slotOverrides['store'] ?? $slotOverrides['part'] ?? null;
-                }
-                if ($override === null && ($node['key'] === 'installation' || $node['key'] === 'labor')) {
-                    $override = $slotOverrides['labor'] ?? $slotOverrides['technician'] ?? null;
-                }
-            }
-
-            if (is_array($override)) {
-                $overrideListingId = (string) ($override['listing_id'] ?? '');
-                if ($overrideListingId !== '') {
-                    $partnerListing = $this->listingSource->findActiveApproved($overrideListingId);
-                    if ($partnerListing !== null) {
-                        $overrideProviderId = (string) $partnerListing['owner_user_id'];
-                        DB::table('deal_invitations')->insert([
-                            'id' => (string) Str::uuid7(),
-                            'deal_need_id' => $needId,
-                            'invited_provider_user_id' => $overrideProviderId,
-                            'invited_by_user_id' => $coordinatorUserId,
-                            'acting_for_user_id' => null,
-                            'purpose' => 'deal_need_assignment',
-                            'scope' => json_encode([
-                                'listing_id' => $overrideListingId,
-                                'listing_version' => (int) ($partnerListing['listing_version_number'] ?? 1),
-                                'price_minor' => (int) ($override['price_minor'] ?? 0),
-                            ], JSON_THROW_ON_ERROR),
-                            'payload_version' => 1,
-                            'status' => 'sent',
-                            'expires_at' => now()->addDays(2),
-                            'version' => 1,
-                            'correlation_id' => $correlationId,
-                            'created_at' => $now,
-                            'updated_at' => $now,
-                        ]);
-                    }
-                }
-            } elseif ($node['key'] === 'primary' || $node['key'] === 'direct' || ($recipe === null && $node['key'] === 'primary_listing')) {
-                DB::table('deal_invitations')->insert([
-                    'id' => (string) Str::uuid7(),
-                    'deal_need_id' => $needId,
-                    'invited_provider_user_id' => (string) $source['owner_user_id'],
-                    'invited_by_user_id' => $coordinatorUserId,
-                    'acting_for_user_id' => null,
-                    'purpose' => 'primary_listing_assignment',
-                    'scope' => json_encode([
-                        'listing_id' => (string) ($source['listing_id'] ?? $source['id'] ?? ''),
-                        'listing_version' => (int) ($source['listing_version_number'] ?? 1),
-                    ], JSON_THROW_ON_ERROR),
-                    'payload_version' => 1,
-                    'status' => 'sent',
-                    'expires_at' => now()->addDays(2),
-                    'version' => 1,
-                    'correlation_id' => $correlationId,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
-            }
-            $needIds[$node['key']] = $needId;
-        }
-
-        foreach ($this->dependenciesFor($recipeDefinition) as [$predecessor, $successor, $condition]) {
-            DB::table('deal_dependencies')->insert([
-                'id' => (string) Str::uuid7(),
-                'deal_chain_id' => $dealChainId,
-                'predecessor_need_id' => $needIds[$predecessor],
-                'successor_need_id' => $needIds[$successor],
-                'dependency_type' => 'blocks',
-                'status' => 'active',
-                'condition_code' => $condition,
-                'created_by_user_id' => $coordinatorUserId,
-                'correlation_id' => $correlationId,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-        }
-    }
-
-    /**
-     * @param  array<string, mixed>  $source
-     * @return list<array{key: string, need_kind: string, title: string, description: string}>
-     */
-    private function nodesFor(
-        ?string $recipe,
-        array $source,
-        int $quantity,
-        ?array $recipeDefinition,
-    ): array {
-        unset($recipe);
-
-        $primaryTitle = (string) $source['title'];
-        $primaryKind = (string) $source['listing_type'] === 'product' ? 'product' : 'service';
-        $quantityLabel = 'Quantity '.$quantity;
-        $templates = (array) (($recipeDefinition['definition'] ?? [])['nodes'] ?? []);
-
-        if ($templates === []) {
-            return [[
-                'key' => 'primary',
-                'need_kind' => $primaryKind,
-                'title' => $primaryTitle,
-                'description' => "Primary listing need · {$quantityLabel} · provider agreement required",
-            ]];
-        }
-
-        return array_values(array_map(
-            static function (array $node) use ($primaryTitle, $primaryKind, $quantityLabel): array {
-                $needKind = (string) ($node['need_kind'] ?? '');
-                if (($node['need_kind_template'] ?? null) === 'primary_listing' || $needKind === '') {
-                    $needKind = $primaryKind;
-                }
-
-                $title = ($node['title_template'] ?? null) === 'primary_listing'
-                    ? $primaryTitle
-                    : (string) ($node['title'] ?? $primaryTitle);
-                $description = str_replace(
-                    '{quantity_label}',
-                    $quantityLabel,
-                    (string) ($node['description_template'] ?? 'Provider agreement required'),
-                );
-
-                return [
-                    'key' => (string) ($node['key'] ?? 'primary'),
-                    'need_kind' => $needKind,
-                    'title' => $title,
-                    'description' => $description,
-                ];
-            },
-            $templates,
-        ));
-    }
-
-    /**
-     * @return list<array{0: string, 1: string, 2: string}>
-     */
-    private function dependenciesFor(?array $recipeDefinition): array
-    {
-        if ($recipeDefinition === null) {
-            return [];
-        }
-
-        return array_values(array_map(
-            static fn (array $dependency): array => [
-                (string) $dependency['predecessor'],
-                (string) $dependency['successor'],
-                (string) $dependency['condition_code'],
-            ],
-            (array) (($recipeDefinition['definition'] ?? [])['dependencies'] ?? []),
-        ));
     }
 
     /**
@@ -642,19 +576,12 @@ final class DealChainController extends Controller
                 ?? ($category === 'local-food' ? '/photos/bibingka.jpg' : ($listing->listing_type === 'product' ? '/photos/ac-capacitor.jpg' : '/photos/courier.jpg'))
             );
 
-            // Role matching
-            $matchedRole = null;
-            if ($listing->listing_type === 'product' || in_array($fixtureKey, ['active-tagudin-ac-capacitor-01', 'active-tagudin-bibingka-01', 'active-tagudin-greens-bag-01'], true)) {
-                $matchedRole = 'STORE';
-            } elseif ($category === 'courier' || $category === 'delivery' || $category === 'logistics' || $fixtureKey === 'active-tagudin-courier-01' || str_contains(strtolower($title), 'courier') || str_contains(strtolower($title), 'delivery')) {
-                $matchedRole = 'COURIER';
-            } elseif ($fixtureKey === 'active-tagudin-safety-audit-01' || str_contains(strtolower($title), 'audit') || str_contains(strtolower($category), 'safety') || str_contains(strtolower($category), 'audit')) {
-                $matchedRole = 'AUDIT';
-            } elseif (str_contains(strtolower($title), 'recycle') || str_contains(strtolower($title), 'scrap') || str_contains(strtolower($category), 'recycle')) {
-                $matchedRole = 'RECYCLE';
-            } elseif ($listing->listing_type === 'service') {
-                $matchedRole = 'LABOR';
-            }
+            $matchedRole = DealChainCandidateRoleClassifier::classify(
+                (string) $listing->listing_type,
+                $category,
+                $title,
+                $fixtureKey,
+            );
 
             if ($matchedRole !== $role) {
                 continue;

@@ -7,7 +7,7 @@ namespace App\Shared\Application;
 use App\Shared\Contracts\CorrelationId;
 use RuntimeException;
 
-final class KernelException extends RuntimeException
+class KernelException extends RuntimeException
 {
     public readonly ErrorEnvelope $envelope;
 

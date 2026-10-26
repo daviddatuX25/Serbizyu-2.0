@@ -16,8 +16,9 @@ final class ConsentActingForAuthorizer implements ActingForAuthorizer
         string $granteeUserId,
         string $grantorUserId,
         string $correlationId,
-        ?string $resourceType = null,
-        ?string $requiredAction = null,
+        string $resourceType,
+        ?string $resourceId,
+        string $requiredAction,
     ): void {
         try {
             $this->consents->assertActiveForActingFor(
@@ -26,6 +27,7 @@ final class ConsentActingForAuthorizer implements ActingForAuthorizer
                 $grantorUserId,
                 $correlationId,
                 $resourceType,
+                $resourceId,
                 $requiredAction,
             );
         } catch (IdentityAccessError $error) {

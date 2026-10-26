@@ -49,12 +49,13 @@ it('allows acting-for only while consent grant is active', function (): void {
     $agent = User::factory()->create();
     $consents = app(ConsentGrantService::class);
     $correlationId = (string) Str::uuid7();
+    $resourceId = (string) Str::uuid7();
 
     $grantId = $consents->grant(
         grantorUserId: $owner->id,
         granteeUserId: $agent->id,
         resourceType: 'listing',
-        resourceId: null,
+        resourceId: $resourceId,
         permissionScope: ['actions' => ['listing.update']],
         correlationId: $correlationId,
     );
@@ -63,14 +64,14 @@ it('allows acting-for only while consent grant is active', function (): void {
     expect($actor->actingForUserId)->toBe($owner->id);
     expect($actor->grantReference)->toBe($grantId);
 
-    DB::transaction(function () use ($consents, $grantId, $agent, $owner, $correlationId): void {
-        $consents->assertActiveForActingFor($grantId, $agent->id, $owner->id, $correlationId, 'listing', 'listing.update');
+    DB::transaction(function () use ($consents, $grantId, $agent, $owner, $correlationId, $resourceId): void {
+        $consents->assertActiveForActingFor($grantId, $agent->id, $owner->id, $correlationId, 'listing', $resourceId, 'listing.update');
     });
 
     $consents->revoke($grantId, $owner->id, $correlationId);
 
-    expect(fn () => DB::transaction(function () use ($consents, $grantId, $agent, $owner, $correlationId): void {
-        $consents->assertActiveForActingFor($grantId, $agent->id, $owner->id, $correlationId, 'listing', 'listing.update');
+    expect(fn () => DB::transaction(function () use ($consents, $grantId, $agent, $owner, $correlationId, $resourceId): void {
+        $consents->assertActiveForActingFor($grantId, $agent->id, $owner->id, $correlationId, 'listing', $resourceId, 'listing.update');
     }))->toThrow(IdentityAccessError::class);
 });
 
@@ -105,10 +106,31 @@ it('lets an agent update a listing draft only with an active consent grant', fun
         grantorUserId: $owner->id,
         granteeUserId: $agent->id,
         resourceType: 'listing',
-        resourceId: null,
+        resourceId: (string) $listing['id'],
         permissionScope: ['actions' => ['listing.update']],
         correlationId: $correlationId,
     );
+
+    $wrongResourceGrantId = $consents->grant(
+        grantorUserId: $owner->id,
+        granteeUserId: $agent->id,
+        resourceType: 'listing',
+        resourceId: (string) Str::uuid7(),
+        permissionScope: ['actions' => ['listing.update']],
+        correlationId: $correlationId,
+    );
+    $wrongResourceActor = new ResourceActor($owner->id, $agent->id, $wrongResourceGrantId);
+    $versionCount = DB::table('listing_versions')->where('listing_id', $listing['id'])->count();
+
+    expect(fn () => app(UpdateListingDraft::class)->handle(
+        (string) $listing['id'],
+        $wrongResourceActor,
+        (int) $listing['version'],
+        ['title' => 'Mismatched grant must not write'],
+        $correlationId,
+    ))->toThrow(ListingError::class);
+    expect(DB::table('listings')->where('id', $listing['id'])->value('version'))->toBe((int) $listing['version']);
+    expect(DB::table('listing_versions')->where('listing_id', $listing['id'])->count())->toBe($versionCount);
 
     $agentActor = new ResourceActor($owner->id, $agent->id, $grantId);
     $saved = app(UpdateListingDraft::class)->handle(
@@ -149,7 +171,5 @@ it('denies partial acting-for headers without a consent grant', function (): voi
         $request,
         $agent->id,
         (string) Str::uuid7(),
-        'listing',
-        'listing.update',
     ))->toThrow(IdentityAccessError::class);
 });

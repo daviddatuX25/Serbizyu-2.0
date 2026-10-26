@@ -7,6 +7,7 @@ export type MarketplaceCategory = {
 };
 
 export type DealChainNode = {
+    key: string;
     id?: string;
     role: string;
     title: string;
@@ -58,6 +59,15 @@ export type BasketItem = {
     title: string;
     price: number;
     quantity: number;
+    listing_id?: string;
+    listing_version_id?: string | null;
+    variant_id?: string | null;
+    package_id?: string | null;
+    addon_ids?: string[];
+    addon_titles?: string[];
+    deal_chain_combination_id?: string | null;
+    deal_chain_title?: string | null;
+    variant_available?: number | null;
     category_code?: string | null;
     listing_type?: string | null;
     work_shape?: string | null;

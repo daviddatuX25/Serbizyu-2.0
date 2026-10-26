@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\ValidatesListingGeography;
+use App\Http\Requests\Concerns\ValidatesWorkSpecificationStages;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class UpdateListingDraftRequest extends FormRequest
 {
     use ValidatesListingGeography;
+    use ValidatesWorkSpecificationStages;
 
     public function authorize(): bool
     {
@@ -31,9 +33,10 @@ final class UpdateListingDraftRequest extends FormRequest
             'pricing_mode' => ['nullable', 'string', 'in:fixed,range,packages'],
             'package_tiers' => ['nullable', 'array'],
             'addons' => ['nullable', 'array'],
-            'milestone_stages' => ['nullable', 'array'],
+            ...$this->workStageRules('milestone_stages'),
             'work_catalog_code' => ['nullable', 'string', 'max:120'],
             'work_set_version' => ['nullable', 'integer', 'min:1'],
+            'prep_lead_time' => ['nullable', 'string', 'in:in_stock,same_day,next_day'],
             'inclusions' => ['nullable', 'array'],
             'variants' => ['nullable', 'array'],
             'media' => ['nullable', 'array'],

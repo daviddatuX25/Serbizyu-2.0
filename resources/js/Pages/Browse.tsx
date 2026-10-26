@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import {
     ArrowUpDown,
-    Bell,
     Check,
     ChevronDown,
     Clock,
@@ -29,6 +28,7 @@ import {
 } from '../lib/philippineAddresses';
 import type { HomeProps, ListingRecord } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
+import { NotificationBell } from '../components/notifications/NotificationCenter';
 import { MarketplaceCard } from '../marketplace/components/MarketplaceCard';
 import { BottomNavBar, type NavTabId } from '../marketplace/components/BottomNavBar';
 import type {
@@ -37,6 +37,7 @@ import type {
     PublishedDealChainRecipeId,
     SlotCandidateListing,
 } from '../marketplace/types';
+import { listingBookingUrl, readPicksBasket, savePicksBasket } from '../marketplace/booking';
 import { PicksDrawer } from '../components/marketplace/PicksDrawer';
 import { DealChainCheckoutModal } from '../components/marketplace/DealChainCheckoutModal';
 import { indexDealChainRecipes } from '../marketplace/dealChainRecipes';
@@ -194,12 +195,7 @@ export default function Browse(props: HomeProps) {
 
         const syncPicks = () => {
             try {
-                const storedPicks = localStorage.getItem('serbizyu.picks');
-                if (storedPicks) {
-                    setBasket(JSON.parse(storedPicks));
-                } else {
-                    setBasket([]);
-                }
+                setBasket(readPicksBasket(localStorage));
             } catch {
                 // ignore
             }
@@ -218,7 +214,7 @@ export default function Browse(props: HomeProps) {
     const saveBasket = (newBasket: BasketItem[]) => {
         setBasket(newBasket);
         try {
-            localStorage.setItem('serbizyu.picks', JSON.stringify(newBasket));
+            savePicksBasket(localStorage, newBasket);
             window.dispatchEvent(new Event('serbizyu:picks-updated'));
         } catch {
             // ignore
@@ -300,21 +296,19 @@ export default function Browse(props: HomeProps) {
             '/deal-chains/authorize',
             {
                 items: basket.map((b) => ({
-                    id: b.id,
+                    id: b.listing_id,
+                    listing_version_id: b.listing_version_id,
+                    variant_id: b.variant_id,
+                    package_id: b.package_id,
+                    deal_chain_combination_id: b.deal_chain_combination_id,
                     quantity: b.quantity,
+                    addon_ids: b.addon_ids ?? [],
                     deal_chain: b.dealChain?.recipeId || null,
                     slot_overrides: b.dealChain?.nodes
                         ? Object.fromEntries(
                               b.dealChain.nodes
                                   .filter((n) => n.listingId)
-                                  .map((n) => [
-                                      n.type,
-                                      {
-                                          listing_id: n.listingId,
-                                          provider_user_id: n.providerId,
-                                          price_minor: n.priceMinor,
-                                      },
-                                  ]),
+                                  .map((n) => [n.key, { listing_id: n.listingId }]),
                           )
                         : null,
                 })),
@@ -1380,19 +1374,7 @@ export default function Browse(props: HomeProps) {
                                     </button>
 
                                     {/* Notification Bell Icon (replaces profile icon) */}
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            alert(
-                                                'Tagudin Updates & Notifications: 0 pending alerts in Centro.',
-                                            )
-                                        }
-                                        className="flex size-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50"
-                                        aria-label="Notifications"
-                                        title="Notifications"
-                                    >
-                                        <Bell className="size-4 text-[#0F2F58]" />
-                                    </button>
+                                    <NotificationBell />
                                 </div>
                             ) : (
                                 /* When focused: Show Cancel to collapse and restore icons */
@@ -1717,6 +1699,7 @@ export default function Browse(props: HomeProps) {
                             if (tab === 'post') setCreatorOpen(true);
                             if (tab === 'quick_deal') setQuickDealOpen(true);
                             if (tab === 'orders') router.visit('/orders');
+                            if (tab === 'invitations') router.visit('/deal-invitations');
                             if (tab === 'profile') setProfileDrawerOpen(true);
                         }}
                         onQuickDealClick={() => setQuickDealOpen(true)}
@@ -2295,9 +2278,9 @@ export default function Browse(props: HomeProps) {
                 recipes={Object.values(dealChainRecipes)}
                 onUpdateQuantity={(id, delta) => {
                     const next = basket
-                        .map((item) =>
-                            item.id === id ? { ...item, quantity: item.quantity + delta } : item,
-                        )
+                        .map((item) => item.id === id
+                            ? { ...item, quantity: Math.min(item.variant_available ?? Number.MAX_SAFE_INTEGER, item.quantity + delta) }
+                            : item)
                         .filter((item) => item.quantity > 0);
                     saveBasket(next);
                 }}
@@ -2307,13 +2290,14 @@ export default function Browse(props: HomeProps) {
                 }}
                 onCheckout={() => {
                     setPicksOpen(false);
-                    const itemsWithDealChain = basket.filter((item) => Boolean(item.dealChain));
-                    if (itemsWithDealChain.length > 0) {
+                    if (basket.some((item) => Boolean(item.dealChain))) {
                         setCheckoutModalOpen(true);
-                    } else if (basket.length > 0) {
-                        // Direct ordinary booking -> forms order proposal
-                        router.visit(`/listings/${basket[0].id}/book`);
+                        return;
                     }
+                    const item = basket[0];
+                    if (!item) return;
+                    const url = listingBookingUrl(item, window.location.origin);
+                    if (url) router.visit(url);
                 }}
                 onAttachDealChain={handleAttachDealChain}
                 onSwapSlotCandidate={handleSwapSlotCandidate}

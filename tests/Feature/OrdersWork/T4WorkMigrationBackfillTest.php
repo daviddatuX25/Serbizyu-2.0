@@ -55,7 +55,7 @@ function t4CreateOrderFixture(): array
         'buyer_user_id' => $user->id,
         'provider_user_id' => $user->id,
         'listing_id' => $listing['id'],
-        'status' => 'pending_acceptance',
+        'status' => 'proposed',
         'origin' => 'direct',
         'mechanism' => 'direct',
         'version' => 1,

@@ -173,9 +173,9 @@ final class WorkExecutionServiceTest extends TestCase
             'order_id' => $orderId,
             'work_instance_id' => $workId,
             'purpose' => 'primary_consideration',
-            'status' => 'created',
+            'status' => 'not_due',
             'lane' => 'external_cash',
-            'due_condition' => 'on_acceptance',
+            'due_condition' => 'on_work_acceptance',
             'amount_minor' => 45000,
             'currency' => 'PHP',
             'payer_user_id' => $buyerId,
@@ -213,11 +213,19 @@ final class WorkExecutionServiceTest extends TestCase
 
         self::assertSame('awaiting_signoff', $res4['work_status']);
 
-        // Step 3b: Customer signs off -> work completed, order closed, obligation released
+        // Step 3b: Customer signs off -> work completed and obligation due, but unsettled
         $res5 = $service->advanceNode($orderId, $buyerId, 'step-3', 'signoff_completion');
 
         self::assertSame('completed', $res5['work_status']);
-        self::assertSame('closed', $res5['order_status']);
-        self::assertSame('released', $res5['obligation_status']);
+        self::assertSame('completed', $res5['order_status']);
+        self::assertSame('due', $res5['obligation_status']);
+        $dueObligation = DB::table('payment_obligations')->where('id', $obligationId)->first();
+        self::assertSame('due', $dueObligation->status);
+        self::assertNotNull($dueObligation->due_at);
+        self::assertNull($dueObligation->settled_at);
+        self::assertSame(1, DB::table('payment_events')
+            ->where('payment_obligation_id', $obligationId)
+            ->where('event_type', 'payment.obligation.due')
+            ->count());
     }
 }

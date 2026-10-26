@@ -1,3 +1,4 @@
+import { NotificationBell } from '../notifications/NotificationCenter';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, LogOut, Package, Plus, ShoppingBag } from 'lucide-react';
 import { Link, router, usePage } from '@inertiajs/react';
@@ -11,6 +12,7 @@ import type {
     PublishedDealChainRecipeId,
     SlotCandidateListing,
 } from '@/marketplace/types';
+import { listingBookingUrl, readPicksBasket, savePicksBasket } from '@/marketplace/booking';
 
 interface DesktopGlobalNavProps {
     session?: SliceSession | null;
@@ -86,26 +88,12 @@ export function DesktopGlobalNav({
     useEffect(() => {
         const readStoragePicks = () => {
             try {
-                const stored = localStorage.getItem('serbizyu.picks');
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    if (Array.isArray(parsed)) {
-                        setBasket(parsed);
-                        if (typeof picksCount !== 'number') {
-                            setLocalPicksCount(
-                                parsed.reduce(
-                                    (sum: number, item: { quantity?: number }) =>
-                                        sum + (item.quantity || 1),
-                                    0,
-                                ),
-                            );
-                        }
-                        return;
-                    }
-                }
-                setBasket([]);
+                const parsed = readPicksBasket(localStorage);
+                setBasket(parsed);
                 if (typeof picksCount !== 'number') {
-                    setLocalPicksCount(0);
+                    setLocalPicksCount(
+                        parsed.reduce((sum, item) => sum + (item.quantity || 1), 0),
+                    );
                 }
             } catch {
                 setBasket([]);
@@ -148,7 +136,7 @@ export function DesktopGlobalNav({
     const saveBasket = (newBasket: BasketItem[]) => {
         setBasket(newBasket);
         try {
-            localStorage.setItem('serbizyu.picks', JSON.stringify(newBasket));
+            savePicksBasket(localStorage, newBasket);
             window.dispatchEvent(new Event('serbizyu:picks-updated'));
         } catch {
             // ignore
@@ -157,7 +145,9 @@ export function DesktopGlobalNav({
 
     const handleUpdateQuantity = (id: string, delta: number) => {
         const next = basket
-            .map((item) => (item.id === id ? { ...item, quantity: item.quantity + delta } : item))
+            .map((item) => item.id === id
+                ? { ...item, quantity: Math.min(item.variant_available ?? Number.MAX_SAFE_INTEGER, item.quantity + delta) }
+                : item)
             .filter((item) => item.quantity > 0);
         saveBasket(next);
     };
@@ -221,12 +211,14 @@ export function DesktopGlobalNav({
 
     const handleCheckout = () => {
         setInternalDrawerOpen(false);
-        const itemsWithDealChain = basket.filter((item) => Boolean(item.dealChain));
-        if (itemsWithDealChain.length > 0) {
+        if (basket.some((item) => Boolean(item.dealChain))) {
             router.visit('/picks');
-        } else if (basket.length > 0) {
-            router.visit(`/listings/${basket[0].id}/book`);
+            return;
         }
+        const item = basket[0];
+        if (!item) return;
+        const url = listingBookingUrl(item, window.location.origin);
+        if (url) router.visit(url);
     };
 
     const handlePicksToggle = () => {
@@ -298,6 +290,28 @@ export function DesktopGlobalNav({
                             >
                                 Orders
                             </a>
+                            <Link
+                                href="/deal-invitations"
+                                aria-current={activeRoute === 'deal-invitations' ? 'page' : undefined}
+                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                                    activeRoute === 'deal-invitations'
+                                        ? 'bg-[#EBF2FA] text-[#0F2F58]'
+                                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                                }`}
+                            >
+                                Invitations
+                            </Link>
+                            <Link
+                                href="/money-history"
+                                aria-current={activeRoute === 'money-history' ? 'page' : undefined}
+                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                                    activeRoute === 'money-history'
+                                        ? 'bg-[#EBF2FA] text-[#0F2F58]'
+                                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                                }`}
+                            >
+                                Money History
+                            </Link>
                             <a
                                 href="/my-listings"
                                 className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
@@ -343,6 +357,7 @@ export function DesktopGlobalNav({
                                 </span>
                             )}
                         </button>
+                        <NotificationBell />
 
                         {/* Acting-for Badge (if active) */}
                         {actingContext?.isActingOnBehalf && (
@@ -397,6 +412,18 @@ export function DesktopGlobalNav({
                                                 <Package className="size-3.5 text-slate-400" />
                                                 <span>My Listings</span>
                                             </a>
+                                            <Link
+                                                href="/my-requests"
+                                                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-[#EBF2FA] hover:text-[#0F2F58]"
+                                            >
+                                                My Requests
+                                            </Link>
+                                            <Link
+                                                href="/my-quotes"
+                                                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-[#EBF2FA] hover:text-[#0F2F58]"
+                                            >
+                                                My Quotes
+                                            </Link>
                                             <a
                                                 href="/orders"
                                                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-[#EBF2FA] hover:text-[#0F2F58]"
