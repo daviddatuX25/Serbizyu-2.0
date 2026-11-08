@@ -46,9 +46,9 @@ final class AdminDealChainCatalogController extends Controller
     public function storeRecipe(Request $request, DealChainCatalog $catalog): RedirectResponse|JsonResponse
     {
         $validated = $this->validateRecipePayload($request, isNew: true);
-        $recipeCode = Str::snake(strtolower(trim((string) $validated['recipe_code'])));
+        $recipeCode = (string) $validated['recipe_code'];
 
-        return $this->persistNewVersion($recipeCode, $validated, $request);
+        return $this->persistNewVersion($recipeCode, $validated, $request, isNew: true);
     }
 
     /**
@@ -58,10 +58,10 @@ final class AdminDealChainCatalogController extends Controller
      */
     public function publishRecipe(Request $request, string $recipeCode, DealChainCatalog $catalog): RedirectResponse|JsonResponse
     {
-        $normalizedCode = Str::snake(strtolower(trim($recipeCode)));
+        abort_unless(preg_match('/^[a-z0-9_]{1,60}$/D', $recipeCode) === 1, 404);
         $validated = $this->validateRecipePayload($request, isNew: false);
 
-        return $this->persistNewVersion($normalizedCode, $validated, $request);
+        return $this->persistNewVersion($recipeCode, $validated, $request, isNew: false);
     }
 
     /**
@@ -87,6 +87,7 @@ final class AdminDealChainCatalogController extends Controller
             'nodes' => ['required', 'array', 'min:2', 'max:16'],
             'nodes.*.key' => ['required', 'string', 'max:60'],
             'nodes.*.need_kind' => ['nullable', 'string', 'max:60'],
+            'nodes.*.is_primary' => ['required', 'boolean'],
             'nodes.*.title' => ['required', 'string', 'max:160'],
             'nodes.*.description_template' => ['nullable', 'string', 'max:300'],
             'nodes.*.frontend' => ['required', 'array'],
@@ -108,6 +109,8 @@ final class AdminDealChainCatalogController extends Controller
 
         if ($isNew) {
             $rules['recipe_code'] = ['required', 'string', 'regex:/^[a-z0-9_]+$/', 'max:60'];
+        } else {
+            $rules['expected_catalog_version'] = ['required', 'integer', 'min:1'];
         }
 
         $validated = $request->validate($rules);
@@ -122,6 +125,15 @@ final class AdminDealChainCatalogController extends Controller
                 ]);
             }
             $nodeKeys[$key] = true;
+        }
+        $primaryCount = count(array_filter(
+            $validated['nodes'],
+            static fn (array $node): bool => $node['is_primary'] === true || $node['is_primary'] === 1 || $node['is_primary'] === '1',
+        ));
+        if ($primaryCount !== 1) {
+            throw ValidationException::withMessages([
+                'nodes' => 'Choose exactly one primary listing for this published recipe.',
+            ]);
         }
 
         // Verify Agnostic Dependencies and Acyclicity
@@ -212,108 +224,135 @@ final class AdminDealChainCatalogController extends Controller
      * @param  array<string, mixed>  $payload
      *
      * @throws JsonException
+     * @throws ValidationException
      */
-    private function persistNewVersion(string $recipeCode, array $payload, Request $request): RedirectResponse|JsonResponse
+    private function persistNewVersion(string $recipeCode, array $payload, Request $request, bool $isNew): RedirectResponse|JsonResponse
     {
-        $currentMaxVersion = DB::table('deal_chain_catalog_versions')
-            ->where('recipe_code', $recipeCode)
-            ->max('catalog_version');
+        return DB::transaction(function () use ($recipeCode, $payload, $request, $isNew): RedirectResponse|JsonResponse {
+            if (DB::connection()->getDriverName() === 'pgsql') {
+                DB::statement('SELECT pg_advisory_xact_lock(hashtext(?))', ["deal_chain_catalog:{$recipeCode}"]);
+            }
 
-        $nextVersion = ((int) ($currentMaxVersion ?? 0)) + 1;
+            $latest = DB::table('deal_chain_catalog_versions')
+                ->where('recipe_code', $recipeCode)
+                ->orderByDesc('catalog_version')
+                ->lockForUpdate()
+                ->first();
 
-        $patternCapsule = array_values(array_map(
-            static fn (array $n): string => strtoupper((string) ($n['frontend']['type'] ?? 'LABOR')),
-            (array) $payload['nodes'],
-        ));
-
-        $normalizedNodes = array_values(array_map(
-            static function (array $n): array {
-                $nodeData = [
-                    'key' => (string) $n['key'],
-                    'need_kind' => (string) ($n['need_kind'] ?? ($n['frontend']['type'] === 'store' ? 'product' : 'service')),
-                    'title' => (string) $n['title'],
-                    'description_template' => (string) ($n['description_template'] ?? "{$n['title']} · provider agreement required"),
-                    'frontend' => [
-                        'role' => (string) $n['frontend']['role'],
-                        'title' => (string) $n['frontend']['title'],
-                        'sub' => (string) ($n['frontend']['sub'] ?? 'Provider agreement required'),
-                        'type' => (string) $n['frontend']['type'],
-                    ],
-                ];
-
-                if (isset($n['slot_requirement']) && is_array($n['slot_requirement'])) {
-                    $nodeData['slot_requirement'] = $n['slot_requirement'];
+            if ($isNew) {
+                if ($latest !== null) {
+                    throw ValidationException::withMessages([
+                        'recipe_code' => 'This recipe code is already in use. Choose a new recipe code.',
+                    ]);
                 }
 
-                if (isset($n['listing_id']) && is_string($n['listing_id'])) {
-                    $nodeData['listing_id'] = $n['listing_id'];
+                $nextVersion = 1;
+            } else {
+                abort_if($latest === null, 404);
+                if ((int) $latest->catalog_version !== (int) $payload['expected_catalog_version']) {
+                    throw ValidationException::withMessages([
+                        'expected_catalog_version' => 'This recipe has changed. Reopen the current version before publishing.',
+                    ]);
                 }
 
-                if (isset($n['provider_name']) && is_string($n['provider_name'])) {
-                    $nodeData['provider_name'] = $n['provider_name'];
-                }
+                $nextVersion = (int) $latest->catalog_version + 1;
+            }
 
-                if (isset($n['price_minor']) && is_numeric($n['price_minor'])) {
-                    $nodeData['price_minor'] = (int) $n['price_minor'];
-                }
+            $patternCapsule = array_values(array_map(
+                static fn (array $n): string => strtoupper((string) ($n['frontend']['type'] ?? 'LABOR')),
+                (array) $payload['nodes'],
+            ));
 
-                return $nodeData;
-            },
-            (array) $payload['nodes'],
-        ));
+            $normalizedNodes = array_values(array_map(
+                static function (array $n): array {
+                    $nodeData = [
+                        'key' => (string) $n['key'],
+                        'need_kind' => (string) ($n['need_kind'] ?? ($n['frontend']['type'] === 'store' ? 'product' : 'service')),
+                        'is_primary' => (bool) $n['is_primary'],
+                        'title' => (string) $n['title'],
+                        'description_template' => (string) ($n['description_template'] ?? "{$n['title']} · provider agreement required"),
+                        'frontend' => [
+                            'role' => (string) $n['frontend']['role'],
+                            'title' => (string) $n['frontend']['title'],
+                            'sub' => (string) ($n['frontend']['sub'] ?? 'Provider agreement required'),
+                            'type' => (string) $n['frontend']['type'],
+                        ],
+                    ];
 
-        $normalizedDependencies = array_values(array_map(
-            static fn (array $d): array => [
-                'predecessor' => (string) $d['predecessor'],
-                'successor' => (string) $d['successor'],
-                'condition_code' => (string) $d['condition_code'],
-                'allow_bypass' => (bool) ($d['allow_bypass'] ?? false),
-            ],
-            (array) $payload['dependencies'],
-        ));
+                    if (isset($n['slot_requirement']) && is_array($n['slot_requirement'])) {
+                        $nodeData['slot_requirement'] = $n['slot_requirement'];
+                    }
 
-        $definition = [
-            'pattern_capsule' => $patternCapsule,
-            'nodes' => $normalizedNodes,
-            'dependencies' => $normalizedDependencies,
-        ];
+                    if (isset($n['listing_id']) && is_string($n['listing_id'])) {
+                        $nodeData['listing_id'] = $n['listing_id'];
+                    }
 
-        $now = now();
-        $id = (string) Str::uuid7();
+                    if (isset($n['provider_name']) && is_string($n['provider_name'])) {
+                        $nodeData['provider_name'] = $n['provider_name'];
+                    }
 
-        DB::table('deal_chain_catalog_versions')->insert([
-            'id' => $id,
-            'recipe_code' => $recipeCode,
-            'catalog_version' => $nextVersion,
-            'title' => (string) $payload['title'],
-            'pattern' => (string) $payload['pattern'],
-            'description' => (string) $payload['description'],
-            'status' => 'published',
-            'category_codes' => json_encode(array_values((array) $payload['category_codes']), JSON_THROW_ON_ERROR),
-            'listing_types' => json_encode(array_values((array) $payload['listing_types']), JSON_THROW_ON_ERROR),
-            'work_shapes' => json_encode(array_values((array) $payload['work_shapes']), JSON_THROW_ON_ERROR),
-            'extra_fee_amount_minor' => (int) $payload['extra_fee_amount_minor'],
-            'currency' => 'PHP',
-            'rating' => 5.0,
-            'booked_count' => 0,
-            'definition' => json_encode($definition, JSON_THROW_ON_ERROR),
-            'payload_version' => 1,
-            'correlation_id' => (string) Str::uuid7(),
-            'created_at' => $now,
-            'updated_at' => $now,
-        ]);
+                    if (isset($n['price_minor']) && is_numeric($n['price_minor'])) {
+                        $nodeData['price_minor'] = (int) $n['price_minor'];
+                    }
 
-        $message = "Published recipe '{$payload['title']}' as version {$nextVersion} successfully.";
+                    return $nodeData;
+                },
+                (array) $payload['nodes'],
+            ));
 
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
+            $normalizedDependencies = array_values(array_map(
+                static fn (array $d): array => [
+                    'predecessor' => (string) $d['predecessor'],
+                    'successor' => (string) $d['successor'],
+                    'condition_code' => (string) $d['condition_code'],
+                    'allow_bypass' => (bool) ($d['allow_bypass'] ?? false),
+                ],
+                (array) $payload['dependencies'],
+            ));
+
+            $definition = [
+                'pattern_capsule' => $patternCapsule,
+                'nodes' => $normalizedNodes,
+                'dependencies' => $normalizedDependencies,
+            ];
+
+            $now = now();
+            $id = (string) Str::uuid7();
+
+            DB::table('deal_chain_catalog_versions')->insert([
+                'id' => $id,
                 'recipe_code' => $recipeCode,
                 'catalog_version' => $nextVersion,
-                'message' => $message,
-            ], 201);
-        }
+                'title' => (string) $payload['title'],
+                'pattern' => (string) $payload['pattern'],
+                'description' => (string) $payload['description'],
+                'status' => 'published',
+                'category_codes' => json_encode(array_values((array) $payload['category_codes']), JSON_THROW_ON_ERROR),
+                'listing_types' => json_encode(array_values((array) $payload['listing_types']), JSON_THROW_ON_ERROR),
+                'work_shapes' => json_encode(array_values((array) $payload['work_shapes']), JSON_THROW_ON_ERROR),
+                'extra_fee_amount_minor' => (int) $payload['extra_fee_amount_minor'],
+                'currency' => 'PHP',
+                'rating' => 5.0,
+                'booked_count' => 0,
+                'definition' => json_encode($definition, JSON_THROW_ON_ERROR),
+                'payload_version' => 1,
+                'correlation_id' => (string) Str::uuid7(),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
 
-        return redirect()->route('admin.catalogs.deal-chains')->with('status', $message);
+            $message = "Published recipe '{$payload['title']}' as version {$nextVersion} successfully.";
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'recipe_code' => $recipeCode,
+                    'catalog_version' => $nextVersion,
+                    'message' => $message,
+                ], 201);
+            }
+
+            return redirect()->route('admin.catalogs.deal-chains')->with('status', $message);
+        });
     }
 }

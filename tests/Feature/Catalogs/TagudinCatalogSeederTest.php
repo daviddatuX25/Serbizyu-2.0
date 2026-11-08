@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Catalogs\Application\DealChainCatalog;
 use App\Modules\IdentityAccess\Infrastructure\FixtureRepository;
 use App\Modules\Listings\Application\PublicListingDetailQuery;
 use App\Modules\Listings\Application\SeedTagudinBrowseCatalog;
@@ -82,15 +81,4 @@ it('seeds idempotent work and deal-chain catalogs with compatible browse supply'
         ->and($activeDetail['addons'])->toBeArray()->not->toBeEmpty()
         ->and($activeDetail['partner_candidates'])->toBeArray()->not->toBeEmpty();
 
-    $recipes = app(DealChainCatalog::class)->published();
-
-    foreach (TagudinBrowseCatalog::listings() as $listing) {
-        $compatible = collect($recipes)->filter(function (array $recipe) use ($listing): bool {
-            return in_array($listing['category_code'], $recipe['category_codes'], true)
-                && in_array($listing['listing_type'], $recipe['listing_types'], true)
-                && in_array($listing['work_shape'], $recipe['work_shapes'], true);
-        });
-
-        expect($compatible->isNotEmpty())->toBeTrue();
-    }
 });

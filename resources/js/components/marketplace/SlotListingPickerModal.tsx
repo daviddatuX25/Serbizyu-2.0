@@ -103,7 +103,7 @@ export function SlotListingPickerModal({
         return visibleCandidates.filter((item) => {
             if (item.role !== canonicalRole) return false;
 
-            if (filterCategory === 'top_rated' && (item.rating || 0) < 4.85) {
+            if (filterCategory === 'top_rated' && (item.rating == null || item.rating < 4.85)) {
                 return false;
             }
 
@@ -120,15 +120,17 @@ export function SlotListingPickerModal({
     }, [visibleCandidates, canonicalRole, filterCategory, searchQuery]);
 
     const activeCandidate = useMemo(() => {
-        return matchingList.find((c) => c.id === selectedId) || matchingList[0];
+        return matchingList.find((c) => c.id === selectedId);
     }, [matchingList, selectedId]);
     const handleConfirm = () => {
         if (activeCandidate) {
-            const rawMinor = activeCandidate.price_minor ?? activeCandidate.priceMinor ?? 0;
+            const rawMinor = activeCandidate.price_minor ?? activeCandidate.priceMinor;
             const normalizedCandidate: SlotCandidateListing = {
                 ...activeCandidate,
-                price_minor: Number.isFinite(rawMinor) ? Number(rawMinor) : 0,
-                priceMinor: Number.isFinite(rawMinor) ? Number(rawMinor) : 0,
+                listingVersionId: activeCandidate.listingVersionId ?? activeCandidate.listing_version_id ?? null,
+                ...(typeof rawMinor === 'number' && Number.isFinite(rawMinor)
+                    ? { price_minor: rawMinor, priceMinor: rawMinor }
+                    : {}),
             };
             onSelectCandidate(normalizedCandidate);
         }
@@ -272,19 +274,20 @@ export function SlotListingPickerModal({
                         </div>
                     ) : (
                         matchingList.map((candidate) => {
-                            const isSelected =
-                                selectedId === candidate.id ||
-                                (!selectedId && activeCandidate?.id === candidate.id);
+                            const isSelected = selectedId === candidate.id
+                                || (!matchingList.some((item) => item.id === selectedId) && activeCandidate?.id === candidate.id);
                             return (
-                                <div
+                                <button
+                                    type="button"
                                     key={candidate.id}
+                                    aria-pressed={isSelected}
                                     onClick={() => setSelectedId(candidate.id)}
-                                    className={`flex cursor-pointer items-start justify-between rounded-2xl border p-3.5 transition-all active:scale-[0.99] ${
+                                    className={`flex w-full cursor-pointer items-start justify-between rounded-2xl border p-3.5 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F2F58] active:scale-[0.99] ${
                                         isSelected
                                             ? 'border-[#0F2F58] bg-[#EBF2FA] shadow-xs'
                                             : 'border-slate-200/80 bg-white hover:border-slate-300'
                                     }`}
-                                >
+                                    >
                                     <div className="flex min-w-0 items-start gap-3">
                                         {candidate.photo_url ? (
                                             <img
@@ -309,12 +312,14 @@ export function SlotListingPickerModal({
                                                     {candidate.role}
                                                 </span>
                                                 <span className="text-slate-300">•</span>
-                                                <div className="flex items-center text-[10px] font-bold text-amber-700">
-                                                    <Star className="mr-0.5 size-2.5 fill-amber-400 stroke-amber-500" />
-                                                    <span>
-                                                        {candidate.rating?.toFixed(1) || '4.9'}
-                                                    </span>
-                                                </div>
+                                                {candidate.rating != null ? (
+                                                    <div className="flex items-center text-[10px] font-bold text-amber-700">
+                                                        <Star className="mr-0.5 size-2.5 fill-amber-400 stroke-amber-500" />
+                                                        <span>{candidate.rating.toFixed(1)}</span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-[10px] font-semibold text-slate-500">No reviews</span>
+                                                )}
                                             </div>
 
                                             <h4 className="mt-0.5 truncate text-xs font-extrabold text-slate-900">
@@ -346,10 +351,15 @@ export function SlotListingPickerModal({
                                         </div>
 
                                         <span className="font-mono text-xs font-extrabold text-[#0F2F58]">
-                                            ₱{((candidate.price_minor ?? candidate.priceMinor ?? 0) / 100).toFixed(2)}
+                                            {(() => {
+                                                const priceMinor = candidate.price_minor ?? candidate.priceMinor;
+                                                return typeof priceMinor === 'number' && Number.isFinite(priceMinor)
+                                                    ? `₱${(priceMinor / 100).toFixed(2)}`
+                                                    : 'Price unavailable';
+                                            })()}
                                         </span>
                                     </div>
-                                </div>
+                                </button>
                             );
                         })
                     )}

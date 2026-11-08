@@ -263,7 +263,7 @@ describe('OrderShow Page - Independent Agreement, Work & Payment rails', () => {
         const rails = screen.getByTestId('order-progress-rails');
         expect(within(rails).getByText('Accepted')).toBeTruthy();
         expect(within(rails).getByText('Completed')).toBeTruthy();
-        expect(within(rails).getByText('payer reported cash')).toBeTruthy();
+        expect(within(rails).getByText('Cash reported · awaiting confirmation')).toBeTruthy();
         expect(screen.getByRole('button', { name: /Cash report details/i })).toBeTruthy();
         fireEvent.click(screen.getByRole('button', { name: /Cash report details/i }));
         expect(screen.getByText(/Cash was reported by the payer/i)).toBeTruthy();
@@ -281,9 +281,58 @@ describe('OrderShow Page - Independent Agreement, Work & Payment rails', () => {
 
         const rails = screen.getByTestId('order-progress-rails');
         expect(within(rails).getByText('Accepted')).toBeTruthy();
-        expect(within(rails).getByText('in progress')).toBeTruthy();
+        expect(within(rails).getByText('In progress')).toBeTruthy();
         expect(within(rails).getByText('Not available')).toBeTruthy();
-        expect(screen.getByText('Work Underway')).toBeTruthy();
+        expect(screen.getByText('Work underway')).toBeTruthy();
+    });
+    it('keeps unsupported historical Work readable without exposing execution actions', () => {
+        render(
+            <OrderShow
+                order={{ ...mockOrder, public_reference: 'ORD-00000005', can_signoff: true }}
+                work={{
+                    id: 'legacy-work',
+                    version: 1,
+                    status: 'awaiting_signoff',
+                    work_shape: 'A2',
+                    execution_available: false,
+                    unavailability_reason: 'Work tracking for this older order needs an update. You can still view the order and payment details.',
+                    active_node_id: null,
+                    pending_customer_confirmation: false,
+                    nodes: [],
+                }}
+                terms={{
+                    snapshot_version: 1,
+                    amount_minor: 85000,
+                    currency: 'PHP',
+                    source_listing_version_id: 'listing-version-1',
+                    accepted_by_user_id: 'user-1',
+                    accepted_at: '2026-09-21T00:00:00Z',
+                }}
+                obligation={{
+                    id: 'legacy-obligation',
+                    status: 'due',
+                    lane: 'external_cash',
+                    amount_minor: 85000,
+                    currency: 'PHP',
+                    eligible_lanes: ['external_cash'],
+                    can_select_lane: true,
+                    can_report_cash: true,
+                    can_acknowledge_cash: false,
+                }}
+                actor_perspective="customer"
+            />,
+        );
+
+        const rails = screen.getByTestId('order-progress-rails');
+        expect(within(rails).getByText('Awaiting sign-off')).toBeTruthy();
+        expect(screen.getByText(/Work tracking for this older order needs an update/i)).toBeTruthy();
+        expect(screen.getByText('Recorded status: Awaiting sign-off')).toBeTruthy();
+        expect(screen.queryByRole('heading', { name: 'Work progress' })).toBeNull();
+        expect(screen.queryByText('No governed Work steps are available.')).toBeNull();
+        expect(screen.queryByRole('button', { name: /Review and confirm Work|Rate Service/i })).toBeNull();
+        expect(screen.getByRole('button', { name: /Payment details/i })).toBeTruthy();
+        expect(screen.getAllByRole('button', { name: /Message Kuya/i }).length).toBeGreaterThan(0);
+        expect(screen.getByText('Commercial terms')).toBeTruthy();
     });
 
 
@@ -519,7 +568,7 @@ describe('Order proposal actions', () => {
         expect(screen.getAllByRole('link', { name: /Money history/i }).some((link) => link.getAttribute('href') === '/money-history')).toBe(true);
         fireEvent.click(screen.getByRole('button', { name: /Accept proposal/i }));
         expect(router.post).toHaveBeenCalledWith(
-            `/orders/${mockOrder.id}/proposals/proposal-1/accept`,
+            `/orders/${mockOrder.id}/accept`,
             { expected_order_version: 7, idempotency_key: expect.any(String) },
             expect.objectContaining({ preserveScroll: true, preserveState: true }),
         );
@@ -669,6 +718,37 @@ describe('Order proposal actions', () => {
         expect(router.post).toHaveBeenCalledWith(
             `/orders/${mockOrder.id}/accept`,
             { expected_order_version: 8, idempotency_key: expect.any(String) },
+            expect.objectContaining({ preserveScroll: true, preserveState: true }),
+        );
+    });
+
+    it('accepts an amendment through its exact proposal endpoint without treating initial agreement as an amendment', () => {
+        render(
+            <OrderShow
+                order={{ ...mockOrder, status: 'accepted', version: 9, can_accept: false }}
+                proposal={{
+                    id: 'amendment-1',
+                    version: 1,
+                    kind: 'amendment',
+                    status: 'proposed',
+                    proposed_by_user_id: 'merchant-1',
+                    amount_minor: 73500,
+                    currency: 'PHP',
+                    note: null,
+                    can_accept: true,
+                    can_decline: false,
+                    can_counter: false,
+                    can_amend: false,
+                    expected_order_version: 9,
+                }}
+                actor_perspective="customer"
+            />,
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: /Accept proposal/i }));
+        expect(router.post).toHaveBeenCalledWith(
+            `/orders/${mockOrder.id}/proposals/amendment-1/accept`,
+            { expected_order_version: 9, idempotency_key: expect.any(String) },
             expect.objectContaining({ preserveScroll: true, preserveState: true }),
         );
     });

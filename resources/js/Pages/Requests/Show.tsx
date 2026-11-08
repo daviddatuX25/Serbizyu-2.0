@@ -23,6 +23,7 @@ import {
     Workflow,
 } from 'lucide-react';
 import { AppShell } from '../../components/AppShell';
+import { NotificationBell } from '../../components/notifications/NotificationCenter';
 import GlovoWaveModal from '../../components/mobile/GlovoWaveModal';
 import AppointmentSlotPicker, {
     type AppointmentHold,
@@ -375,23 +376,26 @@ export default function RequestShow({
             <Head title={`Request: ${request.title}`} />
 
             {/* Mobile Header */}
-            <div className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden">
+            <header aria-label="Request navigation" className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden">
                 <Link
                     href="/browse"
-                    className="flex size-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition-colors hover:bg-slate-200"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition-colors hover:bg-slate-200"
+                    aria-label="Back to marketplace"
                 >
                     <ArrowLeft className="size-4.5 stroke-[2.5]" />
                 </Link>
-                <div className="text-center">
+                <div className="min-w-0 flex-1 text-center">
                     <span className="text-[10px] font-extrabold tracking-wider text-teal-700 uppercase">
                         {isSealed ? 'Sealed Bidding' : 'Citizen Tender'}
                     </span>
-                    <h2 className="max-w-[200px] truncate text-xs font-bold text-[#0F2F58]">
+                    <h2 className="truncate text-xs font-bold text-[#0F2F58]">
                         {request.title}
                     </h2>
                 </div>
-                <div className="size-9" />
-            </div>
+                <div className="flex size-11 shrink-0 items-center justify-center [&_button]:min-h-11 [&_button]:min-w-11">
+                    <NotificationBell />
+                </div>
+            </header>
 
             {/* Main Responsive Canvas */}
             <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 pb-28 sm:px-6 lg:pb-12">

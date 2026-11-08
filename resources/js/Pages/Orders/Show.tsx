@@ -19,6 +19,7 @@ import {
     X,
 } from 'lucide-react';
 import type { WorkNodeRecord } from '../../types';
+import { createRequestKey } from '@/lib/requestKey';
 import WorkNodeEvidenceTools, { type WorkNodeAction } from '../../components/mobile/WorkNodeEvidenceTools';
 import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import ReviewCeremonyModal from '../../components/reviews/ReviewCeremonyModal';
@@ -55,6 +56,7 @@ type OrderShowProps = {
     proposal?: OrderProposal | null;
     order: {
         id: string;
+        public_reference?: string | null;
         status: 'proposed' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
         version: number;
         listing_id: string;
@@ -108,6 +110,8 @@ type OrderShowProps = {
         version: number;
         status: string;
         work_shape: string;
+        execution_available?: boolean;
+        unavailability_reason?: string | null;
         signature_hash?: string | null;
         active_node_id?: string | null;
         active_ordinal?: number;
@@ -186,6 +190,17 @@ function matchNodeKindBadge(kind: string): { label: string; style: string } {
             };
     }
 }
+function readableStatus(status: string): string {
+    const labels: Record<string, string> = {
+        awaiting_signoff: 'Awaiting sign-off',
+        completion_proposed: 'Awaiting sign-off',
+        payer_reported_cash: 'Cash reported · awaiting confirmation',
+        not_due: 'Not due',
+        in_progress: 'In progress',
+    };
+    return labels[status] ?? status.replaceAll('_', ' ');
+}
+
 function requestedConversationContext(search: string): { owner_user_id?: string; consent_grant_id?: string } {
     const query = new URLSearchParams(search);
     const owner = query.get('owner_user_id');
@@ -247,14 +262,14 @@ export default function OrderShow(props: OrderShowProps) {
         setProposalAmount(minor === null || minor === undefined ? '' : (minor / 100).toFixed(2));
         setProposalScope('');
         setProposalNote('');
-        setProposalIdempotencyKey(crypto.randomUUID());
+        setProposalIdempotencyKey(createRequestKey());
     };
 
     const sendProposalAction = (
         action: 'accept' | 'decline' | ProposalSheetAction,
         proposalAccept = false,
         payload: { amount_minor?: number; scope?: string; note?: string } = {},
-        idempotencyKey: string = crypto.randomUUID(),
+        idempotencyKey: string = createRequestKey(),
         onSuccess?: () => void,
         onFinish?: () => void,
     ) => {
@@ -303,16 +318,19 @@ export default function OrderShow(props: OrderShowProps) {
     };
 
     const orderStatus = props.order.status;
+    const workAvailable = props.work?.execution_available !== false;
     const workStatus = props.work?.status ?? 'not_available';
-    const isWorkCompleted = workStatus === 'completed';
+    const isWorkCompleted = workAvailable && workStatus === 'completed';
     const isPaymentSettled = props.obligation?.status === 'settled';
-    const isSignoff =
+    const isSignoff = workAvailable && (
         workStatus === 'awaiting_signoff' ||
-        workStatus === 'completion_proposed';
-    const isInProgress =
+        workStatus === 'completion_proposed'
+    );
+    const isInProgress = workAvailable && (
         orderStatus === 'in_progress' ||
         (orderStatus === 'accepted' && workStatus === 'in_progress') ||
-        workStatus === 'scheduled';
+        workStatus === 'scheduled'
+    );
     const isPending = orderStatus === 'proposed';
 
     const amountMinor =
@@ -358,16 +376,14 @@ export default function OrderShow(props: OrderShowProps) {
             : 'Order amount';
     const formattedAmount = money(amountMinor, currency);
 
-    const orderShortId = `#ORD-${props.order.id.slice(0, 8).toUpperCase()}`;
     const listingTitle = props.order.listing_title || 'Order';
 
-    // Smart back link
     const backHref = props.order.deal_chain_id
         ? `/deal-chains/${props.order.deal_chain_id}`
         : '/orders';
     const backLabel = props.order.deal_chain_id
-        ? `${props.order.deal_chain_ref ?? 'Deal Chain'} Relay Pool`
-        : 'Orders Hub';
+        ? props.order.deal_chain_title || props.order.deal_chain_ref || 'Deal'
+        : 'Orders';
 
     const counterpartyName = props.order.counterparty_name ?? '';
     const counterpartyPhone = props.order.counterparty_phone ?? '';
@@ -380,7 +396,7 @@ export default function OrderShow(props: OrderShowProps) {
     const submitSimpleProposalAction = (action: 'accept' | 'decline', proposalAccept = false) => {
         if (proposalActionProcessing) return;
         setProposalActionProcessing(true);
-        sendProposalAction(action, proposalAccept, {}, crypto.randomUUID(), undefined, () => setProposalActionProcessing(false));
+        sendProposalAction(action, proposalAccept, {}, createRequestKey(), undefined, () => setProposalActionProcessing(false));
     };
 
     const handleAdvanceNode = (
@@ -427,7 +443,7 @@ export default function OrderShow(props: OrderShowProps) {
         const xsrfToken = document.cookie.split(';').map((cookie) => cookie.trim())
             .find((cookie) => cookie.startsWith('XSRF-TOKEN='))?.slice('XSRF-TOKEN='.length);
         if (!supportIdempotency.current || supportIdempotency.current.category !== supportCategory || supportIdempotency.current.content !== content) {
-            supportIdempotency.current = { category: supportCategory, content, key: crypto.randomUUID() };
+            supportIdempotency.current = { category: supportCategory, content, key: createRequestKey() };
         }
         const idempotencyKey = supportIdempotency.current.key;
         try {
@@ -489,9 +505,11 @@ export default function OrderShow(props: OrderShowProps) {
 
                 <div className="flex flex-col items-center min-w-0 px-2 text-center">
                     <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-[10px] font-extrabold text-slate-400">
-                            {orderShortId}
-                        </span>
+                        {props.order.public_reference && (
+                            <span className="font-mono text-[10px] font-extrabold text-slate-400">
+                                #{props.order.public_reference}
+                            </span>
+                        )}
                         {props.order.deal_chain_ref && (
                             <span className="rounded-md bg-blue-50 border border-blue-100 px-1.5 py-0.2 text-[9px] font-extrabold text-blue-700">
                                 {props.order.deal_chain_ref}
@@ -562,7 +580,7 @@ export default function OrderShow(props: OrderShowProps) {
                             href="/orders"
                             className="hover:text-[#0F2F58] font-bold text-slate-700"
                         >
-                            Orders Hub
+                            Orders
                         </Link>
                         {props.order.deal_chain_id && (
                             <>
@@ -571,13 +589,13 @@ export default function OrderShow(props: OrderShowProps) {
                                     href={`/deal-chains/${props.order.deal_chain_id}`}
                                     className="hover:text-[#0F2F58] font-bold text-slate-700"
                                 >
-                                    {props.order.deal_chain_ref ?? 'Deal Chain'} Relay Pool
+                                    {props.order.deal_chain_title || props.order.deal_chain_ref || 'Deal'}
                                 </Link>
                             </>
                         )}
                         <span>/</span>
                         <span className="font-extrabold text-slate-900">
-                            Order {orderShortId}
+                            {props.order.public_reference ? `Order #${props.order.public_reference}` : 'Order'}
                         </span>
                     </div>
 
@@ -699,17 +717,19 @@ export default function OrderShow(props: OrderShowProps) {
                                         <span>
                                             {isWorkCompleted
                                                 ? 'Work completed'
+                                                : !workAvailable
+                                                ? 'Work tracking unavailable'
                                                 : isSignoff
-                                                ? 'Awaiting Sign-off'
+                                                ? 'Awaiting sign-off'
                                                 : isInProgress
-                                                ? 'Work Underway'
+                                                ? 'Work underway'
                                                 : isPending
                                                 ? 'Proposal open'
-                                                : orderStatus.replaceAll('_', ' ')}
+                                                : readableStatus(orderStatus)}
                                         </span>
                                     </span>
                                     <span className="text-[10px] font-bold text-white/70">
-                                        {props.order.status.replaceAll('_', ' ')}
+                                        {readableStatus(props.order.status)}
                                     </span>
                                 </div>
 
@@ -751,19 +771,19 @@ export default function OrderShow(props: OrderShowProps) {
                         <div className="rounded-xl border border-slate-200 bg-white p-3">
                             <span className="block text-[10px] font-bold text-slate-500">Agreement</span>
                             <strong className="mt-1 block text-xs font-extrabold text-[#0F2F58]">
-                                {orderStatus === 'accepted' || orderStatus === 'in_progress' || orderStatus === 'completed' ? 'Accepted' : orderStatus.replaceAll('_', ' ')}
+                                {orderStatus === 'accepted' || orderStatus === 'in_progress' || orderStatus === 'completed' ? 'Accepted' : readableStatus(orderStatus)}
                             </strong>
                         </div>
                         <div className="rounded-xl border border-slate-200 bg-white p-3">
                             <span className="block text-[10px] font-bold text-slate-500">Work</span>
                             <strong className="mt-1 block text-xs font-extrabold text-[#0F2F58]">
-                                {isWorkCompleted ? 'Completed' : workStatus.replaceAll('_', ' ')}
+                                {isWorkCompleted ? 'Completed' : readableStatus(workStatus)}
                             </strong>
                         </div>
                         <div className="rounded-xl border border-slate-200 bg-white p-3">
                             <span className="block text-[10px] font-bold text-slate-500">Payment</span>
                             <strong className={`mt-1 block text-xs font-extrabold ${isPaymentSettled ? 'text-emerald-800' : 'text-[#0F2F58]'}`}>
-                                {props.obligation ? props.obligation.status.replaceAll('_', ' ') : 'Not available'}
+                                {props.obligation ? readableStatus(props.obligation.status) : 'Not available'}
                             </strong>
                         </div>
                     </section>
@@ -779,7 +799,7 @@ export default function OrderShow(props: OrderShowProps) {
                             {proposal.note && <p className="text-xs leading-relaxed text-slate-700">{proposal.note}</p>}
                             <div className="flex flex-wrap gap-2">
                                 {canAcceptProposal && (
-                                    <button type="button" disabled={proposalActionProcessing} onClick={() => submitSimpleProposalAction('accept', proposal.can_accept)} className="min-h-10 rounded-full bg-[#0D715F] px-4 text-xs font-extrabold text-white hover:bg-[#0a574a] disabled:opacity-50">
+                                    <button type="button" disabled={proposalActionProcessing} onClick={() => submitSimpleProposalAction('accept', proposal.kind === 'amendment')} className="min-h-10 rounded-full bg-[#0D715F] px-4 text-xs font-extrabold text-white hover:bg-[#0a574a] disabled:opacity-50">
                                         Accept proposal
                                     </button>
                                 )}
@@ -803,27 +823,31 @@ export default function OrderShow(props: OrderShowProps) {
                     )}
 
                     {/* 2. Live Progress Execution Section */}
+                    {props.work?.execution_available === false ? (
+                        <section aria-label="Work tracking status" className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                            <h2 className="text-sm font-extrabold text-amber-950">Work tracking</h2>
+                            <p className="mt-2 text-xs leading-relaxed text-amber-900">
+                                {props.work.unavailability_reason ?? 'Work tracking for this order is unavailable.'}
+                            </p>
+                            <p className="mt-2 text-xs font-semibold text-amber-950">
+                                Recorded status: {readableStatus(props.work.status)}
+                            </p>
+                        </section>
+                    ) : (
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3.5">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                             <div>
-                                <div className="flex items-center gap-2">
-                                    <h2 className="text-sm font-extrabold tracking-wider text-[#0F2F58] uppercase">
-                                        {props.work?.work_shape === 'A9' ? 'A9 Delivery Plan' : 'Work Execution Pipeline'}
-                                    </h2>
-                                    {props.work?.signature_hash && (
-                                        <span className="font-mono text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
-                                            {props.work.signature_hash}
-                                        </span>
-                                    )}
-                                </div>
+                                <h2 className="text-sm font-extrabold tracking-wider text-[#0F2F58] uppercase">
+                                    {props.work?.work_shape === 'A9' ? 'Delivery progress' : 'Work progress'}
+                                </h2>
                                 <p className="mt-0.5 text-xs text-slate-500">
                                     {props.work?.work_shape === 'A9'
-                                        ? 'Planned delivery steps. Evidence, QA, and version acceptance happen in the A9 delivery panel.'
+                                        ? 'Planned delivery steps and submitted proof.'
                                         : props.work?.nodes && props.work.nodes.length > 0
-                                        ? `${props.work.nodes.length} Work nodes · ${props.work.work_shape || 'A1'}`
+                                        ? `${props.work.nodes.length} steps`
                                         : isPending
                                         ? 'Work steps appear after the provider accepts the order.'
-                                        : 'No active Work step data is available.'}
+                                        : 'No active Work steps are available.'}
                                 </p>
                             </div>
                         </div>
@@ -956,7 +980,7 @@ export default function OrderShow(props: OrderShowProps) {
                                                                 <span className="text-[11px] font-semibold text-amber-950">Use the governed A4 handoff panel below to complete authored Work proof and recipient receipt.</span>
                                                             ) : !props.order.is_order_buyer ? (
                                                                 <span className="text-[11px] font-semibold text-slate-600">
-                                                                    Only the child order buyer can approve this step.
+                                                                    Only the customer who placed this order can approve this step.
                                                                 </span>
                                                             ) : node.approval_method === 'presence_otp' || node.approval_method === 'worker_dropoff' ? (
                                                                 <span className="text-[11px] font-semibold text-amber-950">
@@ -1008,18 +1032,19 @@ export default function OrderShow(props: OrderShowProps) {
                                 <p className="text-[11px] leading-relaxed text-slate-600">
                                     {isPending
                                         ? 'Work steps become available after proposal acceptance.'
-                                        : 'This order has no active Work node data. No completion or proof action is available here.'}
+                                        : 'No active Work steps are available here.'}
                                 </p>
                             </div>
                         )}
                     </div>
+                    )}
 
 
-                    {props.work?.work_shape === 'A9' && props.a9Delivery?.enabled && (
+                    {workAvailable && props.work?.work_shape === 'A9' && props.a9Delivery?.enabled && (
                         <A9DeliveryPanel orderId={props.order.id} delivery={props.a9Delivery} />
                     )}
-                    {props.appointment && <AppointmentPanel orderId={props.order.id} appointment={props.appointment} />}
-                    {props.a4Handoff?.enabled && (
+                    {workAvailable && props.appointment && <AppointmentPanel orderId={props.order.id} appointment={props.appointment} />}
+                    {workAvailable && props.a4Handoff?.enabled && (
                         <A4HandoffPanel
                             orderId={props.order.id}
                             orderVersion={props.order.version}
@@ -1123,7 +1148,7 @@ export default function OrderShow(props: OrderShowProps) {
                                 className="flex h-11 items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 cursor-pointer"
                             >
                                 <ArrowLeft className="size-4 text-[#0F2F58]" />
-                                <span>{props.order.deal_chain_id ? 'Relay Pool' : 'Orders Hub'}</span>
+                                <span>{props.order.deal_chain_id ? 'Deal' : 'Orders'}</span>
                             </Link>
 
                             {isSignoff && props.work?.work_shape !== 'A4' && props.work?.work_shape !== 'A9' ? (
@@ -1143,7 +1168,7 @@ export default function OrderShow(props: OrderShowProps) {
                                         <span>
                                             {props.order.is_order_buyer
                                                 ? 'Sign-off is unavailable until the required Work evidence is approved and available.'
-                                                : 'Waiting for the child order buyer to sign off.'}
+                                                : 'Waiting for the customer to approve completion.'}
                                         </span>
                                     </div>
                                 )
@@ -1169,7 +1194,7 @@ export default function OrderShow(props: OrderShowProps) {
                                 className="flex h-11 items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 cursor-pointer"
                             >
                                 <ArrowLeft className="size-4 text-[#0F2F58]" />
-                                <span>{props.order.deal_chain_id ? 'Relay Pool' : 'Orders Hub'}</span>
+                                <span>{props.order.deal_chain_id ? 'Deal' : 'Orders'}</span>
                             </Link>
 
                             {isWorkCompleted ? (
@@ -1185,7 +1210,7 @@ export default function OrderShow(props: OrderShowProps) {
                             ) : isSignoff ? (
                                 <div className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 text-xs font-extrabold text-amber-800 shadow-sm">
                                     <Clock className="size-4 text-amber-600" />
-                                    <span>Completion proposed · waiting for customer</span>
+                                    <span>Waiting for customer approval</span>
                                 </div>
                             ) : null}
                         </>
@@ -1204,7 +1229,7 @@ export default function OrderShow(props: OrderShowProps) {
                 open={supportComposeOpen}
                 onClose={() => setSupportComposeOpen(false)}
                 title="Contact Support"
-                subtitle={`Open an actual support case for Order ${orderShortId}`}
+                subtitle={`Open a support case for ${props.order.public_reference ? `Order #${props.order.public_reference}` : 'this order'}`}
             >
                 <form onSubmit={(event) => void createSupportCase(event)} className="space-y-4 py-4">
                     <label className="block space-y-1.5 text-sm font-semibold text-slate-800">

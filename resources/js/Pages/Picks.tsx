@@ -23,7 +23,7 @@ import type {
     PublishedDealChainRecipeId,
     SlotCandidateListing,
 } from '../marketplace/types';
-import { listingBookingUrl, readPicksBasket, savePicksBasket } from '../marketplace/booking';
+import { hasCoordination, hasValidSavedDealChainPreview, listingBookingUrl, readPicksBasket, savePicksBasket, serializeDealChainStageItem } from '../marketplace/booking';
 
 export default function Picks(props: HomeProps) {
     const dealChainRecipes = useMemo(
@@ -97,6 +97,8 @@ export default function Picks(props: HomeProps) {
                 ...item,
                 price: newPrice,
                 dealChain: recipe || undefined,
+                savedDealChain: undefined,
+                deal_chain_combination_id: null,
             };
         });
         saveBasket(next);
@@ -104,7 +106,7 @@ export default function Picks(props: HomeProps) {
 
     const totalCount = basket.reduce((sum, item) => sum + item.quantity, 0);
     const subtotal = basket.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const itemsWithDealChain = basket.filter((item) => Boolean(item.dealChain));
+    const itemsWithDealChain = basket.filter(hasCoordination);
     const hasDealChain = itemsWithDealChain.length > 0;
     const isSingleProduct = basket.length === 1 && basket[0].listing_type === 'product';
     const isSingleService = basket.length === 1 && basket[0].listing_type !== 'product';
@@ -121,6 +123,11 @@ export default function Picks(props: HomeProps) {
     }
 
     const handleProceedToCheckout = () => {
+        const legacySaved = basket.find((item) => item.deal_chain_combination_id && !hasValidSavedDealChainPreview(item));
+        if (legacySaved?.listing_id) {
+            router.visit(`/listings/${encodeURIComponent(legacySaved.listing_id)}`);
+            return;
+        }
         if (hasDealChain) {
             setCheckoutModalOpen(true);
             return;
@@ -137,12 +144,31 @@ export default function Picks(props: HomeProps) {
         candidate: SlotCandidateListing,
     ) => {
         const next = basket.map((item) => {
-            if (item.id !== itemId || !item.dealChain) return item;
+            if (item.id !== itemId) return item;
+            if (item.savedDealChain) {
+                const nodes = [...item.savedDealChain.nodes];
+                const previous = nodes[nodeIndex];
+                if (!previous || previous.isPrimary) return item;
+                nodes[nodeIndex] = {
+                    ...previous,
+                    listingId: candidate.id,
+                    listingVersionId: candidate.listingVersionId ?? candidate.listing_version_id ?? null,
+                    providerId: candidate.provider_user_id,
+                    priceMinor: candidate.price_minor ?? candidate.priceMinor ?? null,
+                    title: candidate.title,
+                    sub: candidate.provider_name,
+                };
+                return { ...item, savedDealChain: { ...item.savedDealChain, nodes } };
+            }
+            if (!item.dealChain) return item;
             const updatedNodes = [...item.dealChain.nodes];
             const oldNode = updatedNodes[nodeIndex];
-            const oldPrice = oldNode.priceMinor ?? (oldNode.type === 'store' ? 18000 : 8000);
-            const newPrice = candidate.price_minor;
-            const priceDiff = (newPrice - oldPrice) / 100;
+            const oldPrice = oldNode.priceMinor;
+            const candidatePrice = candidate.price_minor ?? candidate.priceMinor;
+            const hasCandidatePrice = typeof candidatePrice === 'number' && Number.isFinite(candidatePrice);
+            const priceDiff = typeof oldPrice === 'number' && hasCandidatePrice
+                ? (candidatePrice - oldPrice) / 100
+                : 0;
 
             updatedNodes[nodeIndex] = {
                 ...oldNode,
@@ -150,8 +176,9 @@ export default function Picks(props: HomeProps) {
                 title: candidate.title,
                 sub: candidate.provider_name,
                 listingId: candidate.id,
+                listingVersionId: candidate.listingVersionId ?? candidate.listing_version_id ?? null,
                 providerId: candidate.provider_user_id,
-                priceMinor: candidate.price_minor,
+                priceMinor: hasCandidatePrice ? candidatePrice : null,
             };
 
             return {
@@ -172,23 +199,7 @@ export default function Picks(props: HomeProps) {
         router.post(
             '/deal-chains/authorize',
             {
-                items: basket.map((b) => ({
-                    id: b.listing_id,
-                    listing_version_id: b.listing_version_id,
-                    variant_id: b.variant_id,
-                    package_id: b.package_id,
-                    quantity: b.quantity,
-                    deal_chain_combination_id: b.deal_chain_combination_id,
-                    deal_chain: b.dealChain?.recipeId || null,
-                    addon_ids: b.addon_ids ?? [],
-                    slot_overrides: b.dealChain?.nodes
-                        ? Object.fromEntries(
-                              b.dealChain.nodes
-                                  .filter((n) => n.listingId)
-                                  .map((n) => [n.key, { listing_id: n.listingId }]),
-                          )
-                        : null,
-                })),
+                items: basket.map(serializeDealChainStageItem),
             },
             {
                 onSuccess: () => {
@@ -301,6 +312,11 @@ export default function Picks(props: HomeProps) {
                                                     <div className="mt-0.5 text-xs text-slate-500">
                                                         Verified Tagudin offering
                                                     </div>
+                                                    {item.deal_chain_combination_id && !hasValidSavedDealChainPreview(item) && item.listing_id && (
+                                                        <Link href={`/listings/${encodeURIComponent(item.listing_id)}`} className="mt-1 inline-block text-xs font-bold text-amber-800 underline">
+                                                            Revisit source listing to review this saved plan
+                                                        </Link>
+                                                    )}
                                                     <div className="mt-1 font-mono text-sm font-extrabold text-[#0F2F58]">
                                                         ₱{item.price.toFixed(2)}
                                                     </div>
@@ -344,6 +360,20 @@ export default function Picks(props: HomeProps) {
                                                 </div>
                                             </div>
 
+                                            {item.savedDealChain && (
+                                                <div className="mt-1 rounded-xl border border-[#0F2F58]/20 bg-[#F0F4F8] p-3">
+                                                    <strong className="text-xs text-[#0F2F58]">{item.savedDealChain.title}</strong>
+                                                    {item.savedDealChain.nodes.filter((node) => !node.isPrimary).map((node) => {
+                                                        const nodeIndex = item.savedDealChain!.nodes.indexOf(node);
+                                                        return <div key={node.id ?? nodeIndex} className="mt-2 flex items-center justify-between text-xs">
+                                                            <span>{node.role}: {node.title}</span>
+                                                            {node.listingId
+                                                                ? <><span className="text-slate-500">{node.sub}</span><button type="button" onClick={() => setSlotPickerTarget({ itemId: item.id, nodeIndex, role: node.type, currentListingId: node.listingId })} className="font-bold text-[#0F2F58] underline">Change</button></>
+                                                                : <button type="button" onClick={() => setSlotPickerTarget({ itemId: item.id, nodeIndex, role: node.type, currentListingId: node.listingId })} className="font-bold text-[#0F2F58] underline">Choose partner</button>}
+                                                        </div>;
+                                                    })}
+                                                </div>
+                                            )}
                                             {/* Deal Chain Button & Visual Pipeline */}
                                             {item.dealChain ? (
                                                 <div className="mt-1 flex flex-col gap-2 rounded-xl border border-[#0F2F58]/20 bg-[#F0F4F8] p-3">

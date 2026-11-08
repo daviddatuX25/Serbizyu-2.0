@@ -331,14 +331,11 @@ export default function TaxonomyStudio() {
         e.preventDefault();
         if (!bumpReason.trim() || !bumpModalItem) return;
 
+        bumpModalItem.currentVersion += 1;
+        bumpModalItem.pinnedVersionString = `v${bumpModalItem.currentVersion}.0`;
         setBumpExecuted(true);
-        setTimeout(() => {
-            bumpModalItem.currentVersion += 1;
-            bumpModalItem.pinnedVersionString = `v${bumpModalItem.currentVersion}.0`;
-            setBumpExecuted(false);
-            setBumpModalItem(null);
-            setBumpReason('');
-        }, 1000);
+        setBumpModalItem(null);
+        setBumpReason('');
     };
 
     return (

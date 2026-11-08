@@ -65,7 +65,7 @@ export const SERVICE_GUIDED_STEPS: StepDefinition[] = [
         shortTitle: 'Work Plan',
         guidedTitle: 'How do you execute this service step-by-step?',
         guidedDescription:
-            'Milestones (like diagnostic check, chemical wash, delta temp test) are tracked with customers. Sign-off on evidence gates unlocks escrow payment.',
+            'Milestones (like diagnostic check, chemical wash, delta temp test) are tracked with customers. Sign-off on evidence gates unlocks milestone payment.',
         standardTitle: 'Work Execution Plan',
     },
     {
@@ -186,7 +186,7 @@ export const SERVICE_FIELD_GUIDANCE: Record<string, FieldDefinition> = {
         guidance: {
             id: 'workPlan',
             question: 'What is a Work Execution Plan?',
-            answer: 'Step-by-step milestones (like chemical flush, delta temp test) tracked for customer verification and escrow sign-off. Sign-off on evidence gates unlocks payment release.',
+            answer: 'Step-by-step milestones (like chemical flush, delta temp test) tracked for customer verification and sign-off. Sign-off on evidence gates unlocks direct payment release.',
             example: '4-step linear project with customer sign-off gate',
         },
     },

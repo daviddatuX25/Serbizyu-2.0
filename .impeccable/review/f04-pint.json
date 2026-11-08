@@ -1,0 +1,5 @@
+{
+    "preset": "laravel",
+    "exclude": ["public", "storage", "bootstrap/cache", "vendor"],
+    "notPath": ["~^(?!(?:app/Modules/Catalogs/Application/DealChainCatalog\\.php|app/Shared/Application/DealChainPlanDefinition\\.php|app/Modules/DealCoordination/Application/StageDealChain\\.php|app/Http/Controllers/DealChainController\\.php|app/Modules/Listings/Infrastructure/ListingRepository\\.php|app/Modules/OrdersWork/Application/SubmitOrderProposal\\.php|app/Modules/OrdersWork/Application/FinalizeOrderAgreement\\.php|tests/Feature/Admin/DealChainCatalogTest\\.php|tests/Feature/DealChaining/SavedPartnershipStagingTest\\.php|tests/Feature/DealChaining/DynamicSlotCandidatesTest\\.php|tests/Feature/Orders/T3OrderHttpTest\\.php)$)~"]
+}

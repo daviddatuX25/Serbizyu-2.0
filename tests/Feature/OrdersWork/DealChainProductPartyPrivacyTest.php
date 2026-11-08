@@ -40,7 +40,7 @@ final class DealChainProductPartyPrivacyTest extends TestCase
         $correlationId = (string) Str::uuid7();
         $labor = $this->createActiveListing($laborOwner, 'service', 'A1');
         $product = $this->createActiveListing($productOwner, 'product', 'A4');
-        $courierListing = $this->createActiveListing($courier, 'service', 'A1');
+        $courierListing = $this->createActiveListing($courier, 'service', 'A1', 'Privacy test courier listing');
 
         $staged = app(StageDealChain::class)->handle(
             coordinatorUserId: (string) $buyer->id,
@@ -118,10 +118,10 @@ final class DealChainProductPartyPrivacyTest extends TestCase
         $this->actingAs($courier)->getJson("/orders/{$productOrderId}")->assertForbidden();
     }
 
-    private function createActiveListing(User $owner, string $listingType, string $workShape): object
+    private function createActiveListing(User $owner, string $listingType, string $workShape, ?string $title = null): object
     {
         $attributes = [
-            'title' => 'Privacy test '.$listingType.' listing',
+            'title' => $title ?? 'Privacy test '.$listingType.' listing',
             'description' => 'Published source listing for a real Deal Chain privacy test.',
             'category_code' => $listingType === 'product' ? 'food' : 'repairs',
             'listing_type' => $listingType,

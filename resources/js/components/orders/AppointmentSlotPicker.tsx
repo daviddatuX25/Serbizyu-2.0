@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarClock, LoaderCircle } from 'lucide-react';
+import { createRequestKey } from '@/lib/requestKey';
 
 export type AppointmentHold = {
     id: string;
@@ -127,7 +128,7 @@ function AppointmentSlotsForSource({ source, onHeld, disabled = false }: Props) 
                     starts_at: selected,
                     [versionField]:
                         source.kind === 'quote' ? source.quoteVersion : source.listingVersionId,
-                    idempotency_key: `appointment-${crypto.randomUUID()}`,
+                    idempotency_key: `appointment-${createRequestKey()}`,
                 }),
             });
             const payload = await response.json();

@@ -22,10 +22,10 @@ final class DealChainExecutionSeeder extends Seeder
 
     private WorkContractRegistry $workRegistry;
 
-    public function run(WorkExecutionService $workExecution, WorkContractRegistry $workRegistry): void
+    public function run(?WorkExecutionService $workExecution = null, ?WorkContractRegistry $workRegistry = null): void
     {
-        $this->workExecution = $workExecution;
-        $this->workRegistry = $workRegistry;
+        $this->workExecution = $workExecution ?? app(WorkExecutionService::class);
+        $this->workRegistry = $workRegistry ?? app(WorkContractRegistry::class);
         $environment = (string) config('serbizyu.environment', config('app.env', 'local'));
         if (! in_array($environment, ['local', 'test', 'testing', 'capstone', 'team', 'training'], true)) {
             return;
@@ -812,6 +812,7 @@ final class DealChainExecutionSeeder extends Seeder
                     'status' => $status === 'completed' ? 'disputed_mismatch' : 'not_due',
                     'due_condition' => 'on_work_acceptance',
                     'due_at' => $status === 'completed' ? now() : null,
+                    'settled_at' => null,
                     'policy_version_id' => null,
                     'platform_fee_amount_minor' => 0,
                     'processor_cost_amount_minor' => 0,

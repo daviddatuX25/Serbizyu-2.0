@@ -132,6 +132,53 @@ describe('Picks Page', () => {
         expect(screen.getByRole('heading', { name: /Review.*Chain/i })).toBeTruthy();
         expect(screen.getByRole('button', { name: /Stage.*Plan/i })).toBeTruthy();
     });
+    it('reviews the exact saved graph from Picks instead of ordinary-booking its primary listing', () => {
+        window.localStorage.setItem('serbizyu.picks', JSON.stringify([{
+            id: 'primary:combo-1',
+            listing_id: 'primary-1',
+            listing_version_id: 'version-1',
+            deal_chain_combination_id: 'combo-1',
+            title: 'Primary service',
+            price: 300,
+            quantity: 2,
+            savedDealChain: {
+                combinationId: 'combo-1',
+                listingVersionId: 'version-1',
+                title: 'Parts then repair',
+                nodes: [
+                    { id: 'node-primary', key: 'node-primary', isPrimary: true, role: 'Service', title: 'Repair', sub: 'Primary', type: 'labor' },
+                    { id: 'node-parts', key: 'node-parts', isPrimary: false, role: 'Store', title: 'Parts', sub: 'Provider selected', type: 'store', listingId: 'store-1' },
+                ],
+                dependencies: [{
+                    predecessorId: 'node-parts', successorId: 'node-primary',
+                    conditionCode: 'part_ready', dependencyType: 'blocks', status: 'active',
+                }],
+            },
+        }]));
+
+        render(<Picks {...baseProps} />);
+        fireEvent.click(screen.getByRole('button', { name: /Review Coordinated Chain/i }));
+        expect(screen.getByText('Parts then repair')).toBeTruthy();
+        expect(screen.getByText('Parts')).toBeTruthy();
+        expect(screen.getByRole('button', { name: /Stage Coordinated Plan/i })).toBeTruthy();
+        expect(router.visit).not.toHaveBeenCalled();
+    });
+
+    it('routes an old saved pick without its pinned display graph back to its source listing', () => {
+        window.localStorage.setItem('serbizyu.picks', JSON.stringify([{
+            id: 'legacy',
+            listing_id: 'primary-1',
+            listing_version_id: 'version-1',
+            deal_chain_combination_id: 'combo-1',
+            title: 'Primary service',
+            price: 300,
+            quantity: 1,
+        }]));
+
+        render(<Picks {...baseProps} />);
+        fireEvent.click(screen.getByRole('button', { name: /Review Coordinated Chain/i }));
+        expect(router.visit).toHaveBeenCalledWith('/listings/primary-1');
+    });
 
     it('updates quantity and recalculates planning estimate', () => {
         const mockPicks = [
@@ -190,21 +237,29 @@ describe('Picks Page', () => {
         ];
         window.localStorage.setItem('serbizyu.picks', JSON.stringify(mockPicks));
 
-        render(<Picks {...baseProps} />);
+        render(<Picks {...baseProps} dealChainCatalog={[{
+            recipeId: 'turnkey_parts', title: 'Service with supplied parts', pattern: 'repair',
+            patternCapsule: ['STORE', 'LABOR'], extraFee: 100, rating: '', bookedCount: '', desc: 'Parts supplied by a separate provider.',
+            applicableCategories: ['repairs'], applicableListingTypes: ['service'],
+            nodes: [
+                { key: 'part', isPrimary: false, role: 'Parts', title: 'Chosen parts supplier', sub: 'Parts', type: 'store' },
+                { key: 'labor', isPrimary: true, role: 'Service', title: 'Repair work', sub: 'Primary', type: 'labor' },
+            ],
+            dependencies: [{ predecessorId: 'part', successorId: 'labor', conditionCode: 'part_ready', dependencyType: 'blocks', status: 'active' }],
+        }]} />);
 
         // Click attach deal chain button to open recipe selector
         const attachBtn = screen.getByRole('button', { name: /\+ Attach Deal Chain/i });
         fireEvent.click(attachBtn);
         expect(screen.getByText('Bundle & Chain Services')).toBeTruthy();
-        const turnkeyOption = screen.getByText(/All-In Parts/i);
-        expect(turnkeyOption).toBeTruthy();
+        const turnkeyOption = screen.getByText('Service with supplied parts');
 
         // Select Turnkey Sourced Parts
         fireEvent.click(turnkeyOption);
 
-        expect(screen.getAllByText(/All-In Parts/i).length).toBeGreaterThanOrEqual(1);
-        expect(screen.getAllByText(/35uF AC Run Cap/i).length).toBeGreaterThanOrEqual(1);
-        expect(screen.getAllByText(/Danny Express/i).length).toBeGreaterThanOrEqual(1);
+        const persisted = JSON.parse(window.localStorage.getItem('serbizyu.picks') || '[]');
+        expect(persisted[0].dealChain.recipeId).toBe('turnkey_parts');
+        expect(persisted[0].dealChain.nodes.map((node: { key: string }) => node.key)).toEqual(['part', 'labor']);
         expect(screen.getByRole('button', { name: 'Unlink' })).toBeTruthy();
         expect(screen.queryByText('Planned Deal Chain Nodes')).toBeNull();
         expect(screen.queryByText(/Planning boundary/i)).toBeNull();

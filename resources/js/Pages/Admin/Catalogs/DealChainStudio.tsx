@@ -189,12 +189,13 @@ const SAMPLE_OBSERVED_RELAYS: ObservedRelay[] = [
 
 function mapCatalogNodesToPipelineNodes(recipe: DealChainCatalogRecord): PipelineNode[] {
     return (recipe.nodes || []).map((node, idx) => ({
-        key: node.key || `step_${recipe.recipeId}_${idx + 1}`,
+        key: node.key ?? '',
         needKind: node.needKind || (node.type === 'store' ? 'product' : 'service'),
         title: node.title,
         role: node.role,
         type: node.type,
         feeMinor: node.priceMinor ?? (node.type === 'store' ? 18000 : node.type === 'delivery' ? 3500 : 25000),
+        isPrimary: node.isPrimary,
         assignedPartner: node.providerName
             ? {
                   id: node.listingId || `partner_${idx}`,
@@ -210,10 +211,10 @@ function mapCatalogDependenciesToPipeline(
     recipe: DealChainCatalogRecord,
     mappedNodes: PipelineNode[],
 ): PipelineDependency[] {
-    if (recipe.dependencies && recipe.dependencies.length > 0) {
+    if (recipe.dependencies) {
         return recipe.dependencies.map((dep) => ({
-            predecessor: dep.predecessor,
-            successor: dep.successor,
+            predecessor: dep.predecessorId,
+            successor: dep.successorId,
             conditionCode: dep.conditionCode,
             allowBypass: dep.allowBypass ?? false,
         }));
@@ -255,13 +256,10 @@ export default function DealChainStudio({
         catalogRecipes[0]?.recipeId || 'turnkey_parts',
     );
 
-    const activeRecipe = React.useMemo(() => {
-        return (
-            catalogRecipes.find((r) => r.recipeId === selectedRecipeCode) ||
-            catalogRecipes[0] ||
-            null
-        );
-    }, [catalogRecipes, selectedRecipeCode]);
+    const activeRecipe = React.useMemo(
+        () => catalogRecipes.find((r) => r.recipeId === selectedRecipeCode) || null,
+        [catalogRecipes, selectedRecipeCode],
+    );
 
     // Active Pipeline State
     const [pipelineNodes, setPipelineNodes] = React.useState<PipelineNode[]>(() => {
@@ -283,6 +281,7 @@ export default function DealChainStudio({
     const [promotedRelayId, setPromotedRelayId] = React.useState<string | null>(null);
     const [isPublishing, setIsPublishing] = React.useState(false);
     const [feedbackMessage, setFeedbackMessage] = React.useState<string | null>(null);
+    const [publishError, setPublishError] = React.useState<string | null>(null);
 
     // New Recipe Blueprint Modal State
     const [isNewBlueprintOpen, setIsNewBlueprintOpen] = React.useState(false);
@@ -325,12 +324,21 @@ export default function DealChainStudio({
     };
 
     const handlePublishVersion = () => {
+        const sourceVersion = activeRecipe?.catalogVersion;
         if (!activeRecipe || isPublishing) return;
+        if (typeof sourceVersion !== 'number' || !Number.isInteger(sourceVersion) || sourceVersion < 1
+            || pipelineNodes.some((node) => !node.key)) {
+            setPublishError('Reload a valid published source version before publishing.');
+            return;
+        }
+        setFeedbackMessage(null);
+        setPublishError(null);
         setIsPublishing(true);
 
-        const totalFeeMinor = pipelineNodes.reduce((sum, n) => sum + (n.feeMinor || 0), 0);
+        const totalFeeMinor = activeRecipe.extraFeeMinor ?? Math.round(activeRecipe.extraFee * 100);
 
         const payload = {
+            expected_catalog_version: sourceVersion,
             title: activeRecipe.title,
             pattern: activeRecipe.pattern,
             description: activeRecipe.desc,
@@ -342,6 +350,7 @@ export default function DealChainStudio({
                 key: n.key,
                 need_kind: n.needKind,
                 title: n.title,
+                is_primary: n.isPrimary === true,
                 description_template: `${n.title} · provider agreement required`,
                 frontend: {
                     role: n.role,
@@ -366,16 +375,20 @@ export default function DealChainStudio({
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    const nextVer = (activeRecipe.catalogVersion ?? 1) + 1;
+                    const nextVer = sourceVersion + 1;
                     setFeedbackMessage(
                         `Successfully bumped '${activeRecipe.title}' to Version ${nextVer}.`,
                     );
                     setTimeout(() => setFeedbackMessage(null), 4000);
                 },
+                onError: (errors) => {
+                    setPublishError(Object.values(errors).join(' '));
+                },
                 onFinish: () => setIsPublishing(false),
             },
         );
     };
+
 
     const handleCreateNewBlueprint = (e: React.FormEvent) => {
         e.preventDefault();
@@ -393,6 +406,7 @@ export default function DealChainStudio({
                     sub: 'Parts ready at counter',
                     type: 'store',
                 },
+                is_primary: true,
             },
             {
                 key: 'courier_transit',
@@ -405,6 +419,7 @@ export default function DealChainStudio({
                     sub: 'Expedited moto transit',
                     type: 'delivery',
                 },
+                is_primary: false,
             },
         ];
 
@@ -423,8 +438,8 @@ export default function DealChainStudio({
             pattern: 'custom',
             description: newDescription.trim() || `Custom Deal Chain relay for ${newTitle.trim()}`,
             category_codes: [newCategory],
-            listing_types: ['service', 'product'],
-            work_shapes: ['A1', 'A3'],
+            listing_types: ['product'],
+            work_shapes: ['A4'],
             extra_fee_amount_minor: 21500,
             nodes: starterNodes,
             dependencies: starterDependencies,
@@ -554,7 +569,7 @@ export default function DealChainStudio({
                 {studioView === 'builder' && activeRecipe && (
                     <Button
                         size="sm"
-                        disabled={isPublishing || pipelineNodes.length < 2}
+                        disabled={isPublishing || pipelineNodes.length < 2 || !activeRecipe.catalogVersion}
                         className="h-8 cursor-pointer gap-1.5 bg-[#0F2F58] text-xs font-bold text-white hover:bg-[#153e74]"
                         onClick={handlePublishVersion}
                     >
@@ -562,13 +577,21 @@ export default function DealChainStudio({
                         <span>
                             {isPublishing
                                 ? 'Publishing...'
-                                : `Publish New Version (v${(activeRecipe.catalogVersion ?? 1) + 1})`}
+                                : activeRecipe.catalogVersion ? `Publish New Version (v${activeRecipe.catalogVersion + 1})` : 'Source version unavailable'}
                         </span>
                     </Button>
                 )}
             </div>
 
             {/* Feedback Alerts */}
+            {publishError && (
+                <div
+                    role="alert"
+                    className="flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-medium text-rose-700 animate-in fade-in"
+                >
+                    <span>{publishError}</span>
+                </div>
+            )}
             {feedbackMessage && (
                 <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-xs font-medium text-green-500 animate-in fade-in">
                     <CheckCircle2 className="size-4 shrink-0" />

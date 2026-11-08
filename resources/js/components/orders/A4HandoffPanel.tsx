@@ -4,6 +4,7 @@ import { CheckCircle2, PackageCheck, Truck, X } from 'lucide-react';
 import WorkClearanceChallenge from './WorkClearanceChallenge';
 import type { WorkNodeRecord } from '../../types';
 import WorkNodeEvidenceTools, { type WorkProofPayload } from '../mobile/WorkNodeEvidenceTools';
+import { createRequestKey } from '@/lib/requestKey';
 
 type HandoffTransfer = {
     id: string;
@@ -73,7 +74,7 @@ export default function A4HandoffPanel({ orderId, orderVersion, handoff }: Props
             ...version,
             node_id: node.id,
             work_version: handoff.workVersion,
-            idempotency_key: crypto.randomUUID(),
+            idempotency_key: createRequestKey(),
             evidence_file_id: evidenceFileId,
             ...(payload.checklist_responses ? { checklist_responses: payload.checklist_responses } : {}),
             ...(payload.metric_readings ? { metric_readings: payload.metric_readings } : {}),
@@ -151,7 +152,7 @@ export default function A4HandoffPanel({ orderId, orderVersion, handoff }: Props
                         <button disabled={processing || (mode === 'courier_delivery' && !handoff.couriers.some((courier) => courier.id === courierId))} onClick={() => {
                             setError(null);
                             setProcessing(true);
-                            router.post(`/orders/${orderId}/handoff/custody`, { transfer_mode: mode, ...(mode === 'courier_delivery' ? { courier_user_id: courierId } : {}), expected_transfer_version: transfer.version, idempotency_key: crypto.randomUUID() }, {
+                            router.post(`/orders/${orderId}/handoff/custody`, { transfer_mode: mode, ...(mode === 'courier_delivery' ? { courier_user_id: courierId } : {}), expected_transfer_version: transfer.version, idempotency_key: createRequestKey() }, {
                                 preserveScroll: true,
                                 onError: (errors) => setError(Object.values(errors).flat().join(' ') || 'Custody could not be offered.'),
                                 onFinish: () => setProcessing(false),

@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\Feature\DealChaining;
 
+use App\Models\User;
+use App\Modules\Listings\Application\CreateListingDraft;
+use App\Shared\Application\ResourceActor;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 final class DynamicSlotCandidatesTest extends TestCase
 {
+    use DatabaseTransactions;
+
     public function test_it_returns_candidates_for_courier_store_and_labor_roles(): void
     {
         $response = $this->getJson('/api/deal-chains/slot-candidates?role=COURIER');
@@ -86,5 +94,61 @@ final class DynamicSlotCandidatesTest extends TestCase
         $partRes = $this->getJson('/api/deal-chains/slot-candidates?role=PART');
         $partRes->assertOk();
         $this->assertSame('STORE', $partRes->json('meta.role'));
+    }
+
+    public function test_candidate_api_returns_current_pins_and_truthful_price_and_review_state_for_audit_and_recycle(): void
+    {
+        $owner = User::factory()->create();
+        $actor = new ResourceActor((string) $owner->id, (string) $owner->id);
+        $createActiveService = function (string $title, ?int $priceMinor) use ($actor): array {
+            $attributes = [
+                'title' => $title,
+                'description' => 'Live slot candidate API fixture.',
+                'category_code' => 'repairs',
+                'listing_type' => 'service',
+                'work_shape' => 'A1',
+            ];
+            if ($priceMinor !== null) {
+                $attributes['price_amount_minor'] = $priceMinor;
+            }
+
+            $listing = app(CreateListingDraft::class)->handle($actor, $attributes, (string) Str::uuid7());
+            DB::table('listings')->where('id', $listing['id'])->update([
+                'status' => 'active',
+                'review_status' => 'approved',
+            ]);
+            DB::table('listing_versions')->where('listing_id', $listing['id'])->update(['published_at' => now()]);
+
+            return [
+                'id' => (string) $listing['id'],
+                'version_id' => (string) DB::table('listing_versions')->where('listing_id', $listing['id'])->value('id'),
+            ];
+        };
+        $audit = $createActiveService('Residential safety audit service', 12500);
+        $recycle = $createActiveService('Appliance recycle collection service', 0);
+        $unpriced = $createActiveService('Unpriced Tagudin repair service', null);
+
+        $auditData = collect($this->getJson('/api/deal-chains/slot-candidates?role=AUDIT')->assertOk()->json('data'))->keyBy('id');
+        $recycleData = collect($this->getJson('/api/deal-chains/slot-candidates?role=RECYCLE')->assertOk()->json('data'))->keyBy('id');
+        $unpricedData = collect($this->getJson('/api/deal-chains/slot-candidates?role=LABOR')->assertOk()->json('data'))->keyBy('id');
+
+        $auditCandidate = $auditData[$audit['id']];
+        self::assertSame($audit['version_id'], $auditCandidate['listing_version_id']);
+        self::assertSame(12500, $auditCandidate['price_minor']);
+        self::assertSame(0, $auditCandidate['reviews_count']);
+        self::assertNull($auditCandidate['rating']);
+
+        $recycleCandidate = $recycleData[$recycle['id']];
+        self::assertSame($recycle['version_id'], $recycleCandidate['listing_version_id']);
+        self::assertSame(0, $recycleCandidate['price_minor']);
+
+        self::assertNull($unpricedData[$unpriced['id']]['price_minor']);
+        self::assertNull($unpricedData[$unpriced['id']]['rating']);
+        $candidateIds = array_merge($auditData->keys()->all(), $recycleData->keys()->all(), $unpricedData->keys()->all());
+        self::assertTrue(collect($candidateIds)->every(static fn (string $id): bool => Str::isUuid($id)));
+        self::assertSame(
+            count($candidateIds),
+            DB::table('listings')->whereIn('id', $candidateIds)->count(),
+        );
     }
 }

@@ -11,7 +11,7 @@ final class DealChainExecutionFixtures
 
     public const BUYER_PHONE = '+639172222001';
 
-    public const STORE_USER_ID = '0198a3b1-7c40-7abc-8def-2234567890ab';
+    public const STORE_USER_ID = '0198a3b1-7c40-7abc-8def-2234567890ac';
 
     public const STORE_PHONE = '+639171111002';
 
@@ -23,6 +23,22 @@ final class DealChainExecutionFixtures
 
     public const TECH_PHONE = '+639171111001';
 
+    public const LOLA_USER_ID = '0198a3b1-7c40-7abc-8def-2234567890ad';
+    public const LOLA_PHONE = '+639171111005';
+    public const ANA_USER_ID = '0198a3b1-7c40-7abc-8def-2234567890ae';
+    public const ANA_PHONE = '+639171111006';
+    public const JUAN_USER_ID = '0198a3b1-7c40-7abc-8def-2234567890af';
+    public const JUAN_PHONE = '+639171111007';
+    public const JOSE_USER_ID = '0198a3b1-7c40-7abc-8def-2234567890b0';
+    public const JOSE_PHONE = '+639171111008';
+    public const CARLO_AGENT_USER_ID = '0198a3b1-7c40-7abc-8def-2234567890c1';
+    public const CARLO_AGENT_PHONE = '+639171111009';
+    public const STAFF_USER_ID = '0198a3b1-7c40-7abc-8def-2234567890d1';
+    public const STAFF_PHONE = '+639179999001';
+    public const CHECKER_STAFF_USER_ID = '0198a3b1-7c40-7abc-8def-2234567890d2';
+    public const CHECKER_STAFF_PHONE = '+639179999002';
+    public const LISTING_HOLCIM_CEMENT = '0198a3b1-7c40-7abc-8def-5234567890bd';
+    public const LISTING_VERSION_HOLCIM_CEMENT = '0198a3b1-7c40-7abc-8def-6234567890bd';
     // Source Listing IDs (from TagudinBrowseCatalog)
     public const LISTING_AC_CLEAN = '0198a3b1-7c40-7abc-8def-5234567890b8';
 

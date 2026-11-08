@@ -5,7 +5,6 @@ import type { ListingRecord, SliceSession } from '../../types';
 import type * as MobileComponents from '../../components/mobile';
 import type { DealChainCustomizerModalProps } from '../../components/mobile/DealChainCustomizerModal';
 import CreateProduct, {
-    defaultCombosForCategory,
     isInstallationApplicable,
     type WorkSetOption,
 } from './CreateProduct';
@@ -21,6 +20,7 @@ vi.mock('@inertiajs/react', () => ({
         visit: vi.fn(),
         post: vi.fn(),
         put: vi.fn(),
+        patch: vi.fn(),
     },
     usePage: () => ({
         props: {
@@ -49,6 +49,84 @@ vi.mock('../../components/mobile', async (importOriginal) => {
         ),
     };
 });
+
+const authoredDeliveryDraft: ListingRecord = {
+    id: 'draft-authored-product', title: 'Authored product', category_code: 'repairs', listing_type: 'product',
+    deal_chain_combinations: [{
+        id: 'combo-delivery', title: 'Product with delivery', icon: 'Truck', isDefault: false, planVersion: 1,
+        nodes: [
+            { id: 'node-product', isPrimary: true, type: 'store', role: 'Product', title: 'Your product', sub: '', bg: '', color: '' },
+            { id: 'node-courier', isPrimary: false, type: 'delivery', role: 'Courier', title: 'Authored courier', sub: '', bg: '', color: '', listingId: 'existing-courier', feeMinor: 3500 },
+        ],
+        slots: [{
+            id: 'node-courier', roleType: 'COURIER', slotLabel: 'Courier', providerName: 'Authored courier',
+            fee: 35, feeMinor: 3500, rating: 0, listingId: 'existing-courier',
+        }],
+        dependencies: [{ predecessorId: 'node-product', successorId: 'node-courier', conditionCode: 'part_ready', dependencyType: 'blocks', status: 'active' }],
+    }],
+};
+
+const auditRecycleDraft: ListingRecord = {
+    id: 'draft-audit-recycle-product',
+    title: 'Product with recovery checks',
+    category_code: 'repairs',
+    listing_type: 'product',
+    deal_chain_combinations: [{
+        id: 'combo-audit-recycle',
+        title: 'Inspect and Recycle',
+        icon: 'ShieldCheck',
+        description: 'Audit before responsible recovery.',
+        isDefault: true,
+        recipeId: 'product-audit-recycle',
+        catalogVersion: 7,
+        planVersion: 1,
+        nodes: [
+            { id: 'node-product', isPrimary: true, type: 'store', role: 'YOUR PRODUCT', title: 'Product', sub: '', bg: '', color: '' },
+            { id: 'node-audit', isPrimary: false, type: 'audit', role: 'AUDIT', title: 'Independent auditor', sub: '', bg: '', color: '', listingId: 'audit-listing', feeMinor: 0 },
+            { id: 'node-recycle', isPrimary: false, type: 'recycle', role: 'RECYCLE', title: 'Recovery partner', sub: '', bg: '', color: '', listingId: 'recycle-listing', feeMinor: 1250 },
+        ],
+        slots: [
+            { id: 'node-audit', roleType: 'AUDIT', slotLabel: 'AUDIT', providerName: 'Independent auditor', fee: 0, feeMinor: 0, rating: 0, listingId: 'audit-listing' },
+            { id: 'node-recycle', roleType: 'RECYCLE', slotLabel: 'RECYCLE', providerName: 'Recovery partner', fee: 12.5, feeMinor: 1250, rating: 0, listingId: 'recycle-listing' },
+        ],
+        dependencies: [
+            { id: 'edge-product-audit', predecessorId: 'node-product', successorId: 'node-audit', conditionCode: 'part_ready', dependencyType: 'blocks', status: 'active' },
+            { id: 'edge-audit-recycle', predecessorId: 'node-audit', successorId: 'node-recycle', conditionCode: 'work_completed', dependencyType: 'blocks', status: 'active' },
+        ],
+    }],
+    deal_chain_specification: {
+        selected_combo_id: 'combo-audit-recycle',
+        based_on_recipe_code: 'product-audit-recycle',
+        based_on_catalog_version: 7,
+    },
+    variants: [
+        { id: 'variant-single', name: 'Single unit', price: 39.5, stock: 8, is_default: true },
+        { id: 'variant-case', name: 'Case of 6', price: 210, stock: 3, is_default: false },
+    ],
+    addons: [
+        {
+            id: 'addon-care-kit',
+            code: 'care_kit',
+            title: 'Care kit',
+            description: 'Seller-provided care kit.',
+            price_amount_minor: 300,
+            currency: 'PHP',
+            status: 'available',
+        },
+        {
+            id: 'addon-old-chain-audit',
+            code: 'product_install',
+            title: 'Legacy audit fee copy',
+            description: 'Legacy duplicated chain fee.',
+            price_amount_minor: 0,
+            currency: 'PHP',
+            partner_role: 'technician',
+            partner_fixture_keys: ['audit-listing'],
+            status: 'available',
+            settlement_mode: 'independent_provider_agreement',
+        },
+    ],
+};
 
 const dealChainOptions = {
     recommended: [
@@ -119,9 +197,6 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         expect(screen.getByText('Product Listing')).toBeTruthy();
         expect(screen.getByText(/Step 1 of 5 · Item & Aisle/i)).toBeTruthy();
 
-        // Mode switcher buttons
-        expect(screen.getByRole('button', { name: /^guided$/i })).toBeTruthy();
-        expect(screen.getByRole('button', { name: /^standard$/i })).toBeTruthy();
 
         // Conversational Q&A prompt in Step 1
         expect(screen.getByText('What merchandise or part are you selling?')).toBeTruthy();
@@ -151,11 +226,28 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         expect(screen.getByRole('button', { name: /continue to pickup point/i })).toBeTruthy();
     });
 
+    it('shows an unreviewed product as unrated instead of assigning it a preview score', () => {
+        render(<CreateProduct />);
+
+        expect(screen.getByText('New · No reviews')).toBeTruthy();
+        expect(screen.queryByText('5.0 (New)')).toBeNull();
+    });
+
+    it('uses the accessible shared dialog for the mobile listing preview', () => {
+        render(<CreateProduct />);
+        fireEvent.click(screen.getByRole('button', { name: /preview/i }));
+
+        expect(screen.getByRole('dialog', { name: 'Customer Preview' })).toBeTruthy();
+        fireEvent.keyDown(document, { key: 'Escape' });
+        expect(screen.queryByRole('dialog', { name: 'Customer Preview' })).toBeNull();
+    });
+
     it('switches to Standard mode with high-density plain labels and all-in-one form', () => {
         render(<CreateProduct />);
 
-        // Switch to standard mode
-        const standardBtn = screen.getByRole('button', { name: /^standard$/i });
+        fireEvent.change(screen.getByTestId('product-title-input'), { target: { value: 'Test market supply' } });
+        fireEvent.click(screen.getByRole('button', { name: /Continue to Product Photos/i }));
+        const standardBtn = screen.getByRole('switch', { name: 'Standard builder mode' });
         fireEvent.click(standardBtn);
 
         // Header reflects standard mode
@@ -169,6 +261,11 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
 
         // Bottom save draft button in Standard mode
         expect(screen.getByText('Standard All-in-One Form')).toBeTruthy();
+        expect(screen.getByDisplayValue('Test market supply')).toBeTruthy();
+        expect(standardBtn.getAttribute('aria-checked')).toBe('true');
+        fireEvent.click(standardBtn);
+        expect(standardBtn.getAttribute('aria-checked')).toBe('false');
+        expect(screen.getByText(/Step 2 of 5/)).toBeTruthy();
     });
 
     it('toggles mode via the bottom switcher button', () => {
@@ -192,7 +289,7 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         render(<CreateProduct />);
 
         // Switch to standard mode to see all fields at once
-        const standardBtn = screen.getByRole('button', { name: /^standard$/i });
+        const standardBtn = screen.getByRole('switch', { name: 'Standard builder mode' });
         fireEvent.click(standardBtn);
 
         // Category dropdown starts with prompt option, not defaulted to repairs
@@ -238,7 +335,7 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         expect(screen.getByText('Handoff and recipient confirmation')).toBeTruthy();
         expect(screen.getByText('Condition close-out')).toBeTruthy();
 
-        fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
         expect(screen.getByText('Default Variant')).toBeTruthy();
     });
 
@@ -271,28 +368,16 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         expect(isInstallationApplicable('crafts')).toBe(false);
         expect(isInstallationApplicable('repairs')).toBe(true);
 
-        const foodCombos = defaultCombosForCategory('local-food');
-        expect(foodCombos.length).toBe(1);
-        expect(foodCombos[0].id).toBe('combo-delivery');
-        expect(foodCombos.some((c) => c.id === 'combo-installation')).toBe(false);
-
-        const repairCombos = defaultCombosForCategory('repairs');
-        expect(repairCombos.length).toBe(2);
-        expect(repairCombos.some((c) => c.id === 'combo-installation')).toBe(true);
 
         // Render in standard mode with local-food category
         render(
             <CreateProduct
-                editingDraft={{
-                    id: 'draft-food-1',
-                    category_code: 'local-food',
-                    title: 'Fresh Tagudin Bibingka',
-                } as any}
+                editingDraft={{ ...authoredDeliveryDraft, category_code: 'local-food', title: 'Fresh Tagudin Bibingka' }}
             />,
         );
 
         // Switch to standard mode to see fulfillment section
-        const standardBtn = screen.getByRole('button', { name: /^standard$/i });
+        const standardBtn = screen.getByRole('switch', { name: 'Standard builder mode' });
         fireEvent.click(standardBtn);
 
         // Counter Pickup is active default
@@ -326,10 +411,10 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
     });
 
     it('separates viewing the deal chain flow from setting it as active fulfillment', () => {
-        render(<CreateProduct />);
+        render(<CreateProduct editingDraft={authoredDeliveryDraft} />);
 
         // Switch to standard mode
-        const standardBtn = screen.getByRole('button', { name: /^standard$/i });
+        const standardBtn = screen.getByRole('switch', { name: 'Standard builder mode' });
         fireEvent.click(standardBtn);
 
         // Counter Pickup is active default
@@ -373,7 +458,7 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
 
     it('opens the Deal Chain Catalog with live search and pattern filters from Attach Delivery / Service Extension', () => {
         render(<CreateProduct dealChainOptions={dealChainOptions} />);
-        fireEvent.click(screen.getByRole('button', { name: /^standard$/i }));
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
         fireEvent.click(screen.getByRole('button', { name: /Attach Delivery \/ Service Extension/i }));
 
         expect(screen.getByRole('dialog', { name: /Select or Build a Partner Deal Chain/i })).toBeTruthy();
@@ -385,7 +470,7 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
 
     it('filters the available deal chain recipes as the catalog search is typed', () => {
         render(<CreateProduct dealChainOptions={dealChainOptions} />);
-        fireEvent.click(screen.getByRole('button', { name: /^standard$/i }));
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
         fireEvent.click(screen.getByRole('button', { name: /Attach Delivery \/ Service Extension/i }));
         fireEvent.click(screen.getByRole('button', { name: /Browse All Compatible/i }));
 
@@ -401,7 +486,7 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
 
     it('opens Deal Chain Studio for a product when building a custom chain', () => {
         render(<CreateProduct dealChainOptions={dealChainOptions} />);
-        fireEvent.click(screen.getByRole('button', { name: /^standard$/i }));
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
         fireEvent.click(screen.getByRole('button', { name: /Attach Delivery \/ Service Extension/i }));
         fireEvent.click(screen.getByRole('button', { name: /Build Custom.*Studio/i }));
 
@@ -424,14 +509,13 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
                 rating: '4.8',
             },
         ];
-        render(<CreateProduct partnerListings={testPartnerListings} />);
-        fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
+        render(<CreateProduct editingDraft={authoredDeliveryDraft} partnerListings={testPartnerListings} />);
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
         fireEvent.click(screen.getByTestId('toggle-flow-combo-delivery'));
         fireEvent.click(screen.getByTestId('customize-deal-chain-combo-delivery'));
 
         const studio = screen.getByRole('dialog', { name: /Deal Chain Studio/i });
         expect(studio).toBeTruthy();
-        expect(screen.getByTestId('deal-chain-customizer-contract').getAttribute('data-combination-id')).toBe('combo-delivery');
 
         fireEvent.click(within(studio).getByRole('button', { name: /Change Partner/i }));
         fireEvent.click(screen.getByText('Barangay Centro Bicycle Runner'));
@@ -439,9 +523,191 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         expect(within(studio).getAllByText('Barangay Centro Bicycle Runner').length).toBeGreaterThan(0);
     });
 
+    it('round-trips audit and recycle roles, selected combination provenance, variants, and stock through editing', () => {
+        const mockPatch = vi.fn();
+        vi.mocked(router.patch).mockImplementation(mockPatch);
+        const session = {
+            authenticated: true,
+            user: { id: 'usr-1', name: 'Vendor Kuya', email: 'vendor@tagudin.ph' },
+            current_slice: 'product',
+        } as unknown as SliceSession;
+
+        const { rerender } = render(
+            <CreateProduct session={session} editingDraft={auditRecycleDraft} />,
+        );
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
+        expect(screen.getByTestId('toggle-active-combo-audit-recycle').textContent).toContain(
+            'Active Selection',
+        );
+
+        fireEvent.click(screen.getByTestId('customize-deal-chain-combo-audit-recycle'));
+        fireEvent.click(screen.getByRole('button', { name: /Apply Deal Chain to Listing/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Save Private Draft/i }));
+
+        expect(mockPatch).toHaveBeenCalledTimes(1);
+        const payload = mockPatch.mock.calls[0][1] as Record<string, unknown>;
+        const savedCombos = payload.deal_chain_combinations as Array<{
+            recipeId: string;
+            catalogVersion: number;
+            nodes: Array<{ type: string; listingId?: string; feeMinor?: number }>;
+            slots: Array<{ roleType: string; feeMinor: number; listingId?: string }>;
+        }>;
+        expect(payload.deal_chain_specification).toEqual(expect.objectContaining({
+            selected_combo_id: 'combo-audit-recycle',
+            based_on_recipe_code: 'product-audit-recycle',
+            based_on_catalog_version: 7,
+        }));
+        expect(savedCombos[0]).toEqual(expect.objectContaining({
+            recipeId: 'product-audit-recycle',
+            catalogVersion: 7,
+            nodes: expect.arrayContaining([
+                expect.objectContaining({ type: 'audit', listingId: 'audit-listing', feeMinor: 0 }),
+                expect.objectContaining({ type: 'recycle', listingId: 'recycle-listing', feeMinor: 1250 }),
+            ]),
+            slots: expect.arrayContaining([
+                expect.objectContaining({ roleType: 'AUDIT', listingId: 'audit-listing', feeMinor: 0 }),
+                expect.objectContaining({ roleType: 'RECYCLE', listingId: 'recycle-listing', feeMinor: 1250 }),
+            ]),
+        }));
+        expect(payload.addons).toEqual([auditRecycleDraft.addons?.[0]]);
+        expect(payload.variants).toEqual([
+            { id: 'variant-single', name: 'Single unit', price: 39.5, stock: 8, is_default: true },
+            { id: 'variant-case', name: 'Case of 6', price: 210, stock: 3, is_default: false },
+        ]);
+
+        rerender(
+            <CreateProduct
+                session={session}
+                editingDraft={{
+                    ...auditRecycleDraft,
+                    deal_chain_combinations: savedCombos as ListingRecord['deal_chain_combinations'],
+                    deal_chain_specification: payload.deal_chain_specification as ListingRecord['deal_chain_specification'],
+                }}
+            />,
+        );
+        expect(screen.getByRole('switch', { name: 'Standard builder mode' }).getAttribute('aria-checked')).toBe('true');
+        expect(screen.getByTestId('toggle-active-combo-audit-recycle').textContent).toContain(
+            'Active Selection',
+        );
+    });
+
+    it('clears active fulfillment to pickup without deleting the authored combination or losing its source', () => {
+        const mockPatch = vi.fn();
+        vi.mocked(router.patch).mockImplementation(mockPatch);
+        const session = {
+            authenticated: true,
+            user: { id: 'usr-1', name: 'Vendor Kuya', email: 'vendor@tagudin.ph' },
+            current_slice: 'product',
+        } as unknown as SliceSession;
+
+        render(<CreateProduct session={session} editingDraft={auditRecycleDraft} />);
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
+        fireEvent.click(screen.getByRole('button', { name: /Switch to Pickup Only/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Save Private Draft/i }));
+
+        const payload = mockPatch.mock.calls[0][1] as Record<string, unknown>;
+        const savedCombos = payload.deal_chain_combinations as Array<{
+            id: string;
+            nodes: Array<{ id: string; type: string; listingId?: string; feeMinor?: number }>;
+            dependencies: Array<{ predecessorId: string; successorId: string; conditionCode: string }>;
+        }>;
+        expect(savedCombos).toHaveLength(1);
+        expect(savedCombos[0]).toEqual(expect.objectContaining({
+            id: 'combo-audit-recycle',
+            nodes: expect.arrayContaining([
+                expect.objectContaining({ id: 'node-audit', type: 'audit', listingId: 'audit-listing', feeMinor: 0 }),
+                expect.objectContaining({ id: 'node-recycle', type: 'recycle', listingId: 'recycle-listing', feeMinor: 1250 }),
+            ]),
+            dependencies: expect.arrayContaining([
+                expect.objectContaining({ predecessorId: 'node-product', successorId: 'node-audit' }),
+                expect.objectContaining({ predecessorId: 'node-audit', successorId: 'node-recycle' }),
+            ]),
+        }));
+        expect(payload.deal_chain_specification).toEqual(expect.objectContaining({
+            selected_combo_id: 'pickup',
+            based_on_recipe_code: 'direct',
+        }));
+        expect(payload.addons).toEqual([auditRecycleDraft.addons?.[0]]);
+    });
+
+    it('offers audit and recycle candidates by their own role and preserves unknown price, rating, and listing versions', () => {
+        const mockPatch = vi.fn();
+        vi.mocked(router.patch).mockImplementation(mockPatch);
+        const session = {
+            authenticated: true,
+            user: { id: 'usr-1', name: 'Vendor Kuya', email: 'vendor@tagudin.ph' },
+            current_slice: 'product',
+        } as unknown as SliceSession;
+        const partnerListings = [
+            {
+                id: 'audit-candidate',
+                name: 'Safety Auditor',
+                providerName: 'Safety Auditor',
+                barangay: 'Poblacion',
+                feeMinor: 0,
+                role: 'audit',
+                sub: 'Independent inspection',
+                rating: '0',
+                listingVersionId: 'audit-version-3',
+            },
+            {
+                id: 'recycle-candidate',
+                name: 'Recovery Partner',
+                providerName: 'Recovery Partner',
+                barangay: 'Poblacion',
+                role: 'recycle',
+                sub: 'Responsible recovery',
+                rating: '',
+                listingVersionId: 'recycle-version-2',
+            },
+        ];
+        render(
+            <CreateProduct
+                session={session}
+                editingDraft={auditRecycleDraft}
+                partnerListings={partnerListings}
+            />,
+        );
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
+
+        fireEvent.click(screen.getAllByRole('button', { name: /Change ▾/i })[0]);
+        expect(screen.getByRole('dialog', { name: /Select Partner for AUDIT/i })).toBeTruthy();
+        expect(screen.getByText('Safety Auditor')).toBeTruthy();
+        expect(screen.queryByText('Recovery Partner')).toBeNull();
+        expect(screen.getByText('0.0')).toBeTruthy();
+        expect(within(screen.getByRole('dialog')).getByText('₱0.00')).toBeTruthy();
+        fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Safety Auditor/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Confirm Partner Selection/i }));
+
+        fireEvent.click(screen.getAllByRole('button', { name: /Change ▾/i })[1]);
+        expect(screen.getByRole('dialog', { name: /Select Partner for RECYCLE/i })).toBeTruthy();
+        expect(screen.getByText('Recovery Partner')).toBeTruthy();
+        expect(within(screen.getByRole('dialog')).queryByText('Safety Auditor')).toBeNull();
+        expect(screen.getByText('No reviews')).toBeTruthy();
+        expect(screen.getByText('Price unavailable')).toBeTruthy();
+        expect(screen.queryByText('4.9')).toBeNull();
+        fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Recovery Partner/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Confirm Partner Selection/i }));
+
+        fireEvent.click(screen.getByRole('button', { name: /Save Private Draft/i }));
+        const payload = mockPatch.mock.calls[0][1] as Record<string, unknown>;
+        const [savedCombo] = payload.deal_chain_combinations as Array<{
+            nodes: Array<{ id: string; type: string; listingId?: string; listingVersionId?: string; feeMinor?: number }>;
+            slots: Array<{ id: string; roleType: string; listingId?: string; listingVersionId?: string; feeMinor?: number }>;
+        }>;
+        expect(savedCombo.nodes).toEqual(expect.arrayContaining([
+            expect.objectContaining({ id: 'node-audit', type: 'audit', listingId: 'audit-candidate', listingVersionId: 'audit-version-3', feeMinor: 0 }),
+            expect.objectContaining({ id: 'node-recycle', type: 'recycle', listingId: 'recycle-candidate', listingVersionId: 'recycle-version-2' }),
+        ]));
+        expect(savedCombo.slots).toEqual(expect.arrayContaining([
+            expect.objectContaining({ roleType: 'AUDIT', listingId: 'audit-candidate', listingVersionId: 'audit-version-3', feeMinor: 0 }),
+            expect.objectContaining({ roleType: 'RECYCLE', listingId: 'recycle-candidate', listingVersionId: 'recycle-version-2', feeMinor: undefined }),
+        ]));
+    });
+
     it('renders preparation lead time controls on inventory options without leaked protocol jargon', () => {
         render(<CreateProduct />);
-        fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
 
         expect(screen.getByText(/Order Preparation Lead Time/i)).toBeTruthy();
         expect(screen.getByRole('button', { name: /In Stock \(Ready\)/i })).toBeTruthy();
@@ -531,7 +797,7 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
                 workOptions={{ recommended: [productSet], other_archetypes: [] }}
             />,
         );
-        fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
         fireEvent.change(screen.getByTestId('product-title-input'), {
             target: { value: 'Fresh Tagudin Bibingka' },
         });
@@ -590,7 +856,7 @@ describe('CreateProduct Component — Granular Guided & Standard Modes', () => {
         render(
             <CreateProduct session={session} />,
         );
-        fireEvent.click(screen.getByRole('button', { name: /^Standard$/i }));
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
 
         // Fill minimal required title and price
         const titleInput = screen.getByTestId('product-title-input');

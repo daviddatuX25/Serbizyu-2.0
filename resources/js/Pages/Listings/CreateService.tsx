@@ -9,7 +9,6 @@ import {
     Trash2,
     ShieldCheck,
     Sliders,
-    Sparkles,
     Check,
     Eye,
     Video,
@@ -21,6 +20,7 @@ import {
     SERVICE_GUIDED_STEPS,
     type BuilderMode,
 } from '../../lib/builderGuidance';
+import BuilderModeToggle from '../../components/listings/BuilderModeToggle';
 import { formatProviderShortName } from '../../lib/formatters';
 import TagudinLocationPicker, {
     type StructuredGeography,
@@ -54,6 +54,7 @@ import {
     readPendingListingDraft,
     savePendingListingDraft,
 } from '../../lib/pendingListingDraft';
+import { isRecipeCompatible, savedCombinationSlots } from '../../marketplace/dealChainRecipes';
 
 interface PackageTierForm {
     id: string;
@@ -106,13 +107,16 @@ interface DealChainOptionGroups {
 interface PartnerListingOption {
     id: string;
     listingId?: string;
+    listingVersionId?: string | null;
+    listing_version_id?: string | null;
     role: string;
     name: string;
     providerName: string;
     barangay: string;
-    price: number;
-    feeMinor: number;
-    rating: string;
+    price?: number | null;
+    feeMinor?: number | null;
+    rating?: number | string | null;
+    reviewsCount?: number | null;
     badge?: string;
     sub: string;
     coverThumbnailUrl?: string;
@@ -243,13 +247,6 @@ export default function CreateService({
             ),
         [workOptions],
     );
-    const allDealChainRecipes = useMemo(
-        () => [
-            ...(dealChainOptions?.recommended ?? []),
-            ...(dealChainOptions?.other_recipes ?? []),
-        ],
-        [dealChainOptions],
-    );
     const slotCandidateListings = useMemo<SlotCandidateListing[]>(() => {
         if (!Array.isArray(partnerListings) || partnerListings.length === 0) {
             return [];
@@ -261,18 +258,28 @@ export default function CreateService({
                     ? 'COURIER'
                     : roleUpper === 'AUDIT' || roleUpper === 'AUDITOR'
                       ? 'AUDIT'
-                      : roleUpper === 'LABOR' || roleUpper === 'TECHNICIAN'
-                        ? 'LABOR'
-                        : 'STORE';
+                      : roleUpper === 'RECYCLE' || roleUpper === 'HAULING'
+                        ? 'RECYCLE'
+                        : roleUpper === 'LABOR' || roleUpper === 'TECHNICIAN'
+                          ? 'LABOR'
+                          : 'STORE';
+            const rating = typeof item.rating === 'number'
+                ? item.rating
+                : item.rating == null || item.rating.trim() === ''
+                  ? undefined
+                  : Number(item.rating);
             return {
                 id: item.id,
                 title: item.name,
                 provider_name: item.providerName,
-                area: item.barangay || 'Tagudin Centro',
+                listing_version_id: item.listingVersionId ?? item.listing_version_id ?? null,
+                listingVersionId: item.listingVersionId ?? item.listing_version_id ?? null,
+                area: item.barangay || 'Area unavailable',
                 price_minor: item.feeMinor,
-                sla_text: item.sub || 'Verified Tagudin partner listing',
+                sla_text: item.sub || 'Details unavailable',
                 photo_url: item.coverThumbnailUrl,
-                rating: parseFloat(item.rating || '4.9') || 4.9,
+                rating: typeof rating === 'number' && Number.isFinite(rating) ? rating : null,
+                reviews_count: item.reviewsCount ?? null,
                 role: mappedRole,
             };
         });
@@ -422,100 +429,16 @@ export default function CreateService({
     );
 
     // Step 3: Deal Chain Combinations
-    const [combinations, setCombinations] = useState<DealChainCombination[]>(
-        editingDraft?.deal_chain_combinations &&
-            Array.isArray(editingDraft.deal_chain_combinations) &&
-            editingDraft.deal_chain_combinations.length > 0
-            ? (editingDraft.deal_chain_combinations as unknown as DealChainCombination[])
-            : [
-                  {
-                      id: 'combo-1',
-                      title: 'All-In Parts, Courier & Labor',
-                      icon: 'Wrench',
-                      isDefault: true,
-                      nodes: [
-                          {
-                              role: 'STORE',
-                              title: '35uF Cap',
-                              sub: '₱180',
-                              type: 'store',
-                              bg: '#FEF3C7',
-                              color: '#B45309',
-                          },
-                          {
-                              role: 'COURIER',
-                              title: 'Danny Exp',
-                              sub: '₱35',
-                              type: 'delivery',
-                              bg: '#E0F2FE',
-                              color: '#0284C7',
-                          },
-                          {
-                              role: 'LABOR',
-                              title: 'Your Service',
-                              sub: '₱450',
-                              type: 'labor',
-                              bg: '#ECFDF5',
-                              color: '#059669',
-                          },
-                      ],
-                      slots: [
-                          {
-                              type: 'store',
-                              role: 'Hardware Part Supplier',
-                              name: 'Tagudin Hardware Depot',
-                              meta: '₱180.00 counter pickup',
-                          },
-                          {
-                              type: 'delivery',
-                              role: 'Doorstep Courier Runner',
-                              name: 'Danny Express Motorcycle Pool',
-                              meta: '₱35.00 route fee',
-                          },
-                      ],
-                  },
-                  {
-                      id: 'combo-2',
-                      title: 'Doorstep Courier Transit Only',
-                      icon: 'Truck',
-                      isDefault: false,
-                      nodes: [
-                          {
-                              role: 'STORE',
-                              title: 'Pickup',
-                              sub: 'Counter',
-                              type: 'store',
-                              bg: '#FEF3C7',
-                              color: '#B45309',
-                          },
-                          {
-                              role: 'COURIER',
-                              title: 'Danny Exp',
-                              sub: '₱35',
-                              type: 'delivery',
-                              bg: '#E0F2FE',
-                              color: '#0284C7',
-                          },
-                          {
-                              role: 'LABOR',
-                              title: 'Your Service',
-                              sub: '₱450',
-                              type: 'labor',
-                              bg: '#ECFDF5',
-                              color: '#059669',
-                          },
-                      ],
-                      slots: [
-                          {
-                              type: 'delivery',
-                              role: 'Doorstep Courier Runner',
-                              name: 'Danny Express Motorcycle Pool',
-                              meta: '₱35.00 route fee',
-                          },
-                      ],
-                  },
-              ],
-    );
+    const [combinations, setCombinations] = useState<DealChainCombination[]>(() => {
+        if (
+            editingDraft?.deal_chain_combinations &&
+            Array.isArray(editingDraft.deal_chain_combinations)
+        ) {
+            return (editingDraft.deal_chain_combinations as unknown as DealChainCombination[])
+                .map((combination) => ({ ...combination, slots: savedCombinationSlots(combination) }));
+        }
+        return [];
+    });
 
     const [activeComboIndex, setActiveComboIndex] = useState(0);
     const [attachChainModalOpen, setAttachChainModalOpen] = useState(false);
@@ -524,11 +447,13 @@ export default function CreateService({
     const [slotPickerTarget, setSlotPickerTarget] = useState<{
         comboId: string;
         slotType: SlotType;
+        nodeId: string | null;
         onPickedOverride?: (partner: {
             id: string;
             title: string;
             providerName: string;
-            priceMinor: number;
+            priceMinor?: number | null;
+            listingVersionId?: string | null;
             photoUrl?: string;
             isOpenSlot?: boolean;
         }) => void;
@@ -571,7 +496,7 @@ export default function CreateService({
         setRangeMax(pendingDraft.rangeMax);
         setPackageTiers(pendingDraft.packageTiers);
         setAddons(pendingDraft.addons);
-        setCombinations(pendingDraft.combinations);
+        setCombinations(pendingDraft.combinations.map((combination) => ({ ...combination, slots: savedCombinationSlots(combination) })));
         if (pendingDraft.media) {
             setMedia(pendingDraft.media);
         }
@@ -662,15 +587,19 @@ export default function CreateService({
                 id: candidate.id,
                 title: candidate.title,
                 providerName: candidate.provider_name,
-                priceMinor: candidate.price_minor,
+                priceMinor: candidate.price_minor ?? candidate.priceMinor ?? null,
+                listingVersionId: candidate.listingVersionId ?? candidate.listing_version_id ?? null,
                 photoUrl: candidate.photo_url,
                 isOpenSlot: false,
             });
             setSlotPickerTarget(null);
             return;
         }
-        const shortName = formatProviderShortName(candidate.provider_name, 14);
-        const priceStr = `₱${Math.round(candidate.price_minor / 100)}`;
+        const candidatePriceMinor = candidate.price_minor ?? candidate.priceMinor;
+        const priceStr = typeof candidatePriceMinor === 'number' && Number.isFinite(candidatePriceMinor)
+            ? `₱${(candidatePriceMinor / 100).toFixed(2)}`
+            : 'Partner fee unavailable';
+        const shortName = formatProviderShortName(candidate.title || candidate.provider_name);
 
         setCombinations((prev) =>
             prev.map((combo) => {
@@ -680,26 +609,32 @@ export default function CreateService({
                     isCustom: true,
                     basedOnTitle: combo.basedOnTitle || combo.title,
                     nodes: combo.nodes.map((n) => {
-                        if (n.type !== slotPickerTarget.slotType) return n;
+                        if (n.isPrimary || n.id !== slotPickerTarget.nodeId) return n;
                         return {
                             ...n,
                             title: shortName,
                             sub: priceStr,
                             listingId: candidate.id,
-                            feeMinor: candidate.price_minor,
-                            coverThumbnailUrl: candidate.photo_url,
+                            listingVersionId: candidate.listingVersionId ?? candidate.listing_version_id ?? null,
+                            feeMinor: candidatePriceMinor,
+                            isOpenSlot: false,
+                            assignmentMode: 'preferred_partner',
                         };
                     }),
                     slots: combo.slots.map((s) => {
-                        if (s.type !== slotPickerTarget.slotType) return s;
+                        if (s.id !== slotPickerTarget.nodeId) return s;
                         return {
                             ...s,
                             name: candidate.title || candidate.provider_name,
-                            meta: `₱${(candidate.price_minor / 100).toFixed(2)} · ${candidate.sla_text}`,
+                            meta: typeof candidatePriceMinor === 'number' && Number.isFinite(candidatePriceMinor)
+                                ? `₱${(candidatePriceMinor / 100).toFixed(2)} · ${candidate.sla_text}`
+                                : `Price unavailable · ${candidate.sla_text}`,
                             listingId: candidate.id,
-                            feeMinor: candidate.price_minor,
+                            listingVersionId: candidate.listingVersionId ?? candidate.listing_version_id ?? null,
+                            feeMinor: candidatePriceMinor,
                             coverThumbnailUrl: candidate.photo_url,
                             isOpenSlot: false,
+                            assignmentMode: 'preferred_partner',
                         };
                     }),
                 };
@@ -715,7 +650,7 @@ export default function CreateService({
                 id: 'open-slot',
                 title: 'Open Role Slot',
                 providerName: 'Buyer selects at checkout',
-                priceMinor: 0,
+                priceMinor: null,
                 isOpenSlot: true,
             });
             setSlotPickerTarget(null);
@@ -729,18 +664,21 @@ export default function CreateService({
                     isCustom: true,
                     basedOnTitle: combo.basedOnTitle || combo.title,
                     nodes: combo.nodes.map((n) =>
-                        n.type === slotPickerTarget.slotType
-                            ? { ...n, title: 'Open Slot', sub: 'Buyer picks', listingId: undefined }
+                        !n.isPrimary && n.id === slotPickerTarget.nodeId
+                            ? { ...n, title: 'Open Slot', sub: 'Buyer picks', listingId: undefined, listingVersionId: undefined, feeMinor: undefined, isOpenSlot: true, assignmentMode: 'buyer_choice' }
                             : n,
                     ),
                     slots: combo.slots.map((s) =>
-                        s.type === slotPickerTarget.slotType
+                        s.id === slotPickerTarget.nodeId
                             ? {
                                   ...s,
                                   name: `Open ${s.role} Slot`,
                                   meta: 'Buyer selects partner at checkout',
                                   listingId: undefined,
+                                  listingVersionId: undefined,
+                                  feeMinor: undefined,
                                   isOpenSlot: true,
+                                  assignmentMode: 'buyer_choice',
                               }
                             : s,
                     ),
@@ -773,45 +711,35 @@ export default function CreateService({
     const handleSelectDealChainRecipe = (recipe: DealChainTemplate) => {
         const primaryPesos = Math.round(effectivePriceMinor / 100);
         const newNodes: DealChainCombination['nodes'] = recipe.nodes.map((node) => {
-            const isPrimary =
-                node.key === 'labor' ||
-                node.key === 'primary' ||
-                node.title.toLowerCase().includes('primary');
+            const isPrimary = node.isPrimary === true;
             const isStore = node.type === 'store';
             const isCourier = node.type === 'delivery';
             const isAudit = node.type === 'audit';
+            const hasListing = Boolean(node.listingId);
+            const feeMinor = node.priceMinor != null ? node.priceMinor : undefined;
             return {
                 id: `node-${node.key}`,
                 role: node.role.toUpperCase(),
                 title: isPrimary ? 'Your Service' : node.title,
                 sub: isPrimary
                     ? `₱${primaryPesos}`
-                    : node.priceMinor
-                      ? `₱${Math.round(node.priceMinor / 100)}`
-                      : isStore
-                        ? '₱180'
-                        : isCourier
-                          ? '₱35'
-                          : isAudit
-                            ? '₱150'
-                            : 'Partner',
+                    : feeMinor != null
+                      ? `₱${Math.round(feeMinor / 100)}`
+                      : 'Quote required',
                 type: node.type,
                 bg: isStore || isAudit ? '#FEF3C7' : isCourier ? '#E0F2FE' : '#ECFDF5',
                 color: isStore || isAudit ? '#B45309' : isCourier ? '#0284C7' : '#059669',
-                listingId: node.listingId ?? undefined,
-                feeMinor: node.priceMinor ?? undefined,
+                listingId: isPrimary ? undefined : node.listingId ?? undefined,
+                feeMinor: isPrimary ? undefined : feeMinor,
                 coverThumbnailUrl: node.image ?? undefined,
                 isPrimary,
+                assignmentMode: node.assignmentMode,
+                isOpenSlot: !hasListing && !isPrimary,
             };
         });
 
         const newSlots: DealChainCombination['slots'] = recipe.nodes
-            .filter(
-                (node) =>
-                    node.key !== 'labor' &&
-                    node.key !== 'primary' &&
-                    !node.title.toLowerCase().includes('primary'),
-            )
+            .filter((node) => !node.isPrimary)
             .map((node) => {
                 const slotType: SlotType =
                     node.type === 'store'
@@ -821,17 +749,19 @@ export default function CreateService({
                           : node.type === 'audit'
                             ? 'audit'
                             : 'installation';
-                const defaultFee =
-                    node.priceMinor ??
-                    (slotType === 'store' ? 18000 : slotType === 'delivery' ? 3500 : 15000);
+                const hasListing = Boolean(node.listingId);
+                const feeMinor = node.priceMinor != null ? node.priceMinor : undefined;
                 return {
-                    id: `slot-${node.key}`,
+                    id: `node-${node.key}`,
                     type: slotType,
                     role: `${node.role} Partner`,
-                    name: node.providerName || node.title,
-                    meta: `₱${(defaultFee / 100).toFixed(2)} partner fee`,
+                    name: node.providerName || (hasListing ? node.title : `Open ${node.role} Slot`),
+                    meta:
+                        feeMinor != null
+                            ? `₱${(feeMinor / 100).toFixed(2)} partner fee`
+                            : 'Quote required upon request',
                     listingId: node.listingId ?? undefined,
-                    feeMinor: defaultFee,
+                    feeMinor,
                     coverThumbnailUrl:
                         node.image ??
                         (slotType === 'store'
@@ -839,6 +769,8 @@ export default function CreateService({
                             : slotType === 'delivery'
                               ? '/photos/courier.jpg'
                               : '/photos/req-electrician.jpg'),
+                    isOpenSlot: !hasListing,
+                    assignmentMode: node.assignmentMode,
                 };
             });
 
@@ -852,6 +784,7 @@ export default function CreateService({
                       ? 'ShieldCheck'
                       : 'Wrench',
             isDefault: combinations.length === 0,
+            planVersion: 1,
             recipeId: recipe.recipeId,
             catalogVersion: recipe.catalogVersion || 1,
             isCustom: false,
@@ -859,6 +792,11 @@ export default function CreateService({
             description: recipe.desc,
             nodes: newNodes,
             slots: newSlots,
+            dependencies: recipe.dependencies?.map((edge) => ({
+                ...edge,
+                predecessorId: edge.predecessorId.startsWith('node-') ? edge.predecessorId : `node-${edge.predecessorId}`,
+                successorId: edge.successorId.startsWith('node-') ? edge.successorId : `node-${edge.successorId}`,
+            })) ?? [],
         };
         setCombinations((prev) => [...prev, newCombo]);
         setActiveComboIndex(combinations.length);
@@ -986,11 +924,11 @@ export default function CreateService({
                 based_on_recipe_code:
                     combinations.find((c) => c.isDefault)?.recipeId ??
                     combinations[0]?.recipeId ??
-                    'turnkey_parts',
+                    null,
                 based_on_catalog_version:
                     combinations.find((c) => c.isDefault)?.catalogVersion ??
                     combinations[0]?.catalogVersion ??
-                    1,
+                    null,
                 is_custom_variation: combinations.some((c) => c.isCustom),
                 combination_count: combinations.length,
             } as unknown as FormDataConvertible,
@@ -1182,11 +1120,11 @@ export default function CreateService({
                     <div className="space-y-1 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-[11px] text-emerald-900">
                         <div className="flex items-center gap-1.5 font-bold">
                             <ShieldCheck className="size-3.5 text-emerald-700" />
-                            <span>Tagudin Public Escrow Guarantee</span>
+                            <span>Direct Cash &amp; Verified Sign-Off</span>
                         </div>
                         <p className="text-[10.5px] leading-relaxed text-emerald-800/90">
-                            Buyers see 0% municipal fees and guaranteed fund protection until
-                            milestone completion.
+                            Buyers see 0% municipal fees and pay directly upon verified completion of
+                            authored work milestones.
                         </p>
                     </div>
                 </div>
@@ -1262,10 +1200,9 @@ export default function CreateService({
                     </div>
 
                     <div className="space-y-1 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-[11px] text-amber-900">
-                        <span className="font-bold">🔒 Escrow Release Mechanism</span>
+                        <span className="font-bold">🔒 Bilateral Settlement Gate</span>
                         <p className="text-[10.5px] leading-relaxed text-amber-800">
-                            Customer payment is deposited in escrow upon order creation and safely
-                            released upon completion of Gate {stages.length}.
+                            Payment obligation is due upon verified completion of Gate {stages.length} and bilateral customer sign-off.
                         </p>
                     </div>
                 </div>
@@ -1304,18 +1241,18 @@ export default function CreateService({
                 {/* Compact 1-Row Sticky Header */}
                 <header
                     data-testid="builder-header"
-                    className="sticky top-0 z-30 grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-2 rounded-2xl border border-slate-200/80 bg-white/95 px-3.5 py-2.5 shadow-xs backdrop-blur-md sm:flex sm:flex-row sm:items-center sm:gap-3 sm:px-4"
+                    className="sticky top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 rounded-2xl border border-slate-200/80 bg-white/95 px-3.5 py-2.5 shadow-xs backdrop-blur-md sm:flex sm:flex-row sm:items-center sm:gap-3 sm:px-4"
                 >
                     {/* Left: Change Type + Title */}
                     <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 sm:gap-2.5">
                         <Link
                             href="/listings/create"
-                            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
+                            className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
                             title="Change Type"
                         >
                             <ArrowLeft className="size-4" />
                         </Link>
-                        <span className="shrink-0 text-xs font-extrabold text-[#0F2F58] sm:text-sm">
+                        <span className="min-w-0 truncate text-xs font-extrabold text-[#0F2F58] sm:text-sm">
                             Service Listing
                         </span>
                     </div>
@@ -1323,11 +1260,11 @@ export default function CreateService({
                     {/* Step indicator pill */}
                     <div className="col-start-1 row-start-2 flex min-w-0 items-center">
                         {builderMode === 'guided' ? (
-                            <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-900">
+                            <span className="min-w-0 truncate rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-900">
                                 Step {step} of 7 · {SERVICE_GUIDED_STEPS[step - 1]?.shortTitle}
                             </span>
                         ) : (
-                            <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                            <span className="min-w-0 truncate rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
                                 Standard Form
                             </span>
                         )}
@@ -1337,43 +1274,14 @@ export default function CreateService({
                     <button
                         type="button"
                         onClick={() => setMobilePreviewOpen(true)}
-                        className="col-start-2 row-start-1 flex shrink-0 cursor-pointer items-center gap-1.5 justify-self-end rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 sm:hidden"
+                        className="col-start-2 row-start-1 flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 justify-self-end rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 sm:hidden"
                         title="Preview Live Customer View"
                     >
                         <Eye className="size-3.5 text-emerald-600" />
                         <span>Preview</span>
                     </button>
 
-                    {/* Right: Mode Switcher */}
-                    <div
-                        className="col-start-2 row-start-2 flex shrink-0 items-center gap-1 justify-self-end rounded-xl border border-slate-200/70 bg-slate-100 p-0.5 sm:ml-auto"
-                        data-testid="builder-mode-switcher"
-                    >
-                        <button
-                            type="button"
-                            onClick={() => setBuilderMode('guided')}
-                            className={`flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition-all sm:px-2.5 ${
-                                builderMode === 'guided'
-                                    ? 'bg-white text-[#0F2F58] shadow-xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                        >
-                            <Sparkles className="size-3 text-amber-500" />
-                            <span>Guided</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setBuilderMode('standard')}
-                            className={`flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition-all sm:px-2.5 ${
-                                builderMode === 'standard'
-                                    ? 'bg-[#0F2F58] text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                        >
-                            <Sliders className="size-3" />
-                            <span>Standard</span>
-                        </button>
-                    </div>
+                    <BuilderModeToggle mode={builderMode} onModeChange={setBuilderMode} />
                 </header>
 
                 {/* Guided Mode Slim Progress Bar */}
@@ -2132,7 +2040,7 @@ export default function CreateService({
                                                                     )
                                                                 }
                                                                 placeholder="Tier name (e.g. Basic, Standard, Full Day)..."
-                                                                className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
+                                                                className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-extrabold text-slate-900 outline-none focus:border-[#0F2F58]"
                                                             />
                                                             <div className="flex shrink-0 items-center gap-1">
                                                                 <span className="text-xs font-bold text-slate-500">
@@ -2224,7 +2132,7 @@ export default function CreateService({
                                                                 )
                                                             }
                                                             placeholder="Add-on title..."
-                                                            className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2F58]"
+                                                            className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2F58]"
                                                         />
                                                         <div className="flex shrink-0 items-center gap-1">
                                                             <span className="text-[10.5px] font-extrabold text-emerald-700">
@@ -2375,9 +2283,14 @@ export default function CreateService({
                                             combinations={combinations}
                                             activeIndex={activeComboIndex}
                                             onIndexChange={setActiveComboIndex}
-                                            onSlotChangeClick={(comboId, slotType) =>
-                                                setSlotPickerTarget({ comboId, slotType })
-                                            }
+                                            onSlotChangeClick={(comboId, slot) => {
+                                                if (!slot.id) {
+                                                    setCustomizingComboId(comboId);
+                                                    setDealChainStudioOpen(true);
+                                                    return;
+                                                }
+                                                setSlotPickerTarget({ comboId, slotType: slot.type, nodeId: slot.id });
+                                            }}
                                             onToggleDefault={handleToggleComboDefault}
                                             onRemoveCombo={handleRemoveCombo}
                                             onAddComboClick={() => setAttachChainModalOpen(true)}
@@ -2602,12 +2515,30 @@ export default function CreateService({
                     open={attachChainModalOpen}
                     onClose={() => setAttachChainModalOpen(false)}
                     categoryCode={category}
+                    listingType="service"
+                    workShape={selectedTemplate.shape || 'A1'}
                     recommended={(dealChainOptions?.recommended ?? []).filter(
                         (r) =>
-                            r.applicableCategories.includes(category) ||
-                            r.applicableCategories.length === 0,
+                            isRecipeCompatible(
+                                r,
+                                category,
+                                'service',
+                                selectedTemplate.shape || 'A1',
+                            ),
                     )}
-                    otherRecipes={allDealChainRecipes}
+                    otherRecipes={[...(dealChainOptions?.recommended ?? []), ...(dealChainOptions?.other_recipes ?? [])]
+                        .filter(
+                            (r) =>
+                                isRecipeCompatible(
+                                    r,
+                                    null,
+                                    'service',
+                                    selectedTemplate.shape || 'A1',
+                                ) &&
+                                !((dealChainOptions?.recommended ?? []).some(
+                                    (rec) => rec.recipeId === r.recipeId && isRecipeCompatible(rec, category, 'service', selectedTemplate.shape || 'A1'),
+                                )),
+                        )}
                     onSelectRecipe={handleSelectDealChainRecipe}
                     onBuildCustom={() => {
                         setCustomizingComboId(null);
@@ -2630,6 +2561,7 @@ export default function CreateService({
                     primaryListingTitle={title}
                     primaryListingPricePesos={Math.round(effectivePriceMinor / 100)}
                     primaryListingType="service"
+                    primaryListingCategoryCode={category}
                     onSave={(updatedCombo) => {
                         setCombinations((prev) => {
                             const exists = prev.some((c) => c.id === updatedCombo.id);
@@ -2647,6 +2579,7 @@ export default function CreateService({
                         setSlotPickerTarget({
                             comboId: customizingComboId || 'studio-new',
                             slotType,
+                            nodeId: null,
                             onPickedOverride: onPicked,
                         });
                     }}

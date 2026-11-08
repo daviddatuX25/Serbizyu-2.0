@@ -205,15 +205,15 @@ export type ListingAddonRecord = {
     description: string;
     price_amount_minor: number;
     currency: string;
-    partner_role: 'courier' | 'technician' | 'store' | 'auditor';
-    partner_fixture_keys: string[];
+    partner_role?: 'store' | 'delivery' | 'courier' | 'labor' | 'technician' | 'audit' | 'auditor' | 'recycle' | 'recycler' | 'hauling';
+    partner_fixture_keys?: string[];
     status: 'available' | 'unavailable' | string;
-    settlement_mode: 'independent_provider_agreement' | string;
+    settlement_mode?: 'independent_provider_agreement' | string;
 };
 
 export type PartnerCandidateRecord = {
     id: string;
-    role: 'courier' | 'technician' | 'store' | 'auditor';
+    role: 'store' | 'delivery' | 'courier' | 'labor' | 'technician' | 'audit' | 'auditor' | 'recycle' | 'recycler' | 'hauling';
     name: string;
     sub: string;
     fee_amount_minor: number;
@@ -239,6 +239,7 @@ export type DealChainCatalogRecord = {
     nodes: Array<{
         key?: string;
         needKind?: string;
+        isPrimary: boolean;
         role: string;
         title: string;
         sub: string;
@@ -249,9 +250,11 @@ export type DealChainCatalogRecord = {
         priceMinor?: number | null;
     }>;
     dependencies?: Array<{
-        predecessor: string;
-        successor: string;
+        predecessorId: string;
+        successorId: string;
         conditionCode: string;
+        dependencyType: 'blocks';
+        status: 'active' | 'removed';
         allowBypass?: boolean;
     }>;
 };

@@ -31,6 +31,7 @@ const mockSlots = [
         deal_chain_id: '0198a3b1-7c40-7abc-8def-5234567890b8',
         ordinal: 2,
         need_kind: 'service',
+        node_role: 'delivery',
         title: 'Danny Express Motorcycle Courier',
         description: 'Partner transit need · Quantity 1 · provider agreement required',
         status: 'open',
@@ -42,6 +43,7 @@ const mockSlots = [
         deal_chain_id: '0198a3b1-7c40-7abc-8def-5234567890b8',
         ordinal: 3,
         need_kind: 'service',
+        node_role: 'service',
         title: 'Inverter Split AC Deep Clean',
         description: 'Primary listing need · Quantity 1 · provider agreement required',
         status: 'open',
@@ -81,15 +83,13 @@ describe('DealChainDetail Page', () => {
             <DealChainDetail chain={mockChain} slots={mockSlots} dependencies={mockDependencies} />,
         );
 
-        expect(screen.getAllByText(/Deal Chain #0198A3B1/i).length).toBeGreaterThanOrEqual(1);
-        expect(screen.getByText('Fiesta AC Overhaul')).toBeTruthy();
-        expect(screen.getByText('No child terms formed')).toBeTruthy();
+        expect(screen.getByRole('heading', { name: 'Fiesta AC Overhaul' })).toBeTruthy();
         expect(screen.getAllByText('Amount pending provider terms')).toHaveLength(3);
-        expect(screen.getByText('part_ready → Slot #2')).toBeTruthy();
-        expect(screen.getByText('delivery_signed → Slot #3')).toBeTruthy();
-        expect(screen.getByText(/this chain has no parent escrow/i)).toBeTruthy();
-        expect(screen.queryByText(/Total Escrow/i)).toBeNull();
-        expect(screen.queryByText(/8m ETA/i)).toBeNull();
+        expect(screen.getByText('Product')).toBeTruthy();
+        expect(screen.getByText('Delivery')).toBeTruthy();
+        expect(screen.getAllByText('Service')).toHaveLength(1);
+        expect(screen.queryByText(/parent escrow|DAG Dependencies|part_ready|delivery_signed/i)).toBeNull();
+        expect(screen.queryByText(/Total Escrow|8m ETA/i)).toBeNull();
     });
 
     it('renders only the partner agreement and shared readiness in the worker projection', () => {
@@ -114,6 +114,8 @@ describe('DealChainDetail Page', () => {
                     {
                         ...mockSlots[1],
                         child_order_id: 'order-sibling',
+                        child_order_status: 'completed',
+                        payment_obligation_status: 'settled',
                         work_status: 'in_progress',
                         can_view_order: false,
                     },
@@ -124,12 +126,15 @@ describe('DealChainDetail Page', () => {
         );
 
         expect(screen.getByText('PHP 250.00')).toBeTruthy();
-        expect(screen.getByText('Shared readiness')).toBeTruthy();
-        expect(screen.queryByText('PHP 630.00 · Derived child total')).toBeNull();
+        expect(screen.getByText('Shared progress')).toBeTruthy();
+        expect(screen.queryByText('PHP 630.00')).toBeNull();
         expect(screen.queryByText('Amount pending provider terms')).toBeNull();
-        expect(screen.getByText('Partner view · your agreement and shared readiness only.')).toBeTruthy();
-        expect(screen.getAllByRole('link', { name: /View Task Details/i })).toHaveLength(1);
-        expect(screen.getByRole('link', { name: /View Task Details/i }).getAttribute('href')).toBe('/orders/order-own');
+        expect(screen.getByText('Your orders and shared progress.')).toBeTruthy();
+        expect(screen.queryByText('Order: Completed')).toBeNull();
+        expect(screen.queryByText('Payment: settled')).toBeNull();
+        expect(screen.getAllByRole('link', { name: /View order/i })).toHaveLength(1);
+        expect(screen.getByRole('link', { name: /View order/i }).getAttribute('href')).toBe('/orders/order-own');
+
     });
 
     it('shows the server-authorized withdraw action for the current provider in worker view', () => {
@@ -142,8 +147,8 @@ describe('DealChainDetail Page', () => {
             />,
         );
 
-        expect(screen.getByRole('button', { name: 'Withdraw current partner' })).toBeTruthy();
-        expect(screen.queryByRole('button', { name: 'Show eligible listings' })).toBeNull();
+        expect(screen.getByRole('button', { name: 'Withdraw provider' })).toBeTruthy();
+        expect(screen.queryByRole('button', { name: 'Show available providers' })).toBeNull();
     });
     it('keeps the coordinator commercial overview and formed-child details', () => {
         render(
@@ -159,6 +164,8 @@ describe('DealChainDetail Page', () => {
                         ...mockSlots[0],
                         child_order_id: 'order-1',
                         child_order_status: 'accepted',
+                        work_status: 'completed',
+                        payment_obligation_status: 'due',
                         amount_minor: 18000,
                         currency: 'PHP',
                         amount_source: 'order terms',
@@ -169,10 +176,11 @@ describe('DealChainDetail Page', () => {
             />,
         );
 
-        expect(screen.getByText('PHP 180.00 · Derived child total')).toBeTruthy();
         expect(screen.getByText('PHP 180.00')).toBeTruthy();
-        expect(screen.getByText('Accepted')).toBeTruthy();
-        expect(screen.getByText('Coordinator project projection.')).toBeTruthy();
+        expect(screen.getByText('Order: Accepted')).toBeTruthy();
+        expect(screen.getByText('Work: Completed')).toBeTruthy();
+        expect(screen.getByText('Payment: due')).toBeTruthy();
+        expect(screen.getByText('Deal status:')).toBeTruthy();
     });
 
     it('renders the server-authorized product handoff link on the courier slot', () => {
@@ -196,7 +204,7 @@ describe('DealChainDetail Page', () => {
             />,
         );
 
-        expect(screen.getByRole('link', { name: /Open product handoff/i }).getAttribute('href'))
+        expect(screen.getByRole('link', { name: /Open handoff details/i }).getAttribute('href'))
             .toBe('/orders/product-order/handoff');
     });
 
@@ -224,7 +232,7 @@ describe('DealChainDetail Page', () => {
         );
 
         expect(screen.queryByTestId('rate-deal-chain-btn')).toBeNull();
-        expect(screen.getByText('Partner needed')).toBeTruthy();
+        expect(screen.getByText('Provider needed')).toBeTruthy();
     });
 });
 
@@ -268,9 +276,9 @@ describe('Deal Chain relay conversation', () => {
                 can_open_relay
             />,
         );
-        fireEvent.click(screen.getByRole('button', { name: 'Open handoff relay' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Group messages' }));
 
-        expect(await screen.findByRole('heading', { name: 'Deal Chain handoff relay' })).toBeTruthy();
+        expect(await screen.findByRole('textbox', { name: 'Message' })).toBeTruthy();
         expect(fetchMock.mock.calls[0][0]).toBe(`/deal-chains/${mockChain.id}/relay`);
         expect(container.querySelector('a[href="/orders/order-relay-child"]')).toBeTruthy();
     });

@@ -12,8 +12,8 @@ use Illuminate\Database\Seeder;
  */
 final class CapstoneContractSeeder extends Seeder
 {
-    public function run(DemoFixtureService $fixtures): void
+    public function run(?DemoFixtureService $fixtures = null): void
     {
-        $fixtures->ensure();
+        ($fixtures ?? app(DemoFixtureService::class))->ensure();
     }
 }

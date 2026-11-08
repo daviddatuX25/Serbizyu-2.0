@@ -398,7 +398,7 @@ export function ModernOnboarding({
                                 </div>
                                 <p className="mt-1 text-[11px] text-slate-500">
                                     Submit PhilSys ID or Trade License for certified blue checkmark
-                                    and high-trust escrow.
+                                    and verified trade privileges.
                                 </p>
                             </div>
                         </div>

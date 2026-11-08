@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quick Deal · mobile-first preview</title>
+<link rel="stylesheet" href="final-kit.css">
+<style>
+body{background:var(--background);font-size:16px}button,input,select,textarea{font:inherit}button,a,input,select,textarea{touch-action:manipulation}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.5}button:active:not(:disabled){transform:scale(.98)}input,select,textarea{width:100%;min-height:48px;padding:11px 12px;border:1px solid var(--border-strong);border-radius:10px;background:white;color:var(--foreground);accent-color:var(--primary)}textarea{resize:vertical;min-height:88px}input[type=checkbox]{width:22px;min-height:22px;flex-shrink:0}label{display:grid;gap:7px;font-size:14px;font-weight:700}input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--ring);outline-offset:3px}[hidden]{display:none!important}
+.preview-bar{height:44px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 14px;background:var(--mango-wash);color:var(--mango-foreground);font-size:12px;border-bottom:1px solid var(--mango-line)}.preview-bar button{border:0;background:transparent;color:inherit;font-size:13px;font-weight:800;min-height:44px;padding:0 8px}.preview-links{display:none}.qd-phone{height:calc(100dvh - 44px);width:100%;max-width:440px;margin:auto;background:white;display:flex;flex-direction:column;position:relative;overflow:hidden}.qd-header{height:62px;flex-shrink:0;display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--border)}.qd-header h1{font-size:18px;color:var(--primary);flex:1}.icon-button{width:44px;height:44px;display:grid;place-items:center;flex-shrink:0;border:0;background:white;border-radius:50%;color:var(--primary)}.icon-button .ic{width:22px;height:22px}.connection{font-size:12px;display:flex;gap:5px;align-items:center;color:var(--muted-foreground)}.connection.offline{color:var(--waiting)}.qd-content{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:24px 22px;scrollbar-width:thin}.qd-content h2{font-size:27px;line-height:1.18;color:var(--primary);letter-spacing:-.025em;margin:0 0 10px}.qd-content h3{font-size:17px;line-height:1.35}.qd-content p{margin:0;line-height:1.5}.subtle{color:var(--muted-foreground);font-size:15px}.small{font-size:13px;color:var(--muted-foreground)}.screen{display:grid;gap:22px}.screen-heading{display:grid;gap:2px}.qd-footer{flex-shrink:0;padding:12px 20px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:white;display:grid;gap:8px}.qd-footer .btn{min-height:52px;width:100%;font-size:16px;border-radius:12px}.qd-footer p{font-size:12px;line-height:1.4;color:var(--muted-foreground);text-align:center}.qd-footer .btn:before{display:none}.text-button{border:0;background:transparent;color:var(--primary);padding:10px 0;min-height:44px;text-align:left;font-weight:700;text-decoration:underline;text-underline-offset:4px}.scan-window{height:232px;position:relative;display:grid;place-items:center;border-radius:16px;background:var(--primary);color:white;overflow:hidden}.scan-window>.ic{width:76px;height:76px;stroke-width:1.2;color:white;opacity:.9}.scan-window .corners{position:absolute;inset:23px;width:calc(100% - 46px);height:calc(100% - 46px);fill:none;stroke:var(--mango);stroke-width:2;stroke-linecap:round}.scan-label{position:absolute;bottom:28px;font-size:12px;color:white}.scan-note{display:flex;align-items:center;gap:9px;color:var(--muted-foreground);font-size:13px;justify-content:center}.person{display:flex;align-items:center;gap:12px}.person .avatar{height:48px;width:48px;font-size:16px}.person p{font-size:13px;color:var(--muted-foreground);margin-top:2px}.service-option{width:100%;padding:16px 0;display:flex;align-items:center;gap:12px;background:white;border:0;border-bottom:1px solid var(--border);text-align:left}.service-option>div{flex:1}.service-option h3{font-size:16px;margin:0 0 4px}.service-option p{font-size:13px;color:var(--muted-foreground)}.service-option img{width:58px;height:58px;object-fit:cover;border-radius:10px}.service-option strong{font-size:16px;color:var(--primary);white-space:nowrap}.service-summary{display:flex;align-items:center;gap:12px;padding-bottom:20px;border-bottom:1px solid var(--border)}.service-summary img{width:72px;height:72px;object-fit:cover;border-radius:12px}.service-summary>div{flex:1}.service-summary h3{font-size:17px;margin-bottom:5px}.service-summary p{font-size:13px;color:var(--muted-foreground)}.price{font:800 30px/1.15 var(--font-display);color:var(--primary);font-variant-numeric:tabular-nums}.review-row{display:flex;justify-content:space-between;align-items:start;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}.review-row span{font-size:13px;color:var(--muted-foreground);display:block;margin-bottom:4px}.review-row strong{font-size:15px;font-weight:650}.review-row button{flex-shrink:0;font-size:13px}.review-row .text-button{min-height:40px;padding:2px 0}.scope{font-size:14px;color:var(--ink-soft);line-height:1.55}.own-side{padding:16px;border:1px solid var(--border);border-radius:12px;display:grid;gap:8px}.own-side strong{color:var(--primary)}.status-mark{width:58px;height:58px;background:var(--waiting-wash);color:var(--waiting);border-radius:50%;display:grid;place-items:center}.status-mark .ic{width:28px;height:28px}.status-mark.done{background:var(--done-wash);color:var(--done)}.record-summary{padding:20px 0;border-block:1px solid var(--border);display:grid;gap:14px}.confirmation{display:flex;gap:10px;align-items:start}.confirmation .ic{width:20px;height:20px;margin-top:2px;color:var(--muted-foreground);flex-shrink:0}.confirmation.confirmed .ic{color:var(--done)}.confirmation p{font-size:13px;color:var(--muted-foreground)}.quiet-note{padding:12px 14px;background:var(--mango-wash);color:var(--mango-foreground);border:1px solid var(--mango-line);border-radius:10px;font-size:13px}.check-label{display:flex;align-items:start;gap:10px;font-weight:500;line-height:1.5}.record-actions{display:flex;gap:16px;flex-wrap:wrap}.record-actions button{font-size:14px}.error{font-size:14px;color:var(--attention);min-height:0}.error:empty{display:none}.help-line{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--muted-foreground)}
+.qd-sheet{position:fixed;inset:auto 0 0;margin:auto auto 0;width:min(100%,440px);max-width:100%;max-height:85dvh;border:0;padding:0;background:transparent;overflow:visible;color:var(--foreground)}.qd-sheet::backdrop{background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}.wave{width:100%;height:34px;display:block;margin-bottom:-1px}.sheet-body{max-height:calc(85dvh - 34px);overflow-y:auto;background:white;padding:6px 20px 28px;display:grid;gap:18px}.sheet-heading{display:flex;gap:10px;align-items:center}.sheet-heading h2{font-size:21px;flex:1;color:var(--primary)}.sheet-body .btn{width:100%;min-height:48px;white-space:normal}.sheet-body .btn:before{display:none}.sheet-body p{font-size:14px;line-height:1.5}.sheet-body form{display:grid;gap:16px}.sheet-option{display:flex;gap:13px;align-items:center;border:1px solid var(--border);padding:15px;border-radius:12px;background:white;text-align:left;color:var(--foreground);width:100%;min-height:68px}.sheet-option>.ic{color:var(--primary);width:24px;height:24px}.sheet-option>div{flex:1}.sheet-option strong{display:block;font-size:15px}.sheet-option small{display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)}.sheet-options{display:grid;gap:10px}.sheet-key{color:var(--muted-foreground);font-size:12px}.copy-area{min-height:180px;font-size:14px}.record-data{margin:0;display:grid;gap:14px}.record-data div{border-bottom:1px solid var(--border);padding-bottom:12px}.record-data dt{font-size:12px;color:var(--muted-foreground);margin-bottom:4px}.record-data dd{margin:0;white-space:pre-wrap;font-size:14px}.lab-actions{display:grid;gap:10px}.lab-actions .btn{font-size:14px}
+@media(min-width:700px){.preview-bar{max-width:1000px;margin:20px auto 18px;border:1px solid var(--mango-line);border-radius:10px}.preview-links{display:flex;gap:16px;align-items:center;font-size:13px}.qd-phone{height:min(860px,calc(100dvh - 112px));min-height:600px;border:1px solid var(--border-strong);border-radius:24px}.qd-sheet{inset:0;margin:auto;max-width:440px}.sheet-body{border-radius:16px;padding:22px;max-height:85dvh}.wave{display:none}}@media(max-height:700px){.scan-window{height:180px}.qd-content{padding-top:18px}.screen{gap:18px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+.approval-methods{display:grid;gap:8px}.approval-methods button{font-size:15px}.approval-code{font-size:30px;letter-spacing:.22em;text-align:center;font-variant-numeric:tabular-nums}.approval-qr{height:180px}.approval-qr>.ic{width:100px;height:100px}.private-code{font:800 34px var(--font-display);letter-spacing:.15em;color:var(--primary);padding:18px 0}.approval-error:empty{display:none}
+.qd-header h1{min-width:0}.signed-account{display:block;font:500 11px/1.25 var(--font-body);color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+</style>
+</head>
+<body>
+<!-- Mobile-first, single-task prototype. No real scanning, authentication, persistence or synchronization. -->
+<div class="preview-bar"><span>Prototype · sample data</span><nav class="preview-links" aria-label="Other previews"><a href="service-journey-prototype.html">Service</a><a href="service-orders-prototype.html">Orders</a></nav><button type="button" onclick="openCases()">Preview cases</button></div>
+<div class="qd-phone">
+<header class="qd-header"><button id="back" class="icon-button" aria-label="Back" onclick="goBack()"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-back"/></svg></button><h1>Quick Deal<small id="signedAccount" class="signed-account"></small></h1><span class="connection" id="connection"></span><button class="icon-button" aria-label="More options" onclick="openMore()"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-more"/></svg></button></header>
+<main id="content" class="qd-content" aria-live="polite"></main>
+<footer id="footer" class="qd-footer"></footer>
+</div>
+<dialog id="sheet" class="qd-sheet" aria-labelledby="sheetTitle"><svg class="wave" viewBox="0 0 390 34" preserveAspectRatio="none" aria-hidden="true"><path d="M 0 16 C 90 2, 140 0, 195 0 C 255 0 315 8 390 28 L 390 34 L 0 34 Z" fill="white"/></svg><div class="sheet-body"><div class="sheet-heading"><h2 id="sheetTitle"></h2><button class="icon-button" aria-label="Close" onclick="closeSheet()"><svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-x"/></svg></button></div><div id="sheetContent"></div></div></dialog>
+<script>
+const $=id=>document.getElementById(id);
+const icon=name=>`<svg class="ic" aria-hidden="true"><use href="final-icons.svg#i-${name}"/></svg>`;
+const escapeHTML=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=minor=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(minor/100);
+const names={buyer:'Maria Santos',seller:'Kuya Ben',helper:'Ate Liza'};
+const services=[{id:'ac-clean',title:'AC cleaning',minor:45000,scope:'Cleaning for one home unit. Replacement parts are not included.',photo:'../photos/ac-clean.jpg'},{id:'ac-check',title:'AC inspection',minor:20000,scope:'Inspection and basic performance check for one home unit.',photo:'../photos/ac-clean.jpg'},{id:'fan-clean',title:'Electric fan cleaning',minor:25000,scope:'Cleaning and function check for one electric fan.',photo:null}];
+let state;
+function reset(scenario='online',initiator='buyer'){
+ state={screen:initiator==='seller'?'services':'scan',scenario,initiator,viewer:scenario==='helper'?'helper':initiator,network:scenario==='offline'?'offline':'online',scanned:false,lookup:null,service:null,amount:0,details:'',when:'Today',purpose:'exchange',orderRef:'',version:1,reviewed:null,confirmations:{buyer:false,seller:false},methods:{buyer:null,seller:null},helperStatement:'',record:null,history:[],synced:scenario!=='offline',followup:false,approvals:[],activeApproval:null,approvalError:'',nightElapsed:false};
+ closeSheet();render();
+}
+function selectedService(){return services.find(s=>s.id===state.service);}
+function purposeLabel(){return {exchange:'Record an exchange',order:'Start an Order',existing:'Acknowledge an Order'}[state.purpose];}
+function validTerms(){return Boolean(state.scanned&&selectedService()&&state.amount>0&&Number.isFinite(state.amount)&&(state.purpose!=='existing'||state.orderRef.trim()));}
+function snapshot(){return {id:'QD-DEMO-01',version:state.version,service:selectedService().title,amount:state.amount,details:state.details,when:state.when,purpose:purposeLabel(),orderRef:state.orderRef,confirmations:{...state.confirmations},methods:{...state.methods},helperStatement:state.helperStatement,concerns:[],checksPending:state.network==='offline'||!state.synced};}
+function reviseTerms(patch){
+ if(state.record){state.history.unshift(structuredClone(state.record));state.record=null;}
+ for(const approval of state.approvals){if(approval.status==='active')approval.status='invalidated';}
+ state.activeApproval=null;state.approvalError='';state.methods={buyer:null,seller:null};state.nightElapsed=false;
+ Object.assign(state,patch);state.version++;state.reviewed=null;state.confirmations={buyer:false,seller:false};state.helperStatement='';
+}
+function changeTerms(patch){reviseTerms(patch);state.screen='review';render();}
+function openSheet(title,html){$('sheetTitle').textContent=title;$('sheetContent').innerHTML=html;if(!$('sheet').open)$('sheet').showModal();}
+function closeSheet(){if($('sheet').open)$('sheet').close();}
+$('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))closeSheet();});
+function setFooter(label,action,note='',disabled=false){$('footer').innerHTML=`<button class="btn primary" id="primary" ${disabled?'disabled':''}>${label}</button>${note?`<p>${note}</p>`:''}`;$('primary').onclick=action;}
+function heading(title,description=''){return `<div class="screen-heading"><h2>${title}</h2>${description?`<p class="subtle">${description}</p>`:''}</div>`;}
+function person(role){return `<div class="person"><span class="avatar">${role==='buyer'?'MS':'KB'}</span><div><strong>${names[role]}</strong><p>${role==='buyer'?'Customer · Poblacion Este':'Aircon services · Tagudin'}</p></div></div>`;}
+function render(){
+ $('signedAccount').textContent=state.viewer==='helper'?'Liza · helper':({buyer:'Maria',seller:'Kuya Ben'}[state.viewer]+'’s account');
+ $('signedAccount').title=`Signed-in example: ${names[state.viewer]}. Scanning a QR does not switch accounts.`;
+ $('connection').className='connection'+(state.network==='offline'?' offline':'');$('connection').innerHTML=icon(state.network==='offline'?'wifi-off':'check-circle')+(state.network==='offline'?'Offline':'Online');
+ $('back').disabled=(state.screen==='scan'&&!state.service)||(state.screen==='services'&&state.initiator==='seller'&&!state.service);
+ const views={scan:renderScan,services:renderServices,unavailable:renderUnavailable,review:renderReview,confirm:renderConfirm,record:renderRecord,approvalQr:renderApprovalQr,approvalReview:renderApprovalReview,approvalCode:renderApprovalCode};views[state.screen]();$('content').scrollTop=0;
+}
+function renderScan(){
+ const target=state.initiator==='seller'?'customer':'seller';
+ $('content').innerHTML=`<div class="screen">${heading(`Scan the ${target}’s QR`,state.initiator==='seller'?'Their public card identifies who you’re dealing with.':'Use their profile card or the service’s QR.')}<div class="scan-window">${icon('qr')}<svg class="corners" viewBox="0 0 260 180" preserveAspectRatio="none" aria-hidden="true"><path d="M0 32V0H32 M228 0H260V32 M260 148V180H228 M32 180H0V148"/></svg><span class="scan-label">Camera off · sample preview</span></div><div class="scan-note">${icon('lock')}A public QR identifies. It doesn’t approve.</div>${state.service?`<div class="help-line">${icon('check')}Selected: ${escapeHTML(selectedService().title)}</div>`:''}</div>`;
+ setFooter('Use a sample QR',openScanExamples,'No camera or real QR lookup in this prototype.');
+}
+function openScanExamples(){
+ const seller=state.initiator==='seller';
+ openSheet('Try a public QR',`<div class="sheet-options"><button class="sheet-option" onclick="scanExample('profile')">${icon('user')}<div><strong>${seller?'Maria’s profile card':'Kuya Ben’s profile card'}</strong><small>${seller?'Identify the customer':'Then choose an actual listed service'}</small></div>${icon('chev')}</button>${!seller?`<button class="sheet-option" onclick="scanExample('listing')">${icon('qr')}<div><strong>AC cleaning service QR</strong><small>Service selected · still review the terms</small></div>${icon('chev')}</button>`:''}</div>`);
+}
+function scanExample(kind){
+ state.lookup=kind;state.scanned=true;closeSheet();
+ if(state.initiator==='seller'){state.screen=state.service?'review':'services';}
+ else if(kind==='listing'){selectService('ac-clean');return;}
+ else {state.screen=state.network==='offline'?'unavailable':'services';}
+ render();
+}
+function renderServices(){
+ $('content').innerHTML=`<div class="screen">${heading(state.initiator==='seller'?'What service did you provide?':'Choose the service',state.initiator==='seller'?'Choose your actual listing before identifying the customer.':'From Kuya Ben’s listings—not suggested delivery or products.')}${person('seller')}<div>${services.map(s=>`<button class="service-option" onclick="selectService('${s.id}')">${s.photo?`<img src="${s.photo}" alt="">`:`<span class="avatar">${icon('receipt')}</span>`}<div><h3>${s.title}</h3><p>${s.scope}</p></div><strong>${money(s.minor)}</strong></button>`).join('')}</div></div>`;
+ $('footer').innerHTML='<p>Choose one listed service to continue.</p>';
+}
+function selectService(id){
+ const s=services.find(s=>s.id===id),patch={service:id,amount:s.minor,details:s.scope,reviewed:null};
+ if(state.service&&(state.service!==id||state.amount!==s.minor||state.details!==s.scope))reviseTerms(patch);
+ else Object.assign(state,patch);
+ state.screen=state.initiator==='seller'&&!state.scanned?'scan':'review';render();
+}
+function renderUnavailable(){
+ $('content').innerHTML=`<div class="screen">${heading('Connect to see the services','This profile card doesn’t contain a saved service listing.')}${person('seller')}<div class="quiet-note">We can identify Kuya Ben, but can’t invent his catalog or confirm availability offline.</div><button class="text-button" onclick="scanExample('listing')">Try a previously saved service example</button></div>`;
+ setFooter('Preview reconnect',()=>{state.network='online';state.synced=true;state.screen='services';render();},'This button simulates reconnecting.');
+}
+function renderReview(){
+ const s=selectedService();
+ $('content').innerHTML=`<div class="screen">${heading('Check the details','Make sure this matches what you agreed.')}<div class="service-summary">${s.photo?`<img src="${s.photo}" alt="AC service example">`:''}<div><h3>${s.title}</h3><p>Kuya Ben · service listing v4</p></div></div><div><p class="small">Agreed amount</p><p class="price">${money(state.amount)}</p></div><div><div class="review-row"><div><span>Between</span><strong>Maria Santos & Kuya Ben</strong></div></div><div class="review-row"><div><span>What this records</span><strong>${purposeLabel()}</strong>${state.orderRef?`<p class="small">${escapeHTML(state.orderRef)}</p>`:''}</div><button class="text-button" onclick="openPurpose()">Change</button></div><div class="review-row"><div><span>When</span><strong>${escapeHTML(state.when)}</strong></div><button class="text-button" onclick="openEdit()">Edit</button></div></div><p class="scope">${escapeHTML(state.details)}</p><button class="text-button" onclick="openEdit()">Edit amount or details</button>${state.network==='offline'?'<div class="quiet-note">You’re offline. Online checks will still be pending.</div>':''}${state.history.length?'<p class="small">Details changed. Earlier records are kept; this version needs fresh confirmation.</p>':''}</div>`;
+ setFooter(state.viewer==='helper'?'Continue as helper':'Continue',()=>{if(!validTerms())return;state.reviewed=state.version;state.screen='confirm';render();},`Version ${state.version} · no payment is made here.`,!validTerms());
+}
+function openPurpose(){
+ openSheet('What are you recording?',`<div class="sheet-options">${[['exchange','Record an exchange','Keep the agreed details for both people.'],['order','Start an Order','Continue this service online.'],['existing','Acknowledge an Order','Attach a record to an exact existing Order.']].map(([key,title,sub])=>`<button class="sheet-option" onclick="choosePurpose('${key}')">${icon(key==='existing'?'link':'receipt')}<div><strong>${title}</strong><small>${sub}</small></div>${icon('chev')}</button>`).join('')}</div>`);
+}
+function choosePurpose(purpose){
+ if(purpose==='existing'){
+  openSheet('Which Order?',`<form id="referenceForm"><label>Order reference<input id="orderRef" required value="${escapeHTML(state.orderRef)}" placeholder="ORD-DEMO-2048" autocomplete="off"></label><p class="small">Example reference only. No real Order is looked up.</p><button class="btn primary">Use this reference</button></form>`);
+  $('referenceForm').onsubmit=e=>{e.preventDefault();const ref=$('orderRef').value.trim();if(!ref)return;closeSheet();changeTerms({purpose,orderRef:ref});};
+ }else{closeSheet();changeTerms({purpose,orderRef:''});}
+}
+function openEdit(){
+ if(!state.scanned){closeSheet();state.screen='scan';render();return;}
+ openSheet('Edit the agreed details',`<form id="editForm"><label>Amount in pesos<input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required value="${state.amount/100}"></label><label>When<input id="when" required value="${escapeHTML(state.when)}"></label><label>Agreed details<textarea id="details" required>${escapeHTML(state.details)}</textarea></label><p class="small">Changes need fresh confirmation. Earlier records stay unchanged.</p><button class="btn primary">Review these changes</button></form>`);
+ $('editForm').onsubmit=e=>{e.preventDefault();const amount=Math.round(Number($('amount').value)*100),when=$('when').value.trim(),details=$('details').value.trim();if(!(amount>0)||!when||!details)return;closeSheet();changeTerms({amount,when,details});};
+}
+function renderConfirm(){
+ const helper=state.viewer==='helper',role=state.viewer;
+ $('content').innerHTML=`<div class="screen">${heading(helper?'You’re helping—not approving':'Your confirmation',helper?'Maria and Kuya Ben still confirm for themselves.':`Signed in as ${names[role]} (preview).`)}<div class="own-side"><strong>${selectedService().title}</strong><p class="price">${money(state.amount)}</p><p>${escapeHTML(state.details)}</p><p class="small">${purposeLabel()} · ${escapeHTML(state.when)} · v${state.version}</p></div>${helper?`<label class="check-label"><input type="checkbox" id="helperCheck"><span>I helped enter or read these details. This is my assistance statement only.</span></label>`:`<p>This approves ${names[role]}’s side only. ${names[role==='buyer'?'seller':'buyer']} still confirms separately.</p><div class="approval-methods"><button class="text-button" onclick="openApprovalMethods()">Other ways for ${names[role]} to confirm</button></div>`}<div class="help-line">${icon('lock')}Work and payment stay separate.</div></div>`;
+ setFooter(helper?'Record my assistance':`Confirm as ${names[role]}`,confirmOwnSide,helper?'No participant approval is recorded.':`Requires ${names[role]}’s own signed-in account. Preview only.`,helper);
+ if(helper)$('helperCheck').onchange=()=>{$('primary').disabled=!$('helperCheck').checked;};
+}
+function confirmOwnSide(){
+ if(state.reviewed!==state.version||!validTerms())return;
+ if(state.viewer!=='helper'){completeApproval('app');return;}
+ if(!$('helperCheck')?.checked)return;
+ state.helperStatement='Ate Liza helped enter or read these details.';
+ saveConfirmationRecord();
+}
+function methodLabel(method){return {app:'own account',qr:'confirmation QR',code:'one-time code'}[method];}
+function completeApproval(method){
+ if(!['buyer','seller'].includes(state.viewer)||!['app','qr','code'].includes(method)||state.reviewed!==state.version||!validTerms())return false;
+ if(state.confirmations[state.viewer])return false;
+ for(const approval of state.approvals){if(approval.status==='active'&&approval.party===state.viewer&&approval.version===state.version)approval.status='invalidated';}
+ state.confirmations[state.viewer]=true;state.methods[state.viewer]=method;state.approvalError='';
+ saveConfirmationRecord();return true;
+}
+function saveConfirmationRecord(){
+ if(!state.record)state.record=snapshot();
+ else{state.record.confirmations={...state.confirmations};state.record.methods={...state.methods};state.record.helperStatement=state.helperStatement;}
+ state.screen='record';render();
+}
+function openApprovalMethods(){
+ if(state.viewer==='helper'||state.reviewed!==state.version)return;
+ openSheet(`Confirm as ${names[state.viewer]}`,`<div class="sheet-options"><button class="sheet-option" onclick="closeSheet();confirmOwnSide()">${icon('user')}<div><strong>${names[state.viewer]}’s account</strong><small>Approve only ${names[state.viewer]}’s side</small></div></button><button class="sheet-option" onclick="beginApproval('qr')">${icon('qr')}<div><strong>Confirmation QR</strong><small>Open in ${names[state.viewer]}’s own signed-in account</small></div></button><button class="sheet-option" onclick="beginApproval('code')">${icon('lock')}<div><strong>One-time confirmation code</strong><small>From ${names[state.viewer]}’s own verified channel</small></div></button></div><p class="small" style="margin-top:16px">These methods approve the named person’s side only. Scanning someone else’s profile never signs in as them. All methods are simulated.</p>`);
+}
+function termsScope(){return JSON.stringify(['QD-DEMO-01',state.version,state.service,'seller:Kuya Ben','buyer:Maria Santos',state.amount,'PHP',state.details,state.when,state.purpose,state.orderRef]);}
+function activeApproval(){return state.approvals.find(approval=>approval.id===state.activeApproval);}
+function beginApproval(method){
+ if(!['qr','code'].includes(method)||!['buyer','seller'].includes(state.viewer)||state.reviewed!==state.version||!validTerms())return;
+ if(state.network!=='online'){openSheet('Connect to use this method','<p>QR/account verification and code delivery need an online channel in this example. Keep an offline record pending; no confirmation is assumed.</p>');return;}
+ for(const approval of state.approvals){if(approval.status==='active')approval.status='invalidated';}
+ const number=state.approvals.length+1;
+ // Entirely synthetic: the scope string is not a cryptographic signature.
+ const approval={id:'CNF-DEMO-'+number,method,party:state.viewer,version:state.version,purpose:state.purpose,scope:termsScope(),terms:{service:selectedService().title,amount:state.amount,details:state.details,when:state.when,purpose:purposeLabel(),orderRef:state.orderRef},sampleCode:String(410000+number*137),expiresAt:Date.now()+120000,attempts:0,status:'active',openedOnOwnPhone:false};
+ state.approvals.push(approval);state.activeApproval=approval.id;state.approvalError='';
+ state.screen=method==='qr'?'approvalQr':'approvalCode';closeSheet();render();
+}
+function approvalProblem(approval,method){
+ if(!approval||approval.method!==method)return 'This confirmation is unavailable. Review the deal again.';
+ if(approval.status==='consumed')return 'This confirmation was already used. No extra approval was recorded.';
+ if(approval.status==='invalidated')return 'The terms or method changed. Review again and request a new confirmation.';
+ if(approval.status==='blocked'||approval.attempts>=5)return 'Too many incorrect attempts. Request a new code.';
+ if(approval.status==='expired'||Date.now()>=approval.expiresAt){approval.status='expired';return 'This confirmation expired. Nothing was approved. Request a new one.';}
+ if(!['buyer','seller'].includes(state.viewer)||state.viewer!==approval.party)return `This confirmation belongs to ${names[approval.party]}, not the current account.`;
+ if(state.version!==approval.version||state.reviewed!==approval.version||state.purpose!==approval.purpose||termsScope()!==approval.scope||!validTerms()){approval.status='invalidated';return 'The details changed. Review the current version before confirming.';}
+ if(state.network!=='online')return 'Connect to verify this confirmation. Nothing was approved.';
+ return '';
+}
+function showApprovalError(message){
+ state.approvalError=message;
+ if($('approvalError'))$('approvalError').textContent=message;
+ if($('attempts'))$('attempts').textContent=`${Math.max(0,5-(activeApproval()?.attempts||0))} attempts left in this demo.`;
+ if($('primary')&&activeApproval()&&activeApproval().status!=='active')$('primary').disabled=true;
+}
+function approvalSummary(approval,compact=false){return `<div class="own-side"><strong>${escapeHTML(approval.terms.service)}</strong><p class="price">${money(approval.terms.amount)}</p>${compact?'':`<p>${escapeHTML(approval.terms.details)}</p>`}<p class="small">For ${names[approval.party]} · ${escapeHTML(approval.terms.purpose)} · v${approval.version}</p></div>`;}
+function showApprovalDetails(){const approval=activeApproval();openSheet('The exact agreed details',`${approvalSummary(approval)}<p>${escapeHTML(approval.terms.when)}</p>${approval.terms.orderRef?`<p>Order: ${escapeHTML(approval.terms.orderRef)}</p>`:''}`);}
+function renderApprovalQr(){
+ const approval=activeApproval();
+ $('content').innerHTML=`<div class="screen">${heading('Confirm on your own phone',`This QR opens the deal for ${names[approval.party]}.`)}<div class="scan-window approval-qr">${icon('qr')}<span class="scan-label">QR placeholder · not scannable</span></div>${approvalSummary(approval)}<p class="small">Scanning only opens the review. ${names[approval.party]} must sign in and explicitly approve.</p><p class="error approval-error" id="approvalError" role="alert">${escapeHTML(state.approvalError)}</p><button class="text-button" onclick="beginApproval('qr')">Request a new confirmation QR</button></div>`;
+ setFooter('Preview opening this QR',openQrReview,'Simulates a separate phone; no real QR or authentication.');
+}
+function openQrReview(){
+ const approval=activeApproval(),problem=approvalProblem(approval,'qr');
+ if(problem){showApprovalError(problem);return;}
+ approval.openedOnOwnPhone=true;state.screen='approvalReview';render();
+}
+function renderApprovalReview(){
+ const approval=activeApproval();
+ $('content').innerHTML=`<div class="screen">${heading(`${names[approval.party]}’s own phone`,'Preview: the intended participant is signed in.')}<p class="small">Opening the QR has not approved anything.</p>${approvalSummary(approval)}<p>Approve only if these are the people, service, amount and details you agreed to.</p><p class="error approval-error" id="approvalError" role="alert">${escapeHTML(state.approvalError)}</p></div>`;
+ setFooter('Approve these terms',approveQr,'Approves this version for your side only.');
+}
+function approveQr(){
+ const approval=activeApproval(),problem=approvalProblem(approval,'qr');
+ if(problem){showApprovalError(problem);return;}
+ if(!approval.openedOnOwnPhone){showApprovalError('Open this review in your own account first.');return;}
+ approval.status='consumed';completeApproval('qr');
+}
+function renderApprovalCode(){
+ const approval=activeApproval();
+ $('content').innerHTML=`<div class="screen">${heading('Enter your confirmation code',`For ${names[approval.party]}’s own verified channel.`)}${approvalSummary(approval,true)}<form id="approvalForm"><label>One-time code<input class="approval-code" id="approvalCode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required placeholder="6 digits"></label></form><p class="small">Not your account password. Valid for this transaction version only.</p><p class="error approval-error" id="approvalError" role="alert">${escapeHTML(state.approvalError)}</p><p class="small" id="attempts">${Math.max(0,5-approval.attempts)} attempts left in this demo.</p><button class="text-button" onclick="showApprovalDetails()">View the agreed details</button><button class="text-button" onclick="beginApproval('code')">Request a new code</button></div>`;
+ setFooter('Verify and confirm',submitApprovalCode,'Demo only: Preview cases → your sample private code. No SMS sent.');
+ $('approvalForm').onsubmit=event=>{event.preventDefault();submitApprovalCode();};
+}
+function submitApprovalCode(){
+ if(!$('approvalForm').reportValidity())return;
+ const approval=activeApproval(),problem=approvalProblem(approval,'code');
+ if(problem){showApprovalError(problem);return;}
+ if($('approvalCode').value!==approval.sampleCode){approval.attempts++;if(approval.attempts>=5)approval.status='blocked';showApprovalError(approval.status==='blocked'?'Too many incorrect attempts. Request a new code.':'Incorrect code. Nothing was approved. Try again.');return;}
+ approval.status='consumed';completeApproval('code');
+}
+function previewPrivateCode(){
+ const approval=activeApproval();
+ if(!approval||approval.method!=='code'||state.viewer!==approval.party)return;
+ openSheet(`${names[approval.party]}’s private message`,`${approvalSummary(approval)}<p class="private-code">${approval.sampleCode}</p><p>Sample independent delivery only. In the real flow, this must reach the approving person through their own verified channel—not be revealed on the preparer’s phone.</p><p class="small">Demo validity: two minutes, one use. No SMS or secure delivery is implemented.</p>`);
+}
+function previewWrongParty(){
+ const approval=activeApproval();if(!approval)return;
+ state.viewer=state.viewer===approval.party?(approval.party==='buyer'?'seller':'buyer'):approval.party;state.approvalError=`Preview signed-in account: ${names[state.viewer]}.`;
+ closeSheet();render();
+}
+function previewExpireApproval(){
+ const approval=activeApproval();if(!approval)return;
+ approval.expiresAt=0;state.approvalError='The confirmation expired. No approval is supplied by expiry.';closeSheet();render();
+}
+function previewOvernight(){
+ const approval=activeApproval();if(approval&&approval.status==='active')approval.expiresAt=0;
+ state.nightElapsed=true;state.approvalError='';
+ if(state.record)state.screen='record';else state.approvalError='Time passed. This confirmation expired; the deal was not accepted.';
+ closeSheet();render();
+}
+function recordStatus(){
+ if(state.record.concerns.length)return {title:'A concern was recorded',sub:'The original record is kept. No automatic debt or penalty.',tone:'waiting'};
+ if(state.network==='offline'||!state.synced)return {title:'Saved · online checks pending',sub:'Your preview record is kept here until you reconnect.',tone:'waiting'};
+ if(state.confirmations.buyer&&state.confirmations.seller)return {title:'Both sides confirmed',sub:'You each have the same agreed details.',tone:'done'};
+ if(state.viewer==='helper'&&!state.confirmations.buyer&&!state.confirmations.seller)return {title:'Waiting for both people',sub:'Your assistance is recorded. It isn’t their approval.',tone:'waiting'};
+ return {title:`Waiting for ${state.confirmations.buyer?'Kuya Ben':'Maria'}`,sub:state.nightElapsed?'Time passed. Still waiting—no automatic acceptance.':'One side confirmed. No reply will not auto-accept this deal.',tone:'waiting'};
+}
+function renderRecord(){
+ const status=recordStatus(),r=state.record,other=pendingOtherParty();
+ $('content').innerHTML=`<div class="screen"><div class="status-mark ${status.tone==='done'?'done':''}">${icon(status.tone==='done'?'check':'clock')}</div>${heading(status.title,status.sub)}<div class="record-summary"><p class="small">${r.id} · version ${r.version}</p><h3>${escapeHTML(r.service)}</h3><p class="price">${money(r.amount)}</p><p class="scope">${escapeHTML(r.details)}</p><p class="small">${escapeHTML(r.purpose)} · ${escapeHTML(r.when)}</p></div><div class="stack">${['buyer','seller'].map(role=>`<div class="confirmation ${state.confirmations[role]?'confirmed':''}">${icon(state.confirmations[role]?'check-circle':'clock')}<div><strong>${names[role]}</strong><p>${state.confirmations[role]?`Confirmed via ${methodLabel(state.methods[role])} (preview)`:'Confirmation pending'}</p></div></div>`).join('')}${r.helperStatement?`<div class="confirmation">${icon('users')}<div><strong>Ate Liza · helper</strong><p>Assistance statement only</p></div></div>`:''}</div>${other?`<button class="text-button" onclick="requestOtherPartyConfirmation()">Ask ${names[other]} to confirm</button>`:''}${r.concerns.length?`<div class="quiet-note">${escapeHTML(r.concerns.at(-1).text)}</div>`:''}<p class="error approval-error" id="approvalError" role="alert">${escapeHTML(state.approvalError)}</p><div class="record-actions"><button class="text-button" onclick="openRecordDetails()">Record details</button><button class="text-button" onclick="openConcern()">Report a concern</button></div><p class="small">Work and payment keep their own records. This doesn’t settle either.</p></div>`;
+ setFooter('Share the record',shareRecord,'Preview only · refresh clears these examples.');
+}
+function pendingOtherParty(){
+ if(!state.record||!['buyer','seller'].includes(state.viewer)||!state.confirmations[state.viewer])return null;
+ const other=state.viewer==='buyer'?'seller':'buyer';
+ return state.confirmations[other]?null:other;
+}
+function requestOtherPartyConfirmation(){
+ const other=pendingOtherParty();if(!other)return;
+ openSheet(`Ask ${names[other]} to confirm`,`<p>This phone is using <strong>${names[state.viewer]}’s account</strong>. It cannot approve ${names[other]}’s side.</p><div class="scan-window approval-qr" style="margin-top:16px">${icon('qr')}<span class="scan-label">Confirmation request · QR placeholder</span></div><p style="margin-top:16px">${names[other]} opens this deal on their own phone, signs in as themselves and reviews before approving. Without their own confirmation, it stays pending.</p><button class="btn primary" style="margin-top:16px" onclick="previewRequestedPhone()">Preview ${names[other]}’s own phone</button><p class="small" style="margin-top:12px">Simulates a separate authenticated session. It is not a real account switch, QR or login.</p>`);
+}
+function previewRequestedPhone(){
+ if(!pendingOtherParty())return;
+ previewFollowup();
+}
+function recordText(r){return ['QUICK DEAL — PREVIEW ONLY',`${r.id} · version ${r.version}`,`Purpose: ${r.purpose}`,`People: Maria Santos (buyer), Kuya Ben (seller)`,`Service: ${r.service}`,`Amount: ${money(r.amount)}`,`When: ${r.when}`,`Agreed details: ${r.details}`,r.orderRef?`Order: ${r.orderRef}`:'',`Maria: ${r.confirmations.buyer?'confirmed via '+methodLabel(r.methods.buyer):'pending'}`,`Kuya Ben: ${r.confirmations.seller?'confirmed via '+methodLabel(r.methods.seller):'pending'}`,r.helperStatement?`Helper statement: ${r.helperStatement}`:'',r.concerns.map(c=>`Concern from ${names[c.role]}: ${c.text}`).join('\n'),`Online checks: ${r.checksPending?'pending':'simulated, not verified'}`,'Silence or expiry never supplies missing consent.','Work: unchanged','Payment: not settled by this record','Synthetic example; no real authentication, QR/code delivery, durable storage or sync.'].filter(Boolean).join('\n');}
+function openRecordDetails(){
+ const r=state.record;openSheet('Your record',`<dl class="record-data"><div><dt>Reference</dt><dd>${r.id} · v${r.version}</dd></div><div><dt>People</dt><dd>Maria Santos · buyer\nKuya Ben · seller</dd></div><div><dt>Agreed service</dt><dd>${escapeHTML(r.service)} · ${money(r.amount)}</dd></div><div><dt>Details</dt><dd>${escapeHTML(r.details)}</dd></div><div><dt>Purpose / when</dt><dd>${escapeHTML(r.purpose)} · ${escapeHTML(r.when)}</dd></div>${r.helperStatement?`<div><dt>Helper statement</dt><dd>${escapeHTML(r.helperStatement)}</dd></div>`:''}<div><dt>Work / payment</dt><dd>Neither is completed or settled by this record.</dd></div></dl>${state.history.length?`<button class="text-button" onclick="openHistory()">Earlier versions (${state.history.length})</button>`:''}`);
+}
+function openHistory(){openSheet('Earlier versions',`<div class="stack">${state.history.map(r=>`<details><summary style="min-height:44px">Version ${r.version} · ${money(r.amount)}</summary><pre style="white-space:pre-wrap;font:14px var(--font-body)">${escapeHTML(recordText(r))}</pre></details>`).join('')}</div>`);}
+function shareRecord(){
+ const text=recordText(state.record);openSheet('Keep a copy',`<p>Share these details with the other person. This sample is not a signed receipt or payment proof.</p><label style="margin-top:16px">Readable record<textarea class="copy-area" id="copyText" readonly>${escapeHTML(text)}</textarea></label><button class="btn primary" id="copyButton" style="margin-top:16px">Copy record</button><p class="small" id="copyResult" role="status" style="margin-top:12px">You can also select and copy the text.</p>`);
+ $('copyButton').onclick=async()=>{try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(text);$('copyResult').textContent='Copied.';}catch{$('copyText').focus();$('copyText').select();$('copyResult').textContent='Select and copy the record above.';}};
+}
+function openConcern(){
+ if(state.viewer==='helper'){openSheet('Your assistance statement',`<p>A helper can record only their own assistance. Maria or Kuya Ben raises their own transaction concern from their own session.</p>`);return;}
+ openSheet('What’s the concern?',`<form id="concernForm"><label>Your concern<textarea id="concern" required></textarea></label><p>Recorded as ${names[state.viewer]}. The original terms and confirmations remain.</p><button class="btn primary">Record my concern</button></form>`);
+ $('concernForm').onsubmit=e=>{e.preventDefault();const text=$('concern').value.trim();if(!text)return;state.record.concerns.push({role:state.viewer,text});closeSheet();render();};
+}
+function goBack(){
+ if(state.screen==='scan'){if(state.initiator==='seller'&&state.service){state.screen='services';render();}return;}
+ if(state.screen==='services'||state.screen==='unavailable')state.screen='scan';
+ else if(state.screen==='confirm')state.screen='review';
+ else if(['approvalQr','approvalReview','approvalCode'].includes(state.screen)){state.screen='confirm';state.approvalError='';render();return;}
+ else if(state.screen==='record'){openMore();return;}
+ else if(state.screen==='review')state.screen=state.initiator==='seller'?'scan':'services';
+ state.reviewed=null;render();
+}
+function openMore(){
+ openSheet('Quick Deal options',`<div class="sheet-options">${state.service?'<button class="sheet-option" onclick="closeSheet();openEdit()">'+icon('receipt')+'<div><strong>Edit the agreed details</strong><small>Changes require fresh confirmation</small></div></button>':''}${state.record?'<button class="sheet-option" onclick="openRecordDetails()">'+icon('receipt')+'<div><strong>View record details</strong></div></button>':''}${state.history.length?'<button class="sheet-option" onclick="openHistory()">'+icon('clock')+'<div><strong>Earlier versions</strong></div></button>':''}<a class="sheet-option" href="service-journey-prototype.html">${icon('back')}<strong>Back to the service preview</strong></a><a class="sheet-option" href="service-orders-prototype.html">${icon('receipt')}<strong>Orders preview</strong></a></div>`);
+}
+function openCases(){
+ const approval=activeApproval();
+ openSheet('Preview setup',`<p>These controls are outside the customer flow. All identities, scans, confirmations, private delivery and sync are simulated.</p><div class="lab-actions" style="margin-top:18px"><button class="btn" onclick="reset('online','buyer')">Buyer’s phone · online</button><button class="btn" onclick="reset('online','seller')">Seller’s phone · online</button><button class="btn" onclick="reset('card','buyer')">One phone + printed card</button><button class="btn" onclick="reset('offline','buyer')">Offline · previously saved listing</button><button class="btn" onclick="reset('helper','buyer')">Helper’s phone</button>${approval&&approval.method==='code'&&state.viewer===approval.party?'<button class="btn primary" onclick="previewPrivateCode()">View '+names[approval.party]+'’s sample private code</button>':''}${approval?'<button class="btn" onclick="previewExpireApproval()">Expire this confirmation</button><button class="btn" onclick="previewWrongParty()">'+(state.viewer===approval.party?'Preview a wrong signed-in party':'Return to '+names[approval.party]+'’s sample account')+'</button>':''}${state.record?'<button class="btn primary" onclick="previewFollowup()">Preview the other person’s follow-up</button>':''}${state.record||approval?'<button class="btn" onclick="previewOvernight()">Advance overnight · no acceptance</button>':''}${state.record&&(state.network==='offline'||!state.synced)?'<button class="btn" onclick="previewReconnect()">Preview reconnect / retry</button>':''}<button class="btn danger" onclick="reset()">Clear preview session</button></div>`);
+}
+function previewFollowup(){
+ if(!state.record)return;state.viewer=state.confirmations.buyer?'seller':'buyer';state.network='online';state.synced=true;state.record.checksPending=false;state.followup=true;state.screen='review';state.reviewed=null;closeSheet();render();
+}
+function previewReconnect(){if(!state.record)return;state.network='online';state.synced=true;state.record.checksPending=false;state.screen='record';closeSheet();render();}
+reset();
+</script>
+</body>
+</html>

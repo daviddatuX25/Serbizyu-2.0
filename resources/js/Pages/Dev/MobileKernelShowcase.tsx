@@ -497,7 +497,7 @@ export default function MobileKernelShowcase() {
                                         ✓ GCash P2P
                                     </span>
                                     <span className="rounded-full border border-emerald-300 bg-white px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                                        ✓ Tiwala Escrow
+                                        ✓ Tiwala Protected
                                     </span>
                                 </div>
                             </div>
@@ -526,7 +526,7 @@ export default function MobileKernelShowcase() {
                             combinations={combinations}
                             activeIndex={activeComboIndex}
                             onIndexChange={setActiveComboIndex}
-                            onSlotChangeClick={handleSlotClick}
+                            onSlotChangeClick={(comboId, slot) => handleSlotClick(comboId, slot.type)}
                             onToggleDefault={handleToggleDefault}
                             onRemoveCombo={handleRemoveCombo}
                             onAddComboClick={() => setIsModalOpen(true)}

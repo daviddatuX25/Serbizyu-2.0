@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\AuthReturnPath;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use Closure;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ final class EnsureMockAuthenticated
         $current = $this->session->read($request);
 
         if ($current === null || ! ($current['authenticated'] ?? false)) {
-            return redirect()->route('home')->with('auth_return_to', $request->getRequestUri());
+            return redirect()->route('home')->with('auth_return_to', AuthReturnPath::safe($request->getRequestUri()));
         }
 
         return $next($request);

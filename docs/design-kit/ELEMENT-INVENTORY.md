@@ -280,3 +280,75 @@ All pages share `sessions/final-kit.css`, `sessions/final-state-icons.css`, and 
 [`sessions/admin-workspace-kit.html`](sessions/admin-workspace-kit.html) defines the admin foundation in the selected navy/white/mango light theme: six contracts (theme, shell, lists, records, actions, states), an Inbox with saved views instead of metric cards, and an Order workspace with separate Agreement/Work/Payment/Case rails, one current responsibility, and independent Deal Chain siblings. Patterns borrow from Shadcn Admin (sidebar, data-table toolbar, saved views, command search); its router, auth, demo data and palette are not imported. Fixtures continue the Cool Again example.
 
 It supersedes the dark executive specimens (`admin-ui-kit.html`, `admin-triage.html`, `admin-inspector.html`, `admin-hold-console.html`, `admin-kit.css`) as visual direction; those files remain for reference. Static review only: navigation and actions are inert; no route, permission, theme cutover or backend change is implied.
+
+### Consumer frontend freeze — listing, Deal Chain and Orders
+
+This is the current consumer implementation handoff, superseding the named-combination experiment's primary-label direction above. The approved direction is **preserve the existing listing; simplify its optional partnership and the resulting Orders**. It is not a listing-builder redesign or a new UI-kit project.
+
+**Visual authority:** retain the navy/white/mango kit above. Production consumes the existing runtime tokens in `resources/css/app.css` and existing `components/ui` controls. Do not ship the HTML preview's `pv-*`/`fk-*` classes, sample fixtures, preview personas or simulated transitions as application components.
+
+#### Composition and naming
+
+- Preserve `resources/js/Pages/ListingDetail.tsx`: media/save, title/price, real reputation, description, provider/contact/location, service packages/product variants, inclusions/promises, add-ons, quantity, Picks and booking.
+- A seller-saved partnership is an explicit optional choice, separate from the seller's package/add-ons. Details does not select it; selection retains the package, extras and quantity. Keep actual option/version identities through review and staging.
+- Prefer factual summaries such as **With parts & delivery** or **Product with delivery & installation**, only when the actual offered roles support them. Keep authored names such as **Cool Again** as secondary metadata/Details; do not rename records or rewrite historical agreements. Do not infer roles from title keywords or invent partners, prices or installation scope.
+- Deal Chain defaults show item, provider, explicit Work status, price and View order. Keep sequencing and independent agreements in Details; retain shared messages. A group total is not a parent escrow or a combined payment.
+- Order detail keeps Agreement, Work and Payment separate, a visible current task, one contextual action area and accessible terms/evidence/activity/help. Supporting panels expand on mobile; desktop may expose more context without duplicating the active form.
+- **Customer reviews retain the older public listing presentation:** rating/count context, job-photo rail, featured review with author/location/date, stars and package tag, quoted text, then expansion, rating/photo filters and pagination when needed. Preserve genuine empty states. This does not change checkout review, Work evidence/sign-off or the post-completion review ceremony.
+
+#### Reuse and extraction map
+
+Paths below are relative to `resources/js/`. “Proposed” means an implementation seam, not an already-built component.
+
+| Area | Decision | Ownership boundary |
+|---|---|---|
+| Theme and controls | Reuse `../css/app.css` and `components/ui` (`Button`, fields, inputs, selects, badges, dialogs/sheets) | Existing variants/tokens; touch-sized controls on mobile. No second button, badge or theme family. |
+| Navigation | Reuse active `components/layout/DesktopGlobalNav.tsx`; retain target pages' mobile composition | Do not route these pages through inactive `ProductShell`/`ListingDetailView` or migrate unrelated shells. |
+| Overlays | Reuse `components/mobile/GlovoWaveModal.tsx` | Shared focus/close/scroll/footer mechanics. Correct its current mobile 88vh cap to the locked 85% rule at this primitive before propagating it; no WaveModalV2. |
+| Customer-review display | Proposed `components/reviews/ListingCustomerReviews.tsx`, extracted in place from the active public page | Own photo/expand/filter/page presentation. Accept a typed public review projection; no fetching, reputation invention, authorization or submission. Reuse in `Pages/Listings/OwnerPreview.tsx` only for the same public projection. |
+| Mobile action area | Proposed `components/mobile/PrimaryActionDock.tsx`, extracted when ListingDetail/Order Show are touched | Shared positioning, safe area and content clearance; page-owned actions/handlers/permissions supplied as children. Existing wizard/showcase `StickyDock` is not this consumer action bar. One action instance across breakpoints. |
+| Order amounts | Proposed `components/orders/formatting.ts`: `formatOrderAmount(minor, currency)` | Known numeric minor units only. Callers retain quote-pending, missing/private amount and currency semantics; unknown must never become zero. Do not merge Agreement/Work/Payment status vocabularies into this helper. |
+| Order tools | Reuse `PaymentObligationSheet`, `AppointmentPanel`, `A4HandoffPanel`, `A9DeliveryPanel`, `WorkNodeEvidenceTools`, `WorkNodeEvidenceReview`, `WorkClearanceChallenge` and `ConversationDrawer` where applicable | Keep their domain purpose and server-projected eligibility. Do not rebuild these tools inside a generic Order card. |
+| Post-completion review | Reuse `ReviewCeremonyModal` | Review submission is separate from public customer-review display and from Work evidence review. |
+| Checkout/plan review | Retain the existing purpose of `DealChainCheckoutModal` | It currently stages basket/recipe plans; it is not automatically the seller-saved-combination review or a payment confirmation. Extend the correct real contract, not a lookalike. |
+| Order cards and workspaces | Keep Index queue cards, ChainDetail privacy-filtered child cards and Show workspace local initially | Their data visibility/actions differ. Do not introduce a mode-heavy mega-card/workspace to remove superficial markup similarity. |
+| Seller-saved choice rows | Keep local until a second real consumer surface has the same contract | Then extract a controlled view with actual versioned options, `selectedId`, `onChange` and `onDetails`. Do not reuse authoring `PartnerSelectionDrawer` or Picks substitution widgets as consumer choices. |
+
+#### Data and cutover constraints
+
+The active public review page expects `timeAgo`, `packageTag` and `hasPhoto`, while `ListingReviewService` supplies `time_ago`, `package_tag` and `has_photo`; OwnerPreview also carries local aliases. Normalize once at the shared public-view boundary, not with repeated alias checks in cards. Preserve the old appearance, **not** the public page's sample-review/photo/rating fallbacks or the test-only `ListingDetailView`'s synthetic reputation. Empty actual data must remain empty.
+
+Pages retain selection/request state, participant identity, navigation and action ownership. Reusable presentation must not infer consent, permissions, payment settlement, Work readiness or price authority. Render only server-projected public/participant data; styling is not a privacy boundary.
+
+Migrate all affected callers and remove their superseded inline rendering in the same cut. No parallel V2 components, compatibility aliases, duplicated mobile/desktop forms, generic approval engine, new state framework or dependencies. Existing unrelated builders/shells stay unchanged.
+
+#### Bounded implementation order and proof
+
+1. Build the real consumer vertical slice: saved listing combination → explicit choice/review → that exact versioned graph/invitations → independently accepted child Orders. Fix selected-graph continuity, not just the displayed label or forwarded ID.
+2. While touching those pages, reuse the existing primitives/tools and make the minimum extractions above. Keep customer-review data normalization and removal of live synthetic fallbacks in that integration cut; no preliminary library-building phase.
+3. Preserve original packages/variants, contractual inclusions, extras, quantities, prices, reviews/media and booking/Picks behavior. Verify selection survives Details, review, back navigation, refresh and the actual resulting Orders; missing quote still blocks a priced commitment.
+4. Verify the actual application with separate actors and mobile/desktop browser interaction: independent consent; permitted Work/evidence; customer confirmation; payment unchanged by Work alone; wrong-user/stale/retry cases; no hidden-finance leakage, sibling-state leakage, duplicate forms or dock-covered content. Exercise customer-review empty/photo/filter/pagination behavior with real-shaped projections.
+
+HTML references: [`service-journey-prototype.html`](sessions/service-journey-prototype.html) and [`service-orders-prototype.html`](sessions/service-orders-prototype.html). Audit document 38 §§18–20 records priority, preservation and this freeze. Quick Deal remains saved and paused until the core journey is qualified; no Agent/GIS/authentication expansion belongs to this frontend cut.
+
+### Work tools — runtime truth and UX preparation
+
+The static `sessions/final-work-tools.html` remains a visual specimen, not the current availability register. Its “catalogued only” labels for GPS/readings/checklists/confirmation predate the current command/UI paths. Dedicated image upload is photo-only, but structured location, named readings and itemized checklist responses are implemented through Work actions; app and purpose-bound code confirmation are separate authority paths. Implemented does not mean end-to-end qualified.
+
+Conversely, `workNodeCatalog.ts`'s “Photo / Video Capture” and timestamp language overstates the image-only Work picker: no verified timestamp-camera, generic Work video pipeline or automatic GPS watermark is established. Do not propagate those claims. Keep selected/uploaded/scanned/submitted/approved states distinct.
+
+Current behavioral source map, actor flows, map reuse constraints, recovery gaps and unrun qualification scenarios: [audit document 38 §21](../planning-hardening/38-orders-and-listing-combination-usability-audit.md#21-work-tools-and-execution-ux--source-audit-and-preparation). Retain the same controls/wave sheets and existing `WorkNodeEvidenceTools`, proof review, challenge, A4 and A9 modules. Work map placement needs controlled edit/read-only behavior at the installed Leaflet seam—not the full listing location form or a new mapping system. No production UI or builder changes are authorized by this planning entry.
+
+### Flexible Work capture — timestamp camera mock
+
+[`sessions/service-work-tools-prototype.html`](sessions/service-work-tools-prototype.html) is the current interactive Work-tool reference. It extends the same navy/white/mango kit and wave sheet; it is not another design system. Timestamp-camera availability is a user requirement, not merely a server upload-time label.
+
+Review its camera/stamped-photo/original/download, optional video, map pin, readings/checklist and provider/customer correction/confirmation states. Required tools gate progress while other permitted tools remain available. A single responsive action area and one shared media result should survive the later React component cutover; do not duplicate camera implementations for Work and future hosts.
+
+Production reuse candidate: Uppy React headless webcam for camera/photo/video behavior; native Canvas2D for thin still-stamp composition; existing Leaflet for maps. No Uppy dependency was installed; the standalone mock uses browser APIs, with local capture and explicitly simulated Work effects. Library evidence, required-versus-permitted contract gap, provenance and integration boundaries: [audit document 38 §22](../planning-hardening/38-orders-and-listing-combination-usability-audit.md#22-flexible-capture-tools--library-recommendation-and-interactive-mock).
+
+### Mobile Work — focused task and first-class checklist
+
+The Work-tools preview now uses a compact Order header, directly visible photo/reading/checklist/location/video/note rows, focused input sheets and one Tools / Review & send dock. Checklist required/optional state and item results are visible; check completion is not step approval. Demo settings no longer precede the phone task, and short landscape retains task chrome. Desktop uses the same draft and expanded context, not another form.
+
+Reuse the existing checklist/metric/photo/location modules, wave modal and active Order navigation. A controlled Work tool list/row is a presentation seam, not a replacement Work engine or new global bottom navigation. The updated mobile proof, readiness gates and physical-device limits are in [audit document 38 §24](../planning-hardening/38-orders-and-listing-combination-usability-audit.md#24-checklist-membership-and-mobile-specific-work-refinement). This is a reviewable interaction reference, not production approval or an installed capture SDK.

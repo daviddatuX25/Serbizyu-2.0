@@ -606,7 +606,7 @@ export default function ReviewCeremonyModal({
                                 </div>
                             </div>
                             <p className="mx-auto max-w-sm text-xs leading-relaxed text-slate-600">
-                                Your review is stored securely in our escrow hold. It will automatically unblind and publish
+                                Your review is stored securely in sealed quarantine. It will automatically unblind and publish
                                 once the counterparty submits their review, or when the 72-hour timer elapses.
                             </p>
                             <div className="rounded-2xl border border-slate-200 bg-[#FAFCFB] p-4 text-left">

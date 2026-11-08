@@ -79,6 +79,81 @@ final class WorkClearanceChallengeTest extends TestCase
         expect($response->json('props.order.can_signoff'))->toBeFalse();
     }
 
+    public function test_unsupported_work_contracts_remain_readable_and_fail_closed_without_side_effects(): void
+    {
+        $headers = [
+            'X-Inertia' => 'true',
+            'X-Requested-With' => 'XMLHttpRequest',
+            'X-Inertia-Version' => file_exists(public_path('build/manifest.json'))
+                ? hash_file('xxh128', public_path('build/manifest.json'))
+                : 'test',
+        ];
+        foreach ([['A2', 1, 1], ['A1', 999, 999]] as [$shape, $contractVersion, $schemaVersion]) {
+            $fixture = $this->createAcceptedWorkOrder('A1', []);
+            $workId = (string) $fixture['work_id'];
+            $orderId = (string) $fixture['order_id'];
+            DB::table('work_instances')->where('id', $workId)->update([
+                'work_shape' => $shape,
+                'shape_contract_version' => $contractVersion,
+                'payload_schema_version' => $schemaVersion,
+                'structure' => json_encode(['stages' => []], JSON_THROW_ON_ERROR),
+            ]);
+            $before = DB::table('work_instances')->where('id', $workId)->firstOrFail();
+            $orderBefore = DB::table('orders')->where('id', $orderId)->firstOrFail();
+            $termsBefore = DB::table('order_terms_snapshots')->where('id', $orderBefore->current_terms_snapshot_id)->firstOrFail();
+            $auditsBefore = DB::table('audit_events')->count();
+            $outboxBefore = DB::table('outbox_messages')->count();
+            $eventsBefore = DB::table('work_events')->count();
+
+            $this->actingAs($fixture['buyer'])->withHeaders($headers)->get("/orders/{$orderId}")
+                ->assertOk()
+                ->assertJsonPath('props.order.id', $orderId)
+                ->assertJsonPath('props.order.status', (string) $orderBefore->status)
+                ->assertJsonPath('props.order.public_reference', (string) $orderBefore->public_reference)
+                ->assertJsonPath('props.order.can_signoff', false)
+                ->assertJsonPath('props.work.id', $workId)
+                ->assertJsonPath('props.work.status', (string) $before->status)
+                ->assertJsonPath('props.work.work_shape', $shape)
+                ->assertJsonPath('props.work.version', (int) $before->version)
+                ->assertJsonPath('props.work.execution_available', false)
+                ->assertJsonPath('props.work.unavailability_reason', 'Work tracking for this older order needs an update. You can still view the order and payment details.')
+                ->assertJsonPath('props.work.nodes', [])
+                ->assertJsonPath('props.work.active_node_id', null)
+                ->assertJsonPath('props.financials.amount_minor', (int) $termsBefore->amount_minor);
+
+            $this->actingAs(User::factory()->create())->getJson("/orders/{$orderId}")
+                ->assertForbidden()
+                ->assertJsonPath('code', 'AUTHORIZATION_DENIED');
+
+            $this->actingAs($fixture['provider'])
+                ->postJson("/orders/{$orderId}/work/propose-completion")
+                ->assertUnprocessable()
+                ->assertJsonPath('code', 'WORK_CONTRACT_VERSION_UNSUPPORTED');
+            $this->actingAs($fixture['buyer'])
+                ->postJson("/orders/{$orderId}/work/signoff")
+                ->assertUnprocessable()
+                ->assertJsonPath('code', 'WORK_CONTRACT_VERSION_UNSUPPORTED');
+            $this->actingAs($fixture['provider'])
+                ->postJson("/orders/{$orderId}/work-nodes/legacy-node", ['action' => 'complete_step'])
+                ->assertUnprocessable()
+                ->assertJsonPath('code', 'WORK_CONTRACT_VERSION_UNSUPPORTED');
+
+            expect(DB::table('work_instances')->where('id', $workId)->value('structure'))->toBe($before->structure)
+                ->and(DB::table('work_instances')->where('id', $workId)->value('version'))->toBe($before->version)
+                ->and(DB::table('orders')->where('id', $orderId)->value('status'))->toBe($orderBefore->status)
+                ->and(DB::table('orders')->where('id', $orderId)->value('public_reference'))->toBe($orderBefore->public_reference)
+                ->and(DB::table('audit_events')->count())->toBe($auditsBefore)
+                ->and(DB::table('outbox_messages')->count())->toBe($outboxBefore)
+                ->and(DB::table('work_events')->count())->toBe($eventsBefore);
+        }
+
+        $canonical = $this->createAcceptedWorkOrder('A1', []);
+        $this->actingAs($canonical['buyer'])->withHeaders($headers)->get("/orders/{$canonical['order_id']}")
+            ->assertOk()
+            ->assertJsonPath('props.work.execution_available', true)
+            ->assertJsonPath('props.work.unavailability_reason', null);
+    }
+
     public function test_named_readings_and_required_checklist_items_are_validated_and_persisted_exactly(): void
     {
         $node = $this->configureNode([

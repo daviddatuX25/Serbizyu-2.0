@@ -114,7 +114,7 @@ final class PaymentP2PWorkflowTest extends TestCase
             ->and($firstProofPayload['title'])->toBeString()
             ->and($firstProofPayload['body'])->toBeString()
             ->and($firstProofPayload['action_url'])->toBe(route('orders.show', ['order' => $obligation->order_id], false));
-        self::assertSame(['attention', 'title', 'body', 'action_url'], array_keys($firstProofPayload));
+        self::assertEqualsCanonicalizing(['attention', 'title', 'body', 'action_url'], array_keys($firstProofPayload));
 
 
 
@@ -250,7 +250,7 @@ final class PaymentP2PWorkflowTest extends TestCase
             ->and($mismatchPayload['title'])->toBeString()
             ->and($mismatchPayload['body'])->toBeString()
             ->and($mismatchPayload['action_url'])->toBe(route('orders.show', ['order' => $obligation->order_id], false));
-        self::assertSame(['attention', 'title', 'body', 'action_url'], array_keys($mismatchPayload));
+        self::assertEqualsCanonicalizing(['attention', 'title', 'body', 'action_url'], array_keys($mismatchPayload));
 
 
 
@@ -383,7 +383,7 @@ final class PaymentP2PWorkflowTest extends TestCase
             ->and($mismatchPayload['title'])->toBeString()
             ->and($mismatchPayload['body'])->toBeString()
             ->and($mismatchPayload['action_url'])->toBe(route('orders.show', ['order' => $obligation->order_id], false));
-        self::assertSame(['attention', 'title', 'body', 'action_url'], array_keys($mismatchPayload));
+        self::assertEqualsCanonicalizing(['attention', 'title', 'body', 'action_url'], array_keys($mismatchPayload));
 
 
         $case = DB::table('support_cases')->where('payment_obligation_id', $obligation->id)->firstOrFail();

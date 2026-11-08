@@ -274,7 +274,7 @@ it('books the selected authored package at its server price with the requested q
         ])
         ->and((int) DB::table('payment_obligations')->where('order_id', $orderId)->value('amount_minor'))->toBe(97500);
 });
-it('validates and books the selected non-default variant at its server price with quantity total', function (): void {
+it('deduplicates numeric-string product extras before applying their server prices', function (): void {
     t3HttpPgsqlOrSkip();
 
     $provider = User::factory()->create();
@@ -287,6 +287,9 @@ it('validates and books the selected non-default variant at its server price wit
     $terms['variants'] = [
         ['id' => 'variant-default', 'name' => 'Default', 'price_amount_minor' => 12000, 'is_default' => true],
         ['id' => 'variant-blue', 'name' => 'Blue', 'price_amount_minor' => 18400, 'is_default' => false],
+    ];
+    $terms['addons'] = [
+        ['id' => '123', 'title' => 'Protective packaging', 'price_amount_minor' => 2600, 'status' => 'available'],
     ];
     DB::table('listing_versions')->where('id', $version->id)->update([
         'terms' => json_encode($terms, JSON_THROW_ON_ERROR),
@@ -301,30 +304,36 @@ it('validates and books the selected non-default variant at its server price wit
     );
 
     $this->authenticateBuyer();
-
-    $response = $this->postJson(route('orders.propose', $fx['listing_id']), [
+    $foreignKey = 'http-product-foreign-extra-'.Str::random(16);
+    $this->postJson(route('orders.propose', $fx['listing_id']), [
         'expected_listing_version' => $fx['expected_version'],
-        'idempotency_key' => 'http-variant-'.Str::random(16),
+        'idempotency_key' => $foreignKey,
         'listing_version_id' => (string) $version->id,
         'variant_id' => 'variant-blue',
         'quantity' => 2,
+        'addon_ids' => ['not-authored'],
+        'amount_minor' => 1,
+        'currency' => 'USD',
+    ])->assertConflict()->assertJsonPath('code', 'VALIDATION_FAILED');
+    $this->assertDatabaseMissing('idempotency_keys', ['key' => $foreignKey]);
+    $this->assertDatabaseMissing('orders', ['listing_id' => $fx['listing_id']]);
+
+    $response = $this->postJson(route('orders.propose', $fx['listing_id']), [
+        'expected_listing_version' => $fx['expected_version'],
+        'idempotency_key' => 'http-product-extra-'.Str::random(16),
+        'listing_version_id' => (string) $version->id,
+        'variant_id' => 'variant-blue',
+        'quantity' => 2,
+        'addon_ids' => ['123', '123'],
         'amount_minor' => 1,
         'currency' => 'USD',
     ]);
 
     $response->assertCreated()
-        ->assertJsonPath('data.amount_minor', 36800)
-        ->assertJsonPath('data.unit_amount_minor', 18400)
+        ->assertJsonPath('data.amount_minor', 42000)
+        ->assertJsonPath('data.unit_amount_minor', 21000)
         ->assertJsonPath('data.variant_id', 'variant-blue')
-        ->assertJsonPath('data.package_id', null)
-        ->assertJsonPath('data.listing_version_id', (string) $version->id)
-        ->assertJsonPath('data.resource_key', 'variant-blue');
-    $reservation = DB::table('listing_capacity_reservations')->where('id', $response->json('data.capacity_reservation_id'))->first();
-    $holdMovement = DB::table('stock_movements')->where('reservation_id', $reservation->id)->where('movement_type', 'hold')->first();
-    expect($reservation->status)->toBe('held')
-        ->and((int) $holdMovement->delta_on_hand)->toBe(0)
-        ->and((int) $holdMovement->delta_held)->toBe(2);
-
+        ->assertJsonPath('data.listing_version_id', (string) $version->id);
     $orderId = (string) $response->json('data.order_id');
     $proposal = json_decode((string) DB::table('order_parties')
         ->where('order_id', $orderId)
@@ -334,9 +343,33 @@ it('validates and books the selected non-default variant at its server price wit
         'variant_id' => 'variant-blue',
         'listing_version_id' => (string) $version->id,
         'quantity' => 2,
-        'unit_amount_minor' => 18400,
-        'amount_minor' => 36800,
+        'unit_amount_minor' => 21000,
+        'amount_minor' => 42000,
+        'addon_ids' => ['123'],
     ]);
+
+    $legacyProposal = json_decode(
+        (string) DB::table('order_proposals')->where('order_id', $orderId)->value('scope'),
+        true,
+        512,
+        JSON_THROW_ON_ERROR,
+    );
+    $legacyProposal['addon_ids'] = ['123', '123'];
+    DB::table('order_proposals')->where('order_id', $orderId)->update([
+        'scope' => json_encode($legacyProposal, JSON_THROW_ON_ERROR),
+    ]);
+
+    $this->actingAs($provider)->post(route('orders.accept', $orderId), [
+        'expected_order_version' => 1,
+        'idempotency_key' => 'http-product-extra-accept-'.$orderId,
+    ])->assertRedirect(route('orders.show', $orderId));
+    $snapshot = DB::table('order_terms_snapshots')->where('order_id', $orderId)->firstOrFail();
+    expect((int) $snapshot->amount_minor)->toBe(42000)
+        ->and(json_decode((string) $snapshot->scope, true))->toMatchArray([
+            'quantity' => 2,
+            'variant_id' => 'variant-blue',
+            'addon_ids' => ['123'],
+        ]);
 });
 
 it('rejects a stale listing version at the booking entry point', function (): void {

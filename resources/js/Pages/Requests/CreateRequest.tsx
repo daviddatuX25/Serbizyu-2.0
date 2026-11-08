@@ -481,7 +481,7 @@ export default function CreateRequest({
     const [budgetMode, setBudgetMode] = useState<'estimate' | 'exact' | 'undisclosed'>('exact');
     const [budget, setBudget] = useState('500');
     const [tenderMode, setTenderMode] = useState<'open_tender' | 'sealed_tender' | 'direct_invite'>('open_tender');
-    const [paymentLane, setPaymentLane] = useState<'external_cash' | 'bilateral_escrow'>('external_cash');
+    const [paymentLane, setPaymentLane] = useState<'external_cash' | 'p2p_transfer'>('external_cash');
 
     // Step 5: Fulfillment & Review
     const [preferredFulfillment, setPreferredFulfillment] = useState<'direct' | 'courier' | 'all'>('direct');
@@ -1508,14 +1508,14 @@ export default function CreateRequest({
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={() => setPaymentLane('bilateral_escrow')}
+                                                onClick={() => setPaymentLane('p2p_transfer')}
                                                 className={`rounded-xl border p-2.5 text-xs font-bold text-center cursor-pointer transition-all ${
-                                                    paymentLane === 'bilateral_escrow'
+                                                    paymentLane === 'p2p_transfer'
                                                         ? 'border-blue-600 bg-blue-50 text-blue-900'
                                                         : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                                                 }`}
                                             >
-                                                Bilateral Escrow
+                                                GCash / Maya (P2P)
                                             </button>
                                         </div>
                                     </div>
@@ -1716,7 +1716,6 @@ export default function CreateRequest({
                     if (tab === 'explore') router.visit('/browse');
                     else if (tab === 'orders') router.visit('/orders');
                     else if (tab === 'profile') router.visit('/my-listings');
-                    else if (tab === 'invitations') router.visit('/deal-invitations');
                 }}
             />
         </div>

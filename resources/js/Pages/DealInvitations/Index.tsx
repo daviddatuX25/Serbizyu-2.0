@@ -1,7 +1,10 @@
 import { Head, router } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 import { DesktopGlobalNav } from '@/components/layout/DesktopGlobalNav';
+import { NotificationBell } from '@/components/notifications/NotificationCenter';
 import { BottomNavBar, type NavTabId } from '@/marketplace/components/BottomNavBar';
+import { QuickDealScanModal } from '@/components/marketplace/QuickDealScanModal';
+import { createRequestKey } from '@/lib/requestKey';
 
 type Invitation = {
     id: string;
@@ -24,6 +27,7 @@ export default function DealInvitationsIndex({ invitations }: { invitations: Inv
     const [responded, setResponded] = useState<Record<string, 'accepted' | 'declined'>>({});
     const [processing, setProcessing] = useState<string | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [quickDealOpen, setQuickDealOpen] = useState(false);
     const withdrawalKeys = useRef(new Map<string, string>());
 
     const respond = async (invitation: Invitation, decision: 'accept' | 'decline') => {
@@ -37,7 +41,7 @@ export default function DealInvitationsIndex({ invitations }: { invitations: Inv
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
-                    'X-Idempotency-Key': crypto.randomUUID(),
+                    'X-Idempotency-Key': createRequestKey(),
                 },
                 body: JSON.stringify({ decision, expected_version: invitation.version }),
             });
@@ -61,7 +65,7 @@ export default function DealInvitationsIndex({ invitations }: { invitations: Inv
         setErrors((current) => ({ ...current, [invitation.id]: '' }));
         let idempotencyKey = withdrawalKeys.current.get(invitation.id);
         if (!idempotencyKey) {
-            idempotencyKey = crypto.randomUUID();
+            idempotencyKey = createRequestKey();
             withdrawalKeys.current.set(invitation.id, idempotencyKey);
         }
         const xsrfToken = document.cookie.split(';').map((cookie) => cookie.trim())
@@ -103,7 +107,10 @@ export default function DealInvitationsIndex({ invitations }: { invitations: Inv
             <DesktopGlobalNav activeRoute="deal-invitations" />
             <main className="mx-auto w-full max-w-4xl px-4 py-8 pb-24 sm:px-6 lg:pb-8">
                 <header className="mb-6">
-                    <h1 className="text-2xl font-bold">Deal invitations</h1>
+                    <div className="flex items-center justify-between gap-3">
+                        <h1 className="min-w-0 text-2xl font-bold">Deal invitations</h1>
+                        <div className="shrink-0 lg:hidden [&_button]:min-h-11 [&_button]:min-w-11"><NotificationBell /></div>
+                    </div>
                     <p className="mt-2 text-sm text-slate-600">Private offers addressed to you. Accepting asks the customer to confirm; it does not create an order.</p>
                 </header>
                 {invitations.length === 0 ? (
@@ -156,16 +163,14 @@ export default function DealInvitationsIndex({ invitations }: { invitations: Inv
                     </ul>
                 )}
             </main>
-            <BottomNavBar
-                activeTab="invitations"
-                onTabSelect={(tab: NavTabId) => {
-                    if (tab === 'invitations') return;
-                    if (tab === 'explore' || tab === 'quick_deal') router.visit('/browse');
-                    if (tab === 'orders') router.visit('/orders');
-                    if (tab === 'profile') router.visit('/my-listings');
-                    if (tab === 'post') router.visit('/requests/create');
-                }}
-            />
+            <BottomNavBar activeTab="" onTabSelect={(tab: NavTabId) => {
+                if (tab === 'explore') router.visit('/browse');
+                if (tab === 'post') router.visit('/requests/create');
+                if (tab === 'orders') router.visit('/orders');
+                if (tab === 'profile') router.visit('/my-listings');
+                if (tab === 'quick_deal') setQuickDealOpen(true);
+            }} />
+            <QuickDealScanModal open={quickDealOpen} onClose={() => setQuickDealOpen(false)} />
         </div>
     );
 }

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\DealCoordination\Application;
 
-use App\Shared\Application\NotificationIntent;
+use App\Shared\Application\DealChainPlanDefinition;
 use App\Shared\Application\ActorContext;
 use App\Shared\Application\AuditRecorder;
 use App\Shared\Application\KernelException;
+use App\Shared\Application\NotificationIntent;
 use App\Shared\Application\OutboxWriter;
 use App\Shared\Contracts\DealWorkGatePort;
 use App\Shared\Contracts\WorkMilestoneReaderPort;
@@ -71,12 +72,15 @@ final class DealWorkGateAdapter implements DealWorkGatePort
             ->where('successor_need_id', $needId)
             ->where('dependency_type', 'blocks')
             ->where('status', 'active')
-            ->whereIn('condition_code', ['part_ready', 'delivery_signed'])
             ->orderBy('id')
             ->lockForUpdate()
             ->get();
 
         foreach ($dependencies as $dependency) {
+            if (! in_array((string) $dependency->condition_code, DealChainPlanDefinition::CONDITIONS, true)) {
+                $this->rejectBlocked($correlationId);
+            }
+
             $predecessor = DB::table('deal_needs')
                 ->where('deal_chain_id', $chainId)
                 ->where('id', $dependency->predecessor_need_id)
@@ -156,7 +160,7 @@ final class DealWorkGateAdapter implements DealWorkGatePort
             ->where('deal_chain_id', $dealChainId)
             ->where('status', 'active')
             ->where('dependency_type', 'blocks')
-            ->whereIn('condition_code', ['part_ready', 'delivery_signed'])
+            ->whereIn('condition_code', DealChainPlanDefinition::CONDITIONS)
             ->where(function ($query) use ($dealNeedId): void {
                 $query->where('predecessor_need_id', $dealNeedId)
                     ->orWhere('successor_need_id', $dealNeedId);
@@ -230,11 +234,18 @@ final class DealWorkGateAdapter implements DealWorkGatePort
             return;
         }
 
-        $condition = $eventType === 'work.ready_for_collection' ? 'part_ready' : 'delivery_signed';
+        $condition = match ($eventType) {
+            'work.ready_for_collection' => 'part_ready',
+            'work.delivered_to_site' => 'delivery_signed',
+            'work.completed' => null,
+        };
+        $conditions = $condition === null
+            ? ['delivery_signed', 'work_completed']
+            : [$condition];
         $dependencies = DB::table('deal_dependencies')
             ->where('deal_chain_id', $source->deal_chain_id)
             ->where('predecessor_need_id', $source->deal_need_id)
-            ->where('condition_code', $condition)
+            ->whereIn('condition_code', $conditions)
             ->where('dependency_type', 'blocks')
             ->where('status', 'active')
             ->orderBy('id')
@@ -288,9 +299,7 @@ final class DealWorkGateAdapter implements DealWorkGatePort
         foreach ($dependencies as $dependency) {
             $gates = DB::table('work_step_dependency_gates')
                 ->where('dependency_id', $dependency->id)
-                ->where('dependency_version', (int) $dependency->version)
-                ->where('condition_code', $condition)
-                ->where('source_confirmation_id', $source->confirmation_id)
+                ->where('condition_code', $dependency->condition_code)
                 ->where('source_order_id', $source->order_id)
                 ->where('source_work_instance_id', $aggregateId)
                 ->where('status', 'blocked')
@@ -353,9 +362,7 @@ final class DealWorkGateAdapter implements DealWorkGatePort
             $this->recordGateMaterialized($gate, $correlationId);
         }
 
-        $eventTypes = (string) $dependency->condition_code === 'part_ready'
-            ? ['work.ready_for_collection']
-            : ['work.delivered_to_site', 'work.completed'];
+        $eventTypes = DealChainPlanDefinition::eventTypesForCondition((string) $dependency->condition_code);
         $fact = DB::table('work_dependency_source_facts')
             ->whereIn('event_type', $eventTypes)
             ->where('deal_chain_id', $dependency->deal_chain_id)

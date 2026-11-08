@@ -200,7 +200,11 @@ it('round trips product preparation terms over HTTP and lets the seller revise s
         'prep_lead_time' => 'same_day',
         'variants' => [['id' => 'rice-cake-plain', 'name' => 'Plain', 'price' => 120, 'stock' => 8, 'is_default' => true]],
         'media' => ['items' => [['id' => 'rice-cover', 'kind' => 'photo', 'url' => '/rice-cake.jpg', 'is_cover' => true]]],
-        'deal_chain_combinations' => [['id' => 'pickup', 'title' => 'Pickup', 'isDefault' => true]],
+        'deal_chain_combinations' => [[
+            'id' => 'pickup', 'title' => 'Pickup', 'isDefault' => true, 'planVersion' => 1,
+            'nodes' => [['id' => 'product', 'type' => 'store', 'isPrimary' => true]],
+            'dependencies' => [],
+        ]],
         'deal_chain_specification' => ['based_on_recipe_code' => 'direct'],
     ])->assertCreated()->json('data');
 

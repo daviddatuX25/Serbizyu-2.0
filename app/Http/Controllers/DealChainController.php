@@ -5,19 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Modules\Catalogs\Application\DealChainCatalog;
+use App\Modules\DealCoordination\Application\ChooseDealReplacement;
 use App\Modules\DealCoordination\Application\ConfirmDealNeedAgreement;
 use App\Modules\DealCoordination\Application\DealCoordinationError;
 use App\Modules\DealCoordination\Application\DealNeedConfirmationProjection;
 use App\Modules\DealCoordination\Application\RespondToDealInvitation;
 use App\Modules\DealCoordination\Application\StageDealChain;
-use App\Modules\DealCoordination\Application\ChooseDealReplacement;
 use App\Modules\DealCoordination\Application\WithdrawDealPartner;
 use App\Modules\IdentityAccess\Application\CurrentSession;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
-use App\Shared\Contracts\OrderHandoffCourierAuthorityPort;
-use App\Shared\Contracts\DealChainConversationParticipantsPort;
 use App\Shared\Application\KernelException;
-use App\Shared\Application\DealChainCandidateRoleClassifier;
+use App\Shared\Contracts\DealChainConversationParticipantsPort;
+use App\Shared\Contracts\OrderHandoffCourierAuthorityPort;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,8 +60,9 @@ final class DealChainController extends Controller
                 'items.*.quantity' => ['required', 'integer', 'min:1', 'max:50'],
                 'items.*.deal_chain' => ['nullable', 'string', Rule::in(array_keys($recipeCatalog))],
                 'items.*.slot_overrides' => ['nullable', 'array'],
-                'items.*.slot_overrides.*' => ['required', 'array:listing_id'],
+                'items.*.slot_overrides.*' => ['required', 'array:listing_id,listing_version_id'],
                 'items.*.slot_overrides.*.listing_id' => ['required', 'uuid'],
+                'items.*.slot_overrides.*.listing_version_id' => ['sometimes', 'uuid'],
                 'payment_method' => ['prohibited'],
                 'total_amount' => ['prohibited'],
             ]);
@@ -200,6 +200,7 @@ final class DealChainController extends Controller
                 idempotencyKey: (string) ($request->header('X-Idempotency-Key') ?: Str::uuid7()),
                 correlationId: $correlationId,
             );
+
             return response()->json(['data' => $result]);
         } catch (IdentityAccessError) {
             return response()->json(['error' => 'Unauthenticated.'], 401);
@@ -230,6 +231,7 @@ final class DealChainController extends Controller
                 idempotencyKey: (string) ($request->header('X-Idempotency-Key') ?: Str::uuid7()),
                 correlationId: $correlationId,
             );
+
             return response()->json(['data' => $result]);
         } catch (IdentityAccessError) {
             return response()->json(['error' => 'Unauthenticated.'], 401);
@@ -394,8 +396,8 @@ final class DealChainController extends Controller
             $terms = $canViewOrder ? $termsByOrder->get($order->id) : null;
             $obligation = $canViewOrder ? $obligationsByOrder->get($order->id) : null;
             $work = $order === null ? null : $workByOrder->get($order->id);
-            $amountMinor = $obligation?->amount_minor ?? $terms?->amount_minor;
-            $amountCurrency = $obligation?->currency ?? $terms?->currency;
+            $amountMinor = $obligation !== null ? $obligation->amount_minor : $terms?->amount_minor;
+            $amountCurrency = $obligation !== null ? $obligation->currency : $terms?->currency;
             $amountSource = $obligation !== null
                 ? 'payment obligation'
                 : ($terms !== null ? 'order terms' : null);
@@ -413,7 +415,7 @@ final class DealChainController extends Controller
 
             $termsData = is_array($terms?->scope)
                 ? $terms->scope
-                : json_decode((string) ($terms?->scope ?? '{}'), true);
+                : json_decode((string) ($terms !== null ? $terms->scope : '{}'), true);
             $listingTitle = $canViewOrder && is_array($termsData) && isset($termsData['title']) && is_string($termsData['title']) && trim($termsData['title']) !== ''
                 ? trim($termsData['title'])
                 : (string) $need->title;
@@ -510,110 +512,72 @@ final class DealChainController extends Controller
             'RECYCLE', 'HAULING', 'SCRAP' => 'RECYCLE',
             default => 'STORE',
         };
+        $slotRole = match ($role) {
+            'COURIER' => 'delivery',
+            'STORE' => 'store',
+            'LABOR' => 'labor',
+            'AUDIT' => 'audit',
+            'RECYCLE' => 'recycle',
+        };
         $filterCategory = strtolower(trim((string) $request->query('category', '')));
-        $filterBarangay = trim((string) $request->query('barangay', ''));
-
-        $query = DB::table('listings')
-            ->join('listing_versions', function ($j): void {
-                $j->on('listing_versions.listing_id', '=', 'listings.id')
-                    ->on('listing_versions.version_number', '=', 'listings.current_version');
-            })
-            ->leftJoin('user_profiles', 'listings.owner_user_id', '=', 'user_profiles.user_id')
-            ->where('listings.status', 'active')
-            ->where('listings.review_status', 'approved')
-            ->where(function ($q): void {
-                $q->whereNull('listings.geography')
-                    ->orWhereRaw("listings.geography->>'municipality_name' ILIKE 'Tagudin'")
-                    ->orWhereRaw("listings.geography->>'municipality_code' = '012925000'");
-            });
-
-        if ($filterBarangay !== '') {
-            $query->where(function ($q) use ($filterBarangay): void {
-                $q->whereNull('listings.geography')
-                    ->orWhereRaw("listings.geography->>'barangay_name' ILIKE ?", ["%{$filterBarangay}%"])
-                    ->orWhereRaw("listings.geography->>'barangay_code' = ?", [$filterBarangay]);
-            });
-        }
-
-        $realListings = $query->select([
-            'listings.id',
-            'listings.owner_user_id',
-            'listings.listing_type',
-            'listings.geography',
-            'listing_versions.terms',
-            'listing_versions.price_amount_minor',
-            'listing_versions.description',
-            'user_profiles.display_name as profile_display_name',
-        ])->get();
-
+        $filterBarangay = strtolower(trim((string) $request->query('barangay', '')));
         $candidates = [];
 
-        foreach ($realListings as $listing) {
-            $terms = json_decode((string) $listing->terms, true) ?: [];
-            $geography = json_decode((string) $listing->geography, true) ?: [];
-            $category = strtolower((string) ($terms['category_code'] ?? ''));
-            $title = (string) ($terms['title'] ?? 'Verified Listing');
-            $priceMinor = (int) ($listing->price_amount_minor ?? $terms['price_amount_minor'] ?? 0);
-            $fixtureKey = (string) ($terms['fixture_key'] ?? '');
-
-            // Dynamic provider display name (never leaking phone or private credentials)
-            $providerName = (string) (
-                $terms['stall_location']
-                ?? $listing->profile_display_name
-                ?? $terms['provider_name']
-                ?? data_get($terms, 'owner.display_name')
-                ?? (str_contains(strtolower($title), 'hardware') ? 'Tagudin Hardware Depot' : (str_contains(strtolower($title), 'bakery') ? 'Tagudin Morning Bakery' : 'Verified Merchant'))
-            );
-
-            // Dynamic area resolution
-            $barangayName = (string) ($geography['barangay_name'] ?? '');
-            $area = $barangayName !== '' ? "{$barangayName}, Tagudin" : 'Centro, Tagudin';
-
-            // Photo resolution
-            $photoUrl = (string) (
-                data_get($terms, 'media.cover_thumbnail_url')
-                ?? data_get($terms, 'media.items.0.url')
-                ?? ($category === 'local-food' ? '/photos/bibingka.jpg' : ($listing->listing_type === 'product' ? '/photos/ac-capacitor.jpg' : '/photos/courier.jpg'))
-            );
-
-            $matchedRole = DealChainCandidateRoleClassifier::classify(
-                (string) $listing->listing_type,
-                $category,
-                $title,
-                $fixtureKey,
-            );
-
-            if ($matchedRole !== $role) {
+        foreach ($this->catalog->partnerListings() as $candidate) {
+            if (($candidate['role'] ?? null) !== $slotRole) {
                 continue;
             }
 
+            $category = strtolower((string) ($candidate['categoryCode'] ?? ''));
             if ($filterCategory !== '' && $category !== '' && $category !== $filterCategory) {
                 continue;
             }
 
+            $geographyPresent = (bool) ($candidate['geographyPresent'] ?? false);
+            $municipalityName = strtolower((string) ($candidate['municipalityName'] ?? ''));
+            $municipalityCode = (string) ($candidate['municipalityCode'] ?? '');
+            if ($geographyPresent
+                && $municipalityName !== 'tagudin'
+                && $municipalityCode !== '012925000') {
+                continue;
+            }
+
+            $barangayName = (string) ($candidate['barangayName'] ?? '');
+            $barangayCode = strtolower((string) ($candidate['barangayCode'] ?? ''));
+            if ($filterBarangay !== '' && $geographyPresent
+                && ! str_contains(strtolower($barangayName), $filterBarangay)
+                && $barangayCode !== $filterBarangay) {
+                continue;
+            }
+
+            $sourceArea = trim((string) ($candidate['barangay'] ?? ''));
+            $area = $barangayName !== ''
+                ? $barangayName.', Tagudin'
+                : ($sourceArea !== '' ? $sourceArea.', Tagudin' : 'Tagudin');
             $candidates[] = [
-                'id' => (string) $listing->id,
-                'title' => $title,
-                'provider_name' => $providerName,
-                'provider_user_id' => (string) $listing->owner_user_id,
+                'id' => (string) $candidate['listingId'],
+                'listing_version_id' => (string) $candidate['listingVersionId'],
+                'title' => (string) $candidate['name'],
+                'provider_name' => (string) $candidate['providerName'],
+                'provider_user_id' => (string) $candidate['providerUserId'],
                 'area' => $area,
-                'price_minor' => $priceMinor,
+                'price_minor' => $candidate['feeMinor'],
                 'sla_text' => match ($role) {
                     'COURIER' => 'On-demand ~20 mins transit',
                     'STORE' => 'Counter Ready in 15 mins',
                     'LABOR' => 'Same-day scheduled labor',
                     'AUDIT' => 'Municipal inspection certificate',
                     'RECYCLE' => 'Same-day material recycling',
-                    default => 'Available in Tagudin',
                 },
-                'rating' => 4.9,
+                'rating' => $candidate['rating'],
+                'reviews_count' => $candidate['reviewsCount'],
                 'role' => $role,
-                'photo_url' => $photoUrl,
+                'photo_url' => $candidate['coverThumbnailUrl'],
             ];
         }
 
         return response()->json([
-            'data' => array_values($candidates),
+            'data' => $candidates,
             'meta' => [
                 'role' => $role,
                 'count' => count($candidates),

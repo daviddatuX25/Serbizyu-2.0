@@ -20,6 +20,8 @@ beforeEach(function (): void {
         $this->markTestSkipped('Payment settlement behavior requires PostgreSQL.');
     }
     $this->seed(DealChainExecutionSeeder::class);
+    $transitObligationIds = DB::table('payment_obligations')->where('order_id', Fix::ORDER_ID_TRANSIT)->pluck('id');
+    DB::table('payment_events')->whereIn('payment_obligation_id', $transitObligationIds)->delete();
     DB::table('payment_obligations')->where('order_id', Fix::ORDER_ID_TRANSIT)->update([
         'status' => 'due',
         'due_at' => now(),

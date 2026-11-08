@@ -37,7 +37,7 @@ import type {
     PublishedDealChainRecipeId,
     SlotCandidateListing,
 } from '../marketplace/types';
-import { listingBookingUrl, readPicksBasket, savePicksBasket } from '../marketplace/booking';
+import { hasCoordination, hasValidSavedDealChainPreview, listingBookingUrl, readPicksBasket, savePicksBasket, serializeDealChainStageItem } from '../marketplace/booking';
 import { PicksDrawer } from '../components/marketplace/PicksDrawer';
 import { DealChainCheckoutModal } from '../components/marketplace/DealChainCheckoutModal';
 import { indexDealChainRecipes } from '../marketplace/dealChainRecipes';
@@ -111,17 +111,23 @@ function getCategoryPhoto(categoryCode?: string | null): string {
 
 function getPriceDisplay(listing: ListingRecord): string {
     const rawMinor = listing.price_amount_minor;
-    if (typeof rawMinor === 'number' && Number.isFinite(rawMinor)) {
-        return `₱${(rawMinor / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    }
-    return '₱80.00';
+    return typeof rawMinor === 'number' && Number.isFinite(rawMinor)
+        ? `₱${(rawMinor / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : 'Price unavailable';
 }
 type PriceRange = 'all' | 'under_150' | '150_300' | '300_plus';
 type SortOption = 'recommended' | 'nearest' | 'price_asc' | 'price_desc' | 'rating';
 
-function getPriceRaw(listing: ListingRecord): number {
+function getPriceRaw(listing: ListingRecord): number | null {
     const rawMinor = listing.price_amount_minor;
-    return typeof rawMinor === 'number' && Number.isFinite(rawMinor) ? rawMinor / 100 : 80;
+    return typeof rawMinor === 'number' && Number.isFinite(rawMinor) ? rawMinor / 100 : null;
+}
+
+function displayRating(listing: ListingRecord): string {
+    const summary = listing.rating_summary;
+    return summary && summary.reviews_count > 0 && typeof summary.rating === 'number'
+        ? summary.rating.toFixed(1)
+        : 'No reviews';
 }
 export default function Browse(props: HomeProps) {
     const rawListings: ListingRecord[] = useMemo(() => {
@@ -242,11 +248,12 @@ export default function Browse(props: HomeProps) {
             if (item.id !== itemId) return item;
             const currentAddon = item.dealChain?.extraFee || 0;
             const newAddon = recipe?.extraFee || 0;
-            const newPrice = item.price - currentAddon + newAddon;
             return {
                 ...item,
-                price: newPrice,
+                price: item.price - currentAddon + newAddon,
                 dealChain: recipe || undefined,
+                savedDealChain: undefined,
+                deal_chain_combination_id: null,
             };
         });
         saveBasket(updated);
@@ -261,9 +268,12 @@ export default function Browse(props: HomeProps) {
                 if (item.id !== itemId || !item.dealChain) return item;
                 const updatedNodes = [...item.dealChain.nodes];
                 const oldNode = updatedNodes[nodeIndex];
-                const oldPrice = oldNode.priceMinor ?? (oldNode.type === 'store' ? 18000 : 8000);
-                const newPrice = candidate.price_minor;
-                const priceDiff = (newPrice - oldPrice) / 100;
+                const oldPrice = oldNode.priceMinor;
+                const candidatePrice = candidate.price_minor ?? candidate.priceMinor;
+                const hasCandidatePrice = typeof candidatePrice === 'number' && Number.isFinite(candidatePrice);
+                const priceDiff = typeof oldPrice === 'number' && hasCandidatePrice
+                    ? (candidatePrice - oldPrice) / 100
+                    : 0;
 
                 updatedNodes[nodeIndex] = {
                     ...oldNode,
@@ -271,8 +281,9 @@ export default function Browse(props: HomeProps) {
                     title: candidate.title,
                     sub: candidate.provider_name,
                     listingId: candidate.id,
+                    listingVersionId: candidate.listingVersionId ?? candidate.listing_version_id ?? null,
                     providerId: candidate.provider_user_id,
-                    priceMinor: candidate.price_minor,
+                    priceMinor: hasCandidatePrice ? candidatePrice : null,
                 };
 
                 return {
@@ -295,23 +306,7 @@ export default function Browse(props: HomeProps) {
         router.post(
             '/deal-chains/authorize',
             {
-                items: basket.map((b) => ({
-                    id: b.listing_id,
-                    listing_version_id: b.listing_version_id,
-                    variant_id: b.variant_id,
-                    package_id: b.package_id,
-                    deal_chain_combination_id: b.deal_chain_combination_id,
-                    quantity: b.quantity,
-                    addon_ids: b.addon_ids ?? [],
-                    deal_chain: b.dealChain?.recipeId || null,
-                    slot_overrides: b.dealChain?.nodes
-                        ? Object.fromEntries(
-                              b.dealChain.nodes
-                                  .filter((n) => n.listingId)
-                                  .map((n) => [n.key, { listing_id: n.listingId }]),
-                          )
-                        : null,
-                })),
+                items: basket.map(serializeDealChainStageItem),
             },
             {
                 onSuccess: () => {
@@ -455,6 +450,7 @@ export default function Browse(props: HomeProps) {
                 // 5. Price Budget Match
                 if (priceRangeFilter !== 'all') {
                     const price = getPriceRaw(item);
+                    if (price === null) return false;
                     if (priceRangeFilter === 'under_150' && price > 150) return false;
                     if (priceRangeFilter === '150_300' && (price < 150 || price > 300))
                         return false;
@@ -469,14 +465,23 @@ export default function Browse(props: HomeProps) {
                     const distB = b.distance_km ?? 999;
                     return distA - distB;
                 }
-                if (sortBy === 'price_asc') {
-                    return getPriceRaw(a) - getPriceRaw(b);
-                }
-                if (sortBy === 'price_desc') {
-                    return getPriceRaw(b) - getPriceRaw(a);
+                if (sortBy === 'price_asc' || sortBy === 'price_desc') {
+                    const priceA = getPriceRaw(a);
+                    const priceB = getPriceRaw(b);
+                    if (priceA === null) return priceB === null ? 0 : 1;
+                    if (priceB === null) return -1;
+                    return sortBy === 'price_asc' ? priceA - priceB : priceB - priceA;
                 }
                 if (sortBy === 'rating') {
-                    return b.title.localeCompare(a.title);
+                    const ratingA = a.rating_summary?.reviews_count && typeof a.rating_summary.rating === 'number'
+                        ? a.rating_summary.rating
+                        : null;
+                    const ratingB = b.rating_summary?.reviews_count && typeof b.rating_summary.rating === 'number'
+                        ? b.rating_summary.rating
+                        : null;
+                    if (ratingA === null) return ratingB === null ? 0 : 1;
+                    if (ratingB === null) return -1;
+                    return ratingB - ratingA;
                 }
                 return 0; // recommended / default ordering
             });
@@ -1186,10 +1191,14 @@ export default function Browse(props: HomeProps) {
                                                                 {priceDisplay}
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800">
-                                                            <Star className="size-3.5 fill-amber-500 text-amber-500" />
-                                                            <span>4.9</span>
-                                                        </div>
+                                                        {displayRating(listing) === 'No reviews' ? (
+                                                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">No reviews</span>
+                                                        ) : (
+                                                            <div className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800">
+                                                                <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                                                                <span>{displayRating(listing)}</span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </article>
@@ -1232,10 +1241,14 @@ export default function Browse(props: HomeProps) {
                                                                 'Verified local service'}
                                                         </p>
                                                         <div className="mt-1.5 flex items-center gap-2 text-[11px] font-medium text-slate-600">
-                                                            <span className="flex items-center gap-0.5 font-bold text-amber-700">
-                                                                <Star className="size-3 fill-amber-500 text-amber-500" />
-                                                                4.9
-                                                            </span>
+                                                            {displayRating(listing) === 'No reviews' ? (
+                                                                <span className="font-semibold text-slate-500">No reviews</span>
+                                                            ) : (
+                                                                <span className="flex items-center gap-0.5 font-bold text-amber-700">
+                                                                    <Star className="size-3 fill-amber-500 text-amber-500" />
+                                                                    {displayRating(listing)}
+                                                                </span>
+                                                            )}
                                                             <span className="flex items-center gap-0.5 text-slate-500">
                                                                 <MapPin className="size-3 text-slate-400" />
                                                                 <span>
@@ -1277,14 +1290,16 @@ export default function Browse(props: HomeProps) {
                                                             <div className="font-mono text-base font-extrabold text-[#0F2F58]">
                                                                 {priceDisplay}
                                                             </div>
-                                                            <div className="text-[10px] text-slate-400">
-                                                                Fixed rate
-                                                            </div>
+                                                            {priceDisplay === 'Price unavailable' ? 'Price not provided' : 'Listing price'}
                                                         </div>
+                                                    {displayRating(listing) === 'No reviews' ? (
+                                                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">No reviews</span>
+                                                    ) : (
                                                         <div className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800">
                                                             <Star className="size-3.5 fill-amber-500 text-amber-500" />
-                                                            <span>4.9</span>
+                                                            <span>{displayRating(listing)}</span>
                                                         </div>
+                                                    )}
                                                     </div>
                                                 </div>
                                             </article>
@@ -1676,7 +1691,6 @@ export default function Browse(props: HomeProps) {
                                         <MarketplaceCard
                                             key={item.id}
                                             listing={item}
-                                            distanceKm={item.distance_km}
                                             onSelect={(selected) =>
                                                 router.visit(`/listings/${selected.id}`)
                                             }
@@ -1699,7 +1713,6 @@ export default function Browse(props: HomeProps) {
                             if (tab === 'post') setCreatorOpen(true);
                             if (tab === 'quick_deal') setQuickDealOpen(true);
                             if (tab === 'orders') router.visit('/orders');
-                            if (tab === 'invitations') router.visit('/deal-invitations');
                             if (tab === 'profile') setProfileDrawerOpen(true);
                         }}
                         onQuickDealClick={() => setQuickDealOpen(true)}
@@ -2290,7 +2303,16 @@ export default function Browse(props: HomeProps) {
                 }}
                 onCheckout={() => {
                     setPicksOpen(false);
-                    if (basket.some((item) => Boolean(item.dealChain))) {
+                    const legacySaved = basket.find((item) => item.deal_chain_combination_id && !hasValidSavedDealChainPreview(item));
+                    if (legacySaved?.listing_id) {
+                        router.visit(`/listings/${encodeURIComponent(legacySaved.listing_id)}`);
+                        return;
+                    }
+                    if (basket.some((item) => item.savedDealChain?.nodes.some((node) => !node.isPrimary && !node.listingId))) {
+                        router.visit('/picks');
+                        return;
+                    }
+                    if (basket.some(hasCoordination)) {
                         setCheckoutModalOpen(true);
                         return;
                     }

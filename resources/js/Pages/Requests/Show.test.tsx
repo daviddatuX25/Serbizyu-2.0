@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within, waitFor } from '@testing-library/react';
 import RequestShow from './Show';
 import { router } from '@inertiajs/react';
+import { NotificationProvider } from '../../components/notifications/NotificationCenter';
 
 vi.mock('@inertiajs/react', () => ({
     Head: ({ title }: { title: string }) => <title>{title}</title>,
@@ -22,6 +23,7 @@ vi.mock('@inertiajs/react', () => ({
         post: vi.fn(),
         visit: vi.fn(),
         reload: vi.fn(),
+        on: vi.fn(() => () => {}),
     },
 }));
 
@@ -115,6 +117,35 @@ describe('RequestShow Page', () => {
         expect(screen.getByText('Mang Cardo Plumbing')).toBeTruthy();
         expect(screen.getByText('₱550.00')).toBeTruthy();
         expect(screen.getByText('₱300.00')).toBeTruthy();
+    });
+
+    it('opens notifications from the same header as the request title and back action', async () => {
+        const summary = { unread_count: 0, needs_action_count: 0, updates_count: 0 };
+        vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => new Response(
+            JSON.stringify(String(input).includes('/summary')
+                ? { data: summary }
+                : { data: [], next_cursor: null }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+        )));
+        render(
+            <NotificationProvider authenticated initialSummary={summary}>
+                <RequestShow
+                    request={mockRequest}
+                    quotes={[]}
+                    session={{ authenticated: true, user_id: 'usr-buyer-1' }}
+                    correlationId="corr-header"
+                    viewer_role="requester"
+                    actions={{ can_quote: false, can_accept: false, is_owner: true }}
+                />
+            </NotificationProvider>,
+        );
+
+        const header = screen.getByRole('banner', { name: 'Request navigation' });
+        expect(within(header).getByRole('link', { name: 'Back to marketplace' })).toBeTruthy();
+        expect(within(header).getByRole('heading', { name: mockRequest.title })).toBeTruthy();
+        fireEvent.click(within(header).getByRole('button', { name: 'Notifications' }));
+        expect(await screen.findByRole('dialog', { name: 'Notifications' })).toBeTruthy();
+        expect(await screen.findByText('No notifications yet.')).toBeTruthy();
     });
 
     it('renders Sealed Bidding badge and confidential notice when in sealed mode', () => {

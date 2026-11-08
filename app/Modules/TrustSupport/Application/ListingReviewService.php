@@ -244,25 +244,25 @@ final class ListingReviewService implements ListingReviewReaderPort
 
     /**
      * @return array{
-     *     rating: float,
-     *     bayesian_rating: float,
+     *     rating: float|null,
+     *     bayesian_rating: float|null,
      *     reviews_count: int,
      *     verified_count: int,
      *     photos_count: int,
      *     distribution: array{1: int, 2: int, 3: int, 4: int, 5: int},
-     *     satisfaction_pct: int,
+     *     satisfaction_pct: int|null,
      * }
      */
     private function emptySummary(): array
     {
         return [
-            'rating' => 5.0,
-            'bayesian_rating' => 4.5,
+            'rating' => null,
+            'bayesian_rating' => null,
             'reviews_count' => 0,
             'verified_count' => 0,
             'photos_count' => 0,
             'distribution' => [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0],
-            'satisfaction_pct' => 100,
+            'satisfaction_pct' => null,
         ];
     }
 

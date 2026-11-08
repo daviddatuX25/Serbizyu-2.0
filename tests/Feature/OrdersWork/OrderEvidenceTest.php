@@ -168,7 +168,6 @@ final class OrderEvidenceTest extends TestCase
                     'notes' => 'Arrival and diagnostic reading recorded.',
                 ],
             ]);
-        dump($res->json());
         $res->assertOk();
         $event = DB::table('work_events')
             ->where('work_instance_id', $node['work_id'])
@@ -411,10 +410,11 @@ final class OrderEvidenceTest extends TestCase
             'completion_proposed_at' => null,
             'updated_at' => now(),
         ]);
-        DB::table('deal_dependencies')
-            ->where('deal_chain_id', Fix::CHAIN_ID_ONGOING)
-            ->where('successor_need_id', Fix::NEED_ID_LABOR)
-            ->update(['status' => 'removed']);
+        DB::table('orders')->where('id', $orderId)->update([
+            'origin' => 'direct_booking',
+            'deal_chain_id' => null,
+            'deal_need_id' => null,
+        ]);
 
         return [
             'order_id' => $orderId,

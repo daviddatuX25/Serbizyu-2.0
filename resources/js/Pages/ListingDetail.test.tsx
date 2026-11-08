@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import ListingDetail from './ListingDetail';
 import type { HomeProps, ListingRecord } from '../types';
 
-const { visit } = vi.hoisted(() => ({ visit: vi.fn() }));
+const { visit, post } = vi.hoisted(() => ({ visit: vi.fn(), post: vi.fn() }));
 
 vi.mock('@inertiajs/react', () => ({
     Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
@@ -11,7 +11,7 @@ vi.mock('@inertiajs/react', () => ({
             {children}
         </a>
     ),
-    router: { visit },
+    router: { visit, post },
 }));
 
 describe('ListingDetail Page', () => {
@@ -19,6 +19,7 @@ describe('ListingDetail Page', () => {
         cleanup();
         window.localStorage.clear();
         visit.mockClear();
+        post.mockClear();
     });
 
     const mockListing: ListingRecord = {
@@ -78,12 +79,30 @@ describe('ListingDetail Page', () => {
                 id: 'combo-fit',
                 title: 'Repair and fitting',
                 isDefault: true,
+                planVersion: 1,
                 nodes: [{
+                    id: 'node-primary',
+                    isPrimary: true,
+                    role: 'service',
+                    title: 'Repair',
+                    sub: 'Primary service',
+                    type: 'labor',
+                }, {
                     id: 'slot-rider',
+                    isPrimary: false,
                     role: 'delivery',
                     title: 'Local rider',
                     sub: 'Active rider listing',
+                    type: 'delivery',
                     listingId: 'rider-listing-1',
+                }],
+                dependencies: [{
+                    id: 'edge-primary-rider',
+                    predecessorId: 'node-primary',
+                    successorId: 'slot-rider',
+                    conditionCode: 'work_completed',
+                    dependencyType: 'blocks',
+                    status: 'active',
                 }],
             }],
         };
@@ -95,15 +114,26 @@ describe('ListingDetail Page', () => {
         fireEvent.click(within(main).getByRole('button', { name: 'Details' }));
         expect(within(main).getByText(/Target duration: 30 min/)).toBeTruthy();
         expect(within(main).getByText(/Required proof: photo proof/)).toBeTruthy();
+        window.localStorage.setItem('serbizyu.picks', JSON.stringify([{
+            id: 'unrelated-item',
+            listing_id: 'unrelated-listing',
+            title: 'Unrelated Picks item',
+            price: 99,
+            quantity: 1,
+        }]));
         expect(within(main).getByText(/Clearance: customer approval/)).toBeTruthy();
         expect(within(main).getByText(/Approval: app confirm/)).toBeTruthy();
         expect(within(main).getByText('Repair and fitting')).toBeTruthy();
-        expect(within(main).getByText('Active rider listing')).toBeTruthy();
         expect(within(main).queryByText(/Tiwala Escrow Protection|Turnkey Parts|Safety Audit/)).toBeNull();
         fireEvent.click(within(main).getByRole('button', { name: /Book Service Now/i }));
         const booking = new URL(visit.mock.calls[0][0], 'http://localhost');
         expect(booking.searchParams.get('listing_version_id')).toBe('service-version-3');
-        expect(booking.searchParams.get('deal_chain_combination_id')).toBe('combo-fit');
+        expect(booking.searchParams.get('deal_chain_combination_id')).toBeNull();
+        fireEvent.click(within(main).getByRole('button', { name: /Repair and fitting/ }));
+        fireEvent.click(within(main).getByRole('button', { name: /Book Service Now/i }));
+        expect(visit).toHaveBeenCalledTimes(1);
+        expect(screen.getByRole('button', { name: /Stage Coordinated Plan/i })).toBeTruthy();
+        expect(screen.queryByText('Unrelated Picks item')).toBeNull();
     });
 
     it('offers only seller-authored add-ons and includes their ids and prices in booking and Picks', () => {
@@ -136,7 +166,7 @@ describe('ListingDetail Page', () => {
         const saved = JSON.parse(window.localStorage.getItem('serbizyu.picks') ?? '[]');
         expect(saved[0]).toMatchObject({ addon_ids: ['addon-rush'], listing_version_id: 'service-version-7' });
     });
-    it('selects a stocked authored variant and forwards its identifiers and quantity to booking and Picks', () => {
+    it('keeps product variants, quantity, and direct seller extras intact through booking and Picks', () => {
         const listing: ListingRecord = {
             id: 'listing-product-1',
             title: 'Olive Oil',
@@ -158,6 +188,25 @@ describe('ListingDetail Page', () => {
                     availability: { available: 0, availability_status: 'out_of_stock' },
                 },
             ],
+            addons: [{
+                id: 'gift-wrap-addon',
+                code: 'gift_wrap',
+                title: 'Gift wrap',
+                description: 'Seller-provided gift wrap.',
+                price_amount_minor: 5000,
+                currency: 'PHP',
+                status: 'available',
+            }, {
+                id: 'independent-install',
+                code: 'external_install',
+                title: 'Independent installer',
+                description: 'Separate provider agreement, not a seller extra.',
+                price_amount_minor: 4500,
+                currency: 'PHP',
+                partner_role: 'technician',
+                status: 'available',
+                settlement_mode: 'independent_provider_agreement',
+            }],
         };
         const { container } = render(<ListingDetail {...baseProps} activeListingDetail={listing} />);
         const main = container.querySelector('main') as HTMLElement;
@@ -165,7 +214,9 @@ describe('ListingDetail Page', () => {
         expect(within(main).getByRole('button', { name: /250 ml.*₱120\.00.*4 available/i })).toBeTruthy();
         expect((within(main).getByRole('button', { name: /500 ml.*₱220\.00.*0 available/i }) as HTMLButtonElement).disabled).toBe(true);
         expect(within(main).queryByText(/1 Unit Standard|Choose Package Tier/)).toBeNull();
+        expect(within(main).queryByRole('checkbox', { name: /Independent installer/i })).toBeNull();
 
+        fireEvent.click(within(main).getByRole('checkbox', { name: /Gift wrap/i }));
         fireEvent.click(within(main).getByRole('button', { name: 'Increase quantity' }));
         fireEvent.click(within(main).getByRole('button', { name: /Buy Product Now/i }));
         expect(visit).toHaveBeenCalledTimes(1);
@@ -173,6 +224,7 @@ describe('ListingDetail Page', () => {
         expect(booking.searchParams.get('variant_id')).toBe('bottle-250');
         expect(booking.searchParams.get('listing_version_id')).toBe('version-4');
         expect(booking.searchParams.get('quantity')).toBe('2');
+        expect(booking.searchParams.getAll('addon_ids[]')).toEqual(['gift-wrap-addon']);
 
         fireEvent.click(within(main).getByRole('button', { name: /Add to Citizen Picks/i }));
         const saved = JSON.parse(window.localStorage.getItem('serbizyu.picks') ?? '[]');
@@ -180,6 +232,7 @@ describe('ListingDetail Page', () => {
             variant_id: 'bottle-250',
             listing_version_id: 'version-4',
             quantity: 2,
+            addon_ids: ['gift-wrap-addon'],
         });
     });
     it('does not invent a product price when no authored variants exist', () => {
@@ -223,6 +276,32 @@ describe('ListingDetail Page', () => {
         expect(screen.getByText('Citizen Picks')).toBeTruthy();
         expect(screen.getByText(/1 item staged for review/i)).toBeTruthy();
         expect(screen.getAllByText(/Inverter Split AC Deep Clean/).length).toBeGreaterThan(0);
+    });
+
+    it('uses the current cart quantity after an earlier direct partnership review was cancelled', () => {
+        const listing: ListingRecord = {
+            ...mockListing, listing_version_id: 'version-1',
+            deal_chain_combinations: [{
+                id: 'with-follow-up', title: 'Service with follow-up', planVersion: 1,
+                nodes: [
+                    { id: 'host', type: 'labor', isPrimary: true, title: 'Main service' },
+                    { id: 'follow-up', type: 'labor', isPrimary: false, title: 'Follow-up', listingId: 'partner-1' },
+                ],
+                dependencies: [],
+            }],
+        };
+        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={listing} />);
+        const main = getDesktop(container);
+        fireEvent.click(within(main).getByRole('button', { name: 'Service with follow-up' }));
+        fireEvent.click(within(main).getByRole('button', { name: /Book Service Now/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+        fireEvent.click(within(main).getByRole('button', { name: 'Increase quantity' }));
+        fireEvent.click(within(main).getByRole('button', { name: /Add to Citizen Picks/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Confirm Booking|Review Coordinated Chain/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Stage Coordinated Plan/i }));
+
+        expect(post).toHaveBeenCalledTimes(1);
+        expect(post.mock.calls[0][1].items[0].quantity).toBe(2);
     });
 
     it('renders unavailable notice when listing is missing', () => {
@@ -447,5 +526,91 @@ describe('ListingDetail Page', () => {
         expect(within(desktop).getByText(/Required proof: photo proof/)).toBeTruthy();
         expect(within(desktop).getByText(/Clearance: provider advance/)).toBeTruthy();
         expect(within(desktop).getByText(/Approval: app confirm/)).toBeTruthy();
+    });
+    it('keeps a product listing unrated when review facts are absent', () => {
+        const product: ListingRecord = {
+            id: 'new-product',
+            title: 'New product',
+            listing_type: 'product',
+            variants: [{ id: 'one', name: 'One', price_amount_minor: 500, availability: { available: 3 } }],
+        };
+
+        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={product} />);
+
+        expect(container.textContent).toContain('New');
+        expect(container.textContent).toContain('0 reviews');
+        expect(container.textContent).toContain('No reviews yet');
+        expect(screen.queryByText(/^(4\.9|5\.0)$/)).toBeNull();
+        expect(container.textContent).not.toContain('Maria S.');
+    });
+
+    it('restores a saved product fulfillment to review and lets the buyer deliberately choose product only', () => {
+        const product: ListingRecord = {
+            id: 'product-with-fulfillment',
+            title: 'Olive Oil',
+            listing_type: 'product',
+            listing_version_id: 'product-version-8',
+            deal_chain_specification: { selected_combo_id: 'with-delivery' },
+            variants: [{
+                id: 'bottle',
+                name: 'Bottle',
+                price_amount_minor: 12000,
+                availability: { available: 4, availability_status: 'open' },
+            }],
+            deal_chain_combinations: [{
+                id: 'with-delivery',
+                title: 'Product with delivery',
+                planVersion: 1,
+                dependencies: [],
+                nodes: [{
+                    id: 'product-node',
+                    isPrimary: true,
+                    role: 'product',
+                    title: 'Olive Oil',
+                    sub: 'Primary product',
+                    type: 'store',
+                }, {
+                    id: 'delivery-node',
+                    isPrimary: false,
+                    role: 'delivery',
+                    title: 'Local delivery',
+                    sub: 'Rider listing',
+                    type: 'delivery',
+                    listingId: 'rider-7',
+                }],
+            }],
+        };
+        const { container, rerender } = render(<ListingDetail {...baseProps} activeListingDetail={product} />);
+        const main = container.querySelector('main') as HTMLElement;
+
+        expect(within(main).getByRole('button', { name: /^Product with delivery/ }).getAttribute('aria-pressed')).toBe('true');
+        fireEvent.click(within(main).getByRole('button', { name: /Buy Product Now/i }));
+        expect(screen.getByRole('button', { name: /Stage Coordinated Plan/i })).toBeTruthy();
+        expect(screen.getByRole('dialog').textContent).toContain('Local delivery');
+        fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
+
+        fireEvent.click(within(main).getByRole('button', { name: 'Product only' }));
+        rerender(<ListingDetail {...baseProps} activeListingDetail={{ ...product }} />);
+        expect(within(main).getByRole('button', { name: 'Product only' }).getAttribute('aria-pressed')).toBe('true');
+        fireEvent.click(within(main).getByRole('button', { name: /Buy Product Now/i }));
+        expect(screen.queryByRole('button', { name: /Stage Coordinated Plan/i })).toBeNull();
+        expect(visit).toHaveBeenCalledTimes(1);
+        expect(new URL(visit.mock.calls[0][0], 'http://localhost').searchParams.get('variant_id')).toBe('bottle');
+    });
+
+    it('does not present audit or recycle partner fees as direct seller add-ons', () => {
+        const listing: ListingRecord = {
+            ...mockListing,
+            addons: [
+                { id: 'audit', code: 'audit_fee', title: 'Audit', description: 'Independent audit', price_amount_minor: 1000, currency: 'PHP', partner_role: 'audit', status: 'available' },
+                { id: 'recycle', code: 'recycle_fee', title: 'Recycle', description: 'Independent recovery', price_amount_minor: 2000, currency: 'PHP', partner_role: 'recycle', status: 'available' },
+                { id: 'legitimate', code: 'care_kit', title: 'Care kit', description: 'Seller extra', price_amount_minor: 3000, currency: 'PHP', status: 'available' },
+            ],
+        };
+        const { container } = render(<ListingDetail {...baseProps} activeListingDetail={listing} />);
+        const main = container.querySelector('main') as HTMLElement;
+
+        expect(within(main).queryAllByRole('checkbox', { name: /Audit|Recycle/i })).toHaveLength(0);
+        expect(within(main).getByRole('checkbox', { name: /Care kit/i })).toBeTruthy();
     });
 });

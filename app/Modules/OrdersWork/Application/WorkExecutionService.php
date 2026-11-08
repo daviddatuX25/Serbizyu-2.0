@@ -1275,8 +1275,8 @@ final class WorkExecutionService
         try {
             return $this->workContracts->resolveForWork(
                 (string) $workRow->work_shape,
-                (int) ($workRow->shape_contract_version ?? 1),
-                (int) ($workRow->payload_schema_version ?? 1),
+                (int) $workRow->shape_contract_version,
+                (int) $workRow->payload_schema_version,
                 $correlationId,
             );
         } catch (WorkContractError $error) {
@@ -1328,9 +1328,24 @@ final class WorkExecutionService
         }
 
         $correlationId = (string) Str::uuid7();
-        $this->contractForWorkRow($workRow, $correlationId);
-        $structure = $this->decodeJson($workRow->structure);
         $workShape = (string) $workRow->work_shape;
+        $availability = $this->executionAvailability($workRow, $correlationId);
+        $structure = $this->decodeJson($workRow->structure);
+
+        if (! $availability['execution_available']) {
+            return [
+                'id' => (string) $workRow->id,
+                'status' => (string) $workRow->status,
+                'work_shape' => $workShape,
+                'version' => (int) $workRow->version,
+                'signature_hash' => is_array($structure) ? ($structure['signature_hash'] ?? null) : null,
+                'active_node_id' => null,
+                'active_ordinal' => null,
+                'pending_customer_confirmation' => false,
+                'nodes' => [],
+                ...$availability,
+            ];
+        }
 
         if ($structure === null || ! isset($structure['nodes']) || ! is_array($structure['nodes']) || $structure['nodes'] === []) {
             $termsData = $termsRow !== null ? $this->decodeJson($termsRow->scope) : [];
@@ -1338,8 +1353,8 @@ final class WorkExecutionService
                 is_array($termsData) ? $termsData : [],
                 $workShape,
                 $correlationId,
-                (int) ($workRow->shape_contract_version ?? 1),
-                (int) ($workRow->payload_schema_version ?? 1),
+                (int) $workRow->shape_contract_version,
+                (int) $workRow->payload_schema_version,
             );
         }
 
@@ -1353,7 +1368,32 @@ final class WorkExecutionService
             'active_ordinal' => $structure['active_ordinal'] ?? 1,
             'pending_customer_confirmation' => (bool) ($structure['pending_customer_confirmation'] ?? false),
             'nodes' => $structure['nodes'] ?? [],
+            ...$availability,
         ];
+    }
+
+    /** @return array{execution_available:bool,unavailability_reason:?string} */
+    public function executionAvailability(object $workRow, ?string $correlationId = null): array
+    {
+        try {
+            $this->contractForWorkRow($workRow, $correlationId ?? (string) Str::uuid7());
+
+            return ['execution_available' => true, 'unavailability_reason' => null];
+        } catch (OrderError $error) {
+            if ($error->envelope->code !== 'WORK_CONTRACT_VERSION_UNSUPPORTED') {
+                throw $error;
+            }
+
+            return [
+                'execution_available' => false,
+                'unavailability_reason' => 'Work tracking for this older order needs an update. You can still view the order and payment details.',
+            ];
+        }
+    }
+
+    public function assertExecutionAvailable(object $workRow, string $correlationId): void
+    {
+        $this->contractForWorkRow($workRow, $correlationId);
     }
 
     /** @return array<string, mixed>|null */

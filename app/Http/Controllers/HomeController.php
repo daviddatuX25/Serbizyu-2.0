@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\AuthReturnPath;
 use App\Http\Requests\OnboardingRequest;
 use App\Modules\IdentityAccess\Application\IdentityAccessError;
 use App\Modules\IdentityAccess\Application\OnboardingService;
@@ -32,7 +33,7 @@ final class HomeController
         return Inertia::render('Auth/Onboarding', [
             'readiness' => $readiness,
             'session' => $state['session'] ?? null,
-            'returnTo' => (string) $request->session()->get('auth_return_to', route('home')),
+            'returnTo' => AuthReturnPath::safe($request->session()->get('auth_return_to')),
         ]);
     }
 

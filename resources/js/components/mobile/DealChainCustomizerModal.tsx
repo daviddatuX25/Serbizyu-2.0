@@ -19,6 +19,8 @@ import type {
     SlotType,
 } from './types';
 
+import { savedCombinationSlots } from '../../marketplace/dealChainRecipes';
+
 export interface DealChainCustomizerModalProps {
     open: boolean;
     onClose: () => void;
@@ -26,6 +28,7 @@ export interface DealChainCustomizerModalProps {
     primaryListingTitle: string;
     primaryListingPricePesos: number;
     primaryListingType: 'service' | 'product';
+    primaryListingCategoryCode: string;
     onSave: (updated: DealChainCombination) => void;
     onPickPartnerForSlot: (
         slotType: SlotType,
@@ -33,7 +36,8 @@ export interface DealChainCustomizerModalProps {
             id: string;
             title: string;
             providerName: string;
-            priceMinor: number;
+            priceMinor?: number | null;
+            listingVersionId?: string | null;
             photoUrl?: string;
             isOpenSlot?: boolean;
         }) => void,
@@ -46,7 +50,6 @@ export const NODE_ROLE_PRESETS: Array<{
     roleBadge: string;
     roleLabel: string;
     defaultName: string;
-    defaultFeePesos: number;
     bg: string;
     color: string;
     position: 'before' | 'after';
@@ -58,61 +61,171 @@ export const NODE_ROLE_PRESETS: Array<{
         slotType: 'store',
         roleBadge: 'STORE',
         roleLabel: 'Hardware / Part / Supply Partner',
-        defaultName: 'Tagudin Hardware & Supply Depot',
-        defaultFeePesos: 180,
+        defaultName: 'Choose a store / parts listing',
         bg: '#FEF3C7',
         color: '#B45309',
         position: 'before',
         tier: 0,
-        conditionCode: 'source_ready',
+        conditionCode: 'all_inputs_ready',
         description: 'Parts or materials procured from a merchant counter or warehouse stall.',
     },
     {
         slotType: 'delivery',
         roleBadge: 'COURIER',
         roleLabel: 'Doorstep Courier Runner',
-        defaultName: 'Danny Express Motorcycle Pool',
-        defaultFeePesos: 35,
+        defaultName: 'Choose a delivery listing',
         bg: '#E0F2FE',
         color: '#0284C7',
         position: 'before',
         tier: 1,
-        conditionCode: 'delivered_to_site',
+        conditionCode: 'all_inputs_ready',
         description: 'Rapid on-demand transit of items from store/merchant directly to jobsite.',
     },
     {
         slotType: 'installation',
         roleBadge: 'LABOR',
         roleLabel: 'Co-Labor / Technician Partner',
-        defaultName: 'Kuya Ben Aircon Services',
-        defaultFeePesos: 250,
+        defaultName: 'Choose a labor / installation listing',
         bg: '#DCFCE7',
         color: '#15803D',
         position: 'after',
         tier: 2,
-        conditionCode: 'work_completed',
+        conditionCode: 'all_inputs_ready',
         description: 'Specialized trade labor performing on-site service installation or prep.',
     },
     {
         slotType: 'audit',
         roleBadge: 'AUDIT',
         roleLabel: 'Certified Safety & Quality Auditor',
-        defaultName: 'Safety Check (Master Electrician)',
-        defaultFeePesos: 150,
+        defaultName: 'Choose an audit listing',
         bg: '#F3E8FF',
         color: '#7E22CE',
         position: 'after',
         tier: 3,
-        conditionCode: 'audit_cleared',
+        conditionCode: 'all_inputs_ready',
         description: 'Independent inspection certifying safety clearance, electrical integrity, or code compliance.',
     },
+    {
+        slotType: 'recycle',
+        roleBadge: 'RECYCLE',
+        roleLabel: 'Recycling / Hauling Partner',
+        defaultName: 'Choose a recycling listing',
+        bg: '#DCFCE7',
+        color: '#15803D',
+        position: 'after',
+        tier: 3,
+        conditionCode: 'all_inputs_ready',
+        description: 'Collect and recycle eligible materials through a real provider listing.',
+    },
 ];
+
+/** Display hint only; publication and staging validate the bound listing on the server. */
+function primaryNodeType(listingType: 'service' | 'product', categoryCode: string, title: string): string {
+    if (listingType === 'product') return 'store';
+    const category = categoryCode.trim().toLowerCase();
+    const name = title.trim().toLowerCase();
+    if (['courier', 'delivery', 'logistics'].includes(category) || name.includes('courier') || name.includes('delivery')) return 'delivery';
+    if (name.includes('audit') || category.includes('safety') || category.includes('audit')) return 'audit';
+    if (name.includes('recycle') || name.includes('scrap') || category.includes('recycle')) return 'recycle';
+    return 'labor';
+}
+
+function canonicalNodeType(type: SlotType | DealChainNode['type']): DealChainNode['type'] {
+    switch (type) {
+        case 'store':
+        case 'parts':
+        case 'product':
+            return 'store';
+        case 'delivery':
+        case 'courier':
+            return 'delivery';
+        case 'installation':
+        case 'service':
+        case 'diagnostic':
+        case 'tools':
+            return 'labor';
+        case 'hauling':
+        case 'recycle':
+            return 'recycle';
+        default:
+            return type;
+    }
+}
+
+function roleLabel(type: SlotType): string {
+    switch (type) {
+        case 'store':
+        case 'parts':
+            return 'Store / Parts Partner';
+        case 'delivery':
+            return 'Courier / Transit Partner';
+        case 'installation':
+        case 'diagnostic':
+        case 'tools':
+            return 'Labor / Technician Partner';
+        case 'audit':
+            return 'Safety / Audit Partner';
+        case 'hauling':
+        case 'recycle':
+            return 'Recycling / Hauling Partner';
+    }
+}
+
+function conditionForSave(conditionCode: string | undefined): string | undefined {
+    return conditionCode === 'source_ready' ? 'part_ready'
+        : conditionCode === 'delivered_to_site' ? 'delivery_signed'
+            : conditionCode === 'completed' ? 'work_completed' : conditionCode;
+}
+
+function conditionMatchesSource(conditionCode: string | undefined, predecessorType: DealChainNode['type']): boolean {
+    const condition = conditionForSave(conditionCode);
+    return condition === 'work_completed'
+        || condition === 'part_ready' && canonicalNodeType(predecessorType) === 'store'
+        || condition === 'delivery_signed' && canonicalNodeType(predecessorType) === 'delivery';
+}
+
+function unresolvedRoleConditions(nodes: DealChainNode[], dependencies: DealChainCombination['dependencies']): boolean {
+    const byId = new Map(nodes.map((node) => [node.id, node]));
+    return (dependencies ?? []).some((edge) => {
+        if (edge.status === 'removed') return false;
+        const predecessor = byId.get(edge.predecessorId);
+        return !predecessor || !conditionMatchesSource(edge.conditionCode, predecessor.type);
+    });
+}
+
+function updatedSavedGraph(
+    combination: DealChainCombination,
+    nodes: DealChainNode[],
+    slots: PartnerSlot[],
+    gateConditionCode: string | undefined,
+    editedConditionIds: Set<string>,
+    primaryConditionEdited: boolean,
+): DealChainCombination['dependencies'] {
+    const conditions = new Map(slots
+        .filter((slot) => slot.id && editedConditionIds.has(slot.id))
+        .map((slot) => [slot.id!, slot.conditionCode] as const));
+    const primaryId = combination.nodes.find((node) => node.isPrimary)?.id;
+    if (primaryId && primaryConditionEdited) conditions.set(primaryId, gateConditionCode);
+    const byId = new Map(nodes.map((node) => [node.id, node]));
+    return (combination.dependencies ?? []).map((edge) => {
+        if (edge.status === 'removed') return edge;
+        const selectedCondition = conditions.get(edge.successorId);
+        if (!selectedCondition) return edge;
+        const predecessor = byId.get(edge.predecessorId);
+        const conditionCode = selectedCondition === 'all_inputs_ready' && predecessor
+            ? canonicalNodeType(predecessor.type) === 'store' ? 'part_ready'
+                : canonicalNodeType(predecessor.type) === 'delivery' ? 'delivery_signed' : 'work_completed'
+            : conditionForSave(selectedCondition);
+        return conditionCode ? { ...edge, conditionCode } : edge;
+    });
+}
 
 function rebuildNodesFromSlots(
     slots: PartnerSlot[],
     primaryTitle: string,
     primaryPricePesos: number,
     primaryListingType: 'service' | 'product',
+    primaryCategoryCode: string,
 ): DealChainNode[] {
     const beforeSlots = slots.filter(
         (s) => s.type === 'store' || s.type === 'parts' || s.type === 'delivery',
@@ -125,10 +238,7 @@ function rebuildNodesFromSlots(
         const isStore = slot.type === 'store' || slot.type === 'parts';
         const isCourier = slot.type === 'delivery';
         const isAudit = slot.type === 'audit';
-        const feePesos =
-            typeof slot.feeMinor === 'number'
-                ? Math.round(slot.feeMinor / 100)
-                : parseInt((slot.meta || '').replace(/[^0-9]/g, ''), 10) || 50;
+        const feePesos = typeof slot.feeMinor === 'number' ? slot.feeMinor / 100 : null;
 
         return {
             id: slot.id || `node-${slot.type}-${idx}`,
@@ -138,16 +248,19 @@ function rebuildNodesFromSlots(
                 : slot.name.length > 18
                   ? `${slot.name.slice(0, 17)}…`
                   : slot.name,
-            sub: slot.isOpenSlot ? 'Buyer picks' : `₱${feePesos}`,
+            sub: slot.isOpenSlot ? 'Buyer picks' : feePesos === null ? 'Partner fee unavailable' : `₱${feePesos.toFixed(2)}`,
             type: slot.type,
             bg: isStore || isAudit ? '#FEF3C7' : isCourier ? '#E0F2FE' : '#ECFDF5',
             color: isStore || isAudit ? '#B45309' : isCourier ? '#0284C7' : '#059669',
             listingId: slot.listingId,
+            listingVersionId: slot.listingVersionId,
             feeMinor: slot.feeMinor,
             coverThumbnailUrl: slot.coverThumbnailUrl,
             tier: slot.tier,
             conditionCode: slot.conditionCode,
-            allowBypass: slot.allowBypass,
+            isPrimary: false,
+            isOpenSlot: slot.isOpenSlot,
+            assignmentMode: slot.assignmentMode,
         };
     };
 
@@ -159,10 +272,11 @@ function rebuildNodesFromSlots(
                 ? `${primaryTitle.trim().slice(0, 17)}…`
                 : primaryTitle.trim() || 'Your Offering',
         sub: `₱${Math.round(primaryPricePesos)}`,
-        type: primaryListingType === 'product' ? 'store' : 'labor',
+        type: primaryNodeType(primaryListingType, primaryCategoryCode, primaryTitle),
         bg: '#ECFDF5',
         color: '#059669',
-        tier: Math.max(-1, ...beforeSlots.map((slot) => slot.tier ?? 0)) + 1,
+        tier: primaryListingType === 'product' ? 0 : Math.max(-1, ...beforeSlots.map((slot) => slot.tier ?? 0)) + 1,
+        isPrimary: true,
     };
     return [...beforeSlots.map((s, i) => toNode(s, i)), primaryNode, ...afterSlots.map((s, i) => toNode(s, beforeSlots.length + 1 + i))];
 }
@@ -174,6 +288,7 @@ export default function DealChainCustomizerModal({
     primaryListingTitle,
     primaryListingPricePesos,
     primaryListingType,
+    primaryListingCategoryCode,
     onSave,
     onPickPartnerForSlot,
     onResetToTemplate,
@@ -187,32 +302,48 @@ export default function DealChainCustomizerModal({
     const [gateAllowBypass, setGateAllowBypass] = useState(false);
     const [inspectorTab, setInspectorTab] = useState<'configure' | 'catalog'>('configure');
     const [isModified, setIsModified] = useState(false);
+    const [conditionEditedIds, setConditionEditedIds] = useState<Set<string>>(() => new Set());
+    const [primaryConditionEdited, setPrimaryConditionEdited] = useState(false);
+    const [graphModified, setGraphModified] = useState(false);
     useEffect(() => {
         if (open && combination) {
+            setGraphModified(combination.planVersion !== 1);
+            setConditionEditedIds(new Set());
+            setPrimaryConditionEdited(false);
+            const incomingCondition = (nodeId: string | undefined) => {
+                const codes = [...new Set((combination.dependencies ?? [])
+                    .filter((edge) => edge.status !== 'removed' && edge.successorId === nodeId)
+                    .map((edge) => edge.conditionCode))];
+                return codes.length === 1 ? codes[0] : 'all_inputs_ready';
+            };
             setTitle(combination.title);
-            const normalizedSlots = combination.slots.map((s, idx) => ({
+            const normalizedSlots = savedCombinationSlots(combination).map((s, idx) => ({
                 ...s,
                 id: s.id || `slot-${s.type}-${idx}-${Date.now()}`,
                 tier: typeof s.tier === 'number' ? s.tier : idx,
-                conditionCode: s.conditionCode || (s.type === 'store' ? 'source_ready' : s.type === 'delivery' ? 'delivered_to_site' : 'completed'),
+                conditionCode: s.conditionCode || incomingCondition(s.id) || 'all_inputs_ready',
             }));
             setSlots(normalizedSlots);
-            setGateConditionCode(combination.nodes.find((node) => node.id === 'node-primary-anchor')?.conditionCode);
-            setGateAllowBypass(Boolean(combination.nodes.find((node) => node.id === 'node-primary-anchor')?.allowBypass));
-            setSelectedSlotId(normalizedSlots[0]?.id || 'node-primary-anchor');
+            const primaryNode = combination.nodes.find((node) => node.isPrimary);
+            setGateConditionCode(primaryNode?.conditionCode || incomingCondition(primaryNode?.id));
+            setGateAllowBypass(Boolean(primaryNode?.allowBypass));
+            setSelectedSlotId(normalizedSlots[0]?.id || primaryNode?.id || 'node-primary-anchor');
             setIsModified(Boolean(combination.isCustom));
         } else if (open && !combination) {
-            setTitle('Custom Partnered Deal Chain');
+            setGraphModified(true);
+            setConditionEditedIds(new Set());
+            setPrimaryConditionEdited(false);
+            setGateConditionCode(undefined);
+            setGateAllowBypass(false);
             const defaultSlot: PartnerSlot = {
                 id: `slot-delivery-${Date.now()}`,
                 type: 'delivery',
                 role: 'Doorstep Courier Runner',
-                name: 'Danny Express Motorcycle Pool',
-                meta: '₱35.00 route fee',
-                feeMinor: 3500,
-                coverThumbnailUrl: '/photos/courier.jpg',
+                name: 'Choose a delivery listing',
+                meta: 'Choose a compatible partner listing',
+                feeMinor: null,
                 tier: 1,
-                conditionCode: 'delivered_to_site',
+                conditionCode: primaryListingType === 'product' ? 'part_ready' : 'work_completed',
             };
             setSlots([defaultSlot]);
             setSelectedSlotId(defaultSlot.id ?? null);
@@ -220,51 +351,76 @@ export default function DealChainCustomizerModal({
         }
     }, [open, combination]);
 
+    const primaryNodeId = combination?.nodes.find((node) => node.isPrimary)?.id || 'node-primary-anchor';
     const previewNodes = useMemo(() => {
-        return rebuildNodesFromSlots(
-            slots,
-            primaryListingTitle,
-            primaryListingPricePesos,
-            primaryListingType,
-        ).map((node) => node.id === 'node-primary-anchor' ? {
-            ...node,
-            conditionCode: gateConditionCode ?? node.conditionCode,
-            allowBypass: gateAllowBypass || node.allowBypass,
-        } : node);
-    }, [slots, primaryListingTitle, primaryListingPricePesos, primaryListingType, gateConditionCode, gateAllowBypass]);
+        if (!graphModified && combination?.planVersion === 1) {
+            return combination.nodes.map((node) => {
+                if (node.isPrimary) return {
+                    ...node,
+                    title: primaryListingTitle.trim() || node.title,
+                    conditionCode: gateConditionCode,
+                };
+                const slot = slots.find((candidate) => candidate.id === node.id);
+                if (!slot) return node;
+                const type = canonicalNodeType(slot.type);
+                const changedRole = type !== canonicalNodeType(node.type);
+                return {
+                    ...node,
+                    type: changedRole ? type : node.type,
+                    role: changedRole ? roleLabel(slot.type) : node.role,
+                    title: changedRole && !slot.listingId ? `Choose ${roleLabel(slot.type)}` : slot.name,
+                    sub: changedRole && !slot.listingId ? '' : slot.meta,
+                    listingId: slot.listingId,
+                    listingVersionId: slot.listingVersionId,
+                    feeMinor: slot.feeMinor,
+                    assignmentMode: slot.assignmentMode,
+                    isOpenSlot: slot.isOpenSlot,
+                    tier: node.tier,
+                    conditionCode: slot.conditionCode,
+                };
+            });
+        }
+        return rebuildNodesFromSlots(slots, primaryListingTitle, primaryListingPricePesos, primaryListingType, primaryListingCategoryCode)
+            .map((node) => node.isPrimary ? { ...node, id: primaryNodeId, conditionCode: gateConditionCode } : node);
+    }, [slots, primaryListingTitle, primaryListingPricePesos, primaryListingType, primaryListingCategoryCode, gateConditionCode, combination, graphModified, primaryNodeId]);
 
     const selectedSlot = useMemo(() => {
         return slots.find((s) => s.id === selectedSlotId) || null;
     }, [slots, selectedSlotId]);
 
     const totalPartnerMinor = useMemo(() => {
-        return slots.reduce((sum, s) => sum + (s.feeMinor || 0), 0);
+        if (slots.some((slot) => typeof slot.feeMinor !== 'number')) return null;
+        return slots.reduce((sum, slot) => sum + slot.feeMinor!, 0);
     }, [slots]);
 
+    const supportedEditorGates = ['all_inputs_ready', 'part_ready', 'delivery_signed', 'work_completed', 'source_ready', 'delivered_to_site'];
+    const projectedDependencies = !graphModified && combination?.planVersion === 1
+        ? updatedSavedGraph(combination, previewNodes, slots, gateConditionCode, conditionEditedIds, primaryConditionEdited)
+        : undefined;
+    const hasUnsupportedSavedGate = gateAllowBypass
+        || slots.some((slot) => slot.allowBypass || (slot.conditionCode && !supportedEditorGates.includes(slot.conditionCode)))
+        || previewNodes.some((node) => node.allowBypass || (node.conditionCode && !supportedEditorGates.includes(node.conditionCode)))
+        || (!graphModified && (projectedDependencies ?? []).some((edge) => edge.status !== 'removed' && !['part_ready', 'delivery_signed', 'work_completed'].includes(edge.conditionCode ?? '')))
+        || unresolvedRoleConditions(previewNodes, projectedDependencies)
+        || slots.some((slot) => slot.assignmentMode === 'preferred_partner' && !slot.listingId);
     if (!open) return null;
 
     const handleAddSlot = (preset: (typeof NODE_ROLE_PRESETS)[number], isParallel = false) => {
         const nextId = `slot-${preset.slotType}-${Date.now()}`;
-        const targetTier = isParallel && selectedSlot ? (selectedSlot.tier ?? 0) : slots.length;
-
+        const maxTier = Math.max(-1, ...slots.map((slot) => slot.tier ?? 0));
+        const targetTier = isParallel && selectedSlot ? (selectedSlot.tier ?? 0) : maxTier + 1;
         const nextSlot: PartnerSlot = {
             id: nextId,
             type: preset.slotType,
             role: preset.roleLabel,
             name: preset.defaultName,
-            meta: `₱${preset.defaultFeePesos.toFixed(2)} partner fee`,
-            feeMinor: preset.defaultFeePesos * 100,
-            coverThumbnailUrl:
-                preset.slotType === 'store'
-                    ? '/photos/ac-capacitor.jpg'
-                    : preset.slotType === 'delivery'
-                      ? '/photos/courier.jpg'
-                      : '/photos/req-electrician.jpg',
+            meta: 'Choose a compatible partner listing',
+            feeMinor: null,
             tier: targetTier,
             conditionCode: preset.conditionCode,
         };
-
         setSlots((prev) => [...prev, nextSlot]);
+        setGraphModified(true);
         setSelectedSlotId(nextId);
         setInspectorTab('configure');
         setIsModified(true);
@@ -272,6 +428,7 @@ export default function DealChainCustomizerModal({
 
     const handleRemoveSlot = (slotId: string) => {
         setSlots((prev) => prev.filter((s) => s.id !== slotId));
+        setGraphModified(true);
         if (selectedSlotId === slotId) {
             setSelectedSlotId(slots[0]?.id || 'node-primary-anchor');
         }
@@ -286,6 +443,7 @@ export default function DealChainCustomizerModal({
         copy.splice(target, 1, { ...moved, tier: slots[target].tier });
         copy[target] = { ...copy[target], tier: slots[index].tier };
         setSlots(copy);
+        setGraphModified(true);
         setIsModified(true);
     };
 
@@ -295,6 +453,7 @@ export default function DealChainCustomizerModal({
         if (!sibling) return;
         const targetTier = sibling.tier ?? 0;
         setSlots((prev) => prev.map((slot, i) => i === index ? { ...slot, tier: targetTier } : slot));
+        setGraphModified(true);
         setIsModified(true);
     };
 
@@ -302,6 +461,7 @@ export default function DealChainCustomizerModal({
         const slot = slots[index];
         if (!slot) return;
         const targetTier = (slot.tier ?? 0) + 1;
+        setGraphModified(true);
         setSlots((prev) => prev.map((item, i) => {
             if (i === index) return { ...item, tier: targetTier };
             return (item.tier ?? 0) >= targetTier ? { ...item, tier: (item.tier ?? 0) + 1 } : item;
@@ -311,9 +471,27 @@ export default function DealChainCustomizerModal({
 
     const handleUpdateSelectedSlot = (patch: Partial<PartnerSlot>) => {
         if (!selectedSlotId) return;
-        setSlots((prev) =>
-            prev.map((s) => (s.id === selectedSlotId ? { ...s, ...patch } : s)),
-        );
+        if ('tier' in patch || 'predecessorIds' in patch) setGraphModified(true);
+        if ('conditionCode' in patch && selectedSlotId) setConditionEditedIds((prev) => new Set(prev).add(selectedSlotId));
+        setSlots((prev) => prev.map((slot) => {
+            if (slot.id !== selectedSlotId) return slot;
+            if ('type' in patch && patch.type && canonicalNodeType(patch.type) !== canonicalNodeType(slot.type)) {
+                return {
+                    ...slot,
+                    ...patch,
+                    role: roleLabel(patch.type),
+                    name: `Choose ${roleLabel(patch.type)}`,
+                    meta: '',
+                    listingId: undefined,
+                    feeMinor: undefined,
+                    listingVersionId: undefined,
+                    coverThumbnailUrl: undefined,
+                    isOpenSlot: false,
+                    assignmentMode: 'preferred_partner',
+                };
+            }
+            return { ...slot, ...patch };
+        }));
         setIsModified(true);
     };
 
@@ -326,32 +504,68 @@ export default function DealChainCustomizerModal({
                     : picked.title || picked.providerName,
                 meta: picked.isOpenSlot
                     ? 'Buyer selects partner at checkout'
-                    : `₱${(picked.priceMinor / 100).toFixed(2)} partner fee`,
+                    : typeof picked.priceMinor === 'number'
+                        ? `₱${(picked.priceMinor / 100).toFixed(2)} partner fee`
+                        : 'Partner fee unavailable',
                 listingId: picked.isOpenSlot ? undefined : picked.id,
-                feeMinor: picked.priceMinor,
-                coverThumbnailUrl: picked.photoUrl,
+                listingVersionId: picked.isOpenSlot ? undefined : picked.listingVersionId ?? null,
+                feeMinor: picked.isOpenSlot ? undefined : picked.priceMinor,
                 isOpenSlot: Boolean(picked.isOpenSlot),
+                assignmentMode: picked.isOpenSlot ? 'buyer_choice' : 'preferred_partner',
             });
         });
     };
 
     const handleSaveChain = () => {
         const baseId = combination?.id || `combo-custom-${Date.now()}`;
-        const basedOnTitle =
-            combination?.basedOnTitle ||
-            (combination && !combination.isCustom ? combination.title : undefined);
-
+        const basedOnTitle = combination?.basedOnTitle || (combination && !combination.isCustom ? combination.title : undefined);
+        const nodes = previewNodes.map((sourceNode) => {
+            const node = { ...sourceNode };
+            delete node.conditionCode;
+            delete node.allowBypass;
+            return node;
+        });
+        const dependencies = !graphModified && combination?.planVersion === 1
+            ? updatedSavedGraph(combination, nodes, slots, gateConditionCode, conditionEditedIds, primaryConditionEdited)
+            : (() => {
+                const tierList = [...new Set(nodes.map((node) => node.tier ?? 0))].sort((a, b) => a - b);
+                return tierList.slice(1).flatMap((tier, tierIndex) => {
+                    const predecessors = nodes.filter((node) => (node.tier ?? 0) === tierList[tierIndex]);
+                    const successors = nodes.filter((node) => (node.tier ?? 0) === tier);
+                    return predecessors.flatMap((predecessor) => successors.map((successor) => {
+                        const raw = previewNodes.find((node) => node.id === successor.id)?.conditionCode || 'all_inputs_ready';
+                        const conditionCode = raw === 'all_inputs_ready'
+                            ? predecessor.type === 'store' && successor.type === 'delivery' ? 'part_ready'
+                                : predecessor.type === 'delivery' ? 'delivery_signed' : 'work_completed'
+                            : conditionForSave(raw) || 'work_completed';
+                        return {
+                            id: `edge-${predecessor.id}-${successor.id}`,
+                            predecessorId: predecessor.id!,
+                            successorId: successor.id!,
+                            conditionCode,
+                            dependencyType: 'blocks' as const,
+                            status: 'active' as const,
+                        };
+                    }));
+                });
+            })();
         const updated: DealChainCombination = {
             id: baseId,
             title: title.trim() || 'Custom Partnered Deal Chain',
             icon: combination?.icon || 'Sliders',
             isDefault: combination?.isDefault ?? true,
+            planVersion: 1,
             recipeId: combination?.recipeId || 'custom_chain',
             catalogVersion: combination?.catalogVersion || 1,
             isCustom: true,
             basedOnTitle,
-            nodes: previewNodes,
-            slots,
+            nodes,
+            slots: slots.map((slot) => {
+                const cleanSlot = { ...slot };
+                delete cleanSlot.allowBypass;
+                return { ...cleanSlot, conditionCode: conditionForSave(slot.conditionCode) };
+            }),
+            dependencies,
         };
         onSave(updated);
         onClose();
@@ -444,6 +658,7 @@ export default function DealChainCustomizerModal({
                         <div className="mt-3 overflow-hidden rounded-xl">
                             <DealChainCanvas
                                 nodes={previewNodes}
+                                dependencies={!graphModified && combination?.planVersion === 1 ? projectedDependencies : undefined}
                                 selectedNodeId={selectedSlotId}
                                 selectedGateId={selectedGateId}
                                 onGateClick={(gateId) => {
@@ -481,9 +696,9 @@ export default function DealChainCustomizerModal({
                             <div className="flex-1 space-y-2 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
                                 {/* Primary Listing Anchor (Fixed Center) */}
                                 <div
-                                    onClick={() => setSelectedSlotId('node-primary-anchor')}
+                                    onClick={() => setSelectedSlotId(primaryNodeId)}
                                     className={`relative flex cursor-pointer flex-col gap-1 rounded-xl border p-2.5 transition-all ${
-                                        selectedSlotId === 'node-primary-anchor'
+                                        selectedSlotId === primaryNodeId
                                             ? 'border-[#0D715F] bg-[#E8F7F1]/30 shadow-xs ring-1 ring-[#0D715F]'
                                             : 'border-emerald-200 bg-emerald-50/40 hover:border-emerald-300'
                                     }`}
@@ -512,7 +727,7 @@ export default function DealChainCustomizerModal({
                                 {/* Dynamic Partner Slots */}
                                 {slots.map((slot, idx) => {
                                     const isSelected = slot.id === selectedSlotId;
-                                    const feePesos = (slot.feeMinor || 0) / 100;
+                                    const feePesos = typeof slot.feeMinor === 'number' ? slot.feeMinor / 100 : null;
 
                                     return (
                                         <div
@@ -593,7 +808,7 @@ export default function DealChainCustomizerModal({
                                                     )}
                                                 </span>
                                                 <span className="font-mono font-bold text-emerald-800">
-                                                    ₱{feePesos.toFixed(2)}
+                                                    {feePesos === null ? 'Not selected' : `₱${feePesos.toFixed(2)}`}
                                                 </span>
                                             </div>
                                             <div className="grid grid-cols-2 gap-1.5 border-t border-slate-100 pt-1.5" onClick={(e) => e.stopPropagation()}>
@@ -680,7 +895,9 @@ export default function DealChainCustomizerModal({
                                                 <label className="text-xs font-bold text-slate-700">Inbound nodes</label>
                                                 <ul className="mt-1 space-y-1">
                                                     {previewNodes
-                                                        .filter((node) => node.tier === (previewNodes.find((item) => item.id === selectedSlotId)?.tier ?? 0) - 1)
+                                                        .filter((node) => combination?.dependencies?.length
+                                                            ? combination.dependencies.some((edge) => edge.status !== 'removed' && edge.predecessorId === node.id && edge.successorId === selectedSlotId)
+                                                            : node.tier === (previewNodes.find((item) => item.id === selectedSlotId)?.tier ?? 0) - 1)
                                                         .map((node) => <li key={node.id} className="rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700">{node.title}</li>)}
                                                 </ul>
                                             </div>
@@ -689,27 +906,51 @@ export default function DealChainCustomizerModal({
                                                 <select
                                                     id="gate-condition-code"
                                                     value={selectedSlot?.conditionCode || gateConditionCode || 'all_inputs_ready'}
-                                                    onChange={(e) => selectedSlot ? handleUpdateSelectedSlot({ conditionCode: e.target.value }) : (setGateConditionCode(e.target.value), setIsModified(true))}
+                                                    onChange={(e) => {
+                                                        if (selectedSlot) {
+                                                            handleUpdateSelectedSlot({ conditionCode: e.target.value });
+                                                        } else {
+                                                            setGateConditionCode(e.target.value);
+                                                            setPrimaryConditionEdited(true);
+                                                            setIsModified(true);
+                                                        }
+                                                    }}
                                                     className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-800"
                                                 >
+                                                    {(() => {
+                                                        const condition = selectedSlot?.conditionCode || gateConditionCode || 'all_inputs_ready';
+                                                        return !supportedEditorGates.includes(condition)
+                                                            ? <option value={condition} disabled>Unsupported saved condition: {condition}</option>
+                                                            : null;
+                                                    })()}
                                                     <option value="all_inputs_ready">All inputs ready (all_inputs_ready)</option>
-                                                    <option value="source_ready">Item ready for pickup (source_ready)</option>
-                                                    <option value="delivered_to_site">Delivered to site (delivered_to_site)</option>
+                                                    <option value="part_ready">Item ready for pickup (part_ready)</option>
+                                                    <option value="delivery_signed">Delivered to site (delivery_signed)</option>
                                                     <option value="work_completed">Work completed (work_completed)</option>
-                                                    <option value="audit_cleared">Audit passed (audit_cleared)</option>
                                                 </select>
+                                                {(() => {
+                                                    const condition = selectedSlot?.conditionCode || gateConditionCode || 'all_inputs_ready';
+                                                    return !supportedEditorGates.includes(condition)
+                                                        ? <p className="mt-1 text-[11px] font-semibold text-amber-800">Unsupported saved condition; choose a supported condition to apply.</p>
+                                                        : null;
+                                                })()}
                                             </div>
-                                            <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={Boolean(selectedSlot ? selectedSlot.allowBypass : gateAllowBypass)}
-                                                    onChange={(e) => selectedSlot ? handleUpdateSelectedSlot({ allowBypass: e.target.checked }) : (setGateAllowBypass(e.target.checked), setIsModified(true))}
-                                                    className="size-4 accent-emerald-700"
-                                                />
-                                                Allow customer bypass
-                                            </label>
+                                            {selectedSlot?.allowBypass || gateAllowBypass ? (
+                                                <div className="flex items-center justify-between gap-2 text-xs text-amber-800">
+                                                    <span>Unsupported saved bypass</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => selectedSlot
+                                                            ? handleUpdateSelectedSlot({ allowBypass: false })
+                                                            : (setGateAllowBypass(false), setIsModified(true))}
+                                                        className="rounded-md border border-amber-300 bg-white px-2 py-1 font-bold"
+                                                    >
+                                                        Remove bypass
+                                                    </button>
+                                                </div>
+                                            ) : null}
                                         </div>
-                                    ) : selectedSlotId === 'node-primary-anchor' ? (
+                                    ) : selectedSlotId === primaryNodeId ? (
                                         <div className="flex flex-col items-center justify-center py-10 text-center">
                                             <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-50 text-[#0D715F]">
                                                 <Store className="size-6" />
@@ -725,8 +966,8 @@ export default function DealChainCustomizerModal({
                                         <div className="space-y-4">
                                             {/* Role & Name */}
                                             <div className="space-y-1.5">
-                                                <label className="text-xs font-bold text-slate-700">
-                                                    Slot Title & Role
+                                                <label htmlFor="slot-role-type" className="text-xs font-bold text-slate-700">
+                                                    Slot Title &amp; Role
                                                 </label>
                                                 <div className="flex gap-2">
                                                     <input
@@ -736,6 +977,8 @@ export default function DealChainCustomizerModal({
                                                         className="flex-1 rounded-xl border border-slate-200 bg-[#FAFCFB] px-3.5 py-2 text-xs font-extrabold text-slate-900 outline-none focus:border-[#0F2F58] focus:bg-white"
                                                     />
                                                     <select
+                                                        id="slot-role-type"
+                                                        aria-label="Partner role"
                                                         value={selectedSlot.type}
                                                         onChange={(e) => handleUpdateSelectedSlot({ type: e.target.value as SlotType })}
                                                         className="rounded-xl border border-slate-200 bg-[#FAFCFB] px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-[#0F2F58]"
@@ -744,9 +987,15 @@ export default function DealChainCustomizerModal({
                                                         <option value="delivery">Courier / Transit</option>
                                                         <option value="installation">Labor / Tech</option>
                                                         <option value="audit">Safety / Audit</option>
+                                                        <option value="recycle">Recycle / Hauling</option>
                                                     </select>
                                                 </div>
                                             </div>
+                                            {selectedSlot.assignmentMode === 'preferred_partner' && !selectedSlot.listingId && (
+                                                <p role="alert" className="text-[11px] font-semibold text-amber-800">
+                                                    Choose a compatible partner listing to continue.
+                                                </p>
+                                            )}
 
                                             {/* Partner Assignment Mode: Bound Listing vs Open Slot */}
                                             <div className="space-y-2 rounded-xl border border-slate-200 bg-[#FAFCFB] p-3.5">
@@ -851,10 +1100,10 @@ export default function DealChainCustomizerModal({
                                                     <span className="text-sm font-extrabold text-slate-500">₱</span>
                                                     <input
                                                         type="number"
-                                                        value={Math.round((selectedSlot.feeMinor || 0) / 100)}
+                                                        value={typeof selectedSlot.feeMinor === 'number' ? Math.round(selectedSlot.feeMinor / 100) : ''}
                                                         onChange={(e) =>
                                                             handleUpdateSelectedSlot({
-                                                                feeMinor: Math.round((parseFloat(e.target.value) || 0) * 100),
+                                                                feeMinor: e.target.value === '' ? undefined : Math.round(parseFloat(e.target.value) * 100),
                                                             })
                                                         }
                                                         className="w-32 rounded-xl border border-slate-200 bg-[#FAFCFB] px-3 py-1.5 font-mono text-xs font-extrabold text-[#0F2F58] outline-none focus:border-[#0F2F58] focus:bg-white"
@@ -882,33 +1131,34 @@ export default function DealChainCustomizerModal({
                                                             Condition Code:
                                                         </span>
                                                         <select
-                                                            value={selectedSlot.conditionCode || 'source_ready'}
+                                                            value={selectedSlot.conditionCode || 'all_inputs_ready'}
                                                             onChange={(e) => handleUpdateSelectedSlot({ conditionCode: e.target.value })}
                                                             className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2F58]"
                                                         >
-                                                            <option value="source_ready">Item Ready for Pickup (source_ready)</option>
-                                                            <option value="delivered_to_site">Delivered to Site (delivered_to_site)</option>
-                                                            <option value="work_completed">Predecessor Work Done (work_completed)</option>
-                                                            <option value="audit_cleared">Safety Audit Passed (audit_cleared)</option>
+                                                            {selectedSlot.conditionCode && !supportedEditorGates.includes(selectedSlot.conditionCode)
+                                                                ? <option value={selectedSlot.conditionCode} disabled>Unsupported saved condition: {selectedSlot.conditionCode}</option>
+                                                                : null}
+                                                            <option value="all_inputs_ready">All inputs ready (all_inputs_ready)</option>
+                                                            <option value="part_ready">Item ready for pickup (part_ready)</option>
+                                                            <option value="delivery_signed">Delivered to site (delivery_signed)</option>
+                                                            <option value="work_completed">Predecessor work completed (work_completed)</option>
                                                         </select>
+                                                        {selectedSlot.conditionCode && !supportedEditorGates.includes(selectedSlot.conditionCode) ? (
+                                                            <p className="mt-1 text-[11px] font-semibold text-amber-800">Unsupported saved condition; choose a supported condition to apply.</p>
+                                                        ) : null}
                                                     </div>
-                                                    <div>
-                                                        <span className="text-[10px] font-bold text-slate-600 uppercase">
-                                                            Customer Bypass:
-                                                        </span>
-                                                        <div className="mt-1 flex items-center gap-2">
-                                                            <input
-                                                                type="checkbox"
-                                                                id="allow-bypass-cb"
-                                                                checked={Boolean(selectedSlot.allowBypass)}
-                                                                onChange={(e) => handleUpdateSelectedSlot({ allowBypass: e.target.checked })}
-                                                                className="size-4 rounded accent-[#0F2F58]"
-                                                            />
-                                                            <label htmlFor="allow-bypass-cb" className="text-xs text-slate-700">
-                                                                Allow buyer to supply own
-                                                            </label>
+                                                    {selectedSlot.allowBypass ? (
+                                                        <div className="flex items-end justify-between gap-2 text-xs text-amber-800">
+                                                            <span>Unsupported saved bypass</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleUpdateSelectedSlot({ allowBypass: false })}
+                                                                className="rounded-md border border-amber-300 bg-white px-2 py-1 font-bold"
+                                                            >
+                                                                Remove bypass
+                                                            </button>
                                                         </div>
-                                                    </div>
+                                                    ) : null}
                                                 </div>
                                             </div>
                                         </div>
@@ -946,9 +1196,6 @@ export default function DealChainCustomizerModal({
                                                         >
                                                             {preset.roleBadge}
                                                         </span>
-                                                        <span className="font-mono text-xs font-bold text-emerald-800">
-                                                            +₱{preset.defaultFeePesos}
-                                                        </span>
                                                     </div>
                                                     <h5 className="mt-1 text-xs font-extrabold text-slate-900">
                                                         {preset.roleLabel}
@@ -962,6 +1209,7 @@ export default function DealChainCustomizerModal({
                                                     <button
                                                         type="button"
                                                         onClick={() => handleAddSlot(preset, false)}
+                                                        aria-label={`Add ${preset.roleLabel} as sequential step`}
                                                         className="flex-1 rounded-lg bg-[#0F2F58] py-1 text-[10.5px] font-bold text-white hover:bg-[#1A3D6E]"
                                                     >
                                                         + Sequential Step
@@ -969,6 +1217,7 @@ export default function DealChainCustomizerModal({
                                                     <button
                                                         type="button"
                                                         onClick={() => handleAddSlot(preset, true)}
+                                                        aria-label={`Add ${preset.roleLabel} as parallel branch`}
                                                         title="Runs concurrently with currently selected slot"
                                                         className="flex-1 rounded-lg border border-slate-200 bg-slate-50 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100"
                                                     >
@@ -989,7 +1238,7 @@ export default function DealChainCustomizerModal({
                             <span className="text-xs text-slate-500 font-semibold">
                                 Total Partner Addon:{' '}
                                 <strong className="font-mono text-sm font-extrabold text-[#0F2F58]">
-                                    ₱{(totalPartnerMinor / 100).toFixed(2)}
+                                    {totalPartnerMinor === null ? 'Partner fees unavailable' : `₱${(totalPartnerMinor / 100).toFixed(2)}`}
                                 </strong>
                             </span>
                             <span className="text-slate-300">|</span>
@@ -1008,8 +1257,9 @@ export default function DealChainCustomizerModal({
                             </button>
                             <button
                                 type="button"
+                                disabled={hasUnsupportedSavedGate}
                                 onClick={handleSaveChain}
-                                className="rounded-xl bg-[#FFC72C] px-5 py-2 text-xs font-extrabold text-slate-950 shadow-xs hover:bg-[#e6b327]"
+                                className="rounded-xl bg-[#FFC72C] px-5 py-2 text-xs font-extrabold text-slate-950 shadow-xs hover:bg-[#e6b327] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Apply Deal Chain to Listing
                             </button>

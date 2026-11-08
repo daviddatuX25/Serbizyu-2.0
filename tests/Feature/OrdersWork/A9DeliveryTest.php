@@ -340,7 +340,8 @@ final class A9DeliveryTest extends TestCase
             'delivery_id' => $draft['id'],
             'message' => 'The allowed revision has been used.',
         ])->assertStatus(409)->assertJsonPath('code', 'REVISION_LIMIT_REACHED');
-        $this->assertDatabaseCount('work_revision_requests', 1);
+        $workInstanceId = DB::table('work_instances')->where('order_id', $this->orderId)->value('id');
+        expect(DB::table('work_revision_requests')->where('work_instance_id', $workInstanceId)->count())->toBe(1);
         expect(DB::table('work_deliverable_files')->where('work_delivery_id', $v1)->value('evidence_file_id'))->toBe($file1);
     }
 

@@ -27,6 +27,7 @@ export interface PipelineNode {
     role: string;
     type: 'store' | 'delivery' | 'labor' | 'audit';
     feeMinor: number;
+    isPrimary?: boolean;
     assignedPartner?: {
         id: string;
         title: string;
@@ -404,6 +405,14 @@ export function DealChainPipelineBuilder({
         onChange(nextNodes, dependencies);
     };
 
+    const handleSelectPrimary = (key: string) => {
+        if (readOnly) return;
+        onChange(
+            nodes.map((node) => ({ ...node, isPrimary: node.key === key })),
+            dependencies,
+        );
+    };
+
     const handleUpdateGateCondition = (
         predKey: string,
         succKey: string,
@@ -599,6 +608,21 @@ export function DealChainPipelineBuilder({
                                         </div>
                                     )}
                                 </div>
+                                {!readOnly && (
+                                    <button
+                                        type="button"
+                                        aria-pressed={node.isPrimary === true}
+                                        aria-label="Use as primary listing"
+                                        onClick={() => handleSelectPrimary(node.key)}
+                                        className={`mt-3 rounded-lg border px-3 py-1.5 text-xs font-bold ${
+                                            node.isPrimary
+                                                ? 'border-[#0F2F58] bg-[#0F2F58] text-white'
+                                                : 'border-slate-200 text-slate-600 hover:border-[#0F2F58]'
+                                        }`}
+                                    >
+                                        {node.isPrimary ? 'Primary listing' : 'Use as primary listing'}
+                                    </button>
+                                )}
 
                                 {/* Step Form Fields */}
                                 <div className="mt-3.5 grid gap-3 sm:grid-cols-2">

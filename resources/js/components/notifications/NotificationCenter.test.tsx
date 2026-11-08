@@ -49,7 +49,7 @@ describe('notification inbox', () => {
         fetchMock.mockResolvedValueOnce(response({ data: { id: actionNotice.id, read_at: '2026-10-26T09:00:00Z', summary: { unread_count: 1, needs_action_count: 0, updates_count: 1 } } }));
         mount();
         fireEvent.click(screen.getByRole('button', { name: /notifications/i }));
-        fireEvent.click(await screen.findByRole('button', { name: /invitation/i }));
+        fireEvent.click(await screen.findByRole('button', { name: /^Invitation, unread$/i }));
 
         await waitFor(() => expect(routerVisit).toHaveBeenCalledWith('/deal-invitations/notice-1'));
         expect(fetchMock).toHaveBeenCalledWith('/notifications/notice-1/read', expect.objectContaining({
@@ -75,7 +75,7 @@ describe('notification inbox', () => {
         expect(screen.getByText('New quote')).toBeTruthy();
         expect(screen.queryByText('Invitation')).toBeNull();
         fireEvent.click(screen.getByRole('button', { name: /your action/i }));
-        fireEvent.click(screen.getByRole('button', { name: /invitation/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^Invitation, unread$/i }));
 
         await waitFor(() => expect(routerVisit).toHaveBeenCalledWith('/deal-invitations/notice-1'));
         expect(fetchMock).toHaveBeenCalledWith('/notifications/notice-1/read', expect.objectContaining({ method: 'POST' }));
@@ -91,7 +91,7 @@ describe('notification inbox', () => {
         fetchMock.mockResolvedValueOnce(response({}, false));
         mount();
         fireEvent.click(screen.getByRole('button', { name: /notifications/i }));
-        fireEvent.click(await screen.findByRole('button', { name: /invitation/i }));
+        fireEvent.click(await screen.findByRole('button', { name: /^Invitation, unread$/i }));
 
         expect(await screen.findByText(/could not mark this notification as read/i)).toBeTruthy();
         expect(routerVisit).not.toHaveBeenCalled();
@@ -121,6 +121,22 @@ describe('notification inbox', () => {
         expect(await screen.findByText(/no notifications yet/i)).toBeTruthy();
         await screen.findByRole('button', { name: /^notifications$/i });
         expect(screen.queryByLabelText('Unread notifications')).toBeNull();
+    });
+
+    it('opens deal invitations from an empty inbox without acknowledging notifications', async () => {
+        const fetchMock = vi.mocked(fetch);
+        fetchMock.mockResolvedValueOnce(response({ data: summary }));
+        fetchMock.mockResolvedValueOnce(response({ data: [], next_cursor: null }));
+        mount();
+
+        fireEvent.click(screen.getByRole('button', { name: /notifications, 2 unread/i }));
+        expect(await screen.findByText(/no notifications yet/i)).toBeTruthy();
+        fireEvent.click(screen.getByRole('button', { name: 'Deal invitations' }));
+
+        await waitFor(() => expect(routerVisit).toHaveBeenCalledWith('/deal-invitations'));
+        expect(screen.queryByRole('dialog', { name: 'Notifications' })).toBeNull();
+        expect(fetchMock).not.toHaveBeenCalledWith(expect.stringMatching(/\/read$/), expect.anything());
+        expect(screen.getByLabelText('Unread notifications').textContent).toBe('2');
     });
     it('keeps the guest bell disabled and does not request private notification data', () => {
         const fetchMock = vi.mocked(fetch);

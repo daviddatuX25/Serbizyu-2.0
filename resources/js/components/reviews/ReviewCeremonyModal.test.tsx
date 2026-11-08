@@ -120,7 +120,7 @@ describe('ReviewCeremonyModal Component - Stages & AD-21 Cascading Flow', () => 
 
         expect(screen.getByText('Review Sealed & Protected')).toBeTruthy();
         expect(screen.getByText('72-Hour Anti-Retaliation Window Active')).toBeTruthy();
-        expect(screen.getByText(/escrow hold/i)).toBeTruthy();
+        expect(screen.getByText(/sealed quarantine/i)).toBeTruthy();
     });
 
     it('renders Stage 3 Revealed with published status', () => {

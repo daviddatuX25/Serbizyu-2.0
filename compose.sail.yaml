@@ -64,6 +64,21 @@ services:
     networks:
       - serbizyu
 
+  node-tools:
+    image: node:22-bookworm-slim
+    profiles: ["tools"]
+    init: true
+    user: "${WWWUSER:-1000}:${WWWGROUP:-1000}"
+    working_dir: /var/www/html
+    environment:
+      HOME: /tmp
+    volumes:
+      - ".:/var/www/html"
+    tmpfs:
+      - /tmp
+    networks:
+      - serbizyu
+
 networks:
   serbizyu:
     external: true

@@ -217,7 +217,6 @@ export default function OrdersIndex(props: OrdersIndexProps) {
                         if (tab === 'post') setCreatorOpen(true);
                         if (tab === 'quick_deal') setQuickDealOpen(true);
                         if (tab === 'orders') setActiveSection('needsAction');
-                        if (tab === 'invitations') router.visit('/deal-invitations');
                         if (tab === 'profile') router.visit('/my-listings');
                     }}
                     onQuickDealClick={() => setQuickDealOpen(true)}

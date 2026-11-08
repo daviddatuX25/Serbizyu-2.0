@@ -26,8 +26,9 @@ export interface DealChainCanvasProps {
 function getNodeCategoryMeta(type: string, role: string) {
     const t = (type || '').toLowerCase();
     const r = (role || '').toLowerCase();
+    const knownType = ['store', 'part', 'parts', 'product', 'delivery', 'courier', 'transit', 'audit', 'labor', 'service', 'installation', 'diagnostic', 'tools', 'hauling', 'recycle'].includes(t);
 
-    if (t === 'store' || t === 'part' || r.includes('part') || r.includes('store') || r.includes('bakery') || r.includes('produce')) {
+    if (['store', 'part', 'parts', 'product'].includes(t) || (!knownType && (r.includes('part') || r.includes('store') || r.includes('bakery') || r.includes('produce')))) {
         return {
             stripeColor: '#F59E0B', // Amber
             icon: <Store className="size-5 text-[#F59E0B]" />,
@@ -36,7 +37,7 @@ function getNodeCategoryMeta(type: string, role: string) {
             label: 'PART / STORE',
         };
     }
-    if (t === 'delivery' || t === 'transit' || r.includes('courier') || r.includes('rider') || r.includes('hauler') || r.includes('transit')) {
+    if (['delivery', 'courier', 'transit', 'hauling'].includes(t) || (!knownType && (r.includes('courier') || r.includes('rider') || r.includes('hauler') || r.includes('transit')))) {
         return {
             stripeColor: '#38BDF8', // Sky Blue
             icon: <Truck className="size-5 text-[#38BDF8]" />,
@@ -45,7 +46,7 @@ function getNodeCategoryMeta(type: string, role: string) {
             label: 'COURIER',
         };
     }
-    if (t === 'audit' || r.includes('audit') || r.includes('cert') || r.includes('inspect')) {
+    if (t === 'audit' || (!knownType && (r.includes('audit') || r.includes('cert') || r.includes('inspect')))) {
         return {
             stripeColor: '#A855F7', // Purple
             icon: <ShieldCheck className="size-5 text-[#A855F7]" />,
@@ -234,7 +235,7 @@ function SquircleNode({
  */
 export default function DealChainCanvas({
     nodes,
-    dependencies = [],
+    dependencies,
     selectedNodeId,
     onNodeClick,
     selectedGateId,
@@ -285,7 +286,22 @@ export default function DealChainCanvas({
             }
         }
         return result;
-    }, [nodes, dependencies]);
+    }, [nodes]);
+
+    const explicitLayout = useMemo(() => {
+        const height = Math.max(160, ...tiers.map((tier) => tier.length * 126));
+        const positions = new Map<string, { x: number; y: number }>();
+        tiers.forEach((tier, column) => {
+            tier.forEach((node, row) => {
+                if (node.id) positions.set(node.id, {
+                    x: column * 270 + 150,
+                    y: (height - tier.length * 126) / 2 + row * 126 + 20,
+                });
+            });
+        });
+        return { positions, height, width: Math.max(270, tiers.length * 270) };
+    }, [tiers]);
+    const explicitEdges = dependencies?.filter((edge) => edge.status !== 'removed');
 
     const isDark = theme === 'dark';
 
@@ -328,25 +344,79 @@ export default function DealChainCanvas({
                     touchAction: 'pan-x',
                 }}
             >
+                {explicitEdges !== undefined ? (
+                    <div className="relative shrink-0" style={{ width: explicitLayout.width, height: explicitLayout.height }}>
+                        <svg className="pointer-events-none absolute inset-0 overflow-visible" width={explicitLayout.width} height={explicitLayout.height} aria-label="Saved partnership dependencies">
+                            {explicitEdges.map((edge) => {
+                                const source = explicitLayout.positions.get(edge.predecessorId);
+                                const target = explicitLayout.positions.get(edge.successorId);
+                                if (!source || !target) return null;
+                                const startX = source.x + 81;
+                                const endX = target.x - 132;
+                                const startY = source.y + 33;
+                                const endY = target.y + 33;
+                                const bendX = (startX + endX) / 2;
+                                return (
+                                    <path key={edge.id} data-predecessor={edge.predecessorId} data-successor={edge.successorId}
+                                        d={`M ${startX} ${startY} C ${bendX} ${startY}, ${bendX} ${endY}, ${endX} ${endY}`}
+                                        fill="none" stroke="#10B981" strokeWidth="2" strokeDasharray="4 3">
+                                        <title>{edge.predecessorId} → {edge.successorId}: {edge.conditionCode}</title>
+                                    </path>
+                                );
+                            })}
+                        </svg>
+                        {nodes.map((node) => {
+                            const position = node.id ? explicitLayout.positions.get(node.id) : undefined;
+                            if (!position) return null;
+                            const inbound = explicitEdges.filter((edge) => edge.successorId === node.id);
+                            const outgoing = explicitEdges.some((edge) => edge.predecessorId === node.id);
+                            return (
+                                <React.Fragment key={node.id}>
+                                    {inbound.length > 0 && (
+                                        <div className="absolute flex items-center" style={{ left: position.x - 132, top: position.y + 3 }}>
+                                            <button type="button" data-testid={`gate-node-${node.id}`}
+                                                aria-label={`Dependency gate for ${node.title}, ${inbound.length} inputs`}
+                                                onClick={() => onGateClick?.(`gate-${node.id}`)}
+                                                className="flex min-h-[60px] w-[112px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl border border-emerald-400/60 bg-[#052E2B] px-2 py-1.5 text-emerald-300"
+                                                style={selectedGateId === `gate-${node.id}` ? { boxShadow: '0 0 0 2.5px rgba(16, 185, 129, 0.7)' } : undefined}>
+                                                <span className="text-[8px] font-black uppercase tracking-wide">Wait for inputs</span>
+                                                <span className="mt-0.5 font-mono text-[7px]">{node.conditionCode || inbound.map((edge) => edge.conditionCode).join(' + ')}</span>
+                                                <span className="text-[7px] font-bold">{inbound.length} INPUTS</span>
+                                            </button>
+                                            <DashedWire width={35} />
+                                        </div>
+                                    )}
+                                    <div className="absolute" style={{ left: position.x, top: position.y }}>
+                                        <SquircleNode node={node} isSelected={node.id === selectedNodeId}
+                                            onClick={() => node.id && onNodeClick?.(node.id)}
+                                            onAddStepClick={onAddStepClick ? (event) => node.id && onAddStepClick(node.id, event) : undefined}
+                                            showInPort={inbound.length > 0} showOutPort={outgoing || Boolean(onAddStepClick)} />
+                                    </div>
+                                </React.Fragment>
+                            );
+                        })}
+                    </div>
+                ) : (
                 <div className="flex items-center gap-0 min-w-max py-2">
                     {tiers.map((tierNodes, tIdx) => {
                         const isFirstTier = tIdx === 0;
                         const isParallelTier = tierNodes.length > 1;
                         const prevTier = tiers[tIdx - 1];
                         const prevWasParallel = prevTier && prevTier.length > 1;
+                        const actualInboundCount = prevTier?.length ?? 0;
 
                         return (
                             <React.Fragment key={`tier-${tIdx}`}>
                                 {/* Connector Wire between tiers */}
                                 {!isFirstTier && (
                                     <>
-                                        {prevWasParallel && !isParallelTier ? (
+                                        {!isParallelTier && prevWasParallel ? (
                                             <div className="flex items-center gap-1">
                                                 <JoinSvg height={160} />
                                                 <button
                                                     type="button"
                                                     data-testid={`gate-node-${tierNodes[0].id || tIdx}`}
-                                                    aria-label={`Dependency gate: wait for all inputs, ${prevTier.length} inputs`}
+                                                    aria-label={`Dependency gate: wait for all inputs, ${actualInboundCount} inputs`}
                                                     onClick={() => onGateClick?.(`gate-${tierNodes.map((node) => node.id).join('-')}`)}
                                                     className="flex min-h-[60px] min-w-[116px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl border border-emerald-400/60 bg-[#052E2B] px-2 py-1.5 text-emerald-300 shadow-[0_0_14px_rgba(16,185,129,0.16)] transition-shadow"
                                                     style={selectedGateId === `gate-${tierNodes.map((node) => node.id).join('-')}` ? { boxShadow: '0 0 0 2.5px rgba(16, 185, 129, 0.7)' } : undefined}
@@ -354,7 +424,7 @@ export default function DealChainCanvas({
                                                 >
                                                     <span className="text-[8px] font-black uppercase tracking-wide">⬡ ALL OF · Wait for all inputs</span>
                                                     <span className="mt-0.5 rounded bg-emerald-950 px-1 font-mono text-[7px] text-emerald-200">{tierNodes[0].conditionCode || 'all_inputs_ready'}</span>
-                                                    <span className="text-[7px] font-bold text-emerald-100">{prevTier.length} INPUTS</span>
+                                                    <span className="text-[7px] font-bold text-emerald-100">{actualInboundCount} INPUTS</span>
                                                 </button>
                                                 <DashedWire width={20} />
                                             </div>
@@ -407,6 +477,7 @@ export default function DealChainCanvas({
                         );
                     })}
                 </div>
+                )}
             </div>
         </div>
     );

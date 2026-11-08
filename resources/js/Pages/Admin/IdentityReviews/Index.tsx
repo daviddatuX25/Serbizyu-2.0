@@ -358,35 +358,32 @@ export default function IdentityReviewsIndex() {
         e.preventDefault();
         if (!activeTask) return;
 
-        setActionExecuted(true);
-        setTimeout(() => {
-            const updatedStatus =
-                actionDialog?.type === 'approve'
-                    ? 'approved'
-                    : actionDialog?.type === 'needs_info'
-                      ? 'needs_info'
-                      : 'rejected';
+        const updatedStatus =
+            actionDialog?.type === 'approve'
+                ? 'approved'
+                : actionDialog?.type === 'needs_info'
+                  ? 'needs_info'
+                  : 'rejected';
 
-            const updatedTask: IdentityReviewTask = {
-                ...activeTask,
-                status: updatedStatus,
-            };
+        const updatedTask: IdentityReviewTask = {
+            ...activeTask,
+            status: updatedStatus,
+        };
 
-            setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
-            setActiveTask(updatedTask);
-            setActionExecuted(false);
-            setActionDialog(null);
-            setActionReason('');
-            setIsDrawerOpen(false);
+        setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
+        setActiveTask(updatedTask);
+        setActionExecuted(false);
+        setActionDialog(null);
+        setActionReason('');
+        setIsDrawerOpen(false);
 
-            setSuccessBanner(
-                updatedStatus === 'approved'
-                    ? `Granted ${updatedTask.workShapeCode} trade capability "${updatedTask.requestedCapability}" to ${updatedTask.applicantName}.`
-                    : updatedStatus === 'needs_info'
-                      ? `Requested additional documentation from ${updatedTask.applicantName}.`
-                      : `Declined accreditation for ${updatedTask.applicantName}. Category remains locked.`,
-            );
-        }, 800);
+        setSuccessBanner(
+            updatedStatus === 'approved'
+                ? `Granted ${updatedTask.workShapeCode} trade capability "${updatedTask.requestedCapability}" to ${updatedTask.applicantName}.`
+                : updatedStatus === 'needs_info'
+                  ? `Requested additional documentation from ${updatedTask.applicantName}.`
+                  : `Declined accreditation for ${updatedTask.applicantName}. Category remains locked.`,
+        );
     };
 
     // Filtered Tasks Computation

@@ -1,0 +1,4 @@
+includes:
+    - /var/www/html/phpstan.neon
+parameters:
+    tmpDir: /tmp/serbizyu-savedplan-phpstan

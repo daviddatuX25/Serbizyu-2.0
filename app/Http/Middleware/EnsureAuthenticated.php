@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\AuthReturnPath;
 use App\Shared\Contracts\StaffAccessPort;
 use Closure;
 use Illuminate\Http\Request;
@@ -17,8 +18,8 @@ final class EnsureAuthenticated
     {
         $user = $request->user();
         if (! $user) {
-            $returnTo = $request->isMethod('GET') ? $request->getRequestUri() : route('home');
-            $request->session()->put('auth_return_to', $returnTo);
+            $returnTo = $request->isMethod('GET') ? $request->getRequestUri() : route('home', absolute: false);
+            $request->session()->put('auth_return_to', AuthReturnPath::safe($returnTo));
 
             return redirect()->route('auth.sign-in');
         }

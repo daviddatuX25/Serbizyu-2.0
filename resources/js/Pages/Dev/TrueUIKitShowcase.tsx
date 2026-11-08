@@ -780,7 +780,7 @@ export default function TrueUIKitShowcase() {
                                                         Deal Chain Nodes
                                                     </TabsTrigger>
                                                     <TabsTrigger value="settlement">
-                                                        Escrow Settlement
+                                                        Order Settlement
                                                     </TabsTrigger>
                                                 </TabsList>
                                                 <TabsContent
@@ -806,8 +806,8 @@ export default function TrueUIKitShowcase() {
                                                     className="rounded-lg border border-border bg-muted/20 p-4"
                                                 >
                                                     <p className="text-xs leading-relaxed text-muted-foreground">
-                                                        Dual OTP customer confirmation before escrow
-                                                        payout release.
+                                                        Dual OTP customer confirmation before milestone
+                                                        payment release.
                                                     </p>
                                                 </TabsContent>
                                             </Tabs>
@@ -954,7 +954,7 @@ export default function TrueUIKitShowcase() {
                                     Provider credentials verified with government DTI record.
                                 </Notice>
                                 <Notice tone="warning" title="Dispute Boundary">
-                                    Direct customer cash transactions forfeit escrow protection.
+                                    Direct customer cash transactions require physical receipt.
                                 </Notice>
                                 <Notice tone="danger" title="Safety Inspection Alert · True Red">
                                     Refrigerant recovery pump mandatory prior to compressor opening.
@@ -1105,7 +1105,7 @@ export default function TrueUIKitShowcase() {
                                             </p>
                                         </div>
                                         <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-2.5 text-[10.5px] font-semibold text-emerald-900">
-                                            Bilateral Escrow · Direct Provider Payment
+                                            Bilateral Payment · Direct Provider Payment
                                         </div>
                                     </Card>
 
@@ -1301,7 +1301,7 @@ export default function TrueUIKitShowcase() {
                                                 <Coins className="size-5" />
                                             </div>
                                             <span className="text-xs font-extrabold text-foreground">
-                                                7. Escrow Settle
+                                                7. Payment Settle
                                             </span>
                                             <span className="text-[10px] text-muted-foreground">
                                                 Funds release
@@ -1664,7 +1664,7 @@ export default function TrueUIKitShowcase() {
                         }
                     >
                         <div className="flex flex-col gap-3 py-2">
-                            <Notice tone="success" title="Escrow Guarantee Active">
+                            <Notice tone="success" title="Payment Sign-Off Active">
                                 Your payment is held safely until you verify work completion delta.
                             </Notice>
 
@@ -1856,7 +1856,7 @@ export default function TrueUIKitShowcase() {
                                                         className="mt-1.5 flex h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-900 outline-none focus:border-emerald-600 focus:bg-white"
                                                     >
                                                         <option value="escrow">
-                                                            Serbizyu Verified Escrow
+                                                            Tiwala Protected Digital (Sandbox)
                                                         </option>
                                                         <option value="cash">
                                                             Direct Cash Upon Completion
@@ -1890,10 +1890,7 @@ export default function TrueUIKitShowcase() {
                                                     onIndexChange={(idx: number) =>
                                                         setActiveComboIndex(idx)
                                                     }
-                                                    onSlotChangeClick={(
-                                                        comboId: string,
-                                                        slotType: SlotType,
-                                                    ) => handleSlotClick(comboId, slotType)}
+                                                    onSlotChangeClick={(comboId, slot) => handleSlotClick(comboId, slot.type)}
                                                     onToggleDefault={handleToggleDefault}
                                                     onRemoveCombo={handleRemoveCombo}
                                                 />

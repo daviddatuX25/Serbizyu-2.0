@@ -193,4 +193,41 @@ describe('DealChainPipelineBuilder', () => {
         const [, nextDeps] = onChange.mock.calls[0];
         expect(nextDeps[0].conditionCode).toBe('work_completed');
     });
+    it('selects one primary listing step through its accessible control', () => {
+        const onChange = vi.fn();
+        const nodes = sampleNodes.map((node, index) => ({
+            ...node,
+            isPrimary: index === 0,
+        }));
+
+        render(
+            <DealChainPipelineBuilder
+                nodes={nodes}
+                dependencies={sampleDependencies}
+                onChange={onChange}
+            />,
+        );
+
+        fireEvent.click(screen.getAllByRole('button', { name: 'Use as primary listing' })[2]);
+
+        const [nextNodes] = onChange.mock.calls[0];
+        expect(nextNodes.map((node: PipelineNode) => node.isPrimary)).toEqual([
+            false,
+            false,
+            true,
+        ]);
+    });
+
+    it('does not offer primary selection in read-only mode', () => {
+        render(
+            <DealChainPipelineBuilder
+                nodes={sampleNodes}
+                dependencies={sampleDependencies}
+                onChange={vi.fn()}
+                readOnly
+            />,
+        );
+
+        expect(screen.queryByRole('button', { name: 'Use as primary listing' })).toBeNull();
+    });
 });

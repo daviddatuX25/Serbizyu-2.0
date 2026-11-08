@@ -80,9 +80,27 @@ final class OrderTransitionPipelineTest extends TestCase
         // Mark Need 1 and Need 2 completed
         DB::table('deal_needs')->where('id', Fix::NEED_ID_PART)->update(['status' => 'completed']);
         DB::table('deal_needs')->where('id', Fix::NEED_ID_TRANSIT)->update(['status' => 'completed']);
+        DB::table('deal_needs')->where('id', Fix::NEED_ID_LABOR)->update(['status' => 'in_progress']);
+        DB::table('deal_dependencies')->where('deal_chain_id', Fix::CHAIN_ID_ONGOING)->where('successor_need_id', Fix::NEED_ID_LABOR)->update(['status' => 'removed']);
+        $laborOrderId = '0198a3b1-7c40-7abc-8def-0ede00000103';
+        DB::table('deal_need_confirmations')->insertOrIgnore([
+            'id' => (string) Str::uuid7(),
+            'deal_chain_id' => Fix::CHAIN_ID_ONGOING,
+            'deal_need_id' => Fix::NEED_ID_LABOR,
+            'invitation_id' => '0198a3b1-7c40-7abc-8def-111100000003',
+            'order_id' => $laborOrderId,
+            'confirmed_by_user_id' => $buyer->id,
+            'listing_id' => Fix::LISTING_AC_CLEAN,
+            'listing_version_id' => (string) DB::table('listing_versions')->where('listing_id', Fix::LISTING_AC_CLEAN)->value('id'),
+            'terms_hash' => hash('sha256', 'terms'),
+            'capacity_hash' => hash('sha256', 'cap'),
+            'payload_version' => 1,
+            'correlation_id' => (string) Str::uuid7(),
+            'confirmed_at' => now(),
+            'created_at' => now(),
+        ]);
         $tech = User::query()->where('phone_e164', Fix::TECH_PHONE)->firstOrFail();
         $techId = (string) $tech->id;
-        $laborOrderId = '0198a3b1-7c40-7abc-8def-0ede00000103';
         DB::table('orders')->updateOrInsert(
             ['id' => $laborOrderId],
             [

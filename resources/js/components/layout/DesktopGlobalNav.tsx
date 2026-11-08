@@ -182,9 +182,12 @@ export function DesktopGlobalNav({
             if (item.id !== itemId || !item.dealChain) return item;
             const updatedNodes = [...item.dealChain.nodes];
             const oldNode = updatedNodes[nodeIndex];
-            const oldPrice = oldNode.priceMinor ?? (oldNode.type === 'store' ? 18000 : 8000);
-            const newPrice = candidate.price_minor;
-            const priceDiff = (newPrice - oldPrice) / 100;
+            const oldPrice = oldNode.priceMinor;
+            const candidatePrice = candidate.price_minor ?? candidate.priceMinor;
+            const hasCandidatePrice = typeof candidatePrice === 'number' && Number.isFinite(candidatePrice);
+            const priceDiff = typeof oldPrice === 'number' && hasCandidatePrice
+                ? (candidatePrice - oldPrice) / 100
+                : 0;
 
             updatedNodes[nodeIndex] = {
                 ...oldNode,
@@ -192,8 +195,9 @@ export function DesktopGlobalNav({
                 title: candidate.title,
                 sub: candidate.provider_name,
                 listingId: candidate.id,
+                listingVersionId: candidate.listingVersionId ?? candidate.listing_version_id ?? null,
                 providerId: candidate.provider_user_id,
-                priceMinor: candidate.price_minor,
+                priceMinor: hasCandidatePrice ? candidatePrice : null,
             };
 
             return {

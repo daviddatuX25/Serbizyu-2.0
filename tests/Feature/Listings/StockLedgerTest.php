@@ -80,10 +80,11 @@ it('seeds product variants once and never resets physical stock on a later seed 
         ->and((int) $bucket->quantity)->toBe(20)
         ->and(DB::table('stock_movements')->where('listing_capacity_id', $bucket->id)->where('movement_type', 'opening_balance')->count())->toBe(1);
 
+    $ownerId = (string) DB::table('listings')->where('id', '0198a3b1-7c40-7abc-8def-5234567890ba')->value('owner_user_id');
     $damage = app(StockLedgerService::class)->adjust(
         capacityId: (string) $bucket->id,
-        actorUserId: FixtureConstants::ACTIVE_OWNER_ID,
-        ownerUserId: FixtureConstants::ACTIVE_OWNER_ID,
+        actorUserId: $ownerId,
+        ownerUserId: $ownerId,
         expectedRowVersion: (int) $bucket->row_version,
         movementType: 'damaged',
         quantity: 1,
@@ -94,8 +95,8 @@ it('seeds product variants once and never resets physical stock on a later seed 
     );
     $damageReplay = app(StockLedgerService::class)->adjust(
         capacityId: (string) $bucket->id,
-        actorUserId: FixtureConstants::ACTIVE_OWNER_ID,
-        ownerUserId: FixtureConstants::ACTIVE_OWNER_ID,
+        actorUserId: $ownerId,
+        ownerUserId: $ownerId,
         expectedRowVersion: (int) $bucket->row_version,
         movementType: 'damaged',
         quantity: 1,

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { BundleChainModal } from './BundleChainModal';
 import type { DealChainRecipeDefinition } from '@/marketplace/dealChainRecipes';
+import { hasCoordination } from '@/marketplace/booking';
 import type {
     BasketItem,
     PublishedDealChainRecipeId,
@@ -84,8 +85,8 @@ export function PicksDrawer({
 
     const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
     const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const itemsWithDealChain = items.filter((item) => Boolean(item.dealChain));
-    const hasDealChain = itemsWithDealChain.length > 0;
+    const hasDealChain = items.some(hasCoordination);
+    const hasSavedPlan = items.some((item) => Boolean(item.deal_chain_combination_id));
     const isSingleProduct = items.length === 1 && items[0].listing_type === 'product';
     const isSingleService = items.length === 1 && items[0].listing_type !== 'product';
 
@@ -238,6 +239,11 @@ export function PicksDrawer({
                                                 </div>
                                             </div>
 
+                                            {item.deal_chain_combination_id && (
+                                                <p className="mt-2 text-xs font-semibold text-[#0F2F58]">
+                                                    {item.savedDealChain?.title ?? item.deal_chain_title ?? 'Saved partner plan'} · Provider agreements required
+                                                </p>
+                                            )}
                                             {/* Deal Chain Button & Attached Node Pipeline */}
                                             {/* Deal Chain Container Card */}
                                             {item.dealChain ? (
@@ -426,7 +432,7 @@ export function PicksDrawer({
                             <div className="space-y-1.5 text-xs">
                                 <div className="flex justify-between font-medium text-slate-600">
                                     <span>
-                                        Picks subtotal ({totalCount}{' '}
+                                        {hasSavedPlan ? 'Selected main items' : 'Picks subtotal'} ({totalCount}{' '}
                                         {totalCount === 1 ? 'item' : 'items'}):
                                     </span>
                                     <span className="font-mono font-bold text-slate-800">
@@ -456,12 +462,12 @@ export function PicksDrawer({
                                                 Confirmed after agreement
                                             </span>
                                         </div>
-                                        <div className="flex justify-between border-t border-slate-100 pt-2 text-sm font-extrabold text-[#0F2F58]">
-                                            <span>Displayed planning estimate:</span>
-                                            <span className="font-mono text-base">
-                                                ₱{subtotal.toFixed(2)}
-                                            </span>
-                                        </div>
+                                        {!hasSavedPlan && (
+                                            <div className="flex justify-between border-t border-slate-100 pt-2 text-sm font-extrabold text-[#0F2F58]">
+                                                <span>Displayed planning estimate:</span>
+                                                <span className="font-mono text-base">₱{subtotal.toFixed(2)}</span>
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>

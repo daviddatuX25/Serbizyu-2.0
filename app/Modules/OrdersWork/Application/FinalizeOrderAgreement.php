@@ -8,14 +8,14 @@ use App\Shared\Application\ActorContext;
 use App\Shared\Application\AuditRecorder;
 use App\Shared\Application\IdempotencyGuard;
 use App\Shared\Application\KernelException;
+use App\Shared\Application\NotificationIntent;
 use App\Shared\Application\OutboxWriter;
 use App\Shared\Contracts\AdministrativeHoldReaderPort;
+use App\Shared\Contracts\NotificationAttention;
+use App\Shared\Contracts\NotificationsPort;
 use App\Shared\Contracts\OrderCapacityPort;
 use App\Shared\Contracts\OrderListingSourcePort;
 use App\Shared\Contracts\OrderPaymentObligationPort;
-use App\Shared\Application\NotificationIntent;
-use App\Shared\Contracts\NotificationAttention;
-use App\Shared\Contracts\NotificationsPort;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -211,7 +211,7 @@ final class FinalizeOrderAgreement
                     throw new OrderError('VERSION_CONFLICT', 'The selected listing option is no longer available.', $correlationId, status: 409, retryable: true);
                 }
             }
-            $addonTotalMinor = 0;
+            $resolvedAddons = [];
             foreach ($addonIds as $addonId) {
                 $addon = null;
                 foreach (($sourceTerms['addons'] ?? []) as $candidate) {
@@ -228,7 +228,13 @@ final class FinalizeOrderAgreement
                 if (in_array($role, ['store', 'courier', 'auditor'], true) || in_array($code, ['turnkey_parts', 'safety_audit', 'courier_delivery', 'product_install'], true)) {
                     throw new OrderError('INVALID_PROPOSAL', 'Partner slots are not listing add-ons.', $correlationId, status: 422);
                 }
-                $addonTotalMinor += (int) ($addon['price_amount_minor'] ?? 0);
+                $resolvedAddons[(string) $addon['id']] = $addon;
+            }
+            $addonIds = array_values(array_map('strval', array_keys($resolvedAddons)));
+            sort($addonIds, SORT_STRING);
+            $addonTotalMinor = 0;
+            foreach ($addonIds as $addonId) {
+                $addonTotalMinor += (int) ($resolvedAddons[$addonId]['price_amount_minor'] ?? 0);
             }
             $currentBaseAmount = $selected !== null
                 ? (isset($selected['price_amount_minor']) ? (int) $selected['price_amount_minor'] : (int) round((float) ($selected['price'] ?? 0) * 100))
@@ -358,6 +364,7 @@ final class FinalizeOrderAgreement
                 throw new OrderError(
                     'UNSUPPORTED_PAYMENT_LANE',
                     "Selected payment lane [{$selectedLane}] is not supported.",
+                    $correlationId,
                     status: 422,
                 );
             }

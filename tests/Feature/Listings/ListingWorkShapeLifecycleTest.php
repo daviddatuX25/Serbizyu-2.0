@@ -662,7 +662,11 @@ it('retains the complete product version payload when submitting for review', fu
         'milestone_stages' => $productWorkSet['steps'],
         'variants' => [['id' => 'variant-one', 'name' => 'Standard', 'price' => 125, 'stock' => 7, 'is_default' => true]],
         'media' => ['items' => [['id' => 'cover', 'kind' => 'photo', 'url' => '/product.jpg', 'is_cover' => true]]],
-        'deal_chain_combinations' => [['id' => 'pickup', 'title' => 'Pickup', 'isDefault' => true, 'nodes' => []]],
+        'deal_chain_combinations' => [[
+            'id' => 'pickup', 'title' => 'Pickup', 'isDefault' => true, 'planVersion' => 1,
+            'nodes' => [['id' => 'product', 'type' => 'store', 'isPrimary' => true]],
+            'dependencies' => [],
+        ]],
         'deal_chain_specification' => ['based_on_recipe_code' => 'direct', 'combination_count' => 1],
     ];
 

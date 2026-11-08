@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Modules\IdentityAccess\Application\PhoneOtpAuthService;
 use App\Modules\IdentityAccess\Application\RequestResetSmsOtp;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -295,6 +296,35 @@ final class Story1_2_SignInAndRecoveryTest extends TestCase
         $this->post('/auth/logout')->assertRedirect(route('home'));
         $this->assertGuest();
         self::assertNotSame($authenticatedSessionId, session()->getId());
+    }
+
+    public function test_password_login_returns_to_local_intended_path_and_rejects_external_targets(): void
+    {
+        $phone = '+63927'.rand(1000000, 9999999);
+        $email = 'return'.rand(1000, 9999).'@example.ph';
+        $password = 'SafeSecret123!';
+        $this->insertUser($phone, status: 'active', verified: true, password: $password, email: $email);
+
+        $this->get('/auth/sign-in?return_to=%2Forders%2FORD-123%3Ftab%3Dwork')
+            ->assertOk();
+        $this->post('/auth/phone/login', ['phone' => $phone, 'password' => $password])
+            ->assertRedirect('/orders/ORD-123?tab=work');
+
+        Auth::logout();
+        $this->flushSession();
+        $this->get('/auth/sign-in?return_to=https%3A%2F%2Fevil.example%2Fsteal')
+            ->assertOk();
+        $this->post('/auth/email/login', ['email' => $email, 'password' => $password])
+            ->assertRedirect(route('home'));
+
+        foreach (['//evil.example/path', '/\\\\evil.example/path', '/auth/logout', "/orders/1\r\nLocation: https://evil.example"] as $target) {
+            Auth::logout();
+            $this->flushSession();
+            $this->get('/auth/sign-in?'.http_build_query(['return_to' => $target]))
+                ->assertOk();
+            $this->post('/auth/phone/login', ['phone' => $phone, 'password' => $password])
+                ->assertRedirect(route('home'));
+        }
     }
 
     private function insertUser(string $phone, string $status, bool $verified, ?string $password = null, ?string $email = null): string

@@ -13,9 +13,9 @@ use Illuminate\Database\Seeder;
  */
 final class TagudinBrowseCatalogSeeder extends Seeder
 {
-    public function run(SeedTagudinBrowseCatalog $seed): void
+    public function run(?SeedTagudinBrowseCatalog $seed = null): void
     {
-        $result = $seed->handle();
+        $result = ($seed ?? app(SeedTagudinBrowseCatalog::class))->handle();
 
         if ($this->command !== null) {
             $this->command->info(sprintf(

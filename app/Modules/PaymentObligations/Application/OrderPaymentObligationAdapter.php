@@ -379,6 +379,13 @@ final class OrderPaymentObligationAdapter implements OrderPaymentObligationPort
             if ((string) $obligation->status !== 'due') {
                 throw new PaymentObligationError('PAYMENT_EVIDENCE_LOCKED', 'The payment lane cannot change after payment is reported or submitted.', 409);
             }
+            $hasEvidence = DB::table('payment_events')
+                ->where('payment_obligation_id', $obligationId)
+                ->whereIn('event_type', ['payment.cash.reported', 'payment.p2p.proof_submitted', 'payment.cash.mismatch_flagged', 'payment.cash.receipt_acknowledged'])
+                ->exists();
+            if ($hasEvidence) {
+                throw new PaymentObligationError('PAYMENT_EVIDENCE_LOCKED', 'The payment lane cannot change after payment evidence has been recorded.', 409);
+            }
             $eligibleLanes = $this->eligibleLanes($acceptedListingVersionId);
             if (! in_array($lane, $eligibleLanes, true)) {
                 throw new PaymentObligationError('PAYMENT_LANE_NOT_ELIGIBLE', 'That payment lane is not available for this order.', 422);

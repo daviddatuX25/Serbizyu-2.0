@@ -567,7 +567,7 @@ final class OrderController extends Controller
 
             $workProjection = $this->workExecution->projectForOrder($work, $terms);
             $canViewWorkEvidence = $actorUserId === $buyerId || $actorUserId === $providerId;
-            if ($workProjection !== null && is_array($workProjection['nodes'] ?? null)) {
+            if (($workProjection['execution_available'] ?? true) && $workProjection !== null && is_array($workProjection['nodes'] ?? null)) {
                 $workProjection['nodes'] = $this->workEvidence->projectNodes(
                     orderId: (string) $row->id,
                     workInstanceId: (string) $work->id,
@@ -591,7 +591,8 @@ final class OrderController extends Controller
             $isOrderBuyer = $actorUserId === $buyerId;
             $canSignoff = false;
             if (
-                $isOrderBuyer
+                ($workProjection['execution_available'] ?? true)
+                && $isOrderBuyer
                 && ! in_array((string) ($work->work_shape ?? ''), ['A4', 'A9'], true)
                 && ($workProjection['status'] ?? null) === 'awaiting_signoff'
                 && is_array($workProjection['nodes'] ?? null)
@@ -1037,6 +1038,9 @@ final class OrderController extends Controller
             }
 
             $work = DB::table('work_instances')->where('order_id', $order)->first();
+            if ($work !== null) {
+                $this->workExecution->assertExecutionAvailable($work, $correlationId);
+            }
             $structure = $work === null ? null : json_decode((string) $work->structure, true);
             $finalNode = null;
             foreach ((array) ($structure['nodes'] ?? []) as $candidate) {
@@ -1122,6 +1126,10 @@ final class OrderController extends Controller
             if ((string) $orderRow->buyer_user_id !== $userId) {
                 throw new OrderError('AUTHORIZATION_DENIED', 'Only the buyer can sign off work completion.', $correlationId, status: 403);
             }
+            $work = DB::table('work_instances')->where('order_id', $order)->first();
+            if ($work !== null) {
+                $this->workExecution->assertExecutionAvailable($work, $correlationId);
+            }
             if (DB::table('work_instances')->where('order_id', $order)->where('work_shape', 'A4')->exists()) {
                 throw new OrderError('HANDOFF_PROTOCOL_REQUIRED', 'A4 product or courier-service completion requires the governed recipient receipt action.', $correlationId, status: 409);
             }
@@ -1133,6 +1141,9 @@ final class OrderController extends Controller
                 }
 
                 $work = DB::table('work_instances')->where('order_id', $lockedOrder->id)->lockForUpdate()->first();
+                if ($work !== null) {
+                    $this->workExecution->assertExecutionAvailable($work, $correlationId);
+                }
                 if ($work === null || (string) $work->status !== 'awaiting_signoff') {
                     throw new OrderError('INVALID_STATE', 'Work is not awaiting customer sign-off.', $correlationId, status: 409);
                 }

@@ -200,7 +200,7 @@ it('executes full buyer request tender, provider quoting, and acceptance flow', 
         'message' => 'I can do this job without provider credentials.',
         'estimated_duration' => '2 hours',
     ])->assertStatus(403);
-    expect(DB::table('notifications')->count())->toBe(0);
+    expect(DB::table('notifications')->where('event_source_id', $requestId)->count())->toBe(0);
 
 
     // 3. Provider 1 submits quote (POST /requests/{id}/quotes)

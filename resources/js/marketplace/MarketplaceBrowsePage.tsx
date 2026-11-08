@@ -200,10 +200,7 @@ export const MarketplaceBrowsePage: React.FC<MarketplaceBrowseProps> = ({
                 <BottomNavBar
                     activeTab={activeTab}
                     ordersCount={basketCount}
-                    onTabSelect={(tab) => {
-                        if (tab === 'invitations') router.visit('/deal-invitations');
-                        else setActiveTab(tab);
-                    }}
+                    onTabSelect={setActiveTab}
                 />
             </div>
         </div>

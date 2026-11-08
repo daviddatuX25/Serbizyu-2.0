@@ -825,7 +825,21 @@ final class DealChainOrdersTest extends TestCase
             'predecessor_need_id' => $needs[2]->id,
             'successor_need_id' => $needs[1]->id,
         ]);
-
+        $completionDependencyId = (string) Str::uuid7();
+        DB::table('deal_dependencies')->insert([
+            'id' => $completionDependencyId,
+            'deal_chain_id' => $staged['deal_chain_id'],
+            'predecessor_need_id' => $needs[2]->id,
+            'successor_need_id' => $needs[0]->id,
+            'dependency_type' => 'blocks',
+            'status' => 'active',
+            'condition_code' => 'work_completed',
+            'created_by_user_id' => $buyerUserId,
+            'version' => 1,
+            'correlation_id' => (string) Str::uuid7(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
         $formed = [];
         foreach ($needs as $need) {
             $accepted = $this->acceptNeed($buyerUserId, (string) $staged['deal_chain_id'], (string) $need->id);
@@ -839,9 +853,11 @@ final class DealChainOrdersTest extends TestCase
         $labor = $formed[(string) $needs[2]->id];
         $courier = $formed[(string) $needs[1]->id];
         $gate = DB::table('work_step_dependency_gates')->where('dependency_id', $deliveryDependency->id)->first();
+        $completionGate = DB::table('work_step_dependency_gates')->where('dependency_id', $completionDependencyId)->first();
         self::assertNotNull($gate);
+        self::assertNotNull($completionGate);
         self::assertSame('blocked', $gate->status);
-
+        self::assertSame('blocked', $completionGate->status);
         $correlationId = (string) Str::uuid7();
         app(OutboxWriter::class)->enqueue(
             eventType: 'work.completed',
@@ -857,7 +873,7 @@ final class DealChainOrdersTest extends TestCase
         );
         self::assertSame(1, app(OutboxDispatcher::class)->dispatch(eventType: 'work.completed')->published);
         self::assertSame('blocked', DB::table('work_step_dependency_gates')->where('id', $gate->id)->value('status'));
-
+        self::assertSame('blocked', DB::table('work_step_dependency_gates')->where('id', $completionGate->id)->value('status'));
         app(OutboxWriter::class)->enqueue(
             eventType: 'work.completed',
             aggregateType: 'work_instance',
@@ -872,7 +888,7 @@ final class DealChainOrdersTest extends TestCase
         );
         self::assertSame(1, app(OutboxDispatcher::class)->dispatch(eventType: 'work.completed')->published);
         self::assertSame('blocked', DB::table('work_step_dependency_gates')->where('id', $gate->id)->value('status'));
-
+        self::assertSame('blocked', DB::table('work_step_dependency_gates')->where('id', $completionGate->id)->value('status'));
         $laborOrder = DB::table('orders')->where('id', $labor['order_id'])->first();
         $laborWork = DB::table('work_instances')->where('id', $labor['work_instance_id'])->first();
         $structure = json_decode((string) $laborWork->structure, true, 512, JSON_THROW_ON_ERROR);
@@ -906,6 +922,7 @@ final class DealChainOrdersTest extends TestCase
         );
         self::assertSame(1, app(OutboxDispatcher::class)->dispatch(eventType: 'work.completed')->published);
         self::assertSame('cleared', DB::table('work_step_dependency_gates')->where('id', $gate->id)->value('status'));
+        self::assertSame('cleared', DB::table('work_step_dependency_gates')->where('id', $completionGate->id)->value('status'));
         self::assertSame('not_started', DB::table('work_instances')->where('id', $courier['work_instance_id'])->value('status'));
     }
 
@@ -938,6 +955,20 @@ final class DealChainOrdersTest extends TestCase
             self::assertSame($formed[$gate->predecessor_need_id]['work_instance_id'], $gate->source_work_instance_id);
             self::assertSame($formed[$gate->successor_need_id]['work_instance_id'], $gate->successor_work_instance_id);
         }
+        $unknownDependency = $gates->firstWhere('condition_code', 'part_ready');
+        DB::table('deal_dependencies')->where('id', $unknownDependency->dependency_id)->update(['condition_code' => 'unknown_condition']);
+        try {
+            app(DealWorkGateAdapter::class)->assertWorkCanAdvance(
+                (string) $unknownDependency->successor_work_instance_id,
+                (string) Str::uuid7(),
+            );
+            self::fail('Unknown active blocking conditions must fail closed.');
+        } catch (KernelException $error) {
+            self::assertSame(409, $error->status);
+        } finally {
+            DB::table('deal_dependencies')->where('id', $unknownDependency->dependency_id)->update(['condition_code' => 'part_ready']);
+        }
+
 
         $unrelatedLabor = $formed[(string) $needs[2]->id];
         app(OutboxWriter::class)->enqueue(

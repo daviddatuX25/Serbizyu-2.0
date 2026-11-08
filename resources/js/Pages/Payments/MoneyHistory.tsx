@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowUpRight, CircleHelp, Clock3, ReceiptText, WalletCards } from 'lucide-react';
 import { AppShell } from '../../components/AppShell';
+import { NotificationBell } from '../../components/notifications/NotificationCenter';
 
 type MoneyHistoryRecord = {
     id: string;
@@ -113,7 +114,10 @@ export default function MoneyHistory({ groups = [] }: { groups: CurrencyGroup[] 
                 <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="mb-2 text-xs font-extrabold tracking-[0.16em] text-[#D98B16] uppercase">Payment activity</p>
-                        <h1 className="text-3xl font-extrabold tracking-tight text-[#0F2F58] sm:text-4xl">Money history</h1>
+                        <div className="flex items-center justify-between gap-3">
+                            <h1 className="min-w-0 text-3xl font-extrabold tracking-tight text-[#0F2F58] sm:text-4xl">Money history</h1>
+                            <div className="shrink-0 lg:hidden [&_button]:min-h-11 [&_button]:min-w-11"><NotificationBell /></div>
+                        </div>
                         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Each record belongs to one order and one payment obligation. Cash and personal-wallet transfers remain between the parties.</p>
                     </div>
                     <Link href="/orders" className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-[#0F2F58] shadow-xs hover:bg-slate-50 sm:self-auto">

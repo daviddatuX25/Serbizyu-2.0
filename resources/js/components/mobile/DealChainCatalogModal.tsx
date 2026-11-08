@@ -1,11 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { Search, Sliders, Sparkles, Star, Truck, Wrench, ShieldCheck, Store } from 'lucide-react';
 import type { DealChainTemplate } from './types';
+import { isRecipeCompatible } from '@/marketplace/dealChainRecipes';
 
 export interface DealChainCatalogModalProps {
     open: boolean;
     onClose: () => void;
     categoryCode: string;
+    listingType?: string;
+    workShape?: string;
     recommended: DealChainTemplate[];
     otherRecipes: DealChainTemplate[];
     onSelectRecipe: (recipe: DealChainTemplate) => void;
@@ -23,6 +26,8 @@ export default function DealChainCatalogModal({
     open,
     onClose,
     categoryCode,
+    listingType,
+    workShape,
     recommended,
     otherRecipes,
     onSelectRecipe,
@@ -30,22 +35,31 @@ export default function DealChainCatalogModal({
 }: DealChainCatalogModalProps) {
     const [search, setSearch] = useState('');
     const [patternFilter, setPatternFilter] = useState<string>('all');
-    const [tab, setTab] = useState<'recommended' | 'all'>(
-        recommended.length > 0 ? 'recommended' : 'all',
-    );
+
+    const compatibleRecommended = useMemo(() => {
+        return recommended.filter((r) =>
+            isRecipeCompatible(r, categoryCode, listingType, workShape),
+        );
+    }, [recommended, categoryCode, listingType, workShape]);
 
     const allRecipes = useMemo(() => {
         const map = new Map<string, DealChainTemplate>();
         for (const r of [...recommended, ...otherRecipes]) {
-            if (!map.has(r.recipeId)) {
+            if (!map.has(r.recipeId) && isRecipeCompatible(r, null, listingType, workShape)) {
                 map.set(r.recipeId, r);
             }
         }
         return Array.from(map.values());
-    }, [recommended, otherRecipes]);
+    }, [recommended, otherRecipes, listingType, workShape]);
 
-    const sourceList = tab === 'recommended' && recommended.length > 0 ? recommended : allRecipes;
+    const [tab, setTab] = useState<'recommended' | 'all'>(
+        compatibleRecommended.length > 0 ? 'recommended' : 'all',
+    );
 
+    const sourceList =
+        tab === 'recommended' && compatibleRecommended.length > 0
+            ? compatibleRecommended
+            : allRecipes;
     const filteredRecipes = useMemo(() => {
         const q = search.trim().toLowerCase();
         return sourceList.filter((r) => {
@@ -126,7 +140,7 @@ export default function DealChainCatalogModal({
                                         : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
                                 }`}
                             >
-                                Suggested for {categoryCode} ({recommended.length})
+                                Suggested for {categoryCode || 'Category'} ({compatibleRecommended.length})
                             </button>
                             <button
                                 type="button"

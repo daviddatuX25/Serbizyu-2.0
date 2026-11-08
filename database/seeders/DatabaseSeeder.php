@@ -22,6 +22,11 @@ final class DatabaseSeeder extends Seeder
             DealChainCatalogSeeder::class,
             TagudinBrowseCatalogSeeder::class,
             DealChainExecutionSeeder::class,
+            RequestQuoteSeeder::class,
+            OrdersStockSeeder::class,
+            PaymentObligationScenarioSeeder::class,
+            WorkExecutionScenariosSeeder::class,
+            AdminWorkspaceSeeder::class,
             ListingReviewsSeeder::class,
         ]);
     }

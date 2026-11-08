@@ -12,13 +12,11 @@ import {
     Plus,
     ShieldCheck,
     Sliders,
-    Sparkles,
     Store,
     Trash2,
     Truck,
     Video,
     Wrench,
-    X,
 } from 'lucide-react';
 import { FieldGuide } from '../../components/ui/FieldGuide';
 import {
@@ -26,6 +24,7 @@ import {
     PRODUCT_GUIDED_STEPS,
     type BuilderMode,
 } from '../../lib/builderGuidance';
+import BuilderModeToggle from '../../components/listings/BuilderModeToggle';
 import { formatProviderShortName } from '../../lib/formatters';
 import TagudinLocationPicker, {
     type StructuredGeography,
@@ -36,6 +35,7 @@ import { QuickDealScanModal } from '../../components/marketplace/QuickDealScanMo
 import {
     DealChainCatalogModal,
     DealChainCustomizerModal,
+    GlovoWaveModal,
     type DealChainCombination,
     type DealChainNode,
     type DealChainTemplate,
@@ -55,6 +55,7 @@ import {
     readPendingListingDraft,
     savePendingListingDraft,
 } from '../../lib/pendingListingDraft';
+import { isRecipeCompatible, savedCombinationSlots } from '../../marketplace/dealChainRecipes';
 
 interface ProductVariantForm {
     id: string;
@@ -66,16 +67,18 @@ interface ProductVariantForm {
 
 export interface PartnerSlot {
     id: string;
-    roleType: 'STORE' | 'COURIER' | 'LABOR';
+    roleType: 'STORE' | 'COURIER' | 'LABOR' | 'AUDIT' | 'RECYCLE';
     slotLabel: string;
     providerName: string;
-    fee: number;
-    feeMinor: number;
-    rating: number;
+    fee?: number | null;
+    feeMinor?: number | null;
+    rating?: number | null;
     slaText?: string;
     photoUrl?: string;
     listingId?: string;
+    listingVersionId?: string | null;
     isOpenSlot?: boolean;
+    assignmentMode?: DealChainPartnerSlot['assignmentMode'];
 }
 
 export interface PartnerCombo {
@@ -87,6 +90,7 @@ export interface PartnerCombo {
     slots: PartnerSlot[];
     recipeId?: string;
     catalogVersion?: number;
+    planVersion?: 1;
     isCustom?: boolean;
     basedOnTitle?: string;
     nodes?: DealChainNode[];
@@ -113,13 +117,15 @@ interface ProductBuilderDraft {
 interface PartnerListingOption {
     id: string;
     listingId?: string;
+    listingVersionId?: string | null;
+    listing_version_id?: string | null;
     role: string;
     name: string;
     providerName: string;
     barangay: string;
-    price: number;
-    feeMinor: number;
-    rating: string;
+    price?: number | null;
+    feeMinor?: number | null;
+    rating?: string | number | null;
     badge?: string;
     sub: string;
     coverThumbnailUrl?: string;
@@ -306,66 +312,6 @@ export function isInstallationApplicable(categoryCode: string): boolean {
     );
 }
 
-export function defaultCombosForCategory(categoryCode: string): PartnerCombo[] {
-    const deliveryCombo: PartnerCombo = {
-        id: 'combo-delivery',
-        title: 'Doorstep Delivery',
-        icon: 'Truck',
-        description: 'On-demand motorcycle delivery straight to customer door in Tagudin.',
-        isDefault: false,
-        slots: [
-            {
-                id: '0198a3b1-7c40-7abc-8def-5234567890b9',
-                roleType: 'COURIER',
-                slotLabel: 'Doorstep Courier Runner',
-                providerName: 'Danny Express Motorcycle Pool',
-                fee: 35,
-                feeMinor: 3500,
-                rating: 4.9,
-                slaText: 'On-demand ~20 mins transit',
-                photoUrl: '/photos/courier.jpg',
-            },
-        ],
-    };
-
-    if (isInstallationApplicable(categoryCode)) {
-        const installCombo: PartnerCombo = {
-            id: 'combo-installation',
-            title: 'Delivery + Installation Labor',
-            icon: 'Wrench',
-            description: 'Courier transit combined with on-site certified technician labor.',
-            isDefault: false,
-            slots: [
-                {
-                    id: '0198a3b1-7c40-7abc-8def-5234567890b9',
-                    roleType: 'COURIER',
-                    slotLabel: 'Doorstep Courier Runner',
-                    providerName: 'Danny Express Motorcycle Pool',
-                    fee: 35,
-                    feeMinor: 3500,
-                    rating: 4.9,
-                    slaText: 'On-demand ~20 mins transit',
-                    photoUrl: '/photos/courier.jpg',
-                },
-                {
-                    id: '0198a3b1-7c40-7abc-8def-5234567890bb',
-                    roleType: 'LABOR',
-                    slotLabel: 'Technician Labor Partner',
-                    providerName: 'Kuya Ben Aircon Services',
-                    fee: 250,
-                    feeMinor: 25000,
-                    rating: 4.9,
-                    slaText: 'Certified technician installation',
-                    photoUrl: '/photos/ac-clean.jpg',
-                },
-            ],
-        };
-        return [deliveryCombo, installCombo];
-    }
-
-    return [deliveryCombo];
-}
-
 function renderComboIcon(iconName: string, className = 'size-4') {
     switch (iconName) {
         case 'Truck':
@@ -380,29 +326,82 @@ function renderComboIcon(iconName: string, className = 'size-4') {
             return <Truck className={className} />;
     }
 }
+
+function dealChainRole(type: string): PartnerSlot['roleType'] {
+    const normalized = type.toLowerCase();
+    if (['delivery', 'courier'].includes(normalized)) return 'COURIER';
+    if (['store', 'parts', 'product', 'tools'].includes(normalized)) return 'STORE';
+    if (['audit', 'auditor'].includes(normalized)) return 'AUDIT';
+    if (['hauling', 'recycle'].includes(normalized)) return 'RECYCLE';
+    return 'LABOR';
+}
+
+function slotTypeForRole(role: PartnerSlot['roleType']): SlotType {
+    switch (role) {
+        case 'COURIER': return 'delivery';
+        case 'STORE': return 'store';
+        case 'AUDIT': return 'audit';
+        case 'RECYCLE': return 'hauling';
+        default: return 'installation';
+    }
+}
+
+function formatPartnerFee(feeMinor?: number | null, digits = 2): string {
+    return typeof feeMinor === 'number' && Number.isFinite(feeMinor)
+        ? `₱${(feeMinor / 100).toFixed(digits)}`
+        : 'Quote required';
+}
+
+function candidateListingVersion(candidate: SlotCandidateListing): string | undefined {
+    const versioned = candidate as SlotCandidateListing & {
+        listingVersionId?: string | null;
+        listing_version_id?: string | null;
+    };
+    return versioned.listingVersionId ?? versioned.listing_version_id ?? undefined;
+}
+function normalizePartnerCombo(combo: PartnerCombo): PartnerCombo {
+    if (combo.planVersion !== 1) return { ...combo, slots: combo.slots ?? [] };
+    const slots = savedCombinationSlots({ planVersion: combo.planVersion, nodes: combo.nodes ?? [], dependencies: combo.dependencies });
+    return {
+        ...combo,
+        slots: slots.map((slot) => {
+            const feeMinor = slot.feeMinor;
+            return {
+                id: slot.id ?? '',
+                roleType: dealChainRole(slot.type),
+                slotLabel: slot.role,
+                providerName: slot.name,
+                fee: typeof feeMinor === 'number' ? feeMinor / 100 : undefined,
+                feeMinor,
+                rating: undefined,
+                photoUrl: slot.coverThumbnailUrl,
+                listingId: slot.listingId,
+                listingVersionId: (slot as typeof slot & { listingVersionId?: string; listing_version_id?: string }).listingVersionId
+                    ?? (slot as typeof slot & { listing_version_id?: string }).listing_version_id,
+                isOpenSlot: slot.isOpenSlot,
+                assignmentMode: slot.assignmentMode,
+            };
+        }),
+    };
+}
+
 function toDealChainCombination(combo: PartnerCombo): DealChainCombination {
     const slots: DealChainPartnerSlot[] = combo.slots.map((slot, index) => ({
         id: slot.id || `slot-${index}`,
-        type:
-            slot.roleType === 'COURIER'
-                ? 'delivery'
-                : slot.roleType === 'STORE'
-                  ? 'store'
-                  : 'installation',
+        type: slotTypeForRole(slot.roleType),
         role: slot.slotLabel,
         name: slot.providerName,
-        meta: slot.slaText || `₱${slot.fee.toFixed(2)} partner fee`,
+        meta: slot.slaText || (slot.feeMinor == null ? 'Quote required' : `${formatPartnerFee(slot.feeMinor)} partner fee`),
         feeMinor: slot.feeMinor,
         coverThumbnailUrl: slot.photoUrl,
         listingId: slot.listingId,
+        listingVersionId: slot.listingVersionId,
         isOpenSlot: slot.isOpenSlot,
+        assignmentMode: slot.assignmentMode,
         tier: index,
-        conditionCode:
-            slot.roleType === 'COURIER'
-                ? 'delivered_to_site'
-                : slot.roleType === 'STORE'
-                  ? 'source_ready'
-                  : 'work_completed',
+        conditionCode: slot.roleType === 'COURIER' || slot.roleType === 'STORE'
+            ? 'part_ready'
+            : 'work_completed',
     }));
     return {
         id: combo.id,
@@ -410,6 +409,7 @@ function toDealChainCombination(combo: PartnerCombo): DealChainCombination {
         icon: combo.icon,
         description: combo.description,
         isDefault: combo.isDefault,
+        planVersion: combo.planVersion,
         recipeId: combo.recipeId,
         catalogVersion: combo.catalogVersion,
         isCustom: combo.isCustom,
@@ -421,7 +421,8 @@ function toDealChainCombination(combo: PartnerCombo): DealChainCombination {
                       .filter((slot) => slot.type === 'delivery' || slot.type === 'store')
                       .map((slot) => ({
                           id: slot.id || '',
-                          role: slot.type === 'delivery' ? 'COURIER' : 'STORE',
+                          isPrimary: false,
+                          role: slot.role,
                           title: slot.name,
                           sub: slot.meta,
                           type: slot.type,
@@ -429,6 +430,7 @@ function toDealChainCombination(combo: PartnerCombo): DealChainCombination {
                           color: slot.type === 'delivery' ? '#0284C7' : '#B45309',
                           feeMinor: slot.feeMinor,
                           listingId: slot.listingId,
+                          listingVersionId: slot.listingVersionId,
                       })),
                   {
                       id: 'node-primary-anchor',
@@ -444,14 +446,15 @@ function toDealChainCombination(combo: PartnerCombo): DealChainCombination {
                       .filter((slot) => slot.type !== 'delivery' && slot.type !== 'store')
                       .map((slot) => ({
                           id: slot.id || '',
-                          role: 'LABOR',
+                          role: slot.role,
                           title: slot.name,
                           sub: slot.meta,
                           type: slot.type,
-                          bg: '#ECFDF5',
-                          color: '#059669',
+                          bg: slot.type === 'audit' || slot.type === 'hauling' ? '#F3E8FF' : '#ECFDF5',
+                          color: slot.type === 'audit' || slot.type === 'hauling' ? '#7E22CE' : '#059669',
                           feeMinor: slot.feeMinor,
                           listingId: slot.listingId,
+                          listingVersionId: slot.listingVersionId,
                       })),
               ],
         slots,
@@ -524,27 +527,17 @@ export default function CreateProduct({
         if (saved === 'same_day' || saved === 'next_day') return saved;
         return 'in_stock';
     });
-    const allDealChainRecipes = useMemo(
-        () => [
-            ...(dealChainOptions?.recommended ?? []),
-            ...(dealChainOptions?.other_recipes ?? []),
-        ],
-        [dealChainOptions],
-    );
     const slotCandidateListings = useMemo<SlotCandidateListing[]>(() => {
         if (!Array.isArray(partnerListings) || partnerListings.length === 0) {
             return [];
         }
         return partnerListings.map((item) => {
-            const roleUpper = (item.role || 'store').toUpperCase();
-            const mappedRole: SlotCandidateListing['role'] =
-                roleUpper === 'DELIVERY' || roleUpper === 'COURIER'
-                    ? 'COURIER'
-                    : roleUpper === 'AUDIT' || roleUpper === 'AUDITOR'
-                      ? 'AUDIT'
-                      : roleUpper === 'LABOR' || roleUpper === 'TECHNICIAN'
-                        ? 'LABOR'
-                        : 'STORE';
+            const mappedRole = dealChainRole(item.role);
+            const parsedRating = typeof item.rating === 'number'
+                ? item.rating
+                : item.rating == null || item.rating.trim() === ''
+                  ? undefined
+                  : Number(item.rating);
             return {
                 id: item.id,
                 title: item.name,
@@ -553,8 +546,10 @@ export default function CreateProduct({
                 price_minor: item.feeMinor,
                 sla_text: item.sub || 'Verified Tagudin partner listing',
                 photo_url: item.coverThumbnailUrl,
-                rating: parseFloat(item.rating || '4.9') || 4.9,
+                rating: parsedRating != null && Number.isFinite(parsedRating) ? parsedRating : undefined,
                 role: mappedRole,
+                listingVersionId: item.listingVersionId ?? item.listing_version_id,
+                listing_version_id: item.listing_version_id ?? item.listingVersionId,
             };
         });
     }, [partnerListings]);
@@ -603,14 +598,11 @@ export default function CreateProduct({
     const [combos, setCombos] = useState<PartnerCombo[]>(() => {
         if (
             editingDraft?.deal_chain_combinations &&
-            Array.isArray(editingDraft.deal_chain_combinations) &&
-            editingDraft.deal_chain_combinations.length > 0
+            Array.isArray(editingDraft.deal_chain_combinations)
         ) {
-            return editingDraft.deal_chain_combinations as unknown as PartnerCombo[];
+            return (editingDraft.deal_chain_combinations as unknown as PartnerCombo[]).map(normalizePartnerCombo);
         }
-        return defaultCombosForCategory(
-            editingDraft?.category_code || editingDraft?.categoryCode || '',
-        );
+        return [];
     });
     const [selectedFulfillment, setSelectedFulfillment] = useState<'pickup' | string>(
         ((editingDraft?.deal_chain_specification as Record<string, unknown>)
@@ -656,8 +648,9 @@ export default function CreateProduct({
             id: string;
             title: string;
             providerName: string;
-            priceMinor: number;
+            priceMinor?: number;
             photoUrl?: string;
+            listingVersionId?: string;
             isOpenSlot?: boolean;
         }) => void;
     }>({
@@ -689,13 +682,8 @@ export default function CreateProduct({
         setDescription(pendingDraft.description);
         setStallLocation(pendingDraft.stallLocation);
         setVariants(pendingDraft.variants);
-        setCombos(pendingDraft.combos);
-        setSelectedFulfillment(
-            pendingDraft.selectedFulfillment === 'pickup' ||
-                pendingDraft.combos.some((combo) => combo.id === pendingDraft.selectedFulfillment)
-                ? pendingDraft.selectedFulfillment
-                : 'pickup',
-        );
+        setCombos(pendingDraft.combos.map(normalizePartnerCombo));
+        setSelectedFulfillment(pendingDraft.selectedFulfillment);
         setCurrentComboIdx(
             Math.min(
                 Math.max(0, pendingDraft.currentComboIdx),
@@ -756,13 +744,19 @@ export default function CreateProduct({
     };
 
     const handleCandidateSelected = (candidate: SlotCandidateListing) => {
+        const sourcePriceMinor = candidate.price_minor ?? candidate.priceMinor;
+        const priceMinor = typeof sourcePriceMinor === 'number' && Number.isFinite(sourcePriceMinor)
+            ? sourcePriceMinor
+            : undefined;
+        const listingVersionId = candidateListingVersion(candidate);
         if (slotPickerState.onPickedOverride) {
             slotPickerState.onPickedOverride({
                 id: candidate.id,
                 title: candidate.title,
                 providerName: candidate.provider_name,
-                priceMinor: candidate.price_minor,
+                priceMinor,
                 photoUrl: candidate.photo_url,
+                listingVersionId,
             });
             setSlotPickerState((prev) => ({ ...prev, open: false, onPickedOverride: undefined }));
             return;
@@ -777,16 +771,25 @@ export default function CreateProduct({
                         selectedSlot?.id ||
                         `slot-${slotPickerState.comboId}-${slotPickerState.slotIndex}`,
                     providerName: candidate.title || candidate.provider_name,
-                    fee: candidate.price_minor / 100,
-                    feeMinor: candidate.price_minor,
-                    rating: candidate.rating ?? 5.0,
+                    fee: priceMinor == null ? undefined : priceMinor / 100,
+                    feeMinor: priceMinor,
+                    rating: typeof candidate.rating === 'number' && Number.isFinite(candidate.rating)
+                        ? candidate.rating
+                        : undefined,
                     slaText: candidate.sla_text,
                     photoUrl: candidate.photo_url,
                     listingId: candidate.id,
+                    listingVersionId,
                     isOpenSlot: false,
+                    assignmentMode: 'preferred_partner' as const,
                 };
                 return {
                     ...c,
+                    nodes: c.nodes?.map((node) => node.id === selectedSlot?.id ? {
+                        ...node, listingId: candidate.id, listingVersionId, title: candidate.title,
+                        feeMinor: priceMinor, coverThumbnailUrl: candidate.photo_url,
+                        isOpenSlot: false, assignmentMode: 'preferred_partner',
+                    } : node),
                     slots: c.slots.map((slot, sIdx) =>
                         sIdx === slotPickerState.slotIndex ? updatedSlot : slot,
                     ),
@@ -807,50 +810,52 @@ export default function CreateProduct({
     const handleSelectDealChainRecipe = (recipe: DealChainTemplate) => {
         const primaryPricePesos = Math.round(defaultVariant?.price || 0);
         const nodes: DealChainNode[] = recipe.nodes.map((node) => {
-            const isPrimary =
-                node.key === 'primary' ||
-                node.key === 'product' ||
-                node.title.toLowerCase().includes('primary');
-            const isStore = node.type === 'store' || node.type === 'parts' || node.type === 'tools';
-            const isCourier = node.type === 'delivery';
-            const feeMinor = node.priceMinor ?? (isCourier ? 3500 : isStore ? 18000 : 25000);
+            const isPrimary = node.isPrimary === true;
+            const roleType = dealChainRole(node.type);
+            const isStore = roleType === 'STORE';
+            const isCourier = roleType === 'COURIER';
+            const feeMinor = node.priceMinor ?? undefined;
             return {
                 id: `node-${node.key}`,
                 role: isPrimary ? 'YOUR PRODUCT' : node.role.toUpperCase(),
                 title: isPrimary ? title || 'Your Product' : node.title,
-                sub: isPrimary ? `₱${primaryPricePesos}` : `₱${Math.round(feeMinor / 100)}`,
+                sub: isPrimary
+                    ? `₱${primaryPricePesos}`
+                    : feeMinor != null
+                      ? formatPartnerFee(feeMinor, 0)
+                      : 'Quote required',
                 type: isPrimary ? 'store' : node.type,
                 bg: isStore ? '#FEF3C7' : isCourier ? '#E0F2FE' : '#ECFDF5',
                 color: isStore ? '#B45309' : isCourier ? '#0284C7' : '#059669',
-                listingId: node.listingId ?? undefined,
+                listingId: isPrimary ? undefined : node.listingId ?? undefined,
+                listingVersionId: (node as typeof node & { listingVersionId?: string | null }).listingVersionId ?? undefined,
                 feeMinor: isPrimary ? undefined : feeMinor,
                 coverThumbnailUrl: node.image ?? undefined,
                 isPrimary,
+                assignmentMode: node.assignmentMode,
+                isOpenSlot: !isPrimary && !node.listingId,
             };
         });
         const slots: PartnerSlot[] = recipe.nodes
-            .filter(
-                (node) =>
-                    node.key !== 'primary' &&
-                    node.key !== 'product' &&
-                    !node.title.toLowerCase().includes('primary'),
-            )
-            .map((node, index) => {
-                const isCourier = node.type === 'delivery';
-                const isStore =
-                    node.type === 'store' || node.type === 'parts' || node.type === 'tools';
-                const feeMinor = node.priceMinor ?? (isCourier ? 3500 : isStore ? 18000 : 25000);
+            .filter((node) => !node.isPrimary)
+            .map((node) => {
+                const roleType = dealChainRole(node.type);
+                const feeMinor = node.priceMinor ?? undefined;
+                const hasListing = Boolean(node.listingId);
                 return {
-                    id: `slot-${node.key}-${index}`,
-                    roleType: isCourier ? 'COURIER' : isStore ? 'STORE' : 'LABOR',
+                    id: `node-${node.key}`,
+                    roleType,
                     slotLabel: node.role,
-                    providerName: node.providerName || node.title,
-                    fee: feeMinor / 100,
+                    providerName: node.providerName || (hasListing ? node.title : `Open ${node.role} Slot`),
+                    fee: feeMinor == null ? undefined : feeMinor / 100,
                     feeMinor,
-                    rating: Number(recipe.rating) || 4.9,
-                    slaText: node.sub,
+                    rating: undefined,
+                    slaText: node.sub || (hasListing ? undefined : 'Quote required upon request'),
                     photoUrl: node.image ?? undefined,
                     listingId: node.listingId ?? undefined,
+                    listingVersionId: (node as typeof node & { listingVersionId?: string | null }).listingVersionId ?? undefined,
+                    isOpenSlot: !hasListing,
+                    assignmentMode: node.assignmentMode,
                 };
             });
         const newCombo: PartnerCombo = {
@@ -864,12 +869,18 @@ export default function CreateProduct({
                       : 'Wrench',
             description: recipe.desc,
             isDefault: combos.length === 0,
+            planVersion: 1,
             recipeId: recipe.recipeId,
             catalogVersion: recipe.catalogVersion || 1,
             isCustom: false,
             basedOnTitle: recipe.title,
             nodes,
             slots,
+            dependencies: recipe.dependencies?.map((edge) => ({
+                ...edge,
+                predecessorId: edge.predecessorId.startsWith('node-') ? edge.predecessorId : `node-${edge.predecessorId}`,
+                successorId: edge.successorId.startsWith('node-') ? edge.successorId : `node-${edge.successorId}`,
+            })) ?? [],
         };
         setCombos((prev) => [...prev, newCombo]);
         setCurrentComboIdx(combos.length);
@@ -886,6 +897,7 @@ export default function CreateProduct({
             isDefault: updated.isDefault,
             recipeId: updated.recipeId,
             catalogVersion: updated.catalogVersion,
+            planVersion: updated.planVersion,
             isCustom: updated.isCustom,
             basedOnTitle: updated.basedOnTitle,
             nodes: updated.nodes,
@@ -893,21 +905,18 @@ export default function CreateProduct({
             flowType: updated.flowType,
             slots: updated.slots.map((slot, index) => ({
                 id: slot.id || `slot-${slot.type}-${index}`,
-                roleType:
-                    slot.type === 'delivery'
-                        ? 'COURIER'
-                        : slot.type === 'store' || slot.type === 'parts'
-                          ? 'STORE'
-                          : 'LABOR',
+                roleType: dealChainRole(slot.type),
                 slotLabel: slot.role,
                 providerName: slot.name,
-                fee: (slot.feeMinor ?? 0) / 100,
-                feeMinor: slot.feeMinor ?? 0,
-                rating: 4.9,
+                fee: typeof slot.feeMinor === 'number' ? slot.feeMinor / 100 : undefined,
+                feeMinor: slot.feeMinor,
+                rating: undefined,
                 slaText: slot.meta,
                 photoUrl: slot.coverThumbnailUrl,
                 listingId: slot.listingId,
+                listingVersionId: (slot as typeof slot & { listingVersionId?: string }).listingVersionId,
                 isOpenSlot: slot.isOpenSlot,
+                assignmentMode: slot.assignmentMode,
             })),
         };
         const existingCombo = combos.find((combo) => combo.id === updated.id);
@@ -946,17 +955,19 @@ export default function CreateProduct({
         const activeCombo = combos.find((c) => c.id === selectedFulfillment);
         if (!activeCombo) {
             return {
-                title: 'Free Counter Pickup · Tagudin Public Market',
-                badge: 'Free',
-                icon: <Store className="size-3.5 text-emerald-600" />,
-                description: `Collect at ${stallLocation || 'Tagudin Public Market'} directly`,
-                totalFee: 0,
+                title: 'Saved partner option unavailable',
+                badge: 'Review selection',
+                icon: <Info className="size-3.5 text-amber-600" />,
+                description: 'Choose pickup or another available partner option.',
+                totalFee: undefined,
                 activeCombo: undefined as PartnerCombo | undefined,
             };
         }
 
-        const totalFee = activeCombo.slots.reduce((sum, s) => sum + s.fee, 0);
-        const feeFormatted = `+₱${totalFee.toFixed(2)}`;
+        const hasUnknownFee = activeCombo.slots.some((slot) => slot.feeMinor == null);
+        const totalFeeMinor = activeCombo.slots.reduce((sum, slot) => sum + (slot.feeMinor ?? 0), 0);
+        const totalFee = totalFeeMinor / 100;
+        const feeFormatted = hasUnknownFee ? 'Quote required' : `+₱${totalFee.toFixed(2)}`;
 
         // Combo 1: Doorstep Delivery
         if (
@@ -973,7 +984,7 @@ export default function CreateProduct({
                 badge: feeFormatted,
                 icon: <Truck className="size-3.5 text-indigo-600" />,
                 description: courierSlot
-                    ? `${courierSlot.providerName} · Rating ${courierSlot.rating.toFixed(1)}`
+                    ? `${courierSlot.providerName}${typeof courierSlot.rating === 'number' ? ` · Rating ${courierSlot.rating.toFixed(1)}` : ''}`
                     : 'Courier delivery',
                 totalFee,
                 activeCombo,
@@ -998,7 +1009,13 @@ export default function CreateProduct({
         return {
             title: `${feeFormatted} ${activeCombo.title}`,
             badge: feeFormatted,
-            icon: <Truck className="size-3.5 text-indigo-600" />,
+            icon: activeCombo.slots.some((slot) => slot.roleType === 'AUDIT')
+                ? <ShieldCheck className="size-3.5 text-violet-600" />
+                : activeCombo.slots.some((slot) => slot.roleType === 'RECYCLE')
+                  ? <Package className="size-3.5 text-emerald-600" />
+                  : activeCombo.slots.some((slot) => slot.roleType === 'STORE')
+                    ? <Store className="size-3.5 text-amber-600" />
+                    : <Wrench className="size-3.5 text-amber-600" />,
             description: activeCombo.slots.map((s) => s.providerName).join(' + '),
             totalFee,
             activeCombo,
@@ -1048,21 +1065,11 @@ export default function CreateProduct({
 
         const activeCombo = combos.find((c) => c.id === selectedFulfillment);
 
-        const addons =
-            selectedFulfillment === 'pickup' || !activeCombo
-                ? []
-                : activeCombo.slots.map((s) => ({
-                      id: `addon-${s.roleType.toLowerCase()}-${s.id}`,
-                      code: s.roleType === 'COURIER' ? 'courier_delivery' : 'product_install',
-                      title: `${s.providerName} (${s.slotLabel})`,
-                      description: s.slaText || `${s.slotLabel} local fulfillment agreement.`,
-                      price_amount_minor: s.feeMinor,
-                      currency: 'PHP',
-                      partner_role: s.roleType.toLowerCase(),
-                      partner_fixture_keys: [s.id],
-                      status: 'available',
-                      settlement_mode: 'independent_provider_agreement',
-                  }));
+        const directAddons = (editingDraft?.addons ?? []).filter((addon) => {
+            const code = addon.code.toLowerCase();
+            return !('partner_role' in addon || 'partner_fixture_keys' in addon || 'settlement_mode' in addon)
+                && !['courier_delivery', 'turnkey_parts', 'product_install', 'safety_audit', 'market_hauling_relay'].includes(code);
+        });
 
         const savedSetCode = editingDraft?.work_specification?.based_on_set_code;
         const savedWorkCode = editingDraft?.work_catalog_code;
@@ -1124,15 +1131,15 @@ export default function CreateProduct({
                     `Stall pickup at ${stallLocation || 'Tagudin Public Market'}`,
                 ],
             })),
-            addons,
+            addons: directAddons,
             milestone_stages: milestoneStages,
             media: media as unknown as FormDataConvertible,
             deal_chain_combinations: combos as unknown as FormDataConvertible,
             deal_chain_specification: {
-                based_on_recipe_code:
-                    selectedFulfillment === 'pickup' ? 'direct' : selectedFulfillment,
-                based_on_catalog_version: 1,
-                is_custom_variation: selectedFulfillment !== 'pickup',
+                selected_combo_id: selectedFulfillment,
+                based_on_recipe_code: activeCombo?.recipeId ?? (selectedFulfillment === 'pickup' ? 'direct' : null),
+                based_on_catalog_version: activeCombo?.catalogVersion ?? null,
+                is_custom_variation: activeCombo?.isCustom ?? false,
                 combination_count: combos.length,
             } as unknown as FormDataConvertible,
         };
@@ -1182,6 +1189,17 @@ export default function CreateProduct({
             },
         });
     };
+
+    const previewReviewSummary = editingDraft?.rating_summary;
+    const previewReviewCount = previewReviewSummary?.reviews_count ?? 0;
+    const hasPreviewRating = previewReviewCount > 0
+        && typeof previewReviewSummary?.rating === 'number'
+        && Number.isFinite(previewReviewSummary.rating);
+    const previewRatingLabel = hasPreviewRating && previewReviewSummary
+        ? `${previewReviewSummary.rating.toFixed(1)} (${previewReviewCount} reviews)`
+        : previewReviewCount > 0
+          ? `${previewReviewCount} reviews`
+          : 'New · No reviews';
 
     const renderCustomerLiveTwin = () => (
         <div className="space-y-4">
@@ -1233,7 +1251,7 @@ export default function CreateProduct({
                         )}
                     </div>
                     <div className="absolute top-2.5 right-2.5 rounded-full bg-white/95 px-2 py-0.5 text-[10.5px] font-extrabold text-slate-900 shadow-2xs backdrop-blur">
-                        5.0 (New)
+                        {previewRatingLabel}
                     </div>
                 </div>
 
@@ -1255,7 +1273,7 @@ export default function CreateProduct({
                     <div className="flex items-baseline justify-between border-t border-slate-100 pt-2.5">
                         <div>
                             <span className="text-[10px] font-semibold text-slate-400 uppercase">
-                                {variants.length > 1 ? 'Starting from' : 'Unit Price'}
+                                {variants.length > 1 ? 'Default variant price' : 'Unit Price'}
                             </span>
                             <div className="font-mono text-base font-extrabold text-[#0F2F58]">
                                 ₱
@@ -1326,14 +1344,20 @@ export default function CreateProduct({
                                     >
                                         {s.roleType === 'COURIER' ? (
                                             <Truck className="size-3.5 text-indigo-600" />
+                                        ) : s.roleType === 'STORE' ? (
+                                            <Store className="size-3.5 text-amber-600" />
+                                        ) : s.roleType === 'AUDIT' ? (
+                                            <ShieldCheck className="size-3.5 text-violet-600" />
+                                        ) : s.roleType === 'RECYCLE' ? (
+                                            <Package className="size-3.5 text-emerald-600" />
                                         ) : (
                                             <Wrench className="size-3.5 text-amber-600" />
                                         )}
                                         <span className="font-bold text-slate-900">
-                                            {s.providerName}
+                                            {s.roleType} · {s.providerName}
                                         </span>
                                         <span className="font-mono font-bold text-emerald-700">
-                                            +₱{s.fee.toFixed(2)}
+                                            {s.feeMinor == null ? 'Quote required' : `+${formatPartnerFee(s.feeMinor)}`}
                                         </span>
                                     </span>
                                 ))}
@@ -1390,18 +1414,18 @@ export default function CreateProduct({
                 {/* Compact 1-Row Sticky Header */}
                 <header
                     data-testid="builder-header"
-                    className="sticky top-0 z-30 grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-2 rounded-2xl border border-slate-200/80 bg-white/95 px-3.5 py-2.5 shadow-xs backdrop-blur-md sm:flex sm:flex-row sm:items-center sm:gap-3 sm:px-4"
+                    className="sticky top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 rounded-2xl border border-slate-200/80 bg-white/95 px-3.5 py-2.5 shadow-xs backdrop-blur-md sm:flex sm:flex-row sm:items-center sm:gap-3 sm:px-4"
                 >
                     {/* Left: Change Type + Title */}
                     <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 sm:gap-2.5">
                         <Link
                             href="/listings/create"
-                            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
+                            className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
                             title="Change Type"
                         >
                             <ArrowLeft className="size-4" />
                         </Link>
-                        <span className="shrink-0 text-xs font-extrabold text-[#0F2F58] sm:text-sm">
+                        <span className="min-w-0 truncate text-xs font-extrabold text-[#0F2F58] sm:text-sm">
                             Product Listing
                         </span>
                     </div>
@@ -1409,11 +1433,11 @@ export default function CreateProduct({
                     {/* Step indicator pill */}
                     <div className="col-start-1 row-start-2 flex min-w-0 items-center">
                         {builderMode === 'guided' ? (
-                            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
+                            <span className="min-w-0 truncate rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
                                 Step {step} of 5 · {PRODUCT_GUIDED_STEPS[step - 1]?.shortTitle}
                             </span>
                         ) : (
-                            <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                            <span className="min-w-0 truncate rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
                                 Standard Form
                             </span>
                         )}
@@ -1423,43 +1447,14 @@ export default function CreateProduct({
                     <button
                         type="button"
                         onClick={() => setMobilePreviewOpen(true)}
-                        className="col-start-2 row-start-1 flex shrink-0 cursor-pointer items-center gap-1.5 justify-self-end rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 sm:hidden"
+                        className="col-start-2 row-start-1 flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 justify-self-end rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 sm:hidden"
                         title="Preview Live Customer View"
                     >
                         <Eye className="size-3.5 text-amber-600" />
                         <span>Preview</span>
                     </button>
 
-                    {/* Right: Mode Switcher */}
-                    <div
-                        className="col-start-2 row-start-2 flex shrink-0 items-center gap-1 justify-self-end rounded-xl border border-slate-200/70 bg-slate-100 p-0.5 sm:ml-auto"
-                        data-testid="builder-mode-switcher"
-                    >
-                        <button
-                            type="button"
-                            onClick={() => setBuilderMode('guided')}
-                            className={`flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition-all sm:px-2.5 ${
-                                builderMode === 'guided'
-                                    ? 'bg-white text-[#0F2F58] shadow-xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                        >
-                            <Sparkles className="size-3 text-amber-500" />
-                            <span>Guided</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setBuilderMode('standard')}
-                            className={`flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition-all sm:px-2.5 ${
-                                builderMode === 'standard'
-                                    ? 'bg-[#0F2F58] text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                        >
-                            <Sliders className="size-3" />
-                            <span>Standard</span>
-                        </button>
-                    </div>
+                    <BuilderModeToggle mode={builderMode} onModeChange={setBuilderMode} />
                 </header>
 
                 {/* Guided Mode Slim Progress Bar */}
@@ -1597,11 +1592,7 @@ export default function CreateProduct({
                                                                     (s) => s.roleType === 'LABOR',
                                                                 ),
                                                         );
-                                                        return filtered.length > 0
-                                                            ? filtered
-                                                            : defaultCombosForCategory(
-                                                                  nextCategory,
-                                                              );
+                                                        return filtered;
                                                     });
                                                     if (
                                                         selectedFulfillment === 'combo-installation'
@@ -2131,13 +2122,13 @@ export default function CreateProduct({
                                                 : 'border-slate-200 bg-[#FAFCFB] hover:border-slate-300'
                                         }`}
                                     >
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="flex items-start gap-3">
+                                        <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
+                                            <div className="flex min-w-0 items-start gap-3">
                                                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-900">
                                                     <Store className="size-5 text-amber-600" />
                                                 </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2">
+                                                <div className="min-w-0">
+                                                    <div className="flex flex-wrap items-center gap-2">
                                                         <h3 className="text-xs font-extrabold text-[#0F2F58]">
                                                             Counter Pickup at Stall
                                                         </h3>
@@ -2145,7 +2136,7 @@ export default function CreateProduct({
                                                             Always Active · Free
                                                         </span>
                                                     </div>
-                                                    <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500">
+                                                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
                                                         <span>Direct in-person pickup</span>
                                                         {stallLocation ? (
                                                             <span
@@ -2172,7 +2163,7 @@ export default function CreateProduct({
                                                     setSelectedFulfillment('pickup');
                                                     setExpandedComboIds({});
                                                 }}
-                                                className={`cursor-pointer rounded-full px-3 py-1 text-[10px] font-extrabold transition-all ${
+                                                className={`min-h-11 shrink-0 cursor-pointer self-start rounded-full px-3 py-1 text-[10px] font-extrabold transition-all ${
                                                     selectedFulfillment === 'pickup'
                                                         ? 'bg-emerald-700 text-white shadow-xs'
                                                         : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
@@ -2230,9 +2221,9 @@ export default function CreateProduct({
                                                     {/* Combo Header: Clicking anywhere on header (except buttons) toggles flow expansion without changing active state */}
                                                     <div
                                                         onClick={() => toggleComboExpansion(c.id)}
-                                                        className="flex cursor-pointer items-center justify-between border-b border-slate-100 pb-2.5"
+                                                        className="flex cursor-pointer flex-col gap-2 border-b border-slate-100 pb-2.5 sm:flex-row sm:items-center sm:justify-between"
                                                     >
-                                                        <div className="flex min-w-0 items-center gap-2">
+                                                        <div className="flex min-w-0 items-center gap-2 sm:flex-1">
                                                             <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#EBF2FA] text-[#0F2F58]">
                                                                 {renderComboIcon(
                                                                     c.icon,
@@ -2255,7 +2246,7 @@ export default function CreateProduct({
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <div className="ml-2 flex shrink-0 items-center gap-1.5">
+                                                        <div className="ml-0 flex w-full shrink-0 flex-wrap items-center justify-start gap-1.5 sm:ml-2 sm:w-auto sm:justify-end">
                                                             {/* Touchpoint 1: View / Explore Deal Chain Flow */}
                                                             <button
                                                                 type="button"
@@ -2415,20 +2406,17 @@ export default function CreateProduct({
 
                                                                     {/* Pipeline Connectors & Slot Nodes */}
                                                                     {c.slots.map((s, sIdx) => {
-                                                                        const isCourier =
-                                                                            s.roleType ===
-                                                                            'COURIER';
-                                                                        const isStore =
-                                                                            s.roleType === 'STORE';
+                                                                        const isCourier = s.roleType === 'COURIER';
+                                                                        const isStore = s.roleType === 'STORE';
+                                                                        const isAudit = s.roleType === 'AUDIT';
+                                                                        const isRecycle = s.roleType === 'RECYCLE';
 
                                                                         const meta = isCourier
                                                                             ? {
                                                                                   label: 'Courier',
                                                                                   border: 'border-sky-300',
                                                                                   badge: 'bg-sky-100 border-sky-300 text-sky-900',
-                                                                                  icon: (
-                                                                                      <Truck className="size-4 text-sky-600" />
-                                                                                  ),
+                                                                                  icon: <Truck className="size-4 text-sky-600" />,
                                                                                   accent: 'bg-sky-50',
                                                                               }
                                                                             : isStore
@@ -2436,20 +2424,32 @@ export default function CreateProduct({
                                                                                     label: 'Store',
                                                                                     border: 'border-amber-300',
                                                                                     badge: 'bg-amber-100 border-amber-300 text-amber-900',
-                                                                                    icon: (
-                                                                                        <Store className="size-4 text-amber-600" />
-                                                                                    ),
+                                                                                    icon: <Store className="size-4 text-amber-600" />,
                                                                                     accent: 'bg-amber-50',
                                                                                 }
-                                                                              : {
-                                                                                    label: 'Labor',
-                                                                                    border: 'border-emerald-300',
-                                                                                    badge: 'bg-emerald-100 border-emerald-300 text-emerald-900',
-                                                                                    icon: (
-                                                                                        <Wrench className="size-4 text-emerald-600" />
-                                                                                    ),
-                                                                                    accent: 'bg-emerald-50',
-                                                                                };
+                                                                              : isAudit
+                                                                                ? {
+                                                                                      label: 'Audit',
+                                                                                      border: 'border-violet-300',
+                                                                                      badge: 'bg-violet-100 border-violet-300 text-violet-900',
+                                                                                      icon: <ShieldCheck className="size-4 text-violet-600" />,
+                                                                                      accent: 'bg-violet-50',
+                                                                                  }
+                                                                                : isRecycle
+                                                                                  ? {
+                                                                                        label: 'Recycle',
+                                                                                        border: 'border-emerald-300',
+                                                                                        badge: 'bg-emerald-100 border-emerald-300 text-emerald-900',
+                                                                                        icon: <Package className="size-4 text-emerald-600" />,
+                                                                                        accent: 'bg-emerald-50',
+                                                                                    }
+                                                                                  : {
+                                                                                        label: 'Labor',
+                                                                                        border: 'border-emerald-300',
+                                                                                        badge: 'bg-emerald-100 border-emerald-300 text-emerald-900',
+                                                                                        icon: <Wrench className="size-4 text-emerald-600" />,
+                                                                                        accent: 'bg-emerald-50',
+                                                                                    };
 
                                                                         return (
                                                                             <React.Fragment
@@ -2477,10 +2477,7 @@ export default function CreateProduct({
                                                                                                 }
                                                                                             </span>
                                                                                             <span className="font-mono text-[9.5px] font-bold text-slate-700">
-                                                                                                +₱
-                                                                                                {s.fee.toFixed(
-                                                                                                    0,
-                                                                                                )}
+                                                                                                {formatPartnerFee(s.feeMinor, 0)}
                                                                                             </span>
                                                                                         </div>
                                                                                         <div className="mt-0.5 max-w-[110px] truncate text-xs font-extrabold text-slate-900">
@@ -2511,7 +2508,7 @@ export default function CreateProduct({
                                                                                 c.id,
                                                                                 sIdx,
                                                                                 s.roleType,
-                                                                                s.id,
+                                                                                s.listingId,
                                                                             )
                                                                         }
                                                                         className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-2xs transition-all hover:border-[#0F2F58]/50"
@@ -2519,13 +2516,15 @@ export default function CreateProduct({
                                                                         <div className="flex min-w-0 items-center gap-2">
                                                                             <span
                                                                                 className={`rounded px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase ${
-                                                                                    s.roleType ===
-                                                                                    'COURIER'
+                                                                                    s.roleType === 'COURIER'
                                                                                         ? 'bg-sky-100 text-sky-800'
-                                                                                        : s.roleType ===
-                                                                                            'STORE'
+                                                                                        : s.roleType === 'STORE'
                                                                                           ? 'bg-amber-100 text-amber-800'
-                                                                                          : 'bg-emerald-100 text-emerald-800'
+                                                                                          : s.roleType === 'AUDIT'
+                                                                                            ? 'bg-violet-100 text-violet-800'
+                                                                                            : s.roleType === 'RECYCLE'
+                                                                                              ? 'bg-emerald-100 text-emerald-800'
+                                                                                              : 'bg-emerald-100 text-emerald-800'
                                                                                 }`}
                                                                             >
                                                                                 {s.roleType}
@@ -2534,7 +2533,7 @@ export default function CreateProduct({
                                                                                 {s.providerName}
                                                                             </span>
                                                                             <span className="shrink-0 font-mono text-[11px] font-bold text-emerald-700">
-                                                                                +₱{s.fee.toFixed(2)}
+                                                                                {formatPartnerFee(s.feeMinor)}
                                                                             </span>
                                                                         </div>
                                                                         <button
@@ -2545,7 +2544,7 @@ export default function CreateProduct({
                                                                                     c.id,
                                                                                     sIdx,
                                                                                     s.roleType,
-                                                                                    s.id,
+                                                                                    s.listingId,
                                                                                 );
                                                                             }}
                                                                             className="shrink-0 cursor-pointer text-[10.5px] font-bold text-[#0F2F58] hover:underline"
@@ -2671,8 +2670,8 @@ export default function CreateProduct({
                                                 {isSubmitting
                                                     ? 'Saving listing...'
                                                     : isAuthenticated
-                                                      ? 'Publish Product Listing'
-                                                      : 'Sign in to Publish'}
+                                                      ? 'Save Private Draft'
+                                                      : 'Sign in to Save Draft'}
                                             </button>
                                         </div>
                                     ) : (
@@ -2728,26 +2727,14 @@ export default function CreateProduct({
                     </aside>
                 </div>
 
-                {/* Mobile Customer Twin Modal Sheet */}
-                {mobilePreviewOpen && (
-                    <div className="fixed inset-0 z-50 flex items-end bg-slate-900/60 backdrop-blur-xs lg:hidden">
-                        <div className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                <span className="text-sm font-extrabold text-[#0F2F58]">
-                                    Live Listing Preview
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => setMobilePreviewOpen(false)}
-                                    className="cursor-pointer rounded-full p-1 text-slate-400 hover:text-slate-700"
-                                >
-                                    <X className="size-5" />
-                                </button>
-                            </div>
-                            <div className="pt-3">{renderCustomerLiveTwin()}</div>
-                        </div>
-                    </div>
-                )}
+                <GlovoWaveModal
+                    open={mobilePreviewOpen}
+                    onClose={() => setMobilePreviewOpen(false)}
+                    title="Customer Preview"
+                    subtitle="How your product looks to customers"
+                >
+                    {renderCustomerLiveTwin()}
+                </GlovoWaveModal>
 
                 <CreatorPostModal open={creatorOpen} onClose={() => setCreatorOpen(false)} />
                 <QuickDealScanModal open={quickDealOpen} onClose={() => setQuickDealOpen(false)} />
@@ -2773,7 +2760,7 @@ export default function CreateProduct({
                             id: 'open-slot',
                             title: 'Open Partner Slot',
                             providerName: 'Buyer selects at checkout',
-                            priceMinor: 0,
+                            priceMinor: undefined,
                             isOpenSlot: true,
                         };
                         if (slotPickerState.onPickedOverride) {
@@ -2784,15 +2771,21 @@ export default function CreateProduct({
                                     if (combo.id !== slotPickerState.comboId) return combo;
                                     return {
                                         ...combo,
+                                        nodes: combo.nodes?.map((node) => node.id === combo.slots[slotPickerState.slotIndex]?.id ? {
+                                            ...node, listingId: undefined, listingVersionId: undefined, feeMinor: undefined, isOpenSlot: true, assignmentMode: 'buyer_choice',
+                                        } : node),
                                         slots: combo.slots.map((slot, index) =>
                                             index === slotPickerState.slotIndex
                                                 ? {
                                                       ...slot,
                                                       providerName: openSlot.providerName,
-                                                      fee: 0,
-                                                      feeMinor: 0,
+                                                      fee: undefined,
+                                                      feeMinor: undefined,
                                                       listingId: undefined,
+                                                      listingVersionId: undefined,
+                                                      rating: undefined,
                                                       isOpenSlot: true,
+                                                      assignmentMode: 'buyer_choice',
                                                   }
                                                 : slot,
                                         ),
@@ -2811,14 +2804,30 @@ export default function CreateProduct({
                     open={attachModalOpen}
                     onClose={() => setAttachModalOpen(false)}
                     categoryCode={category}
+                    listingType="product"
+                    workShape={defaultWorkSet?.work_shape || 'A4'}
                     recommended={(dealChainOptions?.recommended ?? []).filter(
                         (recipe) =>
-                            (recipe.applicableCategories.includes(category) ||
-                                recipe.applicableCategories.length === 0) &&
-                            (recipe.applicableListingTypes.includes('product') ||
-                                recipe.applicableListingTypes.length === 0),
+                            isRecipeCompatible(
+                                recipe,
+                                category,
+                                'product',
+                                defaultWorkSet?.work_shape || 'A4',
+                            ),
                     )}
-                    otherRecipes={allDealChainRecipes}
+                    otherRecipes={[...(dealChainOptions?.recommended ?? []), ...(dealChainOptions?.other_recipes ?? [])]
+                        .filter(
+                            (recipe) =>
+                                isRecipeCompatible(
+                                    recipe,
+                                    null,
+                                    'product',
+                                    defaultWorkSet?.work_shape || 'A4',
+                                ) &&
+                                !((dealChainOptions?.recommended ?? []).some(
+                                    (rec) => rec.recipeId === recipe.recipeId && isRecipeCompatible(rec, category, 'product', defaultWorkSet?.work_shape || 'A4'),
+                                )),
+                        )}
                     onSelectRecipe={handleSelectDealChainRecipe}
                     onBuildCustom={() => {
                         setCustomizingComboId(null);
@@ -2836,6 +2845,7 @@ export default function CreateProduct({
                     primaryListingTitle={title || 'Untitled Product'}
                     primaryListingPricePesos={Math.round(defaultVariant?.price || 0)}
                     primaryListingType="product"
+                    primaryListingCategoryCode={category}
                     onSave={handleSaveDealChain}
                     onPickPartnerForSlot={(slotType: SlotType, onPicked) => {
                         setSlotPickerState({

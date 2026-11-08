@@ -14,10 +14,12 @@ export type DealChainNode = {
     sub: string;
     type: 'store' | 'delivery' | 'labor' | 'audit' | 'recycle';
     listingId?: string;
+    listingVersionId?: string | null;
     providerId?: string;
-    priceMinor?: number;
+    priceMinor?: number | null;
     image?: string;
     providerName?: string;
+    isPrimary?: boolean;
 };
 
 export interface SlotCandidateListing {
@@ -25,12 +27,16 @@ export interface SlotCandidateListing {
     title: string;
     provider_name: string;
     provider_user_id?: string;
+    listing_version_id?: string | null;
+    listingVersionId?: string | null;
     area: string;
-    price_minor: number;
-    priceMinor?: number;
+    price_minor?: number | null;
+    priceMinor?: number | null;
     sla_text: string;
     photo_url?: string;
-    rating?: number;
+    rating?: number | null;
+    reviews_count?: number | null;
+    reviewsCount?: number | null;
     role: 'STORE' | 'COURIER' | 'LABOR' | 'AUDIT' | 'RECYCLE';
 }
 
@@ -47,11 +53,30 @@ export type DealChainRecipeId =
     | 'direct';
 export type PublishedDealChainRecipeId = Exclude<DealChainRecipeId, 'direct'>;
 
+export type DealChainDependencyEdge = {
+    id?: string;
+    predecessorId: string;
+    successorId: string;
+    conditionCode: string;
+    dependencyType: 'blocks';
+    status?: 'active' | 'removed';
+    allowBypass?: boolean;
+};
+
 export type AttachedDealChain = {
     recipeId: DealChainRecipeId;
     title: string;
     extraFee: number;
     nodes: DealChainNode[];
+    dependencies?: DealChainDependencyEdge[];
+};
+
+export type SavedDealChainPreview = {
+    combinationId: string;
+    listingVersionId: string;
+    title: string;
+    nodes: DealChainNode[];
+    dependencies: DealChainDependencyEdge[];
 };
 
 export type BasketItem = {
@@ -75,6 +100,7 @@ export type BasketItem = {
     providerName?: string | null;
     notes?: string;
     dealChain?: AttachedDealChain;
+    savedDealChain?: SavedDealChainPreview;
 };
 
 export type MarketplaceBrowseProps = {

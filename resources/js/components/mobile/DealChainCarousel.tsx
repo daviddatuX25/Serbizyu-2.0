@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import type { DealChainCombination, DealChainNode, PartnerSlot, SlotType } from './types';
+import type { DealChainCombination, DealChainNode, PartnerSlot } from './types';
 
 /* ── Props ── */
 export interface DealChainCarouselProps {
     combinations: DealChainCombination[];
     activeIndex: number;
     onIndexChange: (index: number) => void;
-    onSlotChangeClick: (comboId: string, slotType: SlotType) => void;
+    onSlotChangeClick: (comboId: string, slot: PartnerSlot) => void;
     onToggleDefault?: (comboId: string) => void;
     onRemoveCombo?: (comboId: string) => void;
     onAddComboClick?: () => void;
@@ -56,12 +56,12 @@ function SlotBinderRow({
 }: {
     slot: PartnerSlot;
     comboId: string;
-    onChangeClick: (comboId: string, slotType: SlotType) => void;
+    onChangeClick: (comboId: string, slot: PartnerSlot) => void;
 }) {
     return (
         <button
             type="button"
-            onClick={() => onChangeClick(comboId, slot.type)}
+            onClick={() => onChangeClick(comboId, slot)}
             className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white px-2 py-[5px] text-left transition-colors hover:border-[#0F2F58]"
         >
             <div className="flex items-center gap-2 min-w-0">
@@ -116,7 +116,7 @@ function ComboSlide({
     onCustomizeComboClick,
 }: {
     combo: DealChainCombination;
-    onSlotChangeClick: (comboId: string, slotType: SlotType) => void;
+    onSlotChangeClick: (comboId: string, slot: PartnerSlot) => void;
     onToggleDefault?: (comboId: string) => void;
     onRemoveCombo?: (comboId: string) => void;
     onCustomizeComboClick?: (comboId: string) => void;

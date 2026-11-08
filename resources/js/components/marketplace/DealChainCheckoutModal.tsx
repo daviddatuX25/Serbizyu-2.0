@@ -1,6 +1,7 @@
 import { ArrowRight, FileCheck, Package, ShieldCheck, Truck, Wrench } from 'lucide-react';
 import GlovoWaveModal from '../mobile/GlovoWaveModal';
 import type { BasketItem, DealChainNode } from '@/marketplace/types';
+import { hasValidSavedDealChainPreview } from '@/marketplace/booking';
 
 interface DealChainCheckoutModalProps {
     open: boolean;
@@ -33,28 +34,40 @@ export function DealChainCheckoutModal({
     totalAmount,
     onAuthorize,
 }: DealChainCheckoutModalProps) {
+    const invalidSavedPreview = items.some((item) => item.deal_chain_combination_id && !hasValidSavedDealChainPreview(item));
+    const hasSavedPlan = items.some((item) => Boolean(item.deal_chain_combination_id));
+    const unresolvedSavedRole = items.some((item) => item.savedDealChain?.nodes.some((node) => !node.isPrimary && !node.listingId));
     if (!open) return null;
-
     const plannedNodes: PlannedNode[] = items.flatMap((item) => {
-        if (item.dealChain) {
-            return item.dealChain.nodes.map((node, nodeIndex) => ({
+        const preview = item.savedDealChain ?? item.dealChain;
+        if (preview) {
+            return preview.nodes.map((node, nodeIndex) => ({
                 id: `${item.id}-${nodeIndex}`,
                 title: node.title,
-                description: `${item.title} · ${node.sub}`,
+                description: [
+                    item.title,
+                    node.sub,
+                    ...(item.savedDealChain?.dependencies ?? [])
+                        .filter((edge) => edge.successorId === node.id)
+                        .map((edge) => {
+                            const predecessor = preview.nodes.find((candidate) => candidate.id === edge.predecessorId);
+                            const milestone = edge.conditionCode === 'part_ready' ? 'item is ready'
+                                : edge.conditionCode === 'delivery_signed' ? 'delivery is received' : 'work is confirmed complete';
+                            return `Starts after ${predecessor?.title ?? 'previous task'}: ${milestone}`;
+                        }),
+                ].filter(Boolean).join(' · '),
                 role: node.role,
                 type: node.type,
             }));
         }
-
-        return [
-            {
-                id: `${item.id}-primary`,
-                title: item.title,
-                description: 'Primary listing need · Provider agreement required',
-                role: item.listing_type === 'product' ? 'Product' : 'Labor',
-                type: item.listing_type === 'product' ? ('store' as const) : ('labor' as const),
-            },
-        ];
+        if (item.deal_chain_combination_id) return [];
+        return [{
+            id: `${item.id}-primary`,
+            title: item.title,
+            description: 'Primary listing need · Provider agreement required',
+            role: item.listing_type === 'product' ? 'Product' : 'Labor',
+            type: item.listing_type === 'product' ? 'store' : 'labor',
+        }];
     });
 
     return (
@@ -66,8 +79,9 @@ export function DealChainCheckoutModal({
             bottomSlot={
                 <button
                     type="button"
+                    disabled={invalidSavedPreview || unresolvedSavedRole}
                     onClick={() => onAuthorize()}
-                    className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#FFC72C] text-xs font-extrabold tracking-wide text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-98"
+                    className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#FFC72C] text-xs font-extrabold tracking-wide text-slate-950 shadow-xs transition-all hover:bg-[#F2BA18] active:scale-98 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <span>Stage Coordinated Plan</span>
                     <ArrowRight className="size-4" />
@@ -86,10 +100,22 @@ export function DealChainCheckoutModal({
                                 payment obligations.
                             </p>
                         </div>
-                        <span className="shrink-0 font-mono text-xs font-bold text-slate-500">
-                            Estimate ₱{totalAmount.toFixed(2)}
-                        </span>
+                        {!hasSavedPlan && (
+                            <span className="shrink-0 font-mono text-xs font-bold text-slate-500">
+                                Estimate ₱{totalAmount.toFixed(2)}
+                            </span>
+                        )}
                     </div>
+                    {invalidSavedPreview && (
+                        <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                            This saved plan has no matching display preview. Revisit its source listing and add it again before staging.
+                        </p>
+                    )}
+                    {unresolvedSavedRole && (
+                        <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                            Choose a provider for every open saved role before staging.
+                        </p>
+                    )}
 
                     {plannedNodes.map((node, index) => (
                         <div

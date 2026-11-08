@@ -1,0 +1,5 @@
+includes:
+    - ../../phpstan.neon
+
+parameters:
+    tmpDir: /tmp/serbizyu-controlled-pilot-qa-f04-20261103/app/private/phpstan

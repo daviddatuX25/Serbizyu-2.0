@@ -8,13 +8,13 @@ use App\Shared\Application\ActorContext;
 use App\Shared\Application\AuditRecorder;
 use App\Shared\Application\IdempotencyGuard;
 use App\Shared\Application\KernelException;
+use App\Shared\Application\NotificationIntent;
 use App\Shared\Application\OutboxWriter;
 use App\Shared\Application\PublicReferenceAllocator;
-use App\Shared\Contracts\OrderCapacityPort;
-use App\Shared\Contracts\OrderListingSourcePort;
-use App\Shared\Application\NotificationIntent;
 use App\Shared\Contracts\NotificationAttention;
 use App\Shared\Contracts\NotificationsPort;
+use App\Shared\Contracts\OrderCapacityPort;
+use App\Shared\Contracts\OrderListingSourcePort;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -204,10 +204,12 @@ final class SubmitOrderProposal
                 ? (isset($selectedPrice['price_amount_minor']) ? (int) $selectedPrice['price_amount_minor'] : (int) round((float) $selectedPrice['price'] * 100))
                 : (int) $source['price_amount_minor'];
             $resolvedAddons = [];
+            $resolvedAddonTerms = [];
             $addonTotalMinor = 0;
             if ($addonIds !== []) {
-                if ((string) ($source['listing_type'] ?? '') !== 'service') {
-                    throw new OrderError('VALIDATION_FAILED', 'Seller add-ons are only available for service listings.', $correlationId, status: 422);
+                $listingType = (string) ($source['listing_type'] ?? '');
+                if (! in_array($listingType, ['service', 'product'], true)) {
+                    throw new OrderError('VALIDATION_FAILED', 'Seller add-ons are not available for this listing.', $correlationId, status: 422);
                 }
                 foreach ($addonIds as $addonId) {
                     $addon = null;
@@ -217,11 +219,30 @@ final class SubmitOrderProposal
                             break;
                         }
                     }
-                    if ($addon === null || ($addon['status'] ?? 'available') !== 'available') {
+                    $productExtra = $listingType === 'product'
+                        && is_array($addon)
+                        && ! array_key_exists('partner_role', $addon)
+                        && ! array_key_exists('partner_fixture_keys', $addon)
+                        && ! array_key_exists('settlement_mode', $addon)
+                        && ! in_array(strtolower((string) ($addon['code'] ?? '')), [
+                            'turnkey_parts',
+                            'safety_audit',
+                            'courier_delivery',
+                            'product_install',
+                        ], true);
+                    if ($addon === null || ($addon['status'] ?? 'available') !== 'available' || ($listingType === 'product' && ! $productExtra)) {
                         throw new OrderError('VALIDATION_FAILED', 'A selected seller add-on is no longer available.', $correlationId, status: 409, retryable: true);
                     }
-                    $resolvedAddons[] = (string) ($addon['id'] ?? $addon['code']);
-                    $addonTotalMinor += (int) ($addon['price_amount_minor'] ?? 0);
+                    $addonPriceMinor = filter_var($addon['price_amount_minor'] ?? null, FILTER_VALIDATE_INT);
+                    if ($listingType === 'product' && ($addonPriceMinor === false || $addonPriceMinor < 0)) {
+                        throw new OrderError('VALIDATION_FAILED', 'A selected product extra has no authored price.', $correlationId, status: 409, retryable: true);
+                    }
+                    $resolvedAddonTerms[(string) ($addon['id'] ?? $addon['code'])] = $addon;
+                }
+                $resolvedAddons = array_values(array_map('strval', array_keys($resolvedAddonTerms)));
+                sort($resolvedAddons, SORT_STRING);
+                foreach ($resolvedAddons as $resolvedAddonId) {
+                    $addonTotalMinor += (int) ($resolvedAddonTerms[$resolvedAddonId]['price_amount_minor'] ?? 0);
                 }
                 $addonIds = $resolvedAddons;
             }

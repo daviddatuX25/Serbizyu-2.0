@@ -73,13 +73,18 @@ export default function GlovoWaveModal({
 }: GlovoWaveModalProps) {
     const isModalOpen = open ?? isOpen ?? false;
     const modalContentRef = useRef<HTMLDivElement>(null);
+    const onCloseRef = useRef(onClose);
     const titleId = useId();
+
+    useEffect(() => {
+        onCloseRef.current = onClose;
+    }, [onClose]);
 
     useEffect(() => {
         if (!isModalOpen) return;
 
         const handleKey = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') onClose();
+            if (event.key === 'Escape') onCloseRef.current();
         };
 
         const previousOverflow = document.body.style.overflow;
@@ -90,7 +95,55 @@ export default function GlovoWaveModal({
             document.body.style.overflow = previousOverflow;
             document.removeEventListener('keydown', handleKey);
         };
-    }, [isModalOpen, onClose]);
+    }, [isModalOpen]);
+
+    useEffect(() => {
+        if (!isModalOpen) return;
+
+        const previousFocus = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+        const content = modalContentRef.current;
+        const focusableSelector = [
+            'a[href]',
+            'button:not(:disabled)',
+            'input:not(:disabled)',
+            'select:not(:disabled)',
+            'textarea:not(:disabled)',
+            '[tabindex]:not([tabindex="-1"])',
+        ].join(',');
+        const focusFirst = () => {
+            const focusables = content?.querySelectorAll<HTMLElement>(focusableSelector);
+            focusables?.[0]?.focus();
+        };
+
+        focusFirst();
+        const handleTab = (event: KeyboardEvent) => {
+            if (event.key !== 'Tab' || !content) return;
+            const focusables = Array.from(content.querySelectorAll<HTMLElement>(focusableSelector))
+                .filter((element) => element.getClientRects().length > 0);
+            if (focusables.length === 0) {
+                event.preventDefault();
+                content.focus();
+                return;
+            }
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (event.shiftKey && (document.activeElement === first || !content.contains(document.activeElement))) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && (document.activeElement === last || !content.contains(document.activeElement))) {
+                event.preventDefault();
+                first.focus();
+            }
+        };
+
+        document.addEventListener('keydown', handleTab);
+        return () => {
+            document.removeEventListener('keydown', handleTab);
+            if (previousFocus?.isConnected) previousFocus.focus();
+        };
+    }, [isModalOpen]);
 
     const handleBackdropClick = useCallback(
         (event: React.MouseEvent<HTMLDivElement>) => {
@@ -117,13 +170,14 @@ export default function GlovoWaveModal({
             <div
                 data-modal-surface="true"
                 onClick={stopPropagation}
-                className="flex max-h-[88vh] w-full translate-y-0 flex-col overflow-hidden bg-transparent transition-transform duration-300 sm:max-h-[85vh] sm:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:shadow-2xl"
+                className="flex max-h-[85vh] w-full translate-y-0 flex-col overflow-hidden bg-transparent transition-transform duration-300 sm:max-h-[85vh] sm:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:shadow-2xl"
                 style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
             >
                 <WaveCap />
 
                 <div
                     ref={modalContentRef}
+                    tabIndex={-1}
                     className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white px-[18px] pt-1 pb-4 sm:rounded-2xl sm:px-6 sm:pt-5"
                 >
                     <div className="shrink-0 border-b border-slate-100 pb-3">

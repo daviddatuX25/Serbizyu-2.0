@@ -625,6 +625,7 @@ final class A9DeliveryService
         if ($work === null || $work->work_shape !== 'A9') {
             return null;
         }
+        $executionAvailability = $this->workExecution->executionAvailability($work);
         $structure = json_decode((string) $work->structure, true);
         $deliveries = DB::table('work_deliveries')->where('work_instance_id', $work->id)->whereIn('status', ['draft', 'submitted', 'accepted', 'superseded'])->orderBy('version')->get();
         $draft = $deliveries->first(static fn (object $delivery): bool => $delivery->status === 'draft');
@@ -645,8 +646,10 @@ final class A9DeliveryService
             && (string) $work->current_delivery_id === ''
             && (int) ($draftEventPayload['version'] ?? 0) === (int) $draft->version
             && (int) ($draftEventPayload['work_version'] ?? 0) === (int) $work->version;
-        $authoredNodes = is_array($structure) && is_array($structure['nodes'] ?? null) ? $structure['nodes'] : [];
-        $nodes = $this->nodeEvidence->projectNodes(
+        $authoredNodes = $executionAvailability['execution_available'] && is_array($structure) && is_array($structure['nodes'] ?? null)
+            ? $structure['nodes']
+            : [];
+        $nodes = $authoredNodes === [] ? [] : $this->nodeEvidence->projectNodes(
             $orderId,
             (string) $work->id,
             $actorId,
@@ -716,6 +719,7 @@ final class A9DeliveryService
             'nodes' => $nodes,
             'currentDelivery' => $current,
             'deliveries' => $projected,
+            ...$executionAvailability,
         ];
     }
 
@@ -771,6 +775,7 @@ final class A9DeliveryService
             throw new OrderError('WORK_NOT_FOUND', 'No Work instance exists for this order.', $correlationId, status: 404);
         }
 
+        $this->workExecution->assertExecutionAvailable($work, $correlationId);
         try {
             $this->workGates->assertWorkCanAdvance((string) $work->id, $correlationId);
         } catch (KernelException $error) {

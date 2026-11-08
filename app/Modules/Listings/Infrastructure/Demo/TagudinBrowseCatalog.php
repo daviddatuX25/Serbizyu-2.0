@@ -6,6 +6,7 @@ namespace App\Modules\Listings\Infrastructure\Demo;
 
 use App\Shared\Contracts\FixtureConstants;
 use App\Shared\Infrastructure\Demo\TagudinPartnerCatalog;
+use App\Shared\Infrastructure\Demo\DealChainExecutionFixtures as Fix;
 
 /**
  * Declarative Tagudin browse supply for local/capstone demos.
@@ -18,6 +19,7 @@ use App\Shared\Infrastructure\Demo\TagudinPartnerCatalog;
  *     fixture_key: string,
  *     listing_id: string,
  *     version_id: string,
+ *     owner_user_id?: string,
  *     category_code: string,
  *     listing_type: 'service'|'product',
  *     work_shape: 'A1'|'A2'|'A3'|'A4'|'A9',
@@ -124,6 +126,7 @@ final class TagudinBrowseCatalog
                 'fixture_key' => 'active-tagudin-bibingka-01',
                 'listing_id' => '0198a3b1-7c40-7abc-8def-5234567890b5',
                 'version_id' => '0198a3b1-7c40-7abc-8def-6234567890b5',
+                'owner_user_id' => Fix::LOLA_USER_ID,
                 'category_code' => 'local-food',
                 'listing_type' => 'product',
                 'work_shape' => 'A4',
@@ -188,6 +191,7 @@ final class TagudinBrowseCatalog
                 'fixture_key' => 'active-tagudin-ac-clean-01',
                 'listing_id' => '0198a3b1-7c40-7abc-8def-5234567890b8',
                 'version_id' => '0198a3b1-7c40-7abc-8def-6234567890b8',
+                'owner_user_id' => Fix::TECH_USER_ID,
                 'category_code' => 'repairs',
                 'listing_type' => 'service',
                 'work_shape' => 'A3',
@@ -217,6 +221,7 @@ final class TagudinBrowseCatalog
                 'fixture_key' => 'active-tagudin-courier-01',
                 'listing_id' => '0198a3b1-7c40-7abc-8def-5234567890b9',
                 'version_id' => '0198a3b1-7c40-7abc-8def-6234567890b9',
+                'owner_user_id' => Fix::COURIER_USER_ID,
                 'category_code' => 'courier',
                 'listing_type' => 'service',
                 'work_shape' => 'A1',
@@ -235,6 +240,7 @@ final class TagudinBrowseCatalog
                 'fixture_key' => 'active-tagudin-ac-capacitor-01',
                 'listing_id' => '0198a3b1-7c40-7abc-8def-5234567890ba',
                 'version_id' => '0198a3b1-7c40-7abc-8def-6234567890ba',
+                'owner_user_id' => Fix::STORE_USER_ID,
                 'category_code' => 'repairs',
                 'listing_type' => 'product',
                 'work_shape' => 'A4',
@@ -255,6 +261,7 @@ final class TagudinBrowseCatalog
                 'fixture_key' => 'active-tagudin-ac-install-01',
                 'listing_id' => '0198a3b1-7c40-7abc-8def-5234567890bb',
                 'version_id' => '0198a3b1-7c40-7abc-8def-6234567890bb',
+                'owner_user_id' => Fix::TECH_USER_ID,
                 'category_code' => 'repairs',
                 'listing_type' => 'service',
                 'work_shape' => 'A3',
@@ -273,6 +280,7 @@ final class TagudinBrowseCatalog
                 'fixture_key' => 'active-tagudin-safety-audit-01',
                 'listing_id' => '0198a3b1-7c40-7abc-8def-5234567890bc',
                 'version_id' => '0198a3b1-7c40-7abc-8def-6234567890bc',
+                'owner_user_id' => Fix::TECH_USER_ID,
                 'category_code' => 'repairs',
                 'listing_type' => 'service',
                 'work_shape' => 'A3',
@@ -286,6 +294,27 @@ final class TagudinBrowseCatalog
                 'barangay_code' => '0102933019',
                 'stall_location' => 'Farola Sundial Point',
                 'coordinates' => ['lat' => 16.9340, 'lng' => 120.4380],
+            ],
+            [
+                'fixture_key' => 'active-tagudin-holcim-40kg',
+                'listing_id' => Fix::LISTING_HOLCIM_CEMENT,
+                'version_id' => Fix::LISTING_VERSION_HOLCIM_CEMENT,
+                'owner_user_id' => Fix::STORE_USER_ID,
+                'category_code' => 'repairs',
+                'listing_type' => 'product',
+                'work_shape' => 'A4',
+                'title' => 'Holcim Excel 40kg Portland Cement',
+                'description' => 'Premium general purpose portland cement for masonry, plastering, and structural concrete. Stored dry at Tagudin Hardware counter.',
+                'scope' => 'Tagudin hardware masonry fixture',
+                'price_amount_minor' => 28500,
+                'currency' => 'PHP',
+                'capacity_summary' => 'In stock at warehouse counter',
+                'barangay_name' => 'Rizal',
+                'barangay_code' => '0102933037',
+                'stall_location' => 'Tagudin Central Hardware, Rizal',
+                'variants' => [
+                    ['id' => 'var-holcim-40kg', 'name' => 'Holcim Excel 40kg', 'price' => 285, 'stock' => 20, 'is_default' => true],
+                ],
             ],
         ];
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, CheckCircle2, QrCode, Sparkles } from 'lucide-react';
+import { Camera, QrCode } from 'lucide-react';
 import GlovoWaveModal from '../mobile/GlovoWaveModal';
 
 export interface QuickDealScanModalProps {
@@ -16,18 +16,6 @@ export function QuickDealScanModal({
     userName = 'Tagudin Resident',
 }: QuickDealScanModalProps) {
     const [scanMode, setScanMode] = useState<'my_qr' | 'scan_camera'>('my_qr');
-    const [scannedSuccess, setScannedSuccess] = useState(false);
-
-    const handleSimulateScan = () => {
-        setScannedSuccess(true);
-        setTimeout(() => {
-            alert(
-                'Quick Deal Verified! Matched with Kuya Ben (AC Technician, Tagudin Centro). Ready for instant cash agreement.',
-            );
-            setScannedSuccess(false);
-            onClose();
-        }, 1200);
-    };
 
     return (
         <GlovoWaveModal
@@ -119,21 +107,9 @@ export function QuickDealScanModal({
                             <div className="absolute right-3 bottom-3 size-5 border-r-2 border-b-2 border-[#FFC244]" />
                         </div>
 
-                        {scannedSuccess ? (
-                            <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600">
-                                <CheckCircle2 className="size-4" />
-                                <span>Tagudin Provider Verified!</span>
-                            </div>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={handleSimulateScan}
-                                className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
-                            >
-                                <Sparkles className="size-3.5 text-amber-600" />
-                                <span>Simulate Scanning Kuya Ben's QR</span>
-                            </button>
-                        )}
+                        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">
+                            <span>Camera QR scanning requires browser media stream permissions. Use in-app pairing or deal code.</span>
+                        </div>
                     </div>
                 ) : null}
             </div>

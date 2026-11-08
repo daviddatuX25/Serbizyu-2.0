@@ -753,7 +753,6 @@ export default function MyListings(props: HomeProps) {
                     if (tab === 'post') setCreatorOpen(true);
                     if (tab === 'quick_deal') setQuickDealOpen(true);
                     if (tab === 'orders') router.visit('/orders');
-                    if (tab === 'invitations') router.visit('/deal-invitations');
                     if (tab === 'profile') router.visit('/my-listings');
                 }}
                 onQuickDealClick={() => setQuickDealOpen(true)}

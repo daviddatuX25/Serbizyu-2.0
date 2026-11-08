@@ -226,7 +226,7 @@ export const WORK_NODE_CATALOG: WorkNodePrimitive[] = [
     {
         id: 'node_client_final_signoff',
         title: 'Client Review & Sign-Off',
-        desc: 'Client inspects results, validates satisfaction, and authorizes escrow release.',
+        desc: 'Client inspects results, validates satisfaction, and authorizes work completion sign-off.',
         dur: '15m',
         clearanceMode: 'customer_approval',
         approvalMethod: 'presence_otp',
@@ -276,7 +276,7 @@ export const INTERACTION_TYPE_DEFINITIONS: InteractionTypeDefinition[] = [
     {
         type: 'client_signoff',
         label: 'Client Sign-Off',
-        description: 'Customer review, milestone sign-off, or escrow release acceptance.',
+        description: 'Customer review, milestone sign-off, or work completion acceptance.',
         badgeStyle: 'bg-green-50 text-green-900 border-green-300',
     },
 ];

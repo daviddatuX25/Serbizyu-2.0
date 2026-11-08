@@ -152,6 +152,12 @@ describe('PicksDrawer', () => {
                 open={true}
                 onClose={vi.fn()}
                 items={mockItems}
+                recipes={[{
+                    recipeId: 'turnkey_parts', title: 'All-In Parts', pattern: 'repair',
+                    patternCapsule: ['STORE', 'COURIER', 'LABOR'], extraFee: 215, rating: '', bookedCount: '',
+                    desc: 'Published coordinated service', applicableCategories: ['repairs'], applicableListingTypes: ['service'],
+                    nodes: mockItemsWithChain[0].dealChain?.nodes ?? [],
+                }]}
                 onUpdateQuantity={vi.fn()}
                 onRemoveItem={vi.fn()}
                 onCheckout={vi.fn()}

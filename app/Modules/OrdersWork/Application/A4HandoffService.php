@@ -682,8 +682,11 @@ final class A4HandoffService
             ? $this->courierCandidatesForOrder($order, $orderId)
             : [];
 
+        $executionAvailability = $work === null
+            ? ['execution_available' => false, 'unavailability_reason' => null]
+            : $this->workExecution->executionAvailability($work, $correlationId);
         $proofNode = null;
-        if ($work !== null && $order !== null) {
+        if ($work !== null && $order !== null && $executionAvailability['execution_available']) {
             $phaseOrdinal = null;
             $canManageEvidence = false;
             $allowAwaitingCustomerConfirmation = false;
@@ -750,12 +753,13 @@ final class A4HandoffService
             'status' => $transfer?->status ?? 'not_prepared',
             'transfer' => $transfer === null ? null : $this->result($transfer, false),
             'couriers' => $courierCandidates,
-            'canMarkPrepared' => $canMarkPrepared,
-            'canOfferCustody' => $canOfferCustody,
-            'canAcceptCustody' => $canAcceptCustody,
-            'canRecordReceipt' => $canRecordReceipt,
+            'canMarkPrepared' => $executionAvailability['execution_available'] && $canMarkPrepared,
+            'canOfferCustody' => $executionAvailability['execution_available'] && $canOfferCustody,
+            'canAcceptCustody' => $executionAvailability['execution_available'] && $canAcceptCustody,
+            'canRecordReceipt' => $executionAvailability['execution_available'] && $canRecordReceipt,
             'workVersion' => $work === null ? null : (int) $work->version,
             'proofNode' => $proofNode,
+            ...$executionAvailability,
         ];
     }
 
@@ -775,6 +779,7 @@ final class A4HandoffService
         if ($work === null || (string) $work->work_shape !== 'A4') {
             throw new OrderError('INVALID_ORDER_SHAPE', 'This custody protocol is only available for A4 product or courier-service orders.', $correlationId, status: 409);
         }
+        $this->workExecution->assertExecutionAvailable($work, $correlationId);
         $this->listingTypeForOrder($orderId, $correlationId);
 
         return $work;

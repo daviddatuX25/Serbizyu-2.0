@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -19,9 +19,11 @@ import {
 } from 'lucide-react';
 import type { HomeProps, ListingRecord } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
+import { NotificationBell } from '../components/notifications/NotificationCenter';
 import { PicksDrawer } from '../components/marketplace/PicksDrawer';
-import { listingBookingUrl, readPicksBasket, savePicksBasket } from '../marketplace/booking';
+import { hasCoordination, hasValidSavedDealChainPreview, listingBookingUrl, normalizeSavedDealChainPreview, readPicksBasket, savePicksBasket, serializeDealChainStageItem } from '../marketplace/booking';
 import { DealChainCheckoutModal } from '../components/marketplace/DealChainCheckoutModal';
+import { SlotListingPickerModal } from '../components/marketplace/SlotListingPickerModal';
 import type { BasketItem, PublishedDealChainRecipeId, SlotCandidateListing } from '../marketplace/types';
 import { indexDealChainRecipes } from '../marketplace/dealChainRecipes';
 import type { DealChainRecipeDefinition } from '../marketplace/dealChainRecipes';
@@ -75,70 +77,16 @@ type ReviewFilter = 'all' | '5' | '4' | 'photos';
 
 const REVIEW_PAGE_SIZE = 5;
 
-const SAMPLE_REVIEWS: ReviewItem[] = [
-    {
-        id: 'rev-1',
-        author: 'Maria S.',
-        barangay: 'Barangay Centro',
-        timeAgo: '3 days ago',
-        stars: 5,
-        packageTag: 'Standard Full Package',
-        quote: 'Very thorough clean. Blower fan wheel was removed and washed with alkaline chemical foam. Malamig na ulit aircon namin!',
-        hasPhoto: true,
-    },
-    {
-        id: 'rev-2',
-        author: 'Ramil D.',
-        barangay: 'Barangay Bio',
-        timeAgo: '1 week ago',
-        stars: 5,
-        packageTag: '1 Unit Standard',
-        quote: 'Arrived right on time in Centro. Clean workmanship, walang kalat sa kwarto.',
-    },
-    {
-        id: 'rev-3',
-        author: 'Ate Elena',
-        barangay: 'Barangay Rizal',
-        timeAgo: '2 weeks ago',
-        stars: 5,
-        packageTag: '1 Unit Standard + Condenser',
-        quote: 'Mabilis mag-troubleshoot si Kuya Ben. Pinalitan capacitor at nilinis coil.',
-    },
-    {
-        id: 'rev-4',
-        author: 'Mang Jose',
-        barangay: 'Pudoc West',
-        timeAgo: '3 weeks ago',
-        stars: 4,
-        packageTag: 'Express Delivery',
-        quote: 'Maayos kausap at maaasahan sa mga biglaang takbo sa centro.',
-    },
-];
-
-const REVIEW_PHOTOS = [
-    {
-        label: 'Chemical coil disinfection',
-        url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=300&auto=format&fit=crop&q=80',
-        author: 'Kuya Ben AC',
-    },
-    {
-        label: 'Blower wheel degreased',
-        url: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=300&auto=format&fit=crop&q=80',
-        author: 'Kuya Ben AC',
-    },
-    {
-        label: 'High pressure rinse',
-        url: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&auto=format&fit=crop&q=80',
-        author: 'Kuya Ben AC',
-    },
-    {
-        label: 'Finished installation',
-        url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=300&auto=format&fit=crop&q=80',
-        author: 'Kuya Ben AC',
-    },
-];
 
 
+
+function savedProductCombinationId(listing: ListingRecord | null | undefined, combinations: DealChainCombination[]): string | null {
+    if ((listing?.listing_type || listing?.listingType) !== 'product') return null;
+    const selectedId = listing?.deal_chain_specification?.selected_combo_id;
+    return typeof selectedId === 'string' && combinations.some((combination) => combination.id === selectedId)
+        ? selectedId
+        : null;
+}
 
 export default function ListingDetail(props: HomeProps) {
     const listing = props.activeListingDetail;
@@ -147,22 +95,41 @@ export default function ListingDetail(props: HomeProps) {
         [props.dealChainCatalog],
     );
     const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+    const [reviewItems, setReviewItems] = useState<BasketItem[]>([]);
+    const [savedRolePickerIndex, setSavedRolePickerIndex] = useState<number | null>(null);
+    const advancingRoleIndexRef = useRef<number | null>(null);
     const dealChainCombinations = useMemo(() => listingDealChainCombinations(listing), [listing]);
-    const [selectedCombinationId, setSelectedCombinationId] = useState<string | null>(null);
+    const [fulfillmentChoice, setFulfillmentChoice] = useState<{
+        listingId: string;
+        combinationId: string | null;
+    } | null>(null);
+    const authoredCombinationId = useMemo(
+        () => savedProductCombinationId(listing, dealChainCombinations),
+        [listing, dealChainCombinations],
+    );
+    const selectedCombinationId = fulfillmentChoice && fulfillmentChoice.listingId === listing?.id
+        ? fulfillmentChoice.combinationId
+        : authoredCombinationId;
+    const chooseFulfillment = (combinationId: string | null) => {
+        if (listing) setFulfillmentChoice({ listingId: listing.id, combinationId });
+    };
     const selectedCombination = dealChainCombinations.find((combination) => combination.id === selectedCombinationId) ?? null;
     const isService = (listing?.listing_type || listing?.listingType) !== 'product';
     const directAddons = useMemo(() => (listing?.addons ?? []).filter((addon) => {
+        if (!isService && ('partner_role' in addon || 'partner_fixture_keys' in addon || 'settlement_mode' in addon)) {
+            return false;
+        }
         const role = addon.partner_role?.toLowerCase();
         const code = addon.code?.toLowerCase();
         return addon.status === 'available' &&
             role !== 'store' &&
             role !== 'courier' &&
-            role !== 'auditor' &&
+            !['audit', 'auditor', 'recycle', 'recycler', 'hauling'].includes(role ?? '') &&
             code !== 'turnkey_parts' &&
             code !== 'safety_audit' &&
             code !== 'courier_delivery' &&
             code !== 'product_install';
-    }), [listing?.addons]);
+    }), [listing?.addons, isService]);
     const [selectedAddonCodes, setSelectedAddonCodes] = useState<string[]>([]);
     const toggleAddon = (code: string) => {
         setSelectedAddonCodes((previous) =>
@@ -227,6 +194,7 @@ export default function ListingDetail(props: HomeProps) {
         }
         return [];
     }, [listing]);
+    const [quantity, setQuantity] = useState(1);
     const [selectedPackageIndex, setSelectedPackageIndex] = useState(0);
     useEffect(() => {
         const available = (option: PackageTier) =>
@@ -285,7 +253,6 @@ export default function ListingDetail(props: HomeProps) {
     const [basket, setBasket] = useState<BasketItem[]>([]);
     const [picksOpen, setPicksOpen] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
-    const [quantity, setQuantity] = useState(1);
     // Reviews expansion & filter state
     const [reviewsExpanded, setReviewsExpanded] = useState(false);
     const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('all');
@@ -293,9 +260,7 @@ export default function ListingDetail(props: HomeProps) {
 
     // Read query parameters and localStorage on mount & synchronize live
     useEffect(() => {
-        const defaultCombination = dealChainCombinations.find((combination) => combination.isDefault);
         setSelectedAddonCodes([]);
-        setSelectedCombinationId(defaultCombination?.id ?? dealChainCombinations[0]?.id ?? null);
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
             const slot = params.get('chain_slot');
@@ -332,8 +297,7 @@ export default function ListingDetail(props: HomeProps) {
             window.removeEventListener('storage', syncBasket);
             window.removeEventListener('serbizyu:picks-updated', syncBasket);
         };
-    }, [listing?.id, dealChainCombinations]);
-
+    }, [listing?.id]);
     const saveBasket = (newBasket: BasketItem[]) => {
         setBasket(newBasket);
         try {
@@ -370,6 +334,35 @@ export default function ListingDetail(props: HomeProps) {
     const calculatedTotal = unitPrice * quantity;
     const handleDirectAction = () => {
         if (!listing || selectedOptionUnavailable) return;
+        if (selectedCombination) {
+            const savedDealChain = normalizeSavedDealChainPreview(
+                listing.deal_chain_combinations?.find((combo) => combo.id === selectedCombination.id),
+                listing.listing_version_id,
+            );
+            if (!savedDealChain) return;
+            const item: BasketItem = {
+                id: `review:${listing.id}:${selectedCombination.id}`,
+                title: listing.title,
+                price: unitPrice,
+                quantity,
+                listing_id: listing.id,
+                listing_version_id: listing.listing_version_id ?? null,
+                variant_id: activePackage.kind === 'variant' ? activePackage.variantId ?? activePackage.id : null,
+                package_id: activePackage.kind === 'package' ? activePackage.id : null,
+                addon_ids: addonIds,
+                listing_type: listing.listing_type ?? listing.listingType ?? null,
+                deal_chain_combination_id: selectedCombination.id,
+                savedDealChain,
+            };
+            setReviewItems([item]);
+            const unresolvedIndex = savedDealChain.nodes.findIndex((node) => !node.isPrimary && !node.listingId);
+            if (unresolvedIndex >= 0) {
+                setSavedRolePickerIndex(unresolvedIndex);
+                return;
+            }
+            setCheckoutModalOpen(true);
+            return;
+        }
         const startUrl = props.booking?.start_url || `/listings/${listing.id}/book`;
         const url = new URL(startUrl, window.location.origin);
         if (activePackage.kind === 'variant') url.searchParams.set('variant_id', activePackage.variantId ?? activePackage.id);
@@ -377,7 +370,6 @@ export default function ListingDetail(props: HomeProps) {
         url.searchParams.set('quantity', String(quantity));
         if (listing.listing_version_id) url.searchParams.set('listing_version_id', listing.listing_version_id);
         addonIds.forEach((id) => url.searchParams.append('addon_ids[]', id));
-        if (selectedCombination) url.searchParams.set('deal_chain_combination_id', selectedCombination.id);
         if (chainSlotContext) url.searchParams.set('chain_slot', chainSlotContext);
         router.visit(`${url.pathname}${url.search}`);
     };
@@ -396,6 +388,10 @@ export default function ListingDetail(props: HomeProps) {
             addon_titles: selectedAddons.map((addon) => addon.title),
             deal_chain_combination_id: selectedCombination?.id ?? null,
             deal_chain_title: selectedCombination?.title ?? null,
+            savedDealChain: selectedCombination
+                ? normalizeSavedDealChainPreview(listing.deal_chain_combinations?.find((combo) => combo.id === selectedCombination.id), listing.listing_version_id) ?? undefined
+                : undefined,
+            dealChain: undefined,
             variant_available: activePackage.kind === 'variant' ? activePackage.available : null,
             category_code: listing.category_code ?? listing.categoryCode ?? null,
             listing_type: listing.listing_type ?? listing.listingType ?? null,
@@ -434,6 +430,8 @@ export default function ListingDetail(props: HomeProps) {
                 ...item,
                 price: item.price - priorFee + nextFee,
                 dealChain: recipe || undefined,
+                savedDealChain: undefined,
+                deal_chain_combination_id: null,
             };
         }));
     };
@@ -443,16 +441,20 @@ export default function ListingDetail(props: HomeProps) {
             if (item.id !== itemId || !item.dealChain) return item;
             const nodes = [...item.dealChain.nodes];
             const previous = nodes[nodeIndex];
-            if (typeof previous.priceMinor !== 'number') return item;
-            const priceDiff = (candidate.price_minor - previous.priceMinor) / 100;
+            const candidatePriceMinor = candidate.price_minor ?? candidate.priceMinor;
+            const hasCandidatePrice = typeof candidatePriceMinor === 'number' && Number.isFinite(candidatePriceMinor);
+            const priceDiff = typeof previous.priceMinor === 'number' && hasCandidatePrice
+                ? (candidatePriceMinor - previous.priceMinor) / 100
+                : 0;
             nodes[nodeIndex] = {
                 ...previous,
                 id: candidate.id,
                 title: candidate.title,
                 sub: candidate.provider_name,
                 listingId: candidate.id,
+                listingVersionId: candidate.listingVersionId ?? candidate.listing_version_id ?? null,
                 providerId: candidate.provider_user_id,
-                priceMinor: candidate.price_minor,
+                priceMinor: hasCandidatePrice ? candidatePriceMinor : null,
             };
             return {
                 ...item,
@@ -467,37 +469,27 @@ export default function ListingDetail(props: HomeProps) {
     };
 
     const handleAuthorizeDealChain = () => {
+        const isDirectReview = reviewItems.length > 0;
         setCheckoutModalOpen(false);
         router.post('/deal-chains/authorize', {
-            items: basket.map((item) => ({
-                id: item.listing_id,
-                listing_version_id: item.listing_version_id,
-                variant_id: item.variant_id,
-                package_id: item.package_id,
-                addon_ids: item.addon_ids ?? [],
-                deal_chain_combination_id: item.deal_chain_combination_id,
-                quantity: item.quantity,
-                deal_chain: item.dealChain?.recipeId || null,
-                slot_overrides: item.dealChain?.nodes
-                    ? Object.fromEntries(item.dealChain.nodes
-                        .filter((node) => node.listingId)
-                        .map((node) => [node.key, { listing_id: node.listingId }]))
-                    : null,
-            })),
+            items: (isDirectReview ? reviewItems : basket).map(serializeDealChainStageItem),
         }, {
-            onSuccess: () => saveBasket([]),
+            onSuccess: () => {
+                setReviewItems([]);
+                if (!isDirectReview) {
+                    saveBasket([]);
+                }
+            },
         });
     };
     const ratingSummary = listing?.rating_summary;
     const incomingReviews = listing?.reviews as ReviewItem[] | undefined;
-    const reviewsList = incomingReviews !== undefined ? incomingReviews : SAMPLE_REVIEWS;
+    const reviewsList = incomingReviews ?? [];
     const reviewsCount = ratingSummary?.reviews_count ?? reviewsList.length;
-    const avgRating = ratingSummary?.rating ?? (reviewsCount > 0 ? 4.9 : 0);
-    const satisfactionPct = ratingSummary?.satisfaction_pct ?? (reviewsCount > 0 ? 98 : 0);
-    const rawPhotos = listing?.photos as any[] | undefined;
-    const listingPhotos = rawPhotos !== undefined ? rawPhotos : REVIEW_PHOTOS;
-    const photosCount =
-        ratingSummary?.photos_count ?? (reviewsCount > 0 ? listingPhotos.length : 0);
+    const avgRating = reviewsCount > 0 && typeof ratingSummary?.rating === 'number' ? ratingSummary.rating : null;
+    const satisfactionPct = reviewsCount > 0 ? ratingSummary?.satisfaction_pct : undefined;
+    const listingPhotos = listing?.photos ?? [];
+    const photosCount = ratingSummary?.photos_count ?? listingPhotos.length;
     const ratingDistribution = ratingSummary?.distribution ?? {};
 
     const featuredReview = reviewsList[0] ?? null;
@@ -572,7 +564,7 @@ export default function ListingDetail(props: HomeProps) {
             />
 
             {/* Mobile Header (Hidden on Desktop) */}
-            <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden">
+            <header aria-label="Listing navigation" className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden">
                 <Link
                     href="/browse"
                     className="flex size-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 hover:bg-slate-50"
@@ -605,6 +597,7 @@ export default function ListingDetail(props: HomeProps) {
                             </span>
                         )}
                     </button>
+                    <div className="shrink-0 [&_button]:min-h-11 [&_button]:min-w-11"><NotificationBell /></div>
                 </div>
             </header>
 
@@ -702,14 +695,20 @@ export default function ListingDetail(props: HomeProps) {
 
                             {/* Rating Row (Directly Below Price, Matching Mock) */}
                             <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-                                <span className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-extrabold text-amber-800">
-                                    <Star className="size-3.5 fill-amber-500 text-amber-500" />
-                                    <span>{reviewsCount > 0 ? avgRating.toFixed(1) : 'New'}</span>
-                                </span>
+                                {avgRating === null ? (
+                                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-bold text-slate-600">
+                                        {reviewsCount > 0 ? 'Unrated' : 'New'}
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-extrabold text-amber-800">
+                                        <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                                        <span>{avgRating.toFixed(1)}</span>
+                                    </span>
+                                )}
                                 <span className="text-xs font-medium text-slate-500">
                                     ({reviewsCount} {reviewsCount === 1 ? 'review' : 'reviews'})
                                 </span>
-                                {reviewsCount > 0 && (
+                                {typeof satisfactionPct === 'number' && (
                                     <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
                                         {satisfactionPct}% satisfaction
                                     </span>
@@ -846,7 +845,7 @@ export default function ListingDetail(props: HomeProps) {
                             </div>
                             )}
 
-                            {isService && packages.length > 0 && directAddons.length > 0 && (
+                            {packages.length > 0 && directAddons.length > 0 && (
                                 <fieldset className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-3">
                                     <legend className="mb-2 text-[11px] font-extrabold tracking-wider text-slate-500 uppercase">
                                         Seller add-ons
@@ -994,13 +993,16 @@ export default function ListingDetail(props: HomeProps) {
                                         Partner slots saved with this listing.
                                     </p>
                                 </div>
+                                <button type="button" onClick={() => chooseFulfillment(null)} aria-pressed={selectedCombinationId === null} className={`mb-2 rounded-xl border p-3 text-left text-sm font-semibold ${selectedCombinationId === null ? 'border-[#0F2F58] bg-[#EBF2FA]' : 'border-slate-200'}`}>
+                                    {isService ? 'Service only' : 'Product only'}
+                                </button>
                                 <div className="flex flex-col gap-2">
                                     {dealChainCombinations.map((combination) => (
                                         <button
                                             key={combination.id}
                                             type="button"
                                             aria-pressed={selectedCombinationId === combination.id}
-                                            onClick={() => setSelectedCombinationId(combination.id)}
+                                            onClick={() => chooseFulfillment(combination.id)}
                                             className={`rounded-xl border p-3 text-left ${
                                                 selectedCombinationId === combination.id
                                                     ? 'border-[#0F2F58] bg-[#EBF2FA]'
@@ -1419,7 +1421,17 @@ export default function ListingDetail(props: HomeProps) {
                 onRemoveItem={(id) => saveBasket(basket.filter((item) => item.id !== id))}
                 onCheckout={() => {
                     setPicksOpen(false);
-                    if (basket.some((item) => Boolean(item.dealChain))) {
+                    setReviewItems([]);
+                    const legacySaved = basket.find((item) => item.deal_chain_combination_id && !hasValidSavedDealChainPreview(item));
+                    if (legacySaved?.listing_id) {
+                        router.visit(`/listings/${encodeURIComponent(legacySaved.listing_id)}`);
+                        return;
+                    }
+                    if (basket.some((item) => item.savedDealChain?.nodes.some((node) => !node.isPrimary && !node.listingId))) {
+                        router.visit('/picks');
+                        return;
+                    }
+                    if (basket.some(hasCoordination)) {
                         setCheckoutModalOpen(true);
                         return;
                     }
@@ -1431,10 +1443,56 @@ export default function ListingDetail(props: HomeProps) {
                 onAttachDealChain={handleAttachDealChain}
                 onSwapSlotCandidate={handleSwapSlotCandidate}
             />
+            <SlotListingPickerModal
+                open={savedRolePickerIndex !== null}
+                onClose={() => {
+                    if (advancingRoleIndexRef.current !== null) {
+                        const next = advancingRoleIndexRef.current;
+                        advancingRoleIndexRef.current = null;
+                        setSavedRolePickerIndex(next);
+                    } else {
+                        setSavedRolePickerIndex(null);
+                    }
+                }}
+                role={savedRolePickerIndex === null ? '' : reviewItems[0]?.savedDealChain?.nodes[savedRolePickerIndex]?.type ?? ''}
+                currentListingId={savedRolePickerIndex === null ? undefined : reviewItems[0]?.savedDealChain?.nodes[savedRolePickerIndex]?.listingId}
+                onSelectCandidate={(candidate) => {
+                    if (savedRolePickerIndex === null) return;
+                    const item = reviewItems[0];
+                    const preview = item?.savedDealChain;
+                    if (!item || !preview) return;
+                    const currentIndex = savedRolePickerIndex;
+                    const nodes = [...preview.nodes];
+                    nodes[currentIndex] = {
+                        ...nodes[currentIndex],
+                        listingId: candidate.id,
+                        listingVersionId: candidate.listingVersionId ?? candidate.listing_version_id ?? null,
+                        providerId: candidate.provider_user_id,
+                        priceMinor: candidate.price_minor ?? candidate.priceMinor ?? null,
+                        title: candidate.title,
+                        sub: candidate.provider_name,
+                    };
+                    const updated: BasketItem = { ...item, savedDealChain: { ...preview, nodes } };
+                    setReviewItems([updated]);
+                    const nextUnresolved = nodes.findIndex((node, idx) => idx > currentIndex && !node.isPrimary && !node.listingId);
+                    const anyUnresolved = nextUnresolved !== -1 ? nextUnresolved : nodes.findIndex((node) => !node.isPrimary && !node.listingId);
+                    if (anyUnresolved === -1) {
+                        advancingRoleIndexRef.current = null;
+                        setSavedRolePickerIndex(null);
+                        setCheckoutModalOpen(true);
+                    } else {
+                        advancingRoleIndexRef.current = anyUnresolved;
+                        setSavedRolePickerIndex(anyUnresolved);
+                    }
+                }}
+            />
             <DealChainCheckoutModal
                 open={checkoutModalOpen}
-                onClose={() => setCheckoutModalOpen(false)}
-                items={basket}
+                onClose={() => {
+                    setCheckoutModalOpen(false);
+                    setReviewItems([]);
+                }}
+                items={reviewItems.length ? reviewItems : basket}
                 totalAmount={basket.reduce((sum, item) => sum + item.price * item.quantity, 0)}
                 onAuthorize={handleAuthorizeDealChain}
             />

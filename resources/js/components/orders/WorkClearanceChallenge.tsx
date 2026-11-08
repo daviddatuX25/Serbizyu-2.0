@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import type { WorkNodeRecord } from '../../types';
 import type { WorkProofPayload } from '../mobile/WorkNodeEvidenceTools';
+import { createRequestKey } from '@/lib/requestKey';
 type Challenge = { challenge_id: string; code: string; kind: 'presence_otp' | 'worker_dropoff'; expires_at: string; work_version: number; node_id: string };
 type A4VerificationContext = { node_id: string; evidence_file_id: string; expected_transfer_version: number; checklist_responses?: WorkProofPayload['checklist_responses']; metric_readings?: WorkProofPayload['metric_readings']; location?: WorkProofPayload['location']; notes?: string };
 type Props = {
@@ -61,7 +62,7 @@ export default function WorkClearanceChallenge({ orderId, workVersion, node, ver
                     work_version: workVersion,
                     node_id: verifyContext.node_id,
                     evidence_file_id: verifyContext.evidence_file_id,
-                    idempotency_key: crypto.randomUUID(),
+                    idempotency_key: createRequestKey(),
                     expected_transfer_version: verifyContext.expected_transfer_version,
                     ...(verifyContext.checklist_responses ? { checklist_responses: verifyContext.checklist_responses } : {}),
                     ...(verifyContext.metric_readings ? { metric_readings: verifyContext.metric_readings } : {}),

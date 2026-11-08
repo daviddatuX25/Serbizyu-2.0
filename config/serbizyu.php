@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 return [
+    'qa' => [
+        'password' => env('SERBIZYU_QA_PASSWORD'),
+    ],
     'environment' => env('SERBIZYU_ENV', env('APP_ENV', 'local')),
     'validate_on_boot' => filter_var(env('SERBIZYU_VALIDATE_ENV', true), FILTER_VALIDATE_BOOL),
     'public_environment' => env('SERBIZYU_ENV', env('APP_ENV', 'local')),

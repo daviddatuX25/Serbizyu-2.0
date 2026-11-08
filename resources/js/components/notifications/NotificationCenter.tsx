@@ -300,6 +300,10 @@ function NotificationInbox() {
                         <X className="size-4" aria-hidden="true" />
                     </button>
                 </div>
+                <button type="button" onClick={() => { setOpen(false); router.visit('/deal-invitations'); }} className="mb-4 flex min-h-11 w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-[#0F2F58] hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#0F2F58]">
+                    <span>Deal invitations</span>
+                    <ChevronDown className="size-4 -rotate-90" aria-hidden="true" />
+                </button>
                 {error && <div role="alert" className="mb-3 rounded-xl border border-rose-200 bg-white p-3 text-sm text-rose-800">{error}<button type="button" onClick={() => void loadPage(null, false)} className="ml-2 font-bold underline">Retry</button></div>}
                 {loading && <p role="status" className="flex items-center gap-2 py-8 text-sm text-slate-600"><LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> Loading notifications…</p>}
                 {!loading && !error && visibleItems.length === 0 && <p className="py-10 text-center text-sm text-slate-600">{items.length === 0 ? 'No notifications yet.' : tab === 'needs_action' ? 'Nothing needs your action.' : 'No updates yet.'}</p>}

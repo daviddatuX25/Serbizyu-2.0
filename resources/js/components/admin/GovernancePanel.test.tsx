@@ -220,7 +220,7 @@ describe('governed case workspace actions', () => {
         ));
         const createPayload = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
         expect(createPayload.exhibit_file_ids).toEqual(['evidence-32']);
-        expect(router.reload).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(router.reload).toHaveBeenCalledTimes(1));
         expect(screen.queryByRole('link', { name: /transmittal.html/ })).toBeNull();
 
         rerender(<GovernancePanel caseId="case-32" governance={{ ...packetWorkspace, packets: [prepared] } as GovernanceWorkspace} />);
@@ -236,7 +236,7 @@ describe('governed case workspace actions', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Record transmission' }));
         await waitFor(() => expect(fetchSpy).toHaveBeenNthCalledWith(2,
             '/admin/lupon-packets/packet-32/transmission',
-            expect.objectContaining({ body: expect.stringContaining('2026-10-26T10:00') }),
+            expect.objectContaining({ body: expect.stringContaining(new Date('2026-10-26T10:00').toISOString()) }),
         ));
         rerender(<GovernancePanel caseId="case-32" governance={{ ...packetWorkspace, packets: [transmitted] } as GovernanceWorkspace} />);
 

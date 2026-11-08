@@ -2,9 +2,6 @@ import { useMemo, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
-    Check,
-    Clock,
-    Lock,
     Phone,
     ShieldCheck,
     Sparkles,
@@ -14,9 +11,11 @@ import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import ReviewCeremonyModal from '../../components/reviews/ReviewCeremonyModal';
 import AppointmentSlotPicker, { type AppointmentHold } from '../../components/orders/AppointmentSlotPicker';
 import ConversationDrawer from '../../components/conversations/ConversationDrawer';
+import { createRequestKey } from '@/lib/requestKey';
 
 interface DealChainRecord {
     id: string;
+    public_reference?: string | null;
     coordinator_user_id: string;
     status: string;
     title: string;
@@ -111,72 +110,66 @@ function statusLabel(status: string): string {
         accepted: 'Accepted',
         awaiting_customer_confirmation: 'Provider accepted · Confirm terms',
         in_progress: 'In progress',
+        awaiting_signoff: 'Awaiting sign-off',
+        completion_proposed: 'Awaiting sign-off',
         completed: 'Completed',
-        replacement_needed: 'Partner needed',
+        replacement_needed: 'Provider needed',
         superseded: 'Replaced',
         cancelled: 'Withdrawn',
-
     };
     return labels[status] ?? status.replaceAll('_', ' ');
 }
-
 function statusTone(status: string): string {
-    if (status === 'completed') return 'border-emerald-200 bg-emerald-50 text-emerald-800';
-    if (status === 'in_progress' || status === 'accepted')
-        return 'border-sky-200 bg-sky-50 text-sky-800';
-    if (status === 'blocked' || status === 'failed' || status === 'replacement_needed')
-        return 'border-amber-200 bg-amber-50 text-amber-900';
-    if (status === 'cancelled' || status === 'superseded')
-        return 'border-slate-200 bg-slate-100 text-slate-600';
-
+    if (status === 'completed' || status === 'settled') return 'border-emerald-200 bg-emerald-50 text-emerald-800';
+    if (status === 'in_progress' || status === 'accepted') return 'border-sky-200 bg-sky-50 text-sky-800';
+    if (status === 'blocked' || status === 'failed' || status === 'replacement_needed') return 'border-amber-200 bg-amber-50 text-amber-900';
+    if (status === 'cancelled' || status === 'superseded') return 'border-slate-200 bg-slate-100 text-slate-600';
     return 'border-blue-200 bg-blue-50 text-blue-900';
 }
-
 function slotImage(slot: DealNeedRecord): string {
-    const title = slot.title.toLowerCase();
-    if (slot.need_kind === 'product' || title.includes('capacitor') || title.includes('part') || title.includes('store') || title.includes('hardware') || title.includes('inverter')) {
-        return '/photos/ac-capacitor.jpg';
-    }
-    if (title.includes('courier') || title.includes('transit') || title.includes('delivery') || title.includes('rider')) {
-        return '/photos/courier.jpg';
-    }
-    if (title.includes('audit') || title.includes('safety') || title.includes('inspect') || title.includes('electrician')) {
-        return '/photos/req-electrician.jpg';
-    }
-    if (title.includes('bibingka') || title.includes('food') || title.includes('bake')) {
-        return '/photos/bibingka.jpg';
-    }
+    const role = (slot.node_role ?? slot.need_kind).toLowerCase();
+    if (slot.need_kind === 'product' || ['product', 'store'].includes(role)) return '/photos/ac-capacitor.jpg';
+    if (['delivery', 'courier', 'transit'].includes(role)) return '/photos/courier.jpg';
+    if (['inspection', 'audit'].includes(role)) return '/photos/req-electrician.jpg';
     return '/photos/ac-clean.jpg';
 }
 
 function slotRoleBadge(slot: DealNeedRecord): { label: string; bg: string; text: string } {
-    const title = slot.title.toLowerCase();
-    if (slot.need_kind === 'product' || title.includes('capacitor') || title.includes('hardware') || title.includes('inverter')) {
-        return { label: 'STORE', bg: 'bg-amber-500', text: 'text-white' };
+    const role = (slot.node_role ?? slot.need_kind).toLowerCase();
+    if (slot.need_kind === 'product' || ['product', 'store'].includes(role)) {
+        return { label: 'Product', bg: 'bg-amber-500', text: 'text-white' };
     }
-    if (title.includes('courier') || title.includes('transit') || title.includes('delivery')) {
-        return { label: 'COURIER', bg: 'bg-sky-500', text: 'text-white' };
+    if (['delivery', 'courier', 'transit'].includes(role)) {
+        return { label: 'Delivery', bg: 'bg-sky-500', text: 'text-white' };
     }
-    if (title.includes('audit') || title.includes('safety')) {
-        return { label: 'AUDIT', bg: 'bg-purple-600', text: 'text-white' };
+    if (['inspection', 'audit'].includes(role)) {
+        return { label: 'Inspection', bg: 'bg-purple-600', text: 'text-white' };
     }
-    return { label: 'LABOR', bg: 'bg-emerald-600', text: 'text-white' };
+    return { label: 'Service', bg: 'bg-emerald-600', text: 'text-white' };
 }
 
 function formatAmount(slot: DealNeedRecord): string {
     const amountMinor = slot.confirmation?.amount_minor ?? slot.amount_minor;
     const currency = slot.confirmation?.currency ?? slot.currency ?? 'PHP';
-    if (amountMinor === null || amountMinor === undefined) {
-        return 'Amount pending provider terms';
-    }
-
+    if (amountMinor === null || amountMinor === undefined) return 'Amount pending provider terms';
     return `${currency} ${(amountMinor / 100).toFixed(2)}`;
-
 }
+
 function appointmentHoldKey(slot: DealNeedRecord): string | null {
     return slot.confirmation
         ? `${slot.id}:${slot.confirmation.listing_version_id}`
         : null;
+}
+
+function dependencyConditionLabel(condition: string): string {
+    const labels: Record<string, string> = {
+        part_ready: 'product is ready',
+        delivery_signed: 'delivery is confirmed',
+        work_completed: 'work is complete',
+        service_completed: 'service is complete',
+        inspection_passed: 'inspection is approved',
+    };
+    return labels[condition] ?? condition.replaceAll('_', ' ');
 }
 
 export default function DealChainDetail({
@@ -187,16 +180,8 @@ export default function DealChainDetail({
     view = 'project',
     can_open_relay = false,
 }: DealChainDetailProps) {
-    const shortId = chain.id ? chain.id.substring(0, 8).toUpperCase() : 'DC';
     const slotsById = new Map(slots.map((slot) => [slot.id, slot]));
-    const summaryAmount =
-        chain.total_budget_amount === null || chain.total_budget_amount === undefined
-            ? null
-            : `${chain.currency_code ?? 'PHP'} ${chain.total_budget_amount.toFixed(2)}`;
-    const contextLabel =
-        view === 'worker'
-            ? 'Partner view · your agreement and shared readiness only.'
-            : 'Coordinator project projection.';
+    const roleSummary = [...new Set(slots.map((slot) => slotRoleBadge(slot).label.toLowerCase()))].join(' + ');
     const [relayOpen, setRelayOpen] = useState(false);
     const conversationSearch = window.location.search;
     const conversationContext = useMemo(() => {
@@ -226,17 +211,17 @@ export default function DealChainDetail({
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': token,
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-Idempotency-Key': window.crypto.randomUUID(),
+                'X-Idempotency-Key': createRequestKey(),
             },
             body: JSON.stringify(payload),
         });
         const result = await response.json() as { error?: { message?: string } };
-        if (!response.ok) throw new Error(result.error?.message ?? 'This Deal Chain action could not be completed.');
+        if (!response.ok) throw new Error(result.error?.message ?? 'This deal could not be updated.');
         router.reload();
     };
 
     const withdrawPartner = async (slot: DealNeedRecord) => {
-        if (!window.confirm('Withdraw this current partner slot? Any completed sibling agreements and payments stay unchanged.')) return;
+        if (!window.confirm('Withdraw this provider? Any completed orders and payments stay unchanged.')) return;
         setWithdrawingNeedId(slot.id);
         setReplacementError(null);
         try {
@@ -244,7 +229,7 @@ export default function DealChainDetail({
                 expected_need_version: slot.expected_need_version ?? 1,
             });
         } catch (error) {
-            setReplacementError(error instanceof Error ? error.message : 'The partner slot could not be withdrawn.');
+            setReplacementError(error instanceof Error ? error.message : 'The provider could not be withdrawn.');
         } finally {
             setWithdrawingNeedId(null);
         }
@@ -277,7 +262,7 @@ export default function DealChainDetail({
                 listing_id: candidate.id,
             });
         } catch (error) {
-            setReplacementError(error instanceof Error ? error.message : 'The invitation could not be issued.');
+            setReplacementError(error instanceof Error ? error.message : 'The invitation could not be sent.');
         }
     };
 
@@ -304,7 +289,7 @@ export default function DealChainDetail({
             },
             {
                 preserveScroll: true,
-                headers: { 'X-Idempotency-Key': window.crypto.randomUUID() },
+                headers: { 'X-Idempotency-Key': createRequestKey() },
                 onFinish: () => setConfirmingNeedId(null),
             },
         );
@@ -326,7 +311,7 @@ export default function DealChainDetail({
 
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-extrabold text-[#0F2F58]">
-                        Deal Chain #{shortId}
+                        {chain.title || 'Deal Chain'}
                     </span>
                     <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[9px] font-extrabold text-slate-700">
                         {statusLabel(chain.status)}
@@ -344,11 +329,11 @@ export default function DealChainDetail({
                             className="flex items-center gap-1 hover:text-[#0F2F58] font-bold text-slate-700"
                         >
                             <ArrowLeft className="size-3.5" />
-                            <span>Orders Hub</span>
+                            <span>Orders</span>
                         </Link>
                         <span>/</span>
                         <span className="font-extrabold text-slate-900">
-                            Deal Chain #{shortId} Multi-Party Relay
+                            {chain.title || 'Deal Chain'}
                         </span>
                     </div>
 
@@ -369,10 +354,10 @@ export default function DealChainDetail({
                             </div>
                             <div>
                                 <h2 className="text-sm font-extrabold text-[#06362e]">
-                                    Deal Chain Relay Completed · Rate Team
+                                    Deal complete · Rate providers
                                 </h2>
                                 <p className="mt-0.5 text-xs text-slate-600">
-                                    Review all participating merchants, couriers, and technicians with unified feedback.
+                                    Share feedback with providers in this deal.
                                 </p>
                             </div>
                         </div>
@@ -383,7 +368,7 @@ export default function DealChainDetail({
                             className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#0D715F] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-[#0a574a]"
                         >
                             <Star className="size-4 fill-amber-300 text-amber-300" />
-                            <span>Rate Team ({slots.length} Providers)</span>
+                            <span>Rate providers ({slots.length})</span>
                         </button>
                     </div>
                 )}
@@ -393,44 +378,37 @@ export default function DealChainDetail({
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <div className="flex items-center gap-2">
                             <span className="text-xs font-extrabold tracking-wider text-slate-500 uppercase">
-                                Multi-Party Deal Chain #{shortId}
-                            </span>
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800">
-                                {slots.length}-Slot Orchestrated Relay
+                                {chain.public_reference ?? 'Deal Chain'}
                             </span>
                         </div>
-                        {view === 'project' && (
-                            <span className="text-right font-mono text-base font-extrabold text-[#0F2F58]">
-                                {summaryAmount
-                                    ? `${summaryAmount} · Derived child total`
-                                    : 'No child terms formed'}
-                            </span>
-                        )}
                         {can_open_relay && (
                             <button
                                 type="button"
                                 onClick={() => setRelayOpen(true)}
                                 className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#0F2F58] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#0c2444] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F2F58]"
                             >
-                                Open handoff relay
+                                Group messages
                             </button>
                         )}
                     </div>
 
                     <div>
                         <h1 className="text-xl font-black text-slate-900 sm:text-2xl">
-                            {chain.title || 'Deal Chain Coordination Plan'}
+                            {chain.title || 'Deal'}
                         </h1>
                         <p className="mt-1 text-sm text-slate-600 leading-relaxed">{chain.goal}</p>
+                        {view === 'project' && chain.total_budget_amount != null && chain.currency_code && (
+                            <p className="mt-2 text-sm font-semibold text-slate-800">
+                                Total of separate orders: {chain.currency_code} {chain.total_budget_amount.toFixed(2)}
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs text-blue-950">
                         <span className="mt-1 size-2 shrink-0 rounded-full bg-blue-500" />
                         <span>
-                            <strong>{contextLabel}</strong> Chain status:{' '}
-                            <span className="font-semibold">{statusLabel(chain.status)}</span>. Because
-                            deal coordination aggregates never write directly to orders or payment obligations,
-                            this chain has no parent escrow.
+                            <strong>{view === 'worker' ? 'Your orders and shared progress.' : 'Deal status:'}</strong>{' '}
+                            <span className="font-semibold">{statusLabel(chain.status)}</span>
                         </span>
                     </div>
                 </section>
@@ -440,20 +418,20 @@ export default function DealChainDetail({
                     <div className="flex flex-wrap items-center justify-between gap-2 px-1">
                         <div>
                             <h2 className="text-xs font-black tracking-wider text-[#0F2F58] uppercase">
-                                Execution Relay Pool ({slots.length} Slots · {dependencies.length} Edge Rules)
+                                Orders in this deal ({slots.length})
                             </h2>
                             <p className="text-[11px] text-slate-500">
-                                Click any child order below to inspect task gates, milestone evidence, and communication.
+                                {roleSummary ? `${roleSummary} · Open an order for its provider, price and progress.` : 'Open an order for its provider, price and progress.'}
                             </p>
                         </div>
-                        <span className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[10px] font-extrabold text-blue-800">
-                            DAG Dependencies
-                        </span>
                     </div>
 
                     {slots.map((slot) => {
-                        const effectiveStatus =
-                            slot.work_status ?? slot.child_order_status ?? slot.status;
+                        const canViewOrderDetails = view === 'project' || slot.can_view_order;
+                        const orderStatus = canViewOrderDetails ? slot.child_order_status : null;
+                        const paymentStatus = canViewOrderDetails ? slot.payment_obligation_status : null;
+                        const effectiveStatus = slot.work_status ?? orderStatus ?? slot.status;
+                        const hasSeparateStatuses = Boolean(orderStatus || slot.work_status || paymentStatus);
                         const outgoingDependencies = dependencies.filter(
                             (dependency) => dependency.predecessor_need_id === slot.id,
                         );
@@ -461,7 +439,7 @@ export default function DealChainDetail({
                             (dependency) => dependency.successor_need_id === slot.id,
                         );
 
-                        const hasChildOrder = Boolean(slot.child_order_id && (view === 'project' || slot.can_view_order));
+                        const hasChildOrder = Boolean(slot.child_order_id && canViewOrderDetails);
                         const roleMeta = slotRoleBadge(slot);
                         const holdKey = appointmentHoldKey(slot);
                         const appointmentHold = holdKey ? appointmentHolds[holdKey] : undefined;
@@ -479,7 +457,7 @@ export default function DealChainDetail({
                                             : 'border-slate-200 bg-white'
                                     }`}
                                 >
-                                    <div className="flex items-start justify-between gap-4">
+                                    <div className="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-start">
                                         <div className="flex min-w-0 flex-1 items-start gap-3.5">
                                             <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-2xs">
                                                 <img
@@ -492,7 +470,7 @@ export default function DealChainDetail({
                                                     }}
                                                 />
                                                 <span
-                                                    className={`absolute bottom-0 inset-x-0 ${roleMeta.bg} text-[7.5px] font-extrabold ${roleMeta.text} text-center uppercase py-0.2 tracking-wider`}
+                                                    className={`absolute bottom-0 inset-x-0 ${roleMeta.bg} text-[9px] font-bold ${roleMeta.text} text-center py-0.5`}
                                                 >
                                                     {roleMeta.label}
                                                 </span>
@@ -501,14 +479,14 @@ export default function DealChainDetail({
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex flex-wrap items-center gap-1.5">
                                                     <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[9.5px] font-black text-slate-600 uppercase">
-                                                        Slot #{slot.ordinal}
+                                                        Order {slot.ordinal}
                                                     </span>
                                                     {slot.order_reference && (
                                                         <span className="shrink-0 rounded-md bg-blue-50 border border-blue-100 px-1.5 py-0.5 text-[9.5px] font-extrabold text-blue-700">
                                                             {slot.order_reference}
                                                         </span>
                                                     )}
-                                                    <h3 className="text-sm font-extrabold text-slate-900 break-words leading-tight">
+                                                    <h3 className="basis-full text-sm font-extrabold text-slate-900 break-words leading-tight">
                                                         {slot.listing_title || slot.title}
                                                     </h3>
                                                 </div>
@@ -522,23 +500,33 @@ export default function DealChainDetail({
                                             </div>
                                         </div>
 
-                                        <div className="max-w-[45%] shrink-0 text-right">
+                                        <div className="min-w-0 text-left sm:max-w-[45%] sm:shrink-0 sm:text-right">
                                             <span className="font-mono text-sm font-black text-[#0F2F58]">
                                                 {view === 'worker' && !slot.can_view_order
-                                                    ? 'Shared readiness'
+                                                    ? 'Shared progress'
                                                     : formatAmount(slot)}
                                             </span>
-                                            <div className="mt-1">
-                                                <span
-                                                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${statusTone(
-                                                        effectiveStatus,
-                                                    )}`}
-                                                >
-                                                    {effectiveStatus === 'completed' && <Check className="size-3" />}
-                                                    {effectiveStatus === 'in_progress' && <Clock className="size-3" />}
-                                                    {effectiveStatus === 'blocked' && <Lock className="size-3" />}
-                                                    {statusLabel(effectiveStatus)}
-                                                </span>
+                                            <div className="mt-1 flex flex-wrap justify-start gap-1 sm:justify-end">
+                                                {orderStatus && (
+                                                    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${statusTone(orderStatus)}`}>
+                                                        Order: {statusLabel(orderStatus)}
+                                                    </span>
+                                                )}
+                                                {slot.work_status && (
+                                                    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${statusTone(slot.work_status)}`}>
+                                                        Work: {statusLabel(slot.work_status)}
+                                                    </span>
+                                                )}
+                                                {paymentStatus && (
+                                                    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${statusTone(paymentStatus)}`}>
+                                                        Payment: {statusLabel(paymentStatus)}
+                                                    </span>
+                                                )}
+                                                {!hasSeparateStatuses && (
+                                                    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${statusTone(effectiveStatus)}`}>
+                                                        {statusLabel(effectiveStatus)}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -546,8 +534,8 @@ export default function DealChainDetail({
                                         <section className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5" aria-label="Accepted provider terms">
                                             <p className="text-xs font-semibold leading-5 text-slate-700">
                                                 {slot.replaces_deal_need_id
-                                                    ? <>You accepted a fresh replacement invitation for <strong>{slot.confirmation.title}</strong> at {formatAmount(slot)}. Review these pinned terms and confirm to form the new child Order.</>
-                                                    : <>Provider accepted <strong>{slot.confirmation.title}</strong> for {formatAmount(slot)}. Confirm only after reviewing these pinned terms.</>}
+                                                    ? <>You accepted a new invitation for <strong>{slot.confirmation.title}</strong> at {formatAmount(slot)}. Review these terms and confirm to create the order.</>
+                                                    : <>Provider accepted <strong>{slot.confirmation.title}</strong> for {formatAmount(slot)}. Review and confirm these terms.</>}
                                             </p>
                                             {slot.confirmation.work_shape === 'A3' && (
                                                 <div className="space-y-2">
@@ -577,7 +565,7 @@ export default function DealChainDetail({
                                     )}
 
 
-                                    {/* Action Bar for this Child Order / Slot */}
+                                    {/* Actions for this order */}
                                     <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5 border-t border-slate-100 pt-3.5">
                                         <div className="flex items-center gap-2">
                                             {slot.provider_phone && (
@@ -597,7 +585,7 @@ export default function DealChainDetail({
                                                     href={`/orders/${slot.child_order_id}`}
                                                     className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F2F58] px-4 py-2 text-xs font-extrabold text-white shadow-xs hover:bg-[#0c2444] transition-all"
                                                 >
-                                                    <span>View Task Details</span>
+                                                    <span>View order</span>
                                                     <span className="text-[10px]">→</span>
                                                 </Link>
                                                 {slot.handoff_url && (
@@ -605,14 +593,14 @@ export default function DealChainDetail({
                                                         href={slot.handoff_url}
                                                         className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-extrabold text-amber-950 shadow-xs hover:bg-amber-100 transition-all"
                                                     >
-                                                        <span>Open product handoff</span>
+                                                        <span>Open handoff details</span>
                                                         <span className="text-[10px]">→</span>
                                                     </Link>
                                                 )}
                                             </div>
                                         ) : slot.child_order_id ? (
                                             <span className="text-xs font-semibold text-slate-500">
-                                                Shared readiness only · sibling Order details are private
+                                                Shared progress only · Other order details are private
                                             </span>
                                         ) : slot.confirmation ? (
                                             <button
@@ -621,11 +609,11 @@ export default function DealChainDetail({
                                                 disabled={slot.confirmation.amount_minor === null || confirmingNeedId === slot.id || (slot.confirmation.work_shape === 'A3' && !appointmentHold)}
                                                 className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-[#0F2F58] px-4 py-2 text-xs font-extrabold text-white shadow-xs transition-colors hover:bg-[#0c2444] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F2F58] disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                {confirmingNeedId === slot.id ? 'Forming child Order…' : 'Confirm provider terms'}
+                                                {confirmingNeedId === slot.id ? 'Creating order…' : 'Confirm provider terms'}
                                             </button>
                                         ) : (
                                             <span className="text-xs font-semibold text-slate-500">
-                                                No child Order formed
+                                                No order yet
                                             </span>
                                         )}
                                     </div>
@@ -637,17 +625,17 @@ export default function DealChainDetail({
                                                 disabled={withdrawingNeedId === slot.id}
                                                 className="inline-flex min-h-9 items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-800 hover:bg-rose-100 disabled:opacity-50"
                                             >
-                                                {withdrawingNeedId === slot.id ? 'Withdrawing…' : 'Withdraw current partner'}
+                                                {withdrawingNeedId === slot.id ? 'Withdrawing…' : 'Withdraw provider'}
                                             </button>
-                                            <p className="text-[11px] text-slate-500">Completed sibling agreements and payments remain unchanged.</p>
+                                            <p className="text-[11px] text-slate-500">Other completed orders and payments stay unchanged.</p>
                                         </div>
                                     )}
                                     {view === 'project' && slot.can_replace && (
-                                        <section className="mt-3 space-y-3 rounded-xl border border-amber-200 bg-amber-50/70 p-3" aria-label="Choose a replacement partner">
+                                        <section className="mt-3 space-y-3 rounded-xl border border-amber-200 bg-amber-50/70 p-3" aria-label="Choose a replacement provider">
                                             <div className="flex flex-wrap items-center justify-between gap-2">
                                                 <div>
-                                                    <h4 className="text-xs font-extrabold text-amber-950">Choose a replacement partner</h4>
-                                                    <p className="text-[11px] text-amber-900">A fresh invitation is sent. No Order forms until the provider accepts and you confirm their terms.</p>
+                                                    <h4 className="text-xs font-extrabold text-amber-950">Choose a replacement provider</h4>
+                                                    <p className="text-[11px] text-amber-900">An order is created after the provider accepts and you confirm the terms.</p>
                                                 </div>
                                                 <button
                                                     type="button"
@@ -655,7 +643,7 @@ export default function DealChainDetail({
                                                     disabled={loadingCandidatesFor === slot.id}
                                                     className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-bold text-amber-950 hover:bg-amber-100 disabled:opacity-50"
                                                 >
-                                                    {loadingCandidatesFor === slot.id ? 'Loading listings…' : 'Show eligible listings'}
+                                                    {loadingCandidatesFor === slot.id ? 'Loading listings…' : 'Show available providers'}
                                                 </button>
                                             </div>
                                             {(candidateOptions[slot.id] ?? []).length > 0 && (
@@ -678,7 +666,7 @@ export default function DealChainDetail({
                                                 </ul>
                                             )}
                                             {candidateOptions[slot.id]?.length === 0 && loadingCandidatesFor !== slot.id && (
-                                                <p className="text-xs text-slate-600">No eligible active listings are available for this slot.</p>
+                                                <p className="text-xs text-slate-600">No available providers are listed for this order.</p>
                                             )}
                                             {replacementError && <p role="alert" className="text-xs font-semibold text-rose-800">{replacementError}</p>}
                                         </section>
@@ -698,7 +686,7 @@ export default function DealChainDetail({
                                                 >
                                                     <Sparkles className="size-3 text-sky-600" />
                                                     <span>
-                                                        {dependency.condition_code} → Slot #{successor?.ordinal ?? '?'}
+                                                        {dependencyConditionLabel(dependency.condition_code)} → {successor?.listing_title || successor?.title || 'next order'}
                                                     </span>
                                                 </span>
                                             );
@@ -708,11 +696,15 @@ export default function DealChainDetail({
                                 )}
 
                                 {incomingDependencies.length > 0 && (
-                                    <div className="text-center text-[10px] font-semibold text-slate-400">
-                                        Gated by predecessor requirement:{' '}
-                                        <span className="font-bold text-slate-600">
-                                            {incomingDependencies.map((d) => d.condition_code).join(', ')}
-                                        </span>
+                                    <div className="text-center text-xs font-semibold text-slate-600">
+                                        {incomingDependencies.map((dependency) => {
+                                            const predecessor = slotsById.get(dependency.predecessor_need_id);
+                                            return (
+                                                <p key={dependency.id}>
+                                                    Starts after {predecessor?.listing_title || predecessor?.title || 'the previous order'}: {dependencyConditionLabel(dependency.condition_code)}
+                                                </p>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>

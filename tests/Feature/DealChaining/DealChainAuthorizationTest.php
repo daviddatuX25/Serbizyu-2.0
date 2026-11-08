@@ -229,7 +229,14 @@ final class DealChainAuthorizationTest extends TestCase
             ['id' => 'variant-custom', 'name' => 'Custom', 'price_amount_minor' => 18400, 'is_default' => false],
         ];
         $terms['deal_chain_combinations'] = [
-            ['id' => 'combo-market', 'title' => 'Market handoff', 'isDefault' => true, 'nodes' => []],
+            [
+                'id' => 'combo-market',
+                'title' => 'Market handoff',
+                'isDefault' => true,
+                'planVersion' => 1,
+                'nodes' => [['id' => 'primary', 'type' => 'store', 'title' => 'Market product', 'isPrimary' => true]],
+                'dependencies' => [],
+            ],
         ];
         DB::table('listing_versions')->where('id', $version->id)->update([
             'terms' => json_encode($terms, JSON_THROW_ON_ERROR),
@@ -361,7 +368,7 @@ final class DealChainAuthorizationTest extends TestCase
             ->first();
         $needId = DB::table('deal_needs')
             ->where('deal_chain_id', $chain->id)
-            ->where('title', '35uF AC Run Capacitor')
+            ->where('node_key', 'part')
             ->value('id');
         $invitation = DB::table('deal_invitations')
             ->where('deal_need_id', $needId)

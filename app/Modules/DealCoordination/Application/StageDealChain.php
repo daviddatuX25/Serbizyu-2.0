@@ -6,18 +6,21 @@ namespace App\Modules\DealCoordination\Application;
 
 use App\Shared\Application\ActorContext;
 use App\Shared\Application\AuditRecorder;
+use App\Shared\Application\DealChainCandidateRoleClassifier;
+use App\Shared\Application\DealChainPlanDefinition;
 use App\Shared\Application\IdempotencyGuard;
 use App\Shared\Application\KernelException;
-use App\Shared\Application\OutboxWriter;
 use App\Shared\Application\NotificationIntent;
+use App\Shared\Application\OutboxWriter;
+use App\Shared\Contracts\DealChainRecipeCatalogPort;
 use App\Shared\Contracts\NotificationAttention;
 use App\Shared\Contracts\NotificationsPort;
-use App\Shared\Contracts\DealChainRecipeCatalogPort;
 use App\Shared\Contracts\OrderCapacityPort;
 use App\Shared\Contracts\OrderListingSourcePort;
-use DateTimeInterface;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 final class StageDealChain
 {
@@ -59,51 +62,68 @@ final class StageDealChain
             );
         }
 
-        $recipeCatalog = $this->catalog->published();
-        $resolvedItems = $this->resolveItems($items, $coordinatorUserId, $recipeCatalog, $correlationId);
+        return DB::transaction(function () use ($coordinatorUserId, $items, $idempotencyKey, $correlationId): array {
+            $recipeCatalog = $this->catalog->published();
+            $allPinned = true;
+            foreach ($items as $item) {
+                if (! is_string($item['listing_version_id'] ?? null) || $item['listing_version_id'] === '') {
+                    $allPinned = false;
+                    break;
+                }
+            }
+            $resolvedItems = $allPinned ? null : $this->resolveItems($items, $coordinatorUserId, $recipeCatalog, $correlationId);
+            $fingerprintItems = $allPinned
+                ? array_map(static function (array $item) use ($recipeCatalog): array {
+                    $recipe = $item['deal_chain'] ?? null;
 
-        $scope = 'deal_chain.stage:'.$coordinatorUserId;
-        $fingerprint = [
-            'operation' => 'deal_chain.stage',
-            'coordinator_user_id' => $coordinatorUserId,
-            'items' => array_map(static fn (array $it): array => [
-                'listing_id' => $it['source']['listing_id'] ?? $it['source']['id'],
-                'quantity' => $it['quantity'],
-                'recipe' => $it['recipe'],
-                'recipe_version' => $it['recipe_definition']['catalog_version'] ?? 1,
-                'slot_overrides' => $it['slot_overrides'] ?? null,
-                'selection' => $it['selection'],
-            ], $resolvedItems),
-        ];
-
-        try {
-            $reservation = $this->idempotency->begin(
-                scope: $scope,
-                key: $idempotencyKey,
-                fingerprint: $fingerprint,
-                correlationId: $correlationId,
-                actorUserId: $coordinatorUserId,
-            );
-        } catch (KernelException $error) {
-            throw new DealCoordinationError(
-                $error->envelope->code,
-                $error->getMessage(),
-                $correlationId,
-                status: $error->status,
-            );
-        }
-
-        if ($reservation->isReplay) {
-            /** @var array{deal_chain_id: string, status: string, items_count: int, needs_count: int, invitations_count: int, dependencies_count: int} */
-            return is_array($reservation->replayPayload) ? $reservation->replayPayload : [];
-        }
-
-        return DB::transaction(function () use (
-            $coordinatorUserId,
-            $resolvedItems,
-            $reservation,
-            $correlationId,
-        ): array {
+                    return [
+                        'listing_id' => strtolower((string) $item['id']),
+                        'quantity' => (int) $item['quantity'],
+                        'recipe' => $recipe,
+                        'recipe_version' => $recipe === null ? 1 : ($recipeCatalog[$recipe]['catalog_version'] ?? 1),
+                        'slot_overrides' => $item['slot_overrides'] ?? null,
+                        'selection' => [
+                            'listing_version_id' => (string) $item['listing_version_id'],
+                            'variant_id' => $item['variant_id'] ?? null,
+                            'package_id' => $item['package_id'] ?? null,
+                            'addon_ids' => array_values((array) ($item['addon_ids'] ?? [])),
+                            'deal_chain_combination_id' => $item['deal_chain_combination_id'] ?? null,
+                            'quantity' => (int) $item['quantity'],
+                        ],
+                    ];
+                }, $items)
+                : array_map(static fn (array $item): array => [
+                    'listing_id' => $item['source']['listing_id'] ?? $item['source']['id'],
+                    'quantity' => $item['quantity'],
+                    'recipe' => $item['recipe'],
+                    'recipe_version' => $item['recipe_definition']['catalog_version'] ?? 1,
+                    'slot_overrides' => $item['slot_overrides'] ?? null,
+                    'selection' => $item['selection'],
+                ], $resolvedItems);
+            try {
+                $reservation = $this->idempotency->begin(
+                    scope: 'deal_chain.stage:'.$coordinatorUserId,
+                    key: $idempotencyKey,
+                    fingerprint: [
+                        'operation' => 'deal_chain.stage',
+                        'coordinator_user_id' => $coordinatorUserId,
+                        'items' => $fingerprintItems,
+                    ],
+                    correlationId: $correlationId,
+                    actorUserId: $coordinatorUserId,
+                );
+            } catch (KernelException $error) {
+                throw new DealCoordinationError(
+                    $error->envelope->code,
+                    $error->getMessage(),
+                    $correlationId,
+                    status: $error->status,
+                );
+            }
+            if ($reservation->isReplay) {
+                return is_array($reservation->replayPayload) ? $reservation->replayPayload : [];
+            }
+            $resolvedItems ??= $this->resolveItems($items, $coordinatorUserId, $recipeCatalog, $correlationId);
             $dealChainId = (string) Str::uuid7();
             $now = now();
 
@@ -132,13 +152,7 @@ final class StageDealChain
                     correlationId: $correlationId,
                     now: $now,
                     ordinal: $ordinal,
-                    recipe: $item['recipe'],
-                    recipeVersion: (int) ($item['recipe_definition']['catalog_version'] ?? 1),
-                    recipeDefinition: $item['recipe_definition'],
-                    source: $item['source'],
-                    quantity: $item['quantity'],
-                    slotOverrides: $item['slot_overrides'] ?? null,
-                    selection: $item['selection'],
+                    item: $item,
                 );
 
                 $needsCount += $counts['needs'];
@@ -187,7 +201,7 @@ final class StageDealChain
     /**
      * @param  array<int, array{id: string, quantity: int, deal_chain?: string|null, slot_overrides?: array<string, mixed>|null, listing_version_id?: string|null, variant_id?: string|null, package_id?: string|null, addon_ids?: list<string>, deal_chain_combination_id?: string|null}>  $items
      * @param  array<string, array<string, mixed>>  $recipeCatalog
-     * @return list<array{source: array<string, mixed>, quantity: int, recipe: string|null, recipe_definition: array<string, mixed>|null, slot_overrides: array<string, mixed>|null, selection: array<string, mixed>}>
+     * @return list<array<string, mixed>>
      */
     private function resolveItems(
         array $items,
@@ -221,28 +235,18 @@ final class StageDealChain
                 continue;
             }
             $slotOverrides = $item['slot_overrides'] ?? null;
-            if ($slotOverrides !== null) {
-                $nodeKeys = array_column(
-                    $this->nodesFor($recipe, $source, (int) $item['quantity'], $recipe === null ? null : ($recipeCatalog[$recipe] ?? null)),
-                    'key',
-                );
-                foreach (array_keys($slotOverrides) as $overrideKey) {
-                    if (! in_array((string) $overrideKey, $nodeKeys, true)) {
-                        $errors["items.{$index}.slot_overrides.{$overrideKey}"] = ['Choose a stable node key from this recipe.'];
-                    }
-                }
-            }
             $terms = is_array($source['terms'] ?? null) ? $source['terms'] : [];
+            $combination = null;
             $selection = [
-                'listing_version_id' => (string) ($source['listing_version_id'] ?? ''),
-                'variant_id' => isset($item['variant_id']) && is_string($item['variant_id']) ? $item['variant_id'] : null,
-                'package_id' => isset($item['package_id']) && is_string($item['package_id']) ? $item['package_id'] : null,
+                'listing_version_id' => (string) $source['listing_version_id'],
+                'variant_id' => $item['variant_id'] ?? null,
+                'package_id' => $item['package_id'] ?? null,
                 'addon_ids' => [],
-                'deal_chain_combination_id' => isset($item['deal_chain_combination_id']) && is_string($item['deal_chain_combination_id']) ? $item['deal_chain_combination_id'] : null,
+                'deal_chain_combination_id' => $item['deal_chain_combination_id'] ?? null,
                 'quantity' => (int) $item['quantity'],
             ];
             $selectionError = null;
-            if (isset($item['listing_version_id']) && $item['listing_version_id'] !== (string) ($source['listing_version_id'] ?? '')) {
+            if (isset($item['listing_version_id']) && $item['listing_version_id'] !== (string) $source['listing_version_id']) {
                 $selectionError = ['listing_version_id' => 'Listing terms changed. Refresh before staging.'];
             }
             if ($selectionError === null && $selection['variant_id'] !== null) {
@@ -268,13 +272,20 @@ final class StageDealChain
                 $selectionError = ['variant_id' => 'Choose either a variant or a package.'];
             }
             if ($selectionError === null && $selection['deal_chain_combination_id'] !== null) {
-                $combinationMatches = collect($terms['deal_chain_combinations'] ?? [])->contains(
+                $combination = collect($terms['deal_chain_combinations'] ?? [])->first(
                     static fn (mixed $combo): bool => is_array($combo)
                         && (string) ($combo['id'] ?? '') === $selection['deal_chain_combination_id']
                 );
-                if (! $combinationMatches) {
+                if ($combination === null) {
                     $selectionError = ['deal_chain_combination_id' => 'The saved Deal Chain combination is not part of this listing version.'];
                 }
+            }
+            if ($selectionError === null && $combination !== null
+                && (! is_string($item['listing_version_id'] ?? null) || $item['listing_version_id'] === '')) {
+                $selectionError = ['listing_version_id' => 'Refresh the listing before choosing a saved partnership.'];
+            }
+            if ($selectionError === null && $combination !== null && $recipe !== null) {
+                $selectionError = ['deal_chain' => 'Choose either a saved partnership or a catalog plan, not both.'];
             }
             $addonIds = $item['addon_ids'] ?? [];
             if ($selectionError === null && (! is_array($addonIds) || array_filter($addonIds, static fn (mixed $addonId): bool => ! is_string($addonId)) !== [])) {
@@ -285,10 +296,27 @@ final class StageDealChain
                     $addon = collect($terms['addons'] ?? [])->first(
                         static fn (mixed $candidate): bool => is_array($candidate)
                             && (string) ($candidate['id'] ?? '') === $addonId
-                            && ($candidate['status'] ?? 'available') === 'available'
+                            && ($candidate['status'] ?? 'available') === 'available',
                     );
-                    if ($addon === null || (string) ($source['listing_type'] ?? '') !== 'service') {
+                    $listingType = (string) ($source['listing_type'] ?? '');
+                    $productExtra = $listingType === 'product'
+                        && ! array_key_exists('partner_role', $addon ?? [])
+                        && ! array_key_exists('partner_fixture_keys', $addon ?? [])
+                        && ! array_key_exists('settlement_mode', $addon ?? [])
+                        && ! in_array(strtolower((string) ($addon['code'] ?? '')), [
+                            'turnkey_parts',
+                            'safety_audit',
+                            'courier_delivery',
+                            'product_install',
+                        ], true);
+                    if ($addon === null || ($listingType !== 'service' && ! $productExtra)) {
                         $selectionError = ['addon_ids' => 'A selected seller add-on is not available for this listing.'];
+                        break;
+                    }
+                    $addonPriceMinor = filter_var($addon['price_amount_minor'] ?? null, FILTER_VALIDATE_INT);
+                    if ($listingType === 'product' && ($addonPriceMinor === false || $addonPriceMinor < 0)) {
+                        $selectionError = ['addon_ids' => 'A selected product extra has no authored price.'];
+
                         break;
                     }
                     $selection['addon_ids'][] = (string) $addon['id'];
@@ -302,6 +330,123 @@ final class StageDealChain
                 continue;
             }
 
+            try {
+                if ($combination !== null) {
+                    $plan = DealChainPlanDefinition::normalize($combination);
+                    foreach ($plan['nodes'] as $nodeIndex => $node) {
+                        $plan['nodes'][$nodeIndex]['need_kind'] = $node['is_primary']
+                            ? (string) $source['listing_type']
+                            : ($node['role'] === 'store' ? 'product' : 'service');
+                        $plan['nodes'][$nodeIndex]['description'] = 'Saved partnership role · provider agreement required';
+                    }
+                } else {
+                    $definition = $recipe === null ? null : ($recipeCatalog[$recipe] ?? null);
+                    $plan = [
+                        'nodes' => $this->nodesFor($recipe, $source, (int) $item['quantity'], $definition),
+                        'dependencies' => $this->dependenciesFor($definition),
+                        'recipe' => $recipe ?? 'direct_listing',
+                        'recipe_version' => (int) ($definition['catalog_version'] ?? 1),
+                    ];
+                }
+            } catch (InvalidArgumentException $error) {
+                $errors["items.{$index}.deal_chain_combination_id"] = [$error->getMessage()];
+
+                continue;
+            }
+            $nodeKeys = array_column($plan['nodes'], 'key');
+            foreach (array_keys($slotOverrides ?? []) as $overrideKey) {
+                if (! in_array((string) $overrideKey, $nodeKeys, true)) {
+                    $errors["items.{$index}.slot_overrides.{$overrideKey}"] = ['Choose a stable node ID from the selected plan.'];
+                }
+            }
+            $bindings = [];
+            foreach ($plan['nodes'] as $node) {
+                $override = $slotOverrides[$node['key']] ?? null;
+                $binding = null;
+                if ($node['is_primary']) {
+                    if ($combination !== null && ($override !== null
+                        || (($node['listing_id'] ?? null) !== null && $node['listing_id'] !== (string) $source['listing_id'])
+                        || (($source['listing_type'] === 'product') !== ($node['role'] === 'store')))) {
+                        $errors["items.{$index}.deal_chain_combination_id"] = ['The primary node must remain the listing you selected.'];
+
+                        continue;
+                    }
+                    if ($combination !== null && ! DealChainCandidateRoleClassifier::matchesNeedRole(
+                        $node['role'],
+                        (string) $source['listing_type'],
+                        (string) $source['category_code'],
+                        (string) $source['title'],
+                        (string) ($source['terms']['fixture_key'] ?? ''),
+                    )) {
+                        $errors["items.{$index}.deal_chain_combination_id"] = ['The primary node must match this listing’s provider role.'];
+
+                        continue;
+                    }
+                    $binding = $source;
+                } else {
+                    $requiresChoice = $combination !== null && $node['assignment_mode'] !== 'preferred_partner';
+                    $listingId = is_array($override) ? ($override['listing_id'] ?? null) : ($node['listing_id'] ?? null);
+                    if ($requiresChoice && $override === null) {
+                        $errors["items.{$index}.slot_overrides.{$node['key']}.listing_id"] = ['Choose a provider for this partnership role.'];
+
+                        continue;
+                    }
+                    if (is_string($listingId) && $listingId !== '' && Str::isUuid($listingId)) {
+                        $binding = $this->listingSource->findActiveApproved($listingId);
+                    }
+                    if ($binding === null && ($combination !== null || $override !== null)) {
+                        $errors["items.{$index}.slot_overrides.{$node['key']}.listing_id"] = ['Choose an active provider listing for this role.'];
+
+                        continue;
+                    }
+                    if ($binding !== null && ! DealChainCandidateRoleClassifier::matchesNeedRole(
+                        $node['role'],
+                        (string) $binding['listing_type'],
+                        (string) $binding['category_code'],
+                        (string) $binding['title'],
+                        (string) ($binding['terms']['fixture_key'] ?? ''),
+                    )) {
+                        $errors["items.{$index}.slot_overrides.{$node['key']}.listing_id"] = ['Choose a listing matching this provider role.'];
+
+                        continue;
+                    }
+                }
+                if ($binding === null) {
+                    continue;
+                }
+                if ((string) $binding['owner_user_id'] === $userId) {
+                    $errors["items.{$index}.slot_overrides.{$node['key']}.listing_id"] = ['Choose a listing owned by another provider.'];
+
+                    continue;
+                }
+                $candidateVersionId = is_array($override)
+                    ? ($override['listing_version_id'] ?? $override['listingVersionId'] ?? null)
+                    : ($node['listing_version_id'] ?? null);
+                if (is_array($override)
+                    && $candidateVersionId === null
+                    && (string) ($override['listing_id'] ?? '') === (string) ($node['listing_id'] ?? '')) {
+                    $candidateVersionId = $node['listing_version_id'] ?? null;
+                }
+                if ($candidateVersionId !== null
+                    && (! is_string($candidateVersionId) || $candidateVersionId !== (string) $binding['listing_version_id'])) {
+                    $errors["items.{$index}.slot_overrides.{$node['key']}.listing_version_id"] = [
+                        'This partner listing changed. Refresh the partnership before staging.',
+                    ];
+
+                    continue;
+                }
+                $offer = $this->invitationScope($binding, (int) $item['quantity'], $node['is_primary'] ? $selection : [], $correlationId);
+                if ($combination !== null && $offer['amount_minor'] === null) {
+                    $errors["items.{$index}.slot_overrides.{$node['key']}.listing_id"] = ['Choose a listing with confirmed pricing before sending this partnership.'];
+
+                    continue;
+                }
+                $bindings[$node['key']] = [
+                    'provider_id' => (string) $binding['owner_user_id'],
+                    'scope' => $offer,
+                ];
+            }
+
             $resolved[] = [
                 'source' => $source,
                 'quantity' => (int) $item['quantity'],
@@ -309,6 +454,8 @@ final class StageDealChain
                 'recipe_definition' => $recipe === null ? null : $recipeCatalog[$recipe] ?? null,
                 'slot_overrides' => $slotOverrides,
                 'selection' => $selection,
+                'plan' => $plan,
+                'bindings' => $bindings,
             ];
         }
 
@@ -344,27 +491,20 @@ final class StageDealChain
     }
 
     /**
-     * @param  array<string, mixed>  $source
-     * @param  array<string, mixed>|null  $recipeDefinition
-     * @param  array<string, mixed>|null  $slotOverrides
-     * @param  array<string, mixed>  $selection
+     * @param  array<string, mixed>  $item
      * @return array{needs: int, invitations: int, dependencies: int}
      */
     private function appendPlan(
         string $dealChainId,
         string $coordinatorUserId,
         string $correlationId,
-        DateTimeInterface $now,
+        CarbonInterface $now,
         int &$ordinal,
-        ?string $recipe,
-        int $recipeVersion,
-        ?array $recipeDefinition,
-        array $source,
-        int $quantity,
-        array $selection,
-        ?array $slotOverrides = null,
+        array $item,
     ): array {
-        $nodes = $this->nodesFor($recipe, $source, $quantity, $recipeDefinition);
+        $source = $item['source'];
+        $plan = $item['plan'];
+        $nodes = $plan['nodes'];
         $needIds = [];
         $needsCount = 0;
         $invitationsCount = 0;
@@ -378,11 +518,11 @@ final class StageDealChain
                 'ordinal' => $ordinal++,
                 'node_key' => $node['key'],
                 'node_role' => $node['role'],
-                'recipe_code' => $recipe ?? 'direct_listing',
-                'recipe_version' => $recipeVersion,
+                'recipe_code' => $plan['recipe'],
+                'recipe_version' => $plan['recipe_version'],
                 'source_listing_id' => (string) ($source['listing_id'] ?? $source['id']),
                 'need_kind' => $node['need_kind'],
-                'title' => $node['title'],
+                'title' => $item['bindings'][$node['key']]['scope']['title'] ?? $node['title'],
                 'description' => $node['description'],
                 'status' => 'open',
                 'requested_at' => $now,
@@ -393,42 +533,14 @@ final class StageDealChain
             ]);
             $needsCount++;
 
-            $override = $slotOverrides[$node['key']] ?? null;
-            $invitationListing = null;
-            $invitationSelection = [];
-
-            if ($node['is_primary']) {
-                $invitationListing = $source;
-                $invitationSelection = $selection;
-            } elseif (is_array($override)) {
-                $overrideListingId = (string) ($override['listing_id'] ?? '');
-                $invitationListing = $overrideListingId !== ''
-                    ? $this->listingSource->findActiveApproved($overrideListingId)
-                    : null;
-
-                if ($invitationListing === null || (string) $invitationListing['owner_user_id'] === $coordinatorUserId) {
-                    throw new DealCoordinationError(
-                        'PARTNER_LISTING_NOT_AVAILABLE',
-                        'The selected partner listing is no longer available.',
-                        $correlationId,
-                        status: 422,
-                        fieldErrors: ['slot_overrides.'.$node['key'].'.listing_id' => ['Choose an active listing owned by another provider.']],
-                    );
-                }
-            }
-
-            if ($invitationListing !== null) {
+            $binding = $item['bindings'][$node['key']] ?? null;
+            if ($binding !== null) {
                 $invitationId = (string) Str::uuid7();
-                $invitationScope = $this->invitationScope(
-                    $invitationListing,
-                    $quantity,
-                    $invitationSelection,
-                    $correlationId,
-                );
+                $invitationScope = $binding['scope'];
                 DB::table('deal_invitations')->insert([
                     'id' => $invitationId,
                     'deal_need_id' => $needId,
-                    'invited_provider_user_id' => (string) $invitationListing['owner_user_id'],
+                    'invited_provider_user_id' => $binding['provider_id'],
                     'invited_by_user_id' => $coordinatorUserId,
                     'acting_for_user_id' => null,
                     'purpose' => $node['is_primary'] ? 'primary_listing_assignment' : 'deal_need_assignment',
@@ -441,7 +553,7 @@ final class StageDealChain
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
-                $invitedProviderUserId = (string) $invitationListing['owner_user_id'];
+                $invitedProviderUserId = $binding['provider_id'];
                 $this->notifications->recordIntent(new NotificationIntent(
                     recipientUserId: $invitedProviderUserId,
                     eventSourceType: 'deal_need',
@@ -461,7 +573,7 @@ final class StageDealChain
             $needIds[$node['key']] = $needId;
         }
 
-        foreach ($this->dependenciesFor($recipeDefinition) as [$predecessor, $successor, $condition]) {
+        foreach ($plan['dependencies'] as [$predecessor, $successor, $condition]) {
             if (isset($needIds[$predecessor], $needIds[$successor])) {
                 DB::table('deal_dependencies')->insert([
                     'id' => (string) Str::uuid7(),
@@ -625,12 +737,17 @@ final class StageDealChain
 
         return array_values(array_map(
             static function (array $node) use ($primaryTitle, $primaryKind, $quantityLabel): array {
+                $hasExplicitPrimary = array_key_exists('is_primary', $node);
+                $legacyPrimary = ($node['title_template'] ?? null) === 'primary_listing'
+                    || ($node['need_kind_template'] ?? null) === 'primary_listing';
+                $isPrimary = $hasExplicitPrimary ? (bool) $node['is_primary'] : $legacyPrimary;
+
                 $needKind = (string) ($node['need_kind'] ?? '');
-                if (($node['need_kind_template'] ?? null) === 'primary_listing' || $needKind === '') {
+                if ($isPrimary || ($needKind === '' && ! $hasExplicitPrimary)) {
                     $needKind = $primaryKind;
                 }
 
-                $title = ($node['title_template'] ?? null) === 'primary_listing'
+                $title = $isPrimary || (! $hasExplicitPrimary && ($node['title_template'] ?? null) === 'primary_listing')
                     ? $primaryTitle
                     : (string) ($node['title'] ?? $primaryTitle);
                 $description = str_replace(
@@ -654,8 +771,7 @@ final class StageDealChain
                     'need_kind' => $needKind,
                     'title' => $title,
                     'description' => $description,
-                    'is_primary' => ($node['title_template'] ?? null) === 'primary_listing'
-                        || ($node['need_kind_template'] ?? null) === 'primary_listing',
+                    'is_primary' => $isPrimary,
                 ];
             },
             $templates,

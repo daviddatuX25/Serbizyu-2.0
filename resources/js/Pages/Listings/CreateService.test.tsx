@@ -57,9 +57,6 @@ describe('CreateService Component — Granular Guided & Standard Modes', () => {
         expect(screen.getByText('Service Listing')).toBeTruthy();
         expect(screen.getByText(/Step 1 of 7 · Craft & Title/i)).toBeTruthy();
 
-        // Mode switcher buttons
-        expect(screen.getByRole('button', { name: /^guided$/i })).toBeTruthy();
-        expect(screen.getByRole('button', { name: /^standard$/i })).toBeTruthy();
 
         // Conversational Q&A prompt in Step 1
         expect(screen.getByText('What do you want to call your service?')).toBeTruthy();
@@ -90,10 +87,20 @@ describe('CreateService Component — Granular Guided & Standard Modes', () => {
     });
 
     it('switches to Standard mode with high-density plain labels and all-in-one form', () => {
-        render(<CreateService workOptions={mockWorkOptions} />);
+        render(<CreateService workOptions={mockWorkOptions} partnerListings={[{
+            id: 'rated-audit-listing',
+            role: 'audit',
+            name: 'Safety inspection',
+            providerName: 'Test auditor',
+            barangay: 'Rizal',
+            feeMinor: 1500,
+            rating: 4.6,
+            sub: 'Seller-authored inspection',
+        }]} />);
 
-        // Switch to standard mode
-        const standardBtn = screen.getByRole('button', { name: /^standard$/i });
+        fireEvent.change(screen.getByPlaceholderText(/e\.g\. Inverter Split AC Deep Clean/i), { target: { value: 'Test fan repair' } });
+        fireEvent.click(screen.getByRole('button', { name: /Continue to visual proof/i }));
+        const standardBtn = screen.getByRole('switch', { name: 'Standard builder mode' });
         fireEvent.click(standardBtn);
 
         // Header reflects standard mode
@@ -107,6 +114,11 @@ describe('CreateService Component — Granular Guided & Standard Modes', () => {
 
         // Bottom save draft button in Standard mode
         expect(screen.getByText('Standard All-in-One Form')).toBeTruthy();
+        expect(screen.getByDisplayValue('Test fan repair')).toBeTruthy();
+        expect(standardBtn.getAttribute('aria-checked')).toBe('true');
+        fireEvent.click(standardBtn);
+        expect(standardBtn.getAttribute('aria-checked')).toBe('false');
+        expect(screen.getByText(/Step 2 of 7/)).toBeTruthy();
     });
 
     it('toggles mode via the bottom switcher button', () => {
@@ -130,7 +142,7 @@ describe('CreateService Component — Granular Guided & Standard Modes', () => {
         render(<CreateService workOptions={mockWorkOptions} />);
 
         // Switch to standard mode
-        const standardBtn = screen.getByRole('button', { name: /^standard$/i });
+        const standardBtn = screen.getByRole('switch', { name: 'Standard builder mode' });
         fireEvent.click(standardBtn);
 
         // Preview card shows neutral fallback, NOT hardcoded AC deep clean

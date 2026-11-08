@@ -13,6 +13,8 @@ use App\Modules\Listings\Application\StockLedgerService;
 use App\Modules\Listings\Domain\ListingRules;
 use App\Modules\Listings\Infrastructure\Models\Listing;
 use App\Shared\Application\AuditRecorder;
+use App\Shared\Application\DealChainCandidateRoleClassifier;
+use App\Shared\Application\DealChainPlanDefinition;
 use App\Shared\Application\IdempotencyGuard;
 use App\Shared\Application\KernelException;
 use App\Shared\Application\OutboxWriter;
@@ -24,6 +26,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 final class ListingRepository implements ListingCommandStore, OwnerListingReader, PublicListingReader
 {
@@ -283,6 +286,104 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 throw new ListingError('LISTING_NOT_FOUND', 'The listing could not be found.', $correlationId, status: 404);
             }
             $terms = json_decode((string) $current->terms, true) ?: [];
+            $combinations = $terms['deal_chain_combinations'] ?? [];
+            if (! is_array($combinations) || ! array_is_list($combinations)) {
+                throw new ListingError('INVALID_DEAL_CHAIN_PLAN', 'Use a list of saved partnerships.', $correlationId, status: 422, fieldErrors: [
+                    'deal_chain_combinations' => ['Use a list of saved partnerships.'],
+                ]);
+            }
+            $combinationIds = [];
+            foreach ($combinations as $index => $combination) {
+                try {
+                    if (! is_array($combination) || ! is_string($combination['id'] ?? null)
+                        || trim($combination['id']) === '' || isset($combinationIds[$combination['id']])) {
+                        throw new InvalidArgumentException('Each saved partnership needs its own stable ID.');
+                    }
+                    $plan = DealChainPlanDefinition::normalize($combination);
+                    foreach ($plan['nodes'] as $node) {
+                        if ($node['is_primary'] && (
+                            (((string) $listing->listing_type === 'product') !== ($node['role'] === 'store'))
+                            || ($node['listing_id'] !== null && $node['listing_id'] !== $listingId)
+                        )) {
+                            throw new InvalidArgumentException('The primary partnership node must be this listing.');
+                        }
+                        if ($node['is_primary'] && ! DealChainCandidateRoleClassifier::matchesNeedRole(
+                            $node['role'],
+                            (string) $listing->listing_type,
+                            (string) ($terms['category_code'] ?? ''),
+                            (string) ($terms['title'] ?? ''),
+                            (string) ($terms['fixture_key'] ?? ''),
+                        )) {
+                            throw new InvalidArgumentException('The primary node must match this listing’s provider role.');
+                        }
+                        if (! $node['is_primary']
+                            && $node['assignment_mode'] === 'preferred_partner'
+                            && $node['listing_id'] === null) {
+                            throw new InvalidArgumentException('A preferred partnership role needs an active listing binding.');
+                        }
+                        if (! $node['is_primary'] && $node['assignment_mode'] === 'preferred_partner' && $node['listing_id'] !== null) {
+                            $binding = DB::table('listings')
+                                ->join('listing_versions', function ($join): void {
+                                    $join->on('listing_versions.listing_id', '=', 'listings.id')
+                                        ->on('listing_versions.version_number', '=', 'listings.current_version');
+                                })
+                                ->join('categories', 'categories.id', '=', 'listings.category_id')
+                                ->where('listings.id', $node['listing_id'])
+                                ->where('listings.status', 'active')
+                                ->where('listings.review_status', 'approved')
+                                ->lockForUpdate()
+                                ->first([
+                                    'listings.listing_type',
+                                    'categories.code as category_code',
+                                    'listing_versions.id as listing_version_id',
+                                    'listing_versions.terms',
+                                ]);
+                            $bindingTerms = $binding === null ? [] : (json_decode((string) $binding->terms, true) ?: []);
+                            if ($binding === null) {
+                                throw new InvalidArgumentException('A preferred listing must be active and match its partnership role.');
+                            }
+                            if ($node['listing_version_id'] !== null
+                                && $node['listing_version_id'] !== (string) $binding->listing_version_id) {
+                                throw new InvalidArgumentException('A preferred listing changed. Refresh the partner selection before publishing.');
+                            }
+                            if (! DealChainCandidateRoleClassifier::matchesNeedRole(
+                                $node['role'],
+                                (string) $binding->listing_type,
+                                (string) $binding->category_code,
+                                (string) ($bindingTerms['title'] ?? ''),
+                                (string) ($bindingTerms['fixture_key'] ?? ''),
+                            )) {
+                                throw new InvalidArgumentException('A preferred listing must be active and match its partnership role.');
+                            }
+                        }
+                    }
+                    $combinationIds[$combination['id']] = true;
+                } catch (InvalidArgumentException $error) {
+                    throw new ListingError(
+                        'INVALID_DEAL_CHAIN_PLAN',
+                        $error->getMessage(),
+                        $correlationId,
+                        status: 422,
+                        fieldErrors: ["deal_chain_combinations.{$index}" => [$error->getMessage()]],
+                    );
+                }
+            }
+            $specification = $terms['deal_chain_specification'] ?? null;
+            if (is_array($specification) && array_key_exists('selected_combo_id', $specification)) {
+                $selectedCombinationId = $specification['selected_combo_id'];
+                if (! is_string($selectedCombinationId)
+                    || ($selectedCombinationId !== 'pickup' && ! isset($combinationIds[$selectedCombinationId]))) {
+                    throw new ListingError(
+                        'INVALID_DEAL_CHAIN_PLAN',
+                        'Choose pickup or a saved partnership from this listing version.',
+                        $correlationId,
+                        status: 422,
+                        fieldErrors: [
+                            'deal_chain_specification.selected_combo_id' => ['Choose pickup or a saved partnership from this listing version.'],
+                        ],
+                    );
+                }
+            }
             $this->validate([
                 'title' => (string) ($terms['title'] ?? ''),
                 'description' => (string) $current->description,
@@ -832,7 +933,7 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                     selectedCatalogCode: is_string($selectedCatalogCode) ? $selectedCatalogCode : null,
                     selectedSetVersion: is_numeric($selectedSetVersion) ? (int) $selectedSetVersion : null,
                 );
-            } catch (\InvalidArgumentException $error) {
+            } catch (InvalidArgumentException $error) {
                 throw new ListingError(
                     'INVALID_WORK_SPECIFICATION',
                     'Work nodes need valid authored checklist and measurement requirements.',

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\AuthReturnPath;
 use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LinkEmailRequest;
 use App\Http\Requests\LoginWithEmailRequest;
@@ -57,8 +58,8 @@ final class AuthController
             $request->session()->forget('auth_phone_pending');
         }
 
-        if ($request->filled('return_to')) {
-            $request->session()->put('auth_return_to', (string) $request->query('return_to'));
+        if ($request->has('return_to')) {
+            $request->session()->put('auth_return_to', AuthReturnPath::safe($request->query('return_to')));
         }
 
         $pendingPhone = $request->session()->get('auth_phone_pending');
@@ -66,7 +67,7 @@ final class AuthController
         $temporaryOtpPreview = $this->temporaryOtp($pendingPhone, PhoneOtpAuthService::PURPOSE);
 
         $props = [
-            'returnTo' => (string) $request->session()->get('auth_return_to', route('home', absolute: false)),
+            'returnTo' => AuthReturnPath::safe($request->session()->get('auth_return_to')),
             'session' => [
                 'status' => $request->session()->has('auth_phone_pending') ? 'challenge_pending' : 'method_picker',
                 'phone' => $pendingPhone,
@@ -96,7 +97,7 @@ final class AuthController
         $pendingPhone = is_string($pendingPhone) ? $pendingPhone : null;
         $temporaryOtpPreview = $this->temporaryOtp($pendingPhone, StartSignup::PURPOSE);
         $props = [
-            'returnTo' => (string) $request->session()->get('auth_return_to', route('home', absolute: false)),
+            'returnTo' => AuthReturnPath::safe($request->session()->get('auth_return_to')),
             'session' => [
                 'status' => $request->session()->has('signup_phone_pending') ? 'challenge_pending' : 'phone_required',
                 'phone' => $pendingPhone,
@@ -189,9 +190,9 @@ final class AuthController
                 ], $correlationId);
             }
 
-            $returnTo = $request->session()->pull('auth_return_to', route('home', absolute: false));
+            $returnTo = AuthReturnPath::safe($request->session()->pull('auth_return_to'));
 
-            return redirect()->to(is_string($returnTo) && $returnTo !== '' ? $returnTo : route('home', absolute: false));
+            return redirect()->to($returnTo);
         } catch (IdentityAccessError $error) {
             return $this->failure(
                 $request,
@@ -224,9 +225,9 @@ final class AuthController
                 ], $correlationId);
             }
 
-            $returnTo = $request->session()->pull('auth_return_to', route('home', absolute: false));
+            $returnTo = AuthReturnPath::safe($request->session()->pull('auth_return_to'));
 
-            return redirect()->to(is_string($returnTo) && $returnTo !== '' ? $returnTo : route('home', absolute: false));
+            return redirect()->to($returnTo);
         } catch (IdentityAccessError $error) {
             return $this->failure(
                 $request,
@@ -291,7 +292,7 @@ final class AuthController
         }
 
         $props = [
-            'returnTo' => (string) $request->session()->get('auth_return_to', route('home', absolute: false)),
+            'returnTo' => AuthReturnPath::safe($request->session()->get('auth_return_to')),
             'session' => [
                 'status' => $pendingPhone !== null ? 'challenge_pending' : 'method_picker',
                 'phone' => $pendingPhone,
@@ -363,7 +364,7 @@ final class AuthController
         return Inertia::render('Auth/ResetPassword', [
             'token' => (string) $request->query('token', ''),
             'email' => (string) $request->query('email', ''),
-            'returnTo' => (string) $request->session()->get('auth_return_to', route('home', absolute: false)),
+            'returnTo' => AuthReturnPath::safe($request->session()->get('auth_return_to')),
         ]);
     }
 
@@ -451,9 +452,9 @@ final class AuthController
                 ], $correlationId);
             }
 
-            $returnTo = $request->session()->pull('auth_return_to', route('home', absolute: false));
+            $returnTo = AuthReturnPath::safe($request->session()->pull('auth_return_to'));
 
-            return redirect()->to(is_string($returnTo) && $returnTo !== '' ? $returnTo : route('home', absolute: false));
+            return redirect()->to($returnTo);
         } catch (IdentityAccessError $error) {
             return $this->failure(
                 $request,

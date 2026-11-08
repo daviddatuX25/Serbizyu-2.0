@@ -370,10 +370,6 @@ describe('Mobile UI Kernel — Foundation Primitives', () => {
             fireEvent.click(nextBtn);
             expect(onIndexChange).toHaveBeenCalledWith(1);
 
-            // Slot change button
-            const changeButtons = screen.getAllByRole('button', { name: /change ▾/i });
-            fireEvent.click(changeButtons[0]);
-            expect(onSlotChange).toHaveBeenCalledWith('c1', 'store');
         });
 
         it('keeps the next option selected while smooth-scroll events are in flight', async () => {

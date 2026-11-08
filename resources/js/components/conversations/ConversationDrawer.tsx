@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertCircle, Download, LoaderCircle, Paperclip, Send, X } from 'lucide-react';
 import GlovoWaveModal from '../mobile/GlovoWaveModal';
+import { createRequestKey } from '@/lib/requestKey';
 import type {
     ConversationContext,
     ConversationMeta,
@@ -292,7 +293,7 @@ export default function ConversationDrawer({
         const content = draft.trim();
         if (!content && !attachmentId) return;
         if (!idempotency.current || idempotency.current.draft !== content || idempotency.current.attachment !== attachmentId || idempotency.current.audience !== audience) {
-            idempotency.current = { draft: content, attachment: attachmentId, audience, key: crypto.randomUUID() };
+            idempotency.current = { draft: content, attachment: attachmentId, audience, key: createRequestKey() };
         }
         const key = idempotency.current.key;
         setSending(true);
@@ -369,7 +370,7 @@ export default function ConversationDrawer({
         }
     };
 
-    const title = conversation?.title ?? 'Conversation';
+    const title = conversation?.scope_type === 'deal_chain_relay' ? 'Group messages' : conversation?.title ?? 'Conversation';
     const readOnly = accessDenied || !conversation?.can_send || conversation.read_only;
     const viewerIsActor = Boolean(conversation && conversation.viewer.actor_user_id !== conversation.viewer.owner_user_id);
 
@@ -378,7 +379,7 @@ export default function ConversationDrawer({
             open={open}
             onClose={onClose}
             title={title}
-            subtitle={conversation?.scope_type === 'order' ? `Order · ${conversation.scope_id}` : conversation?.scope_type === 'deal_chain_relay' ? 'Deal Chain handoff relay' : 'Support case'}
+            subtitle={conversation?.scope_type === 'order' ? `Order · ${conversation.scope_id}` : conversation?.scope_type === 'deal_chain_relay' ? 'Coordinate the orders in this deal' : 'Support case'}
         >
             <div className="flex h-[min(72vh,680px)] min-h-[360px] flex-col">
                 {viewerIsActor && conversation && (

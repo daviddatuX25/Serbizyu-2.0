@@ -113,7 +113,7 @@ export interface WorkTemplate {
 }
 
 export type SlotType =
-    'store' | 'delivery' | 'installation' | 'audit' | 'hauling' | 'parts' | 'diagnostic' | 'tools';
+    'store' | 'delivery' | 'installation' | 'audit' | 'hauling' | 'recycle' | 'parts' | 'diagnostic' | 'tools';
 
 export interface DealChainDependencyEdge {
     id: string;
@@ -125,13 +125,14 @@ export interface DealChainDependencyEdge {
 }
 export type SlotAssignmentMode = 'preferred_partner' | 'open_pool' | 'buyer_choice';
 
-export interface PartnerSlot extends Partial<Pick<SlotCandidateListing, 'id' | 'title' | 'area' | 'price_minor' | 'priceMinor' | 'provider_name' | 'photo_url'>> {
+export interface PartnerSlot extends Partial<Pick<SlotCandidateListing, 'id' | 'title' | 'area' | 'price_minor' | 'priceMinor' | 'provider_name' | 'photo_url' | 'listing_version_id' | 'listingVersionId'>> {
     role: string;
     type: SlotType;
     name: string;
     meta: string;
     listingId?: string;
-    feeMinor?: number;
+    listingVersionId?: string | null;
+    feeMinor?: number | null;
     coverThumbnailUrl?: string;
     isOpenSlot?: boolean;
     assignmentMode?: SlotAssignmentMode;
@@ -141,7 +142,7 @@ export interface PartnerSlot extends Partial<Pick<SlotCandidateListing, 'id' | '
     allowBypass?: boolean;
 }
 
-export interface DealChainNode extends Partial<Pick<SlotCandidateListing, 'id' | 'area' | 'price_minor' | 'priceMinor' | 'provider_name' | 'photo_url'>> {
+export interface DealChainNode extends Partial<Pick<SlotCandidateListing, 'id' | 'area' | 'price_minor' | 'priceMinor' | 'provider_name' | 'photo_url' | 'listing_version_id' | 'listingVersionId'>> {
     role: string;
     title: string;
     sub: string;
@@ -149,7 +150,8 @@ export interface DealChainNode extends Partial<Pick<SlotCandidateListing, 'id' |
     bg: string;
     color: string;
     listingId?: string;
-    feeMinor?: number;
+    listingVersionId?: string | null;
+    feeMinor?: number | null;
     coverThumbnailUrl?: string;
     isPrimary?: boolean;
     isOpenSlot?: boolean;
@@ -165,6 +167,7 @@ export interface DealChainCombination {
     title: string;
     icon: string;
     isDefault: boolean;
+    planVersion?: 1;
     recipeId?: string;
     catalogVersion?: number;
     isCustom?: boolean;
@@ -189,12 +192,15 @@ export interface DealChainTemplate {
     applicableCategories: string[];
     applicableListingTypes: string[];
     applicableWorkShapes: string[];
+    dependencies?: DealChainDependencyEdge[];
     nodes: Array<{
         key: string;
         role: string;
         title: string;
         sub: string;
         type: string;
+        isPrimary?: boolean;
+        assignmentMode?: SlotAssignmentMode;
         listingId?: string | null;
         providerName?: string | null;
         image?: string | null;
