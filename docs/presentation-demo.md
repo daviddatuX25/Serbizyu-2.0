@@ -11,7 +11,25 @@ This is a **local, English-language synthetic presentation**, not approval for a
 
 ## Local environment and access
 
-Start the existing Sail services if needed with `vendor/bin/sail up -d`. For this workstation, the app container address was `172.20.0.4`; check it with `vendor/bin/sail exec -T app hostname -i`. Container addresses can change. Ports 8102 and 8103 are local QA PHP listeners, not the normal web server. Use separate browser profiles or private windows for the two previews to avoid sharing XSRF cookies.
+Start the existing Sail services if needed with `vendor/bin/sail up -d`. For this workstation, the app container address was `172.20.0.4`; check it with `vendor/bin/sail exec -T app hostname -i`. Container addresses can change. Ports 8102 and 8103 are isolated QA PHP listeners, not the normal web server. Use separate browser profiles or private windows for the two previews to avoid sharing XSRF cookies.
+
+For the current ZeroTier address, the demo forwards are:
+
+| Preview | Address for a trusted ZeroTier participant |
+|---|---|
+| Service/catalog | `http://192.168.192.141:8102/auth/sign-in` |
+| Product | `http://192.168.192.141:8103/auth/sign-in` |
+
+The host-side forwards bind only to `192.168.192.141`; the device opening them must be able to reach that ZeroTier interface. Port 8080 is the ordinary web service and is not the isolated demo. The forwarding and application connections use plain HTTP, so use synthetic credentials only and do not expose the preview to untrusted users or networks.
+
+If the forwards have stopped, first follow the listener checks below and confirm the current container IP. Then run each command in a separate terminal, replacing the container IP if it changed; leave the terminals open:
+
+```bash
+socat -d -d TCP-LISTEN:8102,bind=192.168.192.141,reuseaddr,fork TCP:172.20.0.4:8102
+socat -d -d TCP-LISTEN:8103,bind=192.168.192.141,reuseaddr,fork TCP:172.20.0.4:8103
+```
+
+Do not start another forward when its port is already listening. The addresses were checked from the host; connectivity from another device still depends on ZeroTier membership and firewall rules.
 
 | Preview | Database | Private storage inside app container | Credentials on host |
 |---|---|---|---|
@@ -44,12 +62,12 @@ These listeners are for a controlled local presentation. They are not hardened o
 
 ## Walkthrough
 
-Replace the host with the verified container address if it changes. Sign in through `/auth/sign-in`.
+Sign in through `/auth/sign-in` using the corresponding ZeroTier preview address. Replace the host IP if it changes.
 
-1. **Service, completed:** In the catalog preview, sign in as the buyer or provider and open `http://172.20.0.4:8102/orders/01a1d1fd-e0cc-70d5-b883-fc3a99109396`. This is service `ORD-00000003`: show accepted agreement, completed Work, buyer sign-off and separately acknowledged synthetic cash. The photo is synthetic evidence, not proof of an actual job.
-2. **Product, pending:** In the product preview, sign in as merchant and open `http://172.20.0.4:8103/orders/01a1d254-522c-71e1-a320-fa75228afc96`. This is a different `ORD-00000003`. The merchant's Orders queue shows the proposal needing a response; the buyer's queue shows waiting for the provider. In Stock, the staged state was 3 physical, 1 held, 0 committed and 2 available. Counts change if the presenter advances the Order.
-3. **Product, completed:** Open `http://172.20.0.4:8103/orders/01a1d22b-591d-712b-8a45-8d016f2df2a8` as buyer or merchant. `ORD-00000002` records acceptance, custody departure, receipt, and a separate cash report and merchant acknowledgement. Its quantity-two purchase reduced on-hand stock once at custody departure, not again at receipt or payment.
-4. **Review:** Open `http://172.20.0.4:8103/listings/01a1d228-f865-73c2-82b1-abd1dd24bc2f`. The synthetic buyer's four-star review was sealed until the merchant submitted feedback. The public listing then showed one four-star review; the merchant's note stayed private. On the completed Order, reopening submitted feedback should show its recorded state rather than a new form.
+1. **Service, completed:** In the catalog preview, sign in as the buyer or provider and open `http://192.168.192.141:8102/orders/01a1d1fd-e0cc-70d5-b883-fc3a99109396`. This is service `ORD-00000003`: show accepted agreement, completed Work, buyer sign-off and separately acknowledged synthetic cash. The photo is synthetic evidence, not proof of an actual job.
+2. **Product, pending:** In the product preview, sign in as merchant and open `http://192.168.192.141:8103/orders/01a1d254-522c-71e1-a320-fa75228afc96`. This is a different `ORD-00000003`. The merchant's Orders queue shows the proposal needing a response; the buyer's queue shows waiting for the provider. In Stock, the staged state was 3 physical, 1 held, 0 committed and 2 available. Counts change if the presenter advances the Order.
+3. **Product, completed:** Open `http://192.168.192.141:8103/orders/01a1d22b-591d-712b-8a45-8d016f2df2a8` as buyer or merchant. `ORD-00000002` records acceptance, custody departure, receipt, and a separate cash report and merchant acknowledgement. Its quantity-two purchase reduced on-hand stock once at custody departure, not again at receipt or payment.
+4. **Review:** Open `http://192.168.192.141:8103/listings/01a1d228-f865-73c2-82b1-abd1dd24bc2f`. The synthetic buyer's four-star review was sealed until the merchant submitted feedback. The public listing then showed one four-star review; the merchant's note stayed private. On the completed Order, reopening submitted feedback should show its recorded state rather than a new form.
 
 The current implementation permits review **after payment settlement**, not before the cash report. Request → Quote → Order → Work → cash was exercised in an earlier separate isolated run documented in the handoff; the two retained previews above do not by themselves recreate that earlier run.
 
