@@ -1,26 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Star, MapPin } from 'lucide-react';
 import type { ListingRecord } from '@/types';
 import { formatListingLocation } from '@/lib/philippineAddresses';
+import { CategoryVisualFallback } from '@/components/listings/ListingMediaPicker';
 interface MarketplaceCardProps {
     listing: ListingRecord;
     onSelect: (listing: ListingRecord) => void;
     onAddToCart?: (listing: ListingRecord) => void;
 }
 
-const CATEGORY_IMAGES: Record<string, string> = {
-    repairs: '/photos/ac-clean.jpg',
-    'home-cleaning': '/photos/req-electrician.jpg',
-    courier: '/photos/courier.jpg',
-    'greeting-cards': '/photos/greeting.jpg',
-    'local-food': '/photos/bibingka.jpg',
-    'print-assist': '/photos/greeting.jpg',
-    default: '/photos/ac-clean.jpg',
-};
 
 export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ listing, onSelect }) => {
-    const categoryKey = (listing.category_code || listing.categoryCode || 'default').toLowerCase();
-    const photoUrl = CATEGORY_IMAGES[categoryKey] || CATEGORY_IMAGES['default'];
+    const photoUrl = listing.cover_thumbnail_url;
+    const [unavailablePhotoUrl, setUnavailablePhotoUrl] = useState<string | null>(null);
 
     const rawMinor = listing.price_amount_minor;
     const priceDisplay = typeof rawMinor === 'number' && Number.isFinite(rawMinor)
@@ -40,6 +32,7 @@ export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ listing, onSel
                     <h3 className="line-clamp-2 break-words [overflow-wrap:anywhere] text-[14px] leading-tight font-extrabold text-[#18181B]">
                         {listing.title}
                     </h3>
+                    {listing.catalog_source === 'tagudin_seed' && <p className="text-xs font-semibold text-slate-600">Sample listing</p>}
                     <p className="mt-1 line-clamp-2 break-words [overflow-wrap:anywhere] text-[11px] leading-relaxed text-[#52525B]">
                         {listing.description || 'Verified local service in Tagudin, Ilocos Sur.'}
                     </p>
@@ -67,16 +60,11 @@ export const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ listing, onSel
             </div>
 
             <div className="relative size-23.5 min-w-0 shrink-0 overflow-hidden rounded-xl bg-[#E5E7EB]">
-                <img
-                    src={photoUrl}
-                    alt={listing.title}
-                    className="size-full object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = '/photos/ac-clean.jpg';
-                    }}
-                />
+                {photoUrl && photoUrl !== unavailablePhotoUrl ? (
+                    <img src={photoUrl} alt={listing.title} className="size-full object-cover" loading="lazy" onError={() => setUnavailablePhotoUrl(photoUrl)} />
+                ) : (
+                    <CategoryVisualFallback categoryCode={listing.category_code || listing.categoryCode} />
+                )}
             </div>
         </article>
     );

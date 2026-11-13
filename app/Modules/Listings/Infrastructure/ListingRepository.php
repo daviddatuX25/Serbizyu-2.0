@@ -286,6 +286,25 @@ final class ListingRepository implements ListingCommandStore, OwnerListingReader
                 throw new ListingError('LISTING_NOT_FOUND', 'The listing could not be found.', $correlationId, status: 404);
             }
             $terms = json_decode((string) $current->terms, true) ?: [];
+            $workSpecification = $terms['work_specification'] ?? null;
+            if (is_array($workSpecification) && (int) ($workSpecification['payload_schema_version'] ?? 1) >= 2) {
+                try {
+                    $this->workSpecs->normalizeNodes(
+                        (array) ($workSpecification['nodes'] ?? []),
+                        (string) ($workSpecification['work_shape'] ?? $terms['work_shape'] ?? 'A1'),
+                        requireToolDefinitions: true,
+                        includePermittedProofs: (int) $workSpecification['payload_schema_version'] >= 3,
+                    );
+                } catch (InvalidArgumentException $error) {
+                    throw new ListingError(
+                        'INVALID_WORK_SPECIFICATION',
+                        'Complete the required Work checklist and measurement details before submitting.',
+                        $correlationId,
+                        status: 422,
+                        fieldErrors: ['milestone_stages' => [$error->getMessage()]],
+                    );
+                }
+            }
             $combinations = $terms['deal_chain_combinations'] ?? [];
             if (! is_array($combinations) || ! array_is_list($combinations)) {
                 throw new ListingError('INVALID_DEAL_CHAIN_PLAN', 'Use a list of saved partnerships.', $correlationId, status: 422, fieldErrors: [

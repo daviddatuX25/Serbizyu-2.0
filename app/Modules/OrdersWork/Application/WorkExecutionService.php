@@ -84,6 +84,7 @@ final class WorkExecutionService
                 $rawNodes,
                 $shape,
                 requireToolDefinitions: $contract->supportsItemizedChecklists || $contract->supportsNamedMetrics,
+                includePermittedProofs: $contract->payloadSchemaVersion >= 3,
             );
         } catch (\InvalidArgumentException) {
             throw new OrderError(
@@ -112,6 +113,7 @@ final class WorkExecutionService
                 'mandatory' => $node['mandatory'],
                 'duration_label' => $node['duration_label'],
                 'required_proofs' => $node['required_proofs'] ?? [],
+                ...($contract->payloadSchemaVersion >= 3 ? ['permitted_proofs' => $node['permitted_proofs']] : []),
                 'handoff_party' => $node['handoff_party'] ?? null,
                 'approval_method' => $node['approval_method'] ?? 'none',
                 'checklist_items' => $node['checklist_items'] ?? [],
@@ -979,9 +981,10 @@ final class WorkExecutionService
         bool $nativeA4Photo = false,
     ): array {
         $requiredProofs = $this->requiredProofs($node, $correlationId);
+        $permittedProofs = $node['permitted_proofs'] ?? $requiredProofs;
 
         $allowedKeys = ['notes'];
-        foreach ($requiredProofs as $proof) {
+        foreach ($permittedProofs as $proof) {
             $key = match ($proof) {
                 'photo_proof' => 'evidence_file_ids',
                 'gps_checkin' => 'location',
@@ -1007,7 +1010,7 @@ final class WorkExecutionService
             $payload['notes'] = trim($payload['notes']);
         }
 
-        if (in_array('photo_proof', $requiredProofs, true) || $nativeA4Photo) {
+        if (in_array('photo_proof', $requiredProofs, true) || $nativeA4Photo || array_key_exists('evidence_file_ids', $payload)) {
             $evidenceFileIds = $payload['evidence_file_ids'] ?? null;
             if (! is_array($evidenceFileIds) || ! array_is_list($evidenceFileIds) || array_filter($evidenceFileIds, 'is_string') !== $evidenceFileIds) {
                 throw new OrderError('INVALID_WORK_EVIDENCE', 'Photo proof must contain uploaded evidence IDs.', $correlationId, status: 422);
@@ -1023,7 +1026,7 @@ final class WorkExecutionService
             throw new OrderError('INVALID_WORK_EVIDENCE', 'This Work node does not accept photo proof.', $correlationId, status: 422);
         }
 
-        if (in_array('gps_checkin', $requiredProofs, true)) {
+        if (in_array('gps_checkin', $requiredProofs, true) || array_key_exists('location', $payload)) {
             $location = $payload['location'] ?? null;
             $allowedLocationKeys = ['latitude', 'longitude', 'source', 'observed_at', 'accuracy_m', 'landmark'];
             if ($persistedProof) {
@@ -1064,7 +1067,7 @@ final class WorkExecutionService
             throw new OrderError('INVALID_WORK_EVIDENCE', 'This Work node does not accept location proof.', $correlationId, status: 422);
         }
 
-        if (in_array('metric_reading', $requiredProofs, true)) {
+        if (in_array('metric_reading', $requiredProofs, true) || array_key_exists('metric_readings', $payload)) {
             $readings = $payload['metric_readings'] ?? null;
             if (! is_array($readings) || ! array_is_list($readings)) {
                 throw new OrderError('INVALID_METRIC_PROOF', 'Enter the named measurements required by this Work node.', $correlationId, status: 422);
@@ -1074,7 +1077,7 @@ final class WorkExecutionService
             throw new OrderError('INVALID_WORK_EVIDENCE', 'This Work node does not accept meter readings.', $correlationId, status: 422);
         }
 
-        if (in_array('checklist_steps', $requiredProofs, true)) {
+        if (in_array('checklist_steps', $requiredProofs, true) || array_key_exists('checklist_responses', $payload)) {
             $responses = $payload['checklist_responses'] ?? null;
             if (! is_array($responses) || ! array_is_list($responses)) {
                 throw new OrderError('WORK_CHECKLIST_REQUIRED', 'Submit item-level responses for this Work checklist.', $correlationId, status: 422);
@@ -1288,9 +1291,25 @@ final class WorkExecutionService
     private function assertNodeSupportedByContract(WorkContractDefinition $contract, array $node, string $correlationId): void
     {
         foreach ($this->requiredProofs($node, $correlationId) as $proof) {
+            if ($contract->payloadSchemaVersion >= 3 && ! in_array($proof, (array) ($node['permitted_proofs'] ?? []), true)) {
+                throw new OrderError('WORK_CONTRACT_VERSION_UNSUPPORTED', 'Required proof must be permitted by this Work contract.', $correlationId, status: 409);
+            }
             if (! $contract->supportsTool($proof)) {
                 throw new OrderError('WORK_CONTRACT_VERSION_UNSUPPORTED', 'This Work contract does not support the authored proof tool.', $correlationId, status: 409);
             }
+        }
+        if ($contract->payloadSchemaVersion >= 3) {
+            $permittedProofs = $node['permitted_proofs'] ?? null;
+            if (! is_array($permittedProofs) || ! array_is_list($permittedProofs) || count(array_unique($permittedProofs, SORT_REGULAR)) !== count($permittedProofs)) {
+                throw new OrderError('WORK_CONTRACT_VERSION_UNSUPPORTED', 'This Work contract has invalid permitted tools.', $correlationId, status: 409);
+            }
+            foreach ($permittedProofs as $proof) {
+                if (! is_string($proof) || ! $contract->supportsTool($proof)) {
+                    throw new OrderError('WORK_CONTRACT_VERSION_UNSUPPORTED', 'This Work contract does not support the permitted tool.', $correlationId, status: 409);
+                }
+            }
+        } elseif (array_key_exists('permitted_proofs', $node)) {
+            throw new OrderError('WORK_CONTRACT_VERSION_UNSUPPORTED', 'This Work contract does not support optional tools.', $correlationId, status: 409);
         }
         if ((! $contract->supportsItemizedChecklists && ! empty($node['checklist_items']))
             || (! $contract->supportsNamedMetrics && ! empty($node['metric_requirements']))) {

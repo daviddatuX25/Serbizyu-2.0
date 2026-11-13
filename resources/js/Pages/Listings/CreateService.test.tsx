@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import CreateService from './CreateService';
+import { router } from '@inertiajs/react';
 
 // Mock Inertia router and Link
 vi.mock('@inertiajs/react', () => ({
@@ -168,6 +169,50 @@ describe('CreateService Component — Granular Guided & Standard Modes', () => {
         expect(screen.getByText('Package Tiers (2)')).toBeTruthy();
     });
 
+    it('submits the selected fixed rate without an empty package tier', () => {
+        render(<CreateService workOptions={mockWorkOptions} session={{ authenticated: true }} />);
+
+        fireEvent.change(screen.getByPlaceholderText(/e\.g\. Inverter Split AC Deep Clean/i), {
+            target: { value: 'Fixed-rate repair service' },
+        });
+        fireEvent.change(screen.getByLabelText('Trade Category'), { target: { value: 'repairs' } });
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Fixed Rate' }));
+        fireEvent.change(screen.getByLabelText(/Standard Rate \(PHP\)/i), {
+            target: { value: '250' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: /Save Private Draft/i }));
+
+        const payload = vi.mocked(router.post).mock.calls.at(-1)?.[1] as Record<string, unknown>;
+        expect(payload.price_amount_minor).toBe(25000);
+        expect(payload.pricing_mode).toBe('fixed');
+        expect(payload.package_tiers).toEqual([]);
+    });
+
+    it('preserves the chosen Work set measurement when saving a service', () => {
+        const option = {
+            ...mockWorkOptions.recommended[0],
+            steps: [{
+                id: 'cooling-test',
+                title: 'Cooling check',
+                description: 'Record the temperature difference.',
+                evidence_type: 'meter_log',
+                required_proofs: ['metric_reading' as const],
+                metric_requirements: [{ id: 'delta', name: 'Temperature difference', unit: '°C', required: true }],
+            }],
+        };
+        render(<CreateService workOptions={{ recommended: [option], other_archetypes: [] }} session={{ authenticated: true }} />);
+        fireEvent.change(screen.getByPlaceholderText(/e\.g\. Inverter Split AC Deep Clean/i), { target: { value: 'Aircon check' } });
+        fireEvent.change(screen.getByLabelText('Trade Category'), { target: { value: 'repairs' } });
+        fireEvent.click(screen.getByRole('switch', { name: 'Standard builder mode' }));
+        fireEvent.click(screen.getByRole('button', { name: /Save Private Draft/i }));
+        const payload = vi.mocked(router.post).mock.calls.at(-1)?.[1] as { milestone_stages: Array<Record<string, unknown>> };
+        expect(payload.milestone_stages[0]).toMatchObject({
+            required_proofs: ['metric_reading'],
+            metric_requirements: [{ id: 'delta', name: 'Temperature difference', unit: '°C', required: true }],
+        });
+    });
+
     it('places Detailed Description in Step 1 (Trade Identity) and keeps Step 5 (Dispatch Base) focused strictly on location', () => {
         render(<CreateService workOptions={mockWorkOptions} />);
 
@@ -199,6 +244,29 @@ describe('CreateService Component — Granular Guided & Standard Modes', () => {
 
         // Step 5 does NOT contain Detailed Description
         expect(screen.queryByLabelText(/Detailed Description/i)).toBeNull();
+    });
+
+    it('restores required and optional tools when reopening an authored Work step', () => {
+        const savedStage = {
+            id: 'inspect',
+            title: 'Inspect the site',
+            description: 'Record the location.',
+            required_proofs: ['photo_proof'],
+            permitted_proofs: ['photo_proof', 'gps_checkin'],
+        };
+        render(<CreateService workOptions={mockWorkOptions} editingDraft={{
+            id: 'listing-1',
+            title: 'Site inspection',
+            category_code: 'repairs',
+            milestone_stages: [savedStage],
+        }} />);
+
+        fireEvent.click(screen.getByRole('button', { name: /continue to visual proof/i }));
+        fireEvent.click(screen.getByRole('button', { name: /continue to work plan/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Customize Work Steps/i }));
+        expect(screen.getByRole('checkbox', { name: 'Require Photo' })).toHaveProperty('checked', true);
+        const location = screen.getByRole('checkbox', { name: 'Require Location coordinates' }).closest('div');
+        expect(location?.querySelector('label input')).toHaveProperty('checked', true);
     });
 
     it('reflects custom workflow created in Work Studio and allows proceeding through listing creation', () => {

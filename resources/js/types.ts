@@ -322,6 +322,8 @@ export type WorkNodeRecord = {
     handoff_party?: 'recipient_confirm' | 'worker_dropoff' | string | null;
     approval_method?: 'app_confirm' | 'presence_otp' | 'worker_dropoff' | 'none' | string;
     required_proofs?: string[];
+    /** Absent on schema 1/2; those nodes permit only their required tools. */
+    permitted_proofs?: string[];
     checklist_items?: Array<{ id: string; label: string; required: boolean }>;
     metric_requirements?: Array<{ id: string; name: string; unit: string; required: boolean; target?: number | null; min?: number | null; max?: number | null }>;
     can_issue_challenge?: boolean;

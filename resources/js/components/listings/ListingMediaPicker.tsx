@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
     Briefcase,
     Camera,
@@ -237,23 +237,22 @@ async function compressImageToWebpThumbnail(file: File): Promise<{
         canvas.width = Math.max(1, Math.round(img.width * scale));
         canvas.height = Math.max(1, Math.round(img.height * scale));
         const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const webpUrl = canvas.toDataURL('image/webp', 0.78);
-            return {
-                fullUrl: webpUrl || objectUrl,
-                thumbnailUrl: webpUrl || objectUrl,
-                sizeBytes: file.size,
-            };
+        if (!ctx) {
+            throw new Error('Image processing is unavailable.');
         }
-    } catch {
-        // Fallback to objectUrl when Image.decode is unavailable
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const webpUrl = canvas.toDataURL('image/webp', 0.78);
+        if (!webpUrl.startsWith('data:image/webp;')) {
+            throw new Error('This browser cannot prepare the photo.');
+        }
+        return {
+            fullUrl: webpUrl,
+            thumbnailUrl: webpUrl,
+            sizeBytes: file.size,
+        };
+    } finally {
+        URL.revokeObjectURL(objectUrl);
     }
-    return {
-        fullUrl: objectUrl,
-        thumbnailUrl: objectUrl,
-        sizeBytes: file.size,
-    };
 }
 
 export function ListingMediaPicker({
@@ -263,6 +262,7 @@ export function ListingMediaPicker({
 }: ListingMediaPickerProps) {
     const photoInputRef = useRef<HTMLInputElement | null>(null);
     const videoInputRef = useRef<HTMLInputElement | null>(null);
+    const [photoError, setPhotoError] = useState<string | null>(null);
 
     const items = media?.items ?? [];
     const photoItems = items.filter((item) => item.kind === 'photo');
@@ -306,22 +306,32 @@ export function ListingMediaPicker({
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files ?? []);
         if (files.length === 0) return;
+        setPhotoError(null);
 
         const added: ListingMediaItem[] = [];
+        const hasOnlyDefaultCover = photoItems.length === 1 && photoItems[0].id.startsWith('media-cover-');
+        const existingItems = hasOnlyDefaultCover ? items.filter((item) => item.id !== photoItems[0].id) : items;
+        const hasExistingPhotos = existingItems.some((item) => item.kind === 'photo');
         for (const file of files.slice(0, 4)) {
-            const compressed = await compressImageToWebpThumbnail(file);
-            added.push({
-                id: `upload-photo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                kind: 'photo',
-                url: compressed.fullUrl,
-                thumbnail_url: compressed.thumbnailUrl,
-                caption: file.name.replace(/\.[^.]+$/, ''),
-                mime_type: 'image/webp',
-                size_bytes: compressed.sizeBytes,
-                is_cover: photoItems.length === 0 && added.length === 0,
-            });
+            try {
+                const compressed = await compressImageToWebpThumbnail(file);
+                added.push({
+                    id: `upload-photo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                    kind: 'photo',
+                    url: compressed.fullUrl,
+                    thumbnail_url: compressed.thumbnailUrl,
+                    caption: file.name.replace(/\.[^.]+$/, ''),
+                    mime_type: 'image/webp',
+                    size_bytes: compressed.sizeBytes,
+                    is_cover: !hasExistingPhotos && added.length === 0,
+                });
+            } catch {
+                setPhotoError('A photo could not be prepared. Try another image or browser.');
+            }
         }
-        onChange(buildNormalizedMedia([...items, ...added]));
+        if (added.length > 0) {
+            onChange(buildNormalizedMedia([...existingItems, ...added]));
+        }
         e.target.value = '';
     };
 
@@ -395,6 +405,7 @@ export function ListingMediaPicker({
                     )}
                 </div>
             </div>
+            {photoError && <p role="alert" className="text-xs text-red-700">{photoError}</p>}
 
             {/* UI Kit Horizontal Upload & Preview Strip (.photos-upload-strip) */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">

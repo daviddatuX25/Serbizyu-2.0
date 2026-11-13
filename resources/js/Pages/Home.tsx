@@ -360,7 +360,6 @@ function Readiness({
     onSubmit: (fields: {
         display_name: string;
         area_code: string;
-        language_code: string;
         low_data_mode: boolean;
         help_preference: string;
     }) => void;
@@ -370,9 +369,6 @@ function Readiness({
     );
     const [areaCode, setAreaCode] = useState(
         readiness.areaCode ?? readiness.area_code ?? readiness.area ?? 'Tagudin',
-    );
-    const [languageCode, setLanguageCode] = useState(
-        readiness.languageCode ?? readiness.language_code ?? readiness.language ?? 'fil',
     );
     const [lowDataMode, setLowDataMode] = useState(
         readiness.lowDataMode ?? readiness.low_data_mode ?? false,
@@ -419,7 +415,6 @@ function Readiness({
                         onSubmit({
                             display_name: displayName,
                             area_code: areaCode,
-                            language_code: languageCode,
                             low_data_mode: lowDataMode,
                             help_preference: helpPreference,
                         });
@@ -444,18 +439,9 @@ function Readiness({
                         value={areaCode}
                         onChange={(event) => setAreaCode(event.target.value)}
                     />
-                    <label className="field-label" htmlFor="language-code">
-                        Language preference
-                    </label>
-                    <select
-                        id="language-code"
-                        className="text-input"
-                        value={languageCode}
-                        onChange={(event) => setLanguageCode(event.target.value)}
-                    >
-                        <option value="fil">Filipino</option>
-                        <option value="en">English</option>
-                    </select>
+                    <p className="text-sm text-slate-600">
+                        Interface language: English. Your saved language preferences are kept.
+                    </p>
                     <label className="check-row" htmlFor="provider-intent">
                         <input
                             id="provider-intent"
@@ -1004,7 +990,6 @@ export default function Home(props: HomeProps) {
     const saveReadiness = (fields: {
         display_name: string;
         area_code: string;
-        language_code: string;
         low_data_mode: boolean;
         help_preference: string;
     }) => {

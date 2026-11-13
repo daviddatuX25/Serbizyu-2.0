@@ -27,6 +27,10 @@ The rebuilt planning chain is founder-approved for planning authority. This does
 authorize production migrations, live payments, production Tiwala, sensitive-ID collection,
 deployment, or genuine Tagudin validation.
 
+For the current synthetic presentation, use the [isolated demo runbook](docs/presentation-demo.md).
+The ordinary `serbizyu` database was affected by a QA incident and must not be migrated,
+reset, seeded, or rolled back as a recovery shortcut; see the runbook before starting.
+
 ## Development
 
 **Docker Compose is the primary run & deploy path** (`compose.yaml`: `db` postgis → `redis` →

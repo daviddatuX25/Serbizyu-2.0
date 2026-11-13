@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, TriangleAlert } from 'lucide-react';
+import { createRequestKey } from '@/lib/requestKey';
 
 type MovementType = 'receiving' | 'damaged' | 'recount';
 type StockItem = {
@@ -49,7 +50,7 @@ const movementTitles: Record<MovementType, string> = {
 };
 
 function newIdempotencyKey(): string {
-    return `stock-${window.crypto.randomUUID()}`;
+    return `stock-${createRequestKey()}`;
 }
 
 export default function StockShow({ stockItem, notice }: { stockItem: StockItem; notice?: string | null }) {

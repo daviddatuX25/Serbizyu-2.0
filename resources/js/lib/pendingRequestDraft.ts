@@ -27,7 +27,7 @@ export interface RequestBuilderDraft {
     budgetMode: 'estimate' | 'exact' | 'undisclosed';
     budgetAmount: number;
     tenderMode: 'open_tender' | 'sealed_tender' | 'direct_invite';
-    paymentLane: 'external_cash' | 'p2p_transfer';
+    paymentLane: 'external_cash' | 'p2p_transfer' | null;
     preferredFulfillment: 'direct' | 'courier' | 'all';
 }
 

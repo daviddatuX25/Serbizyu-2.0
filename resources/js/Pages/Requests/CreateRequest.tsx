@@ -68,6 +68,14 @@ interface WorkSetOption {
         duration_label?: string | null;
         evidence_type?: string;
         evidence_description?: string;
+        required_proofs?: WorkStage['requiredProofs'];
+        permitted_proofs?: WorkStage['permittedProofs'];
+        checklist_items?: WorkStage['checklistItems'];
+        metric_requirements?: WorkStage['metricRequirements'];
+        control_mode?: 'provider_advance' | 'customer_confirm' | 'counterparty_handoff';
+        clearance_mode?: WorkStage['clearanceMode'];
+        approval_method?: WorkStage['approvalMethod'];
+        handoff_party?: WorkStage['handoffParty'];
     }>;
 }
 
@@ -90,6 +98,13 @@ interface CreateRequestProps {
     workCatalog?: unknown;
 }
 
+const getLocalDateString = () => {
+    const date = new Date();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
+};
+
 const DEFAULT_CATEGORIES: CategoryOption[] = [
     { id: 'cat-repairs', code: 'repairs', name: 'Repairs & Appliance Care' },
     { id: 'cat-electrical', code: 'electrical', name: 'Electrical & Power' },
@@ -110,10 +125,7 @@ const CATEGORY_TASK_SUGGESTIONS: Record<string, string[]> = {
         'Prepare fresh food order per recipe specifications',
         'Package securely in clean food-grade containers',
     ],
-    repairs: [
-        'Inspect unit and diagnose root cause',
-        'Replace or repair defective component',
-    ],
+    repairs: ['Inspect unit and diagnose root cause', 'Replace or repair defective component'],
     electrical: [
         'Inspect circuit line and verify voltage safety',
         'Secure loose terminals and replace faulty component',
@@ -417,6 +429,17 @@ function toWorkTemplate(option: WorkSetOption): WorkTemplate {
             desc: step.description,
             evidence: step.evidence_description || step.evidence_type || 'Work evidence',
             evidenceType: step.evidence_type,
+            requiredProofs: step.required_proofs,
+            permittedProofs: step.permitted_proofs,
+            checklistItems: step.checklist_items,
+            metricRequirements: step.metric_requirements,
+            clearanceMode: step.clearance_mode ?? (step.control_mode === 'provider_advance'
+                ? 'worker_direct'
+                : step.control_mode === 'customer_confirm'
+                    ? 'customer_approval'
+                    : step.control_mode === 'counterparty_handoff' ? 'physical_handoff' : undefined),
+            approvalMethod: step.approval_method,
+            handoffParty: step.handoff_party,
             color: '#0F2F58',
             bg: '#EBF2FA',
         })),
@@ -459,7 +482,9 @@ export default function CreateRequest({
 
     const initialTemplate = useMemo(() => {
         return (
-            allWorkTemplates.find((t) => t.categoryCodes?.includes(category) || t.category === category) ??
+            allWorkTemplates.find(
+                (t) => t.categoryCodes?.includes(category) || t.category === category,
+            ) ??
             allWorkTemplates[0] ??
             DEFAULT_WORK_TEMPLATES_BY_CATEGORY['repairs']
         );
@@ -471,8 +496,10 @@ export default function CreateRequest({
     const [customizerModalOpen, setCustomizerModalOpen] = useState(false);
 
     // Step 3: Schedule & Location
-    const [urgency, setUrgency] = useState<'today' | 'this_week' | 'flexible' | 'specific'>('today');
-    const [scheduledDate, setScheduledDate] = useState('2026-10-01');
+    const [urgency, setUrgency] = useState<'today' | 'this_week' | 'flexible' | 'specific'>(
+        'today',
+    );
+    const [scheduledDate, setScheduledDate] = useState(getLocalDateString);
     const [scheduledTimeWindow, setScheduledTimeWindow] = useState('Morning (8am - 12pm)');
     const [area, setArea] = useState('Tagudin Centro');
     const [addressHidden, setAddressHidden] = useState(true);
@@ -480,11 +507,17 @@ export default function CreateRequest({
     // Step 4: Budget & Tender Rules
     const [budgetMode, setBudgetMode] = useState<'estimate' | 'exact' | 'undisclosed'>('exact');
     const [budget, setBudget] = useState('500');
-    const [tenderMode, setTenderMode] = useState<'open_tender' | 'sealed_tender' | 'direct_invite'>('open_tender');
-    const [paymentLane, setPaymentLane] = useState<'external_cash' | 'p2p_transfer'>('external_cash');
+    const [tenderMode, setTenderMode] = useState<'open_tender' | 'sealed_tender' | 'direct_invite'>(
+        'open_tender',
+    );
+    const [paymentLane, setPaymentLane] = useState<'external_cash' | 'p2p_transfer' | null>(
+        'external_cash',
+    );
 
     // Step 5: Fulfillment & Review
-    const [preferredFulfillment, setPreferredFulfillment] = useState<'direct' | 'courier' | 'all'>('direct');
+    const [preferredFulfillment, setPreferredFulfillment] = useState<'direct' | 'courier' | 'all'>(
+        'direct',
+    );
 
     const isAuthenticated = session?.authenticated === true || session?.isAuthenticated === true;
 
@@ -492,7 +525,9 @@ export default function CreateRequest({
     const handleCategoryChange = (newCat: string) => {
         setCategory(newCat);
         const match =
-            allWorkTemplates.find((t) => t.categoryCodes?.includes(newCat) || t.category === newCat) ??
+            allWorkTemplates.find(
+                (t) => t.categoryCodes?.includes(newCat) || t.category === newCat,
+            ) ??
             DEFAULT_WORK_TEMPLATES_BY_CATEGORY[newCat] ??
             DEFAULT_WORK_TEMPLATES_BY_CATEGORY['repairs'];
         setSelectedTemplate(match);
@@ -526,13 +561,15 @@ export default function CreateRequest({
         }
         setAttachPipeline(Boolean(saved.attachPipeline));
         if (Array.isArray(saved.pipelineStages) && saved.pipelineStages.length > 0) {
-            setStages(saved.pipelineStages.map(({ step: savedStep, dur, ...stage }) => ({
-                ...stage,
-                color: stage.color ?? '#0F2F58',
-                bg: stage.bg ?? '#EBF2FA',
-                num: String(savedStep),
-                dur: String(dur),
-            })));
+            setStages(
+                saved.pipelineStages.map(({ step: savedStep, dur, ...stage }) => ({
+                    ...stage,
+                    color: stage.color ?? '#0F2F58',
+                    bg: stage.bg ?? '#EBF2FA',
+                    num: String(savedStep),
+                    dur: String(dur),
+                })),
+            );
         }
         if (saved.urgency) setUrgency(saved.urgency);
         if (saved.scheduledDate) setScheduledDate(saved.scheduledDate);
@@ -542,7 +579,13 @@ export default function CreateRequest({
         if (saved.budgetMode) setBudgetMode(saved.budgetMode);
         if (saved.budgetAmount !== undefined) setBudget(String(saved.budgetAmount));
         if (saved.tenderMode) setTenderMode(saved.tenderMode);
-        if (saved.paymentLane) setPaymentLane(saved.paymentLane);
+        if (saved.paymentLane === 'external_cash' || saved.paymentLane === 'p2p_transfer') {
+            setPaymentLane(saved.paymentLane);
+        } else if (saved.paymentLane === null || saved.paymentLane) {
+            // Retired or unknown payment lanes must not be silently converted to a current choice.
+            setPaymentLane(null);
+            if (saved.builderMode === 'guided' && saved.step > 4) setStep(4);
+        }
         if (saved.preferredFulfillment) setPreferredFulfillment(saved.preferredFulfillment);
     }, []);
 
@@ -612,8 +655,15 @@ export default function CreateRequest({
     // Validation per step
     const canContinueStep1 = title.trim().length >= 3;
     const canContinueStep2 = true; // Scope tasks are optional; citizens can post with summary or attach pipeline
-    const canContinueStep3 = Boolean(area);
-    const canContinueStep4 = budgetMode === 'undisclosed' || parseFloat(budget) > 0;
+    const canContinueStep3 =
+        Boolean(area) &&
+        (urgency !== 'specific' ||
+            (Boolean(scheduledDate) && scheduledDate >= getLocalDateString()));
+    const budgetAmount = Number(budget);
+    const canContinueStep4 =
+        (budgetMode === 'undisclosed' ||
+            (Number.isFinite(budgetAmount) && budgetAmount >= 50 && budgetAmount <= 500000)) &&
+        paymentLane !== null;
 
     const handleNextStep = () => {
         if (step === 1 && !canContinueStep1) {
@@ -638,6 +688,12 @@ export default function CreateRequest({
         if (!title.trim() || title.trim().length < 3) {
             setFormErrors({ title: 'Request title must be at least 3 characters.' });
             setStep(1);
+            return;
+        }
+
+        if (paymentLane === null) {
+            setFormErrors({ payment_lane: 'Choose a current payment option before publishing.' });
+            setStep(4);
             return;
         }
 
@@ -670,8 +726,12 @@ export default function CreateRequest({
                       work_shape: selectedTemplate.shape,
                       catalog_code: selectedTemplate.id,
                       target_sla: selectedTemplate.sla,
-                      stages: stages.map(({ checklistItems, metricRequirements, ...stage }) => ({
+                      stages: stages.map(({ checklistItems, metricRequirements, permittedProofs, requiredProofs, ...stage }) => ({
                           ...stage,
+                          ...(requiredProofs === undefined ? {} : { required_proofs: requiredProofs }),
+                          ...(permittedProofs === undefined
+                              ? {}
+                              : { permitted_proofs: Array.from(new Set([...(requiredProofs ?? []), ...permittedProofs])) }),
                           ...(Array.isArray(checklistItems) ? { checklist_items: checklistItems } : {}),
                           ...(Array.isArray(metricRequirements) ? { metric_requirements: metricRequirements } : {}),
                       })),
@@ -692,7 +752,9 @@ export default function CreateRequest({
                 setIsSubmitting(false);
                 if (errs.title || errs.category_code || errs.description) {
                     setStep(1);
-                } else if (errs.budget_amount || errs.budget_mode) {
+                } else if (errs.scheduled_date || errs.time_window || errs.area) {
+                    setStep(3);
+                } else if (errs.budget_amount || errs.budget_mode || errs.payment_lane) {
                     setStep(4);
                 }
             },
@@ -710,16 +772,16 @@ export default function CreateRequest({
         <div className="space-y-4">
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                    <span className="text-[11px] font-extrabold tracking-wider text-slate-500 uppercase">
                         Citizen Request Preview
                     </span>
                     <span
                         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
                             tenderMode === 'sealed_tender'
-                                ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                                ? 'border border-purple-200 bg-purple-100 text-purple-900'
                                 : tenderMode === 'direct_invite'
-                                  ? 'bg-amber-100 text-amber-900 border border-amber-200'
-                                  : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                                  ? 'border border-amber-200 bg-amber-100 text-amber-900'
+                                  : 'border border-emerald-200 bg-emerald-100 text-emerald-900'
                         }`}
                     >
                         {tenderMode === 'sealed_tender' ? (
@@ -742,7 +804,7 @@ export default function CreateRequest({
                 </div>
 
                 <div className="mt-4 space-y-3">
-                    <h3 className="text-base font-extrabold text-[#0F2F58] leading-snug">
+                    <h3 className="text-base leading-snug font-extrabold text-[#0F2F58]">
                         {title.trim() || 'Untitled Request'}
                     </h3>
 
@@ -753,28 +815,32 @@ export default function CreateRequest({
                         <span className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
                             <MapPin className="size-3 text-slate-400" />
                             <span>{area}</span>
-                            {addressHidden && <span className="text-[9px] text-slate-400 font-semibold">(Coarse)</span>}
+                            {addressHidden && (
+                                <span className="text-[9px] font-semibold text-slate-400">
+                                    (Coarse)
+                                </span>
+                            )}
                         </span>
                     </div>
 
-                    <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-xs text-slate-700 leading-relaxed">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-xs leading-relaxed text-slate-700">
                         {description.trim() || 'No detailed task condition entered yet.'}
                     </div>
 
                     {requirements.length > 0 && (
                         <div className="space-y-1.5 pt-1">
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                            <span className="text-[10px] font-extrabold tracking-wider text-slate-500 uppercase">
                                 Required Tasks ({requirements.length})
                             </span>
                             <ul className="space-y-1 text-xs text-slate-600">
                                 {requirements.slice(0, 3).map((r, i) => (
                                     <li key={i} className="flex items-start gap-1.5">
-                                        <CheckCircle2 className="size-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                                        <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
                                         <span className="line-clamp-1">{r}</span>
                                     </li>
                                 ))}
                                 {requirements.length > 3 && (
-                                    <li className="text-[10px] font-bold text-slate-500 italic pl-5">
+                                    <li className="pl-5 text-[10px] font-bold text-slate-500 italic">
                                         + {requirements.length - 3} more items
                                     </li>
                                 )}
@@ -783,12 +849,14 @@ export default function CreateRequest({
                     )}
 
                     {attachPipeline && (
-                        <div className="rounded-xl border border-teal-200/80 bg-teal-50/60 p-2.5 text-xs text-teal-950 flex items-center justify-between">
+                        <div className="flex items-center justify-between rounded-xl border border-teal-200/80 bg-teal-50/60 p-2.5 text-xs text-teal-950">
                             <div className="flex items-center gap-2">
-                                <ShieldCheck className="size-4 text-teal-600 shrink-0" />
-                                <span className="font-extrabold truncate max-w-[170px]">{selectedTemplate.title}</span>
+                                <ShieldCheck className="size-4 shrink-0 text-teal-600" />
+                                <span className="max-w-[170px] truncate font-extrabold">
+                                    {selectedTemplate.title}
+                                </span>
                             </div>
-                            <span className="font-mono text-[11px] font-bold text-teal-800 shrink-0">
+                            <span className="shrink-0 font-mono text-[11px] font-bold text-teal-800">
                                 {stages.length} Gates · {selectedTemplate.sla || 'Standard'}
                             </span>
                         </div>
@@ -797,14 +865,24 @@ export default function CreateRequest({
                     <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
                             <Clock className="size-3.5 text-slate-400" />
-                            <span className="capitalize">{urgency === 'specific' ? `${scheduledDate}` : urgency.replace('_', ' ')}</span>
+                            <span className="capitalize">
+                                {urgency === 'specific'
+                                    ? `${scheduledDate}`
+                                    : urgency.replace('_', ' ')}
+                            </span>
                         </div>
                         <div className="text-right">
-                            <span className="text-[10px] font-bold uppercase text-slate-400 block">
-                                {budgetMode === 'undisclosed' ? 'Tender Budget' : budgetMode === 'estimate' ? 'Estimated Guide' : 'Exact Budget'}
+                            <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                                {budgetMode === 'undisclosed'
+                                    ? 'Tender Budget'
+                                    : budgetMode === 'estimate'
+                                      ? 'Estimated Guide'
+                                      : 'Exact Budget'}
                             </span>
                             <span className="font-mono text-base font-extrabold text-[#0F2F58]">
-                                {budgetMode === 'undisclosed' ? 'Undisclosed' : `₱${parseFloat(budget || '0').toFixed(2)}`}
+                                {budgetMode === 'undisclosed'
+                                    ? 'Undisclosed'
+                                    : `₱${parseFloat(budget || '0').toFixed(2)}`}
                             </span>
                         </div>
                     </div>
@@ -814,28 +892,29 @@ export default function CreateRequest({
     );
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 pb-20">
+        <div className="min-h-screen bg-[#F8FAFC] pb-20 font-['Plus_Jakarta_Sans',sans-serif] text-slate-900">
             <DesktopGlobalNav />
 
-            <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8 space-y-5">
+            <div className="mx-auto max-w-6xl space-y-5 px-4 py-4 sm:px-6 lg:px-8">
                 {/* STICKY TOP BUILDER HEADER */}
-                <header className="sticky top-0 z-30 flex items-center justify-between rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-3 shadow-xs backdrop-blur-md">
-                    <div className="flex items-center gap-3 min-w-0">
+                <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-1 rounded-2xl border border-slate-200/90 bg-white/95 px-2 py-3 shadow-xs backdrop-blur-md sm:flex-nowrap sm:px-4">
+                    <div className="flex min-w-0 shrink-0 items-center gap-1 sm:shrink sm:gap-3">
                         <Link
                             href="/browse"
-                            className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+                            className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:bg-slate-50 active:scale-95"
                             title="Back to Browse"
                         >
                             <ArrowLeft className="size-4" />
                         </Link>
-                        <div className="min-w-0">
+                        <div className="sr-only min-w-0 sm:not-sr-only">
                             <div className="flex items-center gap-2">
-                                <h1 className="text-sm font-extrabold text-[#0F2F58] sm:text-base truncate">
+                                <h1 className="truncate text-sm font-extrabold text-[#0F2F58] sm:text-base">
                                     Custom Request Builder
                                 </h1>
                                 {builderMode === 'guided' ? (
                                     <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-extrabold text-blue-900">
-                                        Step {step} of 5 · {REQUEST_GUIDED_STEPS[step - 1]?.shortTitle}
+                                        Step {step} of 5 ·{' '}
+                                        {REQUEST_GUIDED_STEPS[step - 1]?.shortTitle}
                                     </span>
                                 ) : (
                                     <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
@@ -847,7 +926,7 @@ export default function CreateRequest({
                     </div>
 
                     {/* Mode Switcher */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                         <div
                             className="flex shrink-0 items-center gap-1 rounded-xl border border-slate-200/70 bg-slate-100 p-0.5"
                             data-testid="builder-mode-switcher"
@@ -855,7 +934,7 @@ export default function CreateRequest({
                             <button
                                 type="button"
                                 onClick={() => setBuilderMode('guided')}
-                                className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                                className={`flex cursor-pointer items-center gap-1 rounded-lg px-1.5 py-1 text-xs font-bold transition-all sm:px-2.5 ${
                                     builderMode === 'guided'
                                         ? 'bg-white text-[#0F2F58] shadow-xs'
                                         : 'text-slate-600 hover:text-slate-900'
@@ -867,7 +946,7 @@ export default function CreateRequest({
                             <button
                                 type="button"
                                 onClick={() => setBuilderMode('standard')}
-                                className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                                className={`flex cursor-pointer items-center gap-1 rounded-lg px-1.5 py-1 text-xs font-bold transition-all sm:px-2.5 ${
                                     builderMode === 'standard'
                                         ? 'bg-[#0F2F58] text-white shadow-xs'
                                         : 'text-slate-600 hover:text-slate-900'
@@ -882,7 +961,7 @@ export default function CreateRequest({
                         <button
                             type="button"
                             onClick={() => setMobilePreviewOpen(true)}
-                            className="lg:hidden flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 cursor-pointer shrink-0"
+                            className="flex shrink-0 cursor-pointer items-center gap-1 rounded-xl border border-slate-200 bg-white px-1.5 py-1 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 sm:px-2.5 lg:hidden"
                             title="Preview Citizen View"
                         >
                             <Eye className="size-3.5 text-blue-600" />
@@ -893,7 +972,7 @@ export default function CreateRequest({
 
                 {/* Guided Mode Progress Bar */}
                 {builderMode === 'guided' && (
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-slate-200/70 -mt-2">
+                    <div className="-mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-200/70">
                         <div
                             className="h-full bg-blue-600 transition-all duration-300 ease-out"
                             style={{ width: `${(step / 5) * 100}%` }}
@@ -902,9 +981,9 @@ export default function CreateRequest({
                 )}
 
                 {/* Main 2-Column Layout */}
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
+                <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
                     {/* LEFT COLUMN: Request Form (7 Cols) */}
-                    <main className="rounded-2xl border border-slate-200/80 bg-white p-5 lg:col-span-7 lg:p-7 shadow-xs space-y-6">
+                    <main className="space-y-6 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs lg:col-span-7 lg:p-7">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* STEP 1: Need & Category */}
                             {(builderMode === 'standard' || step === 1) && (
@@ -914,13 +993,13 @@ export default function CreateRequest({
                                             <h2 className="text-lg font-extrabold text-[#0F2F58]">
                                                 {REQUEST_GUIDED_STEPS[0].guidedTitle}
                                             </h2>
-                                            <p className="text-xs text-slate-500 leading-relaxed">
+                                            <p className="text-xs leading-relaxed text-slate-500">
                                                 {REQUEST_GUIDED_STEPS[0].guidedDescription}
                                             </p>
                                         </div>
                                     ) : (
                                         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                            <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
+                                            <h2 className="text-sm font-extrabold tracking-wider text-slate-800 uppercase">
                                                 1. {REQUEST_GUIDED_STEPS[0].standardTitle}
                                             </h2>
                                         </div>
@@ -929,10 +1008,17 @@ export default function CreateRequest({
                                     {/* Request Title */}
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
-                                            <label htmlFor="req-title" className="text-xs font-bold text-slate-700">
-                                                Request Summary / Title <span className="text-red-500">*</span>
+                                            <label
+                                                htmlFor="req-title"
+                                                className="text-xs font-bold text-slate-700"
+                                            >
+                                                Request Summary / Title{' '}
+                                                <span className="text-red-500">*</span>
                                             </label>
-                                            <FieldGuide guidance={REQUEST_FIELD_GUIDANCE.title.guidance} mode={builderMode} />
+                                            <FieldGuide
+                                                guidance={REQUEST_FIELD_GUIDANCE.title.guidance}
+                                                mode={builderMode}
+                                            />
                                         </div>
                                         <input
                                             id="req-title"
@@ -943,14 +1029,14 @@ export default function CreateRequest({
                                             onChange={(e) => setTitle(e.target.value)}
                                             placeholder={REQUEST_FIELD_GUIDANCE.title.placeholder}
                                             maxLength={120}
-                                            className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+                                            className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-hidden"
                                         />
                                         <div className="flex justify-between text-[11px] text-slate-400">
                                             <span>Be specific about the issue and location</span>
                                             <span>{title.length}/120</span>
                                         </div>
                                         {formErrors.title && (
-                                            <p className="text-xs font-bold text-red-600 flex items-center gap-1">
+                                            <p className="flex items-center gap-1 text-xs font-bold text-red-600">
                                                 <AlertCircle className="size-3.5" />
                                                 {formErrors.title}
                                             </p>
@@ -960,10 +1046,16 @@ export default function CreateRequest({
                                     {/* Category Selector */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <label htmlFor="req-category" className="text-xs font-bold text-slate-700">
+                                            <label
+                                                htmlFor="req-category"
+                                                className="text-xs font-bold text-slate-700"
+                                            >
                                                 Trade Category
                                             </label>
-                                            <FieldGuide guidance={REQUEST_FIELD_GUIDANCE.category.guidance} mode={builderMode} />
+                                            <FieldGuide
+                                                guidance={REQUEST_FIELD_GUIDANCE.category.guidance}
+                                                mode={builderMode}
+                                            />
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             {categories.map((c) => (
@@ -971,7 +1063,7 @@ export default function CreateRequest({
                                                     key={c.code}
                                                     type="button"
                                                     onClick={() => handleCategoryChange(c.code)}
-                                                    className={`rounded-xl border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                                                    className={`cursor-pointer rounded-xl border px-3 py-1.5 text-xs font-bold transition-all ${
                                                         category === c.code
                                                             ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-2xs'
                                                             : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -986,10 +1078,18 @@ export default function CreateRequest({
                                     {/* Description */}
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
-                                            <label htmlFor="req-description" className="text-xs font-bold text-slate-700">
+                                            <label
+                                                htmlFor="req-description"
+                                                className="text-xs font-bold text-slate-700"
+                                            >
                                                 Problem Details & Conditions
                                             </label>
-                                            <FieldGuide guidance={REQUEST_FIELD_GUIDANCE.description.guidance} mode={builderMode} />
+                                            <FieldGuide
+                                                guidance={
+                                                    REQUEST_FIELD_GUIDANCE.description.guidance
+                                                }
+                                                mode={builderMode}
+                                            />
                                         </div>
                                         <textarea
                                             id="req-description"
@@ -997,11 +1097,14 @@ export default function CreateRequest({
                                             rows={3}
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
-                                            placeholder={REQUEST_FIELD_GUIDANCE.description.placeholder}
-                                            className="w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 leading-relaxed"
+                                            placeholder={
+                                                REQUEST_FIELD_GUIDANCE.description.placeholder
+                                            }
+                                            className="w-full rounded-xl border border-slate-200 p-3 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-hidden"
                                         />
                                         <span className="text-[11px] text-slate-400">
-                                            Minimum 10 characters. Describe symptoms or materials you already have.
+                                            Minimum 10 characters. Describe symptoms or materials
+                                            you already have.
                                         </span>
                                     </div>
 
@@ -1011,7 +1114,7 @@ export default function CreateRequest({
                                                 type="button"
                                                 onClick={handleNextStep}
                                                 disabled={!canContinueStep1}
-                                                className="flex items-center gap-1.5 rounded-xl bg-[#0F2F58] px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#1a447c] active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                                                className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0F2F58] px-5 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#1a447c] active:scale-95 disabled:opacity-50"
                                             >
                                                 <span>Continue to Scope</span>
                                                 <ArrowRight className="size-4" />
@@ -1023,19 +1126,19 @@ export default function CreateRequest({
 
                             {/* STEP 2: Scope & Governed Pipeline */}
                             {(builderMode === 'standard' || step === 2) && (
-                                <section className="space-y-4 pt-4 border-t border-slate-100">
+                                <section className="space-y-4 border-t border-slate-100 pt-4">
                                     {builderMode === 'guided' ? (
                                         <div className="space-y-1">
                                             <h2 className="text-lg font-extrabold text-[#0F2F58]">
                                                 {REQUEST_GUIDED_STEPS[1].guidedTitle}
                                             </h2>
-                                            <p className="text-xs text-slate-500 leading-relaxed">
+                                            <p className="text-xs leading-relaxed text-slate-500">
                                                 {REQUEST_GUIDED_STEPS[1].guidedDescription}
                                             </p>
                                         </div>
                                     ) : (
                                         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                            <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
+                                            <h2 className="text-sm font-extrabold tracking-wider text-slate-800 uppercase">
                                                 2. {REQUEST_GUIDED_STEPS[1].standardTitle}
                                             </h2>
                                         </div>
@@ -1044,14 +1147,14 @@ export default function CreateRequest({
                                     {/* Scope Checklist */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <label className="text-xs font-bold text-slate-700 block">
+                                            <label className="block text-xs font-bold text-slate-700">
                                                 Scope Checklist (Deliverables)
                                             </label>
                                             {requirements.length > 0 && (
                                                 <button
                                                     type="button"
                                                     onClick={() => setRequirements([])}
-                                                    className="text-[11px] font-semibold text-slate-400 hover:text-red-600 cursor-pointer"
+                                                    className="cursor-pointer text-[11px] font-semibold text-slate-400 hover:text-red-600"
                                                 >
                                                     Clear All
                                                 </button>
@@ -1059,19 +1162,29 @@ export default function CreateRequest({
                                         </div>
 
                                         {requirements.length === 0 ? (
-                                            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-3.5 text-center space-y-2">
-                                                <p className="text-[11px] text-slate-500 font-medium">
-                                                    No specific tasks added yet. Add custom tasks below or load suggested deliverables for {categoryName}.
+                                            <div className="space-y-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-3.5 text-center">
+                                                <p className="text-[11px] font-medium text-slate-500">
+                                                    No specific tasks added yet. Add custom tasks
+                                                    below or load suggested deliverables for{' '}
+                                                    {categoryName}.
                                                 </p>
                                                 {CATEGORY_TASK_SUGGESTIONS[category] && (
                                                     <button
                                                         type="button"
                                                         data-testid="load-suggested-tasks-btn"
-                                                        onClick={() => setRequirements([...CATEGORY_TASK_SUGGESTIONS[category]])}
-                                                        className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-900 hover:bg-blue-100 transition-colors cursor-pointer"
+                                                        onClick={() =>
+                                                            setRequirements([
+                                                                ...CATEGORY_TASK_SUGGESTIONS[
+                                                                    category
+                                                                ],
+                                                            ])
+                                                        }
+                                                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-900 transition-colors hover:bg-blue-100"
                                                     >
                                                         <Sparkles className="size-3.5 text-amber-500" />
-                                                        <span>Load Suggested Tasks for {categoryName}</span>
+                                                        <span>
+                                                            Load Suggested Tasks for {categoryName}
+                                                        </span>
                                                     </button>
                                                 )}
                                             </div>
@@ -1082,7 +1195,7 @@ export default function CreateRequest({
                                                         key={idx}
                                                         className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-semibold text-slate-800"
                                                     >
-                                                        <div className="flex items-center gap-2 min-w-0">
+                                                        <div className="flex min-w-0 items-center gap-2">
                                                             <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-extrabold text-blue-900">
                                                                 {idx + 1}
                                                             </span>
@@ -1091,7 +1204,7 @@ export default function CreateRequest({
                                                         <button
                                                             type="button"
                                                             onClick={() => removeRequirement(idx)}
-                                                            className="text-slate-400 hover:text-red-600 p-1 cursor-pointer transition-colors"
+                                                            className="cursor-pointer p-1 text-slate-400 transition-colors hover:text-red-600"
                                                             title="Remove task"
                                                         >
                                                             <Trash2 className="size-3.5" />
@@ -1105,7 +1218,9 @@ export default function CreateRequest({
                                             <input
                                                 type="text"
                                                 value={newRequirementText}
-                                                onChange={(e) => setNewRequirementText(e.target.value)}
+                                                onChange={(e) =>
+                                                    setNewRequirementText(e.target.value)
+                                                }
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         e.preventDefault();
@@ -1119,7 +1234,7 @@ export default function CreateRequest({
                                                 type="button"
                                                 data-testid="add-requirement-btn"
                                                 onClick={addRequirement}
-                                                className="flex items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900 hover:bg-blue-100 cursor-pointer"
+                                                className="flex cursor-pointer items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900 hover:bg-blue-100"
                                             >
                                                 <Plus className="size-3.5" />
                                                 <span>Add</span>
@@ -1128,20 +1243,26 @@ export default function CreateRequest({
                                     </div>
 
                                     {/* Governed Pipeline Toggle & Full-Fledged Nominal Interface */}
-                                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+                                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                                         <div className="flex items-center justify-between">
                                             <div className="space-y-0.5">
                                                 <div className="flex items-center gap-2">
                                                     <label
                                                         htmlFor="pipeline-toggle"
-                                                        className="text-xs font-extrabold text-[#0F2F58] cursor-pointer"
+                                                        className="cursor-pointer text-xs font-extrabold text-[#0F2F58]"
                                                     >
                                                         Attach Governed Work Pipeline
                                                     </label>
-                                                    <FieldGuide guidance={REQUEST_FIELD_GUIDANCE.pipeline.guidance} mode={builderMode} />
+                                                    <FieldGuide
+                                                        guidance={
+                                                            REQUEST_FIELD_GUIDANCE.pipeline.guidance
+                                                        }
+                                                        mode={builderMode}
+                                                    />
                                                 </div>
                                                 <p className="text-[11px] text-slate-500">
-                                                    Standard catalog template with milestone SLAs and photographic evidence gates.
+                                                    Standard catalog template with milestone SLAs
+                                                    and photographic evidence gates.
                                                 </p>
                                             </div>
                                             <input
@@ -1149,13 +1270,15 @@ export default function CreateRequest({
                                                 data-testid="attach-pipeline-toggle"
                                                 type="checkbox"
                                                 checked={attachPipeline}
-                                                onChange={(e) => setAttachPipeline(e.target.checked)}
-                                                className="size-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                onChange={(e) =>
+                                                    setAttachPipeline(e.target.checked)
+                                                }
+                                                className="size-4.5 cursor-pointer rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                                             />
                                         </div>
 
                                         {attachPipeline && (
-                                            <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs pt-3">
+                                            <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3.5 pt-3 shadow-2xs">
                                                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                                     <div className="flex min-w-0 flex-1 items-center gap-2.5">
                                                         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF2FA] text-[#0F2F58]">
@@ -1169,10 +1292,13 @@ export default function CreateRequest({
                                                                 <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-800">
                                                                     Shape: {selectedTemplate.shape}
                                                                 </span>
-                                                                <span className="text-[10px] text-slate-500">{stages.length} steps</span>
+                                                                <span className="text-[10px] text-slate-500">
+                                                                    {stages.length} steps
+                                                                </span>
                                                                 {selectedTemplate.sla && (
                                                                     <span className="text-[10px] font-semibold text-slate-500">
-                                                                        · {selectedTemplate.sla} target SLA
+                                                                        · {selectedTemplate.sla}{' '}
+                                                                        target SLA
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -1184,18 +1310,22 @@ export default function CreateRequest({
                                                             type="button"
                                                             data-testid="browse-work-templates-btn"
                                                             onClick={() => setWorkModalOpen(true)}
-                                                            className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-2xs"
+                                                            className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50"
                                                         >
                                                             <span>Browse Work Sets ▾</span>
                                                         </button>
                                                         <button
                                                             type="button"
                                                             data-testid="customize-work-stages-btn"
-                                                            onClick={() => setCustomizerModalOpen(true)}
+                                                            onClick={() =>
+                                                                setCustomizerModalOpen(true)
+                                                            }
                                                             className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#0F2F58] px-3 py-1.5 text-xs font-extrabold text-white shadow-2xs hover:bg-[#153e74]"
                                                         >
                                                             <Sliders className="size-3 text-[#FFC72C]" />
-                                                            <span>Customize Steps ({stages.length})</span>
+                                                            <span>
+                                                                Customize Steps ({stages.length})
+                                                            </span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1204,8 +1334,12 @@ export default function CreateRequest({
                                                 <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-slate-50/50 p-2.5">
                                                     <WorkPipelineCanvas
                                                         stages={stages}
-                                                        flowType={selectedTemplate.flowType || 'linear'}
-                                                        onStageClick={() => setCustomizerModalOpen(true)}
+                                                        flowType={
+                                                            selectedTemplate.flowType || 'linear'
+                                                        }
+                                                        onStageClick={() =>
+                                                            setCustomizerModalOpen(true)
+                                                        }
                                                     />
                                                 </div>
                                             </div>
@@ -1226,7 +1360,7 @@ export default function CreateRequest({
                                                 type="button"
                                                 onClick={handleNextStep}
                                                 disabled={!canContinueStep2}
-                                                className="flex items-center gap-1.5 rounded-xl bg-[#0F2F58] px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#1a447c] active:scale-95 transition-all disabled:opacity-50"
+                                                className="flex items-center gap-1.5 rounded-xl bg-[#0F2F58] px-5 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#1a447c] active:scale-95 disabled:opacity-50"
                                             >
                                                 <span>Continue to Schedule</span>
                                                 <ArrowRight className="size-4" />
@@ -1238,19 +1372,19 @@ export default function CreateRequest({
 
                             {/* STEP 3: Schedule & Location */}
                             {(builderMode === 'standard' || step === 3) && (
-                                <section className="space-y-4 pt-4 border-t border-slate-100">
+                                <section className="space-y-4 border-t border-slate-100 pt-4">
                                     {builderMode === 'guided' ? (
                                         <div className="space-y-1">
                                             <h2 className="text-lg font-extrabold text-[#0F2F58]">
                                                 {REQUEST_GUIDED_STEPS[2].guidedTitle}
                                             </h2>
-                                            <p className="text-xs text-slate-500 leading-relaxed">
+                                            <p className="text-xs leading-relaxed text-slate-500">
                                                 {REQUEST_GUIDED_STEPS[2].guidedDescription}
                                             </p>
                                         </div>
                                     ) : (
                                         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                            <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
+                                            <h2 className="text-sm font-extrabold tracking-wider text-slate-800 uppercase">
                                                 3. {REQUEST_GUIDED_STEPS[2].standardTitle}
                                             </h2>
                                         </div>
@@ -1262,9 +1396,12 @@ export default function CreateRequest({
                                             <label className="text-xs font-bold text-slate-700">
                                                 Urgency &amp; Timing
                                             </label>
-                                            <FieldGuide guidance={REQUEST_FIELD_GUIDANCE.timing.guidance} mode={builderMode} />
+                                            <FieldGuide
+                                                guidance={REQUEST_FIELD_GUIDANCE.timing.guidance}
+                                                mode={builderMode}
+                                            />
                                         </div>
-                                        <div className="grid grid-cols-3 gap-2">
+                                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                                             {[
                                                 { id: 'today', label: 'Urgent (Today)' },
                                                 { id: 'this_week', label: 'Flexible This Week' },
@@ -1273,8 +1410,11 @@ export default function CreateRequest({
                                                 <button
                                                     key={opt.id}
                                                     type="button"
-                                                    onClick={() => setUrgency(opt.id as typeof urgency)}
-                                                    className={`rounded-xl border p-2.5 text-xs font-bold transition-all text-center cursor-pointer ${
+                                                    aria-pressed={urgency === opt.id}
+                                                    onClick={() =>
+                                                        setUrgency(opt.id as typeof urgency)
+                                                    }
+                                                    className={`cursor-pointer rounded-xl border p-2.5 text-center text-xs font-bold transition-all ${
                                                         urgency === opt.id
                                                             ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-2xs'
                                                             : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -1286,24 +1426,53 @@ export default function CreateRequest({
                                         </div>
 
                                         {urgency === 'specific' && (
-                                            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
+                                            <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                                                 <div className="flex items-center gap-2">
                                                     <Calendar className="size-4 text-blue-600" />
                                                     <input
                                                         type="date"
+                                                        aria-label="Requested date"
                                                         data-testid="schedule-date-input"
+                                                        min={getLocalDateString()}
                                                         value={scheduledDate}
-                                                        onChange={(e) => setScheduledDate(e.target.value)}
+                                                        onChange={(e) =>
+                                                            setScheduledDate(e.target.value)
+                                                        }
                                                         className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800"
                                                     />
                                                 </div>
-                                                <div className="flex gap-2">
-                                                    {['Morning (8am - 12pm)', 'Afternoon (1pm - 5pm)', 'Anytime that day'].map((win) => (
+                                                {(!scheduledDate ||
+                                                    scheduledDate < getLocalDateString()) && (
+                                                    <p
+                                                        role="alert"
+                                                        className="text-xs font-semibold text-red-700"
+                                                    >
+                                                        Choose today or a future date.
+                                                    </p>
+                                                )}
+                                                {(formErrors.scheduled_date ||
+                                                    formErrors.time_window) && (
+                                                    <p
+                                                        role="alert"
+                                                        className="text-xs font-semibold text-red-700"
+                                                    >
+                                                        {formErrors.scheduled_date ||
+                                                            formErrors.time_window}
+                                                    </p>
+                                                )}
+                                                <div className="flex flex-wrap gap-2">
+                                                    {[
+                                                        'Morning (8am - 12pm)',
+                                                        'Afternoon (1pm - 5pm)',
+                                                        'Anytime that day',
+                                                    ].map((win) => (
                                                         <button
                                                             key={win}
                                                             type="button"
-                                                            onClick={() => setScheduledTimeWindow(win)}
-                                                            className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold ${
+                                                            onClick={() =>
+                                                                setScheduledTimeWindow(win)
+                                                            }
+                                                            className={`min-h-9 rounded-lg border px-2.5 py-1 text-[11px] font-bold ${
                                                                 scheduledTimeWindow === win
                                                                     ? 'border-blue-600 bg-blue-100/70 text-blue-900'
                                                                     : 'border-slate-200 bg-white text-slate-600'
@@ -1320,10 +1489,16 @@ export default function CreateRequest({
                                     {/* Location / Barangay */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <label htmlFor="req-area" className="text-xs font-bold text-slate-700">
+                                            <label
+                                                htmlFor="req-area"
+                                                className="text-xs font-bold text-slate-700"
+                                            >
                                                 Barangay / Location
                                             </label>
-                                            <FieldGuide guidance={REQUEST_FIELD_GUIDANCE.location.guidance} mode={builderMode} />
+                                            <FieldGuide
+                                                guidance={REQUEST_FIELD_GUIDANCE.location.guidance}
+                                                mode={builderMode}
+                                            />
                                         </div>
                                         <select
                                             id="req-area"
@@ -1332,19 +1507,27 @@ export default function CreateRequest({
                                             onChange={(e) => setArea(e.target.value)}
                                             className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:border-blue-500 focus:outline-hidden"
                                         >
-                                            <option value="Tagudin Centro">Barangay Tagudin Centro</option>
+                                            <option value="Tagudin Centro">
+                                                Barangay Tagudin Centro
+                                            </option>
                                             {TAGUDIN_BARANGAYS_43.map((bg) => (
                                                 <option key={bg.code} value={bg.name}>
                                                     Barangay {bg.name}
                                                 </option>
                                             ))}
                                         </select>
+                                        {formErrors.area && (
+                                            <p role="alert" className="text-xs font-semibold text-red-700">
+                                                {formErrors.area}
+                                            </p>
+                                        )}
 
                                         {/* Privacy Notice */}
-                                        <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-2.5 text-xs text-blue-950 flex items-center gap-2">
-                                            <Lock className="size-3.5 text-blue-600 shrink-0" />
+                                        <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50/60 p-2.5 text-xs text-blue-950">
+                                            <Lock className="size-3.5 shrink-0 text-blue-600" />
                                             <span className="text-[11px] font-semibold text-blue-900">
-                                                Only your barangay is visible during bidding. Street address is released upon award.
+                                                Only your barangay is visible during bidding. Street
+                                                address is released upon award.
                                             </span>
                                         </div>
                                     </div>
@@ -1363,7 +1546,7 @@ export default function CreateRequest({
                                                 type="button"
                                                 onClick={handleNextStep}
                                                 disabled={!canContinueStep3}
-                                                className="flex items-center gap-1.5 rounded-xl bg-[#0F2F58] px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#1a447c] active:scale-95 transition-all disabled:opacity-50"
+                                                className="flex items-center gap-1.5 rounded-xl bg-[#0F2F58] px-5 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#1a447c] active:scale-95 disabled:opacity-50"
                                             >
                                                 <span>Continue to Budget &amp; Rules</span>
                                                 <ArrowRight className="size-4" />
@@ -1375,19 +1558,19 @@ export default function CreateRequest({
 
                             {/* STEP 4: Budget & Tender Rules */}
                             {(builderMode === 'standard' || step === 4) && (
-                                <section className="space-y-4 pt-4 border-t border-slate-100">
+                                <section className="space-y-4 border-t border-slate-100 pt-4">
                                     {builderMode === 'guided' ? (
                                         <div className="space-y-1">
                                             <h2 className="text-lg font-extrabold text-[#0F2F58]">
                                                 {REQUEST_GUIDED_STEPS[3].guidedTitle}
                                             </h2>
-                                            <p className="text-xs text-slate-500 leading-relaxed">
+                                            <p className="text-xs leading-relaxed text-slate-500">
                                                 {REQUEST_GUIDED_STEPS[3].guidedDescription}
                                             </p>
                                         </div>
                                     ) : (
                                         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                            <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
+                                            <h2 className="text-sm font-extrabold tracking-wider text-slate-800 uppercase">
                                                 4. {REQUEST_GUIDED_STEPS[3].standardTitle}
                                             </h2>
                                         </div>
@@ -1399,9 +1582,15 @@ export default function CreateRequest({
                                             <label className="text-xs font-bold text-slate-700">
                                                 Budget Semantics
                                             </label>
-                                            <FieldGuide guidance={REQUEST_FIELD_GUIDANCE.budget.guidance} mode={builderMode} />
+                                            <FieldGuide
+                                                guidance={REQUEST_FIELD_GUIDANCE.budget.guidance}
+                                                mode={builderMode}
+                                            />
                                         </div>
-                                        <div className="grid grid-cols-3 gap-2" data-testid="budget-mode-switcher">
+                                        <div
+                                            className="grid grid-cols-3 gap-2"
+                                            data-testid="budget-mode-switcher"
+                                        >
                                             {[
                                                 { id: 'estimate', label: 'Need Estimate' },
                                                 { id: 'exact', label: 'Exact Budget' },
@@ -1410,8 +1599,11 @@ export default function CreateRequest({
                                                 <button
                                                     key={bm.id}
                                                     type="button"
-                                                    onClick={() => setBudgetMode(bm.id as typeof budgetMode)}
-                                                    className={`rounded-xl border p-2 text-xs font-bold text-center cursor-pointer transition-all ${
+                                                    aria-pressed={budgetMode === bm.id}
+                                                    onClick={() =>
+                                                        setBudgetMode(bm.id as typeof budgetMode)
+                                                    }
+                                                    className={`cursor-pointer rounded-xl border p-2 text-center text-xs font-bold transition-all ${
                                                         budgetMode === bm.id
                                                             ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-2xs'
                                                             : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -1436,8 +1628,20 @@ export default function CreateRequest({
                                                     value={budget}
                                                     onChange={(e) => setBudget(e.target.value)}
                                                     placeholder="500.00"
-                                                    className="w-full rounded-xl border border-slate-200 pl-8 pr-3.5 py-2.5 text-sm font-mono font-bold text-slate-900 focus:border-blue-500 focus:outline-hidden"
+                                                    className="w-full rounded-xl border border-slate-200 py-2.5 pr-3.5 pl-8 font-mono text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-hidden"
                                                 />
+                                                {(!Number.isFinite(budgetAmount) ||
+                                                    budgetAmount < 50 ||
+                                                    budgetAmount > 500000 ||
+                                                    formErrors.budget_amount) && (
+                                                    <p
+                                                        role="alert"
+                                                        className="mt-1 text-xs font-semibold text-red-700"
+                                                    >
+                                                        {formErrors.budget_amount ||
+                                                            'Enter an amount from ₱50 to ₱500,000.'}
+                                                    </p>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -1448,42 +1652,54 @@ export default function CreateRequest({
                                             <label className="text-xs font-bold text-slate-700">
                                                 Tender Privacy Mode
                                             </label>
-                                            <FieldGuide guidance={REQUEST_FIELD_GUIDANCE.tenderMode.guidance} mode={builderMode} />
+                                            <FieldGuide
+                                                guidance={
+                                                    REQUEST_FIELD_GUIDANCE.tenderMode.guidance
+                                                }
+                                                mode={builderMode}
+                                            />
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5" data-testid="tender-mode-switcher">
+                                        <div
+                                            className="grid grid-cols-1 gap-2.5 sm:grid-cols-2"
+                                            data-testid="tender-mode-switcher"
+                                        >
                                             <button
                                                 type="button"
+                                                aria-pressed={tenderMode === 'open_tender'}
                                                 onClick={() => setTenderMode('open_tender')}
-                                                className={`rounded-xl border p-3 text-left space-y-1 cursor-pointer transition-all ${
+                                                className={`cursor-pointer space-y-1 rounded-xl border p-3 text-left transition-all ${
                                                     tenderMode === 'open_tender'
                                                         ? 'border-blue-600 bg-blue-50/70 text-blue-950 ring-2 ring-blue-500/20'
                                                         : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                                                 }`}
                                             >
-                                                <div className="flex items-center gap-1.5 font-extrabold text-xs">
+                                                <div className="flex items-center gap-1.5 text-xs font-extrabold">
                                                     <Unlock className="size-3.5 text-blue-600" />
                                                     <span>Open Tender</span>
                                                 </div>
-                                                <p className="text-[11px] text-slate-500 leading-tight">
-                                                    Public discovery. Providers see that others have bid and propose competitive offers.
+                                                <p className="text-[11px] leading-tight text-slate-500">
+                                                    Public discovery. Providers see that others have
+                                                    bid and propose competitive offers.
                                                 </p>
                                             </button>
 
                                             <button
                                                 type="button"
+                                                aria-pressed={tenderMode === 'sealed_tender'}
                                                 onClick={() => setTenderMode('sealed_tender')}
-                                                className={`rounded-xl border p-3 text-left space-y-1 cursor-pointer transition-all ${
+                                                className={`cursor-pointer space-y-1 rounded-xl border p-3 text-left transition-all ${
                                                     tenderMode === 'sealed_tender'
                                                         ? 'border-purple-600 bg-purple-50/70 text-purple-950 ring-2 ring-purple-500/20'
                                                         : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                                                 }`}
                                             >
-                                                <div className="flex items-center gap-1.5 font-extrabold text-xs">
+                                                <div className="flex items-center gap-1.5 text-xs font-extrabold">
                                                     <Lock className="size-3.5 text-purple-600" />
                                                     <span>Sealed Bidding</span>
                                                 </div>
-                                                <p className="text-[11px] text-slate-500 leading-tight">
-                                                    Blind proposals. Competitor quotes remain confidential until close.
+                                                <p className="text-[11px] leading-tight text-slate-500">
+                                                    Blind proposals. Competitor quotes remain
+                                                    confidential until close.
                                                 </p>
                                             </button>
                                         </div>
@@ -1491,14 +1707,15 @@ export default function CreateRequest({
 
                                     {/* Payment Lane */}
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700 block">
+                                        <label className="block text-xs font-bold text-slate-700">
                                             Payment Lane
                                         </label>
                                         <div className="grid grid-cols-2 gap-2">
                                             <button
                                                 type="button"
+                                                aria-pressed={paymentLane === 'external_cash'}
                                                 onClick={() => setPaymentLane('external_cash')}
-                                                className={`rounded-xl border p-2.5 text-xs font-bold text-center cursor-pointer transition-all ${
+                                                className={`cursor-pointer rounded-xl border p-2.5 text-center text-xs font-bold transition-all ${
                                                     paymentLane === 'external_cash'
                                                         ? 'border-blue-600 bg-blue-50 text-blue-900'
                                                         : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -1508,8 +1725,9 @@ export default function CreateRequest({
                                             </button>
                                             <button
                                                 type="button"
+                                                aria-pressed={paymentLane === 'p2p_transfer'}
                                                 onClick={() => setPaymentLane('p2p_transfer')}
-                                                className={`rounded-xl border p-2.5 text-xs font-bold text-center cursor-pointer transition-all ${
+                                                className={`cursor-pointer rounded-xl border p-2.5 text-center text-xs font-bold transition-all ${
                                                     paymentLane === 'p2p_transfer'
                                                         ? 'border-blue-600 bg-blue-50 text-blue-900'
                                                         : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -1518,6 +1736,21 @@ export default function CreateRequest({
                                                 GCash / Maya (P2P)
                                             </button>
                                         </div>
+                                        {formErrors.payment_lane && (
+                                            <p
+                                                role="alert"
+                                                className="text-xs font-semibold text-red-700"
+                                            >
+                                                {formErrors.payment_lane}
+                                            </p>
+                                        )}
+                                        {paymentLane === null && (
+                                            <p role="status" className="text-xs text-amber-800">
+                                                This saved request used a retired payment option.
+                                                Choose Cash on Delivery or GCash / Maya (P2P) to
+                                                continue; your other draft details are unchanged.
+                                            </p>
+                                        )}
                                     </div>
 
                                     {builderMode === 'guided' && (
@@ -1534,7 +1767,7 @@ export default function CreateRequest({
                                                 type="button"
                                                 onClick={handleNextStep}
                                                 disabled={!canContinueStep4}
-                                                className="flex items-center gap-1.5 rounded-xl bg-[#0F2F58] px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#1a447c] active:scale-95 transition-all disabled:opacity-50"
+                                                className="flex items-center gap-1.5 rounded-xl bg-[#0F2F58] px-5 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#1a447c] active:scale-95 disabled:opacity-50"
                                             >
                                                 <span>Continue to Review</span>
                                                 <ArrowRight className="size-4" />
@@ -1546,19 +1779,19 @@ export default function CreateRequest({
 
                             {/* STEP 5: Fulfillment & Review */}
                             {(builderMode === 'standard' || step === 5) && (
-                                <section className="space-y-4 pt-4 border-t border-slate-100">
+                                <section className="space-y-4 border-t border-slate-100 pt-4">
                                     {builderMode === 'guided' ? (
                                         <div className="space-y-1">
                                             <h2 className="text-lg font-extrabold text-[#0F2F58]">
                                                 {REQUEST_GUIDED_STEPS[4].guidedTitle}
                                             </h2>
-                                            <p className="text-xs text-slate-500 leading-relaxed">
+                                            <p className="text-xs leading-relaxed text-slate-500">
                                                 {REQUEST_GUIDED_STEPS[4].guidedDescription}
                                             </p>
                                         </div>
                                     ) : (
                                         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                            <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
+                                            <h2 className="text-sm font-extrabold tracking-wider text-slate-800 uppercase">
                                                 5. {REQUEST_GUIDED_STEPS[4].standardTitle}
                                             </h2>
                                         </div>
@@ -1570,9 +1803,14 @@ export default function CreateRequest({
                                             <label className="text-xs font-bold text-slate-700">
                                                 Fulfillment &amp; Sourcing Preference
                                             </label>
-                                            <FieldGuide guidance={REQUEST_FIELD_GUIDANCE.fulfillment.guidance} mode={builderMode} />
+                                            <FieldGuide
+                                                guidance={
+                                                    REQUEST_FIELD_GUIDANCE.fulfillment.guidance
+                                                }
+                                                mode={builderMode}
+                                            />
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                                             {[
                                                 { id: 'direct', label: 'Direct On-Site' },
                                                 { id: 'courier', label: 'Courier Runner' },
@@ -1581,8 +1819,12 @@ export default function CreateRequest({
                                                 <button
                                                     key={f.id}
                                                     type="button"
-                                                    onClick={() => setPreferredFulfillment(f.id as typeof preferredFulfillment)}
-                                                    className={`rounded-xl border p-2.5 text-xs font-bold text-center cursor-pointer transition-all ${
+                                                    onClick={() =>
+                                                        setPreferredFulfillment(
+                                                            f.id as typeof preferredFulfillment,
+                                                        )
+                                                    }
+                                                    className={`cursor-pointer rounded-xl border p-2.5 text-center text-xs font-bold transition-all ${
                                                         preferredFulfillment === f.id
                                                             ? 'border-blue-600 bg-blue-50 text-blue-900'
                                                             : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -1595,36 +1837,66 @@ export default function CreateRequest({
                                     </div>
 
                                     {/* Review Summary Box */}
-                                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 space-y-3">
-                                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block">
+                                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                                        <span className="block text-[11px] font-extrabold tracking-wider text-slate-500 uppercase">
                                             Summary Before Posting
                                         </span>
                                         <div className="grid grid-cols-2 gap-3 text-xs">
                                             <div>
-                                                <span className="text-slate-400 block text-[10px]">Title</span>
-                                                <span className="font-bold text-slate-800 line-clamp-1">{title || 'Untitled'}</span>
+                                                <span className="block text-[10px] text-slate-400">
+                                                    Title
+                                                </span>
+                                                <span className="line-clamp-1 font-bold text-slate-800">
+                                                    {title || 'Untitled'}
+                                                </span>
                                             </div>
                                             <div>
-                                                <span className="text-slate-400 block text-[10px]">Category</span>
-                                                <span className="font-bold text-slate-800">{categoryName}</span>
+                                                <span className="block text-[10px] text-slate-400">
+                                                    Category
+                                                </span>
+                                                <span className="font-bold text-slate-800">
+                                                    {categoryName}
+                                                </span>
                                             </div>
                                             <div>
-                                                <span className="text-slate-400 block text-[10px]">Tender Mode</span>
+                                                <span className="block text-[10px] text-slate-400">
+                                                    Tender Mode
+                                                </span>
                                                 <span className="font-bold text-slate-800 capitalize">
                                                     {tenderMode.replace('_', ' ')}
                                                 </span>
                                             </div>
                                             <div>
-                                                <span className="text-slate-400 block text-[10px]">Budget</span>
+                                                <span className="block text-[10px] text-slate-400">
+                                                    Budget
+                                                </span>
                                                 <span className="font-bold text-slate-800">
-                                                    {budgetMode === 'undisclosed' ? 'Undisclosed' : `₱${budget}`}
+                                                    {budgetMode === 'undisclosed'
+                                                        ? 'Undisclosed'
+                                                        : `₱${budget}`}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="block text-[10px] text-slate-400">
+                                                    Payment
+                                                </span>
+                                                <span className="font-bold text-slate-800">
+                                                    {paymentLane === 'external_cash'
+                                                        ? 'Cash on Delivery'
+                                                        : paymentLane === 'p2p_transfer'
+                                                          ? 'GCash / Maya (P2P)'
+                                                          : 'Choose a payment option'}
                                                 </span>
                                             </div>
                                             {attachPipeline && (
                                                 <div className="col-span-2 border-t border-slate-200/60 pt-2">
-                                                    <span className="text-slate-400 block text-[10px]">Governed Pipeline</span>
+                                                    <span className="block text-[10px] text-slate-400">
+                                                        Governed Pipeline
+                                                    </span>
                                                     <span className="font-bold text-teal-800">
-                                                        {selectedTemplate.title} ({stages.length} stages · {selectedTemplate.sla || 'Standard'})
+                                                        {selectedTemplate.title} ({stages.length}{' '}
+                                                        stages ·{' '}
+                                                        {selectedTemplate.sla || 'Standard'})
                                                     </span>
                                                 </div>
                                             )}
@@ -1632,7 +1904,7 @@ export default function CreateRequest({
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                                         {builderMode === 'guided' && (
                                             <button
                                                 type="button"
@@ -1646,8 +1918,12 @@ export default function CreateRequest({
                                         <button
                                             type="submit"
                                             data-testid="submit-request-btn"
-                                            disabled={isSubmitting || !title.trim()}
-                                            className="ml-auto flex items-center gap-2 rounded-xl bg-[#0F2F58] px-6 py-3 text-xs font-extrabold text-white shadow-md hover:bg-[#1a447c] active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                                            disabled={
+                                                isSubmitting ||
+                                                !title.trim() ||
+                                                paymentLane === null
+                                            }
+                                            className="ml-auto flex cursor-pointer items-center gap-2 rounded-xl bg-[#0F2F58] px-6 py-3 text-xs font-extrabold text-white shadow-md transition-all hover:bg-[#1a447c] active:scale-95 disabled:opacity-50"
                                         >
                                             {isSubmitting ? (
                                                 <span>Publishing Request...</span>
@@ -1665,7 +1941,7 @@ export default function CreateRequest({
                     </main>
 
                     {/* RIGHT COLUMN: Desktop Live Preview (5 Cols) */}
-                    <aside className="hidden lg:block lg:col-span-5 sticky top-20">
+                    <aside className="sticky top-20 hidden lg:col-span-5 lg:block">
                         {renderLiveTwin()}
                     </aside>
                 </div>
@@ -1675,8 +1951,8 @@ export default function CreateRequest({
             {mobilePreviewOpen && (
                 <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-xs lg:hidden">
                     <div className="relative max-h-[85vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                            <span className="text-xs font-extrabold uppercase text-[#0F2F58]">
+                        <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+                            <span className="text-xs font-extrabold text-[#0F2F58] uppercase">
                                 Mobile Customer Preview
                             </span>
                             <button

@@ -22,6 +22,20 @@ beforeEach(function (): void {
     app(FixtureRepository::class)->ensure();
 });
 
+it('publishes a real illustrative bibingka photo without inventing product photos', function (): void {
+    app(SeedTagudinBrowseCatalog::class)->handle();
+    $catalog = collect(TagudinBrowseCatalog::listings())->keyBy('fixture_key');
+    $detail = app(PublicListingDetailQuery::class);
+    $bibingka = $detail->handle($catalog['active-tagudin-bibingka-01']['listing_id'], (string) Str::uuid7());
+    $cement = $detail->handle($catalog['active-tagudin-holcim-40kg']['listing_id'], (string) Str::uuid7());
+    $greens = $detail->handle($catalog['active-tagudin-greens-bag-01']['listing_id'], (string) Str::uuid7());
+
+    expect($bibingka['cover_thumbnail_url'])->toBe('/photos/sample-bibingka-cc0.jpg')
+        ->and($bibingka['media']['items'][0]['caption'])->toContain('Illustrative', 'CC0')
+        ->and($cement['cover_thumbnail_url'])->toBeNull()
+        ->and($greens['cover_thumbnail_url'])->toBeNull();
+});
+
 it('seeds a scalable Tagudin browse catalog without losing the contract fixture', function (): void {
     $result = app(SeedTagudinBrowseCatalog::class)->handle();
 

@@ -16,6 +16,7 @@ use App\Modules\OrdersWork\Application\SubmitOrderProposal;
 use App\Modules\OrdersWork\Application\WorkClearanceChallengeService;
 use App\Modules\OrdersWork\Application\WorkExecutionService;
 use App\Modules\OrdersWork\Application\WorkNodeEvidenceService;
+use App\Modules\TrustSupport\Application\OwnOrderReviewReader;
 use App\Shared\Contracts\OrderListingSourcePort;
 use App\Shared\Contracts\OrderPaymentObligationPort;
 use Closure;
@@ -39,6 +40,7 @@ final class OrderController extends Controller
         private readonly OrderPaymentObligationPort $paymentObligations,
         private readonly A9DeliveryService $a9Deliveries,
         private readonly A4HandoffService $a4Handoff,
+        private readonly OwnOrderReviewReader $ownReviews,
     ) {}
 
     public function index(Request $request): mixed
@@ -70,6 +72,7 @@ final class OrderController extends Controller
                     'orders.listing_id',
                     'orders.buyer_user_id',
                     'orders.provider_user_id',
+                    'orders.current_terms_snapshot_id',
                     'orders.deal_chain_id',
                     'orders.created_at',
                     'orders.updated_at',
@@ -252,7 +255,6 @@ final class OrderController extends Controller
             foreach ($orders as $o) {
                 $status = (string) $o->order_status;
                 $workStatus = $o->work_status ? (string) $o->work_status : null;
-                $isDone = in_array($status, ['completed', 'cancelled'], true);
                 $item = [
                     'id' => (string) $o->id,
                     'type' => 'order',
@@ -266,19 +268,158 @@ final class OrderController extends Controller
                     'updated_at' => (string) $o->updated_at,
                     'created_at' => (string) $o->created_at,
                 ];
+                $role = $item['role'];
+                $waitingOn = null;
+                $action = null;
+                if ($status === 'proposed'
+                    && (string) $o->current_proposal_status === 'proposed'
+                    && (string) $o->proposed_by_user_id === $userId) {
+                    $waitingOn = (string) $o->proposed_by_user_id === (string) $o->buyer_user_id ? 'provider' : 'buyer';
+                }
+                if ($status === 'proposed'
+                    && (string) $o->current_proposal_status === 'proposed'
+                    && in_array($role, ['buyer', 'provider'], true)
+                    && (string) $o->proposed_by_user_id !== $userId) {
+                    $action = 'Respond to order proposal';
+                } elseif (
+                    in_array($status, ['accepted', 'in_progress'], true)
+                    && in_array($role, ['buyer', 'provider'], true)
+                    && ! in_array((string) $o->work_shape, ['A4', 'A9'], true)
+                ) {
+                    $work = DB::table('work_instances')->where('order_id', $o->id)->first();
+                    $terms = $o->current_terms_snapshot_id === null
+                        ? null
+                        : DB::table('order_terms_snapshots')->where('id', $o->current_terms_snapshot_id)->first();
+                    $projection = $this->workExecution->projectForOrder($work, $terms);
+                    $nodes = $projection['nodes'] ?? [];
+                    if ($work !== null && is_array($nodes) && ($projection['execution_available'] ?? false)) {
+                        $nodes = $this->workEvidence->projectNodes(
+                            orderId: (string) $o->id,
+                            workInstanceId: (string) $work->id,
+                            actorUserId: $userId,
+                            nodes: $nodes,
+                            canViewSubmittedEvidence: true,
+                            canManageEvidence: $role === 'provider',
+                        );
+                    }
+                    if ($work !== null && is_array($nodes) && ($projection['execution_available'] ?? false)) {
+                        $nodes = array_map(
+                            fn (array $node): array => $this->workChallenges->projectNode(
+                                orderId: (string) $o->id,
+                                actorUserId: $userId,
+                                workVersion: (int) $projection['version'],
+                                workSignature: (string) ($projection['signature_hash'] ?? ''),
+                                node: $node,
+                            ),
+                            $nodes,
+                        );
+                    }
+                    foreach ($nodes as $nodeIndex => $node) {
+                        if (
+                            $role === 'provider'
+                            && ($node['status'] ?? null) === 'awaiting_customer_confirmation'
+                            && ($node['control_mode'] ?? null) === 'customer_confirm'
+                            && ($node['approval_method'] ?? 'app_confirm') === 'app_confirm'
+                        ) {
+                            $waitingOn = 'buyer';
+                        }
+                        if ($role === 'buyer' && ($node['can_confirm'] ?? false)) {
+                            $action = ($node['node_kind'] ?? null) === 'final_signoff'
+                                ? 'Confirm completed work'
+                                : 'Confirm Work step';
+                            break;
+                        }
+                        if ($role !== 'provider' || ($node['status'] ?? null) !== 'active') {
+                            continue;
+                        }
+                        if (($node['control_mode'] ?? null) === 'provider_advance') {
+                            $action = 'Continue Work';
+                        } elseif (($node['control_mode'] ?? null) === 'customer_confirm') {
+                            if (($node['node_kind'] ?? null) === 'final_signoff') {
+                                $predecessorsComplete = true;
+                                foreach (array_slice($nodes, 0, $nodeIndex) as $predecessor) {
+                                    if (($predecessor['status'] ?? null) !== 'completed') {
+                                        $predecessorsComplete = false;
+                                        break;
+                                    }
+                                }
+                                if ($predecessorsComplete && $nodeIndex === count($nodes) - 1) {
+                                    $action = 'Propose Work completion';
+                                }
+                            } else {
+                                $action = 'Request customer confirmation';
+                            }
+                        } elseif (($node['control_mode'] ?? null) === 'counterparty_handoff'
+                            && ! in_array((string) ($node['approval_method'] ?? 'none'), ['presence_otp', 'worker_dropoff'], true)
+                            && ($node['handoff_party'] ?? null) !== 'worker_dropoff') {
+                            $action = 'Mark ready for handoff';
+                        }
+                        if ($action !== null) {
+                            break;
+                        }
+                    }
+                } elseif (in_array($status, ['accepted', 'in_progress'], true) && (string) $o->work_shape === 'A4') {
+                    $handoff = $this->a4Handoff->projectForOrder((string) $o->id, $userId, $correlationId);
+                    if ($handoff['canMarkPrepared'] ?? false) {
+                        $action = 'Prepare goods for handoff';
+                    } elseif ($handoff['canOfferCustody'] ?? false) {
+                        $action = 'Offer custody';
+                    } elseif ($handoff['canAcceptCustody'] ?? false) {
+                        $action = 'Confirm custody';
+                    } elseif ($handoff['canRecordReceipt'] ?? false) {
+                        $action = 'Confirm goods received';
+                    }
+                    if ($action === null && ($handoff['transfer']['status'] ?? null) === 'offered') {
+                        $recipientId = (string) ($handoff['transfer']['offered_to_user_id'] ?? '');
+                        if ($recipientId !== '' && $recipientId !== $userId) {
+                            if ($recipientId === (string) $o->buyer_user_id) {
+                                $waitingOn = 'buyer';
+                            } elseif ($recipientId === (string) $o->provider_user_id) {
+                                $waitingOn = 'provider';
+                            } elseif (DB::table('order_parties')->where('order_id', $o->id)->where('user_id', $recipientId)->where('status', 'active')->exists()) {
+                                $waitingOn = 'assigned participant';
+                            }
+                        }
+                    }
+                }
+                $payment = $this->paymentObligations->projectForOrder((string) $o->id, $userId, null);
+                if ($action === null && ($payment['can_report_cash'] ?? false)) {
+                    $action = 'Report cash payment';
+                } elseif ($action === null && ($payment['can_acknowledge_cash'] ?? false)) {
+                    $action = 'Acknowledge cash receipt';
+                }
+                if ($action === null && ($payment['status'] ?? null) === 'payer_reported_cash'
+                    && DB::table('payment_obligations')
+                        ->where('order_id', $o->id)
+                        ->where('purpose', 'primary_consideration')
+                        ->where('payer_user_id', $userId)
+                        ->exists()) {
+                    $waitingOn = 'payment recipient';
+                }
+                if ($action === null && ($payment['status'] ?? null) === 'due'
+                    && DB::table('payment_obligations')
+                        ->where('order_id', $o->id)
+                        ->where('purpose', 'primary_consideration')
+                        ->where('lane', 'external_cash')
+                        ->where('recipient_user_id', $userId)
+                        ->exists()) {
+                    $waitingOn = 'payer';
+                }
+                $item['waiting_on'] = $waitingOn;
+                $item['next_action'] = $action;
+                $item['payment_status'] = $payment['status'] ?? null;
                 $isChildOfActiveChain = $o->deal_chain_id !== null && in_array((string) $o->deal_chain_id, $activeDealChainIds, true);
                 $isChainBuyer = $isChildOfActiveChain && (string) $o->buyer_user_id === $userId;
+
                 if ($isChainBuyer) {
                     continue;
                 }
-                if ($isDone) {
+                if ($status === 'cancelled') {
                     $done[] = $item;
-                } elseif (
-                    $status === 'proposed'
-                    && (string) $o->current_proposal_status === 'proposed'
-                    && (string) $o->proposed_by_user_id !== $userId
-                ) {
+                } elseif ($action !== null) {
                     $needsAction[] = $item;
+                } elseif ($status === 'completed' && ($payment === null || ($payment['status'] ?? null) === 'settled')) {
+                    $done[] = $item;
                 } else {
                     $active[] = $item;
                 }
@@ -792,6 +933,9 @@ final class OrderController extends Controller
                 'notice' => $request->session()->get('notice'),
                 'actor_perspective' => $actorPerspective,
                 'proposal' => $proposal,
+                'own_review' => (string) $row->status === 'completed' && in_array($actorUserId, [$buyerId, $providerId], true)
+                    ? $this->ownReviews->forOrder((string) $row->id, $actorUserId)
+                    : null,
                 'active_support_case_id' => DB::table('support_cases')
                     ->where('order_id', $row->id)
                     ->whereNotIn('status', ['resolved', 'closed', 'archived'])

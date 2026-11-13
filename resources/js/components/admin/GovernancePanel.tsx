@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { router } from '@inertiajs/react';
+import { getXsrfToken } from '@/lib/csrf';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,7 +74,7 @@ export function GovernancePanel({ caseId, governance }: { caseId: string; govern
         : selectedTarget;
 
     const perform = async (key: string, url: string, body: object | FormData, fallback: string): Promise<boolean> => {
-        const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
+        const csrfToken = getXsrfToken();
         if (!csrfToken) {
             setErrors((current) => ({ ...current, [key]: 'This browser session is missing its CSRF token. Refresh the page and try again.' }));
             return false;
@@ -88,7 +89,7 @@ export function GovernancePanel({ caseId, governance }: { caseId: string; govern
                 credentials: 'same-origin',
                 headers: {
                     Accept: 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    'X-XSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest',
                     ...(isMultipart ? {} : { 'Content-Type': 'application/json' }),
                 },

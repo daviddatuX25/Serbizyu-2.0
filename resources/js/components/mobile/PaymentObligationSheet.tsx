@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { ArrowRight, CheckCircle2, Coins, LoaderCircle } from 'lucide-react';
 import GlovoWaveModal from './GlovoWaveModal';
@@ -76,8 +76,22 @@ export default function PaymentObligationSheet({
     const [transferReference, setTransferReference] = useState(obligation.p2p_transfer_reference ?? '');
     const [receivedAmount, setReceivedAmount] = useState((obligation.amount_minor / 100).toFixed(2));
     const [rejectReason, setRejectReason] = useState('');
-    const baseUrl = `/orders/${orderId}/payment-obligations/${obligation.id}`;
     const formattedAmount = amount(obligation.amount_minor, obligation.currency);
+    useEffect(() => {
+        setSelectedLane(obligation.lane);
+        setSentAmount(((obligation.p2p_sent_amount_minor ?? obligation.amount_minor) / 100).toFixed(2));
+        setTransferReference(obligation.p2p_transfer_reference ?? '');
+        setReceivedAmount((obligation.amount_minor / 100).toFixed(2));
+        setProofFile(null);
+        setRejectReason('');
+    }, [
+        obligation.id,
+        obligation.lane,
+        obligation.amount_minor,
+        obligation.p2p_sent_amount_minor,
+        obligation.p2p_transfer_reference,
+    ]);
+    const baseUrl = `/orders/${orderId}/payment-obligations/${obligation.id}`;
     const canSelectLane = obligation.can_select_lane && obligation.status === 'due';
     const receivedAmountMinor = parseAmountMinor(receivedAmount);
     const receivedMatchesPaymentFacts = receivedAmountMinor !== null

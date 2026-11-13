@@ -322,7 +322,7 @@ final class OrderPaymentObligationAdapter implements OrderPaymentObligationPort
             'lane' => $lane,
             'amount_minor' => (int) $obligation->amount_minor,
             'currency' => (string) $obligation->currency,
-            'eligible_lanes' => $this->eligibleLanes($acceptedListingVersionId),
+            'eligible_lanes' => $this->eligibleLanes($acceptedListingVersionId, $orderId),
             'can_select_lane' => $isPayer && $status === 'due',
             'can_report_cash' => $isPayer && $status === 'due' && $lane === 'external_cash',
             'can_acknowledge_cash' => $isRecipient && $status === 'payer_reported_cash' && $lane === 'external_cash',
@@ -386,7 +386,7 @@ final class OrderPaymentObligationAdapter implements OrderPaymentObligationPort
             if ($hasEvidence) {
                 throw new PaymentObligationError('PAYMENT_EVIDENCE_LOCKED', 'The payment lane cannot change after payment evidence has been recorded.', 409);
             }
-            $eligibleLanes = $this->eligibleLanes($acceptedListingVersionId);
+            $eligibleLanes = $this->eligibleLanes($acceptedListingVersionId, $orderId);
             if (! in_array($lane, $eligibleLanes, true)) {
                 throw new PaymentObligationError('PAYMENT_LANE_NOT_ELIGIBLE', 'That payment lane is not available for this order.', 422);
             }
@@ -1045,18 +1045,40 @@ final class OrderPaymentObligationAdapter implements OrderPaymentObligationPort
     /**
      * @return list<string>
      */
-    private function eligibleLanes(?string $acceptedListingVersionId): array
+    private function eligibleLanes(?string $acceptedListingVersionId, ?string $orderId = null): array
     {
-        if ($acceptedListingVersionId === null || $acceptedListingVersionId === '') {
+        if ($acceptedListingVersionId !== null && $acceptedListingVersionId !== '') {
+            $lanes = $this->listingSource->eligiblePaymentLanesForVersion($acceptedListingVersionId);
+            if (! $this->protectedDigitalSandboxEnabled()) {
+                $lanes = array_values(array_diff($lanes, ['protected_digital']));
+            }
+
+            return $lanes;
+        }
+
+        if ($orderId === null || $orderId === '') {
             return ['external_cash'];
         }
 
-        $lanes = $this->listingSource->eligiblePaymentLanesForVersion($acceptedListingVersionId);
-        if (! $this->protectedDigitalSandboxEnabled()) {
-            $lanes = array_values(array_diff($lanes, ['protected_digital']));
+        $snapshot = DB::table('orders')
+            ->join('order_terms_snapshots', 'order_terms_snapshots.id', '=', 'orders.current_terms_snapshot_id')
+            ->join('quotes', 'quotes.id', '=', 'orders.quote_id')
+            ->where('orders.id', $orderId)
+            ->whereColumn('order_terms_snapshots.order_id', 'orders.id')
+            ->whereColumn('order_terms_snapshots.source_quote_id', 'quotes.id')
+            ->whereColumn('quotes.request_id', 'orders.request_id')
+            ->whereNull('quotes.listing_id')
+            ->whereNull('order_terms_snapshots.source_listing_version_id')
+            ->value('order_terms_snapshots.payment_lane_options');
+        if ($snapshot === null) {
+            return ['external_cash'];
         }
 
-        return $lanes;
+        $lanes = is_string($snapshot) ? json_decode($snapshot, true) : (array) $snapshot;
+
+        return is_array($lanes)
+            ? array_values(array_intersect(['external_cash', 'p2p_transfer'], $lanes))
+            : [];
     }
 
     /**

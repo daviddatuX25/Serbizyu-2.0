@@ -24,6 +24,7 @@ describe('DealInvitationsIndex', () => {
     beforeEach(() => vi.restoreAllMocks());
 
     it('posts acceptance with version and idempotency key, then waits for customer confirmation', async () => {
+        document.cookie = 'XSRF-TOKEN=rotated%20session%20token; path=/';
         const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(successfulResponse() as Response);
         render(<DealInvitationsIndex invitations={[invitation]} />);
         expect(screen.getByText(/Accepting asks the customer to confirm/i)).toBeTruthy();
@@ -32,7 +33,11 @@ describe('DealInvitationsIndex', () => {
         expect(fetchMock).toHaveBeenCalledWith('/deal-invitations/inv-1/respond', expect.objectContaining({
             method: 'POST',
             body: JSON.stringify({ decision: 'accept', expected_version: 4 }),
-            headers: expect.objectContaining({ Accept: 'application/json', 'X-Idempotency-Key': expect.any(String) }),
+            headers: expect.objectContaining({
+                Accept: 'application/json',
+                'X-Idempotency-Key': expect.any(String),
+                'X-XSRF-TOKEN': 'rotated session token',
+            }),
         }));
         expect(screen.getByText(/must confirm these terms before an independent order can be created/i)).toBeTruthy();
         expect(screen.queryByRole('link', { name: /order/i })).toBeNull();

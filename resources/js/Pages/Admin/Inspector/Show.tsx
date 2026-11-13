@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import * as React from 'react';
 import { Search } from 'lucide-react';
+import { getXsrfToken } from '@/lib/csrf';
 
 import { GovernancePanel } from '@/components/admin/GovernancePanel';
 import { StaffContextBadges } from '@/components/admin/StaffContextBadges';
@@ -247,7 +248,7 @@ function IdentityReviewControls({ action }: { action: IdentityReviewAction }) {
 
     const submit = async (decision: 'approve' | 'reject') => {
         if (decision === 'approve' ? !canApprove : !canReject) return;
-        const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
+        const csrfToken = getXsrfToken();
         if (!csrfToken) {
             setError('This browser session is missing its CSRF token. Refresh the page and try again.');
             return;
@@ -262,7 +263,7 @@ function IdentityReviewControls({ action }: { action: IdentityReviewAction }) {
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    'X-XSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest',
                 },
                 body: JSON.stringify({

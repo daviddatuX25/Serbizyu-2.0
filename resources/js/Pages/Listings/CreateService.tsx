@@ -186,6 +186,14 @@ interface WorkSetOption {
         duration_label?: string | null;
         evidence_type?: string;
         evidence_description?: string;
+        required_proofs?: WorkStage['requiredProofs'];
+        permitted_proofs?: WorkStage['permittedProofs'];
+        checklist_items?: WorkStage['checklistItems'];
+        metric_requirements?: WorkStage['metricRequirements'];
+        control_mode?: 'provider_advance' | 'customer_confirm' | 'counterparty_handoff';
+        clearance_mode?: WorkStage['clearanceMode'];
+        approval_method?: WorkStage['approvalMethod'];
+        handoff_party?: WorkStage['handoffParty'];
     }>;
 }
 
@@ -216,6 +224,17 @@ function toWorkTemplate(option: WorkSetOption): WorkTemplate {
             desc: step.description,
             evidence: step.evidence_description || step.evidence_type || 'Work evidence',
             evidenceType: step.evidence_type,
+            requiredProofs: step.required_proofs,
+            permittedProofs: step.permitted_proofs,
+            checklistItems: step.checklist_items,
+            metricRequirements: step.metric_requirements,
+            clearanceMode: step.clearance_mode ?? (step.control_mode === 'provider_advance'
+                ? 'worker_direct'
+                : step.control_mode === 'customer_confirm'
+                    ? 'customer_approval'
+                    : step.control_mode === 'counterparty_handoff' ? 'physical_handoff' : undefined),
+            approvalMethod: step.approval_method,
+            handoffParty: step.handoff_party,
             color: '#0F2F58',
             bg: '#EBF2FA',
         })),
@@ -323,11 +342,25 @@ export default function CreateService({
               : null;
     const normalizedDraftStages = draftStages?.map((stage) => {
         const serialized = stage as WorkStage & {
+            required_proofs?: WorkStage['requiredProofs'];
+            permitted_proofs?: WorkStage['permittedProofs'];
+            clearance_mode?: WorkStage['clearanceMode'];
+            approval_method?: WorkStage['approvalMethod'];
+            handoff_party?: WorkStage['handoffParty'];
+            evidence_type?: string;
+            description?: string;
             checklist_items?: WorkStage['checklistItems'];
             metric_requirements?: WorkStage['metricRequirements'];
         };
         return {
             ...stage,
+            desc: stage.desc ?? serialized.description ?? '',
+            evidenceType: stage.evidenceType ?? serialized.evidence_type,
+            clearanceMode: stage.clearanceMode ?? serialized.clearance_mode,
+            approvalMethod: stage.approvalMethod ?? serialized.approval_method,
+            handoffParty: stage.handoffParty ?? serialized.handoff_party,
+            requiredProofs: stage.requiredProofs ?? serialized.required_proofs,
+            permittedProofs: stage.permittedProofs ?? serialized.permitted_proofs,
             checklistItems: stage.checklistItems ?? serialized.checklist_items,
             metricRequirements: stage.metricRequirements ?? serialized.metric_requirements,
         };
@@ -885,13 +918,16 @@ export default function CreateService({
             price_amount_minor: effectivePriceMinor,
             pricing_mode: pricingMode,
             inclusions,
-            package_tiers: packageTiers.map((tier) => ({
-                id: tier.id,
-                title: tier.title,
-                price: tier.price,
-                sub: tier.sub,
-                inclusions: tier.inclusions,
-            })),
+            package_tiers:
+                pricingMode === 'packages'
+                    ? packageTiers.map((tier) => ({
+                          id: tier.id,
+                          title: tier.title,
+                          price: tier.price,
+                          sub: tier.sub,
+                          inclusions: tier.inclusions,
+                      }))
+                    : [],
             addons: addons.map((a) => ({
                 id: a.id,
                 code: a.code,
@@ -915,6 +951,9 @@ export default function CreateService({
                 ...(s.approvalMethod !== undefined ? { approval_method: s.approvalMethod } : {}),
                 ...(s.handoffParty !== undefined ? { handoff_party: s.handoffParty } : {}),
                 ...(Array.isArray(s.requiredProofs) ? { required_proofs: s.requiredProofs } : {}),
+                ...(Array.isArray(s.permittedProofs)
+                    ? { permitted_proofs: Array.from(new Set([...(s.requiredProofs ?? []), ...s.permittedProofs])) }
+                    : {}),
                 ...(Array.isArray(s.checklistItems) ? { checklist_items: s.checklistItems } : {}),
                 ...(Array.isArray(s.metricRequirements) ? { metric_requirements: s.metricRequirements } : {}),
             })),
@@ -1964,10 +2003,11 @@ export default function CreateService({
                                     {/* Pricing Inputs */}
                                     {pricingMode === 'fixed' && (
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-bold text-slate-700">
+                                            <label htmlFor="service-fixed-rate" className="text-xs font-bold text-slate-700">
                                                 Standard Rate (PHP)
                                             </label>
                                             <input
+                                                id="service-fixed-rate"
                                                 type="number"
                                                 value={fixedPrice}
                                                 onChange={(e) => setFixedPrice(e.target.value)}

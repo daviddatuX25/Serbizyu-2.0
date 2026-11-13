@@ -29,6 +29,7 @@ import {
 import type { HomeProps, ListingRecord } from '../types';
 import { DesktopGlobalNav } from '../components/layout/DesktopGlobalNav';
 import { NotificationBell } from '../components/notifications/NotificationCenter';
+import { CategoryVisualFallback } from '../components/listings/ListingMediaPicker';
 import { MarketplaceCard } from '../marketplace/components/MarketplaceCard';
 import { BottomNavBar, type NavTabId } from '../marketplace/components/BottomNavBar';
 import type {
@@ -92,22 +93,6 @@ const MARKETPLACE_CATEGORIES: (MarketplaceCategory & { icon: string; description
     },
 ];
 
-// Curated Category Images for High-Craft Visuals
-const CATEGORY_IMAGES: Record<string, string> = {
-    repairs: '/photos/ac-clean.jpg',
-    'home-cleaning': '/photos/req-electrician.jpg',
-    courier: '/photos/courier.jpg',
-    'local-food': '/photos/bibingka.jpg',
-    'print-assist': '/photos/greeting.jpg',
-    'greeting-cards': '/photos/greeting.jpg',
-    'local-services': '/photos/ac-clean.jpg',
-    default: '/photos/ac-clean.jpg',
-};
-
-function getCategoryPhoto(categoryCode?: string | null): string {
-    const code = (categoryCode || 'default').toLowerCase();
-    return CATEGORY_IMAGES[code] || CATEGORY_IMAGES.default;
-}
 
 function getPriceDisplay(listing: ListingRecord): string {
     const rawMinor = listing.price_amount_minor;
@@ -1068,11 +1053,7 @@ export default function Browse(props: HomeProps) {
                                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                                     {filteredListings.map((listing) => {
                                         const isPinned = pinnedIds.includes(listing.id);
-                                        const photoUrl =
-                                            listing.cover_thumbnail_url ||
-                                            getCategoryPhoto(
-                                                listing.category_code || listing.categoryCode,
-                                            );
+                                        const photoUrl = listing.cover_thumbnail_url;
                                         const priceDisplay = getPriceDisplay(listing);
                                         const isService =
                                             (listing.listing_type || listing.listingType) !==
@@ -1088,12 +1069,11 @@ export default function Browse(props: HomeProps) {
                                             >
                                                 {/* Cover Photo with Badges */}
                                                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
-                                                    <img
-                                                        src={photoUrl}
-                                                        alt={listing.title}
-                                                        className="size-full object-cover transition-transform duration-300 group-hover:scale-103"
-                                                        loading="lazy"
-                                                    />
+                                                    {photoUrl ? (
+                                                        <img src={photoUrl} alt={listing.title} className="size-full object-cover transition-transform duration-300 group-hover:scale-103" loading="lazy" />
+                                                    ) : (
+                                                        <CategoryVisualFallback categoryCode={listing.category_code || listing.categoryCode} />
+                                                    )}
                                                     {/* Top Badges */}
                                                     <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
                                                         <span
@@ -1105,6 +1085,9 @@ export default function Browse(props: HomeProps) {
                                                         >
                                                             {isService ? 'Service' : 'Product'}
                                                         </span>
+                                                        {listing.catalog_source === 'tagudin_seed' && (
+                                                            <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-slate-800">Sample listing</span>
+                                                        )}
                                                         {listing.has_video && (
                                                             <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/85 px-2 py-0.5 text-[10px] font-extrabold text-white shadow-xs backdrop-blur-xs">
                                                                 <Video className="size-3 text-[#FFC72C]" />
@@ -1210,11 +1193,7 @@ export default function Browse(props: HomeProps) {
                                 <div className="flex flex-col gap-3">
                                     {filteredListings.map((listing) => {
                                         const isPinned = pinnedIds.includes(listing.id);
-                                        const photoUrl =
-                                            listing.cover_thumbnail_url ||
-                                            getCategoryPhoto(
-                                                listing.category_code || listing.categoryCode,
-                                            );
+                                        const photoUrl = listing.cover_thumbnail_url;
                                         const priceDisplay = getPriceDisplay(listing);
 
                                         return (
@@ -1226,16 +1205,18 @@ export default function Browse(props: HomeProps) {
                                                 className="group flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition-all hover:shadow-md"
                                             >
                                                 <div className="flex items-center gap-4">
-                                                    <img
-                                                        src={photoUrl}
-                                                        alt={listing.title}
-                                                        className="size-18 rounded-xl object-cover"
-                                                        loading="lazy"
-                                                    />
+                                                    {photoUrl ? (
+                                                        <img src={photoUrl} alt={listing.title} className="size-18 rounded-xl object-cover" loading="lazy" />
+                                                    ) : (
+                                                        <CategoryVisualFallback categoryCode={listing.category_code || listing.categoryCode} className="size-18 shrink-0 rounded-xl" />
+                                                    )}
                                                     <div>
                                                         <h3 className="text-sm font-extrabold text-[#0F2F58] group-hover:text-blue-900">
                                                             {listing.title}
                                                         </h3>
+                                                        {listing.catalog_source === 'tagudin_seed' && (
+                                                            <span className="text-xs font-semibold text-slate-600">Sample listing</span>
+                                                        )}
                                                         <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
                                                             {listing.description ||
                                                                 'Verified local service'}

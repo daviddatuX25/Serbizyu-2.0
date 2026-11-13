@@ -119,6 +119,7 @@ type OrderShowProps = {
         nodes?: WorkNodeRecord[];
     } | null;
     obligation?: PaymentObligation | null;
+    own_review?: { status: 'sealed' | 'unblinded' } | null;
     a9Delivery?: A9DeliveryProjection | null;
     a4Handoff?: A4HandoffProjection;
     appointment?: {
@@ -226,6 +227,7 @@ export default function OrderShow(props: OrderShowProps) {
         (props.order.actor_role === 'buyer' ? 'customer' : 'provider');
 
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+    const [finalWorkReviewOpen, setFinalWorkReviewOpen] = useState(false);
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
     const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
@@ -322,6 +324,11 @@ export default function OrderShow(props: OrderShowProps) {
     const workStatus = props.work?.status ?? 'not_available';
     const isWorkCompleted = workAvailable && workStatus === 'completed';
     const isPaymentSettled = props.obligation?.status === 'settled';
+    const paymentActionLabel = props.obligation?.can_report_cash
+        ? 'Report cash payment'
+        : props.obligation?.can_acknowledge_cash
+          ? 'Confirm cash received'
+          : 'View payment status';
     const isSignoff = workAvailable && (
         workStatus === 'awaiting_signoff' ||
         workStatus === 'completion_proposed'
@@ -415,7 +422,8 @@ export default function OrderShow(props: OrderShowProps) {
         );
     };
 
-    const handleSignoff = () => {
+    const commitSignoff = () => {
+        if (signoffProcessing) return;
         setSignoffProcessing(true);
         router.post(`/orders/${props.order.id}/work/signoff`, {}, {
             preserveScroll: true,
@@ -572,7 +580,7 @@ export default function OrderShow(props: OrderShowProps) {
                 </div>
             </header>
 
-            <main className="mx-auto max-w-4xl px-4 py-5 pb-16 sm:px-6 lg:py-8">
+            <main className="mx-auto max-w-4xl px-4 py-5 pb-24 sm:px-6 lg:py-8">
                 {/* Desktop Breadcrumbs */}
                 <div className="hidden items-center justify-between mb-5 lg:flex">
                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
@@ -1098,7 +1106,7 @@ export default function OrderShow(props: OrderShowProps) {
                             </div>
 
                         {props.obligation && (
-                            <div className="space-y-3 border-t border-slate-200 pt-3">
+                            <div id="payment-details" className="space-y-3 border-t border-slate-200 pt-3">
                                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                                     <span className="font-semibold text-slate-700">
                                         {props.obligation.lane === 'external_cash'
@@ -1138,7 +1146,7 @@ export default function OrderShow(props: OrderShowProps) {
             </main>
 
             {/* 5. Fixed Bottom Action Dock */}
-            <footer className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur">
+            <footer className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur">
                 <div className="mx-auto flex max-w-4xl items-center gap-3">
                     {/* CUSTOMER ACTIONS */}
                     {perspective === 'customer' && (
@@ -1155,11 +1163,11 @@ export default function OrderShow(props: OrderShowProps) {
                                 props.order.can_signoff ? (
                                     <button
                                         type="button"
-                                        onClick={handleSignoff}
+                                        onClick={() => setFinalWorkReviewOpen(true)}
                                         disabled={signoffProcessing}
                                         className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0D715F] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#0a574a] disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        {signoffProcessing ? 'Saving sign-off…' : 'Review and confirm Work'}
+                                        Review Work
                                         <ArrowRight className="size-4" />
                                     </button>
                                 ) : (
@@ -1172,7 +1180,11 @@ export default function OrderShow(props: OrderShowProps) {
                                         </span>
                                     </div>
                                 )
-                            ) : isWorkCompleted ? (
+                            ) : isWorkCompleted && !isPaymentSettled && props.obligation ? (
+                                <a href="#payment-details" className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[#0D715F] px-4 text-xs font-extrabold text-white">
+                                    {paymentActionLabel}
+                                </a>
+                            ) : isWorkCompleted && isPaymentSettled && props.order.is_order_buyer ? (
                                 <button
                                     type="button"
                                     data-testid="leave-review-btn"
@@ -1180,7 +1192,7 @@ export default function OrderShow(props: OrderShowProps) {
                                     className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0D715F] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#0a574a]"
                                 >
                                     <Star className="size-4 fill-amber-300 text-amber-300" />
-                                    <span>Rate Service &amp; Share Feedback</span>
+                                    <span>{props.own_review ? 'View submitted review' : 'Rate Service & Share Feedback'}</span>
                                 </button>
                             ) : null}
                         </>
@@ -1197,7 +1209,11 @@ export default function OrderShow(props: OrderShowProps) {
                                 <span>{props.order.deal_chain_id ? 'Deal' : 'Orders'}</span>
                             </Link>
 
-                            {isWorkCompleted ? (
+                            {isWorkCompleted && !isPaymentSettled && props.obligation ? (
+                                <a href="#payment-details" className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white">
+                                    {paymentActionLabel}
+                                </a>
+                            ) : isWorkCompleted && isPaymentSettled ? (
                                 <button
                                     type="button"
                                     data-testid="provider-reliability-btn"
@@ -1205,7 +1221,7 @@ export default function OrderShow(props: OrderShowProps) {
                                     className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0F2F58] px-4 text-xs font-extrabold text-white shadow-md hover:bg-[#153e74]"
                                 >
                                     <ShieldCheck className="size-4 text-emerald-400" />
-                                    <span>Citizen Reliability Feedback</span>
+                                    <span>{props.own_review ? 'View submitted feedback' : 'Citizen Reliability Feedback'}</span>
                                 </button>
                             ) : isSignoff ? (
                                 <div className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 text-xs font-extrabold text-amber-800 shadow-sm">
@@ -1286,7 +1302,8 @@ export default function OrderShow(props: OrderShowProps) {
                             <button
                                 type="button"
                                 onClick={() => setPreviewPhoto(null)}
-                                className="flex size-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100"
+                                aria-label="Close photo preview"
+                                className="flex size-11 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100"
                             >
                                 <X className="size-4" />
                             </button>
@@ -1354,6 +1371,58 @@ export default function OrderShow(props: OrderShowProps) {
                     {errors.note && <p role="alert" className="text-xs font-semibold text-rose-700">{Array.isArray(errors.note) ? errors.note[0] : errors.note}</p>}
                 </form>
             </GlovoWaveModal>
+            <GlovoWaveModal
+                isOpen={finalWorkReviewOpen}
+                onClose={() => setFinalWorkReviewOpen(false)}
+                title="Review completed Work"
+                subtitle="Check the submitted evidence before confirming the final sign-off."
+                bottomSlot={
+                    <div className="flex gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setFinalWorkReviewOpen(false)}
+                            className="min-h-11 flex-1 rounded-full border border-slate-300 bg-white px-4 text-xs font-extrabold text-slate-700"
+                        >
+                            Go back
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setFinalWorkReviewOpen(false);
+                                commitSignoff();
+                            }}
+                            disabled={signoffProcessing || !props.order.can_signoff}
+                            className="min-h-11 flex-1 rounded-full bg-[#0D715F] px-4 text-xs font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            Confirm Work sign-off
+                        </button>
+                    </div>
+                }
+            >
+                <div className="space-y-3 pb-4 text-sm text-slate-700">
+                    <p>
+                        Confirm that the provider completed <strong>{listingTitle}</strong>. Review the submitted Work evidence before confirming.
+                    </p>
+                    {props.work?.nodes?.filter((node) => node.evidence || node.node_kind === 'final_signoff').map((node) => (
+                        <section key={node.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                            <h3 className="text-xs font-extrabold text-[#0F2F58]">{node.title}</h3>
+                            <WorkNodeEvidenceReview
+                                evidence={node.evidence}
+                                node={node}
+                                onPreviewPhoto={setPreviewPhoto}
+                            />
+                        </section>
+                    ))}
+                    {props.terms && (
+                        <p className="rounded-xl bg-slate-50 p-3 text-xs">
+                            Agreed amount: <strong>{money(props.terms.amount_minor, props.terms.currency)}</strong>
+                        </p>
+                    )}
+                    <p className="text-xs leading-relaxed text-slate-600">
+                        This records Work completion. It does not mark the separate cash or personal-wallet payment as received.
+                    </p>
+                </div>
+            </GlovoWaveModal>
             {/* Review Ceremony Modal */}
             <ReviewCeremonyModal
                 isOpen={reviewModalOpen}
@@ -1361,6 +1430,7 @@ export default function OrderShow(props: OrderShowProps) {
                 orderId={props.order.id}
                 referenceTitle={listingTitle}
                 actorRole={perspective === 'customer' ? 'buyer' : 'provider'}
+                existingReview={props.own_review ?? undefined}
                 targets={[
                     {
                         orderId: props.order.id,

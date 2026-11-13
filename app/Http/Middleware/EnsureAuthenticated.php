@@ -18,6 +18,10 @@ final class EnsureAuthenticated
     {
         $user = $request->user();
         if (! $user) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+
             $returnTo = $request->isMethod('GET') ? $request->getRequestUri() : route('home', absolute: false);
             $request->session()->put('auth_return_to', AuthReturnPath::safe($returnTo));
 

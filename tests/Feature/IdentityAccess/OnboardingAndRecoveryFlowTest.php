@@ -80,6 +80,48 @@ it('completes onboarding through POST /onboarding and activates user', function 
     expect(DB::table('user_profiles')->where('user_id', $user->id)->value('service_area_display'))->toBe('Tagudin');
 });
 
+it('preserves existing language preferences when completing English onboarding', function (array $preferences, array $languageInput): void {
+    $user = User::factory()->create(['locale' => 'ilo', 'status' => 'pending', 'phone_verified_at' => now()]);
+    DB::table('user_profiles')->where('user_id', $user->id)->update([
+        'language_preferences' => json_encode($preferences, JSON_THROW_ON_ERROR),
+    ]);
+
+    $this->actingAs($user)->post('/onboarding', [
+        'provider_intent' => true,
+        'display_name' => 'Preference preservation',
+        'area_code' => 'Tagudin',
+        'password' => 'SafePass123!',
+        'password_confirmation' => 'SafePass123!',
+        ...$languageInput,
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    expect($user->fresh()->locale)->toBe('ilo');
+    expect(json_decode((string) DB::table('user_profiles')->where('user_id', $user->id)->value('language_preferences'), true))
+        ->toBe($preferences);
+    $this->withHeaders(onboardingInertiaHeaders())->get('/onboarding')
+        ->assertOk()->assertJsonPath('props.readiness.language_code', 'ilo');
+})->with([
+    'stored primary with omitted choice' => [['primary' => 'ilo', 'secondary' => ['en']], []],
+    'legacy list with omitted choice' => [['ilo', 'en'], []],
+    'existing Ilocano submitted explicitly' => [['primary' => 'ilo'], ['language_code' => 'ilo']],
+]);
+
+it('does not reset fixture language preferences when browsing', function (): void {
+    $fixtures = app(\App\Modules\IdentityAccess\Infrastructure\FixtureRepository::class);
+    $fixtures->ensure();
+    $userId = $fixtures::PROVIDER_ID;
+    DB::table('users')->where('id', $userId)->update(['locale' => 'ilo']);
+    DB::table('user_profiles')->where('user_id', $userId)->update([
+        'language_preferences' => json_encode(['ilo', 'en'], JSON_THROW_ON_ERROR),
+    ]);
+
+    $this->get('/')->assertOk();
+
+    expect(DB::table('users')->where('id', $userId)->value('locale'))->toBe('ilo');
+    expect(json_decode((string) DB::table('user_profiles')->where('user_id', $userId)->value('language_preferences'), true))
+        ->toBe(['ilo', 'en']);
+});
+
 it('renders forgot password page with recovery session and dev preview props', function (): void {
     $this->withHeaders(onboardingInertiaHeaders())
         ->get('/auth/password/forgot')

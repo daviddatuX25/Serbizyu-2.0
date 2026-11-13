@@ -201,3 +201,29 @@ it('selects schema v2 for clearance-only Work and rejects incompatible v1 header
         (string) Str::uuid7(),
     ));
 });
+
+it('resolves schema v3 only for A1 and A3 with complete permitted proof sets', function (): void {
+    $registry = new DefaultWorkContractRegistry;
+    $nodes = [
+        ['required_proofs' => ['photo_proof'], 'permitted_proofs' => ['photo_proof', 'gps_checkin']],
+        ['required_proofs' => [], 'permitted_proofs' => ['checklist_steps'], 'checklist_items' => [['id' => 'seal', 'label' => 'Seal', 'required' => true]]],
+    ];
+
+    expect(WorkContractSelector::resolve($registry, 'A1', null, $nodes, (string) Str::uuid7())->payloadSchemaVersion)->toBe(3)
+        ->and(WorkContractSelector::resolve($registry, 'A3', ['shape_contract_version' => 1, 'payload_schema_version' => 3], $nodes, (string) Str::uuid7())->payloadSchemaVersion)->toBe(3);
+
+    t4ExpectWorkContractError(fn () => WorkContractSelector::resolve(
+        $registry,
+        'A1',
+        ['shape_contract_version' => 1, 'payload_schema_version' => 3],
+        [['required_proofs' => ['photo_proof']]],
+        (string) Str::uuid7(),
+    ));
+    t4ExpectWorkContractError(fn () => WorkContractSelector::resolve(
+        $registry,
+        'A4',
+        ['shape_contract_version' => 1, 'payload_schema_version' => 3],
+        $nodes,
+        (string) Str::uuid7(),
+    ));
+});

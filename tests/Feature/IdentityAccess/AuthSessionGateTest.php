@@ -21,6 +21,15 @@ final class AuthSessionGateTest extends TestCase
         $this->assertSame('/my-listings', session('auth_return_to'));
     }
 
+    public function test_background_json_request_does_not_replace_the_intended_sign_in_destination(): void
+    {
+        $this->withSession(['auth_return_to' => '/orders/example'])
+            ->getJson('/notifications/summary')
+            ->assertUnauthorized();
+
+        $this->assertSame('/orders/example', session('auth_return_to'));
+    }
+
     public function test_auth_phone_deep_link_redirects_to_the_single_sign_in_hub(): void
     {
         $this->get('/auth/phone')

@@ -15,11 +15,7 @@ final class OnboardingRequest extends FormRequest
         $language = $this->input('language_code');
 
         if ($language === null && is_array($languagePreferences)) {
-            $language = $languagePreferences[0] ?? null;
-        }
-
-        if ($language === 'ilo') {
-            $language = 'fil';
+            $language = $languagePreferences['primary'] ?? $languagePreferences[0] ?? null;
         }
 
         $this->merge([
@@ -46,7 +42,7 @@ final class OnboardingRequest extends FormRequest
             'display_name' => ['required', 'string', 'max:120'],
             'area_code' => ['nullable', 'string', 'max:64'],
             'service_area_display' => ['nullable', 'string', 'max:64'],
-            'language_code' => ['nullable', 'string', 'in:fil,en'],
+            'language_code' => ['nullable', 'string', 'in:fil,en,ilo'],
             'language_preferences' => ['nullable', 'array'],
             'low_data_mode' => ['sometimes', 'boolean'],
             'accessibility_preferences' => ['nullable', 'array'],

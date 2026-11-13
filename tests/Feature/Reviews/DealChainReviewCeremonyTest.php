@@ -70,8 +70,9 @@ it('quarantines held child reviews while allowing sibling publication and timeou
         ->and($siblingReviews->every(fn ($review): bool => $review->moderation_status === 'approved' && $review->unblinded_at !== null))->toBeTrue();
 
     $listingId = (string) DB::table('orders')->where('id', $sibling['order_id'])->value('listing_id');
-    expect(app(\App\Modules\TrustSupport\Application\ListingReviewService::class)->reviewsForListing($listingId))
-        ->toHaveCount(2);
+    $publicReviews = app(\App\Modules\TrustSupport\Application\ListingReviewService::class)->reviewsForListing($listingId);
+    expect($publicReviews)->toHaveCount(1)
+        ->and($publicReviews[0]['quote'])->toBe('The completed work was excellent.');
 
     DB::table('reviews')->where('order_id', $held['order_id'])->update(['sealed_until' => now()->subMinute()]);
     DB::table('reviews')->where('order_id', $sibling['order_id'])->update(['sealed_until' => now()->subMinute()]);

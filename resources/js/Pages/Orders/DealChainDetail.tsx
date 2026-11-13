@@ -11,6 +11,7 @@ import { DesktopGlobalNav } from '../../components/layout/DesktopGlobalNav';
 import ReviewCeremonyModal from '../../components/reviews/ReviewCeremonyModal';
 import AppointmentSlotPicker, { type AppointmentHold } from '../../components/orders/AppointmentSlotPicker';
 import ConversationDrawer from '../../components/conversations/ConversationDrawer';
+import { getXsrfToken } from '@/lib/csrf';
 import { createRequestKey } from '@/lib/requestKey';
 
 interface DealChainRecord {
@@ -202,14 +203,14 @@ export default function DealChainDetail({
     const [withdrawingNeedId, setWithdrawingNeedId] = useState<string | null>(null);
 
     const postDealAction = async (url: string, payload: Record<string, unknown>) => {
-        const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
+        const token = getXsrfToken();
         const response = await fetch(url, {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': token,
+                'X-XSRF-TOKEN': token,
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-Idempotency-Key': createRequestKey(),
             },

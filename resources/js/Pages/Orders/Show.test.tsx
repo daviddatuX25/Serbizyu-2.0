@@ -233,8 +233,15 @@ describe('OrderShow Page - Work Evidence & Tools', () => {
         expect(screen.getByText('220')).toBeTruthy();
         expect(within(review).getByText(/Line voltage/)).toBeTruthy();
         expect(within(review).getByText(/Verify grounding: Complete/)).toBeTruthy();
-        expect(screen.getByRole('button', { name: /Review and confirm Work/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /Review Work/i })).toBeTruthy();
         expect(screen.queryByText(/Chat with Provider ·/i)).toBeNull();
+        vi.mocked(router.post).mockClear();
+        fireEvent.click(screen.getByRole('button', { name: /Review Work/i }));
+        expect(vi.mocked(router.post)).not.toHaveBeenCalled();
+        const dialog = screen.getByRole('dialog', { name: 'Review completed Work' });
+        expect(within(dialog).getByText('Capacitor replaced. Operating at 4.2A steady load.')).toBeTruthy();
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm Work sign-off' }));
+        expect(vi.mocked(router.post)).toHaveBeenCalledOnce();
     });
 });
 describe('OrderShow Page - Independent Agreement, Work & Payment rails', () => {
@@ -264,10 +271,58 @@ describe('OrderShow Page - Independent Agreement, Work & Payment rails', () => {
         expect(within(rails).getByText('Accepted')).toBeTruthy();
         expect(within(rails).getByText('Completed')).toBeTruthy();
         expect(within(rails).getByText('Cash reported · awaiting confirmation')).toBeTruthy();
+        expect(screen.getByRole('link', { name: 'View payment status' }).getAttribute('href')).toBe('#payment-details');
+        expect(screen.queryByTestId('leave-review-btn')).toBeNull();
         expect(screen.getByRole('button', { name: /Cash report details/i })).toBeTruthy();
         fireEvent.click(screen.getByRole('button', { name: /Cash report details/i }));
         expect(screen.getByText(/Cash was reported by the payer/i)).toBeTruthy();
         expect(screen.queryByRole('button', { name: /Report cash handed over/i })).toBeNull();
+    });
+
+    it('offers buyer review after payment has been acknowledged', () => {
+        render(
+            <OrderShow
+                order={{ ...mockOrder, status: 'completed', can_signoff: false }}
+                work={{ id: 'work-1', version: 1, status: 'completed', work_shape: 'A1' }}
+                obligation={{
+                    id: 'obligation-1',
+                    status: 'settled',
+                    lane: 'external_cash',
+                    amount_minor: 85000,
+                    currency: 'PHP',
+                    eligible_lanes: ['external_cash'],
+                    can_select_lane: false,
+                    can_report_cash: false,
+                    can_acknowledge_cash: false,
+                }}
+                actor_perspective="customer"
+            />,
+        );
+        expect(screen.getByTestId('leave-review-btn')).toBeTruthy();
+    });
+
+    it('reopens submitted feedback without offering a second submission', () => {
+        render(
+            <OrderShow
+                order={{ ...mockOrder, status: 'completed', can_signoff: false }}
+                work={{ id: 'work-1', version: 1, status: 'completed', work_shape: 'A1' }}
+                obligation={{
+                    id: 'obligation-1',
+                    status: 'settled',
+                    lane: 'external_cash',
+                    amount_minor: 85000,
+                    currency: 'PHP',
+                    eligible_lanes: ['external_cash'],
+                    can_select_lane: false,
+                    can_report_cash: false,
+                    can_acknowledge_cash: false,
+                }}
+                own_review={{ status: 'unblinded' }}
+                actor_perspective="customer"
+            />,
+        );
+        fireEvent.click(screen.getByRole('button', { name: 'View submitted review' }));
+        expect(screen.queryByRole('button', { name: /submit sealed review/i })).toBeNull();
     });
 
     it('keeps the agreement rail accepted once canonical order status reaches in progress', () => {

@@ -114,7 +114,7 @@ final class WorkCatalog implements WorkSpecificationPort
      *     metric_requirements: list<array{id: string, name: string, unit: string, required: bool, target?: float, min?: float, max?: float}>
      * }>
      */
-    public function normalizeNodes(array $rawSteps, string $workShape = 'A1', bool $requireToolDefinitions = false): array
+    public function normalizeNodes(array $rawSteps, string $workShape = 'A1', bool $requireToolDefinitions = false, bool $includePermittedProofs = false): array
     {
         $values = array_values($rawSteps);
         $total = count($values);
@@ -143,9 +143,27 @@ final class WorkCatalog implements WorkSpecificationPort
                     }
                 }
             }
+            $hasPermittedProofs = array_key_exists('permitted_proofs', $raw) || array_key_exists('permittedProofs', $raw);
+            $rawPermittedProofs = $this->authoredField($raw, 'permitted_proofs', 'permittedProofs');
+            if ($hasPermittedProofs && (! is_array($rawPermittedProofs) || ! array_is_list($rawPermittedProofs))) {
+                throw new \InvalidArgumentException('permitted_proofs must be a supported tool list.');
+            }
+            if ($hasPermittedProofs) {
+                foreach ($rawPermittedProofs as $proof) {
+                    if (! is_string($proof) || ! in_array($proof, ['photo_proof', 'gps_checkin', 'metric_reading', 'checklist_steps'], true)) {
+                        throw new \InvalidArgumentException('A permitted Work proof tool is unknown or unsupported.');
+                    }
+                }
+                if (count(array_unique($rawPermittedProofs)) !== count($rawPermittedProofs)) {
+                    throw new \InvalidArgumentException('permitted_proofs must not contain duplicate tools.');
+                }
+            }
             $hasExplicitEvidenceType = array_key_exists('evidence_type', $raw) || array_key_exists('evidenceType', $raw);
             $rawEvidenceType = (string) ($raw['evidence_type'] ?? $raw['evidenceType'] ?? '');
             $evidenceDescription = trim((string) ($raw['evidence_description'] ?? $raw['evidenceDescription'] ?? $raw['evidence'] ?? 'Verification proof required at this gate.'));
+            if ($hasPermittedProofs && in_array($rawEvidenceType, ['video_required', 'receipt_upload'], true)) {
+                throw new \InvalidArgumentException('Video and document evidence are unsupported by the permitted Work tools.');
+            }
 
             if ($hasRequiredProofs && is_array($rawRequiredProofs) && ! $hasExplicitEvidenceType) {
                 if (in_array('gps_checkin', $rawRequiredProofs, true)) {
@@ -184,6 +202,15 @@ final class WorkCatalog implements WorkSpecificationPort
                     default => [],
                 };
             }
+            if ($hasPermittedProofs && array_diff($requiredProofs, $rawPermittedProofs) !== []) {
+                throw new \InvalidArgumentException('permitted_proofs must include every required proof tool.');
+            }
+            $permittedProofs = $hasPermittedProofs
+                ? array_values(array_filter(
+                    ['photo_proof', 'gps_checkin', 'metric_reading', 'checklist_steps'],
+                    static fn (string $proof): bool => in_array($proof, $rawPermittedProofs, true) || in_array($proof, $requiredProofs, true),
+                ))
+                : $requiredProofs;
 
             $rawNodeKind = (string) ($raw['node_kind'] ?? $raw['nodeKind'] ?? '');
             if (! in_array($rawNodeKind, self::NODE_KINDS, true)) {
@@ -250,11 +277,13 @@ final class WorkCatalog implements WorkSpecificationPort
             }
             $checklistItems = $this->normalizeChecklistItems(
                 $this->authoredField($raw, 'checklist_items', 'checklistItems'),
-                $requireToolDefinitions && in_array('checklist_steps', $requiredProofs, true),
+                ($requireToolDefinitions || ($hasPermittedProofs && in_array('checklist_steps', $permittedProofs, true)))
+                    && in_array('checklist_steps', $hasPermittedProofs ? $permittedProofs : $requiredProofs, true),
             );
             $metricRequirements = $this->normalizeMetricRequirements(
                 $this->authoredField($raw, 'metric_requirements', 'metricRequirements'),
-                $requireToolDefinitions && in_array('metric_reading', $requiredProofs, true),
+                ($requireToolDefinitions || ($hasPermittedProofs && in_array('metric_reading', $permittedProofs, true)))
+                    && in_array('metric_reading', $hasPermittedProofs ? $permittedProofs : $requiredProofs, true),
             );
 
             $normalized[] = [
@@ -276,6 +305,9 @@ final class WorkCatalog implements WorkSpecificationPort
                 'checklist_items' => $checklistItems,
                 'metric_requirements' => $metricRequirements,
             ];
+            if ($includePermittedProofs || $hasPermittedProofs) {
+                $normalized[array_key_last($normalized)]['permitted_proofs'] = $permittedProofs;
+            }
         }
 
         $normalizedShape = strtoupper(trim($workShape));
@@ -429,18 +461,25 @@ final class WorkCatalog implements WorkSpecificationPort
         $normalizedNodes = $this->normalizeNodes($nodes, $normalizedShape);
 
         $structuralTuples = array_map(
-            static fn (array $node): array => [
-                'ordinal' => $node['ordinal'],
-                'node_kind' => $node['node_kind'],
-                'evidence_type' => $node['evidence_type'],
-                'control_mode' => $node['control_mode'],
-                'mandatory' => $node['mandatory'],
-                'required_proofs' => $node['required_proofs'],
-                'approval_method' => $node['approval_method'],
-                'handoff_party' => $node['handoff_party'],
-                'checklist_items' => $node['checklist_items'],
-                'metric_requirements' => $node['metric_requirements'],
-            ],
+            static function (array $node): array {
+                $tuple = [
+                    'ordinal' => $node['ordinal'],
+                    'node_kind' => $node['node_kind'],
+                    'evidence_type' => $node['evidence_type'],
+                    'control_mode' => $node['control_mode'],
+                    'mandatory' => $node['mandatory'],
+                    'required_proofs' => $node['required_proofs'],
+                    'approval_method' => $node['approval_method'],
+                    'handoff_party' => $node['handoff_party'],
+                    'checklist_items' => $node['checklist_items'],
+                    'metric_requirements' => $node['metric_requirements'],
+                ];
+                if (array_key_exists('permitted_proofs', $node)) {
+                    $tuple['permitted_proofs'] = $node['permitted_proofs'];
+                }
+
+                return $tuple;
+            },
             $normalizedNodes,
         );
 
@@ -485,7 +524,25 @@ final class WorkCatalog implements WorkSpecificationPort
             $rawStages = $selectedSteps !== [] ? $selectedSteps : (array) ($this->publishedForShape($normalizedShape)['definition']['steps'] ?? []);
         }
 
-        $nodes = $this->normalizeNodes($rawStages, $normalizedShape, requireToolDefinitions: false);
+        $hasPermittedProofs = array_reduce(
+            $rawStages,
+            static fn (bool $found, array $stage): bool => $found
+                || array_key_exists('permitted_proofs', $stage)
+                || array_key_exists('permittedProofs', $stage),
+            false,
+        );
+        $emitPermittedProofs = $hasPermittedProofs && in_array(strtoupper(trim($normalizedShape)), ['A1', 'A3'], true);
+        if ($hasPermittedProofs && ! in_array(strtoupper(trim($normalizedShape)), ['A1', 'A3'], true)) {
+            throw new \InvalidArgumentException('permitted_proofs is supported only by A1 and A3 Work contracts.');
+        }
+        if ($hasPermittedProofs) {
+            foreach ($rawStages as $stage) {
+                if (in_array($stage['evidence_type'] ?? $stage['evidenceType'] ?? null, ['video_required', 'receipt_upload'], true)) {
+                    throw new \InvalidArgumentException('Video and document evidence are unsupported by the permitted Work tools.');
+                }
+            }
+        }
+        $nodes = $this->normalizeNodes($rawStages, $normalizedShape, requireToolDefinitions: $emitPermittedProofs, includePermittedProofs: $emitPermittedProofs);
         $signatureHash = $this->computeSignature($normalizedShape, $nodes);
         $isCustomVariation = $selected !== null && $this->stepsDiffer($nodes, $this->normalizeNodes($selectedSteps, $normalizedShape));
         $catalogCode = $selected['set_code'] ?? $selected['catalog_code'] ?? $selected['option_id'] ?? null;
@@ -493,6 +550,9 @@ final class WorkCatalog implements WorkSpecificationPort
         $payloadSchemaVersion = isset($selected['payload_schema_version'])
             ? (int) $selected['payload_schema_version']
             : ($this->requiresSchemaTwo($nodes) ? 2 : 1);
+        if ($emitPermittedProofs) {
+            $payloadSchemaVersion = 3;
+        }
         if ($payloadSchemaVersion < 2 && $this->requiresSchemaTwo($nodes) && ($selected === null || $isCustomVariation)) {
             $payloadSchemaVersion = 2;
         }

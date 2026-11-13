@@ -24,9 +24,11 @@ final class ListingReviewService implements ListingReviewReaderPort
 
         $rows = DB::table('reviews')
             ->join('orders', 'orders.id', '=', 'reviews.order_id')
-            ->where('orders.listing_id', $listingId)
+            ->where('reviews.author_role', 'buyer')
+            ->whereNotNull('reviews.rating')
             ->whereNotNull('reviews.unblinded_at')
             ->whereIn('reviews.moderation_status', ['approved', 'unblinded'])
+            ->where('orders.listing_id', $listingId)
             ->select(['reviews.order_id', 'reviews.rating'])
             ->get()
             ->reject(fn ($row): bool => $this->isQuarantined((string) $row->order_id))
@@ -59,6 +61,8 @@ final class ListingReviewService implements ListingReviewReaderPort
                 ->join('orders', 'orders.id', '=', 'reviews.order_id')
                 ->join('evidence_files', 'evidence_files.id', '=', 'reviews.eligibility_evidence_file_id')
                 ->where('orders.listing_id', $listingId)
+                ->where('reviews.author_role', 'buyer')
+                ->whereNotNull('reviews.rating')
                 ->whereNotNull('reviews.unblinded_at')
                 ->whereIn('reviews.moderation_status', ['approved', 'unblinded'])
                 ->whereNull('evidence_files.deleted_at')
@@ -93,12 +97,16 @@ final class ListingReviewService implements ListingReviewReaderPort
             ->join('evidence_files', 'evidence_files.id', '=', 'reviews.eligibility_evidence_file_id')
             ->leftJoin('user_profiles', 'user_profiles.user_id', '=', 'reviews.author_user_id')
             ->where('orders.listing_id', $listingId)
+            ->where('reviews.author_role', 'buyer')
+            ->whereNotNull('reviews.rating')
+            ->whereNotNull('reviews.unblinded_at')
             ->whereIn('reviews.moderation_status', ['approved', 'unblinded'])
             ->whereNull('evidence_files.deleted_at')
             ->where('evidence_files.scan_status', 'clean')
             ->where('evidence_files.visibility', 'public')
             ->where('evidence_files.media_type', 'like', 'image/%')
             ->select([
+                'reviews.order_id',
                 'evidence_files.id',
                 'evidence_files.storage_key',
                 'evidence_files.evidence_type',
@@ -106,8 +114,9 @@ final class ListingReviewService implements ListingReviewReaderPort
                 'user_profiles.display_name',
             ])
             ->orderByDesc('reviews.created_at')
-            ->limit(max(0, $limit))
-            ->get();
+            ->get()
+            ->reject(fn ($row): bool => $this->isQuarantined((string) $row->order_id))
+            ->take(max(0, $limit));
 
         $photos = [];
         foreach ($rows as $row) {
@@ -139,8 +148,16 @@ final class ListingReviewService implements ListingReviewReaderPort
         $query = DB::table('reviews')
             ->join('orders', 'orders.id', '=', 'reviews.order_id')
             ->leftJoin('user_profiles', 'user_profiles.user_id', '=', 'reviews.author_user_id')
-            ->leftJoin('evidence_files', 'evidence_files.id', '=', 'reviews.eligibility_evidence_file_id')
+            ->leftJoin('evidence_files', function ($join): void {
+                $join->on('evidence_files.id', '=', 'reviews.eligibility_evidence_file_id')
+                    ->whereNull('evidence_files.deleted_at')
+                    ->where('evidence_files.scan_status', 'clean')
+                    ->where('evidence_files.visibility', 'public')
+                    ->where('evidence_files.media_type', 'like', 'image/%');
+            })
             ->where('orders.listing_id', $listingId)
+            ->where('reviews.author_role', 'buyer')
+            ->whereNotNull('reviews.rating')
             ->whereNotNull('reviews.unblinded_at')
             ->whereIn('reviews.moderation_status', ['approved', 'unblinded'])
             ->select([
@@ -191,7 +208,7 @@ final class ListingReviewService implements ListingReviewReaderPort
                 'created_at' => $createdAt->toISOString(),
                 'stars' => (int) $row->rating,
                 'package_tag' => 'Verified Order',
-                'quote' => (string) ($row->content ?? 'Great service and communication.'),
+                'quote' => $row->content === null ? null : (string) $row->content,
                 'attribute_chips' => $chips,
                 'has_photo' => $hasPhoto,
                 'photo_url' => $photoUrl,
@@ -210,9 +227,11 @@ final class ListingReviewService implements ListingReviewReaderPort
 
         $rawRows = DB::table('reviews')
             ->join('orders', 'orders.id', '=', 'reviews.order_id')
-            ->whereIn('orders.listing_id', $listingIds)
+            ->where('reviews.author_role', 'buyer')
+            ->whereNotNull('reviews.rating')
             ->whereNotNull('reviews.unblinded_at')
             ->whereIn('reviews.moderation_status', ['approved', 'unblinded'])
+            ->whereIn('orders.listing_id', $listingIds)
             ->select(['orders.listing_id', 'reviews.order_id', 'reviews.rating'])
             ->get()
             ->reject(fn ($row): bool => $this->isQuarantined((string) $row->order_id));

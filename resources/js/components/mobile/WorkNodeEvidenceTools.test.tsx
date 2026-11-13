@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import WorkNodeEvidenceTools from './WorkNodeEvidenceTools';
 import type { WorkNodeRecord } from '../../types';
@@ -25,6 +25,18 @@ describe('WorkNodeEvidenceTools', () => {
         }));
     });
 
+    it('accepts successive measurement edits without losing the entered value', () => {
+        const onSubmit = vi.fn();
+        render(<WorkNodeEvidenceTools orderId="order-1" node={{ ...node, required_proofs: ['metric_reading'] }} action="complete_step" processing={false} onSubmit={onSubmit} onPreviewPhoto={vi.fn()} />);
+        const input = screen.getByLabelText(/Voltage \(V\)/);
+        act(() => {
+            fireEvent.change(input, { target: { value: '1' } });
+            fireEvent.change(input, { target: { value: '12' } });
+        });
+        fireEvent.click(screen.getByRole('button', { name: /Submit proof/ }));
+        expect(onSubmit).toHaveBeenCalledWith({ metric_readings: [{ id: 'voltage', value: 12, unit: 'V' }] });
+    });
+
     it('does not allow advancement until required checklist items and named measurements are entered', () => {
         render(<WorkNodeEvidenceTools orderId="order-1" node={node} action="complete_step" processing={false} onSubmit={vi.fn()} onPreviewPhoto={vi.fn()} />);
         expect((screen.getByRole('button', { name: /Submit proof/ }) as HTMLButtonElement).disabled).toBe(true);
@@ -39,5 +51,21 @@ describe('WorkNodeEvidenceTools', () => {
         expect(submit).toHaveProperty('disabled', true);
         fireEvent.click(submit);
         expect(onSubmit).not.toHaveBeenCalled();
+    });
+    it('allows an optional checklist to be omitted or submitted when completed', () => {
+        const onSubmit = vi.fn();
+        render(<WorkNodeEvidenceTools orderId="order-1" node={{
+            ...node,
+            required_proofs: [],
+            permitted_proofs: ['checklist_steps'],
+        }} action="complete_step" processing={false} onSubmit={onSubmit} onPreviewPhoto={vi.fn()} />);
+
+        fireEvent.click(screen.getByRole('button', { name: /Submit proof/ }));
+        expect(onSubmit).toHaveBeenLastCalledWith({});
+        fireEvent.click(screen.getByLabelText(/Confirm grounding/));
+        fireEvent.click(screen.getByRole('button', { name: /Submit proof/ }));
+        expect(onSubmit).toHaveBeenLastCalledWith({
+            checklist_responses: [{ id: 'ground', completed: true }, { id: 'label', completed: false }],
+        });
     });
 });

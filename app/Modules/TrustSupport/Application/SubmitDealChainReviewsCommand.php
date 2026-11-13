@@ -191,6 +191,9 @@ final class SubmitDealChainReviewsCommand
                     ->where('order_id', $orderId)
                     ->where('author_user_id', $authorUserId)
                     ->first();
+                if ($existing !== null && $existing->unblinded_at !== null) {
+                    throw new TrustSupportError('REVIEW_ALREADY_REVEALED', 'A revealed review cannot be changed.', $correlationId, status: 409);
+                }
 
                 $reviewId = (string) Str::uuid7();
 

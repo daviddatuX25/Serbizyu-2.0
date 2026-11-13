@@ -48,6 +48,8 @@ export interface QuoteComposerPipelineStage {
     clearanceMode?: string;
     approvalMethod?: string;
     requiredProofs?: string[];
+    permittedProofs?: string[];
+    permitted_proofs?: string[];
     handoffParty?: string;
     checklistItems?: WorkChecklistItem[];
     metricRequirements?: WorkMetricRequirement[];
@@ -290,9 +292,13 @@ export default function QuoteComposerSheet({
                   ]
                 : []),
         ].map((stage: QuoteComposerPipelineStage) => {
-            const { checklistItems, metricRequirements, ...persistedStage } = stage;
+            const { checklistItems, metricRequirements, permittedProofs, requiredProofs, ...persistedStage } = stage;
             return {
                 ...persistedStage,
+                ...(requiredProofs === undefined ? {} : { requiredProofs }),
+                ...(permittedProofs === undefined
+                    ? {}
+                    : { permitted_proofs: Array.from(new Set([...(requiredProofs ?? []), ...permittedProofs])) }),
                 ...(checklistItems === undefined ? {} : { checklist_items: checklistItems }),
                 ...(metricRequirements === undefined ? {} : { metric_requirements: metricRequirements }),
             };

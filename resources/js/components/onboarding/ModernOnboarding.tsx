@@ -5,7 +5,6 @@ import { Field, Notice, PasswordInput, PasswordRequirements, TextInput } from '@
 export interface ModernOnboardingProps {
     initialDisplayName?: string;
     initialAreaCode?: string;
-    initialLanguageCode?: 'fil' | 'en';
     onSuccess?: () => void;
     onCancel?: () => void;
 }
@@ -13,7 +12,6 @@ export interface ModernOnboardingProps {
 export function ModernOnboarding({
     initialDisplayName = '',
     initialAreaCode = 'Tagudin Centro',
-    initialLanguageCode = 'fil',
     onSuccess,
     onCancel,
 }: ModernOnboardingProps) {
@@ -24,7 +22,6 @@ export function ModernOnboarding({
             ? initialAreaCode
             : 'Tagudin Centro',
     );
-    const [languageCode, setLanguageCode] = useState<'fil' | 'en'>(initialLanguageCode);
     const [providerIntent, setProviderIntent] = useState(true);
     const lowDataMode = false;
     const helpPreference = 'self_managed';
@@ -75,7 +72,6 @@ export function ModernOnboarding({
                 provider_intent: providerIntent,
                 display_name: displayName.trim(),
                 area_code: areaCode,
-                language_code: languageCode,
                 low_data_mode: lowDataMode,
                 help_preference: helpPreference,
                 password,
@@ -181,33 +177,13 @@ export function ModernOnboarding({
                         {/* Right Column: Language & Storefront Toggle */}
                         <div className="space-y-4">
                             <div>
-                                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                                    Primary Language
-                                </label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setLanguageCode('fil')}
-                                        className={`rounded-xl border px-3 py-2.5 text-xs font-bold transition-all ${
-                                            languageCode === 'fil'
-                                                ? 'border-[#0F2F58] bg-[#0F2F58] text-white shadow-xs'
-                                                : 'border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100'
-                                        }`}
-                                    >
-                                        Filipino
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setLanguageCode('en')}
-                                        className={`rounded-xl border px-3 py-2.5 text-xs font-bold transition-all ${
-                                            languageCode === 'en'
-                                                ? 'border-[#0F2F58] bg-[#0F2F58] text-white shadow-xs'
-                                                : 'border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100'
-                                        }`}
-                                    >
-                                        English
-                                    </button>
-                                </div>
+                                <p className="text-sm font-semibold text-slate-700">
+                                    Language preferences
+                                </p>
+                                <p className="mt-1 text-sm text-slate-600">
+                                    Saved language preferences are kept. Filipino and Ilocano
+                                    interfaces are not available yet.
+                                </p>
                             </div>
 
                             {/* Provider Intent Toggle */}

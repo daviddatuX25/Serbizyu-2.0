@@ -50,7 +50,7 @@ final class SliceStateQuery
                 'purpose_specific_actions' => $this->roles->purposeSpecificActions($userId),
                 'display_name' => $profile->display_name ?? null,
                 'area_code' => $profile->service_area_display ?? 'Tagudin',
-                'language_code' => $language['primary'] ?? 'fil',
+                'language_code' => $language['primary'] ?? $language[0] ?? DB::table('users')->where('id', $userId)->value('locale') ?? 'en',
                 'low_data_mode' => (bool) ($access['low_data_mode'] ?? false),
                 'help_preference' => $access['help_preference'] ?? 'self_managed',
                 'email_attached' => $emailAttached,

@@ -69,7 +69,7 @@ type ReviewItem = {
     timeAgo: string;
     stars: number;
     packageTag: string;
-    quote: string;
+    quote: string | null;
     hasPhoto?: boolean;
 };
 
@@ -95,6 +95,8 @@ export default function ListingDetail(props: HomeProps) {
         [props.dealChainCatalog],
     );
     const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+    const [selectedPhoto, setSelectedPhoto] = useState<{ listingId: string; photoId: string } | null>(null);
+    const [unavailablePhotoUrl, setUnavailablePhotoUrl] = useState<string | null>(null);
     const [reviewItems, setReviewItems] = useState<BasketItem[]>([]);
     const [savedRolePickerIndex, setSavedRolePickerIndex] = useState<number | null>(null);
     const advancingRoleIndexRef = useRef<number | null>(null);
@@ -512,7 +514,11 @@ export default function ListingDetail(props: HomeProps) {
         reviewPage * REVIEW_PAGE_SIZE,
     );
     const hasReviews = reviewsCount > 0;
-    const photoUrl = listing?.media?.cover_thumbnail_url ?? listing?.cover_thumbnail_url ?? null;
+    const listingMediaPhotos = (listing?.media?.items ?? []).filter((item) => item.kind === 'photo' && item.url);
+    const activePhoto = (selectedPhoto?.listingId === listing?.id
+        ? listingMediaPhotos.find((item) => item.id === selectedPhoto?.photoId)
+        : null) ?? listingMediaPhotos.find((item) => item.is_cover);
+    const photoUrl = activePhoto?.url ?? listing?.media?.cover_thumbnail_url ?? listing?.cover_thumbnail_url ?? listingMediaPhotos[0]?.url ?? null;
 
     if (!listing) {
         return (
@@ -602,7 +608,7 @@ export default function ListingDetail(props: HomeProps) {
             </header>
 
             {/* Main Content Area */}
-            <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
+            <main className="mx-auto max-w-7xl px-4 pt-6 pb-28 sm:px-6 lg:py-8">
                 {/* Contextual Deal Chain Slot Indicator (When redirected via ?chain_slot=) */}
                 {chainSlotContext && (
                     <div className="mb-4 flex items-center justify-between rounded-xl border border-amber-400 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-900 shadow-xs">
@@ -639,11 +645,11 @@ export default function ListingDetail(props: HomeProps) {
                     <div className="flex flex-col gap-5 lg:col-span-7">
                         {/* 1. Hero Image Container (Clean, without messy text overlays) */}
                         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xs">
-                            {photoUrl ? (
-                                <img src={photoUrl} alt={listing.title} className="size-full object-cover" />
+                            {photoUrl && photoUrl !== unavailablePhotoUrl ? (
+                                <img src={photoUrl} alt={listing.title} onError={() => setUnavailablePhotoUrl(photoUrl)} className="size-full object-cover" />
                             ) : (
                                 <div className="flex size-full items-center justify-center text-xs font-semibold text-slate-500">
-                                    No listing image
+                                    {photoUrl ? 'Listing image unavailable' : 'No listing image'}
                                 </div>
                             )}
                             <button
@@ -657,13 +663,30 @@ export default function ListingDetail(props: HomeProps) {
                                 <Heart className={`size-4.5 ${isPinned ? 'fill-red-500' : ''}`} />
                             </button>
                         </div>
+                        {listingMediaPhotos.length > 1 && (
+                            <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Listing photos">
+                                {listingMediaPhotos.map((photo, index) => (
+                                    <button
+                                        key={photo.id}
+                                        type="button"
+                                        onClick={() => setSelectedPhoto({ listingId: listing.id, photoId: photo.id })}
+                                        aria-label={`View photo ${index + 1}${photo.caption ? `: ${photo.caption}` : ''}`}
+                                        aria-pressed={photoUrl === photo.url}
+                                        className="size-16 shrink-0 overflow-hidden rounded-lg border-2 border-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F2F58] aria-pressed:border-[#0F2F58]"
+                                    >
+                                        <img src={photo.thumbnail_url || photo.url} alt="" className="size-full object-cover" />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {activePhoto?.caption && <p className="text-xs break-words text-slate-600">{activePhoto.caption}</p>}
 
                         {/* 2. Main Title, Price Line & Rating Row Card (Exact Mock Hierarchy) */}
                         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                             {/* Category Badge */}
                             <div className="flex items-center gap-2">
                                 <span className="rounded-full bg-[#EBF2FA] px-3 py-0.5 text-[11px] font-extrabold tracking-wide text-[#0F2F58] uppercase">
-                                    {isService ? 'Verified Service' : 'Verified Local Product'}
+                                    {listing.catalog_source === 'tagudin_seed' ? 'Sample listing' : isService ? 'Verified Service' : 'Verified Local Product'}
                                 </span>
                             </div>
 
@@ -1096,9 +1119,9 @@ export default function ListingDetail(props: HomeProps) {
                                             {featuredReview.packageTag}
                                         </span>
                                     </div>
-                                    <p className="mt-2 text-xs leading-relaxed text-slate-700">
-                                        "{featuredReview.quote}"
-                                    </p>
+                                    {featuredReview.quote && (
+                                        <p className="mt-2 text-xs leading-relaxed text-slate-700">"{featuredReview.quote}"</p>
+                                    )}
                                 </div>
                             ) : !hasReviews ? (
                                 <div className="rounded-xl border border-dashed border-slate-200 bg-[#FAFCFB] p-6 text-center">
@@ -1195,9 +1218,9 @@ export default function ListingDetail(props: HomeProps) {
                                                         {rev.packageTag}
                                                     </span>
                                                 </div>
-                                                <p className="mt-1.5 text-xs leading-relaxed text-slate-700">
-                                                    "{rev.quote}"
-                                                </p>
+                                                {rev.quote && (
+                                                    <p className="mt-1.5 text-xs leading-relaxed text-slate-700">"{rev.quote}"</p>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

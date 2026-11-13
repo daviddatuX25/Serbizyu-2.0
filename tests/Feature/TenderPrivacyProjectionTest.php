@@ -16,6 +16,15 @@ uses(DatabaseTransactions::class, AuthenticatesWithPhoneOtp::class);
 beforeEach(function (): void {
     $this->bootPhoneOtpAuth();
     $this->withoutMiddleware(ThrottleRequests::class);
+    foreach (['home-help' => 'Home Help', 'courier' => 'Courier'] as $code => $name) {
+        DB::table('categories')->insertOrIgnore([
+            'id' => (string) Str::uuid7(), 'code' => $code, 'name' => $name,
+            'safety_class' => 'standard', 'data_class' => 'public', 'status' => 'active',
+            'pilot_status' => 'approved', 'metadata' => '{}', 'metadata_version' => 1,
+            'version' => 1, 'correlation_id' => (string) Str::uuid7(),
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
 });
 
 function createPrivacyTestUser(string $phone, string $role = 'buy'): User

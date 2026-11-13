@@ -46,7 +46,7 @@ interface ListingReviewReaderPort
      *     created_at: string,
      *     stars: int,
      *     package_tag: string,
-     *     quote: string,
+     *     quote: ?string,
      *     attribute_chips: list<string>,
      *     has_photo: bool,
      *     photo_url: ?string,

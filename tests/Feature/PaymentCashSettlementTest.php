@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\IdentityAccess\Application\ConsentGrantService;
 use App\Shared\Infrastructure\Demo\DealChainExecutionFixtures as Fix;
-use Database\Seeders\DealChainExecutionSeeder;
+use Database\Seeders\TagudinBrowseCatalogSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +19,7 @@ beforeEach(function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
         $this->markTestSkipped('Payment settlement behavior requires PostgreSQL.');
     }
+    $this->seed(TagudinBrowseCatalogSeeder::class);
     $this->seed(DealChainExecutionSeeder::class);
     $transitObligationIds = DB::table('payment_obligations')->where('order_id', Fix::ORDER_ID_TRANSIT)->pluck('id');
     DB::table('payment_events')->whereIn('payment_obligation_id', $transitObligationIds)->delete();

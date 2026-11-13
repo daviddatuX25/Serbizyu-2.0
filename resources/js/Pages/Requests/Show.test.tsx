@@ -121,12 +121,20 @@ describe('RequestShow Page', () => {
 
     it('opens notifications from the same header as the request title and back action', async () => {
         const summary = { unread_count: 0, needs_action_count: 0, updates_count: 0 };
-        vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => new Response(
-            JSON.stringify(String(input).includes('/summary')
-                ? { data: summary }
-                : { data: [], next_cursor: null }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } },
-        )));
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(
+                async (input: RequestInfo | URL) =>
+                    new Response(
+                        JSON.stringify(
+                            String(input).includes('/summary')
+                                ? { data: summary }
+                                : { data: [], next_cursor: null },
+                        ),
+                        { status: 200, headers: { 'Content-Type': 'application/json' } },
+                    ),
+            ),
+        );
         render(
             <NotificationProvider authenticated initialSummary={summary}>
                 <RequestShow
@@ -265,13 +273,33 @@ describe('RequestShow Page', () => {
             />,
         );
 
-        const img = screen.getByRole('img', {
-            name: /I need someone to buy me a milk tea from Big Brew/i,
-        });
+        const img = screen.getByRole('img', { name: 'Category illustration' });
         expect(img.getAttribute('src')).toBe('/photos/courier.jpg');
         expect(screen.getByText('Courier')).toBeTruthy();
         expect(screen.getByText(/Fulfillment:/i)).toBeTruthy();
         expect(screen.getByText(/Direct Cash \(COD\)/i)).toBeTruthy();
+    });
+    it('labels the P2P payment lane explicitly', () => {
+        const p2pRequest = {
+            ...mockRequest,
+            item_list: {
+                ...mockRequest.item_list,
+                payment_lane: 'p2p_transfer',
+            },
+        };
+
+        render(
+            <RequestShow
+                request={p2pRequest}
+                quotes={[]}
+                session={{ authenticated: true, user_id: 'usr-prov-1' }}
+                correlationId="corr-p2p"
+                viewer_role="eligible_responder"
+                actions={{ can_quote: true, can_accept: false, is_owner: false }}
+            />,
+        );
+
+        expect(screen.getByText('GCash / Maya (P2P)')).toBeTruthy();
     });
 
     it('renders planned work pipeline stages, template, and evidence requirements when present', () => {

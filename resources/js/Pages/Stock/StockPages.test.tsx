@@ -15,7 +15,10 @@ vi.mock('@inertiajs/react', () => ({
     }),
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+});
 
 const item = {
     id: 'capacity-1',
@@ -70,5 +73,14 @@ describe('merchant stock ledger pages', () => {
         expect(screen.getAllByRole('button', { name: /^Record physical recount$/ }).length).toBeGreaterThan(0);
         expect(screen.getByRole('heading', { name: 'Movement history' })).toBeTruthy();
         expect(screen.getByText('Physical recount')).toBeTruthy();
+    });
+
+    it('opens the stock ledger when randomUUID is unavailable', () => {
+        vi.stubGlobal('crypto', {
+            getRandomValues: (bytes: Uint8Array) => bytes.fill(42),
+        });
+        render(<StockShow stockItem={item} />);
+        expect(screen.getByRole('heading', { name: 'Movement history' })).toBeTruthy();
+        expect(screen.getByLabelText('Quantity received')).toBeTruthy();
     });
 });

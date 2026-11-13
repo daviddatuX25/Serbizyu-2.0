@@ -12,7 +12,7 @@ vi.mock('@inertiajs/react', () => ({
 afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
-    document.head.querySelector('meta[name="csrf-token"]')?.remove();
+    document.cookie = 'XSRF-TOKEN=; Max-Age=0; path=/';
     vi.clearAllMocks();
     vi.restoreAllMocks();
 });
@@ -41,10 +41,7 @@ const governance = {
 type MockJsonResponse = { ok: boolean; status: number; json: () => Promise<unknown> };
 
 function authorizeBrowserRequests() {
-    const csrf = document.createElement('meta');
-    csrf.name = 'csrf-token';
-    csrf.content = 'csrf-32';
-    document.head.append(csrf);
+    document.cookie = 'XSRF-TOKEN=csrf-32; path=/';
 }
 
 function jsonResponse(data: unknown, ok = true): MockJsonResponse {
@@ -64,7 +61,10 @@ describe('governed case workspace actions', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Assign case' }));
         await waitFor(() => expect(fetchSpy).toHaveBeenNthCalledWith(1,
             '/admin/support-cases/case-32/assign',
-            expect.objectContaining({ body: expect.stringContaining('"expected_version":7') }),
+            expect.objectContaining({
+                body: expect.stringContaining('"expected_version":7'),
+                headers: expect.objectContaining({ 'X-XSRF-TOKEN': 'csrf-32' }),
+            }),
         ));
         expect(router.reload).toHaveBeenCalled();
         expect(screen.getByText(/Assigned Mara Maker/)).toBeTruthy();

@@ -30,7 +30,7 @@ final class OnboardingService
         if (str_starts_with($area, 'Tagudin')) {
             $area = 'Tagudin';
         }
-        $language = trim((string) ($input['language_code'] ?? $input['language'] ?? 'fil'));
+        $language = $input['language_code'] ?? $input['language'] ?? null;
         $displayName = trim((string) ($input['display_name'] ?? ''));
         $help = trim((string) ($input['help_preference'] ?? 'self_managed'));
         $providerIntent = (bool) ($input['provider_intent'] ?? false);
@@ -70,8 +70,8 @@ final class OnboardingService
         if (! in_array($area, ['Tagudin', 'Tagudin Centro'], true)) {
             $errors['area_code'][] = 'Use the safe Tagudin area for this demo.';
         }
-        if (! in_array($language, ['fil', 'en'], true)) {
-            $errors['language_code'][] = 'Choose Filipino or English.';
+        if ($language !== null && ! in_array($language, ['fil', 'en', 'ilo'], true)) {
+            $errors['language_code'][] = 'Choose a supported language preference.';
         }
         if (! in_array($help, ['self_managed', 'assistance_requested'], true)) {
             $errors['help_preference'][] = 'Choose an available setup support preference.';
@@ -100,11 +100,22 @@ final class OnboardingService
                     'low_data_mode' => (bool) ($input['low_data_mode'] ?? false),
                     'help_preference' => $help,
                 ], JSON_THROW_ON_ERROR),
-                'language_preferences' => json_encode(['primary' => $language], JSON_THROW_ON_ERROR),
                 'version' => DB::raw('version + 1'),
                 'correlation_id' => $correlationId,
                 'updated_at' => $now,
             ]);
+            if ($language !== null) {
+                $storedPreferences = json_decode((string) DB::table('user_profiles')->where('user_id', $userId)->value('language_preferences'), true) ?: [];
+                $storedPrimary = $storedPreferences['primary'] ?? $storedPreferences[0] ?? null;
+                if ($storedPrimary !== $language) {
+                    $storedPreferences = array_is_list($storedPreferences)
+                        ? array_values(array_unique([$language, ...$storedPreferences]))
+                        : [...$storedPreferences, 'primary' => $language];
+                    DB::table('user_profiles')->where('user_id', $userId)->update([
+                        'language_preferences' => json_encode($storedPreferences, JSON_THROW_ON_ERROR),
+                    ]);
+                }
+            }
 
             foreach ($requestedRoles as $roleCode) {
                 $this->roles->ensureActive(
@@ -156,6 +167,11 @@ final class OnboardingService
                 ->where('user_id', $userId)
                 ->where('verification_type', 'provider_readiness')
                 ->value('status') ?? 'none');
+        }
+
+        if ($language === null) {
+            $preferences = json_decode((string) DB::table('user_profiles')->where('user_id', $userId)->value('language_preferences'), true) ?: [];
+            $language = $preferences['primary'] ?? $preferences[0] ?? $user->locale ?? 'en';
         }
 
         return [

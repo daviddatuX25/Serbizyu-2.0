@@ -25,6 +25,34 @@ function listingLifecyclePgsqlOrSkip(): void
     }
 }
 
+it('rejects submitting a draft with incomplete required Work measurements', function (): void {
+    listingLifecyclePgsqlOrSkip();
+    $user = User::factory()->create();
+    $actor = new ResourceActor((string) $user->id, (string) $user->id);
+    $correlationId = (string) Str::uuid7();
+    $listing = app(CreateListingDraft::class)->handle($actor, [
+        'title' => 'Incomplete measurement service',
+        'description' => 'A service with an incomplete measurement requirement.',
+        'category_code' => 'home-help',
+        'listing_type' => 'service',
+        'work_shape' => 'A1',
+        'milestone_stages' => [[
+            'id' => 'measurement',
+            'title' => 'Check the reading',
+            'required_proofs' => ['metric_reading'],
+        ]],
+    ], $correlationId);
+
+    expect(fn () => app(SubmitListing::class)->handle(
+        (string) $listing['id'],
+        $actor,
+        (int) $listing['expected_version'],
+        'submit-incomplete-'.Str::uuid7(),
+        $correlationId,
+    ))->toThrow(ListingError::class);
+    expect(DB::table('listings')->where('id', $listing['id'])->value('status'))->toBe('draft');
+});
+
 it('persists A3 service selection through create, update, version terms, and submit lifecycle', function (): void {
     listingLifecyclePgsqlOrSkip();
 
@@ -39,6 +67,10 @@ it('persists A3 service selection through create, update, version terms, and sub
         'category_code' => 'home-help',
         'listing_type' => 'service',
         'work_shape' => 'A3',
+        'milestone_stages' => [
+            ['id' => 'visit', 'title' => 'Consultation', 'required_proofs' => [], 'control_mode' => 'provider_advance'],
+            ['id' => 'review', 'title' => 'Customer review', 'required_proofs' => [], 'control_mode' => 'customer_confirm'],
+        ],
     ], $correlationId);
 
     expect($created['id'])->not->toBeEmpty()

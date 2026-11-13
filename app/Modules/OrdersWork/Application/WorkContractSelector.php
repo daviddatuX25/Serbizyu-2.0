@@ -26,11 +26,16 @@ final class WorkContractSelector
 
         $contractNodes = $nodes !== [] ? $nodes : (array) ($specification['nodes'] ?? []);
         $requiresSchemaTwo = self::requiresSchemaTwo($contractNodes);
+        $hasPermittedProofs = self::hasPermittedProofs($contractNodes);
         $shapeVersion = $hasShapeVersion ? self::version($specification['shape_contract_version'], $correlationId) : 1;
         $schemaVersion = $hasPayloadVersion
             ? self::version($specification['payload_schema_version'], $correlationId)
-            : ($requiresSchemaTwo ? 2 : 1);
-        if ($schemaVersion === 1 && $requiresSchemaTwo) {
+            : ($hasPermittedProofs && in_array(strtoupper($shapeCode), ['A1', 'A3'], true)
+                ? 3
+                : ($requiresSchemaTwo ? 2 : 1));
+        if (($schemaVersion === 1 && $requiresSchemaTwo)
+            || ($schemaVersion === 3 && ! in_array(strtoupper($shapeCode), ['A1', 'A3'], true))
+            || ($hasPermittedProofs && $schemaVersion !== 3)) {
             throw WorkContractError::unsupported($correlationId);
         }
 
@@ -48,9 +53,37 @@ final class WorkContractSelector
                     throw WorkContractError::unsupported($correlationId);
                 }
             }
+            if ($schemaVersion === 3) {
+                $permitted = $node['permitted_proofs'] ?? $node['permittedProofs'] ?? null;
+                if (! is_array($permitted)
+                    || ! array_is_list($permitted)
+                    || ! array_is_list($proofs)
+                    || count(array_unique($permitted)) !== count($permitted)
+                    || count(array_unique($proofs)) !== count($proofs)
+                    || array_diff($proofs, $permitted) !== []) {
+                    throw WorkContractError::unsupported($correlationId);
+                }
+                foreach ($permitted as $proof) {
+                    if (! is_string($proof) || ! $contract->supportsTool($proof)) {
+                        throw WorkContractError::unsupported($correlationId);
+                    }
+                }
+            }
         }
 
         return $contract;
+    }
+
+    /** @param list<array<string, mixed>> $nodes */
+    private static function hasPermittedProofs(array $nodes): bool
+    {
+        foreach ($nodes as $node) {
+            if (is_array($node) && (array_key_exists('permitted_proofs', $node) || array_key_exists('permittedProofs', $node))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function version(mixed $value, string $correlationId): int

@@ -79,6 +79,22 @@ final class TenderService
             if ($listingId !== null && ($listingSource === null || (string) $listingSource['owner_user_id'] !== $userId)) {
                 throw new IdentityAccessError('INVALID_LISTING_OWNER', 'You may only quote with an active listing you own.', $correlationId, status: 422);
             }
+            $requestItems = is_string($request->item_list) ? json_decode($request->item_list, true) : (array) $request->item_list;
+            if (is_array($requestItems) && array_key_exists('payment_lane', $requestItems)) {
+                $requestedLane = $requestItems['payment_lane'];
+                if (! in_array($requestedLane, ['external_cash', 'p2p_transfer'], true)) {
+                    throw new IdentityAccessError('PAYMENT_LANE_NOT_ELIGIBLE', 'This request uses a retired or invalid payment lane. Update the request before quoting.', $correlationId, status: 422);
+                }
+            } else {
+                $requestedLane = 'external_cash';
+            }
+            if ($listingSource !== null) {
+                $eligibleLanes = $this->listings->eligiblePaymentLanesForVersion((string) $listingSource['listing_version_id']);
+                if (! in_array($requestedLane, $eligibleLanes, true)) {
+                    throw new IdentityAccessError('PAYMENT_LANE_NOT_ELIGIBLE', 'The requested payment lane is not available for this listing.', $correlationId, status: 422);
+                }
+            }
+            $paymentLaneOptions = [$requestedLane];
             $requestedWorkShape = strtoupper((string) ($input['work_shape'] ?? $listingSource['work_shape'] ?? 'A1'));
             $workShape = $listingSource !== null ? (string) $listingSource['work_shape'] : $requestedWorkShape;
             $listingType = $listingSource !== null ? (string) $listingSource['listing_type'] : 'service';
@@ -94,7 +110,6 @@ final class TenderService
                     ?? null;
             }
             if (! is_array($milestoneStages) || $milestoneStages === []) {
-                $requestItems = is_string($request->item_list) ? json_decode($request->item_list, true) : (array) $request->item_list;
                 $milestoneStages = is_array($requestItems) ? ($requestItems['pipeline']['stages'] ?? null) : null;
             }
             if ($workShape === 'A3' && (! is_array($milestoneStages) || $milestoneStages === [])) {
@@ -107,8 +122,20 @@ final class TenderService
                 );
             }
             if (is_array($milestoneStages) && $milestoneStages !== []) {
+                $includePermittedProofs = (int) ($listingSource['work_specification']['payload_schema_version'] ?? 0) === 3;
+                foreach ($milestoneStages as $stage) {
+                    if (is_array($stage) && (array_key_exists('permitted_proofs', $stage) || array_key_exists('permittedProofs', $stage))) {
+                        $includePermittedProofs = true;
+                        break;
+                    }
+                }
                 try {
-                    $milestoneStages = $this->workSpecs->normalizeNodes($milestoneStages, $workShape, requireToolDefinitions: true);
+                    $milestoneStages = $this->workSpecs->normalizeNodes(
+                        $milestoneStages,
+                        $workShape,
+                        requireToolDefinitions: true,
+                        includePermittedProofs: $includePermittedProofs,
+                    );
                 } catch (\InvalidArgumentException $error) {
                     throw new IdentityAccessError(
                         'INVALID_WORK_SPECIFICATION',
@@ -127,6 +154,7 @@ final class TenderService
                     $workSpecification['nodes'] = $milestoneStages;
                 }
                 $requiresSchemaTwo = false;
+                $requiresSchemaThree = false;
                 foreach ((array) $milestoneStages as $stage) {
                     if (! is_array($stage)) {
                         continue;
@@ -134,18 +162,22 @@ final class TenderService
                     $proofs = $stage['required_proofs'] ?? $stage['requiredProofs'] ?? [];
                     $approvalMethod = $stage['approval_method'] ?? $stage['approvalMethod'] ?? null;
                     $handoffParty = $stage['handoff_party'] ?? $stage['handoffParty'] ?? null;
+                    $requiresSchemaThree = $requiresSchemaThree
+                        || array_key_exists('permitted_proofs', $stage)
+                        || array_key_exists('permittedProofs', $stage);
                     if ((is_array($proofs) && array_intersect($proofs, ['checklist_steps', 'metric_reading']) !== [])
                         || (array) ($stage['checklist_items'] ?? $stage['checklistItems'] ?? []) !== []
                         || (array) ($stage['metric_requirements'] ?? $stage['metricRequirements'] ?? []) !== []
                         || in_array($approvalMethod, ['presence_otp', 'worker_dropoff'], true)
                         || $handoffParty === 'worker_dropoff') {
                         $requiresSchemaTwo = true;
-                        break;
                     }
                 }
                 $workSpecification['shape_contract_version'] ??= 1;
                 $workSpecification['payload_schema_version'] ??= 1;
-                if ($requiresSchemaTwo && (int) $workSpecification['payload_schema_version'] < 2) {
+                if ($requiresSchemaThree && in_array($workShape, ['A1', 'A3'], true)) {
+                    $workSpecification['payload_schema_version'] = 3;
+                } elseif ($requiresSchemaTwo && (int) $workSpecification['payload_schema_version'] < 2) {
                     $workSpecification['payload_schema_version'] = 2;
                 }
             }
@@ -268,7 +300,7 @@ final class TenderService
                 'exclusions' => null,
                 'expires_at' => now()->addDays(7),
                 'work_shape' => $workShape,
-                'payment_lane_options' => json_encode(['external_cash'], JSON_THROW_ON_ERROR),
+                'payment_lane_options' => json_encode($paymentLaneOptions, JSON_THROW_ON_ERROR),
                 'status' => 'submitted',
                 'deal_chain_id' => null,
                 'deal_need_id' => null,

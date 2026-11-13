@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { AlertCircle, Camera, CheckCircle2, Loader2, Upload, X } from 'lucide-react';
 import type { WorkNodeEvidenceCandidate } from '../../types';
+import { getXsrfToken } from '@/lib/csrf';
 
 const MAX_PHOTOS_PER_NODE = 8;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -147,7 +148,7 @@ export default function WorkPhotoProofInput({
             return;
         }
 
-        const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
+        const csrfToken = getXsrfToken();
         if (!csrfToken) {
             setUploadError('Refresh this page to restore the secure upload session.');
             return;
@@ -166,7 +167,7 @@ export default function WorkPhotoProofInput({
                 credentials: 'same-origin',
                 headers: {
                     Accept: 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    'X-XSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest',
                 },
                 body: formData,

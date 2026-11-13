@@ -37,7 +37,7 @@ function projection(id: string, version: number, workStatus = 'in_progress'): A9
 describe('A9DeliveryPanel authored QA', () => {
     afterEach(() => {
         cleanup();
-        document.querySelector('meta[name="csrf-token"]')?.remove();
+        document.cookie = 'XSRF-TOKEN=; Max-Age=0; path=/';
         vi.unstubAllGlobals();
         vi.mocked(router.reload).mockClear();
     });
@@ -47,10 +47,7 @@ describe('A9DeliveryPanel authored QA', () => {
     });
 
     it('submits itemized proof, preserves inputs on server errors, and requires fresh proof for a revision', async () => {
-        const csrf = document.createElement('meta');
-        csrf.name = 'csrf-token';
-        csrf.content = 'test-token';
-        document.head.appendChild(csrf);
+        document.cookie = 'XSRF-TOKEN=test-token; path=/';
         const fetch = vi.fn()
             .mockResolvedValueOnce(new Response(JSON.stringify({ error: { message: 'Measurement unit does not match.' } }), { status: 422 }))
             .mockResolvedValueOnce(new Response(JSON.stringify({ data: { status: 'submitted' } }), { status: 200 }));
@@ -75,6 +72,9 @@ describe('A9DeliveryPanel authored QA', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Attach proof to this delivery' }));
         fireEvent.click(screen.getByRole('button', { name: 'Submit version 2 for review' }));
         await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+        expect(fetch).toHaveBeenNthCalledWith(2, expect.any(String), expect.objectContaining({
+            headers: expect.objectContaining({ 'X-XSRF-TOKEN': 'test-token' }),
+        }));
         const submitted = JSON.parse(String(fetch.mock.calls[1][1]?.body));
         expect(submitted).toEqual({
             node_proofs: {
@@ -86,10 +86,7 @@ describe('A9DeliveryPanel authored QA', () => {
         });
     });
     it('shows accepted status and reloads the full order projection after customer acceptance', async () => {
-        const csrf = document.createElement('meta');
-        csrf.name = 'csrf-token';
-        csrf.content = 'test-token';
-        document.head.appendChild(csrf);
+        document.cookie = 'XSRF-TOKEN=test-token; path=/';
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
             new Response(JSON.stringify({ data: { work_status: 'completed', order_status: 'completed' } }), { status: 200 }),
         ));

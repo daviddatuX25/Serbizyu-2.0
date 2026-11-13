@@ -30,6 +30,23 @@ final class FormQuoteAwardOrder implements QuoteAwardOrderFormationPort
                 throw new KernelException('APPOINTMENT_HOLD_REQUIRED', 'A3 quote acceptance requires the customer-selected appointment hold.', $correlationId, status: 409);
             }
             $scope = is_array($terms['scope'] ?? null) ? $terms['scope'] : [];
+            $sourcePaymentLaneOptions = is_array($terms['payment_lane_options'] ?? null) ? $terms['payment_lane_options'] : [];
+            $paymentLaneOptions = array_values(array_unique(array_filter(
+                $sourcePaymentLaneOptions,
+                static fn (mixed $lane): bool => in_array($lane, ['external_cash', 'p2p_transfer'], true),
+            )));
+            if ($sourcePaymentLaneOptions !== [] && $paymentLaneOptions === []) {
+                throw new KernelException(
+                    'PAYMENT_LANE_NOT_ELIGIBLE',
+                    'The accepted quote uses a retired or invalid payment lane.',
+                    $correlationId,
+                    status: 422,
+                );
+            }
+            if ($paymentLaneOptions === []) {
+                $paymentLaneOptions = ['external_cash'];
+            }
+            $terms['payment_lane_options'] = $paymentLaneOptions;
             $listingType = isset($scope['listing_type']) && is_string($scope['listing_type']) ? $scope['listing_type'] : null;
             if ($workShape === 'A3') {
                 $sourceVersionId = $terms['source_listing_version_id'] ?? null;
@@ -306,7 +323,7 @@ final class FormQuoteAwardOrder implements QuoteAwardOrderFormationPort
             }
             $obligationId = $this->payments->createPrimary(
                 $orderId, $workId, $terms['amount_minor'], $terms['currency'],
-                $terms['buyer_user_id'], $terms['provider_user_id'], $correlationId,
+                $terms['buyer_user_id'], $terms['provider_user_id'], $correlationId, $paymentLaneOptions[0],
             );
 
             return ['order_id' => $orderId, 'work_instance_id' => $workId, 'payment_obligation_id' => $obligationId];

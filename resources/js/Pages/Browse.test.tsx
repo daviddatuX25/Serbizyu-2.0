@@ -106,6 +106,29 @@ describe('Browse Page', () => {
         expect(within(desktop).getByText('₱80.00')).toBeTruthy();
     });
 
+    it('labels sample listings and does not show an unrelated photo for a listing without one', () => {
+        render(<Browse {...baseProps} publicListings={[{ ...mockListings[0], catalog_source: 'tagudin_seed' }]} />);
+        const cards = screen.getAllByText('Inverter Split AC Deep Clean').map((title) => title.closest('article'));
+        expect(cards).toHaveLength(2);
+        for (const card of cards) {
+            expect(card).not.toBeNull();
+            expect(within(card as HTMLElement).getByText('Sample listing')).toBeTruthy();
+            expect(within(card as HTMLElement).getByTestId('category-svg-fallback')).toBeTruthy();
+            expect(within(card as HTMLElement).queryByRole('img', { name: 'Inverter Split AC Deep Clean' })).toBeNull();
+        }
+    });
+
+    it('uses the seller cover on both marketplace layouts', () => {
+        render(<Browse {...baseProps} publicListings={[{ ...mockListings[0], cover_thumbnail_url: '/photos/req-electrician.jpg' }]} />);
+        const photos = screen.getAllByRole('img', { name: 'Inverter Split AC Deep Clean', hidden: true });
+        expect(photos).toHaveLength(2);
+        for (const photo of photos) {
+            expect(photo.getAttribute('src')).toBe('/photos/req-electrician.jpg');
+        }
+        fireEvent.error(photos[1]);
+        expect(screen.getByTestId('category-svg-fallback')).toBeTruthy();
+    });
+
     it('filters listings by search query in real time', () => {
         const { container } = render(<Browse {...baseProps} />);
         const desktop = getDesktop(container as HTMLElement);

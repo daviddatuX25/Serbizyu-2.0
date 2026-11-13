@@ -32,13 +32,14 @@ interface WorkSpecificationPort
      *     mandatory: bool,
      *     duration_label: string|null,
      *     required_proofs: list<string>,
+     *     permitted_proofs?: list<string>,
      *     approval_method: string,
      *     handoff_party: string|null,
      *     checklist_items: list<array{id: string, label: string, required: bool}>,
      *     metric_requirements: list<array{id: string, name: string, unit: string, required: bool, target?: float, min?: float, max?: float}>
      * }>
      */
-    public function normalizeNodes(array $rawSteps, string $workShape = 'A1', bool $requireToolDefinitions = false): array;
+    public function normalizeNodes(array $rawSteps, string $workShape = 'A1', bool $requireToolDefinitions = false, bool $includePermittedProofs = false): array;
 
     /**
      * @param  array<int, array<string, mixed>>  $nodes

@@ -131,19 +131,29 @@ it('submits double-blind reviews and unblinds when both parties submit', functio
 
     $this->actingAs($fixture['provider']);
     $providerReview = $this->postJson("/orders/{$orderId}/reviews", [
-        'rating' => 5,
+        'rating' => null,
         'attribute_chips' => ['cash_ready_on_site', 'respectful_communication'],
         'content' => 'Prompt buyer, smooth transaction.',
     ])->assertCreated()->json('data');
 
     expect($providerReview['status'])->toBe('sealed')
         ->and($providerReview['unblinded'])->toBeFalse();
+    inertiaGetPreview("/orders/{$orderId}")->assertJsonPath('props.own_review.status', 'sealed');
+
+    $this->actingAs($fixture['buyer']);
+    inertiaGetPreview("/orders/{$orderId}")->assertJsonPath('props.own_review', null);
+
+    $this->postJson("/orders/{$orderId}/reviews", [
+        'rating' => null,
+        'attribute_chips' => ['on_time'],
+        'content' => 'Missing buyer rating.',
+    ])->assertStatus(422);
 
     $this->actingAs($fixture['buyer']);
     $buyerReview = $this->postJson("/orders/{$orderId}/reviews", [
         'rating' => 5,
         'attribute_chips' => ['on_time', 'clean_workspace'],
-        'content' => 'Excellent work, very professional.',
+        'content' => null,
     ])->assertCreated()->json('data');
 
     expect($buyerReview['status'])->toBe('approved')
@@ -153,6 +163,27 @@ it('submits double-blind reviews and unblinds when both parties submit', functio
             ->where('moderation_status', 'approved')
             ->whereNotNull('unblinded_at')
             ->count())->toBe(2);
+    inertiaGetPreview("/orders/{$orderId}")->assertJsonPath('props.own_review.status', 'unblinded');
+    $this->actingAs($fixture['provider']);
+    inertiaGetPreview("/orders/{$orderId}")->assertJsonPath('props.own_review.status', 'unblinded');
+    $this->actingAs($fixture['buyer']);
+
+    $listingId = (string) DB::table('orders')->where('id', $orderId)->value('listing_id');
+    $service = app(ListingReviewService::class);
+    expect($service->summaryForListing($listingId)['reviews_count'])->toBe(1)
+        ->and($service->summaryForListing($listingId)['rating'])->toBe(5.0)
+        ->and($service->reviewsForListing($listingId))->toHaveCount(1)
+        ->and($service->reviewsForListing($listingId)[0]['quote'])->toBeNull()
+        ->and(collect($service->reviewsForListing($listingId))->pluck('quote'))->not->toContain('Prompt buyer, smooth transaction.');
+
+    $this->postJson("/orders/{$orderId}/reviews", [
+        'rating' => 1,
+        'attribute_chips' => [],
+        'content' => 'A retaliatory edit.',
+    ])->assertStatus(409);
+
+    expect(DB::table('reviews')->where('id', $buyerReview['id'])->value('content'))
+        ->toBeNull();
 });
 
 it('does not resurrect snapshotless demo Orders or publish unverified seeded reviews', function (): void {

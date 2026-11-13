@@ -26,7 +26,7 @@ final class ReviewController
         }
 
         $validated = $request->validate([
-            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'rating' => ['nullable', 'integer', 'min:1', 'max:5'],
             'content' => ['nullable', 'string', 'max:2000'],
             'attribute_chips' => ['nullable', 'array'],
             'attribute_chips.*' => ['string', 'max:64'],
@@ -38,7 +38,7 @@ final class ReviewController
             $result = $this->submitReview->handle(
                 orderId: $order,
                 authorUserId: (string) $user->getAuthIdentifier(),
-                rating: (int) $validated['rating'],
+                rating: isset($validated['rating']) ? (int) $validated['rating'] : null,
                 content: isset($validated['content']) ? (string) $validated['content'] : null,
                 attributeChips: (array) ($validated['attribute_chips'] ?? []),
                 cascade: (bool) ($validated['cascade'] ?? true),

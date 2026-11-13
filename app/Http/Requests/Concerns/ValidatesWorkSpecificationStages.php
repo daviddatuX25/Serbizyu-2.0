@@ -37,6 +37,8 @@ trait ValidatesWorkSpecificationStages
             "{$prefix}.*.metric_unit" => ['prohibited'],
             "{$prefix}.*.requiredProofs" => ['nullable', 'array'],
             "{$prefix}.*.required_proofs" => ['nullable', 'array'],
+            "{$prefix}.*.permittedProofs" => ['nullable', 'array'],
+            "{$prefix}.*.permitted_proofs" => ['nullable', 'array'],
             "{$prefix}.*.checklistItems" => ['nullable', 'array'],
             "{$prefix}.*.checklist_items" => ['nullable', 'array'],
             "{$prefix}.*.metricRequirements" => ['nullable', 'array'],
@@ -45,6 +47,9 @@ trait ValidatesWorkSpecificationStages
 
         foreach (['requiredProofs', 'required_proofs'] as $field) {
             $rules["{$prefix}.*.{$field}.*"] = ['string', 'in:'.implode(',', WorkSpecificationPort::WORK_TOOLS)];
+        }
+        foreach (['permittedProofs', 'permitted_proofs'] as $field) {
+            $rules["{$prefix}.*.{$field}.*"] = ['string', 'in:photo_proof,gps_checkin,metric_reading,checklist_steps'];
         }
         foreach (['checklistItems', 'checklist_items'] as $field) {
             $rules["{$prefix}.*.{$field}.*"] = ['array'];

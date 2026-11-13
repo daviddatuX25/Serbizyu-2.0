@@ -9,6 +9,7 @@ use App\Modules\TrustSupport\Application\TrustSupportError;
 use App\Shared\Contracts\PaymentMismatchCasePort;
 use App\Shared\Infrastructure\Demo\DealChainExecutionFixtures as Fix;
 use Database\Seeders\DealChainExecutionSeeder;
+use Database\Seeders\TagudinBrowseCatalogSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -37,6 +38,7 @@ final class PaymentP2PWorkflowTest extends TestCase
         $this->privateStorageRoot = storage_path('framework/testing/payment-p2p-'.Str::uuid7());
         config()->set('filesystems.disks.private.root', $this->privateStorageRoot);
         Storage::forgetDisk('private');
+        $this->seed(TagudinBrowseCatalogSeeder::class);
         $this->seed(DealChainExecutionSeeder::class);
         DB::table('payment_obligations')->where('order_id', Fix::ORDER_ID_TRANSIT)->update([
             'status' => 'due',

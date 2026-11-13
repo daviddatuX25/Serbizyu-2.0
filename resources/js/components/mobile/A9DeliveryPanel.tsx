@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CheckCircle2, Download, FileImage, FileText, LoaderCircle, RefreshCw, ShieldCheck, UploadCloud, X } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import type { WorkNodeRecord } from '../../types';
+import { getXsrfToken } from '@/lib/csrf';
 import WorkNodeEvidenceTools, { type WorkProofPayload } from './WorkNodeEvidenceTools';
 
 type DeliveryFile = {
@@ -65,14 +66,14 @@ export default function A9DeliveryPanel({ orderId, delivery }: Props) {
     const refresh = () => router.reload();
 
     const send = async (path: string, body?: FormData | Record<string, unknown>) => {
-        const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
+        const csrfToken = getXsrfToken();
         if (!csrfToken) throw new Error('Refresh this page to restore the secure session.');
         const response = await fetch(path, {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
                 Accept: 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
+                'X-XSRF-TOKEN': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest',
                 ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
             },

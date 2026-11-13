@@ -4,7 +4,15 @@ import { router } from '@inertiajs/react';
 import CreateRequest from './CreateRequest';
 
 vi.mock('@inertiajs/react', () => ({
-    Link: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
+    Link: ({
+        children,
+        href,
+        ...props
+    }: {
+        children: React.ReactNode;
+        href: string;
+        [key: string]: unknown;
+    }) => (
         <a href={href} {...props}>
             {children}
         </a>
@@ -99,7 +107,9 @@ describe('CreateRequest Page', () => {
         fireEvent.change(reqInput, { target: { value: 'Check under-sink drainage valve' } });
         fireEvent.click(addBtn);
 
-        expect(screen.getAllByText('Check under-sink drainage valve').length).toBeGreaterThanOrEqual(1);
+        expect(
+            screen.getAllByText('Check under-sink drainage valve').length,
+        ).toBeGreaterThanOrEqual(1);
 
         // Continue to Step 3
         const toScheduleBtn = screen.getByRole('button', { name: /Continue to Schedule/i });
@@ -168,12 +178,7 @@ describe('CreateRequest Page', () => {
     });
 
     it('redirects unauthenticated guest to sign-in and preserves draft in sessionStorage', () => {
-        render(
-            <CreateRequest
-                session={{ authenticated: false }}
-                categories={mockCategories}
-            />,
-        );
+        render(<CreateRequest session={{ authenticated: false }} categories={mockCategories} />);
 
         const titleInput = screen.getByTestId('request-title-input');
         fireEvent.change(titleInput, { target: { value: 'Guest custom request draft' } });
@@ -193,6 +198,57 @@ describe('CreateRequest Page', () => {
         const stored = window.sessionStorage.getItem('serbizyu.pending-request.v1');
         expect(stored).not.toBeNull();
         expect(stored).toContain('Guest custom request draft');
+    });
+    it('preserves a draft with a retired payment lane and requires a current payment choice', () => {
+        window.sessionStorage.setItem(
+            'serbizyu.pending-request.v1',
+            JSON.stringify({
+                version: 1,
+                draft: {
+                    version: 1,
+                    step: 5,
+                    builderMode: 'guided',
+                    title: 'Repair the water pump',
+                    category: 'repairs',
+                    description: 'The pump is leaking.',
+                    requirements: ['Inspect the pump'],
+                    attachPipeline: false,
+                    pipelineStages: [],
+                    urgency: 'this_week',
+                    area: 'Tagudin Centro',
+                    addressHidden: true,
+                    budgetMode: 'exact',
+                    budgetAmount: 500,
+                    tenderMode: 'open_tender',
+                    paymentLane: 'bilateral_escrow',
+                    preferredFulfillment: 'direct',
+                },
+            }),
+        );
+
+        render(
+            <CreateRequest
+                session={{ authenticated: true, user_id: 'usr-1' }}
+                categories={mockCategories}
+            />,
+        );
+
+        expect(screen.getByRole('status').textContent).toContain('retired payment option');
+        expect(
+            screen.getByRole('button', { name: /Continue to Review/i }).getAttribute('disabled'),
+        ).not.toBeNull();
+
+        fireEvent.click(screen.getByRole('button', { name: 'GCash / Maya (P2P)' }));
+
+        expect(
+            screen.getByRole('button', { name: /Continue to Review/i }).getAttribute('disabled'),
+        ).toBeNull();
+        expect(window.sessionStorage.getItem('serbizyu.pending-request.v1')).toContain(
+            'Repair the water pump',
+        );
+        fireEvent.click(screen.getByRole('button', { name: /Continue to Review/i }));
+        expect(screen.getByRole('heading', { name: 'Repair the water pump' })).toBeTruthy();
+        expect(screen.getByText('GCash / Maya (P2P)')).toBeTruthy();
     });
 
     it('adaptively updates pipeline template and task suggestions when category changes', () => {
@@ -220,15 +276,21 @@ describe('CreateRequest Page', () => {
         const suggestBtn = screen.getByTestId('load-suggested-tasks-btn');
         fireEvent.click(suggestBtn);
 
-        expect(screen.getAllByText(/Prepare fresh food order per recipe specifications/i).length).toBeGreaterThanOrEqual(1);
-        expect(screen.getAllByText(/Package securely in clean food-grade containers/i).length).toBeGreaterThanOrEqual(1);
+        expect(
+            screen.getAllByText(/Prepare fresh food order per recipe specifications/i).length,
+        ).toBeGreaterThanOrEqual(1);
+        expect(
+            screen.getAllByText(/Package securely in clean food-grade containers/i).length,
+        ).toBeGreaterThanOrEqual(1);
 
         // Toggle pipeline ON
         const pipelineToggle = screen.getByTestId('attach-pipeline-toggle');
         fireEvent.click(pipelineToggle);
 
         // Pipeline must adapt to Food Preparation (A4 shape)
-        expect(screen.getAllByText(/Food Preparation, Packaging & Safe Dispatch/i).length).toBeGreaterThanOrEqual(1);
+        expect(
+            screen.getAllByText(/Food Preparation, Packaging & Safe Dispatch/i).length,
+        ).toBeGreaterThanOrEqual(1);
         expect(screen.getByText(/Shape: A4/i)).toBeTruthy();
         expect(screen.getByTestId('browse-work-templates-btn')).toBeTruthy();
         expect(screen.getByTestId('customize-work-stages-btn')).toBeTruthy();

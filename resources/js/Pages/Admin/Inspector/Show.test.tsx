@@ -20,7 +20,7 @@ vi.mock('@/layouts/AdminLayout', () => ({
 afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
-    document.head.querySelector('meta[name="csrf-token"]')?.remove();
+    document.cookie = 'XSRF-TOKEN=; Max-Age=0; path=/';
     vi.clearAllMocks();
 });
 
@@ -95,10 +95,7 @@ describe('Universal record workspace', () => {
             json: async () => ({ data: { status: 'rejected' } }),
         });
         vi.stubGlobal('fetch', fetchSpy);
-        const csrfMeta = document.createElement('meta');
-        csrfMeta.name = 'csrf-token';
-        csrfMeta.content = 'test-token';
-        document.head.append(csrfMeta);
+        document.cookie = 'XSRF-TOKEN=test-token; path=/';
         const Page = InspectorShow as ComponentType<InspectorPageProps>;
         const identityProps = {
             ...props,
@@ -150,8 +147,8 @@ describe('Universal record workspace', () => {
         await waitFor(() => expect(fetchSpy).toHaveBeenCalledWith(
             '/admin/identity-verifications/verification-31/review',
             expect.objectContaining({
-                method: 'POST',
                 body: JSON.stringify({ decision: 'reject', reason: 'DOCUMENT_UNREADABLE' }),
+                headers: expect.objectContaining({ 'X-XSRF-TOKEN': 'test-token' }),
             }),
         ));
         expect(router.reload).toHaveBeenCalled();

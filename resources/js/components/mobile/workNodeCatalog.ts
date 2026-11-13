@@ -50,8 +50,8 @@ export const WORK_TOOL_REGISTRY: WorkToolDefinition[] = [
     {
         toolKey: 'photo_proof',
         kind: 'native',
-        label: 'Photo / Video Capture',
-        description: 'Time-stamped before/after photo or visual progress verification.',
+        label: 'Photo',
+        description: 'Private photo evidence for this step.',
         lucideIcon: 'Camera',
         actor: 'worker',
         configSchema: {},
@@ -59,8 +59,8 @@ export const WORK_TOOL_REGISTRY: WorkToolDefinition[] = [
     {
         toolKey: 'gps_checkin',
         kind: 'native',
-        label: 'GPS / Map Coordinate Pin',
-        description: 'Time-stamped device coordinates or map pin check-in at site/handoff point.',
+        label: 'Location coordinates',
+        description: 'Device location or manually entered coordinates for this step.',
         lucideIcon: 'MapPin',
         actor: 'worker',
         configSchema: {},
@@ -290,8 +290,8 @@ export interface EvidenceProtocolDefinition {
 export const EVIDENCE_PROTOCOL_DEFINITIONS: EvidenceProtocolDefinition[] = [
     {
         protocol: 'photo_proof',
-        label: 'Photo / Video Proof',
-        description: 'Time-stamped before/after or in-progress visual capture.',
+        label: 'Photo Proof',
+        description: 'Private photo evidence for this step.',
     },
     {
         protocol: 'customer_otp',

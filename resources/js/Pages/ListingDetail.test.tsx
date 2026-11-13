@@ -598,6 +598,30 @@ describe('ListingDetail Page', () => {
         expect(new URL(visit.mock.calls[0][0], 'http://localhost').searchParams.get('variant_id')).toBe('bottle');
     });
 
+    it('lets buyers view every seller photo rather than only the cover', () => {
+        const listing: ListingRecord = {
+            ...mockListing,
+            media: {
+                cover_thumbnail_url: '/photos/ac-clean.jpg',
+                has_video: false,
+                items: [
+                    { id: 'cover', kind: 'photo', url: '/photos/ac-clean.jpg', is_cover: true },
+                    { id: 'detail', kind: 'photo', url: '/photos/req-electrician.jpg', caption: 'Inspection' },
+                ],
+            },
+        };
+        render(<ListingDetail {...baseProps} activeListingDetail={listing} />);
+        fireEvent.click(screen.getByRole('button', { name: 'View photo 2: Inspection' }));
+        expect(screen.getByRole('img', { name: listing.title }).getAttribute('src')).toBe('/photos/req-electrician.jpg');
+    });
+
+    it('reports a broken listing image without substituting an unrelated photo', () => {
+        render(<ListingDetail {...baseProps} activeListingDetail={{ ...mockListing, cover_thumbnail_url: '/missing-photo.jpg' }} />);
+        fireEvent.error(screen.getByRole('img', { name: mockListing.title }));
+        expect(screen.getByText('Listing image unavailable')).toBeTruthy();
+        expect(screen.queryByRole('img', { name: mockListing.title })).toBeNull();
+    });
+
     it('does not present audit or recycle partner fees as direct seller add-ons', () => {
         const listing: ListingRecord = {
             ...mockListing,

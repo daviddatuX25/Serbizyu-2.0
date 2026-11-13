@@ -113,6 +113,7 @@ export function AuthShell({
                                 <p className="mt-1 text-xs text-slate-500 sm:text-sm">{subtitle}</p>
                             )}
                         </div>
+                        <p className="mb-4 text-sm text-slate-600">Interface language: English</p>
 
                         {/* Content / Forms */}
                         {children}

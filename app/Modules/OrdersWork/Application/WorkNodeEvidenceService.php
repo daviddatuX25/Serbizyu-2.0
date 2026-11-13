@@ -323,8 +323,8 @@ final class WorkNodeEvidenceService
                 'pending_photo_count' => $pendingCount,
             ] : null;
             $requiredProofs = (array) ($node['required_proofs'] ?? []);
-            $photoProofReady = ! in_array('photo_proof', $requiredProofs, true)
-                || (count($photos) > 0 && $pendingCount === 0);
+            $photoProofReady = $pendingCount === 0
+                && (! in_array('photo_proof', $requiredProofs, true) || count($photos) > 0);
             $node['can_confirm'] = ($node['status'] ?? null) === 'awaiting_customer_confirmation'
                 && ($node['approval_method'] ?? 'app_confirm') === 'app_confirm'
                 && $photoProofReady;
@@ -513,7 +513,10 @@ final class WorkNodeEvidenceService
         }
         $validNodeState = ($node['status'] ?? null) === 'active' || $isA4PhaseActor || $isA9DraftActor;
         $nativeA4Photo = $isA4PhaseActor;
-        $authoredPhoto = in_array('photo_proof', (array) ($node['required_proofs'] ?? []), true);
+        $permittedProofs = (int) ($work->payload_schema_version ?? 1) >= 3
+            ? (array) ($node['permitted_proofs'] ?? [])
+            : (array) ($node['required_proofs'] ?? []);
+        $authoredPhoto = in_array('photo_proof', $permittedProofs, true);
         if (! $validNodeState || (! $nativeA4Photo && ! $authoredPhoto)) {
             throw new OrderError('INVALID_STATE', 'Photo proof is not available for this Work node.', $correlationId, status: 409);
         }

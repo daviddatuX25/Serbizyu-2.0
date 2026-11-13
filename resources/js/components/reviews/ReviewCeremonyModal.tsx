@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-    Camera,
     CheckCircle2,
     Clock,
     Lock,
@@ -8,6 +7,7 @@ import {
     Star,
     X,
 } from 'lucide-react';
+import { getXsrfToken } from '@/lib/csrf';
 
 export type ReviewCeremonyTarget = {
     orderId: string;
@@ -84,29 +84,17 @@ export default function ReviewCeremonyModal({
     const [isCascading, setIsCascading] = useState(true);
 
     // Unified Review State (Buyer)
-    const [unifiedRating, setUnifiedRating] = useState(5);
-    const [unifiedChips, setUnifiedChips] = useState<string[]>(['on_time', 'clean_workspace']);
+    const [unifiedRating, setUnifiedRating] = useState<number | null>(null);
+    const [unifiedChips, setUnifiedChips] = useState<string[]>([]);
     const [unifiedNote, setUnifiedNote] = useState('');
-    const [unifiedPhotoUrl, setUnifiedPhotoUrl] = useState<string | null>('/photos/ac-clean.jpg');
 
     // Granular Per-Node Review State (Buyer uncascaded)
     const [granularReviews, setGranularReviews] = useState<
-        Record<string, { rating: number; note: string; chips: string[]; photoUrl?: string | null }>
-    >(() => {
-        const initial: Record<string, { rating: number; note: string; chips: string[]; photoUrl?: string | null }> = {};
-        for (const t of targets) {
-            initial[t.orderId] = {
-                rating: 5,
-                note: '',
-                chips: ['on_time'],
-                photoUrl: null,
-            };
-        }
-        return initial;
-    });
+        Record<string, { rating: number | null; note: string; chips: string[] }>
+    >(() => Object.fromEntries(targets.map((target) => [target.orderId, { rating: null, note: '', chips: [] }])));
 
     // Provider Feedback State (Non-numeric Citizen Reliability)
-    const [providerChips, setProviderChips] = useState<string[]>(['cash_ready_on_site', 'respectful_communication']);
+    const [providerChips, setProviderChips] = useState<string[]>([]);
     const [providerNote, setProviderNote] = useState('');
 
     const [submitting, setSubmitting] = useState(false);
@@ -133,7 +121,7 @@ export default function ReviewCeremonyModal({
                 return {
                     ...prev,
                     [targetOrderId]: {
-                        ...(prev[targetOrderId] ?? { rating: 5, note: '' }),
+                        ...(prev[targetOrderId] ?? { rating: null, note: '' }),
                         chips: updated,
                     },
                 };
@@ -144,9 +132,17 @@ export default function ReviewCeremonyModal({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (submitting) return;
+        if (actorRole === 'buyer') {
+            const missingRating = isChain && !isCascading
+                ? targets.some((target) => granularReviews[target.orderId]?.rating == null)
+                : unifiedRating == null;
+            if (missingRating) {
+                setSubmitError('Select a star rating before submitting your review.');
+                return;
+            }
+        }
         setSubmitting(true);
         setSubmitError(null);
-
         try {
             if (isChain && dealChainId) {
                 // Batch Deal Chain Review Endpoint
@@ -164,7 +160,7 @@ export default function ReviewCeremonyModal({
                           mode: 'granular',
                           granular_reviews: targets.map((t) => ({
                               order_id: t.orderId,
-                              rating: granularReviews[t.orderId]?.rating ?? 5,
+                              rating: granularReviews[t.orderId]?.rating ?? null,
                               content: granularReviews[t.orderId]?.note || null,
                               attribute_chips: granularReviews[t.orderId]?.chips ?? [],
                               evidence_file_id: null,
@@ -176,9 +172,7 @@ export default function ReviewCeremonyModal({
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
-                        'X-CSRF-TOKEN':
-                            (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)
-                                ?.content || '',
+                        'X-XSRF-TOKEN': getXsrfToken(),
                     },
                     body: JSON.stringify(payload),
                 });
@@ -206,7 +200,6 @@ export default function ReviewCeremonyModal({
                               cascade: true,
                           }
                         : {
-                              rating: 5, // internal DB constraint placeholder, server stores NULL
                               content: providerNote || null,
                               attribute_chips: providerChips,
                               cascade: false,
@@ -217,9 +210,7 @@ export default function ReviewCeremonyModal({
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
-                        'X-CSRF-TOKEN':
-                            (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)
-                                ?.content || '',
+                        'X-XSRF-TOKEN': getXsrfToken(),
                     },
                     body: JSON.stringify(payload),
                 });
@@ -249,7 +240,6 @@ export default function ReviewCeremonyModal({
             className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs"
         >
             <div className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
-                {/* Topbar */}
                 <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-100 px-5">
                     <div>
                         <h2 className="text-sm font-extrabold text-[#0F2F58]">
@@ -260,8 +250,8 @@ export default function ReviewCeremonyModal({
                                         : 'Rate Service Order'
                                     : 'Citizen Reliability Feedback'
                                 : stage === 'sealed'
-                                  ? 'Review Cryptographically Sealed'
-                                  : 'Verified Reviews Revealed'}
+                                  ? 'Review Submitted'
+                                  : 'Reviews Revealed'}
                         </h2>
                         <p className="text-[11px] font-semibold text-emerald-700">
                             {referenceTitle} · Bilateral Tiwala
@@ -280,12 +270,10 @@ export default function ReviewCeremonyModal({
                 {/* Body Content */}
                 <div className="flex-1 overflow-y-auto px-5 py-4">
                     {submitError && (
-                        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-700">
+                        <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-700">
                             {submitError}
                         </div>
                     )}
-
-                    {/* STAGE 1: COMPOSE */}
                     {stage === 'compose' && (
                         <form id="review-ceremony-form" onSubmit={handleSubmit} className="space-y-4">
                             {/* Context Card */}
@@ -325,8 +313,7 @@ export default function ReviewCeremonyModal({
                                                 </span>
                                             </label>
                                             <p className="mt-1 ml-6 text-[10.5px] text-slate-600">
-                                                Uncheck to assign independent star ratings, notes, and photos to each individual
-                                                provider (Labor, Parts, Courier).
+                                                Uncheck to assign independent star ratings and notes to each individual provider (Labor, Parts, Courier).
                                             </p>
                                         </div>
                                     )}
@@ -345,22 +332,18 @@ export default function ReviewCeremonyModal({
                                                             key={star}
                                                             type="button"
                                                             data-testid={`star-${star}`}
+                                                            aria-label={`Rate ${star} ${star === 1 ? 'star' : 'stars'}`}
+                                                            aria-pressed={unifiedRating === star}
                                                             onClick={() => setUnifiedRating(star)}
                                                             className="cursor-pointer text-2xl transition-transform hover:scale-110"
                                                         >
-                                                            <Star
-                                                                className={`size-8 ${
-                                                                    star <= unifiedRating
-                                                                        ? 'fill-amber-400 text-amber-500'
-                                                                        : 'text-slate-200'
-                                                                }`}
-                                                            />
+                                                            <Star className={`size-8 ${unifiedRating != null && star <= unifiedRating ? 'fill-amber-400 text-amber-500' : 'text-slate-200'}`} />
                                                         </button>
                                                     ))}
                                                 </div>
                                                 <div className="mt-1 text-xs font-bold text-amber-700">
-                                                    {STAR_LABELS[unifiedRating]}
-                                                </div>
+                                                    {unifiedRating == null ? 'Choose a rating' : STAR_LABELS[unifiedRating]}
+                                            </div>
                                             </div>
 
                                             {/* Attribute Chips */}
@@ -375,6 +358,7 @@ export default function ReviewCeremonyModal({
                                                             <button
                                                                 key={chip.id}
                                                                 type="button"
+                                                                aria-pressed={isSelected}
                                                                 onClick={() => toggleChip(chip.id, true)}
                                                                 className={`cursor-pointer rounded-full px-3 py-1 text-[11px] font-bold transition-all ${
                                                                     isSelected
@@ -404,39 +388,6 @@ export default function ReviewCeremonyModal({
                                                 />
                                             </div>
 
-                                            {/* Photo Attachment Strip */}
-                                            <div>
-                                                <div className="text-[11px] font-bold text-slate-600">
-                                                    Job Photo Evidence
-                                                </div>
-                                                <div className="mt-1.5 flex items-center gap-2">
-                                                    {unifiedPhotoUrl ? (
-                                                        <div className="relative">
-                                                            <img
-                                                                src={unifiedPhotoUrl}
-                                                                alt="Verified proof"
-                                                                className="size-14 rounded-lg border border-slate-200 object-cover"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setUnifiedPhotoUrl(null)}
-                                                                className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-slate-900 text-[10px] text-white"
-                                                            >
-                                                                &times;
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setUnifiedPhotoUrl('/photos/ac-clean.jpg')}
-                                                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-dashed border-slate-300 bg-[#FAFCFB] px-3 py-2 text-xs font-bold text-slate-600 hover:border-[#0F2F58]"
-                                                        >
-                                                            <Camera className="size-3.5 text-slate-500" />
-                                                            <span>Attach Milestone Photo</span>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
                                         </div>
                                     )}
 
@@ -445,9 +396,9 @@ export default function ReviewCeremonyModal({
                                         <div className="space-y-3" data-testid="granular-review-cards">
                                             {targets.map((target) => {
                                                 const current = granularReviews[target.orderId] ?? {
-                                                    rating: 5,
+                                                    rating: null,
                                                     note: '',
-                                                    chips: ['on_time'],
+                                                    chips: [],
                                                 };
                                                 return (
                                                     <div
@@ -469,28 +420,20 @@ export default function ReviewCeremonyModal({
                                                                     <button
                                                                         key={star}
                                                                         type="button"
+                                                                        aria-label={`Rate ${target.providerName} ${star} ${star === 1 ? 'star' : 'stars'}`}
+                                                                        aria-pressed={current.rating === star}
                                                                         onClick={() =>
                                                                             setGranularReviews((prev) => ({
                                                                                 ...prev,
                                                                                 [target.orderId]: {
-                                                                                    ...(prev[target.orderId] ?? {
-                                                                                        rating: 5,
-                                                                                        note: '',
-                                                                                        chips: [],
-                                                                                    }),
+                                                                                    ...(prev[target.orderId] ?? { rating: null, note: '', chips: [] }),
                                                                                     rating: star,
                                                                                 },
                                                                             }))
                                                                         }
                                                                         className="cursor-pointer text-sm"
                                                                     >
-                                                                        <Star
-                                                                            className={`size-5 ${
-                                                                                star <= current.rating
-                                                                                    ? 'fill-amber-400 text-amber-500'
-                                                                                    : 'text-slate-200'
-                                                                            }`}
-                                                                        />
+                                                                        <Star className={`size-5 ${current.rating != null && star <= current.rating ? 'fill-amber-400 text-amber-500' : 'text-slate-200'}`} />
                                                                     </button>
                                                                 ))}
                                                             </div>
@@ -505,10 +448,7 @@ export default function ReviewCeremonyModal({
                                                                 setGranularReviews((prev) => ({
                                                                     ...prev,
                                                                     [target.orderId]: {
-                                                                        ...(prev[target.orderId] ?? {
-                                                                            rating: 5,
-                                                                            chips: [],
-                                                                        }),
+                                                                        ...(prev[target.orderId] ?? { rating: null, note: '', chips: [] }),
                                                                         note: val,
                                                                     },
                                                                 }));
@@ -549,6 +489,7 @@ export default function ReviewCeremonyModal({
                                                     <button
                                                         key={chip.id}
                                                         type="button"
+                                                        aria-pressed={isSelected}
                                                         onClick={() => toggleChip(chip.id, true)}
                                                         className={`cursor-pointer rounded-full px-3 py-1 text-[11px] font-bold transition-all ${
                                                             isSelected
@@ -583,8 +524,7 @@ export default function ReviewCeremonyModal({
                             <div className="flex items-start gap-2.5 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs text-slate-600">
                                 <Lock className="mt-0.5 size-4 shrink-0 text-[#0F2F58]" />
                                 <div className="text-[11px] leading-relaxed">
-                                    <strong className="text-slate-900">72-Hour Double-Blind Hold:</strong> Your review
-                                    remains sealed until the counterparty submits their feedback or 72 hours elapse. Neither party can view or retaliate against the other's feedback.
+                                    <strong className="text-slate-900">Double-Blind Hold:</strong> Feedback stays sealed until both parties submit or the review window closes. Provider feedback remains private.
                                 </div>
                             </div>
                         </form>
@@ -602,26 +542,31 @@ export default function ReviewCeremonyModal({
                                 </h3>
                                 <div className="mt-1.5 flex items-center justify-center gap-1.5 text-xs font-bold text-amber-700">
                                     <Clock className="size-3.5" />
-                                    <span>72-Hour Anti-Retaliation Window Active</span>
+                                    <span>Double-blind feedback</span>
                                 </div>
                             </div>
                             <p className="mx-auto max-w-sm text-xs leading-relaxed text-slate-600">
-                                Your review is stored securely in sealed quarantine. It will automatically unblind and publish
-                                once the counterparty submits their review, or when the 72-hour timer elapses.
+                                Feedback remains sealed pending the other party or the review window. Disputes or administrative holds can delay publication.
                             </p>
+                            {!existingReview && (
                             <div className="rounded-2xl border border-slate-200 bg-[#FAFCFB] p-4 text-left">
                                 <div className="text-xs font-extrabold text-slate-700 uppercase">
                                     Your Submitted Feedback:
                                 </div>
-                                {actorRole === 'buyer' && (
+                                {actorRole === 'buyer' && unifiedRating != null && (
                                     <div className="mt-2 flex items-center gap-1 text-sm font-bold text-amber-500">
                                         {'★'.repeat(unifiedRating)}
                                     </div>
                                 )}
-                                <p className="mt-1 text-xs text-slate-700 italic">
-                                    &ldquo;{unifiedNote || providerNote || 'Verified project completion.'}&rdquo;
-                                </p>
+                                {(actorRole === 'buyer' ? unifiedNote : providerNote) ? (
+                                    <p className="mt-1 text-xs text-slate-700 italic">
+                                        &ldquo;{actorRole === 'buyer' ? unifiedNote : providerNote}&rdquo;
+                                    </p>
+                                ) : (
+                                    <p className="mt-1 text-xs text-slate-500">No written note submitted.</p>
+                                )}
                             </div>
+                            )}
                         </div>
                     )}
 
@@ -631,15 +576,14 @@ export default function ReviewCeremonyModal({
                             <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                                 <CheckCircle2 className="size-8" />
                             </div>
-                            <div>
-                                <h3 className="text-base font-extrabold text-[#0F2F58]">
-                                    Reviews Revealed & Published!
-                                </h3>
-                                <p className="mt-1 text-xs text-slate-600">
-                                    Both counterparties have completed the bilateral ceremony. Feedback is now reflected in
-                                    community reputation.
-                                </p>
-                            </div>
+                            <h3 className="text-base font-extrabold text-[#0F2F58]">
+                                {actorRole === 'provider' ? 'Feedback Recorded' : 'Review Unsealed'}
+                            </h3>
+                            <p className="mt-1 text-xs text-slate-600">
+                                {actorRole === 'provider'
+                                    ? 'Your feedback remains private.'
+                                    : 'Your review is no longer sealed. A dispute or hold can delay publication.'}
+                            </p>
                         </div>
                     )}
                 </div>
@@ -650,8 +594,9 @@ export default function ReviewCeremonyModal({
                         <button
                             type="submit"
                             form="review-ceremony-form"
-                            disabled={submitting}
-                            data-testid="submit-review-btn"
+                            disabled={submitting || (actorRole === 'buyer' && (isChain && !isCascading
+                                ? targets.some((target) => granularReviews[target.orderId]?.rating == null)
+                                : unifiedRating == null))}
                             className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0F2F58] py-3 text-xs font-extrabold text-white shadow-sm hover:bg-[#153e74] disabled:opacity-50"
                         >
                             <Lock className="size-4" />

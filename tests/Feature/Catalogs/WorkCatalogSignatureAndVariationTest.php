@@ -531,3 +531,48 @@ it('pins clearance-only A4 authoring to schema v2', function (): void {
     expect($specification['shape_contract_version'])->toBe(1)
         ->and($specification['payload_schema_version'])->toBe(2);
 });
+
+it('authors schema v3 permitted tools canonically without changing legacy node meanings', function (): void {
+    $catalog = app(WorkCatalog::class);
+    $specification = $catalog->resolveAndRecordListingWork(
+        workShape: 'A1',
+        categoryCode: 'repairs',
+        listingType: 'service',
+        listingTitle: 'Metered repair',
+        rawStages: [[
+            'id' => 'measurement',
+            'required_proofs' => ['metric_reading'],
+            'permitted_proofs' => ['photo_proof', 'metric_reading'],
+            'metric_requirements' => [['id' => 'voltage', 'name' => 'Voltage', 'unit' => 'V']],
+        ], [
+            'id' => 'completion',
+            'required_proofs' => [],
+        ]],
+    );
+
+    expect($specification['payload_schema_version'])->toBe(3)
+        ->and($specification['nodes'][0]['permitted_proofs'])->toBe(['photo_proof', 'metric_reading'])
+        ->and($specification['nodes'][1]['permitted_proofs'])->toBe([])
+        ->and($catalog->normalizeNodes([['id' => 'legacy']])[0])->not->toHaveKey('permitted_proofs');
+});
+
+it('rejects inconsistent permitted proof lists and unsupported evidence promises in schema v3 authoring', function (): void {
+    $catalog = app(WorkCatalog::class);
+
+    expect(fn () => $catalog->normalizeNodes([[
+        'required_proofs' => ['photo_proof'],
+        'permitted_proofs' => ['gps_checkin'],
+    ]], 'A1'))->toThrow(\InvalidArgumentException::class, 'must include every required');
+
+    expect(fn () => $catalog->resolveAndRecordListingWork(
+        workShape: 'A3',
+        categoryCode: 'repairs',
+        listingType: 'service',
+        listingTitle: 'Video inspection',
+        rawStages: [[
+            'id' => 'inspection',
+            'permitted_proofs' => ['photo_proof'],
+            'evidence_type' => 'video_required',
+        ]],
+    ))->toThrow(\InvalidArgumentException::class, 'Video and document evidence');
+});

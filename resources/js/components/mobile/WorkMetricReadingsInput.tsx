@@ -47,7 +47,10 @@ export default function WorkMetricReadingsInput({ requirements, disabled, onChan
                                 inputMode="decimal"
                                 step="any"
                                 value={values[requirement.id] ?? ''}
-                                onChange={(event) => setValues((current) => ({ ...current, [requirement.id]: event.currentTarget.value }))}
+                                onChange={(event) => {
+                                    const value = event.currentTarget.value;
+                                    setValues((current) => ({ ...current, [requirement.id]: value }));
+                                }}
                                 disabled={disabled}
                                 aria-label={`${requirement.name} (${requirement.unit})`}
                                 className="min-h-11 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-900 focus:border-[#0F2F58] focus:outline-none focus:ring-2 focus:ring-[#0F2F58]/20 disabled:bg-slate-50"

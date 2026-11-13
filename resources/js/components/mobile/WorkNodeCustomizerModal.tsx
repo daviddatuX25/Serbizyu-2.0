@@ -297,12 +297,24 @@ export default function WorkNodeCustomizerModal({
 
     const handleToggleProof = (proofType: WorkEvidenceType) => {
         const existing = new Set(currentProofs);
+        const permitted = new Set(currentStage?.permittedProofs ?? currentProofs);
         if (existing.has(proofType)) {
             existing.delete(proofType);
+            permitted.delete(proofType);
         } else {
             existing.add(proofType);
+            permitted.add(proofType);
         }
-        updateCurrentStage({ requiredProofs: Array.from(existing) as WorkEvidenceType[] });
+        updateCurrentStage({
+            requiredProofs: Array.from(existing) as WorkEvidenceType[],
+            permittedProofs: Array.from(permitted) as WorkEvidenceType[],
+        });
+    };
+    const handleToggleOptionalProof = (proofType: WorkEvidenceType) => {
+        const permitted = new Set(currentStage?.permittedProofs ?? currentProofs);
+        if (permitted.has(proofType)) permitted.delete(proofType);
+        else permitted.add(proofType);
+        updateCurrentStage({ permittedProofs: Array.from(permitted) as WorkEvidenceType[] });
     };
 
     const handleReorder = (idx: number, direction: 'up' | 'down') => {
@@ -876,9 +888,9 @@ export default function WorkNodeCustomizerModal({
                                             {REQUIRED_PROOF_DEFINITIONS.map((def) => {
                                                 const isChecked = currentProofs.includes(def.type);
                                                 return (
-                                                    <label
+                                                    <div
                                                         key={def.type}
-                                                        className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-2.5 transition-all ${
+                                                        className={`flex items-start gap-2.5 rounded-xl border p-2.5 transition-all ${
                                                             isChecked
                                                                 ? 'border-[#0F2F58] bg-[#FAFCFB] shadow-2xs'
                                                                 : 'border-slate-200 bg-white hover:border-slate-300'
@@ -886,6 +898,7 @@ export default function WorkNodeCustomizerModal({
                                                     >
                                                         <input
                                                             type="checkbox"
+                                                            aria-label={`Require ${def.label}`}
                                                             checked={isChecked}
                                                             onChange={() => handleToggleProof(def.type)}
                                                             className="mt-0.5 size-4 accent-[#0F2F58] cursor-pointer rounded"
@@ -901,12 +914,22 @@ export default function WorkNodeCustomizerModal({
                                                                 {def.description}
                                                             </p>
                                                         </div>
-                                                    </label>
+                                                            <label className="mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-slate-600">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={!isChecked && (currentStage?.permittedProofs ?? currentProofs).includes(def.type)}
+                                                                    disabled={isChecked}
+                                                                    onChange={() => handleToggleOptionalProof(def.type)}
+                                                                    className="size-3 accent-[#0F2F58]"
+                                                                />
+                                                                Also permit as optional
+                                                            </label>
+                                                        </div>
                                                 );
                                             })}
                                         </div>
 
-                                        {currentProofs.includes('metric_reading') && (
+                                        {(currentStage?.permittedProofs ?? currentProofs).includes('metric_reading') && (
                                             <div className="mt-1.5 space-y-2 rounded-xl border border-amber-200 bg-amber-50/50 p-3">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-xs font-bold text-amber-950">Named measurements</span>
@@ -925,7 +948,7 @@ export default function WorkNodeCustomizerModal({
                                                 ))}
                                             </div>
                                         )}
-                                        {currentProofs.includes('checklist_steps') && (
+                                        {(currentStage?.permittedProofs ?? currentProofs).includes('checklist_steps') && (
                                             <div className="mt-1.5 space-y-2 rounded-xl border border-slate-200 bg-white p-3">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-xs font-bold text-slate-900">Checklist items</span>

@@ -66,7 +66,7 @@ final class FixtureRepository
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
-        ], ['id'], ['phone_e164', 'status', 'primary_access_tier', 'locale', 'timezone', 'updated_at']);
+        ], ['id'], ['phone_e164', 'status', 'primary_access_tier', 'timezone', 'updated_at']);
 
         DB::table('user_profiles')->upsert([
             [
@@ -93,7 +93,7 @@ final class FixtureRepository
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
-        ], ['user_id'], ['display_name', 'public_bio', 'service_area_display', 'accessibility_preferences', 'language_preferences', 'updated_at']);
+        ], ['user_id'], ['display_name', 'public_bio', 'service_area_display', 'accessibility_preferences', 'updated_at']);
 
         if (Schema::hasTable('categories')) {
             DB::table('categories')->upsert([[

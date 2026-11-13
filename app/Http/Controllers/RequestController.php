@@ -16,6 +16,7 @@ use App\Shared\Application\KernelException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -72,7 +73,7 @@ final class RequestController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'min:3', 'max:120'],
             'description' => ['required', 'string', 'min:10', 'max:4000'],
-            'category_code' => ['required', 'string'],
+            'category_code' => ['required', 'string', Rule::exists('categories', 'code')->where('status', 'active')],
             'budget_amount' => ['nullable', 'numeric', 'min:0'],
             'budget_mode' => ['nullable', 'string', 'in:estimate,exact,undisclosed'],
             'urgency' => ['nullable', 'string', 'in:today,this_week,flexible,specific'],
@@ -80,7 +81,7 @@ final class RequestController extends Controller
             'time_window' => ['nullable', 'string'],
             'preferred_fulfillment' => ['nullable', 'string'],
             'tender_mode' => ['nullable', 'string', 'in:open_tender,sealed_tender,direct_invite'],
-            'payment_lane' => ['nullable', 'string', 'in:external_cash,bilateral_escrow'],
+            'payment_lane' => ['sometimes', 'string', 'in:external_cash,p2p_transfer'],
             'area' => ['nullable', 'string', 'max:120'],
             'hide_exact_address' => ['nullable', 'boolean'],
             'requirements' => ['nullable', 'array'],
@@ -93,8 +94,7 @@ final class RequestController extends Controller
             ...$this->workStageRules('pipeline.stages'),
         ]);
 
-        $category = DB::table('categories')->where('code', $validated['category_code'])->first()
-            ?? DB::table('categories')->first();
+        $category = DB::table('categories')->where('code', $validated['category_code'])->where('status', 'active')->firstOrFail();
 
         $isUndisclosed = ($validated['budget_mode'] ?? null) === 'undisclosed';
         $budgetMinor = ! $isUndisclosed && isset($validated['budget_amount']) && is_numeric($validated['budget_amount']) && ((float) $validated['budget_amount']) > 0
@@ -108,7 +108,7 @@ final class RequestController extends Controller
             'id' => $requestId,
             'requester_user_id' => $userId,
             'listing_id' => null,
-            'category_id' => $category?->id ?? (string) Str::uuid7(),
+            'category_id' => $category->id,
             'capability_profile_id' => null,
             'description' => trim($validated['description']),
             'item_list' => json_encode([

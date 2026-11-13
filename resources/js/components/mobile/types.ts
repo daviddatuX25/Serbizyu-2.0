@@ -69,6 +69,7 @@ export interface WorkStage {
     clearanceMode?: WorkClearanceMode;
     handoffParty?: HandoffParty;
     requiredProofs?: WorkEvidenceType[];
+    permittedProofs?: WorkEvidenceType[];
     approvalMethod?: WorkApprovalMethod;
     toolBindings?: WorkToolBinding[];
     checklistItems?: WorkChecklistItem[];

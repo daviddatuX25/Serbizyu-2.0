@@ -46,10 +46,47 @@ describe('ReviewCeremonyModal Component - Stages & AD-21 Cascading Flow', () => 
         expect(toggle).toBeTruthy();
         expect(toggle.checked).toBe(true);
 
-        // Unified overall rating is visible
         expect(screen.getByText('Overall Rating')).toBeTruthy();
-        expect(screen.getByText(/5.0 · Outstanding work & punctuality/i)).toBeTruthy();
+        expect(screen.getByText('Choose a rating')).toBeTruthy();
+        expect(screen.getByRole('button', { name: 'Rate 1 star' })).toBeTruthy();
+        expect(screen.getByRole('button', { name: 'Rate 5 stars' })).toBeTruthy();
+        expect((screen.getByRole('button', { name: 'Submit Sealed Review' }) as HTMLButtonElement).disabled).toBe(true);
+        expect(screen.queryByText('5.0 · Outstanding work & punctuality')).toBeNull();
         expect(screen.getByText('Submit Sealed Review')).toBeTruthy();
+    });
+    it('requires explicit ratings for every uncascaded provider', () => {
+        render(
+            <ReviewCeremonyModal
+                isOpen={true}
+                onClose={vi.fn()}
+                dealChainId="01a0d011-chain-123"
+                referenceTitle="All-In AC Repair #DC-892"
+                actorRole="buyer"
+                targets={sampleTargets}
+            />,
+        );
+
+        fireEvent.click(screen.getByTestId('cascading-toggle'));
+        const ratings = screen.getAllByRole('button', { name: /Rate Kuya Ben Electrician/ });
+        expect(ratings).toHaveLength(5);
+        fireEvent.click(ratings[4]);
+        expect((screen.getByRole('button', { name: 'Submit Sealed Review' }) as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it('does not display an attachment affordance or default provider feedback selections', () => {
+        render(
+            <ReviewCeremonyModal
+                isOpen={true}
+                onClose={vi.fn()}
+                orderId="01a0d011-order-456"
+                referenceTitle="Order #ORD-7721"
+                actorRole="provider"
+                targets={sampleTargets}
+            />,
+        );
+
+        expect(screen.queryByText(/attach milestone photo/i)).toBeNull();
+        expect(screen.getByRole('button', { name: /Cash Ready on Site/i }).getAttribute('aria-pressed')).not.toBe('true');
     });
 
     it('reveals per-provider custom review cards when cascading toggle is unchecked', () => {
@@ -107,7 +144,7 @@ describe('ReviewCeremonyModal Component - Stages & AD-21 Cascading Flow', () => 
         expect(screen.queryByText('Overall Rating')).toBeNull();
     });
 
-    it('renders Stage 2 Sealed with 72-hour anti-retaliation hold badge', () => {
+    it('does not offer another submission while feedback is sealed', () => {
         render(
             <ReviewCeremonyModal
                 isOpen={true}
@@ -119,11 +156,10 @@ describe('ReviewCeremonyModal Component - Stages & AD-21 Cascading Flow', () => 
         );
 
         expect(screen.getByText('Review Sealed & Protected')).toBeTruthy();
-        expect(screen.getByText('72-Hour Anti-Retaliation Window Active')).toBeTruthy();
-        expect(screen.getByText(/sealed quarantine/i)).toBeTruthy();
+        expect(screen.queryByRole('button', { name: /submit/i })).toBeNull();
     });
 
-    it('renders Stage 3 Revealed with published status', () => {
+    it('does not offer review submission after reviews are revealed', () => {
         render(
             <ReviewCeremonyModal
                 isOpen={true}
@@ -134,7 +170,7 @@ describe('ReviewCeremonyModal Component - Stages & AD-21 Cascading Flow', () => 
             />,
         );
 
-        expect(screen.getByText('Reviews Revealed & Published!')).toBeTruthy();
-        expect(screen.getByText(/bilateral ceremony/i)).toBeTruthy();
+        expect(screen.queryByRole('button', { name: 'Submit Sealed Review' })).toBeNull();
+        expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy();
     });
 });

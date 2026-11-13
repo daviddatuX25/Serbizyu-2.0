@@ -41,7 +41,7 @@ export type OwnerReviewItem = {
     stars: number;
     packageTag?: string;
     package_tag?: string;
-    quote: string;
+    quote: string | null;
     attribute_chips?: string[];
     hasPhoto?: boolean;
     has_photo?: boolean;
@@ -781,9 +781,9 @@ export default function OwnerPreview({
                                                         {'★'.repeat(Math.max(1, Math.min(5, review.stars)))}
                                                     </div>
                                                 </div>
-                                                <p className="mt-2 text-xs leading-relaxed text-slate-700">
-                                                    &ldquo;{review.quote}&rdquo;
-                                                </p>
+                                                {review.quote && (
+                                                    <p className="mt-2 text-xs leading-relaxed text-slate-700">&ldquo;{review.quote}&rdquo;</p>
+                                                )}
                                                 {Array.isArray(review.attribute_chips) &&
                                                     review.attribute_chips.length > 0 && (
                                                         <div className="mt-2 flex flex-wrap gap-1">

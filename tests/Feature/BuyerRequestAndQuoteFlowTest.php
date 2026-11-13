@@ -21,6 +21,27 @@ uses(DatabaseTransactions::class, AuthenticatesWithPhoneOtp::class);
 beforeEach(function (): void {
     $this->bootPhoneOtpAuth();
     $this->withoutMiddleware(ThrottleRequests::class);
+    foreach (['home-help' => 'Home Help', 'print-assist' => 'Print Assist'] as $code => $name) {
+        DB::table('categories')->insertOrIgnore([
+            'id' => (string) Str::uuid7(), 'code' => $code, 'name' => $name,
+            'safety_class' => 'standard', 'data_class' => 'public', 'status' => 'active',
+            'pilot_status' => 'approved', 'metadata' => '{}', 'metadata_version' => 1,
+            'version' => 1, 'correlation_id' => (string) Str::uuid7(),
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+});
+
+it('rejects an unavailable category without creating a Request', function (): void {
+    $buyer = createTestBuyer('+639179999089');
+
+    $this->actingAs($buyer)->postJson('/requests', [
+        'title' => 'Repair a water line',
+        'description' => 'Repair the leak and check the repaired line.',
+        'category_code' => 'category-that-does-not-exist',
+    ])->assertUnprocessable()->assertJsonValidationErrors(['category_code']);
+
+    expect(DB::table('requests')->where('requester_user_id', $buyer->id)->count())->toBe(0);
 });
 
 function createTestProvider(string $phone = '+639178888001'): User
@@ -452,7 +473,7 @@ it('creates request with tender mode, budget semantics, governed pipeline, and p
         'scheduled_date' => '2026-10-05',
         'time_window' => 'Morning (8am - 12pm)',
         'tender_mode' => 'sealed_tender',
-        'payment_lane' => 'bilateral_escrow',
+        'payment_lane' => 'external_cash',
         'area' => 'Tagudin Centro',
         'hide_exact_address' => true,
         'preferred_fulfillment' => 'direct',
@@ -479,7 +500,7 @@ it('creates request with tender mode, budget semantics, governed pipeline, and p
     expect($itemList['title'])->toBe('Repair gate valve and pressure test water line');
     expect($itemList['tender_mode'])->toBe('sealed_tender');
     expect($itemList['budget_mode'])->toBe('exact');
-    expect($itemList['payment_lane'])->toBe('bilateral_escrow');
+    expect($itemList['payment_lane'])->toBe('external_cash');
     expect($itemList['requirements'])->toHaveCount(3);
     expect($itemList['attach_pipeline'])->toBeTrue();
     expect($itemList['pipeline']['template'])->toBe('A1-Linear-3-Stage');
@@ -496,6 +517,135 @@ it('creates request with tender mode, budget semantics, governed pipeline, and p
     $privacy = json_decode($row->privacy_preferences, true);
     expect($privacy['tender_mode'])->toBe('sealed_tender');
     expect($privacy['hide_exact_address'])->toBeTrue();
+});
+it('rejects retired and explicit-null request lanes instead of silently restoring cash', function (): void {
+    $buyer = createTestBuyer('+639179999089');
+    $this->actingAs($buyer)->postJson('/requests', [
+        'title' => 'Repair the courtyard gate',
+        'description' => 'The courtyard gate hinge needs repair and alignment.',
+        'category_code' => 'home-help',
+        'payment_lane' => 'bilateral_escrow',
+    ])->assertUnprocessable();
+    $this->postJson('/requests', [
+        'title' => 'Repair the courtyard gate',
+        'description' => 'The courtyard gate hinge needs repair and alignment.',
+        'category_code' => 'home-help',
+        'payment_lane' => null,
+    ])->assertUnprocessable();
+    expect(DB::table('requests')->where('requester_user_id', $buyer->id)->count())->toBe(0);
+
+    $requestId = $this->postJson('/requests', [
+        'title' => 'Repair the courtyard gate',
+        'description' => 'The courtyard gate hinge needs repair and alignment.',
+        'category_code' => 'home-help',
+    ])->assertCreated()->json('data.id');
+    $request = DB::table('requests')->where('id', $requestId)->first();
+    $itemList = json_decode($request->item_list, true);
+    $itemList['payment_lane'] = 'bilateral_escrow';
+    DB::table('requests')->where('id', $requestId)->update([
+        'item_list' => json_encode($itemList, JSON_THROW_ON_ERROR),
+    ]);
+
+    $provider = createTestProvider('+639178888092');
+    $this->actingAs($provider)->postJson("/requests/{$requestId}/quotes", [
+        'amount_minor' => 12000,
+        'message' => 'Quote against the saved service request.',
+    ])->assertUnprocessable()->assertJsonPath('code', 'PAYMENT_LANE_NOT_ELIGIBLE');
+
+    expect(DB::table('quotes')->where('request_id', $requestId)->count())->toBe(0);
+});
+
+it('awards an unlisted custom A1 request with its accepted P2P lane and source Work definition', function (): void {
+    $buyer = createTestBuyer('+639179999090');
+    $provider = createTestProvider('+639178888091');
+    $requestId = $this->actingAs($buyer)->postJson('/requests', [
+        'title' => 'Repair the outdoor water line',
+        'description' => 'Repair the outdoor water line and confirm there are no remaining leaks.',
+        'category_code' => 'home-help',
+        'payment_lane' => 'p2p_transfer',
+        'attach_pipeline' => true,
+        'pipeline' => [
+            'work_shape' => 'A1',
+            'stages' => [
+                [
+                    'id' => 'custom-water-line',
+                    'title' => 'Repair and test the outdoor water line',
+                    'control_mode' => 'provider_advance',
+                    'required_proofs' => [],
+                    'permitted_proofs' => ['gps_checkin'],
+                ],
+                [
+                    'id' => 'customer-review',
+                    'title' => 'Customer reviews the repair',
+                    'node_kind' => 'final_signoff',
+                    'control_mode' => 'customer_confirm',
+                    'approval_method' => 'app_confirm',
+                    'required_proofs' => [],
+                ],
+            ],
+        ],
+    ])->assertCreated()->json('data.id');
+
+    $quoteId = $this->actingAs($provider)->postJson("/requests/{$requestId}/quotes", [
+        'amount_minor' => 42000,
+        'message' => 'I can repair and test the line without a catalog listing.',
+        'work_shape' => 'A1',
+    ])->assertCreated()->json('data.id');
+    $quote = DB::table('quotes')->where('id', $quoteId)->first();
+    expect($quote->listing_id)->toBeNull()
+        ->and(json_decode($quote->payment_lane_options, true))->toBe(['p2p_transfer']);
+
+    $award = $this->actingAs($buyer)->postJson("/requests/{$requestId}/quotes/{$quoteId}/accept")
+        ->assertOk()
+        ->json('data');
+    $orderId = $award['order_id'];
+    $snapshot = DB::table('order_terms_snapshots')->where('order_id', $orderId)->first();
+    $work = DB::table('work_instances')->where('order_id', $orderId)->first();
+    $obligation = DB::table('payment_obligations')->where('order_id', $orderId)->first();
+    $snapshotScope = json_decode($snapshot->scope, true);
+    $workStructure = json_decode($work->structure, true);
+
+    expect($snapshot->source_listing_version_id)->toBeNull()
+        ->and(json_decode($snapshot->payment_lane_options, true))->toBe(['p2p_transfer'])
+        ->and($snapshotScope['milestone_stages'][0]['id'])->toBe('custom-water-line')
+        ->and($snapshotScope['milestone_stages'][0]['permitted_proofs'])->toBe(['gps_checkin'])
+        ->and((int) $work->payload_schema_version)->toBe(3)
+        ->and($workStructure['nodes'][0]['permitted_proofs'])->toBe(['gps_checkin'])
+        ->and($workStructure['nodes'][0]['id'])->toBe('custom-water-line')
+        ->and($obligation->lane)->toBe('p2p_transfer')
+        ->and($obligation->status)->toBe('not_due');
+    $this->postJson("/requests/{$requestId}/quotes/{$quoteId}/accept")
+        ->assertUnprocessable();
+    $workService = app(\App\Modules\OrdersWork\Application\WorkExecutionService::class);
+    $workService->advanceNode($orderId, (string) $provider->id, 'custom-water-line', 'complete_step', [
+        'location' => [
+            'latitude' => 16.94,
+            'longitude' => 120.44,
+            'source' => 'manual',
+            'observed_at' => '2026-01-01T00:00:00Z',
+            'landmark' => 'Water line',
+        ],
+    ]);
+    $workService->advanceNode($orderId, (string) $provider->id, 'customer-review', 'propose_completion');
+    $workService->advanceNode($orderId, (string) $buyer->id, 'customer-review', 'signoff_completion');
+    $requestItems = json_decode((string) DB::table('requests')->where('id', $requestId)->value('item_list'), true);
+    $requestItems['payment_lane'] = 'external_cash';
+    DB::table('requests')->where('id', $requestId)->update([
+        'item_list' => json_encode($requestItems, JSON_THROW_ON_ERROR),
+    ]);
+    $laneRequest = [
+        'lane' => 'p2p_transfer',
+        'idempotency_key' => 'custom-quote-lane-'.$orderId,
+    ];
+    $this->actingAs($buyer)->postJson(route('orders.payment-obligations.lane', [$orderId, $obligation->id]), $laneRequest)
+        ->assertOk()
+        ->assertJsonPath('data.obligation_id', (string) $obligation->id);
+    $this->postJson(route('orders.payment-obligations.lane', [$orderId, $obligation->id]), $laneRequest)
+        ->assertOk()
+        ->assertJsonPath('data.obligation_id', (string) $obligation->id);
+
+    expect(DB::table('payment_obligations')->where('order_id', $orderId)->count())->toBe(1)
+        ->and(DB::table('payment_obligations')->where('id', $obligation->id)->value('lane'))->toBe('p2p_transfer');
 });
 
 it('allows requester to counter-offer on a submitted quote and creates immutable superseded revision', function (): void {

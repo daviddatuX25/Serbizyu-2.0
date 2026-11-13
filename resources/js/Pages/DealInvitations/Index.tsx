@@ -4,6 +4,7 @@ import { DesktopGlobalNav } from '@/components/layout/DesktopGlobalNav';
 import { NotificationBell } from '@/components/notifications/NotificationCenter';
 import { BottomNavBar, type NavTabId } from '@/marketplace/components/BottomNavBar';
 import { QuickDealScanModal } from '@/components/marketplace/QuickDealScanModal';
+import { getXsrfToken } from '@/lib/csrf';
 import { createRequestKey } from '@/lib/requestKey';
 
 type Invitation = {
@@ -40,7 +41,7 @@ export default function DealInvitationsIndex({ invitations }: { invitations: Inv
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
+                    'X-XSRF-TOKEN': getXsrfToken(),
                     'X-Idempotency-Key': createRequestKey(),
                 },
                 body: JSON.stringify({ decision, expected_version: invitation.version }),
@@ -68,9 +69,7 @@ export default function DealInvitationsIndex({ invitations }: { invitations: Inv
             idempotencyKey = createRequestKey();
             withdrawalKeys.current.set(invitation.id, idempotencyKey);
         }
-        const xsrfToken = document.cookie.split(';').map((cookie) => cookie.trim())
-            .find((cookie) => cookie.startsWith('XSRF-TOKEN='))
-            ?.slice('XSRF-TOKEN='.length);
+        const xsrfToken = getXsrfToken();
         try {
             const response = await fetch(`/deal-chains/${invitation.deal_chain_id}/needs/${invitation.deal_need_id}/withdraw`, {
                 method: 'POST',
@@ -78,7 +77,7 @@ export default function DealInvitationsIndex({ invitations }: { invitations: Inv
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'X-XSRF-TOKEN': xsrfToken ? decodeURIComponent(xsrfToken) : '',
+                    'X-XSRF-TOKEN': xsrfToken,
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-Idempotency-Key': idempotencyKey,
                 },

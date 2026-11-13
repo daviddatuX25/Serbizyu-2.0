@@ -53,9 +53,12 @@ export default function WorkNodeEvidenceTools({
     submitLabel,
 }: WorkNodeEvidenceToolsProps) {
     const requiredProofs = node.required_proofs ?? [];
-    const unsupportedTools = requiredProofs.filter((toolKey) =>
-        !WORK_TOOL_REGISTRY.some((tool) => tool.toolKey === toolKey && tool.kind === 'native'),
+    const permittedProofs = node.permitted_proofs ?? requiredProofs;
+    const optionalProofs = permittedProofs.filter((tool) => !requiredProofs.includes(tool));
+    const supportedProofs = permittedProofs.filter((toolKey) =>
+        WORK_TOOL_REGISTRY.some((tool) => tool.toolKey === toolKey && tool.kind === 'native'),
     );
+    const unsupportedTools = requiredProofs.filter((toolKey) => !supportedProofs.includes(toolKey));
     const checklistItems = node.checklist_items ?? [];
     const metricRequirements = node.metric_requirements ?? NO_METRIC_REQUIREMENTS;
     const [evidenceFileIds, setEvidenceFileIds] = useState<string[]>(
@@ -85,16 +88,20 @@ export default function WorkNodeEvidenceTools({
         if (notes.trim() !== '') {
             payload.notes = notes.trim();
         }
-        if (requiredProofs.includes('photo_proof')) {
+        if (permittedProofs.includes('photo_proof') && evidenceFileIds.length > 0) {
             payload.evidence_file_ids = evidenceFileIds;
         }
-        if (requiredProofs.includes('gps_checkin') && location !== null) {
+        if (permittedProofs.includes('gps_checkin') && location !== null) {
             payload.location = location;
         }
-        if (requiredProofs.includes('metric_reading')) {
+        if (permittedProofs.includes('metric_reading') && metricReadings.length > 0) {
             payload.metric_readings = metricReadings;
         }
-        if (requiredProofs.includes('checklist_steps')) {
+        if (
+            permittedProofs.includes('checklist_steps')
+            && checklistItems.length > 0
+            && (requiredProofs.includes('checklist_steps') || Object.values(checklistResponses).some(Boolean))
+        ) {
             payload.checklist_responses = checklistItems.map((item) => ({
                 id: item.id,
                 completed: checklistResponses[item.id] === true,
@@ -107,10 +114,10 @@ export default function WorkNodeEvidenceTools({
         <div className="mt-4 space-y-4 border-t border-slate-200 pt-4" data-testid={`work-node-tools-${node.id}`}>
             <div>
                 <h4 className="text-xs font-extrabold text-slate-900">Work tools for this step</h4>
-                {requiredProofs.length === 0 ? (
+                {requiredProofs.length === 0 && optionalProofs.length === 0 ? (
                     <p className="mt-0.5 text-[11px] text-slate-600">No attachment is required. Add a note if useful, then continue.</p>
                 ) : (
-                    <p className="mt-0.5 text-[11px] text-slate-600">Only the proof required by this Work node appears here.</p>
+                    <p className="mt-0.5 text-[11px] text-slate-600">Required tools are listed first; optional supported tools can be used when helpful.</p>
                 )}
             </div>
 
@@ -124,25 +131,26 @@ export default function WorkNodeEvidenceTools({
                 );
             })}
 
-            {requiredProofs.includes('photo_proof') && (
-                <WorkPhotoProofInput
-                    orderId={orderId}
-                    nodeId={node.id}
-                    candidates={node.candidate_evidence}
-                    disabled={processing}
-                    onEvidenceIdsChange={setEvidenceFileIds}
-                    onPreviewPhoto={onPreviewPhoto}
-                />
-            )}
-            {requiredProofs.includes('gps_checkin') && (
-                <WorkLocationPinInput disabled={processing} onChange={setLocation} />
-            )}
-            {requiredProofs.includes('metric_reading') && (
-                <WorkMetricReadingsInput requirements={metricRequirements} disabled={processing} onChange={setMetricReadings} />
-            )}
-            {requiredProofs.includes('checklist_steps') && (
-                <WorkChecklistStepsInput items={checklistItems} responses={checklistResponses} disabled={processing} onChange={setChecklistResponses} />
-            )}
+            {[...requiredProofs, ...optionalProofs]
+                .filter((toolKey) => supportedProofs.includes(toolKey))
+                .map((toolKey) => {
+                    const isRequired = requiredProofs.includes(toolKey);
+                    const label = WORK_TOOL_REGISTRY.find((tool) => tool.toolKey === toolKey)?.label ?? toolKey;
+                    return (
+                        <div key={toolKey} className="space-y-1">
+                            <p className="text-[11px] font-bold text-slate-700">{label} · {isRequired ? 'required' : 'optional'}</p>
+                            {toolKey === 'photo_proof' ? (
+                                <WorkPhotoProofInput orderId={orderId} nodeId={node.id} candidates={node.candidate_evidence} disabled={processing} onEvidenceIdsChange={setEvidenceFileIds} onPreviewPhoto={onPreviewPhoto} />
+                            ) : toolKey === 'gps_checkin' ? (
+                                <WorkLocationPinInput disabled={processing} onChange={setLocation} />
+                            ) : toolKey === 'metric_reading' ? (
+                                <WorkMetricReadingsInput requirements={metricRequirements} disabled={processing} onChange={setMetricReadings} />
+                            ) : toolKey === 'checklist_steps' ? (
+                                <WorkChecklistStepsInput items={checklistItems} responses={checklistResponses} disabled={processing} onChange={setChecklistResponses} />
+                            ) : null}
+                        </div>
+                    );
+                })}
 
             <label className="block space-y-1 text-xs font-semibold text-slate-700">
                 Work notes <span className="font-normal text-slate-500">(optional)</span>

@@ -57,4 +57,57 @@ final class WorkToolsRegressionTest extends TestCase
             ->and($updatedStructure['nodes'][0]['status'])->toBe('active')
             ->and($updatedStructure['nodes'][0]['evidence_payload'])->toBeNull();
     }
+    public function test_optional_location_is_accepted_without_weakening_required_checklist(): void
+    {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            $this->markTestSkipped('Work execution contract tests require PostgreSQL.');
+        }
+
+        $nodeId = 'optional-location';
+        $fixture = $this->createAcceptedWorkOrder('A1', [[
+            'id' => $nodeId,
+            'title' => 'Check the package',
+            'node_kind' => 'execution_proof',
+            'evidence_type' => 'none',
+            'control_mode' => 'provider_advance',
+            'required_proofs' => ['checklist_steps'],
+            'permitted_proofs' => ['checklist_steps', 'gps_checkin'],
+            'checklist_items' => [['id' => 'seal', 'label' => 'Seal is intact', 'required' => true]],
+        ]]);
+        $orderId = $fixture['order_id'];
+        $url = "/orders/{$orderId}/work-nodes/{$nodeId}";
+        $location = [
+            'latitude' => 16.94,
+            'longitude' => 120.44,
+            'source' => 'manual',
+            'observed_at' => '2026-01-01T00:00:00Z',
+            'landmark' => 'Market',
+        ];
+
+        $this->actingAs($fixture['provider'])->postJson($url, [
+            'action' => 'complete_step',
+            'payload' => ['location' => $location],
+        ])->assertUnprocessable();
+        $this->actingAs($fixture['provider'])->postJson($url, [
+            'action' => 'complete_step',
+            'payload' => [
+                'checklist_responses' => [['id' => 'seal', 'completed' => true]],
+                'metric_readings' => [],
+            ],
+        ])->assertUnprocessable();
+        $this->actingAs($fixture['provider'])->postJson($url, [
+            'action' => 'complete_step',
+            'payload' => [
+                'checklist_responses' => [['id' => 'seal', 'completed' => true]],
+                'location' => $location,
+            ],
+        ])->assertSuccessful();
+
+        $work = DB::table('work_instances')->where('id', $fixture['work_id'])->firstOrFail();
+        $structure = json_decode((string) $work->structure, true, 512, JSON_THROW_ON_ERROR);
+        expect((int) $work->payload_schema_version)->toBe(3)
+            ->and($structure['nodes'][0]['status'])->toBe('completed')
+            ->and($structure['nodes'][0]['evidence_payload']['location']['landmark'])->toBe('Market')
+            ->and($structure['nodes'][0]['evidence_payload']['checklist_responses'][0]['completed'])->toBeTrue();
+    }
 }

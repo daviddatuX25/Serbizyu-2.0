@@ -8,11 +8,7 @@ const node = { id: 'node-7', approval_method: 'presence_otp', can_issue_challeng
 
 describe('WorkClearanceChallenge', () => {
     beforeEach(() => {
-        document.querySelector('meta[name="csrf-token"]')?.remove();
-        const csrf = document.createElement('meta');
-        csrf.name = 'csrf-token';
-        csrf.content = 'test-csrf';
-        document.head.append(csrf);
+        document.cookie = 'XSRF-TOKEN=test-csrf; path=/';
         vi.setSystemTime(new Date('2026-10-25T12:00:00Z'));
     });
     afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.setSystemTime(new Date(ORIGINAL_NOW)); });
@@ -22,7 +18,10 @@ describe('WorkClearanceChallenge', () => {
         expect(screen.queryByText('4821')).toBeNull();
         fireEvent.click(screen.getByRole('button', { name: 'Issue clearance code' }));
         expect(await screen.findByText('4821')).toBeDefined();
-        expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/orders/order-1/work-nodes/node-7/clearance-challenges'), expect.objectContaining({ method: 'POST' }));
+        expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/orders/order-1/work-nodes/node-7/clearance-challenges'), expect.objectContaining({
+            method: 'POST',
+            headers: expect.objectContaining({ 'X-XSRF-TOKEN': 'test-csrf' }),
+        }));
     });
 
     it('shows server issue errors and never fabricates a code', async () => {

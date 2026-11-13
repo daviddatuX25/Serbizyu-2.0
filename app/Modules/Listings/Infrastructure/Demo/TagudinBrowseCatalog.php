@@ -418,21 +418,29 @@ final class TagudinBrowseCatalog
 
     /**
      * @param  array<string, mixed>  $row
-     * @return array{cover_thumbnail_url: string, has_video: bool, items: list<array<string, mixed>>}
+     * @return array{cover_thumbnail_url: string|null, has_video: bool, items: list<array<string, mixed>>}
      */
     private static function defaultMedia(array $row): array
     {
         $fixtureKey = (string) ($row['fixture_key'] ?? '');
-        $categoryCode = (string) ($row['category_code'] ?? '');
-        $photoUrl = match (true) {
-            str_contains($fixtureKey, 'capacitor') => '/photos/ac-capacitor.jpg',
-            str_contains($fixtureKey, 'ac-') => '/photos/ac-clean.jpg',
-            str_contains($fixtureKey, 'safety-audit') => '/photos/req-electrician.jpg',
-            $categoryCode === 'courier' => '/photos/courier.jpg',
-            $categoryCode === 'local-food' => '/photos/bibingka.jpg',
-            in_array($categoryCode, ['print-assist', 'greeting-cards'], true) => '/photos/greeting.jpg',
-            default => '/photos/ac-clean.jpg',
+        $photoUrl = match ($fixtureKey) {
+            'active-tagudin-bibingka-01' => '/photos/sample-bibingka-cc0.jpg',
+            'active-tagudin-ac-capacitor-01' => '/photos/ac-capacitor.jpg',
+            'active-tagudin-ac-clean-01',
+            'active-tagudin-ac-install-01' => '/photos/ac-clean.jpg',
+            'active-tagudin-safety-audit-01' => '/photos/req-electrician.jpg',
+            'active-tagudin-courier-01' => '/photos/courier.jpg',
+            'active-tagudin-greeting-card-01' => '/photos/greeting.jpg',
+            default => null,
         };
+
+        if ($photoUrl === null) {
+            return [
+                'cover_thumbnail_url' => null,
+                'has_video' => false,
+                'items' => [],
+            ];
+        }
 
         return [
             'cover_thumbnail_url' => $photoUrl,
@@ -443,7 +451,9 @@ final class TagudinBrowseCatalog
                     'kind' => 'photo',
                     'url' => $photoUrl,
                     'thumbnail_url' => $photoUrl,
-                    'caption' => (string) ($row['title'] ?? 'Tagudin listing photo'),
+                    'caption' => $fixtureKey === 'active-tagudin-bibingka-01'
+                        ? 'Illustrative sample photo by Tomwsulcer, CC0: https://commons.wikimedia.org/wiki/File:Philippine_Dessert_Bibingka.jpg'
+                        : 'Illustrative sample image; not seller-provided evidence.',
                     'mime_type' => 'image/jpeg',
                     'is_cover' => true,
                 ],

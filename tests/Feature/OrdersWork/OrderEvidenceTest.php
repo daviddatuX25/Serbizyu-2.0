@@ -79,6 +79,43 @@ final class OrderEvidenceTest extends TestCase
             ->and($eventPayload['tool_key'])->toBe('photo_proof');
     }
 
+    public function test_optional_photo_requires_permission_and_is_reviewable_after_submission(): void
+    {
+        $provider = User::query()->where('phone_e164', Fix::TECH_PHONE)->firstOrFail();
+        $buyer = User::query()->where('phone_e164', Fix::BUYER_PHONE)->firstOrFail();
+        $node = $this->prepareActiveNode([]);
+        $work = DB::table('work_instances')->where('id', $node['work_id'])->firstOrFail();
+        $structure = json_decode((string) $work->structure, true, 512, JSON_THROW_ON_ERROR);
+        $structure['nodes'][0]['permitted_proofs'] = [];
+        DB::table('work_instances')->where('id', $node['work_id'])->update([
+            'payload_schema_version' => 3,
+            'structure' => json_encode($structure, JSON_THROW_ON_ERROR),
+        ]);
+        $url = "/orders/{$node['order_id']}/work-nodes/{$node['id']}/evidence";
+
+        $this->actingAs($provider)->postJson($url, [
+            'file' => $this->validPng(),
+            'tool_key' => 'photo_proof',
+        ])->assertConflict();
+
+        $structure['nodes'][0]['permitted_proofs'] = ['photo_proof'];
+        DB::table('work_instances')->where('id', $node['work_id'])->update([
+            'structure' => json_encode($structure, JSON_THROW_ON_ERROR),
+        ]);
+        $evidenceId = $this->actingAs($provider)->postJson($url, [
+            'file' => $this->validPng(),
+            'tool_key' => 'photo_proof',
+        ])->assertCreated()->json('data.id');
+        app(OutboxDispatcher::class)->dispatch();
+        expect(DB::table('evidence_files')->where('id', $evidenceId)->value('scan_status'))->toBe('clean');
+
+        $this->actingAs($provider)->postJson("/orders/{$node['order_id']}/work-nodes/{$node['id']}", [
+            'action' => 'request_confirmation',
+            'payload' => ['evidence_file_ids' => [$evidenceId]],
+        ])->assertOk();
+        $this->actingAs($buyer)->get("/orders/{$node['order_id']}/work-evidence/{$evidenceId}")->assertOk();
+    }
+
     public function test_buyer_cannot_upload_provider_work_evidence(): void
     {
         $buyer = User::query()->where('phone_e164', Fix::BUYER_PHONE)->firstOrFail();

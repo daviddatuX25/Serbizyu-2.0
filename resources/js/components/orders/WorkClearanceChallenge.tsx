@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import type { WorkNodeRecord } from '../../types';
 import type { WorkProofPayload } from '../mobile/WorkNodeEvidenceTools';
 import { createRequestKey } from '@/lib/requestKey';
+import { getXsrfToken } from '@/lib/csrf';
 type Challenge = { challenge_id: string; code: string; kind: 'presence_otp' | 'worker_dropoff'; expires_at: string; work_version: number; node_id: string };
 type A4VerificationContext = { node_id: string; evidence_file_id: string; expected_transfer_version: number; checklist_responses?: WorkProofPayload['checklist_responses']; metric_readings?: WorkProofPayload['metric_readings']; location?: WorkProofPayload['location']; notes?: string };
 type Props = {
@@ -15,9 +16,9 @@ type Props = {
 };
 
 async function postJson<T>(path: string, body?: Record<string, unknown>): Promise<T> {
-    const csrf = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
+    const csrf = getXsrfToken();
     if (!csrf) throw new Error('Refresh this page to restore the secure session.');
-    const response = await fetch(path, { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+    const response = await fetch(path, { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     const result = await response.json() as { data?: T; message?: string; error?: { message?: string }; errors?: Record<string, string[]> };
     if (!response.ok) throw new Error(result.error?.message ?? Object.values(result.errors ?? {}).flat()[0] ?? result.message ?? 'The clearance code request failed. Try again.');
     if (!result.data) throw new Error('The server did not return a clearance challenge.');

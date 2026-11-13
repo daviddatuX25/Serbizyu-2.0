@@ -46,7 +46,7 @@ final class SubmitReviewCommand
     public function handle(
         string $orderId,
         string $authorUserId,
-        int $rating,
+        ?int $rating,
         ?string $content,
         array $attributeChips,
         bool $cascade,
@@ -134,7 +134,10 @@ final class SubmitReviewCommand
             $validChips = array_values(array_intersect($attributeChips, $allowed));
 
             // Validate stars (buyers give 1-5; provider gives non-numeric citizen reliability, rating is null)
-            $effectiveRating = $isBuyer ? max(1, min(5, $rating)) : null;
+            if ($isBuyer && ($rating === null || $rating < 1 || $rating > 5)) {
+                throw new TrustSupportError('INVALID_RATING', 'Buyer reviews require a rating from 1 to 5.', $correlationId, status: 422);
+            }
+            $effectiveRating = $isBuyer ? $rating : null;
             // Check if counterparty has already submitted
             $counterpartyReview = DB::table('reviews')
                 ->where('order_id', $orderId)
@@ -168,6 +171,9 @@ final class SubmitReviewCommand
                 ->where('order_id', $orderId)
                 ->where('author_user_id', $authorUserId)
                 ->first();
+            if ($existing !== null && $existing->unblinded_at !== null) {
+                throw new TrustSupportError('REVIEW_ALREADY_REVEALED', 'A revealed review cannot be changed.', $correlationId, status: 409);
+            }
 
             if ($existing !== null) {
                 $reviewId = (string) $existing->id;

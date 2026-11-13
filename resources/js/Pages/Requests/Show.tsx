@@ -11,7 +11,7 @@ import {
     MessageCircle,
     Send,
     Shield,
-    ZoomIn,
+    X,
     TableProperties,
     SlidersHorizontal,
     Minus,
@@ -21,6 +21,7 @@ import {
     Camera,
     Truck,
     Workflow,
+    ZoomIn,
 } from 'lucide-react';
 import { AppShell } from '../../components/AppShell';
 import { NotificationBell } from '../../components/notifications/NotificationCenter';
@@ -32,6 +33,7 @@ import QuoteComposerSheet, {
     type ProviderListingOption,
     type QuoteComposerPipeline,
 } from '../../components/quotes/QuoteComposerSheet';
+import { getXsrfToken } from '../../lib/csrf';
 interface QuoteItem {
     id: string;
     request_id: string;
@@ -140,6 +142,7 @@ export default function RequestShow({
     const [acceptingQuoteId, setAcceptingQuoteId] = useState<string | null>(null);
     const [appointmentQuote, setAppointmentQuote] = useState<QuoteItem | null>(null);
     const [appointmentHold, setAppointmentHold] = useState<AppointmentHold | null>(null);
+    const [photoPreviewOpen, setPhotoPreviewOpen] = useState(false);
     const [acceptanceError, setAcceptanceError] = useState<string | null>(null);
 
     // Form state for Quote Composer sheet
@@ -263,9 +266,7 @@ export default function RequestShow({
                     headers: {
                         Accept: 'application/json',
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN':
-                            document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-                                ?.content ?? '',
+                        'X-XSRF-TOKEN': getXsrfToken(),
                     },
                     body: JSON.stringify({
                         appointment_reservation_id: appointmentHold.id,
@@ -376,7 +377,10 @@ export default function RequestShow({
             <Head title={`Request: ${request.title}`} />
 
             {/* Mobile Header */}
-            <header aria-label="Request navigation" className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden">
+            <header
+                aria-label="Request navigation"
+                className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden"
+            >
                 <Link
                     href="/browse"
                     className="flex size-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition-colors hover:bg-slate-200"
@@ -388,9 +392,7 @@ export default function RequestShow({
                     <span className="text-[10px] font-extrabold tracking-wider text-teal-700 uppercase">
                         {isSealed ? 'Sealed Bidding' : 'Citizen Tender'}
                     </span>
-                    <h2 className="truncate text-xs font-bold text-[#0F2F58]">
-                        {request.title}
-                    </h2>
+                    <h2 className="truncate text-xs font-bold text-[#0F2F58]">{request.title}</h2>
                 </div>
                 <div className="flex size-11 shrink-0 items-center justify-center [&_button]:min-h-11 [&_button]:min-w-11">
                     <NotificationBell />
@@ -414,10 +416,12 @@ export default function RequestShow({
                         <div className="relative h-[240px] w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-200 shadow-xs sm:h-[340px]">
                             <img
                                 src={photoUrl}
-                                alt={request.title}
+                                alt={request.item_list?.photo ? request.title : 'Category illustration'}
                                 className="h-full w-full object-cover"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = '/photos/ac-clean.jpg';
+                                onError={(event) => {
+                                    if (!request.item_list?.photo && !event.currentTarget.src.endsWith('/photos/ac-clean.jpg')) {
+                                        event.currentTarget.src = '/photos/ac-clean.jpg';
+                                    }
                                 }}
                             />
                             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
@@ -441,12 +445,18 @@ export default function RequestShow({
 
                             <button
                                 type="button"
-                                onClick={() => alert('Photo inspection view')}
-                                className="absolute top-4 right-4 flex size-9 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md backdrop-blur-xs transition-all hover:bg-white active:scale-95"
+                                aria-label={request.item_list?.photo ? 'View request photo' : 'View category illustration'}
+                                onClick={() => setPhotoPreviewOpen(true)}
+                                className="absolute top-4 right-4 flex size-11 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md backdrop-blur-xs transition-all hover:bg-white active:scale-95"
                             >
                                 <ZoomIn className="size-4.5 stroke-[2.2]" />
                             </button>
 
+                            {!request.item_list?.photo && (
+                                <span className="absolute top-20 right-4 rounded-full bg-white/95 px-2 py-1 text-[10px] font-bold text-slate-700">
+                                    Category image
+                                </span>
+                            )}
                             <div className="absolute right-4 bottom-4 left-4 text-white">
                                 {request.category_name ? (
                                     <div className="mb-1.5 flex items-center gap-1.5">
@@ -569,10 +579,13 @@ export default function RequestShow({
                                                     {request.item_list.payment_lane ===
                                                     'external_cash'
                                                         ? 'Direct Cash (COD)'
-                                                        : request.item_list.payment_lane.replace(
-                                                              '_',
-                                                              ' ',
-                                                          )}
+                                                        : request.item_list.payment_lane ===
+                                                            'p2p_transfer'
+                                                          ? 'GCash / Maya (P2P)'
+                                                          : request.item_list.payment_lane.replace(
+                                                                '_',
+                                                                ' ',
+                                                            )}
                                                 </strong>
                                             </span>
                                         </span>
@@ -852,7 +865,7 @@ export default function RequestShow({
                             )}
 
                             {actions.can_quote && (
-                                <div className="pt-2">
+                                <div className="hidden pt-2 lg:block">
                                     <button
                                         type="button"
                                         onClick={() => setComposerOpen(true)}
@@ -870,7 +883,7 @@ export default function RequestShow({
 
             {/* Mobile Fixed Bottom Bar */}
             {actions.can_quote ? (
-                <div className="fixed right-0 bottom-0 left-0 z-30 flex items-center gap-2 border-t border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur-md lg:hidden">
+                <div className="fixed right-0 bottom-[60px] left-0 z-30 flex items-center gap-2 border-t border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur-md lg:hidden">
                     <button
                         type="button"
                         onClick={() => setComposerOpen(true)}
@@ -890,13 +903,38 @@ export default function RequestShow({
                     </button>
                 </div>
             ) : isOwner ? (
-                <div className="fixed right-0 bottom-0 left-0 z-30 flex items-center justify-between border-t border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur-md lg:hidden">
+                <div className="fixed right-0 bottom-[60px] left-0 z-30 flex items-center justify-between border-t border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur-md lg:hidden">
                     <span className="font-bold text-[#0F2F58]">Your Request Dashboard</span>
                     <span className="rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-[11px] font-bold text-teal-700">
                         {quotes.length} Bids Available
                     </span>
                 </div>
             ) : null}
+            {photoPreviewOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={request.item_list?.photo ? 'Request photo' : 'Category illustration'}
+                    onClick={() => setPhotoPreviewOpen(false)}
+                >
+                    <button
+                        type="button"
+                        aria-label="Close photo"
+                        onClick={() => setPhotoPreviewOpen(false)}
+                        className="absolute top-4 right-4 flex size-11 items-center justify-center rounded-full bg-white text-slate-900"
+                    >
+                        <X className="size-5" />
+                    </button>
+                    <img
+                        src={photoUrl}
+                        alt={request.item_list?.photo ? request.title : 'Category illustration'}
+                        onClick={(event) => event.stopPropagation()}
+                        className="max-h-[90vh] max-w-full rounded-lg object-contain"
+                    />
+                </div>
+            )}
+
 
             {/* Proposal Side-by-Side Comparison Matrix Modal */}
             <GlovoWaveModal
